@@ -1,0 +1,13 @@
+let
+  pkgs = import (fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/22.05.tar.gz";
+    sha256 = "1xlgynfw9svy7nvh9nkxsxdzncv9hg99gbvbwv3gmrhmzc3sar75";
+  }) {};
+in with pkgs;
+mkShell {
+  packages = [
+  {{- range .Packages}}
+    {{.}}
+  {{end -}}
+  ];
+}

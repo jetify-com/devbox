@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "boxcli",
+    srcs = [
+        "build.go",
+        "root.go",
+        "shell.go",
+    ],
+    importpath = "go.jetpack.io/axiom/opensource/devbox/boxcli",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//opensource/devbox",
+        "@com_github_spf13_cobra//:cobra",
+    ],
+)
