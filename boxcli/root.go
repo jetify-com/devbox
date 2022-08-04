@@ -14,7 +14,6 @@ func RootCmd() *cobra.Command {
 			fmt.Println("Ran devbox")
 		},
 	}
-	command.AddCommand(BuildCmd())
 	command.AddCommand(ShellCmd())
 	return command
 }
