@@ -17,28 +17,45 @@ func Marshal(v any, extension string) ([]byte, error) {
 	}
 
 	switch extension {
-	case "json":
+	case ".json":
 		return MarshalJson(v)
-	case "yml", "yaml":
+	case ".yml", ".yaml":
 		return MarshalYaml(v)
 	}
-	return nil, errors.New("unsupported extension")
+	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
 
 func Unmarshal(data []byte, extension string, v any) error {
 	switch extension {
-	case "json":
+	case ".json":
 		err := UnmarshalJson(data, v)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-	case "yml", "yaml":
+		return nil
+	case ".yml", ".yaml":
 		err := UnmarshalYaml(data, v)
 		if err != nil {
 			return errors.WithStack(err)
 		}
+		return nil
 	}
-	return nil
+	return errors.Errorf("Unsupported file format '%s' for config file", extension)
+}
+
+func InitFile(path string, v any) (bool, error) {
+	if _, err := os.Stat(path); err == nil {
+		// File already exists, don't create a new one.
+		// TODO: should we read and write again, in case the schema needs updating?
+		return false, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		// File does not exist, create a new one:
+		return true, WriteFile(path, v)
+	} else {
+		// Error case:
+		return false, errors.WithStack(err)
+	}
+
 }
 
 func ReadFile(path string, v any) error {

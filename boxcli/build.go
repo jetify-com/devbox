@@ -10,21 +10,19 @@ func BuildCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:  "build [<dir>]",
 		Args: cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Default to the current working directory
-			path := "."
-			if len(args) > 0 {
-				path = args[0]
-			}
-
-			// Check the directory exists.
-			box, err := devbox.Open(path)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			return box.Build()
-		},
+		RunE: runBuildCmd,
 	}
 	return command
+}
+
+func runBuildCmd(cmd *cobra.Command, args []string) error {
+	path := pathArg(args)
+
+	// Check the directory exists.
+	box, err := devbox.Open(path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.Build()
 }

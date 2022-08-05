@@ -10,11 +10,14 @@ go_library(
     embedsrcs = [
         "tmpl/default.nix.tmpl",
         "tmpl/shell.nix.tmpl",
+        "tmpl/Dockerfile.tmpl",
     ],
     importpath = "go.jetpack.io/axiom/opensource/devbox",
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox/cuecfg",
+        "//opensource/devbox/docker",
+        "//opensource/devbox/nix",
         "@com_github_pkg_errors//:errors",
     ],
 )

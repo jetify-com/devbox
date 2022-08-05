@@ -1,50 +1,62 @@
 package devbox
 
 import (
-	"fmt"
-	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
+	"go.jetpack.io/axiom/opensource/devbox/docker"
+	"go.jetpack.io/axiom/opensource/devbox/nix"
 )
 
 type Devbox struct {
-	workdir string
+	cfg    *Config
+	srcDir string
 }
 
-func Open(path string) (*Devbox, error) {
-	// If we can't access the directory (either because it doesn not exist or
-	// because we don't have permissions), return an error.
-	if _, err := os.Stat(path); err != nil {
+const CONFIG_FILENAME = "devbox.json"
+
+func Init(dir string) (bool, error) {
+	cfgPath := filepath.Join(dir, CONFIG_FILENAME)
+	return cuecfg.InitFile(cfgPath, &Config{})
+}
+
+func Open(dir string) (*Devbox, error) {
+	cfgPath := filepath.Join(dir, CONFIG_FILENAME)
+
+	cfg, err := ReadConfig(cfgPath)
+	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	box := &Devbox{
-		workdir: path,
+		cfg:    cfg,
+		srcDir: dir,
 	}
 	return box, nil
 }
 
-func (d *Devbox) Init() error {
-	fmt.Printf("TODO: devbox init %s\n", d.workdir)
-	return nil
-}
-
 func (d *Devbox) Add(pkgs ...string) error {
-	fmt.Printf("TODO: devbox add %s\n", pkgs)
-	return nil
+	// TODO: validate packages and detect duplicates.
+	d.cfg.Packages = append(d.cfg.Packages, pkgs...)
+	return d.saveCfg()
 }
 
 func (d *Devbox) Build() error {
-	fmt.Printf("TODO: devbox build %s\n", d.workdir)
-	return nil
+	return docker.Build(d.srcDir)
 }
 
+// TODO: for now 'generate' is a manual step, but it should happen
+// automatically instead (and the files should be hidden).
 func (d *Devbox) Generate() error {
-	fmt.Printf("TODO: devbox build %s\n", d.workdir)
-	return nil
+	return generate(d.srcDir, d.cfg)
 }
 
 func (d *Devbox) Shell() error {
-	fmt.Printf("TODO: devbox shell %s\n", d.workdir)
-	return nil
+	return nix.Shell(d.srcDir)
+}
+
+func (d *Devbox) saveCfg() error {
+	cfgPath := filepath.Join(d.srcDir, CONFIG_FILENAME)
+	return cuecfg.WriteFile(cfgPath, d.cfg)
 }

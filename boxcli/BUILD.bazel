@@ -4,6 +4,7 @@ go_library(
     name = "boxcli",
     srcs = [
         "add.go",
+        "args.go",
         "build.go",
         "generate.go",
         "init.go",
@@ -14,7 +15,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox",
-        "//opensource/devbox/nix",
         "@com_github_pkg_errors//:errors",
         "@com_github_spf13_cobra//:cobra",
     ],

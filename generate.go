@@ -8,14 +8,13 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
 )
 
 //go:embed tmpl
 var tmplFS embed.FS
 
-func Generate(path string, cfg *Config) error {
-	err := initConfig(path)
+func generate(path string, cfg *Config) error {
+	err := writeFromTemplate(path, cfg, "Dockerfile")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -25,17 +24,6 @@ func Generate(path string, cfg *Config) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func initConfig(path string) error {
-	cfgPath := filepath.Join(path, "devbox.json")
-
-	if _, err := os.Stat(cfgPath); err == nil {
-		return nil
-	}
-	return cuecfg.WriteFile(cfgPath, &Config{
-		Packages: []string{},
-	})
 }
 
 func writeFromTemplate(path string, cfg *Config, tmplName string) error {

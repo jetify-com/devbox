@@ -2,6 +2,7 @@ package boxcli
 
 import (
 	"context"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -9,6 +10,10 @@ import (
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use: "devbox",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			// Don't display 'usage' on application errors.
+			cmd.SilenceUsage = true
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -29,6 +34,6 @@ func Execute(ctx context.Context) error {
 func Main() {
 	err := Execute(context.Background())
 	if err != nil {
-		panic(err)
+		os.Exit(1)
 	}
 }

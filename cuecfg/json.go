@@ -6,7 +6,7 @@ import "encoding/json"
 // "encoding/json" ... it might have extra functionality related
 // to the cue language.
 func MarshalJson(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
+	return json.MarshalIndent(v, "", "  ")
 }
 
 func UnmarshalJson(data []byte, v interface{}) error {

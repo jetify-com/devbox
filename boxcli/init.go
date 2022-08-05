@@ -10,21 +10,17 @@ func InitCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:  "init [<dir>]",
 		Args: cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Default to the current working directory
-			path := "."
-			if len(args) > 0 {
-				path = args[0]
-			}
-
-			// Check the directory exists.
-			box, err := devbox.Open(path)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			return box.Init()
-		},
+		RunE: runInitCmd,
 	}
 	return command
+}
+
+func runInitCmd(cmd *cobra.Command, args []string) error {
+	path := pathArg(args)
+
+	_, err := devbox.Init(path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

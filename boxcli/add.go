@@ -10,14 +10,16 @@ func AddCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:  "add <pkg>...",
 		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			box, err := devbox.Open(".")
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			return box.Add(args...)
-		},
+		RunE: runAddCmd,
 	}
 	return command
+}
+
+func runAddCmd(cmd *cobra.Command, args []string) error {
+	box, err := devbox.Open(".")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.Add(args...)
 }
