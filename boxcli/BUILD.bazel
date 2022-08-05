@@ -3,6 +3,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "boxcli",
     srcs = [
+        "add.go",
+        "build.go",
+        "generate.go",
+        "init.go",
         "root.go",
         "shell.go",
     ],
@@ -10,6 +14,8 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox",
+        "//opensource/devbox/nix",
+        "@com_github_pkg_errors//:errors",
         "@com_github_spf13_cobra//:cobra",
     ],
 )

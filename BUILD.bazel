@@ -3,11 +3,9 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "devbox",
     srcs = [
+        "config.go",
         "devbox.go",
-        "devconfig.go",
-        "docker.go",
         "generate.go",
-        "nix.go",
     ],
     embedsrcs = [
         "tmpl/default.nix.tmpl",
@@ -16,7 +14,7 @@ go_library(
     importpath = "go.jetpack.io/axiom/opensource/devbox",
     visibility = ["//visibility:public"],
     deps = [
+        "//opensource/devbox/cuecfg",
         "@com_github_pkg_errors//:errors",
-        "@org_cuelang_go//cuego",
     ],
 )

@@ -2,7 +2,6 @@ package boxcli
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -10,19 +9,26 @@ import (
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use: "devbox",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Ran devbox")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
 		},
 	}
+	command.AddCommand(AddCmd())
+	command.AddCommand(BuildCmd())
+	command.AddCommand(GenerateCmd())
+	command.AddCommand(InitCmd())
 	command.AddCommand(ShellCmd())
 	return command
 }
 
-func Execute(ctx context.Context) {
+func Execute(ctx context.Context) error {
 	cmd := RootCmd()
-	_ = cmd.ExecuteContext(ctx)
+	return cmd.ExecuteContext(ctx)
 }
 
 func Main() {
-	Execute(context.Background())
+	err := Execute(context.Background())
+	if err != nil {
+		panic(err)
+	}
 }

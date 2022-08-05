@@ -6,9 +6,9 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox"
 )
 
-func ShellCmd() *cobra.Command {
+func BuildCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "shell [<dir>]",
+		Use:  "build [<dir>]",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Default to the current working directory
@@ -23,7 +23,7 @@ func ShellCmd() *cobra.Command {
 				return errors.WithStack(err)
 			}
 
-			return box.Shell()
+			return box.Build()
 		},
 	}
 	return command

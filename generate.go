@@ -8,12 +8,13 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
 )
 
 //go:embed tmpl
 var tmplFS embed.FS
 
-func Generate(path string, cfg *DevConfig) error {
+func Generate(path string, cfg *Config) error {
 	err := initConfig(path)
 	if err != nil {
 		return errors.WithStack(err)
@@ -32,12 +33,12 @@ func initConfig(path string) error {
 	if _, err := os.Stat(cfgPath); err == nil {
 		return nil
 	}
-	return Write(cfgPath, &DevConfig{
+	return cuecfg.WriteFile(cfgPath, &Config{
 		Packages: []string{},
 	})
 }
 
-func writeFromTemplate(path string, cfg *DevConfig, tmplName string) error {
+func writeFromTemplate(path string, cfg *Config, tmplName string) error {
 	tmplPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 	t := template.Must(template.New(tmplName+".tmpl").ParseFS(tmplFS, tmplPath))
 

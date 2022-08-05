@@ -6,9 +6,11 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox"
 )
 
-func ShellCmd() *cobra.Command {
+// TODO: this command is useful for debugging.
+// Decided whether we want to keep it for real – or it should be removed.
+func GenerateCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "shell [<dir>]",
+		Use:  "generate [<dir>]",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Default to the current working directory
@@ -23,7 +25,7 @@ func ShellCmd() *cobra.Command {
 				return errors.WithStack(err)
 			}
 
-			return box.Shell()
+			return box.Generate()
 		},
 	}
 	return command

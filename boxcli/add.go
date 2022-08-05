@@ -6,24 +6,17 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox"
 )
 
-func ShellCmd() *cobra.Command {
+func AddCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "shell [<dir>]",
-		Args: cobra.MaximumNArgs(1),
+		Use:  "add <pkg>...",
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Default to the current working directory
-			path := "."
-			if len(args) > 0 {
-				path = args[0]
-			}
-
-			// Check the directory exists.
-			box, err := devbox.Open(path)
+			box, err := devbox.Open(".")
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
-			return box.Shell()
+			return box.Add(args...)
 		},
 	}
 	return command
