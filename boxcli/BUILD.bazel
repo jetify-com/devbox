@@ -8,6 +8,7 @@ go_library(
         "build.go",
         "generate.go",
         "init.go",
+        "plan.go",
         "root.go",
         "shell.go",
     ],

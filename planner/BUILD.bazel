@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "planner",
+    srcs = [
+        "empty_planner.go",
+        "go_planner.go",
+        "planner.go",
+        "python_planner.go",
+    ],
+    importpath = "go.jetpack.io/axiom/opensource/devbox/planner",
+    visibility = ["//visibility:public"],
+)

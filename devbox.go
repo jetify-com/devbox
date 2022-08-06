@@ -7,6 +7,7 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
 	"go.jetpack.io/axiom/opensource/devbox/docker"
 	"go.jetpack.io/axiom/opensource/devbox/nix"
+	"go.jetpack.io/axiom/opensource/devbox/planner"
 )
 
 type Devbox struct {
@@ -44,6 +45,11 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 func (d *Devbox) Build() error {
 	return docker.Build(d.srcDir)
+}
+
+func (d *Devbox) Plan() *planner.BuildPlan {
+	// TODO: should the BuildPlan struct type be part of 'devbox' instead of 'planner'
+	return planner.Plan(d.srcDir)
 }
 
 // TODO: for now 'generate' is a manual step, but it should happen

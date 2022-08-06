@@ -18,6 +18,7 @@ go_library(
         "//opensource/devbox/cuecfg",
         "//opensource/devbox/docker",
         "//opensource/devbox/nix",
+        "//opensource/devbox/planner",
         "@com_github_pkg_errors//:errors",
     ],
 )
