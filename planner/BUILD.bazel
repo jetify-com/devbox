@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "empty_planner.go",
         "go_planner.go",
+        "plan.go",
         "planner.go",
         "python_planner.go",
     ],

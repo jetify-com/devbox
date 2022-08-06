@@ -44,21 +44,31 @@ func (d *Devbox) Add(pkgs ...string) error {
 }
 
 func (d *Devbox) Build() error {
+	err := d.Generate()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return docker.Build(d.srcDir)
 }
 
 func (d *Devbox) Plan() *planner.BuildPlan {
-	// TODO: should the BuildPlan struct type be part of 'devbox' instead of 'planner'
-	return planner.Plan(d.srcDir)
+	basePlan := &planner.BuildPlan{
+		Packages: d.cfg.Packages,
+	}
+	return planner.MergePlans(basePlan, planner.Plan(d.srcDir))
 }
 
-// TODO: for now 'generate' is a manual step, but it should happen
-// automatically instead (and the files should be hidden).
+// TODO: generate necessary files without modifying src directory.
 func (d *Devbox) Generate() error {
-	return generate(d.srcDir, d.cfg)
+	plan := d.Plan()
+	return generate(d.srcDir, plan)
 }
 
 func (d *Devbox) Shell() error {
+	err := d.Generate()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nix.Shell(d.srcDir)
 }
 
