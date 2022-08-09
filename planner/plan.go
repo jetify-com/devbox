@@ -5,7 +5,10 @@ import "encoding/json"
 // TODO: decide if BuildPlan should continue to be a separate structure
 // or whether it should be the same structure as devbox.Config.
 type BuildPlan struct {
-	Packages []string `cue:"[...string]" json:"packages"`
+	Packages       []string `cue:"[...string]" json:"packages"`
+	InstallCommand string   `cue:"string" json:"install_command,omitempty"`
+	BuildCommand   string   `cue:"string" json:"build_command,omitempty"`
+	StartCommand   string   `cue:"string" json:"start_command,omitempty"`
 }
 
 func (p *BuildPlan) String() string {

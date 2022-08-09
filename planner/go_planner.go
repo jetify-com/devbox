@@ -24,6 +24,9 @@ func (g *GoPlanner) Plan(srcDir string) *BuildPlan {
 		Packages: []string{
 			"go",
 		},
+		InstallCommand: "go get",
+		BuildCommand:   "go build -o out",
+		StartCommand:   "./out",
 	}
 }
 

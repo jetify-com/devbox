@@ -1,1 +1,13 @@
+FROM nixos/nix as builder
+WORKDIR /scratch
+
+COPY . .
+RUN nix-env -if shell.nix
+RUN {{.InstallCommand}}
+RUN {{.BuildCommand}}
+
 FROM gcr.io/distroless/base:debug
+WORKDIR app
+# TODO: Improve to only copy needed files and not the entire src directory.
+COPY --from=builder /scratch .
+CMD {{.StartCommand}}
