@@ -1,6 +1,10 @@
 package planner
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/imdario/mergo"
+)
 
 // TODO: decide if BuildPlan should continue to be a separate structure
 // or whether it should be the same structure as devbox.Config.
@@ -24,8 +28,10 @@ func MergePlans(plans ...*BuildPlan) *BuildPlan {
 		Packages: []string{},
 	}
 	for _, p := range plans {
-		// TODO: de-duplicate
-		plan.Packages = append(plan.Packages, p.Packages...)
+		err := mergo.Merge(plan, p)
+		if err != nil {
+			panic(err) // TODO: propagate error.
+		}
 	}
 	return plan
 }

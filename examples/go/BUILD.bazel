@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_lib",
+    srcs = ["main.go"],
+    importpath = "go.jetpack.io/axiom/opensource/devbox/examples/go",
+    visibility = ["//visibility:private"],
+    deps = ["@com_github_gin_gonic_gin//:gin"],
+)
+
+go_binary(
+    name = "go",
+    embed = [":go_lib"],
+    visibility = ["//visibility:public"],
+)

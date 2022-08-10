@@ -11,4 +11,5 @@ go_library(
     ],
     importpath = "go.jetpack.io/axiom/opensource/devbox/planner",
     visibility = ["//visibility:public"],
+    deps = ["@com_github_imdario_mergo//:mergo"],
 )

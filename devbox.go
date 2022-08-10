@@ -48,7 +48,9 @@ func (d *Devbox) Build() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return docker.Build(d.srcDir)
+	return docker.Build(d.srcDir, docker.BuildOpts{
+		Name: "devbox", // TODO: make it configurable.
+	})
 }
 
 func (d *Devbox) Plan() *planner.BuildPlan {

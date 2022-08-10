@@ -25,7 +25,7 @@ func (g *GoPlanner) Plan(srcDir string) *BuildPlan {
 			"go",
 		},
 		InstallCommand: "go get",
-		BuildCommand:   "go build -o out",
+		BuildCommand:   "CGO_ENABLED=0 go build -o out",
 		StartCommand:   "./out",
 	}
 }

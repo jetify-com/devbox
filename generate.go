@@ -24,6 +24,11 @@ func generate(path string, plan *planner.BuildPlan) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	err = writeFromTemplate(path, plan, "default.nix")
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
