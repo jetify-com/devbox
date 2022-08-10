@@ -2,6 +2,7 @@ package devbox
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -34,7 +35,7 @@ func generate(path string, plan *planner.BuildPlan) error {
 
 func writeFromTemplate(path string, plan *planner.BuildPlan, tmplName string) error {
 	tmplPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
-	t := template.Must(template.New(tmplName+".tmpl").ParseFS(tmplFS, tmplPath))
+	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, tmplPath))
 
 	f, err := os.Create(filepath.Join(path, tmplName))
 	defer func() {
@@ -45,4 +46,13 @@ func writeFromTemplate(path string, plan *planner.BuildPlan, tmplName string) er
 	}
 
 	return t.Execute(f, plan)
+}
+
+func toJson(a any) string {
+	data, _ := json.Marshal(a)
+	return string(data)
+}
+
+var templateFuncs = template.FuncMap{
+	"json": toJson,
 }

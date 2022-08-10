@@ -1,18 +1,49 @@
 # syntax=docker/dockerfile:1
+
 FROM nixos/nix as builder
+
+# 1. SETUP PHASE
+#    Setup the container, and install nix packages.
+# -------------------------------------------------
+
+# Setup shell so that we catch any errors early
+SHELL [ "/bin/sh", "-eux", "-o", "pipefail", "-c"]
 WORKDIR /scratch
 
 # Setup nix in its own layer so it can be cached.
 COPY ./default.nix .
-RUN nix-env -if default.nix
+# Setup /nix/store as a cache directory.
+# Declaring it as a cache directory makes it empty directory, so we need to
+# specify, using from= and source=, that we want to re-copy the contents of
+# the directory from nixos/nix.
+RUN --mount=type=cache,target=/nix/store,from=nixos/nix,source=/nix/store \
+  nix-env -if default.nix
+
+# 2. INSTALL PHASE
+#    Install libraries needed by the source code.
+# -----------------------------------------------
 
 COPY . .
-RUN {{.InstallCommand}}
-RUN {{.BuildCommand}}
+RUN --mount=type=cache,target=/nix/store {{.InstallCommand}}
 
+# 3. BUILD PHASE
+#    Compile the source code into an executable.
+# ----------------------------------------------
+RUN --mount=type=cache,target=/nix/store {{.BuildCommand}}
+
+# 4. PACKAGING PHASE
+#    Create a minimal image that contains the executable.
+# -------------------------------------------------------
+
+# Default to :debug so we have a shell.
 FROM gcr.io/distroless/base:debug
+# Setup shell so that we catch any errors early
+SHELL [ "/busybox/sh", "-eux", "-o", "pipefail", "-c"]
 
 # TODO: Improve to only copy needed files and not the entire src directory.
 COPY --from=builder /scratch /app
 WORKDIR app
-ENTRYPOINT ["{{.StartCommand}}"] # TODO: support start command with additional args
+
+# We default to ENTRYPOINT instead of CMD as we consider it best practice
+# when the container is wrapping an application or service.
+ENTRYPOINT {{.StartCommand}}

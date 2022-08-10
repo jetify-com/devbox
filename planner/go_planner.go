@@ -26,7 +26,7 @@ func (g *GoPlanner) Plan(srcDir string) *BuildPlan {
 		},
 		InstallCommand: "go get",
 		BuildCommand:   "CGO_ENABLED=0 go build -o out",
-		StartCommand:   "./out",
+		StartCommand:   "GIN_MODE=release ./out", // TODO: Move gin specific stuff elsewhere.
 	}
 }
 
