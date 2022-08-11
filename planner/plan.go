@@ -28,7 +28,7 @@ func MergePlans(plans ...*BuildPlan) *BuildPlan {
 		Packages: []string{},
 	}
 	for _, p := range plans {
-		err := mergo.Merge(plan, p)
+		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
 		if err != nil {
 			panic(err) // TODO: propagate error.
 		}
