@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "planner",
@@ -12,4 +12,11 @@ go_library(
     importpath = "go.jetpack.io/axiom/opensource/devbox/planner",
     visibility = ["//visibility:public"],
     deps = ["@com_github_imdario_mergo//:mergo"],
+)
+
+go_test(
+    name = "planner_test",
+    srcs = ["plan_test.go"],
+    embed = [":planner"],
+    deps = ["@com_github_stretchr_testify//assert"],
 )
