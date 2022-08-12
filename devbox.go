@@ -38,7 +38,13 @@ func Open(dir string) (*Devbox, error) {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
-	// TODO: validate packages and detect duplicates.
+	for _, pkg := range pkgs {
+		ok := nix.PkgExists(pkg)
+		if !ok {
+			return errors.Errorf("Package %s not found.", pkg)
+		}
+	}
+	// TODO: detect duplicates
 	d.cfg.Packages = append(d.cfg.Packages, pkgs...)
 	return d.saveCfg()
 }
