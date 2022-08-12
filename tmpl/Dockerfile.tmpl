@@ -11,7 +11,7 @@ SHELL [ "/bin/sh", "-eux", "-o", "pipefail", "-c"]
 WORKDIR /scratch
 
 # Setup nix in its own layer so it can be cached.
-COPY ./default.nix .
+COPY --link ./default.nix ./
 # Setup /nix/store as a cache directory.
 # Declaring it as a cache directory makes it empty directory, so we need to
 # specify, using from= and source=, that we want to re-copy the contents of
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/nix/store,from=nixos/nix,source=/nix/store \
 #    Install libraries needed by the source code.
 # -----------------------------------------------
 
-COPY . .
+COPY --link . ./
 RUN --mount=type=cache,target=/nix/store {{.InstallCommand}}
 
 # 3. BUILD PHASE
@@ -38,11 +38,11 @@ RUN --mount=type=cache,target=/nix/store {{.BuildCommand}}
 # Default to :debug so we have a shell.
 FROM gcr.io/distroless/base:debug
 # Setup shell so that we catch any errors early
-SHELL [ "/busybox/sh", "-eux", "-o", "pipefail", "-c"]
+SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
 
 # TODO: Improve to only copy needed files and not the entire src directory.
-COPY --from=builder /scratch /app
-WORKDIR app
+COPY --link --from=builder /scratch/. /app/
+WORKDIR /app
 
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
