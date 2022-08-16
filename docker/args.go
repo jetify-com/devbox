@@ -5,17 +5,27 @@ import (
 	"strings"
 )
 
-func ToArgs(args []string, opts BuildOpts) []string {
-	if opts.Name != "" {
-		args = append(args, "-t", opts.Name)
+func ToArgs(args []string, flags *BuildFlags) []string {
+	if flags == nil {
+		return args
+	}
+	if args == nil {
+		args = []string{}
+	}
+	if flags.Name != "" {
+		args = append(args, "-t", flags.Name)
 
-		for _, tag := range opts.Tags {
-			args = append(args, "-t", fmt.Sprintf("%s:%s", opts.Name, tag))
+		for _, tag := range flags.Tags {
+			args = append(args, "-t", fmt.Sprintf("%s:%s", flags.Name, tag))
 		}
 	}
 
-	if len(opts.Platforms) > 0 {
-		args = append(args, fmt.Sprintf("--platform=%s", strings.Join(opts.Platforms, ",")))
+	if len(flags.Platforms) > 0 {
+		args = append(args, fmt.Sprintf("--platform=%s", strings.Join(flags.Platforms, ",")))
+	}
+
+	if flags.NoCache {
+		args = append(args, "--no-cache")
 	}
 
 	return args

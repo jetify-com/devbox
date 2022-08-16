@@ -24,12 +24,12 @@ RUN --mount=type=cache,target=/nix/store,from=nixos/nix,source=/nix/store \
 # -----------------------------------------------
 
 COPY --link . ./
-RUN --mount=type=cache,target=/nix/store {{.InstallCommand}}
+RUN --mount=type=cache,target=/nix/store,from=nixos/nix,source=/nix/store {{.InstallCommand}}
 
 # 3. BUILD PHASE
 #    Compile the source code into an executable.
 # ----------------------------------------------
-RUN --mount=type=cache,target=/nix/store {{.BuildCommand}}
+RUN --mount=type=cache,target=/nix/store,from=nixos/nix,source=/nix/store {{.BuildCommand}}
 
 # 4. PACKAGING PHASE
 #    Create a minimal image that contains the executable.

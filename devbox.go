@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
 	"go.jetpack.io/axiom/opensource/devbox/docker"
 	"go.jetpack.io/axiom/opensource/devbox/nix"
@@ -38,25 +39,40 @@ func Open(dir string) (*Devbox, error) {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
+	// Check packages exist before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(pkg)
 		if !ok {
 			return errors.Errorf("Package %s not found.", pkg)
 		}
 	}
-	// TODO: detect duplicates
-	d.cfg.Packages = append(d.cfg.Packages, pkgs...)
+	// Merge and remove duplicates:
+	merged := append(d.cfg.Packages, pkgs...)
+	d.cfg.Packages = lo.FindUniques(merged)
+
+	// Save config.
 	return d.saveCfg()
 }
 
-func (d *Devbox) Build() error {
+func (d *Devbox) Remove(pkgs ...string) error {
+	// Remove packages from config.
+	d.cfg.Packages = lo.Without(d.cfg.Packages, pkgs...)
+
+	// Save config.
+	return d.saveCfg()
+}
+
+func (d *Devbox) Build(opts ...docker.BuildOptions) error {
+	defaultFlags := &docker.BuildFlags{
+		Name: "devbox",
+	}
+	opts = append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, opts...)
+
 	err := d.Generate()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return docker.Build(d.srcDir, docker.BuildOpts{
-		Name: "devbox", // TODO: make it configurable.
-	})
+	return docker.Build(d.srcDir, opts...)
 }
 
 func (d *Devbox) Plan() *planner.BuildPlan {

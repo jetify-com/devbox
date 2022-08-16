@@ -4,6 +4,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/imdario/mergo"
 )
 
 // This package provides an API to build images using docker.
@@ -16,17 +18,38 @@ import (
 // + In the past we've had some trouble with docker go libraries, and dependency
 //   management.
 
-type BuildOpts struct {
+type BuildFlags struct {
 	Name      string
 	Tags      []string
 	Platforms []string
+	NoCache   bool
 }
 
-func Build(path string, opts ...BuildOpts) error {
-	args := []string{"build", "."}
-	if len(opts) > 0 {
-		args = ToArgs(args, opts[0])
+type BuildOptions func(*BuildFlags)
+
+func WithFlags(src *BuildFlags) BuildOptions {
+	return func(dst *BuildFlags) {
+		err := mergo.Merge(dst, src, mergo.WithOverride)
+		if err != nil {
+			panic(err)
+		}
 	}
+}
+
+func WithoutCache() BuildOptions {
+	return func(flags *BuildFlags) {
+		flags.NoCache = true
+	}
+}
+
+func Build(path string, opts ...BuildOptions) error {
+	flags := &BuildFlags{}
+	for _, opt := range opts {
+		opt(flags)
+	}
+
+	args := []string{"buildx", "build", "."}
+	args = ToArgs(args, flags)
 
 	dir, fileName := parsePath(path)
 	if fileName != "" {

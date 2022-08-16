@@ -9,6 +9,7 @@ go_library(
         "generate.go",
         "init.go",
         "plan.go",
+        "rm.go",
         "root.go",
         "shell.go",
     ],
@@ -16,6 +17,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox",
+        "//opensource/devbox/docker",
         "@com_github_pkg_errors//:errors",
         "@com_github_spf13_cobra//:cobra",
     ],

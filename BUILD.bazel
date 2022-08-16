@@ -20,5 +20,6 @@ go_library(
         "//opensource/devbox/nix",
         "//opensource/devbox/planner",
         "@com_github_pkg_errors//:errors",
+        "@com_github_samber_lo//:lo",
     ],
 )

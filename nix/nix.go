@@ -35,9 +35,9 @@ func PkgExists(pkg string) bool {
 
 type Info struct {
 	NixName string
-	Name string
+	Name    string
 	Version string
-	System string
+	System  string
 }
 
 func PkgInfo(pkg string) (*Info, bool) {
@@ -70,9 +70,9 @@ func parseInfo(pkg string, data []byte) *Info {
 	for _, result := range results {
 		pkgInfo := &Info{
 			NixName: pkg,
-			Name: result["pname"].(string),
+			Name:    result["pname"].(string),
 			Version: result["version"].(string),
-			System: result["system"].(string),
+			System:  result["system"].(string),
 		}
 		return pkgInfo
 	}
