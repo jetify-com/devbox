@@ -1,7 +1,10 @@
 let
-  pkgs = import (fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/22.05.tar.gz";
-    sha256 = "0d643wp3l77hv2pmg2fi7vyxn4rwy0iyr8djcw1h5x72315ck9ik";
+  pkgs = import (fetchGit {
+    url = "https://github.com/nixos/nixpkgs/";
+    ref = "refs/heads/nixos-unstable";
+    # Commit hash as of 2022-08-16
+    # `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
+    rev = "af9e00071d0971eb292fd5abef334e66eda3cb69";
   }) {};
 in with pkgs;
 mkShell {
