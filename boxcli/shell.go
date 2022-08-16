@@ -24,5 +24,6 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
+	// TODO: If we're inside a devbox shell already, don't re-run.
 	return box.Shell()
 }

@@ -11,6 +11,11 @@ import (
 
 func Shell(path string) error {
 	cmd := exec.Command("nix-shell")
+	// Default to the shell already being used.
+	shell := os.Getenv("SHELL")
+	if shell != "" {
+		cmd.Args = append(cmd.Args, "--command", shell)
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

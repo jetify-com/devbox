@@ -5,6 +5,7 @@ let
   }) {};
 in with pkgs;
 mkShell {
+  shellHook = "export name=devbox IN_NIX_SHELL=0; DEVBOX_SHELL_ENABLED=1;";
   packages = [
   {{- range .Packages}}
     {{.}}
