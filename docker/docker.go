@@ -19,10 +19,11 @@ import (
 //   management.
 
 type BuildFlags struct {
-	Name      string
-	Tags      []string
-	Platforms []string
-	NoCache   bool
+	Name           string
+	Tags           []string
+	Platforms      []string
+	NoCache        bool
+	DockerfilePath string
 }
 
 type BuildOptions func(*BuildFlags)

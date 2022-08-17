@@ -11,9 +11,10 @@ func BuildCmd() *cobra.Command {
 	flags := &docker.BuildFlags{}
 
 	command := &cobra.Command{
-		Use:  "build [<dir>]",
-		Args: cobra.MaximumNArgs(1),
-		RunE: buildCmdFunc(flags),
+		Use:    "build [<dir>]",
+		Args:   cobra.MaximumNArgs(1),
+		Hidden: true, // Hide until ready for release.
+		RunE:   buildCmdFunc(flags),
 	}
 
 	command.Flags().BoolVar(

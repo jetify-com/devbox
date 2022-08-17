@@ -8,8 +8,6 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox"
 )
 
-// TODO: this command is useful for debugging.
-// Decide whether we want to keep it for real – or it should be removed.
 func PlanCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:  "plan [<dir>]",

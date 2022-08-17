@@ -6,13 +6,12 @@ import (
 	"go.jetpack.io/axiom/opensource/devbox"
 )
 
-// TODO: this command is useful for debugging.
-// Decide whether we want to keep it for real – or it should be removed.
 func GenerateCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "generate [<dir>]",
-		Args: cobra.MaximumNArgs(1),
-		RunE: runGenerateCmd,
+		Use:    "generate [<dir>]",
+		Args:   cobra.MaximumNArgs(1),
+		Hidden: true, // For debugging only
+		RunE:   runGenerateCmd,
 	}
 	return command
 }

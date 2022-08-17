@@ -19,7 +19,9 @@ func ToArgs(args []string, flags *BuildFlags) []string {
 			args = append(args, "-t", fmt.Sprintf("%s:%s", flags.Name, tag))
 		}
 	}
-
+	if flags.DockerfilePath != "" {
+		args = append(args, "-f", flags.DockerfilePath)
+	}
 	if len(flags.Platforms) > 0 {
 		args = append(args, fmt.Sprintf("--platform=%s", strings.Join(flags.Platforms, ",")))
 	}

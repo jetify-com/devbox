@@ -64,7 +64,8 @@ func (d *Devbox) Remove(pkgs ...string) error {
 
 func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 	defaultFlags := &docker.BuildFlags{
-		Name: "devbox",
+		Name:           "devbox",
+		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
 	}
 	opts = append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, opts...)
 
@@ -82,7 +83,6 @@ func (d *Devbox) Plan() *planner.BuildPlan {
 	return planner.MergePlans(basePlan, planner.Plan(d.srcDir))
 }
 
-// TODO: generate necessary files without modifying src directory.
 func (d *Devbox) Generate() error {
 	plan := d.Plan()
 	return generate(d.srcDir, plan)
@@ -93,7 +93,8 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return nix.Shell(d.srcDir)
+	nixDir := filepath.Join(d.srcDir, ".devbox/gen")
+	return nix.Shell(nixDir)
 }
 
 func (d *Devbox) saveCfg() error {
