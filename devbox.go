@@ -8,10 +8,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
-	"go.jetpack.io/axiom/opensource/devbox/docker"
-	"go.jetpack.io/axiom/opensource/devbox/nix"
-	"go.jetpack.io/axiom/opensource/devbox/planner"
+	"go.jetpack.io/devbox/cuecfg"
+	"go.jetpack.io/devbox/docker"
+	"go.jetpack.io/devbox/nix"
+	"go.jetpack.io/devbox/planner"
 )
 
 type Devbox struct {

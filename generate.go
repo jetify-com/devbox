@@ -12,7 +12,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/axiom/opensource/devbox/planner"
+	"go.jetpack.io/devbox/planner"
 )
 
 //go:embed tmpl/* tmpl/.*

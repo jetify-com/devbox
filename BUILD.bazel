@@ -1,4 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
+# gazelle:prefix go.jetpack.io/devbox
 
 go_library(
     name = "devbox",
@@ -13,7 +14,7 @@ go_library(
         "tmpl/Dockerfile.tmpl",
         "tmpl/.gitignore.tmpl",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox",
+    importpath = "go.jetpack.io/devbox",
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox/cuecfg",

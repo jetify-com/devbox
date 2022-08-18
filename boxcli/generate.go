@@ -6,7 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/axiom/opensource/devbox"
+	"go.jetpack.io/devbox"
 )
 
 func GenerateCmd() *cobra.Command {

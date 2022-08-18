@@ -5,7 +5,7 @@ package devbox
 
 import (
 	"github.com/pkg/errors"
-	"go.jetpack.io/axiom/opensource/devbox/cuecfg"
+	"go.jetpack.io/devbox/cuecfg"
 )
 
 type Config struct {

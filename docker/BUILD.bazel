@@ -6,7 +6,7 @@ go_library(
         "args.go",
         "docker.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox/docker",
+    importpath = "go.jetpack.io/devbox/docker",
     visibility = ["//visibility:public"],
     deps = ["@com_github_imdario_mergo//:mergo"],
 )

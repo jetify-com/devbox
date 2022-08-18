@@ -8,11 +8,11 @@ go_library(
         "json.go",
         "yaml.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox/cuecfg",
+    importpath = "go.jetpack.io/devbox/cuecfg",
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_pkg_errors//:errors",
         "@in_gopkg_yaml_v3//:yaml_v3",
-        "@org_cuelang_go//cuego",
+        "@org_cuelang_go//cuego:go_default_library",
     ],
 )

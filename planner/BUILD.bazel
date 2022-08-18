@@ -9,7 +9,7 @@ go_library(
         "planner.go",
         "python_planner.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox/planner",
+    importpath = "go.jetpack.io/devbox/planner",
     visibility = ["//visibility:public"],
     deps = ["@com_github_imdario_mergo//:mergo"],
 )

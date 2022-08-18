@@ -3,7 +3,7 @@
 
 package main
 
-import "go.jetpack.io/axiom/opensource/devbox/boxcli"
+import "go.jetpack.io/devbox/boxcli"
 
 func main() {
 	boxcli.Main()

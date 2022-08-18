@@ -6,6 +6,6 @@ go_library(
         "doc.go",
         "nix.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox/nix",
+    importpath = "go.jetpack.io/devbox/nix",
     visibility = ["//visibility:public"],
 )

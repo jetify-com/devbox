@@ -13,7 +13,7 @@ go_library(
         "root.go",
         "shell.go",
     ],
-    importpath = "go.jetpack.io/axiom/opensource/devbox/boxcli",
+    importpath = "go.jetpack.io/devbox/boxcli",
     visibility = ["//visibility:public"],
     deps = [
         "//opensource/devbox",

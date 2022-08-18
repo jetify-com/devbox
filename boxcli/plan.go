@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/axiom/opensource/devbox"
+	"go.jetpack.io/devbox"
 )
 
 func PlanCmd() *cobra.Command {
