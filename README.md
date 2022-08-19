@@ -15,7 +15,7 @@ devbox init
 
 Add [Nix Packages](https://search.nixos.org/packages) to your project
 ```bash
-devbox add hello go-rice
+devbox add goreleaser
 ```
 
 Start a local development shell with your project and packages
