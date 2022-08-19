@@ -1,0 +1,51 @@
+name: release
+
+on:
+  workflow_dispatch:
+    releaseType:
+      description: "Release Type"
+      required: true
+      default: "snapshot"
+      type: choice
+      options:
+        - snapshot
+  # Nightly releases
+  schedule:
+    - cron: "45 8 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed by goreleaser to browse history.
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+      - name: Build with goreleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --skip-publish --snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Determine release tag
+        run: |
+          TAG=$(ls dist/*_checksums.txt | cut -d '_' -f 2 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-dev')
+          echo "release_tag=$TAG" >> $GITHUB_ENV
+      - name: Publish release to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          fail_on_unmatched_files: true
+          tag_name: ${{ env.release_tag }}
+          files: |
+            dist/*_checksums.txt
+            dist/*.tar.gz

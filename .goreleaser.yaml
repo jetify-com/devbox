@@ -1,0 +1,31 @@
+project_name: devbox
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/devbox.go
+    binary: devbox
+    mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}}
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - linux
+      - darwin
+archives:
+  - files:
+      - no-files-will-match-* # Glob that does not match to create archive with only binaries.
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{if .Arm}}{{.Arm}}{{end}}"
+snapshot:
+  name_template: '{{ incpatch .Version }}-dev{{ time "20060102" }}'
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+release:
+  prerelease: auto
+  draft: true
+  github:
+    owner: jetpack-io
+    name: devbox
