@@ -1,6 +1,7 @@
 name: release
 
 on:
+  # Release on demand
   workflow_dispatch:
     releaseType:
       description: "Release Type"
@@ -28,6 +29,8 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.19
+      - name: Run tests
+        run: go test -v ./...
       - name: Build with goreleaser
         uses: goreleaser/goreleaser-action@v3
         with:

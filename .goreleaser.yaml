@@ -3,7 +3,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: ./cmd/devbox.go
+  - main: ./cmd/devbox/main.go
     binary: devbox
     mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
     ldflags:
@@ -21,7 +21,7 @@ archives:
 snapshot:
   name_template: '{{ incpatch .Version }}-dev{{ time "20060102" }}'
 checksum:
-  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  name_template: "checksums.txt"
   algorithm: sha256
 release:
   prerelease: auto
