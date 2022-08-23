@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       is_snapshot_release:
-        description: "Publish Release"
+        description: "Publish Release:"
         required: false
         default: false
         type: boolean
