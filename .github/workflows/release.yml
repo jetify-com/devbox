@@ -3,11 +3,12 @@ name: release
 on:
   # Build/Release on demand
   workflow_dispatch:
-    is_snapshot_release:
-      description: "Release Snapshot?"
-      required: true
-      default: false
-      type: boolean
+    inputs:
+      is_snapshot_release:
+        description: "Release Snapshot?"
+        required: false
+        default: false
+        type: boolean
   # Nightly releases
   schedule:
     - cron: "45 8 * * 1-5"
