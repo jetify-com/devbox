@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       is_snapshot_release:
-        description: "Release Snapshot?"
+        description: "Publish Release"
         required: false
         default: false
         type: boolean
@@ -20,13 +20,11 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
         uses: actions/setup-go@v3
         with:
@@ -41,6 +39,15 @@ jobs:
     needs: build
     if: ${{ inputs.is_snapshot_release || github.event.schedule }}
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed by goreleaser to browse history.
+      - name: Set up go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+          cache: true
       - name: Build snapshot with goreleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -68,6 +75,15 @@ jobs:
     # Only release when there's a tag for the release.
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed by goreleaser to browse history.
+      - name: Set up go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+          cache: false
       - name: Release with goreleaser
         uses: goreleaser/goreleaser-action@v3
         with:
