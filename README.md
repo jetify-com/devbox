@@ -8,13 +8,17 @@
 
 ## What is it?
 
-Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required for your development environment, and devbox uses that definition to create an isolated environment just for your application.
+Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
-In practice, Devbox works simlar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
+In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
 
 Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`.
 
-![screen cast](https://user-images.githubusercontent.com/279789/186473702-b65cf932-766c-4875-85d7-d77ebe68fe20.svg)
+## Demo
+The example below creates a development environment with `python 2.7` and `go 1.19`, even though those packages are not installed in the underlying machine:
+
+![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
+
 
 ## Benefits
 
@@ -123,6 +127,12 @@ Devbox makes it easy to package your application into an OCI-compliant container
    ```bash
    docker tag devbox my-image:v0.1
    ```
+### Auto-detected languages:
+Devbox currently detects the following languages:
+
+- Go
+
+Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
 
 ## Additional commands
 
