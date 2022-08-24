@@ -24,7 +24,11 @@ Devbox works on:
 
 2. Install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/).
 
-3. Install [Devbox binaries](https://github.com/jetpack-io/devbox/releases) and ensure `devbox` is in the `PATH`. For Windows, install the Linux binaries into WSL.
+3. Install Devbox:
+
+   ```sh
+   curl -fsSL https://get.jetpack.io/devbox | bash
+   ```
 
 
 ## Quickstart: Fast, Deterministic Shell
