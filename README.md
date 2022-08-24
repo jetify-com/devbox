@@ -140,6 +140,10 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 
 `devbox plan` - see the configuration and steps Devbox will use to generate a container
 
+## Join our Developer Community
+
+Ask questions, suggest ideas, and get help by [joining the `#devbox` channel](https://discord.gg/agbskCJXk2) in the Jetpack.io Discord Server.
+
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
