@@ -1,24 +1,50 @@
-# Devbox: instant, easy and predictable development environments.
+# Devbox 📦
 
-[![release](https://github.com/jetpack-io/devbox/actions/workflows/release.yml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/release.yml)
-![Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox)
+### Instant, easy, and predictable shells and containers
 
-With Devbox, you can easily create deterministic shells with preinstalled utilities without polluting your machine with contradictory versions.
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&include_prereleases&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases)
 
-Want to try out a tool but don’t want the mess? Add it to a Devbox shell.
+---
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/WMBaXQZmDoA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+## What is it?
 
-## Compatibility
+Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required for your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
-Devbox works on:
+In practice, Devbox works simlar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
 
-- Linux
-- macOS
-- Windows via WSL2
+Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`.
 
+![screen cast](https://user-images.githubusercontent.com/279789/186473702-b65cf932-766c-4875-85d7-d77ebe68fe20.svg)
 
-## Setup
+## Benefits
+
+### A consistent shell for everyone on the team
+
+Declare the list of tools needed by your project via a `devbox.json` file and run `devbox shell`. Everyone working on the project gets a shell environment with the exact same version of those tools.
+
+### Try new tools without polluting your laptop
+
+Development environments created by Devbox are isolated from everything else in your laptop. Is there a tool you want to try without making a mess? Add it to a Devbox shell, and remove it when you don't want it anymore – all while keeping your laptop pristine.
+
+### Don't sacrifice speed
+
+Devbox can create isolated environments right on your laptop, without an extra-layer of virtualization slowing your file system or every command. When you're ready to ship, it'll turn it into an equivalent container – but not before.
+
+### Good-bye conflicting versions
+
+Are you working on multiple projects, all of which need different versions of the same binary? Instead of attempting to install conflicting versions of the same binary on your laptop, create an isolated environment for each project, and use whatever version you want for each.
+
+### Instantly turn your application into a container
+
+Devbox analyzes your source code and instantly turns it into an OCI-compliant image that can be deployed to any cloud. The image is optimized for speed, size, security and caching ... and without needing to write a `Dockerfile`. And unlike [buildpacks](https://buildpacks.io/), it does it quickly.
+
+### Stop declaring dependencies twice
+
+Your application often needs the same set of dependencies when you are developing on your laptop, and when you're packaging it as a container ready to deploy to the cloud. Devbox's dev environments are _isomorphic_: meaning that we can turn them into both a local shell environment or a cloud-ready container, all without having to repeat yourself twice.
+
+## Installing Devbox
+
+In addition to installing Devbox itself, you will need to install `nix` and `docker` since Devbox depends on them:
 
 1. Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
 
@@ -29,7 +55,6 @@ Devbox works on:
    ```sh
    curl -fsSL https://get.jetpack.io/devbox | bash
    ```
-
 
 ## Quickstart: Fast, Deterministic Shell
 
@@ -79,12 +104,11 @@ In this quickstart we’ll create a development shell with specific tools instal
    exit
    ```
 
+## Quickstart: Instant Docker Image
 
-## Quickstart: Automatic Docker Image
+Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
 
-With a Devbox environment, it’s simple to build the codebase into an OCI-compliant container image. Devbox will automatically detect your toolchain and pull in the correct Dockerfile.
-
-1. Open a terminal in a Devbox folder (see above).
+1. Initialize your project with `devbox init` if you haven't already.
 
 2. Build the image:
 
@@ -96,29 +120,20 @@ With a Devbox environment, it’s simple to build the codebase into an OCI-compl
 
 3. Tag the image with a more descriptive name:
 
-   ```
+   ```bash
    docker tag devbox my-image:v0.1
    ```
 
-### Auto-detected languages:
-
-- Go
-
-Want more languages? [Ask for a new Language](https://jetpack-io.canny.io/devbox) or [Contribute one via Pull Request](https://github.com/jetpack-io/devbox/tree/main/tmpl)
-
-
 ## Additional commands
 
-`devbox –help` - see all commands
+`devbox help` - see all commands
 
 `devbox plan` - see the configuration and steps Devbox will use to generate a container
 
-
 ## Related Work
 
-Thanks to [Nix](https://nixos.org/) for providing isolated shells. Devbox is not affiliated with the NixOS project.
-
+Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## License
 
-This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE) Copyright Jetpack Technologies, Inc.
+This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE)

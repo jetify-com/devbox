@@ -8,7 +8,13 @@ let
   }) {};
 in with pkgs;
 mkShell {
-  shellHook = "export name=devbox IN_NIX_SHELL=0; DEVBOX_SHELL_ENABLED=1;";
+  shellHook =
+    ''
+      echo "Starting a devbox shell..."
+      export name="devbox"
+      export IN_NIX_SHELL=0
+      export DEVBOX_SHELL_ENABLED=1
+    '';
   packages = [
   {{- range .Packages}}
     {{.}}

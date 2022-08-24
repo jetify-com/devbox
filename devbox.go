@@ -96,7 +96,7 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	nixDir := filepath.Join(d.srcDir, ".devbox/gen")
+	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	return nix.Shell(nixDir)
 }
 

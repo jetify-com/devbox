@@ -13,7 +13,7 @@ import (
 )
 
 func Shell(path string) error {
-	cmd := exec.Command("nix-shell")
+	cmd := exec.Command("nix-shell", path)
 	// Default to the shell already being used.
 	shell := os.Getenv("SHELL")
 	if shell != "" {
@@ -22,7 +22,6 @@ func Shell(path string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = path
 	return cmd.Run()
 }
 
