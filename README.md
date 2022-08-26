@@ -2,7 +2,7 @@
 
 ### Instant, easy, and predictable shells and containers
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&include_prereleases&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases)
 
 ---
 
@@ -72,15 +72,24 @@ In this quickstart we’ll create a development shell with specific tools instal
    devbox init
    ```
 
-   This creates `devbox.json`. You should commit this file.
+   This creates a `devbox.json` file in the current directory. You should commit it to source control.
 
 3. Add command-line tools from [Nix Packages](https://search.nixos.org/packages). For example, to add Python 3.10:
 
    ```bash
    devbox add python310
    ```
+4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
-4. Start a new shell that has these tools installed:
+   ```json
+   {
+      "packages": [
+         "python310"
+       ]
+   }
+   ```
+
+5. Start a new shell that has these tools installed:
 
    ```bash
    devbox shell
@@ -88,7 +97,7 @@ In this quickstart we’ll create a development shell with specific tools instal
 
    You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
 
-5. Use your favorite tools.
+6. Use your favorite tools.
 
    In this example we installed Python 3.10, so let’s use it.
 
@@ -96,13 +105,13 @@ In this quickstart we’ll create a development shell with specific tools instal
    python --version
    ```
 
-6. Your regular tools are also available including environment variables and config settings.
+7. Your regular tools are also available including environment variables and config settings.
 
    ```bash
    git config --get user.name
    ```
 
-7. To exit the Devbox shell and return to your regular shell:
+8. To exit the Devbox shell and return to your regular shell:
 
    ```bash
    exit
@@ -142,7 +151,8 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 
 ## Join our Developer Community
 
-Ask questions, suggest ideas, and get help by [joining the `#devbox` channel](https://discord.gg/agbskCJXk2) in the Jetpack.io Discord Server.
++ Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project. 
++ File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
 
 ## Related Work
 
