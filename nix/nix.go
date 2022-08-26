@@ -6,6 +6,7 @@ package nix
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,6 +14,10 @@ import (
 )
 
 func Shell(path string) error {
+	_, err := exec.LookPath("nix-shell")
+	if err != nil {
+		return errors.New("Could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly.")
+	}
 	cmd := exec.Command("nix-shell", path)
 	// Default to the shell already being used.
 	shell := os.Getenv("SHELL")
