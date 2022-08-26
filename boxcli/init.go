@@ -21,7 +21,7 @@ func InitCmd() *cobra.Command {
 func runInitCmd(cmd *cobra.Command, args []string) error {
 	path := pathArg(args)
 
-	_, err := devbox.Init(path)
+	_, err := devbox.InitConfig(path)
 	if err != nil {
 		return errors.WithStack(err)
 	}

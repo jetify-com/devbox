@@ -8,10 +8,14 @@ import (
 	"go.jetpack.io/devbox/cuecfg"
 )
 
+// Config defines a devbox environment as JSON.
 type Config struct {
+	// Packages is the slice of Nix packages that devbox makes available in
+	// its environment.
 	Packages []string `cue:"[...string]" json:"packages,omitempty"`
 }
 
+// ReadConfig reads a devbox config file.
 func ReadConfig(path string) (*Config, error) {
 	cfg := &Config{}
 	err := cuecfg.ReadFile(path, cfg)
@@ -21,6 +25,7 @@ func ReadConfig(path string) (*Config, error) {
 	return cfg, nil
 }
 
+// WriteConfig saves a devbox config file.
 func WriteConfig(path string, cfg *Config) error {
 	return cuecfg.WriteFile(path, cfg)
 }
