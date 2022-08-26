@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -29,7 +30,12 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
+	inDevboxShell := os.Getenv("DEVBOX_SHELL_ENABLED")
+	if inDevboxShell != "" && inDevboxShell != "0" && inDevboxShell != "false" {
+		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
+	}
+
 	fmt.Println("Installing nix packages. This may take a while...")
-	// TODO: If we're inside a devbox shell already, don't re-run.
+
 	return box.Shell()
 }
