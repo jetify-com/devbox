@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -27,6 +29,7 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
+	fmt.Println("Installing nix packages. This may take a while...")
 	// TODO: If we're inside a devbox shell already, don't re-run.
 	return box.Shell()
 }
