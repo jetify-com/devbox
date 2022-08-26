@@ -15,7 +15,7 @@ In practice, Devbox works similar to a package manager like `yarn` – except th
 Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`.
 
 ## Demo
-The example below creates a development environment with `python 2.7` and `go 1.19`, even though those packages are not installed in the underlying machine:
+The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
 
