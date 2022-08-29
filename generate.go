@@ -36,7 +36,6 @@ func generate(rootPath string, plan *planner.BuildPlan) error {
 
 func writeFromTemplate(path string, plan *planner.BuildPlan, tmplName string) error {
 	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
-	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
 
 	// Should we clear the directory so we start "fresh"?
 	outPath := filepath.Join(path, tmplName)
@@ -54,14 +53,15 @@ func writeFromTemplate(path string, plan *planner.BuildPlan, tmplName string) er
 		return errors.WithStack(err)
 	}
 
+	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
 	return t.Execute(f, plan)
 }
 
-func toJson(a any) string {
+func toJSON(a any) string {
 	data, _ := json.Marshal(a)
 	return string(data)
 }
 
 var templateFuncs = template.FuncMap{
-	"json": toJson,
+	"json": toJSON,
 }

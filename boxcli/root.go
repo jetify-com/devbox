@@ -22,7 +22,7 @@ func RootCmd() *cobra.Command {
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			_, err := exec.LookPath("nix-shell")
 			if err != nil {
-				return errors.New("Could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly.")
+				return errors.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
 			}
 			return nil
 		},
