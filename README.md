@@ -153,6 +153,7 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 
 + Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project. 
 + File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
++ Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
 ## Related Work
 
