@@ -7,7 +7,9 @@ builds:
     binary: devbox
     mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}}
+      - -s -w -X go.jetpack.io/devbox/build.Version={{.Version}}
+      - -s -w -X go.jetpack.io/devbox/build.Commit={{.Commit}}
+      - -s -w -X go.jetpack.io/devbox/build.CommitDate={{.CommitDate}}
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

@@ -26,8 +26,6 @@ func BuildCmd() *cobra.Command {
 	return command
 }
 
-type runFunc func(cmd *cobra.Command, args []string) error
-
 func buildCmdFunc(flags *docker.BuildFlags) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		path := pathArg(args)

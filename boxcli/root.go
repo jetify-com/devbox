@@ -33,10 +33,11 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(AddCmd())
 	command.AddCommand(BuildCmd())
 	command.AddCommand(GenerateCmd())
+	command.AddCommand(InitCmd())
 	command.AddCommand(PlanCmd())
 	command.AddCommand(RemoveCmd())
-	command.AddCommand(InitCmd())
 	command.AddCommand(ShellCmd())
+	command.AddCommand(VersionCmd())
 	return command
 }
 
@@ -51,3 +52,5 @@ func Main() {
 		os.Exit(1)
 	}
 }
+
+type runFunc func(cmd *cobra.Command, args []string) error
