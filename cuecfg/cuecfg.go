@@ -21,7 +21,7 @@ func Marshal(v any, extension string) ([]byte, error) {
 
 	switch extension {
 	case ".json":
-		return MarshalJson(v)
+		return MarshalJSON(v)
 	case ".yml", ".yaml":
 		return MarshalYaml(v)
 	}
@@ -31,7 +31,7 @@ func Marshal(v any, extension string) ([]byte, error) {
 func Unmarshal(data []byte, extension string, v any) error {
 	switch extension {
 	case ".json":
-		err := UnmarshalJson(data, v)
+		err := UnmarshalJSON(data, v)
 		if err != nil {
 			return errors.WithStack(err)
 		}

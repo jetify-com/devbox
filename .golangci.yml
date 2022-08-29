@@ -1,0 +1,53 @@
+run:
+  go: "1.19"
+linters:
+  disable-all: true
+  enable:
+    - dupl
+    - errorlint
+    - errcheck
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - nilerr
+    - reassign
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam 
+    - unused
+    - usestdlibvars
+    - varnamelen
+    # - wrapcheck If we're going to use github.com/pkg/errors we should probably turn this on?
+
+    # We'd like to have the following linter enabled, but it's broken for Go
+    # 1.19 as of golangci-lint v1.48.0. Re-enable it when this issue is
+    # fixed: https://github.com/golangci/golangci-lint/issues/2649
+    # - structcheck
+issues:
+  exclude:
+
+linters-settings:
+  varnamelen:
+    max-distance: 10
+    ignore-decls:
+      - T any
+      - c echo.Context
+      - const C
+      - e error
+      - e watch.Event
+      - f *foo.Bar
+      - i int
+      - id string
+      - m map[string]any
+      - m map[string]int
+      - ns string
+      - r *http.Request
+      - t testing.T
+      - w http.ResponseWriter
+      - w io.Writer

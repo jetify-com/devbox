@@ -8,10 +8,10 @@ import "encoding/json"
 // TODO: consider using cue's JSON marshaller instead of
 // "encoding/json" ... it might have extra functionality related
 // to the cue language.
-func MarshalJson(v interface{}) ([]byte, error) {
+func MarshalJSON(v interface{}) ([]byte, error) {
 	return json.MarshalIndent(v, "", "  ")
 }
 
-func UnmarshalJson(data []byte, v interface{}) error {
+func UnmarshalJSON(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
