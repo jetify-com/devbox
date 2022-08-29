@@ -5,4 +5,6 @@ var (
 	Version    = "0.0.0-dev"
 	Commit     = "none"
 	CommitDate = "unknown"
+
+	TelemetryKey = "" // Disabled by default
 )
