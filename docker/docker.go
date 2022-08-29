@@ -52,7 +52,7 @@ func Build(path string, opts ...BuildOptions) error {
 		opt(flags)
 	}
 
-	args := []string{"buildx", "build", "."}
+	args := []string{"build", "."}
 	args = ToArgs(args, flags)
 
 	dir, fileName := parsePath(path)
