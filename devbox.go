@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
@@ -61,7 +60,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	// Merge and remove duplicates:
 	merged := append(d.cfg.Packages, pkgs...)
-	d.cfg.Packages = lo.FindUniques(merged)
+	d.cfg.Packages = unique(merged)
 	return d.saveCfg()
 }
 
@@ -69,7 +68,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 // the devbox environment.
 func (d *Devbox) Remove(pkgs ...string) error {
 	// Remove packages from config.
-	d.cfg.Packages = lo.Without(d.cfg.Packages, pkgs...)
+	d.cfg.Packages = exclude(d.cfg.Packages, pkgs)
 	return d.saveCfg()
 }
 
@@ -119,4 +118,31 @@ func (d *Devbox) Shell() error {
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.srcDir, configFilename)
 	return cuecfg.WriteFile(cfgPath, d.cfg)
+}
+
+func unique(s []string) []string {
+	deduped := make([]string, 0, len(s))
+	seen := make(map[string]bool, len(s))
+	for _, str := range s {
+		if !seen[str] {
+			deduped = append(deduped, str)
+		}
+		seen[str] = true
+	}
+	return deduped
+}
+
+func exclude(s []string, elems []string) []string {
+	excluded := make(map[string]bool, len(elems))
+	for _, ex := range elems {
+		excluded[ex] = true
+	}
+
+	filtered := make([]string, 0, len(s))
+	for _, str := range s {
+		if !excluded[str] {
+			filtered = append(filtered, str)
+		}
+	}
+	return filtered
 }
