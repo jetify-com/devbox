@@ -43,7 +43,11 @@ func (v version) exact() string {
 }
 
 func (v version) major() string {
-	return v.parts()[0]
+	parts := v.parts()
+	if len(parts) == 0 {
+		return ""
+	}
+	return parts[0]
 }
 
 func (v version) majorMinor() string {

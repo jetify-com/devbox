@@ -15,6 +15,7 @@ var PLANNERS = []Planner{
 	&GoPlanner{},
 	&PHPPlanner{},
 	&PythonPoetryPlanner{},
+	&NodeJSPlanner{},
 }
 
 func GetPlan(srcDir string) *Plan {
