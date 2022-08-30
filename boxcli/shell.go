@@ -6,6 +6,7 @@ package boxcli
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -37,5 +38,11 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Installing nix packages. This may take a while...")
 
-	return box.Shell()
+	err = box.Shell()
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		cmd.SilenceErrors = true
+		cmd.SilenceUsage = true
+	}
+	return err
 }
