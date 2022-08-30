@@ -22,14 +22,20 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(goModPath)
 }
 
-func (g *GoPlanner) Plan(srcDir string) *BuildPlan {
-	return &BuildPlan{
+func (g *GoPlanner) GetPlan(srcDir string) *Plan {
+	return &Plan{
 		Packages: []string{
 			"go",
 		},
-		InstallCommand: "go get",
-		BuildCommand:   "CGO_ENABLED=0 go build -o out",
-		StartCommand:   "./out", // TODO: Move gin specific stuff elsewhere.
+		InstallStep: &Step{
+			Command: "go get",
+		},
+		BuildStep: &Step{
+			Command: "CGO_ENABLED=0 go build -o app",
+		},
+		StartStep: &Step{
+			Command: "./app",
+		},
 	}
 }
 
