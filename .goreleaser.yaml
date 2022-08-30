@@ -58,7 +58,7 @@ announce:
 
     # Set author of the embed.
     # Defaults to `GoReleaser`
-    author: 'Jetpack Team'
+    author: 'jetpack.io'
 
     # Color code of the embed. You have to use decimal numeral system, not hexadecimal.
     # Defaults to `3888754` - the grey-ish from goreleaser
