@@ -4,8 +4,10 @@
 package midcobra
 
 import (
+	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
@@ -20,11 +22,14 @@ import (
 // 2. Data is only stored in SOC 2 compliant systems, and we are SOC 2 compliant ourselves.
 // 3. Users should always have the ability to opt-out.
 func Telemetry(opts *TelemetryOpts) Middleware {
-	noTrackEnvVar := os.Getenv("DO_NOT_TRACK") // https://consoledonottrack.com/
+	doNotTrack, err := strconv.ParseBool(os.Getenv("DO_NOT_TRACK")) // https://consoledonottrack.com/
+	if err != nil {
+		doNotTrack = false
+	}
 
 	return &telemetryMiddleware{
 		opts:     *opts,
-		disabled: noTrackEnvVar == "1" || noTrackEnvVar == "true" || opts.TelemetryKey == "",
+		disabled: doNotTrack || opts.TelemetryKey == "",
 	}
 }
 
@@ -59,25 +64,26 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		_ = segmentClient.Close()
 	}()
 
-	subcmd, _, parseErr := getSubcommand(cmd, args)
+	subcmd, subargs, parseErr := getSubcommand(cmd, args)
 	if parseErr != nil {
 		return // Ignore invalid commands
 	}
 
 	trackEvent(segmentClient, &event{
-		AppName:    m.opts.AppName,
-		AppVersion: m.opts.AppVersion,
-		Command:    subcmd.CommandPath(),
-		DeviceID:   deviceID(),
-		Duration:   time.Since(m.startTime),
-		Failed:     runErr != nil,
+		AppName:     m.opts.AppName,
+		AppVersion:  m.opts.AppVersion,
+		Command:     subcmd.CommandPath(),
+		CommandArgs: subargs,
+		DeviceID:    deviceID(),
+		Duration:    time.Since(m.startTime),
+		Failed:      runErr != nil,
 	})
 }
 
 func deviceID() string {
-	salt := "64ee464f-9450-4b14-8d9c-014c0012ac1a" // Ensure machined id is hashed and non-identifiable
-	id, _ := machineid.ProtectedID(salt)
-	return id
+	salt := "64ee464f-9450-4b14-8d9c-014c0012ac1a"
+	hashedID, _ := machineid.ProtectedID(salt) // Ensure machine id is hashed and non-identifiable
+	return hashedID
 }
 
 func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
@@ -90,18 +96,19 @@ func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, suba
 }
 
 type event struct {
-	AppName    string
-	AppVersion string
-	Command    string
-	DeviceID   string
-	Duration   time.Duration
-	Failed     bool
+	AppName     string
+	AppVersion  string
+	Command     string
+	CommandArgs []string
+	DeviceID    string
+	Duration    time.Duration
+	Failed      bool
 }
 
 func trackEvent(client segment.Client, evt *event) {
 	_ = client.Enqueue(segment.Track{ // Ignore errors, telemetry is best effort
 		AnonymousId: evt.DeviceID, // Use device id instead
-		Event:       evt.Command,
+		Event:       fmt.Sprintf("[%s] Command: %s", evt.AppName, evt.Command),
 		Context: &segment.Context{
 			Device: segment.DeviceInfo{
 				Id: evt.DeviceID,
@@ -115,6 +122,8 @@ func trackEvent(client segment.Client, evt *event) {
 			},
 		},
 		Properties: segment.NewProperties().
+			Set("command", evt.Command).
+			Set("command_args", evt.CommandArgs).
 			Set("failed", evt.Failed).
 			Set("duration", evt.Duration.Milliseconds()),
 	})
