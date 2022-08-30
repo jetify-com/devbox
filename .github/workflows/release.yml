@@ -27,6 +27,7 @@ jobs:
 
   release-snapshot:
     runs-on: ubuntu-latest
+    environment: release
     needs: tests
     if: ${{ inputs.is_snapshot_release || github.event.schedule }}
     steps:
@@ -47,6 +48,7 @@ jobs:
           args: release --rm-dist --skip-publish --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
       - name: Determine snapshot tag
         run: |
           TAG=$(ls dist/*_linux_386.tar.gz | cut -d '_' -f 2 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-dev')
@@ -62,6 +64,7 @@ jobs:
             dist/*.tar.gz
   release:
     runs-on: ubuntu-latest
+    environment: release
     needs: tests
     # Only release when there's a tag for the release.
     if: startsWith(github.ref, 'refs/tags/')
@@ -83,3 +86,4 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
