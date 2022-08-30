@@ -10,6 +10,8 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox/boxcli/midcobra"
+	"go.jetpack.io/devbox/build"
 )
 
 func RootCmd() *cobra.Command {
@@ -41,16 +43,19 @@ func RootCmd() *cobra.Command {
 	return command
 }
 
-func Execute(ctx context.Context) error {
-	cmd := RootCmd()
-	return cmd.ExecuteContext(ctx)
+func Execute(ctx context.Context, args []string) int {
+	exe := midcobra.New(RootCmd())
+	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
+		AppName:      "devbox",
+		AppVersion:   build.Version,
+		TelemetryKey: build.TelemetryKey,
+	}))
+	return exe.Execute(ctx, args)
 }
 
 func Main() {
-	err := Execute(context.Background())
-	if err != nil {
-		os.Exit(1)
-	}
+	code := Execute(context.Background(), os.Args[1:])
+	os.Exit(code)
 }
 
 type runFunc func(cmd *cobra.Command, args []string) error
