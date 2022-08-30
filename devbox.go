@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
@@ -61,7 +60,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	// Merge and remove duplicates:
 	merged := append(d.cfg.Packages, pkgs...)
-	d.cfg.Packages = lo.FindUniques(merged)
+	d.cfg.Packages = unique(merged)
 	return d.saveCfg()
 }
 
@@ -69,7 +68,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 // the devbox environment.
 func (d *Devbox) Remove(pkgs ...string) error {
 	// Remove packages from config.
-	d.cfg.Packages = lo.Without(d.cfg.Packages, pkgs...)
+	d.cfg.Packages = exclude(d.cfg.Packages, pkgs)
 	return d.saveCfg()
 }
 
