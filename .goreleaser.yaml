@@ -32,3 +32,39 @@ release:
   github:
     owner: jetpack-io
     name: devbox
+announce:
+  discord:
+    # Whether its enabled or not.
+    # Defaults to false.
+    enabled: true
+
+    # Message template to use while publishing.
+    # Defaults to `{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}`
+    message_template: |
+      **New Release: Devbox {{.Tag}}**
+      We just released a version {{.Tag}} of `devbox`.
+      
+      Description:
+      {{.TagBody}}
+      
+      Release: {{.ReleaseURL}}
+      
+      Updating:
+      If you installed devbox via our recommended installer
+      (`curl -fsSL https://get.jetpack.io/devbox | bash`) you will get the new version
+      _automatically_, the next time you run `devbox` 
+      
+      Thanks,
+      jetpack.io
+
+    # Set author of the embed.
+    # Defaults to `GoReleaser`
+    author: 'jetpack.io'
+
+    # Color code of the embed. You have to use decimal numeral system, not hexadecimal.
+    # Defaults to `3888754` - the grey-ish from goreleaser
+    color: '2622553' #This is the Jetpack Space color
+
+    # URL to an image to use as the icon for the embed.
+    # Defaults to `https://goreleaser.com/static/avatar.png`
+    icon_url: ''
