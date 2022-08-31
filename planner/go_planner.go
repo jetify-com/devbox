@@ -4,7 +4,6 @@
 package planner
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -66,7 +65,7 @@ func getGoPackage(srcDir string) string {
 }
 
 func getVersion(gomodPath string) string {
-	content, err := ioutil.ReadFile(gomodPath)
+	content, err := os.ReadFile(gomodPath)
 	if err != nil {
 		return ""
 	}
