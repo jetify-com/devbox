@@ -18,7 +18,7 @@ import (
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-func generate(rootPath string, plan *planner.BuildPlan) error {
+func generate(rootPath string, plan *planner.Plan) error {
 	// TODO: we should also generate a .dockerignore file
 	files := []string{".gitignore", "Dockerfile", "shell.nix", "default.nix"}
 
@@ -34,7 +34,7 @@ func generate(rootPath string, plan *planner.BuildPlan) error {
 	return nil
 }
 
-func writeFromTemplate(path string, plan *planner.BuildPlan, tmplName string) error {
+func writeFromTemplate(path string, plan *planner.Plan, tmplName string) error {
 	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?

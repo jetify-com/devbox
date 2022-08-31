@@ -4,7 +4,7 @@ FROM nixos/nix:2.10.3 as base
 
 FROM base as builder
 
-# 1. SETUP PHASE
+# 1. SETUP STAGE
 #    Setup the container, and install nix packages.
 # -------------------------------------------------
 
@@ -21,19 +21,19 @@ COPY --link ./.devbox/gen/default.nix ./.devbox/gen/
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store \
   nix-env -if ./.devbox/gen/default.nix
 
-# 2. INSTALL PHASE
+# 2. INSTALL STAGE
 #    Install libraries needed by the source code.
 # -----------------------------------------------
 
 COPY --link . ./
-RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallCommand}}
+RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallStage.Command}}
 
-# 3. BUILD PHASE
+# 3. BUILD STAGE
 #    Compile the source code into an executable.
 # ----------------------------------------------
-RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildCommand}}
+RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
 
-# 4. PACKAGING PHASE
+# 4. PACKAGING STAGE
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
 
@@ -46,6 +46,10 @@ SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
 COPY --link --from=builder /scratch/. /app/
 WORKDIR /app
 
+# 4. START STAGE
+#    Execute the application inside the final container.
+# ------------------------------------------------------
+
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
-ENTRYPOINT {{.StartCommand}}
+ENTRYPOINT {{.StartStage.Command}}

@@ -16,6 +16,6 @@ func (g *EmptyPlanner) IsRelevant(srcDir string) bool {
 	return false
 }
 
-func (g *EmptyPlanner) Plan(srcDir string) *BuildPlan {
-	return &BuildPlan{}
+func (g *EmptyPlanner) GetPlan(srcDir string) *Plan {
+	return &Plan{}
 }

@@ -11,9 +11,10 @@ import (
 
 func RemoveCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "rm <pkg>...",
-		Args: cobra.MinimumNArgs(1),
-		RunE: runRemoveCmd,
+		Use:   "rm <pkg>...",
+		Short: "Remove a package from your devbox",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  runRemoveCmd,
 	}
 	return command
 }

@@ -16,6 +16,6 @@ func (g *PythonPlanner) IsRelevant(srcDir string) bool {
 	return false
 }
 
-func (g *PythonPlanner) Plan(srcDir string) *BuildPlan {
-	return &BuildPlan{}
+func (g *PythonPlanner) GetPlan(srcDir string) *Plan {
+	return &Plan{}
 }

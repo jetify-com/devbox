@@ -11,9 +11,10 @@ import (
 
 func InitCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "init [<dir>]",
-		Args: cobra.MaximumNArgs(1),
-		RunE: runInitCmd,
+		Use:   "init [<dir>]",
+		Short: "Initialize a directory as a devbox project",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  runInitCmd,
 	}
 	return command
 }

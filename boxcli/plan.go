@@ -13,9 +13,10 @@ import (
 
 func PlanCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "plan [<dir>]",
-		Args: cobra.MaximumNArgs(1),
-		RunE: runPlanCmd,
+		Use:   "plan [<dir>]",
+		Short: "Preview the plan used to build your environment",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  runPlanCmd,
 	}
 	return command
 }

@@ -6,7 +6,7 @@ package planner
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	Plan(srcDir string) *BuildPlan
+	GetPlan(srcDir string) *Plan
 }
 
 var PLANNERS = []Planner{
@@ -14,13 +14,13 @@ var PLANNERS = []Planner{
 	&PythonPlanner{},
 }
 
-func Plan(srcDir string) *BuildPlan {
-	result := &BuildPlan{
+func GetPlan(srcDir string) *Plan {
+	result := &Plan{
 		Packages: []string{},
 	}
 	for _, planner := range PLANNERS {
 		if planner.IsRelevant(srcDir) {
-			plan := planner.Plan(srcDir)
+			plan := planner.GetPlan(srcDir)
 			result = MergePlans(result, plan)
 		}
 	}
