@@ -11,6 +11,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
+	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -30,5 +31,6 @@ require (
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
