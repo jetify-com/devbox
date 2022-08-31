@@ -3,7 +3,13 @@
 
 package planner
 
-import "path/filepath"
+import (
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/pelletier/go-toml/v2"
+)
 
 type PythonPoetryPlanner struct{}
 
@@ -21,9 +27,10 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 }
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
+	version := g.PythonVersion(srcDir)
 	return &Plan{
 		Packages: []string{
-			"python310",
+			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
 			"poetry",
 		},
 		InstallStage: &Stage{
@@ -33,8 +40,35 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 			Command: "poetry build",
 		},
 		// TODO parse pyproject.toml to get the start command?
-		StartStage: &Stage{
-			Command: "python main.py",
+		StartStage: &EntrypointStage{
+			Entrypoint:     "python main.py",
+			Image:          fmt.Sprintf("python:%s-alpine", version.exact()),
+			PrepareCommand: "pip install dist/*.whl",
 		},
 	}
+}
+
+// TODO: This can be generalized to all python planners
+func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
+	defaultVersion, _ := newVersion("3.10.6")
+	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
+	c, err := ioutil.ReadFile(pyProjectPath)
+	if err != nil {
+		return defaultVersion
+	}
+	pyProject := struct {
+		Tool struct {
+			Poetry struct {
+				Dependencies struct {
+					Python string `toml:"python"`
+				} `toml:"dependencies"`
+			} `toml:"poetry"`
+		} `toml:"tool"`
+	}{}
+	_ = toml.Unmarshal(c, &pyProject)
+
+	if v, err := newVersion(pyProject.Tool.Poetry.Dependencies.Python); err == nil {
+		return v
+	}
+	return defaultVersion
 }

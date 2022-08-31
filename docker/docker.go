@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 )
 
 // This package provides an API to build images using docker.
@@ -52,7 +53,7 @@ func Build(path string, opts ...BuildOptions) error {
 		opt(flags)
 	}
 
-	args := []string{"build", "."}
+	args := []string{"build", path}
 	args = ToArgs(args, flags)
 
 	dir, fileName := parsePath(path)
@@ -66,7 +67,7 @@ func Build(path string, opts ...BuildOptions) error {
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(), "BUILDKIT=1")
 	cmd.Dir = dir
-	return cmd.Run()
+	return errors.WithStack(cmd.Run())
 }
 
 func parsePath(path string) (string, string) {

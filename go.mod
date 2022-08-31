@@ -6,6 +6,7 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/imdario/mergo v0.3.13
+	github.com/pelletier/go-toml/v2 v2.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/spf13/cobra v1.5.0

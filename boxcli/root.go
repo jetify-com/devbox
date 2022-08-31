@@ -14,6 +14,8 @@ import (
 	"go.jetpack.io/devbox/build"
 )
 
+var debug midcobra.Debug
+
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
@@ -41,6 +43,14 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(ShellCmd())
 	command.AddCommand(VersionCmd())
+
+	command.PersistentFlags().BoolVar(
+		(*bool)(&debug),
+		"debug",
+		false,
+		"Show full stack traces on errors",
+	)
+
 	return command
 }
 
@@ -51,6 +61,7 @@ func Execute(ctx context.Context, args []string) int {
 		AppVersion:   build.Version,
 		TelemetryKey: build.TelemetryKey,
 	}))
+	exe.AddMiddleware(&debug)
 	return exe.Execute(ctx, args)
 }
 
