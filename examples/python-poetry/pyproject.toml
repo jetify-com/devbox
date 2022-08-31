@@ -2,7 +2,7 @@
 name = "python-poetry"
 version = "0.1.0"
 description = ""
-authors = ["Mike Landau <mikeland86@gmail.com>"]
+authors = ["Jose Example <jose@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
