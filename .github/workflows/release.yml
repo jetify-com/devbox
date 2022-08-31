@@ -12,8 +12,6 @@ on:
         default: false
         type: boolean
   # Nightly releases
-  schedule:
-    - cron: "45 8 * * 1-5"
   push:
     tags:
       - "*" # Tags that trigger a new release version
