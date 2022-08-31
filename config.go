@@ -12,7 +12,8 @@ import (
 type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment.
-	Packages []string `cue:"[...string]" json:"packages,omitempty"`
+	Packages  []string `cue:"[...string]" json:"packages,omitempty"`
+	ShellHook string   `cue:"string" json:"shell-hook"`
 }
 
 // ReadConfig reads a devbox config file.

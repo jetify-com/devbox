@@ -13,6 +13,7 @@ import (
 // or whether it should be the same structure as devbox.Config.
 type BuildPlan struct {
 	Packages       []string `cue:"[...string]" json:"packages"`
+	ShellHook      string   `cue:"string" json:"shell-hook,omitempty"`
 	InstallCommand string   `cue:"string" json:"install_command,omitempty"`
 	BuildCommand   string   `cue:"string" json:"build_command,omitempty"`
 	StartCommand   string   `cue:"string" json:"start_command,omitempty"`

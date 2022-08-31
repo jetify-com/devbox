@@ -91,7 +91,8 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 // environment.
 func (d *Devbox) Plan() *planner.BuildPlan {
 	basePlan := &planner.BuildPlan{
-		Packages: d.cfg.Packages,
+		Packages:  d.cfg.Packages,
+		ShellHook: d.cfg.ShellHook,
 	}
 	return planner.MergePlans(basePlan, planner.Plan(d.srcDir))
 }
