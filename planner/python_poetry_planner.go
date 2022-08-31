@@ -5,7 +5,7 @@ package planner
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
@@ -52,7 +52,7 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 	defaultVersion, _ := newVersion("3.10.6")
 	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
-	c, err := ioutil.ReadFile(pyProjectPath)
+	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {
 		return defaultVersion
 	}
@@ -65,7 +65,7 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 			} `toml:"poetry"`
 		} `toml:"tool"`
 	}{}
-	_ = toml.Unmarshal(c, &pyProject)
+	_ = toml.Unmarshal(content, &pyProject)
 
 	if v, err := newVersion(pyProject.Tool.Poetry.Dependencies.Python); err == nil {
 		return v

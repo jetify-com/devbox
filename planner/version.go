@@ -19,7 +19,7 @@ func newVersion(v string) (*version, error) {
 }
 
 func (v version) parts() []string {
-	r := regexp.MustCompile("^\\^?([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?$")
+	r := regexp.MustCompile(`^\^?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?$`)
 	return r.FindStringSubmatch(string(v))
 }
 
