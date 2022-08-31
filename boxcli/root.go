@@ -16,7 +16,8 @@ import (
 
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use: "devbox",
+		Use:   "devbox",
+		Short: "Instant, easy, predictable shells and containers",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Don't display 'usage' on application errors.
 			cmd.SilenceUsage = true

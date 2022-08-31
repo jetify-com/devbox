@@ -14,9 +14,10 @@ import (
 func VersionCmd() *cobra.Command {
 	flags := &versionFlags{}
 	command := &cobra.Command{
-		Use:  "version",
-		Args: cobra.NoArgs,
-		RunE: versionCmdFunc(flags),
+		Use:   "version",
+		Short: "Print version information",
+		Args:  cobra.NoArgs,
+		RunE:  versionCmdFunc(flags),
 	}
 
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value

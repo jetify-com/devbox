@@ -89,11 +89,9 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // environment.
-func (d *Devbox) Plan() *planner.BuildPlan {
-	basePlan := &planner.BuildPlan{
-		Packages: d.cfg.Packages,
-	}
-	return planner.MergePlans(basePlan, planner.Plan(d.srcDir))
+func (d *Devbox) Plan() *planner.Plan {
+	basePlan := &d.cfg.Plan
+	return planner.MergePlans(basePlan, planner.GetPlan(d.srcDir))
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define

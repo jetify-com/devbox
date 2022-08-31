@@ -20,15 +20,21 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(poetryLockPath) && fileExists(mainPYPath)
 }
 
-func (g *PythonPoetryPlanner) Plan(srcDir string) *BuildPlan {
-	return &BuildPlan{
+func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
+	return &Plan{
 		Packages: []string{
 			"python310",
 			"poetry",
 		},
-		InstallCommand: "poetry install --no-dev --no-interaction --no-ansi",
-		BuildCommand:   "poetry build",
+		InstallStage: &Stage{
+			Command: "poetry install --no-dev --no-interaction --no-ansi",
+		},
+		BuildStage: &Stage{
+			Command: "poetry build",
+		},
 		// TODO parse pyproject.toml to get the start command?
-		StartCommand: "python main.py",
+		StartStage: &Stage{
+			Command: "python main.py",
+		},
 	}
 }

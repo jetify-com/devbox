@@ -9,16 +9,32 @@ import (
 	"github.com/imdario/mergo"
 )
 
-// TODO: decide if BuildPlan should continue to be a separate structure
-// or whether it should be the same structure as devbox.Config.
-type BuildPlan struct {
-	Packages       []string `cue:"[...string]" json:"packages"`
-	InstallCommand string   `cue:"string" json:"install_command,omitempty"`
-	BuildCommand   string   `cue:"string" json:"build_command,omitempty"`
-	StartCommand   string   `cue:"string" json:"start_command,omitempty"`
+// Note: The Plan struct is exposed in `devbox.json` – be thoughful of how
+// we evolve the schema, and make sure we keep backwards compatibility.
+
+type Plan struct {
+	// Packages is the slice of Nix packages that devbox makes available in
+	// its environment.
+	Packages []string `cue:"[...string]" json:"packages"`
+	// InstallStage defines the actions that should be taken when
+	// installing language-specific libraries.
+	// Ex: pip install, yarn install, go get
+	InstallStage *Stage `json:"install_stage,omitempty"`
+	// BuildStage defines the actions that should be taken when
+	// compiling the application binary.
+	// Ex: go build -o app
+	BuildStage *Stage `json:"build_stage,omitempty"`
+	// StartStage defines the actions that should be taken when
+	// starting (running) the application.
+	// Ex: python main.py
+	StartStage *Stage `json:"start_stage,omitempty"`
 }
 
-func (p *BuildPlan) String() string {
+type Stage struct {
+	Command string `cue:"string" json:"command"`
+}
+
+func (p *Plan) String() string {
 	b, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
 		panic(err)
@@ -26,8 +42,8 @@ func (p *BuildPlan) String() string {
 	return string(b)
 }
 
-func MergePlans(plans ...*BuildPlan) *BuildPlan {
-	plan := &BuildPlan{
+func MergePlans(plans ...*Plan) *Plan {
+	plan := &Plan{
 		Packages: []string{},
 	}
 	for _, p := range plans {
