@@ -37,6 +37,19 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildCom
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
 
+{{ if true -}}
+
+FROM python:3.10.6-alpine AS python-final
+
+WORKDIR /app
+
+COPY --link --from=builder /scratch/. /app/
+RUN pip install dist/*.whl
+
+ENTRYPOINT {{.StartCommand}}
+
+{{- else -}}
+
 # Default to :debug so we have a shell.
 FROM gcr.io/distroless/base:debug
 # Setup shell so that we catch any errors early
@@ -49,3 +62,5 @@ WORKDIR /app
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
 ENTRYPOINT {{.StartCommand}}
+
+{{- end }}

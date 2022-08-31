@@ -11,7 +11,7 @@ type Planner interface {
 
 var PLANNERS = []Planner{
 	&GoPlanner{},
-	&PythonPlanner{},
+	&PythonPoetryPlanner{},
 }
 
 func Plan(srcDir string) *BuildPlan {
