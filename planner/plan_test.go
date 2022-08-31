@@ -25,18 +25,18 @@ func TestMergePlans(t *testing.T) {
 
 	// Base plan (the first one) takes precedence:
 	plan1 = &Plan{
-		BuildStep: &Step{
+		BuildStage: &Stage{
 			Command: "plan1",
 		},
 	}
 	plan2 = &Plan{
-		BuildStep: &Step{
+		BuildStage: &Stage{
 			Command: "plan2",
 		},
 	}
 	expected = &Plan{
 		Packages: []string{},
-		BuildStep: &Step{
+		BuildStage: &Stage{
 			Command: "plan1",
 		},
 	}

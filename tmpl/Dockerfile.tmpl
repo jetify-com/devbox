@@ -26,12 +26,12 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store \
 # -----------------------------------------------
 
 COPY --link . ./
-RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallStep.Command}}
+RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallStage.Command}}
 
 # 3. BUILD STAGE
 #    Compile the source code into an executable.
 # ----------------------------------------------
-RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStep.Command}}
+RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
 
 # 4. PACKAGING STAGE
 #    Create a minimal image that contains the executable.
@@ -52,4 +52,4 @@ WORKDIR /app
 
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
-ENTRYPOINT {{.StartStep.Command}}
+ENTRYPOINT {{.StartStage.Command}}

@@ -27,13 +27,13 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 		Packages: []string{
 			"go",
 		},
-		InstallStep: &Step{
+		InstallStage: &Stage{
 			Command: "go get",
 		},
-		BuildStep: &Step{
+		BuildStage: &Stage{
 			Command: "CGO_ENABLED=0 go build -o app",
 		},
-		StartStep: &Step{
+		StartStage: &Stage{
 			Command: "./app",
 		},
 	}

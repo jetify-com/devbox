@@ -15,9 +15,10 @@ import (
 
 func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:  "shell [<dir>]",
-		Args: cobra.MaximumNArgs(1),
-		RunE: runShellCmd,
+		Use:   "shell [<dir>]",
+		Short: "Start a new shell with access to your packages",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  runShellCmd,
 	}
 	return command
 }

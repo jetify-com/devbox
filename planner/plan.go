@@ -16,21 +16,21 @@ type Plan struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment.
 	Packages []string `cue:"[...string]" json:"packages"`
-	// InstallStep defines the actions that should be taken when
+	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
 	// Ex: pip install, yarn install, go get
-	InstallStep *Step `json:"install_step,omitempty"`
-	// BuildStep defines the actions that should be taken when
+	InstallStage *Stage `json:"install_stage,omitempty"`
+	// BuildStage defines the actions that should be taken when
 	// compiling the application binary.
 	// Ex: go build -o app
-	BuildStep *Step `json:"build_step,omitempty"`
-	// StartStep defines the actions that should be taken when
+	BuildStage *Stage `json:"build_stage,omitempty"`
+	// StartStage defines the actions that should be taken when
 	// starting (running) the application.
 	// Ex: python main.py
-	StartStep *Step `json:"start_step,omitempty"`
+	StartStage *Stage `json:"start_stage,omitempty"`
 }
 
-type Step struct {
+type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
