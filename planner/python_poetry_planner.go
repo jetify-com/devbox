@@ -90,9 +90,9 @@ func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) string {
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.
-	module_name := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
-	if _, ok := project.Tool.Poetry.Scripts[module_name]; ok {
-		return module_name
+	moduleName := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
+	if _, ok := project.Tool.Poetry.Scripts[moduleName]; ok {
+		return moduleName
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
