@@ -19,24 +19,37 @@ func newVersion(v string) (*version, error) {
 }
 
 func (v version) parts() []string {
-	r := regexp.MustCompile(`^\^?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?$`)
-	return r.FindStringSubmatch(string(v))
+	// This regex allows starting versions with ^ or >=
+	// It ignored anything after a comma (including the comma)
+	// Maybe consider using https://github.com/aquasecurity/go-pep440-version
+	// or equivalent
+	r := regexp.MustCompile(`^(?:\^|>=)?([0-9]+)(\.[0-9]+)?(\.[0-9]+)?(?:,.*)?$`)
+	groups := r.FindStringSubmatch(string(v))
+	if len(groups) > 0 {
+		return groups[1:]
+	}
+	return []string{}
 }
 
 func (v version) exact() string {
 	parts := v.parts()
 	if len(parts) > 0 {
-		return strings.Join(parts[1:], "")
+		return strings.Join(parts, "")
 	}
 	return ""
 }
 
-func (v version) majorMinorConcatenated() string {
+func (v version) majorMinor() string {
 	parts := v.parts()
-	if len(parts) > 0 && len(parts) < 3 {
-		return strings.ReplaceAll(strings.Join(parts[1:], ""), ".", "")
-	} else if len(parts) > 0 {
-		return strings.ReplaceAll(strings.Join(parts[1:3], ""), ".", "")
+	if len(parts) == 0 {
+		return ""
 	}
-	return ""
+	if len(parts) > 1 {
+		return strings.Join(parts[:2], "")
+	}
+	return parts[0]
+}
+
+func (v version) majorMinorConcatenated() string {
+	return strings.ReplaceAll(v.majorMinor(), ".", "")
 }

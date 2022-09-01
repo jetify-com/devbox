@@ -37,15 +37,20 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 			"poetry",
 		},
 		InstallStage: &Stage{
-			Command: "poetry add pex -D -n --no-ansi && poetry install --no-dev -n --no-ansi",
+			// pex is is incompatible with certain less common python versions,
+			// but because versions are sometimes expressed open-ended (e.g. ^3.10)
+			// It will cause `poetry add pex` to fail. One solution is to use: --version flag
+			// but when using that flag, the nix container can no longer find pex.
+			Command: "poetry add pex -n --no-ansi && " +
+				"poetry install --no-dev -n --no-ansi",
 		},
 		BuildStage: &Stage{
-			Command: "poetry run pex . -o app.pex --script " + g.GetEntrypoint(srcDir),
+			Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + g.GetEntrypoint(srcDir),
 		},
 		// TODO parse pyproject.toml to get the start command?
 		StartStage: &Stage{
 			Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-			Image:   "al3xos/python-distroless:3.10-debian11-debug",
+			Image:   getPythonImage(version),
 		},
 	}
 }
@@ -66,11 +71,11 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 }
 
 func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) string {
-	p := g.PyProject(srcDir)
-	if p == nil {
+	project := g.PyProject(srcDir)
+	if project == nil {
 		panic("pyproject.toml not found")
 	}
-	if len(p.Tool.Poetry.Scripts) == 0 {
+	if len(project.Tool.Poetry.Scripts) == 0 {
 		// This error message as a panic is not ideal. We should change GetPlan
 		// to return (plan, error) and print a nicer formatted error message.
 		panic(
@@ -82,16 +87,14 @@ func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) string {
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.
-	module_name := strings.ReplaceAll(p.Tool.Poetry.Name, "-", "_")
-	if _, ok := p.Tool.Poetry.Scripts[module_name]; ok {
-		fmt.Println("ENTRYPOINT", module_name)
+	module_name := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
+	if _, ok := project.Tool.Poetry.Scripts[module_name]; ok {
 		return module_name
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
-	scripts := maps.Keys(p.Tool.Poetry.Scripts)
+	scripts := maps.Keys(project.Tool.Poetry.Scripts)
 	slices.Sort(scripts)
-	fmt.Println("ENTRYPOINT", scripts[0])
 	return scripts[0]
 }
 
@@ -116,4 +119,14 @@ func (g *PythonPoetryPlanner) PyProject(srcDir string) *pyProject {
 	p := pyProject{}
 	_ = toml.Unmarshal(content, &p)
 	return &p
+}
+
+func getPythonImage(version *version) string {
+	if version.exact() == "3" {
+		return "al3xos/python-distroless:3.10-debian11-debug"
+	}
+	if version.majorMinor() == "3.10" || version.majorMinor() == "3.9" {
+		return fmt.Sprintf("al3xos/python-distroless:%s-debian11-debug", version.majorMinor())
+	}
+	return fmt.Sprintf("python:%s-slim", version.exact())
 }

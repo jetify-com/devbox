@@ -35,6 +35,7 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 		},
 		StartStage: &Stage{
 			Command: "./app",
+			Image:   "gcr.io/distroless/base:debug",
 		},
 	}
 }
