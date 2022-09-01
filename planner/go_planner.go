@@ -19,7 +19,7 @@ var versionMap = map[string]string{
 	"1.17": "go_1_17",
 }
 
-const defaultPkg = "go_1_19" // Default for cases where we can't determine a version.
+const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't determine a version.
 
 // GoPlanner implements interface Planner (compile-time check)
 var _ Planner = (*GoPlanner)(nil)
@@ -53,7 +53,7 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 
 func getGoPackage(srcDir string) string {
 	goModPath := filepath.Join(srcDir, "go.mod")
-	goVersion := getVersion(goModPath)
+	goVersion := parseGoVersion(goModPath)
 	v, ok := versionMap[goVersion]
 	if ok {
 		return v
@@ -64,7 +64,7 @@ func getGoPackage(srcDir string) string {
 	}
 }
 
-func getVersion(gomodPath string) string {
+func parseGoVersion(gomodPath string) string {
 	content, err := os.ReadFile(gomodPath)
 	if err != nil {
 		return ""
