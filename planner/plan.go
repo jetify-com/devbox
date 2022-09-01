@@ -14,8 +14,12 @@ import (
 
 type Plan struct {
 	// Packages is the slice of Nix packages that devbox makes available in
-	// its environment.
+	// its development environment.
 	Packages []string `cue:"[...string]" json:"packages"`
+	// RuntimePackages is the slice of Nix packages that devbox makes available in
+	// in both the development environment and the final container that runs the
+	// application.
+	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
 	// Ex: pip install, yarn install, go get
@@ -44,7 +48,8 @@ func (p *Plan) String() string {
 
 func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
-		Packages: []string{},
+		Packages:        []string{},
+		RuntimePackages: []string{},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)

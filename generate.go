@@ -20,7 +20,7 @@ var tmplFS embed.FS
 
 func generate(rootPath string, plan *planner.Plan) error {
 	// TODO: we should also generate a .dockerignore file
-	files := []string{".gitignore", "Dockerfile", "shell.nix", "default.nix"}
+	files := []string{".gitignore", "Dockerfile", "shell.nix", "development.nix", "runtime.nix"}
 
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 

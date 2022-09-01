@@ -7,8 +7,11 @@ let
   }) {};
 in with pkgs;
 buildEnv {
-  name = "devbox";
+  name = "devbox-development";
   paths = [
+  {{- range .RuntimePackages}}
+    {{.}}
+  {{end -}}
   {{- range .Packages}}
     {{.}}
   {{end -}}

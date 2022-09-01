@@ -12,6 +12,7 @@ import (
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
 	"go.jetpack.io/devbox/planner"
+	"golang.org/x/exp/slices"
 )
 
 // configFilename is name of the JSON file that defines a devbox environment.
@@ -51,16 +52,44 @@ func Open(dir string) (*Devbox, error) {
 // environment. It validates that the Nix package exists, but doesn't install
 // it. Adding a duplicate package is a no-op.
 func (d *Devbox) Add(pkgs ...string) error {
-	// Check packages exist before adding.
+	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(pkg)
 		if !ok {
 			return errors.Errorf("package %s not found", pkg)
 		}
 	}
-	// Merge and remove duplicates:
-	merged := append(d.cfg.Packages, pkgs...)
-	d.cfg.Packages = unique(merged)
+
+	// Add to Packages only if it's not already in either package list
+	for _, pkg := range pkgs {
+		if slices.Contains(d.cfg.RuntimePackages, pkg) || slices.Contains(d.cfg.Packages, pkg) {
+			continue
+		}
+		d.cfg.Packages = append(d.cfg.Packages, pkg)
+	}
+	return d.saveCfg()
+}
+
+func (d *Devbox) AddToRuntime(pkgs ...string) error {
+	// Check packages are valid before adding.
+	for _, pkg := range pkgs {
+		ok := nix.PkgExists(pkg)
+		if !ok {
+			return errors.Errorf("package %s not found", pkg)
+		}
+	}
+
+	// If they exist in Packages, delete from there since we'll add to
+	// RuntimePackages instead.
+	d.cfg.Packages = exclude(d.cfg.Packages, pkgs)
+
+	// Add to runtime packages if not already there.
+	for _, pkg := range pkgs {
+		if slices.Contains(d.cfg.RuntimePackages, pkg) {
+			continue
+		}
+		d.cfg.RuntimePackages = append(d.cfg.RuntimePackages, pkg)
+	}
 	return d.saveCfg()
 }
 
@@ -69,6 +98,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 func (d *Devbox) Remove(pkgs ...string) error {
 	// Remove packages from config.
 	d.cfg.Packages = exclude(d.cfg.Packages, pkgs)
+	d.cfg.RuntimePackages = exclude(d.cfg.RuntimePackages, pkgs)
 	return d.saveCfg()
 }
 

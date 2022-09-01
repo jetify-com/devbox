@@ -26,3 +26,13 @@ func exclude(s []string, elems []string) []string {
 	}
 	return filtered
 }
+
+func delete(s []string, elem string) []string {
+	filtered := make([]string, 0, len(s))
+	for _, str := range s {
+		if str != elem {
+			filtered = append(filtered, str)
+		}
+	}
+	return filtered
+}

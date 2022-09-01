@@ -2,7 +2,7 @@
 
 ### Instant, easy, and predictable shells and containers
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases) [![tests](https://github.com/jetpack-io/devbox/actions/workflows/tests.yaml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/tests.yaml)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases)
 
 ---
 
@@ -95,7 +95,7 @@ In this quickstart we’ll create a development shell with specific tools instal
    devbox shell
    ```
 
-   You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
+   You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt changed.
 
 6. Use your favorite tools.
 

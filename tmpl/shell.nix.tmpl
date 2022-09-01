@@ -23,6 +23,9 @@ mkShell {
       export PATH=$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
     '';
   packages = [
+  {{- range .RuntimePackages}}
+    {{.}}
+  {{end -}}
   {{- range .Packages}}
     {{.}}
   {{end -}}
