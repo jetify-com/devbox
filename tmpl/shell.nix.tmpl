@@ -20,7 +20,7 @@ mkShell {
 
       # Make sure we include a basic path for the devbox shell. Otherwise it may
       # fail to start.
-      export PATH=$PATH:/bin:/usr/bin
+      export PATH=$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
     '';
   packages = [
   {{- range .Packages}}
