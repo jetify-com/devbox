@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,13 +33,13 @@ type Shell struct {
 }
 
 // Detect attempts to determine the user's default shell.
-func Detect() (Shell, error) {
+func Detect() (*Shell, error) {
 	path := os.Getenv("SHELL")
 	if path == "" {
-		return Shell{}, errors.New("unable to detect the current shell")
+		return nil, errors.New("unable to detect the current shell")
 	}
 
-	sh := Shell{path: filepath.Clean(path)}
+	sh := &Shell{path: filepath.Clean(path)}
 	base := filepath.Base(path)
 	// Login shell
 	if base[0] == '-' {
@@ -124,7 +123,7 @@ func (s *Shell) SetInit(script string) error {
 }
 
 // ExecCommand is a command that replaces the current shell with s.
-func (s Shell) ExecCommand() string {
+func (s *Shell) ExecCommand() string {
 	if s.devboxInitFile == "" {
 		return "exec " + s.path
 	}

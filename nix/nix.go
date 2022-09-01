@@ -44,7 +44,7 @@ func Shell(path string) error {
 	//
 	// ORIGINAL_PATH is set by sh.StartCommand.
 	// PURE_NIX_PATH is set by the shell hook in shell.nix.tmpl.
-	sh.SetInit(`
+	_ = sh.SetInit(`
 # Update the $PATH so the user can keep using programs that live outside of Nix,
 # but prefer anything installed by Nix.
 export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
