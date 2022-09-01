@@ -25,8 +25,11 @@ func (g *PythonPoetryPlanner) Name() string {
 
 func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 	poetryLockPath := filepath.Join(srcDir, "poetry.lock")
-	mainPYPath := filepath.Join(srcDir, "main.py")
-	return fileExists(poetryLockPath) && fileExists(mainPYPath)
+	// in order to successfully build we also need an entrypoint. Since we can
+	// still have a shell without an entrypoint, IsRelevant will still return true.
+	// We could add an IsBuildable() method to the planner interface to check for
+	// build dependencies that are not required for the shell.
+	return fileExists(poetryLockPath)
 }
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
