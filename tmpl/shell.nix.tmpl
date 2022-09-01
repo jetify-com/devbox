@@ -13,6 +13,14 @@ mkShell {
       export name="devbox"
       export IN_NIX_SHELL=0
       export DEVBOX_SHELL_ENABLED=1
+
+      # We set PURE_NIX_PATH in case the user's init files in the devbox shell
+      # end up modifying PATH.
+      export PURE_NIX_PATH="$PATH"
+
+      # Make sure we include a basic path for the devbox shell. Otherwise it may
+      # fail to start.
+      export PATH=$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
     '';
   packages = [
   {{- range .Packages}}
