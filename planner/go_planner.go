@@ -6,9 +6,20 @@ package planner
 import (
 	"os"
 	"path/filepath"
+
+	"golang.org/x/mod/modfile"
 )
 
 type GoPlanner struct{}
+
+var versionMap = map[string]string{
+	// Map go versions to the corresponding nixpkgs:
+	"1.19": "go_1_19",
+	"1.18": "go",
+	"1.17": "go_1_17",
+}
+
+const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't determine a version.
 
 // GoPlanner implements interface Planner (compile-time check)
 var _ Planner = (*GoPlanner)(nil)
@@ -23,9 +34,10 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 }
 
 func (g *GoPlanner) GetPlan(srcDir string) *Plan {
+	goPkg := getGoPackage(srcDir)
 	return &Plan{
 		Packages: []string{
-			"go",
+			goPkg,
 		},
 		InstallStage: &Stage{
 			Command: "go get",
@@ -37,6 +49,31 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 			Command: "./app",
 		},
 	}
+}
+
+func getGoPackage(srcDir string) string {
+	goModPath := filepath.Join(srcDir, "go.mod")
+	goVersion := parseGoVersion(goModPath)
+	v, ok := versionMap[goVersion]
+	if ok {
+		return v
+	} else {
+		// Should we be throwing an error instead, if we don't have a nix package
+		// for the specified version of go?
+		return defaultPkg
+	}
+}
+
+func parseGoVersion(gomodPath string) string {
+	content, err := os.ReadFile(gomodPath)
+	if err != nil {
+		return ""
+	}
+	parsed, err := modfile.ParseLax(gomodPath, content, nil)
+	if err != nil {
+		return ""
+	}
+	return parsed.Go.Version
 }
 
 func fileExists(path string) bool {
