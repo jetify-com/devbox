@@ -27,18 +27,12 @@ type Plan struct {
 	// StartStage defines the actions that should be taken when
 	// starting (running) the application.
 	// Ex: python main.py
-	StartStage *EntrypointStage `json:"start_stage,omitempty"`
+	StartStage *Stage `json:"start_stage,omitempty"`
 }
 
 type Stage struct {
 	Command string `cue:"string" json:"command"`
-	Image   string `cue:"string" json:"image"`
-}
-
-type EntrypointStage struct {
-	PrepareCommand string `cue:"string" json:"prepare_command"`
-	Entrypoint     string `cue:"string" json:"entrypoint"`
-	Image          string `cue:"string" json:"image"`
+	Image   string `json:"-"`
 }
 
 func (p *Plan) String() string {

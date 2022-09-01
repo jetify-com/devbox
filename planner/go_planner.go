@@ -33,8 +33,8 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 		BuildStage: &Stage{
 			Command: "CGO_ENABLED=0 go build -o app",
 		},
-		StartStage: &EntrypointStage{
-			Entrypoint: "./app",
+		StartStage: &Stage{
+			Command: "./app",
 		},
 	}
 }

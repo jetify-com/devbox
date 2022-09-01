@@ -37,24 +37,9 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildSta
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
 
-{{ if .StartStage.Image -}}
-
-FROM {{ .StartStage.Image }}
-
-WORKDIR /app
-
-COPY --link --from=builder /scratch/. /app/
-{{ if .StartStage.PrepareCommand -}}
-RUN {{ .StartStage.PrepareCommand }}
-{{- end }}
-
-ENTRYPOINT {{.StartStage.Entrypoint}}
-
-{{- else -}}
-# If image is not specified, fallback to distroless
-
 # Default to :debug so we have a shell.
-FROM gcr.io/distroless/base:debug
+FROM {{ or .StartStage.Image "gcr.io/distroless/base:debug" }}
+
 # Setup shell so that we catch any errors early
 SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
 
@@ -68,6 +53,4 @@ WORKDIR /app
 
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
-ENTRYPOINT {{.StartStage.Entrypoint}}
-
-{{- end }}
+ENTRYPOINT {{.StartStage.Command}}
