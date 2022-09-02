@@ -44,14 +44,19 @@ func Shell(path string) error {
 	//
 	// ORIGINAL_PATH is set by sh.StartCommand.
 	// PURE_NIX_PATH is set by the shell hook in shell.nix.tmpl.
-	_ = sh.SetInit(`
-# Update the $PATH so the user can keep using programs that live outside of Nix,
-# but prefer anything installed by Nix.
-export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+	sh.PreInitHook = `
+# Update the $PATH so that the user's init script has access to all of their
+# non-devbox programs.
+export PATH="$ORIGINAL_PATH"
+`
+	sh.PostInitHook = `
+# Update the $PATH again so that the Nix packages take priority over the
+# programs outside of devbox.
+export PATH="$PURE_NIX_PATH:$PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
-`)
+`
 
 	cmd := exec.Command("nix-shell", path)
 	cmd.Args = append(cmd.Args, "--pure", "--command", sh.ExecCommand())
