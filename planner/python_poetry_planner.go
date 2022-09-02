@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
@@ -76,16 +77,16 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) string {
 	project := g.PyProject(srcDir)
 	if project == nil {
-		panic("pyproject.toml not found")
+		panic(errors.New("pyproject.toml not found"))
 	}
 	if len(project.Tool.Poetry.Scripts) == 0 {
 		// This error message as a panic is not ideal. We should change GetPlan
 		// to return (plan, error) and print a nicer formatted error message.
-		panic(
+		panic(errors.New(
 			"\n\nno scripts found in pyproject.toml. Please define a script to use as " +
 				"an entrypoint for your app:\n" +
 				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n",
-		)
+		))
 	}
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.

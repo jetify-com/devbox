@@ -3,7 +3,11 @@
 
 package boxcli
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/pkg/errors"
+)
 
 // Functions that help parse arguments
 
@@ -13,7 +17,7 @@ func pathArg(args []string) string {
 	if len(args) > 0 {
 		p, err := filepath.Abs(args[0])
 		if err != nil {
-			panic(err) // What even triggers this?
+			panic(errors.WithStack(err)) // What even triggers this?
 		}
 		return p
 	}
