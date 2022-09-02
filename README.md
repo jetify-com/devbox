@@ -140,6 +140,7 @@ Devbox makes it easy to package your application into an OCI-compliant container
 Devbox currently detects the following languages:
 
 - Go
+- Python (Poetry)
 
 Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
 

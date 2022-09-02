@@ -41,10 +41,15 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildSta
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
 
+{{ if contains .StartStage.Image "debug" -}}
 # Default to :debug so we have a shell.
-FROM gcr.io/distroless/base:debug
+{{ end -}}
+FROM {{ .StartStage.Image }}
+
+{{ if contains .StartStage.Image "distroless" -}}
 # Setup shell so that we catch any errors early
 SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
+{{- end -}}
 
 # TODO: Improve to only copy needed files and not the entire src directory.
 COPY --link --from=builder /scratch/. /app/
