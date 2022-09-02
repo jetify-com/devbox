@@ -47,12 +47,12 @@ func Shell(path string) error {
 	sh.PreInitHook = `
 # Update the $PATH so that the user's init script has access to all of their
 # non-devbox programs.
-export PATH="$ORIGINAL_PATH"
+export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
 `
 	sh.PostInitHook = `
 # Update the $PATH again so that the Nix packages take priority over the
 # programs outside of devbox.
-export PATH="$PURE_NIX_PATH:$PATH"
+export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
