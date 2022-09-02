@@ -18,9 +18,12 @@ import (
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-func generate(rootPath string, plan *planner.Plan) error {
+func generate(rootPath string, plan *planner.Plan, includeBuildFiles bool) error {
 	// TODO: we should also generate a .dockerignore file
-	files := []string{".gitignore", "Dockerfile", "shell.nix", "default.nix"}
+	files := []string{".gitignore", "shell.nix", "default.nix"}
+	if includeBuildFiles {
+		files = append(files, "Dockerfile")
+	}
 
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
