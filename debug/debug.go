@@ -19,14 +19,14 @@ func Enable() {
 	enabled = true
 	log.SetPrefix("[DEBUG] ")
 	log.SetFlags(log.Llongfile | log.Ldate | log.Ltime)
-	log.Output(2, "Debug mode enabled.")
+	_ = log.Output(2, "Debug mode enabled.")
 }
 
 func Log(format string, v ...any) {
 	if !enabled {
 		return
 	}
-	log.Output(2, fmt.Sprintf(format, v...))
+	_ = log.Output(2, fmt.Sprintf(format, v...))
 }
 
 func Recover() {
