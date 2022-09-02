@@ -23,8 +23,9 @@ func AddCmd() *cobra.Command {
 		RunE:  addCmdFunc(flags),
 	}
 
-	command.Flags().BoolVarP(
-		&flags.runtime, "runtime", "r", false, "The package is needed at runtime")
+	// Uncomment when we're ready to turn on 'runtime package' functionality:
+	// command.Flags().BoolVarP(
+	// 	&flags.runtime, "runtime", "r", false, "The package is needed at runtime")
 	return command
 }
 
