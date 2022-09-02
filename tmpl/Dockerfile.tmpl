@@ -1,21 +1,19 @@
 # syntax=docker/dockerfile:1
 
-FROM nixos/nix:2.10.3 as nix
-
 # BASE IMAGE
-FROM nix as base
+FROM nixos/nix:2.10.3 as base
 WORKDIR /scratch
 # Setup shell so that we catch any errors early
 SHELL [ "/bin/sh", "-eux", "-o", "pipefail", "-c"]
-# Install runtime packages
+# Install runtime packages and copy them to /runtime
 COPY --link ./.devbox/gen/runtime.nix ./.devbox/gen/
 RUN mkdir -p /runtime/store && \
   nix-env --profile /runtime/profile -if ./.devbox/gen/runtime.nix && \
   cp -va $(nix-store -qR /runtime/profile) /runtime/store
 
-FROM scratch as runtime_base
-COPY --link --from=base /runtime/store /nix/store
-COPY --link --from=base /runtime/profile/ /usr/local/
+# FROM scratch as runtime
+# COPY --link --from=base /runtime/store/. /nix/store/
+# COPY --link --from=base /runtime/profile/. /usr/local/
 
 # BUILDER IMAGE
 FROM base as builder
@@ -53,17 +51,23 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildSta
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
 
-# RUNTIME IMAGE
+# FINAL APP IMAGE
+# This is the final image with the application. We're trying to keep it very small
+# so we copy only the application + any runtime dependencies it might have.
+# Development dependencies are *not* copied over.
+
 # Default to :debug so we have a shell.
 FROM gcr.io/distroless/base:debug
 # Setup shell so that we catch any errors early
 SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
+# Populate /bin and /usr/bin with symlinks to busybox
+RUN cp -rs /busybox/. /bin/ && cp -rs /busybox/. /usr/bin/
 
 # Copy over the nix store that contains our runtime dependencies.
-COPY --link --from=runtime_base /nix/store/. /nix/store/
+COPY --link --from=base /runtime/store/. /nix/store/
 # https://github.com/moby/moby/issues/37965
 RUN true
-COPY --link --from=runtime_base /usr/local/. /usr/local/
+COPY --link --from=base /runtime/profile/. /usr/local/
 RUN true
 # TODO: Improve to only copy needed files and not the entire src directory.
 COPY --link --from=builder /scratch/. /app/
