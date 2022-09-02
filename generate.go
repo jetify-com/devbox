@@ -18,10 +18,12 @@ import (
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-func generate(rootPath string, plan *planner.Plan) error {
-	// TODO: we should also generate a .dockerignore file
-	files := []string{".gitignore", "Dockerfile", "shell.nix", "default.nix"}
+var shellFiles = []string{".gitignore", "shell.nix"}
 
+// TODO: we should also generate a .dockerignore file
+var buildFiles = []string{".gitignore", "default.nix", "Dockerfile"}
+
+func generate(rootPath string, plan *planner.Plan, files []string) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range files {
