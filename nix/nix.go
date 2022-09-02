@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/shell"
 )
 
@@ -58,11 +59,18 @@ export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
 export PS1="(devbox) $PS1"
 `
 
+	if debug.IsEnabled() {
+		sh.PostInitHook += `echo "POST-INIT PATH=$PATH"
+`
+	}
+
 	cmd := exec.Command("nix-shell", path)
 	cmd.Args = append(cmd.Args, "--pure", "--command", sh.ExecCommand())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	debug.Log("Executing nix-shell command: %v", cmd.Args)
 	return cmd.Run()
 }
 
@@ -71,6 +79,8 @@ func runFallbackShell(path string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	debug.Log("Unrecognized user shell, falling back to: %v", cmd.Args)
 	return cmd.Run()
 }
 

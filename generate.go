@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/planner"
 )
 
@@ -67,4 +68,5 @@ func toJSON(a any) string {
 var templateFuncs = template.FuncMap{
 	"json":     toJSON,
 	"contains": strings.Contains,
+	"debug":    debug.IsEnabled,
 }

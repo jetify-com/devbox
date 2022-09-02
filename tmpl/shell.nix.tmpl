@@ -21,6 +21,11 @@ mkShell {
       # Make sure we include a basic path for the devbox shell. Otherwise it may
       # fail to start.
       export PATH=$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+
+      {{ if debug }}
+      echo "PURE_NIX_PATH=$PURE_NIX_PATH"
+      echo "PATH=$PATH"
+      {{- end }}
     '';
   packages = [
   {{- range .Packages}}

@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 type name string
@@ -83,6 +85,9 @@ func Detect() (*Shell, error) {
 	default:
 		sh.name = shUnknown
 	}
+	debug.Log("Detected shell: %s", sh.path)
+	debug.Log("Recognized shell as: %s", sh.path)
+	debug.Log("Looking for user's shell init file at: %s", sh.initFile)
 	return sh, nil
 }
 
@@ -164,12 +169,16 @@ func (s *Shell) writeHooks() error {
 		return fmt.Errorf("write to shell init file: %v", err)
 	}
 	s.devboxInitFile = devboxInitFile
+
+	debug.Log("Wrote devbox shell init file to: %s", s.devboxInitFile)
+	debug.Log("--- Begin Devbox Shell Init Contents ---\n%s--- End Devbox Shell Init Contents ---", initContents)
 	return nil
 }
 
 // ExecCommand is a command that replaces the current shell with s.
 func (s *Shell) ExecCommand() string {
 	if err := s.writeHooks(); err != nil || s.devboxInitFile == "" {
+		debug.Log("Failed to write shell pre-init and post-init hooks: %v", err)
 		return "exec " + s.path
 	}
 
