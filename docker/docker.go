@@ -4,11 +4,13 @@
 package docker
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/imdario/mergo"
+	"golang.org/x/exp/slices"
 )
 
 // This package provides an API to build images using docker.
@@ -27,6 +29,7 @@ type BuildFlags struct {
 	Platforms      []string
 	NoCache        bool
 	DockerfilePath string
+	Engine         string
 }
 
 type BuildOptions func(*BuildFlags)
@@ -51,6 +54,10 @@ func Build(path string, opts ...BuildOptions) error {
 	for _, opt := range opts {
 		opt(flags)
 	}
+	err := validateFlags(flags)
+	if err != nil {
+		return err
+	}
 
 	args := []string{"build", "."}
 	args = ToArgs(args, flags)
@@ -60,7 +67,12 @@ func Build(path string, opts ...BuildOptions) error {
 		args = append(args, "-f", fileName)
 	}
 
-	cmd := exec.Command("docker", args...)
+	binName := "docker"
+	if flags.Engine != "" {
+		binName = flags.Engine
+	}
+
+	cmd := exec.Command(binName, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -87,4 +99,12 @@ func isFile(path string) bool {
 	}
 
 	return fileInfo.Mode().IsRegular()
+}
+
+func validateFlags(flags *BuildFlags) error {
+	engines := []string{"", "docker", "podman"}
+	if !slices.Contains(engines, flags.Engine) {
+		return fmt.Errorf("unrecognized container engine: %s", flags.Engine)
+	}
+	return nil
 }

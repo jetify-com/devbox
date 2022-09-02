@@ -22,6 +22,8 @@ func BuildCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.NoCache, "no-cache", false, "Do not use a cache")
+	command.Flags().StringVar(
+		&flags.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
 
 	return command
 }
