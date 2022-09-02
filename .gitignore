@@ -1,0 +1,24 @@
+# Global gitignore for the entire monorepo. Only add things here that truly
+# need to always be ignored regardless of project.
+#
+# If something is more specific to a particular project, add a gitignore in the
+# corresponding subdirectory.
+
+# MacOS filesystem
+.DS_Store
+
+# Editors
+.idea
+.vscode
+
+# NodeJS
+node_modules
+.yalc
+dist
+
+
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class

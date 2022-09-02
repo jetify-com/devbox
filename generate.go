@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -54,7 +55,6 @@ func writeFromTemplate(path string, plan *planner.Plan, tmplName string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
 	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
 	return t.Execute(f, plan)
 }
@@ -65,5 +65,6 @@ func toJSON(a any) string {
 }
 
 var templateFuncs = template.FuncMap{
-	"json": toJSON,
+	"json":     toJSON,
+	"contains": strings.Contains,
 }
