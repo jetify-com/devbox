@@ -11,10 +11,6 @@ RUN mkdir -p /runtime/store && \
   nix-env --profile /runtime/profile -if ./.devbox/gen/runtime.nix && \
   cp -va $(nix-store -qR /runtime/profile) /runtime/store
 
-# FROM scratch as runtime
-# COPY --link --from=base /runtime/store/. /nix/store/
-# COPY --link --from=base /runtime/profile/. /usr/local/
-
 # BUILDER IMAGE
 FROM base as builder
 
