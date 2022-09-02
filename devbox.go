@@ -98,14 +98,14 @@ func (d *Devbox) Plan() *planner.Plan {
 // the devbox environment.
 func (d *Devbox) Generate() error {
 	plan := d.Plan()
-	return generate(d.srcDir, plan, true)
+	return generate(d.srcDir, plan, buildFiles)
 }
 
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {
 	plan := d.Plan()
-	err := generate(d.srcDir, plan, false)
+	err := generate(d.srcDir, plan, shellFiles)
 	if err != nil {
 		return errors.WithStack(err)
 	}
