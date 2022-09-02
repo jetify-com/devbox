@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/shell"
 )
 
@@ -44,20 +45,32 @@ func Shell(path string) error {
 	//
 	// ORIGINAL_PATH is set by sh.StartCommand.
 	// PURE_NIX_PATH is set by the shell hook in shell.nix.tmpl.
-	_ = sh.SetInit(`
-# Update the $PATH so the user can keep using programs that live outside of Nix,
-# but prefer anything installed by Nix.
+	sh.PreInitHook = `
+# Update the $PATH so that the user's init script has access to all of their
+# non-devbox programs.
+export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+`
+	sh.PostInitHook = `
+# Update the $PATH again so that the Nix packages take priority over the
+# programs outside of devbox.
 export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
-`)
+`
+
+	if debug.IsEnabled() {
+		sh.PostInitHook += `echo "POST-INIT PATH=$PATH"
+`
+	}
 
 	cmd := exec.Command("nix-shell", path)
 	cmd.Args = append(cmd.Args, "--pure", "--command", sh.ExecCommand())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	debug.Log("Executing nix-shell command: %v", cmd.Args)
 	return cmd.Run()
 }
 
@@ -66,6 +79,8 @@ func runFallbackShell(path string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	debug.Log("Unrecognized user shell, falling back to: %v", cmd.Args)
 	return cmd.Run()
 }
 

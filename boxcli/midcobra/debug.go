@@ -4,11 +4,12 @@
 package midcobra
 
 import (
-	"log"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.jetpack.io/devbox/debug"
 )
 
 type DebugMiddleware struct {
@@ -27,17 +28,25 @@ func (d *DebugMiddleware) AttachToFlag(flags *pflag.FlagSet, flagName string) {
 	d.flag.Hidden = true
 }
 
-func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {}
+func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
+	if d == nil {
+		return
+	}
 
-func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
-	if runErr != nil && d.Debug() {
-		log.Printf("Error: %+v\n", runErr)
+	strVal := ""
+	if d.flag.Changed {
+		strVal = d.flag.Value.String()
+	} else {
+		strVal = os.Getenv("DEVBOX_DEBUG")
+	}
+	if enabled, _ := strconv.ParseBool(strVal); enabled {
+		debug.Enable()
 	}
 }
 
-func (d *DebugMiddleware) Debug() bool {
-	if d != nil && d.flag.Changed {
-		return d.flag.Value.String() == "true"
+func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+	if runErr == nil {
+		return
 	}
-	return os.Getenv("DEBUG") != ""
+	debug.Log("Error: %+v\n", runErr)
 }

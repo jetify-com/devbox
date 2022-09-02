@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 type name string
@@ -30,6 +32,22 @@ type Shell struct {
 	path           string
 	initFile       string
 	devboxInitFile string
+
+	// PreInitHook contains commands that will run before the user's init
+	// files at shell startup.
+	//
+	// The script's environment will contain an ORIGINAL_PATH environment
+	// variable, which will bet set to the PATH before the shell's init
+	// files have had a chance to modify it.
+	PreInitHook string
+
+	// PostInitHook contains commands that will run after the user's init
+	// files at shell startup.
+	//
+	// The script's environment will contain an ORIGINAL_PATH environment
+	// variable, which will bet set to the PATH before the shell's init
+	// files have had a chance to modify it.
+	PostInitHook string
 }
 
 // Detect attempts to determine the user's default shell.
@@ -67,6 +85,9 @@ func Detect() (*Shell, error) {
 	default:
 		sh.name = shUnknown
 	}
+	debug.Log("Detected shell: %s", sh.path)
+	debug.Log("Recognized shell as: %s", sh.path)
+	debug.Log("Looking for user's shell init file at: %s", sh.initFile)
 	return sh, nil
 }
 
@@ -80,33 +101,62 @@ func rcfilePath(basename string) string {
 	return filepath.Join(home, basename)
 }
 
-// SetInit configures the shell to run a script at startup. The script runs
-// after the user's usual init files. The script's environment will contain an
-// ORIGINAL_PATH environment variable, which will bet set to the PATH before
-// the user's init files have had a chance to modify it.
-func (s *Shell) SetInit(script string) error {
-	script = strings.TrimSpace(script)
-	if script == "" {
-		return nil
+func (s *Shell) buildInitFile() ([]byte, error) {
+	prehook := strings.TrimSpace(s.PreInitHook)
+	posthook := strings.TrimSpace(s.PostInitHook)
+	if prehook == "" && posthook == "" {
+		return nil, nil
 	}
 
-	initFile, _ := os.ReadFile(s.initFile)
+	buf := bytes.Buffer{}
+	if prehook != "" {
+		buf.WriteString(`
+# Begin Devbox Pre-init Hook
+
+`)
+		buf.WriteString(prehook)
+		buf.WriteString(`
+
+# End Devbox Pre-init Hook
+
+`)
+	}
+
+	initFile, err := os.ReadFile(s.initFile)
+	if err != nil {
+		return nil, err
+	}
 	initFile = bytes.TrimSpace(initFile)
 	if len(initFile) > 0 {
-		initFile = append(initFile, '\n', '\n')
+		buf.Write(initFile)
 	}
 
-	buf := bytes.NewBuffer(initFile)
-	buf.WriteString(`
+	if posthook != "" {
+		buf.WriteString(`
 
-# Begin Devbox Shell Hook
+# Begin Devbox Pre-init Hook
 
 `)
-	buf.WriteString(script)
-	buf.WriteString(`
+		buf.WriteString(posthook)
+		buf.WriteString(`
 
-# End Devbox Shell Hook
-`)
+# End Devbox Post-init Hook`)
+	}
+
+	b := buf.Bytes()
+	b = bytes.TrimSpace(b)
+	if len(b) == 0 {
+		return nil, nil
+	}
+	b = append(b, '\n')
+	return b, nil
+}
+
+func (s *Shell) writeHooks() error {
+	initContents, err := s.buildInitFile()
+	if err != nil {
+		return err
+	}
 
 	// We need a temp dir (as opposed to a temp file) because zsh uses
 	// ZDOTDIR to point to a new directory containing the .zshrc.
@@ -115,16 +165,20 @@ func (s *Shell) SetInit(script string) error {
 		return fmt.Errorf("create temp dir for shell init file: %v", err)
 	}
 	devboxInitFile := filepath.Join(tmp, filepath.Base(s.initFile))
-	if err := os.WriteFile(devboxInitFile, buf.Bytes(), 0600); err != nil {
+	if err := os.WriteFile(devboxInitFile, initContents, 0600); err != nil {
 		return fmt.Errorf("write to shell init file: %v", err)
 	}
 	s.devboxInitFile = devboxInitFile
+
+	debug.Log("Wrote devbox shell init file to: %s", s.devboxInitFile)
+	debug.Log("--- Begin Devbox Shell Init Contents ---\n%s--- End Devbox Shell Init Contents ---", initContents)
 	return nil
 }
 
 // ExecCommand is a command that replaces the current shell with s.
 func (s *Shell) ExecCommand() string {
-	if s.devboxInitFile == "" {
+	if err := s.writeHooks(); err != nil || s.devboxInitFile == "" {
+		debug.Log("Failed to write shell pre-init and post-init hooks: %v", err)
 		return "exec " + s.path
 	}
 

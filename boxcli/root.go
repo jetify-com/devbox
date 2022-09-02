@@ -6,13 +6,13 @@ package boxcli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/boxcli/midcobra"
 	"go.jetpack.io/devbox/build"
+	"go.jetpack.io/devbox/debug"
 )
 
 var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
@@ -51,15 +51,7 @@ func RootCmd() *cobra.Command {
 }
 
 func Execute(ctx context.Context, args []string) int {
-	defer func() {
-		if r := recover(); r != nil {
-			if debugMiddleware.Debug() {
-				fmt.Printf("PANIC (DEBUG MODE ON): %+v\n", r)
-			} else {
-				fmt.Printf("Error: %s\n", r)
-			}
-		}
-	}()
+	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
 	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
 		AppName:      "devbox",
