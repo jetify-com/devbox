@@ -12,13 +12,16 @@ import (
 func TestMergePlans(t *testing.T) {
 	// Packages get appended
 	plan1 := &Plan{
-		Packages: []string{"foo", "bar"},
+		Packages:        []string{"foo", "bar"},
+		RuntimePackages: []string{"a"},
 	}
 	plan2 := &Plan{
-		Packages: []string{"baz"},
+		Packages:        []string{"baz"},
+		RuntimePackages: []string{"b", "c"},
 	}
 	expected := &Plan{
-		Packages: []string{"foo", "bar", "baz"},
+		Packages:        []string{"foo", "bar", "baz"},
+		RuntimePackages: []string{"a", "b", "c"},
 	}
 	actual := MergePlans(plan1, plan2)
 	assert.Equal(t, expected, actual)
@@ -35,7 +38,8 @@ func TestMergePlans(t *testing.T) {
 		},
 	}
 	expected = &Plan{
-		Packages: []string{},
+		Packages:        []string{},
+		RuntimePackages: []string{},
 		BuildStage: &Stage{
 			Command: "plan1",
 		},
