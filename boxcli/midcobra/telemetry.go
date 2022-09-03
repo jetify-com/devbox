@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
+	"github.com/segmentio/analytics-go"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 )
@@ -59,7 +60,8 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	segmentClient := segment.New(m.opts.TelemetryKey)
+	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, analytics.Config{Verbose: false})
+
 	defer func() {
 		_ = segmentClient.Close()
 	}()
