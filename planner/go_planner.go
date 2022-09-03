@@ -33,7 +33,7 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(goModPath)
 }
 
-func (g *GoPlanner) GetPlan(srcDir string) *Plan {
+func (g *GoPlanner) GetPlan(srcDir string) (*Plan, error) {
 	goPkg := getGoPackage(srcDir)
 	return &Plan{
 		Packages: []string{
@@ -49,7 +49,7 @@ func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 			Command: "./app",
 			Image:   "gcr.io/distroless/base:debug",
 		},
-	}
+	}, nil
 }
 
 func getGoPackage(srcDir string) string {

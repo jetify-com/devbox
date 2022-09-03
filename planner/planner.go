@@ -6,7 +6,7 @@ package planner
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) *Plan // TODO: this should probably return (*Plan, error)
+	GetPlan(srcDir string) (*Plan, error)
 }
 
 var PLANNERS = []Planner{
@@ -14,15 +14,27 @@ var PLANNERS = []Planner{
 	&PythonPoetryPlanner{},
 }
 
-func GetPlan(srcDir string) *Plan {
+func GetPlan(srcDir string) (*Plan, error) {
 	result := &Plan{
 		Packages: []string{},
 	}
 	for _, planner := range PLANNERS {
 		if planner.IsRelevant(srcDir) {
-			plan := planner.GetPlan(srcDir)
+			plan, err := planner.GetPlan(srcDir)
+			if err != nil {
+				return nil, err
+			}
 			result = MergePlans(result, plan)
 		}
 	}
-	return result
+	return result, nil
+}
+
+func HasPlan(srcDir string) bool {
+	for _, planner := range PLANNERS {
+		if planner.IsRelevant(srcDir) {
+			return true
+		}
+	}
+	return false
 }
