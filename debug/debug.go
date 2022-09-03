@@ -54,7 +54,6 @@ func EarliestStackTrace(err error) errors.StackTrace {
 	}
 
 	var st stackTracer
-	var c causer
 	var earliestStackTrace errors.StackTrace
 
 	for err != nil {
@@ -62,6 +61,7 @@ func EarliestStackTrace(err error) errors.StackTrace {
 			earliestStackTrace = st.StackTrace()
 		}
 
+		var c causer
 		if !errors.As(err, &c) {
 			break
 		}

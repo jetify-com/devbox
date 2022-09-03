@@ -57,7 +57,7 @@ func writeFromTemplate(path string, plan *planner.Plan, tmplName string) error {
 		return errors.WithStack(err)
 	}
 	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
-	return t.Execute(f, plan)
+	return errors.WithStack(t.Execute(f, plan))
 }
 
 func toJSON(a any) string {

@@ -56,7 +56,7 @@ func (c *combined) Format(s fmt.State, verb rune) {
 		fmt.Fprintf(s, c.userMessage)
 		return
 	}
-	errors.Wrap(c.source, c.userMessage).(interface {
+	errors.Wrap(c.source, c.userMessage).(interface { //nolint:errorlint
 		Format(s fmt.State, verb rune)
 	}).Format(s, verb)
 }

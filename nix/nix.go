@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/shell"
 )
@@ -71,7 +72,7 @@ export PS1="(devbox) $PS1"
 	cmd.Stderr = os.Stderr
 
 	debug.Log("Executing nix-shell command: %v", cmd.Args)
-	return cmd.Run()
+	return errors.WithStack(cmd.Run())
 }
 
 func runFallbackShell(path string) error {
@@ -81,7 +82,7 @@ func runFallbackShell(path string) error {
 	cmd.Stderr = os.Stderr
 
 	debug.Log("Unrecognized user shell, falling back to: %v", cmd.Args)
-	return cmd.Run()
+	return errors.WithStack(cmd.Run())
 }
 
 func Exec(path string, command []string) error {
@@ -91,7 +92,7 @@ func Exec(path string, command []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = path
-	return cmd.Run()
+	return errors.WithStack(cmd.Run())
 }
 
 func PkgExists(pkg string) bool {
