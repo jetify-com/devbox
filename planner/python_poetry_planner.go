@@ -25,42 +25,56 @@ func (g *PythonPoetryPlanner) Name() string {
 }
 
 func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
-	poetryLockPath := filepath.Join(srcDir, "poetry.lock")
-	// in order to successfully build we also need an entrypoint. Since we can
-	// still have a shell without an entrypoint, IsRelevant will still return true.
-	// We could add an IsBuildable() method to the planner interface to check for
-	// build dependencies that are not required for the shell.
-	return fileExists(poetryLockPath)
+	return fileExists(filepath.Join(srcDir, "poetry.lock"))
+}
+
+func (g *PythonPoetryPlanner) IsBuildable(srcDir string) (bool, error) {
+	project := g.PyProject(srcDir)
+	if project == nil {
+		return false,
+			usererr.New("Project is not buildable: pyproject.toml not found")
+	}
+	if len(project.Tool.Poetry.Scripts) == 0 {
+		return false, usererr.New(
+			"Project is not buildable: no scripts found in pyproject.toml. Please " +
+				"define a script to use as an entrypoint for your app:\n\n" +
+				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n",
+		)
+	}
+	return true, nil
 }
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
 	version := g.PythonVersion(srcDir)
-	entrypoint, err := g.GetEntrypoint(srcDir)
-	if err != nil {
-		return nil, err
-	}
-	return &Plan{
+	plan := &Plan{
 		Packages: []string{
 			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
 			"poetry",
 		},
-		InstallStage: &Stage{
-			// pex is is incompatible with certain less common python versions,
-			// but because versions are sometimes expressed open-ended (e.g. ^3.10)
-			// It will cause `poetry add pex` to fail. One solution is to use: --version flag
-			// but when using that flag, the nix container can no longer find pex.
-			Command: "poetry add pex -n --no-ansi && " +
-				"poetry install --no-dev -n --no-ansi",
-		},
-		BuildStage: &Stage{
-			Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + entrypoint,
-		},
-		// TODO parse pyproject.toml to get the start command?
-		StartStage: &Stage{
-			Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-			Image:   getPythonImage(version),
-		},
-	}, nil
+	}
+	if buildable, _ := g.IsBuildable(srcDir); !buildable {
+		return plan, nil
+	}
+	entrypoint, err := g.GetEntrypoint(srcDir)
+	if err != nil {
+		return nil, err
+	}
+	plan.InstallStage = &Stage{
+		// pex is is incompatible with certain less common python versions,
+		// but because versions are sometimes expressed open-ended (e.g. ^3.10)
+		// It will cause `poetry add pex` to fail. One solution is to use: --version
+		// flag but when using that flag, the nix container can no longer find pex.
+		Command: "poetry add pex -n --no-ansi && " +
+			"poetry install --no-dev -n --no-ansi",
+	}
+	plan.BuildStage = &Stage{
+		Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + entrypoint,
+	}
+	plan.StartStage = &Stage{
+		Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
+		Image:   getPythonImage(version),
+	}
+	return plan, nil
 }
 
 // TODO: This can be generalized to all python planners
@@ -80,16 +94,6 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 
 func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) (string, error) {
 	project := g.PyProject(srcDir)
-	if project == nil {
-		return "", usererr.New("pyproject.toml not found")
-	}
-	if len(project.Tool.Poetry.Scripts) == 0 {
-		return "", usererr.New(
-			"\n\nno scripts found in pyproject.toml. Please define a script to use as " +
-				"an entrypoint for your app:\n" +
-				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n",
-		)
-	}
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.

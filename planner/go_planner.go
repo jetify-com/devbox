@@ -33,6 +33,10 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(goModPath)
 }
 
+func (g *GoPlanner) IsBuildable(srcDir string) (bool, error) {
+	return true, nil
+}
+
 func (g *GoPlanner) GetPlan(srcDir string) (*Plan, error) {
 	goPkg := getGoPackage(srcDir)
 	return &Plan{

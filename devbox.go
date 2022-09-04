@@ -82,6 +82,9 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 				"https://discord.gg/agbskCJXk2 or https://github.com/jetpack-io/devbox",
 		)
 	}
+	if ok, err := planner.IsBuildable(d.srcDir); !ok {
+		return err
+	}
 	defaultFlags := &docker.BuildFlags{
 		Name:           "devbox",
 		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
