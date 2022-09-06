@@ -9,8 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"go.jetpack.io/devbox/boxcli/usererr"
 )
 
 // https://github.com/NixOS/nixpkgs/tree/nixos-22.05/pkgs/development/interpreters/php
@@ -37,10 +35,6 @@ func (g *PHPPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(filepath.Join(srcDir, "composer.lock"))
 }
 
-func (g *PHPPlanner) IsBuildable(srcDir string) (bool, error) {
-	return false, usererr.New("PHP projects are not buildable yet. Stay tuned!")
-}
-
 func (g *PHPPlanner) GetPlan(srcDir string) (*Plan, error) {
 	v := g.version(srcDir)
 	return &Plan{
@@ -48,6 +42,7 @@ func (g *PHPPlanner) GetPlan(srcDir string) (*Plan, error) {
 			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
 		},
+		buildHint: "PHP projects are not buildable yet. Stay tuned!",
 	}, nil
 }
 
