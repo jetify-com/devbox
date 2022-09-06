@@ -48,7 +48,9 @@ linters-settings:
       - ns string
       - r *http.Request
       - sh *Shell
+      - sh *shell
       - sh *shell.Shell
+      - sh shell
       - t testing.T
       - w http.ResponseWriter
       - w io.Writer

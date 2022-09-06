@@ -134,7 +134,7 @@ func (s *Shell) buildInitFile() ([]byte, error) {
 	if posthook != "" {
 		buf.WriteString(`
 
-# Begin Devbox Pre-init Hook
+# Begin Devbox Post-init Hook
 
 `)
 		buf.WriteString(posthook)
