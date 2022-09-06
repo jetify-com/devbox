@@ -28,6 +28,10 @@ type Plan struct {
 	// starting (running) the application.
 	// Ex: python main.py
 	StartStage *Stage `json:"start_stage,omitempty"`
+
+	// When a planner can't build something, it can add a buildHint that will
+	// let the user know what they need to do to get it to build.
+	buildHint string
 }
 
 type Stage struct {
@@ -41,6 +45,13 @@ func (p *Plan) String() string {
 		panic(err)
 	}
 	return string(b)
+}
+
+func (p *Plan) Buildable() bool {
+	if p == nil {
+		return false
+	}
+	return p.InstallStage != nil || p.BuildStage != nil || p.StartStage != nil
 }
 
 func MergePlans(plans ...*Plan) *Plan {

@@ -7,9 +7,6 @@ import "go.jetpack.io/devbox/boxcli/usererr"
 
 type Planner interface {
 	Name() string
-	// IsBuildable returns true if the planner can build the project.
-	// It assumes that IsRelevant() has already returned true.
-	IsBuildable(srcDir string) (bool, error)
 	IsRelevant(srcDir string) bool
 	GetPlan(srcDir string) (*Plan, error)
 }
@@ -41,8 +38,12 @@ func HasPlan(srcDir string) bool {
 func IsBuildable(srcDir string) (bool, error) {
 	buildables := []Planner{}
 	for _, planner := range getRelevantPlans(srcDir) {
-		if ok, err := planner.IsBuildable(srcDir); !ok {
+		if plan, err := planner.GetPlan(srcDir); err != nil {
 			return false, err
+		} else if !plan.Buildable() && plan.buildHint != "" {
+			return false, usererr.New(plan.buildHint)
+		} else {
+			usererr.New("Unable to build project")
 		}
 		buildables = append(buildables, planner)
 	}

@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
-	"go.jetpack.io/devbox/boxcli/usererr"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
@@ -28,22 +27,6 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(filepath.Join(srcDir, "poetry.lock"))
 }
 
-func (g *PythonPoetryPlanner) IsBuildable(srcDir string) (bool, error) {
-	project := g.PyProject(srcDir)
-	if project == nil {
-		return false,
-			usererr.New("Project is not buildable: pyproject.toml not found")
-	}
-	if len(project.Tool.Poetry.Scripts) == 0 {
-		return false, usererr.New(
-			"Project is not buildable: no scripts found in pyproject.toml. Please " +
-				"define a script to use as an entrypoint for your app:\n\n" +
-				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n",
-		)
-	}
-	return true, nil
-}
-
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
 	version := g.PythonVersion(srcDir)
 	plan := &Plan{
@@ -52,7 +35,8 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
 			"poetry",
 		},
 	}
-	if buildable, _ := g.IsBuildable(srcDir); !buildable {
+	if buildable, hint := g.isBuildable(srcDir); !buildable {
+		plan.buildHint = hint
 		return plan, nil
 	}
 	entrypoint, err := g.GetEntrypoint(srcDir)
@@ -139,4 +123,18 @@ func getPythonImage(version *version) string {
 		return fmt.Sprintf("al3xos/python-distroless:%s-debian11-debug", version.majorMinor())
 	}
 	return fmt.Sprintf("python:%s-slim", version.exact())
+}
+
+func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, string) {
+	project := g.PyProject(srcDir)
+	if project == nil {
+		return false, "Project is not buildable: pyproject.toml not found"
+	}
+	if len(project.Tool.Poetry.Scripts) == 0 {
+		return false,
+			"Project is not buildable: no scripts found in pyproject.toml. Please " +
+				"define a script to use as an entrypoint for your app:\n\n" +
+				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n"
+	}
+	return true, ""
 }
