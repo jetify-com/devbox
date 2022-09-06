@@ -39,10 +39,11 @@ func IsBuildable(srcDir string) (bool, error) {
 	for _, planner := range getRelevantPlans(srcDir) {
 		if plan, err := planner.GetPlan(srcDir); err != nil {
 			return false, err
-		} else if !plan.Buildable() && plan.buildHint != "" {
-			return false, usererr.New(plan.buildHint)
-		} else {
-			usererr.New("Unable to build project")
+		} else if !plan.Buildable() {
+			if plan.buildHint != "" {
+				return false, usererr.New(plan.buildHint)
+			}
+			return false, usererr.New("Unable to build project")
 		}
 		buildables = append(buildables, planner)
 	}
