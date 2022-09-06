@@ -160,6 +160,10 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
+## Translation
+
++ [Chinese](./translation/README-zh-CN.md)
+
 ## License
 
 This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE)
