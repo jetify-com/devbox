@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/boxcli/midcobra"
 	"go.jetpack.io/devbox/build"
+	"go.jetpack.io/devbox/debug"
 )
 
 var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
@@ -48,6 +49,7 @@ func RootCmd() *cobra.Command {
 }
 
 func Execute(ctx context.Context, args []string) int {
+	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
 	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
 		AppName:      "devbox",
