@@ -8,7 +8,7 @@
 
 ## What is it?
 
-Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
+[Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
 
@@ -59,6 +59,8 @@ In addition to installing Devbox itself, you will need to install `nix` and `doc
    ```sh
    curl -fsSL https://get.jetpack.io/devbox | bash
    ```
+
+Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
 
 ## Quickstart: Fast, Deterministic Shell
 
@@ -117,6 +119,8 @@ In this quickstart we’ll create a development shell with specific tools instal
    exit
    ```
 
+Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/).
+
 ## Quickstart: Instant Docker Image
 
 Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
@@ -143,12 +147,15 @@ Devbox currently detects the following languages:
 - Python (Poetry)
 
 Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
+Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/#package-your-application-as-a-docker-image).
 
 ## Additional commands
 
 `devbox help` - see all commands
 
 `devbox plan` - see the configuration and steps Devbox will use to generate a container
+
+See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for the full list of commands.
 
 ## Join our Developer Community
 
