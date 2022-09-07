@@ -47,7 +47,6 @@ type SharedPlan struct {
 
 type Stage struct {
 	Command string `cue:"string" json:"command"`
-	Image   string `json:"-"`
 }
 
 func (p *Plan) String() string {

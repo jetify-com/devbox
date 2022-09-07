@@ -43,6 +43,9 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	if err != nil {
 		return plan.WithError(err)
 	}
+	plan.RuntimePackages = []string{
+		fmt.Sprintf("python%s", version.majorMinorConcatenated()),
+	}
 	plan.InstallStage = &Stage{
 		// pex is is incompatible with certain less common python versions,
 		// but because versions are sometimes expressed open-ended (e.g. ^3.10)
@@ -56,7 +59,6 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	}
 	plan.StartStage = &Stage{
 		Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-		Image:   getPythonImage(version),
 	}
 	return plan
 }
@@ -113,16 +115,6 @@ func (g *PythonPoetryPlanner) PyProject(srcDir string) *pyProject {
 	p := pyProject{}
 	_ = toml.Unmarshal(content, &p)
 	return &p
-}
-
-func getPythonImage(version *version) string {
-	if version.exact() == "3" {
-		return "al3xos/python-distroless:3.10-debian11-debug"
-	}
-	if version.majorMinor() == "3.10" || version.majorMinor() == "3.9" {
-		return fmt.Sprintf("al3xos/python-distroless:%s-debian11-debug", version.majorMinor())
-	}
-	return fmt.Sprintf("python:%s-slim", version.exact())
 }
 
 func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
