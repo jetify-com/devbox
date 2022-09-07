@@ -27,20 +27,24 @@ func GetPlan(srcDir string) *Plan {
 	return result
 }
 
-func HasPlan(srcDir string) bool {
-	return len(getRelevantPlans(srcDir)) > 0
-}
-
 func IsBuildable(srcDir string) (bool, error) {
-	buildables := []Planner{}
+	buildables := []*Plan{}
+	unbuildables := []*Plan{}
 	for _, planner := range getRelevantPlans(srcDir) {
-		if plan := planner.GetPlan(srcDir); !plan.Buildable() {
-			if err := plan.Error(); err != nil {
-				return false, err
-			}
-			return false, usererr.New("Unable to build project")
+		if plan := planner.GetPlan(srcDir); plan.Buildable() {
+			buildables = append(buildables, plan)
+		} else {
+			unbuildables = append(unbuildables, plan)
 		}
-		buildables = append(buildables, planner)
+	}
+	// If we could not find any buildable plans, and at least one unbuildable plan,
+	// Let's let the user know. Question: How should we handle multiple
+	// unbuildable plans?
+	if len(buildables) == 0 && len(unbuildables) > 0 {
+		if err := unbuildables[0].Error(); err != nil {
+			return false, err
+		}
+		return false, usererr.New("Unable to build project")
 	}
 	if len(buildables) > 1 {
 		// TODO(Landau) Ideally we give the user a way to resolve this
