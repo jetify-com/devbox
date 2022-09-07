@@ -99,7 +99,6 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
-		Errors:          []planError{},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
