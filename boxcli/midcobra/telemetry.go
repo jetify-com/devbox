@@ -70,15 +70,19 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return // Ignore invalid commands
 	}
 
-	trackEvent(segmentClient, &event{
+	evt := &event{
 		AppName:     m.opts.AppName,
 		AppVersion:  m.opts.AppVersion,
 		Command:     subcmd.CommandPath(),
 		CommandArgs: subargs,
 		DeviceID:    deviceID(),
 		Duration:    time.Since(m.startTime),
-		Failed:      runErr != nil,
-	})
+	}
+	if runErr != nil {
+		evt.Failed = true
+		evt.FailedMsg = runErr.Error()
+	}
+	trackEvent(segmentClient, evt)
 }
 
 func deviceID() string {
@@ -104,6 +108,7 @@ type event struct {
 	DeviceID    string
 	Duration    time.Duration
 	Failed      bool
+	FailedMsg   string
 }
 
 func trackEvent(client segment.Client, evt *event) {
@@ -126,6 +131,7 @@ func trackEvent(client segment.Client, evt *event) {
 			Set("command", evt.Command).
 			Set("command_args", evt.CommandArgs).
 			Set("failed", evt.Failed).
+			Set("failed_msg", evt.FailedMsg).
 			Set("duration", evt.Duration.Milliseconds()),
 	})
 }
