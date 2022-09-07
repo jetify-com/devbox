@@ -13,6 +13,7 @@ type Planner interface {
 
 var PLANNERS = []Planner{
 	&GoPlanner{},
+	&PHPPlanner{},
 	&PythonPoetryPlanner{},
 }
 
