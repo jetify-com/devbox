@@ -36,18 +36,20 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 	goPkg := getGoPackage(srcDir)
 	return &Plan{
-		Packages: []string{
+		DevPackages: []string{
 			goPkg,
 		},
-		InstallStage: &Stage{
-			Command: "go get",
-		},
-		BuildStage: &Stage{
-			Command: "CGO_ENABLED=0 go build -o app",
-		},
-		StartStage: &Stage{
-			Command: "./app",
-			Image:   "gcr.io/distroless/base:debug",
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				Command: "go get",
+			},
+			BuildStage: &Stage{
+				Command: "CGO_ENABLED=0 go build -o app",
+			},
+			StartStage: &Stage{
+				Command: "./app",
+				Image:   "gcr.io/distroless/base:debug",
+			},
 		},
 	}
 }

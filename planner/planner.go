@@ -16,7 +16,8 @@ var PLANNERS = []Planner{
 
 func GetPlan(srcDir string) *Plan {
 	result := &Plan{
-		Packages: []string{},
+		DevPackages:     []string{},
+		RuntimePackages: []string{},
 	}
 	for _, planner := range PLANNERS {
 		if planner.IsRelevant(srcDir) {
