@@ -11,7 +11,11 @@ import (
 
 // Config defines a devbox environment as JSON.
 type Config struct {
-	planner.Plan
+	planner.SharedPlan
+
+	// Packages is the slice of Nix packages that devbox makes available in
+	// its environment.
+	Packages []string `cue:"[...string]" json:"packages"`
 }
 
 // ReadConfig reads a devbox config file.

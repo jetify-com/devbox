@@ -16,10 +16,6 @@ func (g *EmptyPlanner) IsRelevant(srcDir string) bool {
 	return false
 }
 
-func (g *EmptyPlanner) IsBuildable(srcDir string) (bool, error) {
-	return false, nil
-}
-
-func (g *EmptyPlanner) GetPlan(srcDir string) (*Plan, error) {
-	return &Plan{}, nil
+func (g *EmptyPlanner) GetPlan(srcDir string) *Plan {
+	return &Plan{}
 }

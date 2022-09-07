@@ -33,23 +33,25 @@ func (g *GoPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(goModPath)
 }
 
-func (g *GoPlanner) GetPlan(srcDir string) (*Plan, error) {
+func (g *GoPlanner) GetPlan(srcDir string) *Plan {
 	goPkg := getGoPackage(srcDir)
 	return &Plan{
-		Packages: []string{
+		DevPackages: []string{
 			goPkg,
 		},
-		InstallStage: &Stage{
-			Command: "go get",
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				Command: "go get",
+			},
+			BuildStage: &Stage{
+				Command: "CGO_ENABLED=0 go build -o app",
+			},
+			StartStage: &Stage{
+				Command: "./app",
+				Image:   "gcr.io/distroless/base:debug",
+			},
 		},
-		BuildStage: &Stage{
-			Command: "CGO_ENABLED=0 go build -o app",
-		},
-		StartStage: &Stage{
-			Command: "./app",
-			Image:   "gcr.io/distroless/base:debug",
-		},
-	}, nil
+	}
 }
 
 func getGoPackage(srcDir string) string {

@@ -30,9 +30,9 @@ func runPlanCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	plan, err := box.Plan()
-	if err != nil {
-		return err
+	plan := box.Plan()
+	if plan.Invalid() {
+		return plan.Error()
 	}
 	fmt.Println(plan)
 	return nil
