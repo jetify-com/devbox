@@ -165,6 +165,10 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for t
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
+## Translation
+
++ [Chinese](./translation/README-zh-CN.md)
+
 ## License
 
 This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE)
