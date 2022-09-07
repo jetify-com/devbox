@@ -37,13 +37,11 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 		},
 	}
 	if buildable, err := g.isBuildable(srcDir); !buildable {
-		plan.Errors = append(plan.Errors, err)
-		return plan
+		return plan.WithError(err)
 	}
 	entrypoint, err := g.GetEntrypoint(srcDir)
 	if err != nil {
-		plan.Errors = append(plan.Errors, err)
-		return plan
+		return plan.WithError(err)
 	}
 	plan.InstallStage = &Stage{
 		// pex is is incompatible with certain less common python versions,
