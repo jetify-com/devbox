@@ -35,15 +35,14 @@ func (g *PHPPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(filepath.Join(srcDir, "composer.lock"))
 }
 
-func (g *PHPPlanner) GetPlan(srcDir string) (*Plan, error) {
+func (g *PHPPlanner) GetPlan(srcDir string) *Plan {
 	v := g.version(srcDir)
 	return &Plan{
-		Packages: []string{
+		DevPackages: []string{
 			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
 		},
-		buildHint: "PHP projects are not buildable yet. Stay tuned!",
-	}, nil
+	}
 }
 
 func (g *PHPPlanner) version(srcDir string) *version {
