@@ -10,6 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+type planError struct {
+	error
+}
+
 type Plan struct {
 	SharedPlan
 
@@ -21,7 +25,7 @@ type Plan struct {
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 
-	Errors []error
+	Errors []planError `json:"errors,omitempty"`
 }
 
 // Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
@@ -54,6 +58,13 @@ func (p *Plan) String() string {
 	return string(b)
 }
 
+func (p *Plan) Buildable() bool {
+	if p == nil {
+		return false
+	}
+	return p.InstallStage != nil || p.BuildStage != nil || p.StartStage != nil
+}
+
 // Invalid returns true if plan is empty and has errors. If the plan is a partial
 // plan, then it is considered valid.
 func (p *Plan) Invalid() bool {
@@ -72,11 +83,16 @@ func (p *Plan) Error() error {
 	if len(p.Errors) == 0 {
 		return nil
 	}
-	err := p.Errors[0]
+	var err error = p.Errors[0]
 	for _, err = range p.Errors[1:] {
 		err = errors.Wrap(err, err.Error())
 	}
 	return err
+}
+
+func (p *Plan) WithError(err error) *Plan {
+	p.Errors = append(p.Errors, planError{err})
+	return p
 }
 
 func MergePlans(plans ...*Plan) *Plan {
@@ -91,4 +107,8 @@ func MergePlans(plans ...*Plan) *Plan {
 		}
 	}
 	return plan
+}
+
+func (p planError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.Error())
 }
