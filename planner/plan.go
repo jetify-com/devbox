@@ -25,7 +25,7 @@ type Plan struct {
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 
-	Errors []planError
+	Errors []planError `json:"errors,omitempty"`
 }
 
 // Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
@@ -99,6 +99,7 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
+		Errors:          []planError{},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
