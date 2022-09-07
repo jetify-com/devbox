@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
@@ -35,8 +36,8 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 			"poetry",
 		},
 	}
-	if buildable, hint := g.isBuildable(srcDir); !buildable {
-		plan.buildHint = hint
+	if buildable, err := g.isBuildable(srcDir); !buildable {
+		plan.errors = append(plan.errors, err)
 		return plan
 	}
 	entrypoint, err := g.GetEntrypoint(srcDir)
@@ -126,17 +127,18 @@ func getPythonImage(version *version) string {
 	return fmt.Sprintf("python:%s-slim", version.exact())
 }
 
-func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, string) {
+func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
 	project := g.PyProject(srcDir)
 	if project == nil {
-		return false, "Could not build container for python application. " +
-			"pyproject.toml is missing and needed to install python dependencies."
+		return false, usererr.New("Could not build container for python " +
+			"application. pyproject.toml is missing and needed to install python " +
+			"dependencies.")
 	}
 	if len(project.Tool.Poetry.Scripts) == 0 {
 		return false,
-			"Project is not buildable: no scripts found in pyproject.toml. Please " +
-				"define a script to use as an entrypoint for your app:\n\n" +
-				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n"
+			usererr.New("Project is not buildable: no scripts found in " +
+				"pyproject.toml. Please define a script to use as an entrypoint for " +
+				"your app:\n\n[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n")
 	}
-	return true, ""
+	return true, nil
 }
