@@ -38,7 +38,7 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	entrypoint, err := g.GetEntrypoint(srcDir)
 	if err != nil {
 		// This gets improved in follow up PR
-		return &Plan{errors: []error{err}}
+		return &Plan{Errors: []error{err}}
 	}
 	return &Plan{
 		DevPackages: []string{
