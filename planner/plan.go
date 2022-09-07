@@ -8,6 +8,7 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/pkgslice"
 )
 
 type planError struct {
@@ -47,6 +48,9 @@ type SharedPlan struct {
 
 type Stage struct {
 	Command string `cue:"string" json:"command"`
+
+	// InputFiles is internal for planners only.
+	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
 }
 
 func (p *Plan) String() string {
@@ -98,6 +102,11 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{},
+			BuildStage:   &Stage{},
+			StartStage:   &Stage{},
+		},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
@@ -105,6 +114,19 @@ func MergePlans(plans ...*Plan) *Plan {
 			panic(err) // TODO: propagate error.
 		}
 	}
+
+	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
+	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
+
+	// Set default files for install stage to copy.
+	if plan.SharedPlan.InstallStage.InputFiles == nil {
+		plan.SharedPlan.InstallStage.InputFiles = []string{"."}
+	}
+	// Set default files for install stage to copy over from build step.
+	if plan.SharedPlan.StartStage.InputFiles == nil {
+		plan.SharedPlan.StartStage.InputFiles = []string{"."}
+	}
+
 	return plan
 }
 

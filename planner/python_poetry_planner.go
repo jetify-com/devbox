@@ -30,11 +30,13 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
+	pythonPkg := fmt.Sprintf("python%s", version.majorMinorConcatenated())
 	plan := &Plan{
 		DevPackages: []string{
-			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
+			pythonPkg,
 			"poetry",
 		},
+		RuntimePackages: []string{pythonPkg},
 	}
 	if buildable, err := g.isBuildable(srcDir); !buildable {
 		return plan.WithError(err)
