@@ -14,16 +14,18 @@ func AddCmd() *cobra.Command {
 		Use:   "add <pkg>...",
 		Short: "Add a new package to your devbox",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  runAddCmd,
+		RunE:  addCmdFunc(),
 	}
+
 	return command
 }
 
-func runAddCmd(cmd *cobra.Command, args []string) error {
-	box, err := devbox.Open(".")
-	if err != nil {
-		return errors.WithStack(err)
+func addCmdFunc() runFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		box, err := devbox.Open(".")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return box.Add(args...)
 	}
-
-	return box.Add(args...)
 }

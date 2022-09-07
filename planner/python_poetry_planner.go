@@ -36,25 +36,27 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
 	return &Plan{
-		Packages: []string{
+		DevPackages: []string{
 			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
 			"poetry",
 		},
-		InstallStage: &Stage{
-			// pex is is incompatible with certain less common python versions,
-			// but because versions are sometimes expressed open-ended (e.g. ^3.10)
-			// It will cause `poetry add pex` to fail. One solution is to use: --version flag
-			// but when using that flag, the nix container can no longer find pex.
-			Command: "poetry add pex -n --no-ansi && " +
-				"poetry install --no-dev -n --no-ansi",
-		},
-		BuildStage: &Stage{
-			Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + g.GetEntrypoint(srcDir),
-		},
-		// TODO parse pyproject.toml to get the start command?
-		StartStage: &Stage{
-			Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-			Image:   getPythonImage(version),
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				// pex is is incompatible with certain less common python versions,
+				// but because versions are sometimes expressed open-ended (e.g. ^3.10)
+				// It will cause `poetry add pex` to fail. One solution is to use: --version flag
+				// but when using that flag, the nix container can no longer find pex.
+				Command: "poetry add pex -n --no-ansi && " +
+					"poetry install --no-dev -n --no-ansi",
+			},
+			BuildStage: &Stage{
+				Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + g.GetEntrypoint(srcDir),
+			},
+			// TODO parse pyproject.toml to get the start command?
+			StartStage: &Stage{
+				Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
+				Image:   getPythonImage(version),
+			},
 		},
 	}
 }
