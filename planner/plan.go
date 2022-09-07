@@ -65,9 +65,12 @@ func (p *Plan) Invalid() bool {
 		len(p.errors) > 0
 }
 
+// Error combines all errors into a single error. We use this instead of a
+// Error() string interface because some of the errors may be user errors, which
+// get formatted differently by some clients.
 func (p *Plan) Error() error {
 	if len(p.errors) == 0 {
-		return errors.New("plan is invalid")
+		return nil
 	}
 	err := p.errors[0]
 	for _, err = range p.errors[1:] {
