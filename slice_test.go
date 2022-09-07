@@ -8,36 +8,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func TestUnique(t *testing.T) {
-	cases := []struct{ in, out []string }{
-		{
-			in:  []string{"a", "b", "b", "c"},
-			out: []string{"a", "b", "c"},
-		},
-		{
-			in:  []string{},
-			out: []string{},
-		},
-		{
-			in:  []string{"a", "b", "c"},
-			out: []string{"a", "b", "c"},
-		},
-		{
-			in:  []string{"a", "a"},
-			out: []string{"a"},
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(fmt.Sprintf("{%s}", strings.Join(tc.in, ",")), func(t *testing.T) {
-			got := unique(tc.in)
-			if !slices.Equal(got, tc.out) {
-				t.Errorf("Got slice %v, want %v.", got, tc.out)
-			}
-		})
-	}
-}
-
 func TestExclude(t *testing.T) {
 	cases := []struct{ in, exclude, out []string }{
 		{
