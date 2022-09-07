@@ -59,7 +59,11 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{Verbose: false})
+	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey,
+		segment.Config{
+			Verbose:   false,
+			BatchSize: 1, // We're in a short lived program, so batching doesn't make sense
+		})
 
 	defer func() {
 		_ = segmentClient.Close()
