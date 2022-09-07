@@ -37,12 +37,12 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 		},
 	}
 	if buildable, err := g.isBuildable(srcDir); !buildable {
-		plan.errors = append(plan.errors, err)
+		plan.Errors = append(plan.Errors, err)
 		return plan
 	}
 	entrypoint, err := g.GetEntrypoint(srcDir)
 	if err != nil {
-		plan.errors = append(plan.errors, err)
+		plan.Errors = append(plan.Errors, err)
 		return plan
 	}
 	plan.InstallStage = &Stage{
