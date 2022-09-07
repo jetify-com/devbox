@@ -2,13 +2,11 @@
 
 ### Instant, easy, and predictable shells and containers
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases)
-
----
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases) [![tests](https://github.com/jetpack-io/devbox/actions/workflows/release.yml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/release.yml?branch=main)
 
 ## What is it?
 
-Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
+[Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
 
@@ -59,6 +57,8 @@ In addition to installing Devbox itself, you will need to install `nix` and `doc
    ```sh
    curl -fsSL https://get.jetpack.io/devbox | bash
    ```
+
+Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
 
 ## Quickstart: Fast, Deterministic Shell
 
@@ -117,6 +117,8 @@ In this quickstart we’ll create a development shell with specific tools instal
    exit
    ```
 
+Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/).
+
 ## Quickstart: Instant Docker Image
 
 Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
@@ -140,8 +142,10 @@ Devbox makes it easy to package your application into an OCI-compliant container
 Devbox currently detects the following languages:
 
 - Go
+- Python (Poetry)
 
 Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
+Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/#package-your-application-as-a-docker-image).
 
 ## Additional commands
 
@@ -149,10 +153,13 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 
 `devbox plan` - see the configuration and steps Devbox will use to generate a container
 
+See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for the full list of commands.
+
 ## Join our Developer Community
 
 + Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project. 
 + File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
++ Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
 ## Related Work
 

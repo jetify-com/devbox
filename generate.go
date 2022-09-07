@@ -9,19 +9,23 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/planner"
 )
 
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-func generate(rootPath string, plan *planner.Plan) error {
-	// TODO: we should also generate a .dockerignore file
-	files := []string{".gitignore", "Dockerfile", "shell.nix", "development.nix", "runtime.nix"}
+var shellFiles = []string{".gitignore", "shell.nix"}
 
+// TODO: we should also generate a .dockerignore file
+var buildFiles = []string{".gitignore", "development.nix", "Dockerfile"}
+
+func generate(rootPath string, plan *planner.Plan, files []string) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range files {
@@ -52,7 +56,6 @@ func writeFromTemplate(path string, plan *planner.Plan, tmplName string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
 	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
 	return t.Execute(f, plan)
 }
@@ -63,5 +66,7 @@ func toJSON(a any) string {
 }
 
 var templateFuncs = template.FuncMap{
-	"json": toJSON,
+	"json":     toJSON,
+	"contains": strings.Contains,
+	"debug":    debug.IsEnabled,
 }

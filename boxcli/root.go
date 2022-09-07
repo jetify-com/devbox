@@ -12,7 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/boxcli/midcobra"
 	"go.jetpack.io/devbox/build"
+	"go.jetpack.io/devbox/debug"
 )
+
+var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
 
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
@@ -41,16 +44,21 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(ShellCmd())
 	command.AddCommand(VersionCmd())
+
+	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
+
 	return command
 }
 
 func Execute(ctx context.Context, args []string) int {
+	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
 	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
 		AppName:      "devbox",
 		AppVersion:   build.Version,
 		TelemetryKey: build.TelemetryKey,
 	}))
+	exe.AddMiddleware(debugMiddleware)
 	return exe.Execute(ctx, args)
 }
 

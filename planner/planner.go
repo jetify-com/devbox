@@ -6,12 +6,12 @@ package planner
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) *Plan
+	GetPlan(srcDir string) *Plan // TODO: this should probably return (*Plan, error)
 }
 
 var PLANNERS = []Planner{
 	&GoPlanner{},
-	&PythonPlanner{},
+	&PythonPoetryPlanner{},
 }
 
 func GetPlan(srcDir string) *Plan {
