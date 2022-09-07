@@ -101,6 +101,11 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{},
+			BuildStage:   &Stage{},
+			StartStage:   &Stage{},
+		},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
@@ -111,6 +116,7 @@ func MergePlans(plans ...*Plan) *Plan {
 
 	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
+
 	// Set default files for install stage to copy.
 	if plan.SharedPlan.InstallStage.InputFiles == nil {
 		plan.SharedPlan.InstallStage.InputFiles = []string{"."}

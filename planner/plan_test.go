@@ -22,6 +22,19 @@ func TestMergePlans(t *testing.T) {
 	expected := &Plan{
 		DevPackages:     []string{"foo", "bar", "baz"},
 		RuntimePackages: []string{"a", "b", "c"},
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"."},
+			},
+			BuildStage: &Stage{
+				Command: "",
+			},
+			StartStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"."},
+			},
+		},
 	}
 	actual := MergePlans(plan1, plan2)
 	assert.Equal(t, expected, actual)
@@ -45,8 +58,50 @@ func TestMergePlans(t *testing.T) {
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"."},
+			},
 			BuildStage: &Stage{
 				Command: "plan1",
+			},
+			StartStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"."},
+			},
+		},
+	}
+	actual = MergePlans(plan1, plan2)
+	assert.Equal(t, expected, actual)
+
+	// InputFiles can be overwritten:
+	plan1 = &Plan{
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				InputFiles: []string{"package.json"},
+			},
+			StartStage: &Stage{
+				InputFiles: []string{"input"},
+			},
+		},
+	}
+	plan2 = &Plan{
+		SharedPlan: SharedPlan{},
+	}
+	expected = &Plan{
+		DevPackages:     []string{},
+		RuntimePackages: []string{},
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"package.json"},
+			},
+			BuildStage: &Stage{
+				Command: "",
+			},
+			StartStage: &Stage{
+				Command:    "",
+				InputFiles: []string{"input"},
 			},
 		},
 	}

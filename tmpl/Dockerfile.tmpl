@@ -33,6 +33,7 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store \
 {{ if .InstallStage }}
   {{ if .InstallStage.InputFiles }}{{ range $i, $files := .InstallStage.InputFiles }}
 COPY --link {{ $files }} ./
+RUN true
   {{- end }}{{- end }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallStage.Command}}
 {{- end }}
@@ -43,6 +44,7 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallS
 {{ if .BuildStage }}
   {{ if .BuildStage.InputFiles }}{{ range $i, $files := .BuildStage.InputFiles }}
 COPY --link {{ $files }} ./
+RUN true
   {{- end }}{{- end }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
 {{- end }}
@@ -77,6 +79,7 @@ WORKDIR /app
 {{ if .StartStage }}
   {{ if .StartStage.InputFiles }}{{ range $i, $files := .StartStage.InputFiles }}
 COPY --link --from=builder /scratch/{{ $files }} ./
+RUN true
   {{- end }}{{- end }}
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
