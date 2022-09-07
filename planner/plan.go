@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 )
 
 type Plan struct {
@@ -19,6 +20,8 @@ type Plan struct {
 	// in both the development environment and the final container that runs the
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
+
+	errors []error
 }
 
 // Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
@@ -49,6 +52,28 @@ func (p *Plan) String() string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// Invalid returns true if plan is empty and has errors. If the plan is a partial
+// plan, then it is considered valid.
+func (p *Plan) Invalid() bool {
+	return len(p.DevPackages) == 0 &&
+		len(p.RuntimePackages) == 0 &&
+		p.InstallStage == nil &&
+		p.BuildStage == nil &&
+		p.StartStage == nil &&
+		len(p.errors) > 0
+}
+
+func (p *Plan) Error() error {
+	if len(p.errors) == 0 {
+		return errors.New("plan is invalid")
+	}
+	err := p.errors[0]
+	for _, err = range p.errors[1:] {
+		err = errors.Wrap(err, err.Error())
+	}
+	return err
 }
 
 func MergePlans(plans ...*Plan) *Plan {

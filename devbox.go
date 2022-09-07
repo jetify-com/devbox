@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
@@ -81,13 +80,6 @@ func (d *Devbox) Remove(pkgs ...string) error {
 
 // Build creates a Docker image containing a shell with the devbox environment.
 func (d *Devbox) Build(opts ...docker.BuildOptions) error {
-	if !planner.HasPlan(d.srcDir) {
-		return usererr.New(
-			"Unable to detect a build plan. It may be your language/framework is " +
-				"not supported yet. Please reach out to us on Discord " +
-				"https://discord.gg/agbskCJXk2 or https://github.com/jetpack-io/devbox",
-		)
-	}
 	defaultFlags := &docker.BuildFlags{
 		Name:           "devbox",
 		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
@@ -103,25 +95,21 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // environment.
-func (d *Devbox) Plan() (*planner.Plan, error) {
+func (d *Devbox) Plan() *planner.Plan {
 	basePlan := &planner.Plan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		SharedPlan:      d.cfg.SharedPlan,
 	}
-	plan, err := planner.GetPlan(d.srcDir)
-	if err != nil {
-		return nil, err
-	}
-	return planner.MergePlans(basePlan, plan), nil
+	return planner.MergePlans(basePlan, planner.GetPlan(d.srcDir))
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
 // the devbox environment.
 func (d *Devbox) Generate() error {
-	plan, err := d.Plan()
-	if err != nil {
-		return err
+	plan := d.Plan()
+	if plan.Invalid() {
+		return plan.Error()
 	}
 	return generate(d.srcDir, plan, append(shellFiles, buildFiles...))
 }
@@ -129,11 +117,11 @@ func (d *Devbox) Generate() error {
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {
-	plan, err := d.Plan()
-	if err != nil {
-		return err
+	plan := d.Plan()
+	if plan.Invalid() {
+		return plan.Error()
 	}
-	err = generate(d.srcDir, plan, shellFiles)
+	err := generate(d.srcDir, plan, shellFiles)
 	if err != nil {
 		return errors.WithStack(err)
 	}

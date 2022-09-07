@@ -33,11 +33,12 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(poetryLockPath)
 }
 
-func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
+func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
 	entrypoint, err := g.GetEntrypoint(srcDir)
 	if err != nil {
-		return nil, err
+		// This gets improved in follow up PR
+		return &Plan{errors: []error{err}}
 	}
 	return &Plan{
 		DevPackages: []string{
@@ -62,7 +63,7 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
 				Image:   getPythonImage(version),
 			},
 		},
-	}, nil
+	}
 }
 
 // TODO: This can be generalized to all python planners
