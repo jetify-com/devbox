@@ -52,3 +52,6 @@ linters-settings:
       - t testing.T
       - w http.ResponseWriter
       - w io.Writer
+  wrapcheck:
+    ignorePackageGlobs:
+      - go.jetpack.io/devbox/*

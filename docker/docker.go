@@ -4,7 +4,6 @@
 package docker
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -105,7 +104,7 @@ func isFile(path string) bool {
 func validateFlags(flags *BuildFlags) error {
 	engines := []string{"", "docker", "podman"}
 	if !slices.Contains(engines, flags.Engine) {
-		return fmt.Errorf("unrecognized container engine: %s", flags.Engine)
+		return errors.Errorf("unrecognized container engine: %s", flags.Engine)
 	}
 	return nil
 }

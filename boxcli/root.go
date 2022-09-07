@@ -21,10 +21,6 @@ func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable shells and containers",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			// Don't display 'usage' on application errors.
-			cmd.SilenceUsage = true
-		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			_, err := exec.LookPath("nix-shell")
 			if err != nil {
@@ -35,6 +31,8 @@ func RootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 	command.AddCommand(AddCmd())
 	command.AddCommand(BuildCmd())

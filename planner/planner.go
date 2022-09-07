@@ -6,7 +6,7 @@ package planner
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) *Plan // TODO: this should probably return (*Plan, error)
+	GetPlan(srcDir string) *Plan
 }
 
 var PLANNERS = []Planner{

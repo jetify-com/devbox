@@ -5,12 +5,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 var enabled bool
 
 func init() {
-	enabled, _ = strconv.ParseBool(os.Getenv("DEBUG"))
+	enabled, _ = strconv.ParseBool(os.Getenv("DEVBOX_DEBUG"))
 }
 
 func IsEnabled() bool { return enabled }
@@ -40,4 +42,31 @@ func Recover() {
 		panic(r)
 	}
 	fmt.Println("Error:", r)
+}
+
+func EarliestStackTrace(err error) errors.StackTrace {
+	type stackTracer interface {
+		StackTrace() errors.StackTrace
+	}
+
+	type causer interface {
+		Cause() error
+	}
+
+	var st stackTracer
+	var earliestStackTrace errors.StackTrace
+
+	for err != nil {
+		if errors.As(err, &st) {
+			earliestStackTrace = st.StackTrace()
+		}
+
+		var c causer
+		if !errors.As(err, &c) {
+			break
+		}
+		err = c.Cause()
+	}
+
+	return earliestStackTrace
 }

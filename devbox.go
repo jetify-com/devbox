@@ -108,6 +108,9 @@ func (d *Devbox) Plan() *planner.Plan {
 // the devbox environment.
 func (d *Devbox) Generate() error {
 	plan := d.Plan()
+	if plan.Invalid() {
+		return plan.Error()
+	}
 	return generate(d.srcDir, plan, append(shellFiles, buildFiles...))
 }
 
@@ -115,6 +118,9 @@ func (d *Devbox) Generate() error {
 // process.
 func (d *Devbox) Shell() error {
 	plan := d.Plan()
+	if plan.Invalid() {
+		return plan.Error()
+	}
 	err := generate(d.srcDir, plan, shellFiles)
 	if err != nil {
 		return errors.WithStack(err)

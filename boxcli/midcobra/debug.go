@@ -4,11 +4,14 @@
 package midcobra
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/debug"
 )
 
@@ -48,5 +51,12 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if runErr == nil {
 		return
 	}
-	debug.Log("Error: %+v\n", runErr)
+	if usererr.HasUserMessage(runErr) {
+		color.Red("\nError: " + runErr.Error() + "\n\n")
+	} else {
+		fmt.Printf("Error: %v\n", runErr)
+	}
+
+	st := debug.EarliestStackTrace(runErr)
+	debug.Log("Error: %v\n%+v", runErr, st)
 }

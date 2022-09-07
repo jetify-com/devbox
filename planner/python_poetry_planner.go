@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
-	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
@@ -35,6 +35,11 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
+	entrypoint, err := g.GetEntrypoint(srcDir)
+	if err != nil {
+		// This gets improved in follow up PR
+		return &Plan{Errors: []error{err}}
+	}
 	return &Plan{
 		DevPackages: []string{
 			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
@@ -50,7 +55,7 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 					"poetry install --no-dev -n --no-ansi",
 			},
 			BuildStage: &Stage{
-				Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + g.GetEntrypoint(srcDir),
+				Command: "PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script " + entrypoint,
 			},
 			// TODO parse pyproject.toml to get the start command?
 			StartStage: &Stage{
@@ -76,32 +81,30 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 	return defaultVersion
 }
 
-func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) string {
+func (g *PythonPoetryPlanner) GetEntrypoint(srcDir string) (string, error) {
 	project := g.PyProject(srcDir)
 	if project == nil {
-		panic(errors.New("pyproject.toml not found"))
+		return "", usererr.New("pyproject.toml not found")
 	}
 	if len(project.Tool.Poetry.Scripts) == 0 {
-		// This error message as a panic is not ideal. We should change GetPlan
-		// to return (plan, error) and print a nicer formatted error message.
-		panic(errors.New(
+		return "", usererr.New(
 			"\n\nno scripts found in pyproject.toml. Please define a script to use as " +
 				"an entrypoint for your app:\n" +
 				"[tool.poetry.scripts]\nmy_app = \"my_app:my_function\"\n",
-		))
+		)
 	}
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.
 	moduleName := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
 	if _, ok := project.Tool.Poetry.Scripts[moduleName]; ok {
-		return moduleName
+		return moduleName, nil
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
 	scripts := maps.Keys(project.Tool.Poetry.Scripts)
 	slices.Sort(scripts)
-	return scripts[0]
+	return scripts[0], nil
 }
 
 type pyProject struct {

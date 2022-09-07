@@ -31,6 +31,9 @@ func runPlanCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	plan := box.Plan()
+	if plan.Invalid() {
+		return plan.Error()
+	}
 	fmt.Println(plan)
 	return nil
 }
