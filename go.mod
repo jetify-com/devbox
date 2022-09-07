@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	cuelang.org/go v0.4.3
+	github.com/bmatcuk/doublestar/v4 v4.2.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/imdario/mergo v0.3.13
 	github.com/pelletier/go-toml/v2 v2.0.5
