@@ -9,10 +9,7 @@ in with pkgs;
 buildEnv {
   name = "devbox-development";
   paths = [
-  {{- range .RuntimePackages}}
-    {{.}}
-  {{end -}}
-  {{- range .Packages}}
+  {{- range .DevPackages}}
     {{.}}
   {{end -}}
   ];

@@ -12,15 +12,15 @@ import (
 func TestMergePlans(t *testing.T) {
 	// Packages get appended
 	plan1 := &Plan{
-		Packages:        []string{"foo", "bar"},
+		DevPackages:     []string{"foo", "bar"},
 		RuntimePackages: []string{"a"},
 	}
 	plan2 := &Plan{
-		Packages:        []string{"baz"},
+		DevPackages:     []string{"baz"},
 		RuntimePackages: []string{"b", "c"},
 	}
 	expected := &Plan{
-		Packages:        []string{"foo", "bar", "baz"},
+		DevPackages:     []string{"foo", "bar", "baz"},
 		RuntimePackages: []string{"a", "b", "c"},
 	}
 	actual := MergePlans(plan1, plan2)
@@ -28,20 +28,26 @@ func TestMergePlans(t *testing.T) {
 
 	// Base plan (the first one) takes precedence:
 	plan1 = &Plan{
-		BuildStage: &Stage{
-			Command: "plan1",
+		SharedPlan: SharedPlan{
+			BuildStage: &Stage{
+				Command: "plan1",
+			},
 		},
 	}
 	plan2 = &Plan{
-		BuildStage: &Stage{
-			Command: "plan2",
+		SharedPlan: SharedPlan{
+			BuildStage: &Stage{
+				Command: "plan2",
+			},
 		},
 	}
 	expected = &Plan{
-		Packages:        []string{},
+		DevPackages:     []string{},
 		RuntimePackages: []string{},
-		BuildStage: &Stage{
-			Command: "plan1",
+		SharedPlan: SharedPlan{
+			BuildStage: &Stage{
+				Command: "plan1",
+			},
 		},
 	}
 	actual = MergePlans(plan1, plan2)

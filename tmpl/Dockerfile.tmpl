@@ -54,7 +54,7 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildSta
 
 {{ if contains .StartStage.Image "debug" -}}
 # Default to :debug so we have a shell.
-{{ end -}}
+{{- end }}
 FROM {{ .StartStage.Image }}
 
 {{ if contains .StartStage.Image "distroless" -}}
@@ -62,7 +62,7 @@ FROM {{ .StartStage.Image }}
 SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
 # Populate /bin and /usr/bin with symlinks to busybox
 RUN cp -rs /busybox/. /bin/ && cp -rs /busybox/. /usr/bin/
-{{- end -}}
+{{- end}}
 
 # Copy over the nix store that contains our runtime dependencies.
 COPY --link --from=base /runtime/store/. /nix/store/
@@ -80,6 +80,6 @@ WORKDIR /app
 
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
-{{ if .StartStage }}
+{{ if .StartStage -}}
 ENTRYPOINT {{.StartStage.Command}}
 {{- end }}

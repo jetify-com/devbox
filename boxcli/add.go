@@ -9,37 +9,23 @@ import (
 	"go.jetpack.io/devbox"
 )
 
-type addFlags struct {
-	runtime bool
-}
-
 func AddCmd() *cobra.Command {
-	flags := &addFlags{}
-
 	command := &cobra.Command{
 		Use:   "add <pkg>...",
 		Short: "Add a new package to your devbox",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  addCmdFunc(flags),
+		RunE:  addCmdFunc(),
 	}
 
-	// Uncomment when we're ready to turn on 'runtime package' functionality:
-	// command.Flags().BoolVarP(
-	// 	&flags.runtime, "runtime", "r", false, "The package is needed at runtime")
 	return command
 }
 
-func addCmdFunc(flags *addFlags) runFunc {
+func addCmdFunc() runFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		box, err := devbox.Open(".")
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
-		if flags.runtime {
-			return box.AddToRuntime(args...)
-		} else {
-			return box.Add(args...)
-		}
+		return box.Add(args...)
 	}
 }

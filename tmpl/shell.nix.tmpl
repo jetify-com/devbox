@@ -28,10 +28,7 @@ mkShell {
       {{- end }}
     '';
   packages = [
-  {{- range .RuntimePackages}}
-    {{.}}
-  {{end -}}
-  {{- range .Packages}}
+  {{- range .DevPackages}}
     {{.}}
   {{end -}}
   ];
