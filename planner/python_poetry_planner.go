@@ -30,11 +30,13 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
+	pythonPkg := fmt.Sprintf("python%s", version.majorMinorConcatenated())
 	plan := &Plan{
 		DevPackages: []string{
-			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
+			pythonPkg,
 			"poetry",
 		},
+		RuntimePackages: []string{pythonPkg},
 	}
 	if buildable, err := g.isBuildable(srcDir); !buildable {
 		return plan.WithError(err)
@@ -56,7 +58,6 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	}
 	plan.StartStage = &Stage{
 		Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-		Image:   getPythonImage(version),
 	}
 	return plan
 }
@@ -113,16 +114,6 @@ func (g *PythonPoetryPlanner) PyProject(srcDir string) *pyProject {
 	p := pyProject{}
 	_ = toml.Unmarshal(content, &p)
 	return &p
-}
-
-func getPythonImage(version *version) string {
-	if version.exact() == "3" {
-		return "al3xos/python-distroless:3.10-debian11-debug"
-	}
-	if version.majorMinor() == "3.10" || version.majorMinor() == "3.9" {
-		return fmt.Sprintf("al3xos/python-distroless:%s-debian11-debug", version.majorMinor())
-	}
-	return fmt.Sprintf("python:%s-slim", version.exact())
 }
 
 func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {

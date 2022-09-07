@@ -30,8 +30,11 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store \
 # 2. INSTALL STAGE
 #    Install libraries needed by the source code.
 # -----------------------------------------------
-COPY --link . ./
 {{ if .InstallStage }}
+  {{ if .InstallStage.InputFiles }}{{ range $i, $files := .InstallStage.InputFiles }}
+COPY --link {{ $files }} ./
+RUN true
+  {{- end }}{{- end }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallStage.Command}}
 {{- end }}
 
@@ -39,6 +42,10 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallS
 #    Compile the source code into an executable.
 # ----------------------------------------------
 {{ if .BuildStage }}
+  {{ if .BuildStage.InputFiles }}{{ range $i, $files := .BuildStage.InputFiles }}
+COPY --link {{ $files }} ./
+RUN true
+  {{- end }}{{- end }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
 {{- end }}
 
@@ -46,23 +53,17 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildSta
 # 4. PACKAGING STAGE
 #    Create a minimal image that contains the executable.
 # -------------------------------------------------------
-
 # FINAL APP IMAGE
 # This is the final image with the application. We're trying to keep it very small
 # so we copy only the application + any runtime dependencies it might have.
 # Development dependencies are *not* copied over.
 
-{{ if contains .StartStage.Image "debug" -}}
 # Default to :debug so we have a shell.
-{{- end }}
-FROM {{ .StartStage.Image }}
-
-{{ if contains .StartStage.Image "distroless" -}}
+FROM gcr.io/distroless/base:debug
 # Setup shell so that we catch any errors early
 SHELL [ "/busybox/sh", "-eu", "-o", "pipefail", "-c"]
 # Populate /bin and /usr/bin with symlinks to busybox
 RUN cp -rs /busybox/. /bin/ && cp -rs /busybox/. /usr/bin/
-{{- end}}
 
 # Copy over the nix store that contains our runtime dependencies.
 COPY --link --from=base /runtime/store/. /nix/store/
@@ -70,16 +71,17 @@ COPY --link --from=base /runtime/store/. /nix/store/
 RUN true
 COPY --link --from=base /runtime/profile/. /usr/local/
 RUN true
-# TODO: Improve to only copy needed files and not the entire src directory.
-COPY --link --from=builder /scratch/. /app/
-WORKDIR /app
 
+WORKDIR /app
 # 4. START STAGE
 #    Execute the application inside the final container.
 # ------------------------------------------------------
-
+{{ if .StartStage }}
+  {{ if .StartStage.InputFiles }}{{ range $i, $files := .StartStage.InputFiles }}
+COPY --link --from=builder /scratch/{{ $files }} ./
+RUN true
+  {{- end }}{{- end }}
 # We default to ENTRYPOINT instead of CMD as we consider it best practice
 # when the container is wrapping an application or service.
-{{ if .StartStage -}}
 ENTRYPOINT {{.StartStage.Command}}
 {{- end }}
