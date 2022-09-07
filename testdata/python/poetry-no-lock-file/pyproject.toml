@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "poetry-no-entrypoint"
+name = "poetry-no-lock-file"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
