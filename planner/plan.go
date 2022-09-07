@@ -7,15 +7,26 @@ import (
 	"encoding/json"
 
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 )
 
-// Note: The Plan struct is exposed in `devbox.json` – be thoughful of how
-// we evolve the schema, and make sure we keep backwards compatibility.
-
 type Plan struct {
-	// Packages is the slice of Nix packages that devbox makes available in
-	// its environment.
-	Packages []string `cue:"[...string]" json:"packages"`
+	SharedPlan
+
+	// DevPackages is the slice of Nix packages that devbox makes available in
+	// its development environment.
+	DevPackages []string `cue:"[...string]" json:"dev_packages"`
+	// RuntimePackages is the slice of Nix packages that devbox makes available in
+	// in both the development environment and the final container that runs the
+	// application.
+	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
+
+	errors []error
+}
+
+// Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
+// we evolve the schema, and make sure we keep backwards compatibility.
+type SharedPlan struct {
 	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
 	// Ex: pip install, yarn install, go get
@@ -54,9 +65,35 @@ func (p *Plan) Buildable() bool {
 	return p.InstallStage != nil || p.BuildStage != nil || p.StartStage != nil
 }
 
+// Invalid returns true if plan is empty and has errors. If the plan is a partial
+// plan, then it is considered valid.
+func (p *Plan) Invalid() bool {
+	return len(p.DevPackages) == 0 &&
+		len(p.RuntimePackages) == 0 &&
+		p.InstallStage == nil &&
+		p.BuildStage == nil &&
+		p.StartStage == nil &&
+		len(p.errors) > 0
+}
+
+// Error combines all errors into a single error. We use this instead of a
+// Error() string interface because some of the errors may be user errors, which
+// get formatted differently by some clients.
+func (p *Plan) Error() error {
+	if len(p.errors) == 0 {
+		return nil
+	}
+	err := p.errors[0]
+	for _, err = range p.errors[1:] {
+		err = errors.Wrap(err, err.Error())
+	}
+	return err
+}
+
 func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
-		Packages: []string{},
+		DevPackages:     []string{},
+		RuntimePackages: []string{},
 	}
 	for _, p := range plans {
 		err := mergo.Merge(plan, p, mergo.WithAppendSlice)

@@ -27,21 +27,22 @@ func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
 	return fileExists(filepath.Join(srcDir, "poetry.lock"))
 }
 
-func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
+func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 	version := g.PythonVersion(srcDir)
 	plan := &Plan{
-		Packages: []string{
+		DevPackages: []string{
 			fmt.Sprintf("python%s", version.majorMinorConcatenated()),
 			"poetry",
 		},
 	}
 	if buildable, hint := g.isBuildable(srcDir); !buildable {
 		plan.buildHint = hint
-		return plan, nil
+		return plan
 	}
 	entrypoint, err := g.GetEntrypoint(srcDir)
 	if err != nil {
-		return nil, err
+		plan.errors = append(plan.errors, err)
+		return plan
 	}
 	plan.InstallStage = &Stage{
 		// pex is is incompatible with certain less common python versions,
@@ -58,7 +59,7 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) (*Plan, error) {
 		Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
 		Image:   getPythonImage(version),
 	}
-	return plan, nil
+	return plan
 }
 
 // TODO: This can be generalized to all python planners
@@ -128,7 +129,8 @@ func getPythonImage(version *version) string {
 func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, string) {
 	project := g.PyProject(srcDir)
 	if project == nil {
-		return false, "Project is not buildable: pyproject.toml not found"
+		return false, "Could not build container for python application. " +
+			"pyproject.toml is missing and needed to install python dependencies."
 	}
 	if len(project.Tool.Poetry.Scripts) == 0 {
 		return false,

@@ -8,7 +8,7 @@ import "go.jetpack.io/devbox/boxcli/usererr"
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) (*Plan, error)
+	GetPlan(srcDir string) *Plan
 }
 
 var PLANNERS = []Planner{
@@ -16,18 +16,15 @@ var PLANNERS = []Planner{
 	&PythonPoetryPlanner{},
 }
 
-func GetPlan(srcDir string) (*Plan, error) {
+func GetPlan(srcDir string) *Plan {
 	result := &Plan{
-		Packages: []string{},
+		DevPackages:     []string{},
+		RuntimePackages: []string{},
 	}
 	for _, planner := range getRelevantPlans(srcDir) {
-		plan, err := planner.GetPlan(srcDir)
-		if err != nil {
-			return nil, err
-		}
-		result = MergePlans(result, plan)
+		result = MergePlans(result, planner.GetPlan(srcDir))
 	}
-	return result, nil
+	return result
 }
 
 func HasPlan(srcDir string) bool {
@@ -37,17 +34,16 @@ func HasPlan(srcDir string) bool {
 func IsBuildable(srcDir string) (bool, error) {
 	buildables := []Planner{}
 	for _, planner := range getRelevantPlans(srcDir) {
-		if plan, err := planner.GetPlan(srcDir); err != nil {
-			return false, err
-		} else if !plan.Buildable() {
-			if plan.buildHint != "" {
-				return false, usererr.New(plan.buildHint)
+		if plan := planner.GetPlan(srcDir); !plan.Buildable() {
+			if err := plan.Error(); err != nil {
+				return false, err
 			}
 			return false, usererr.New("Unable to build project")
 		}
 		buildables = append(buildables, planner)
 	}
 	if len(buildables) > 1 {
+		// TODO(Landau) Ideally we give the user a way to resolve this
 		return false, usererr.New("Multiple buildable plans found: %v", buildables)
 	}
 	return true, nil
