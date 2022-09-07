@@ -17,6 +17,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
+
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.1 // indirect
@@ -29,7 +31,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
