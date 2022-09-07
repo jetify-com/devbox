@@ -11,6 +11,7 @@ import (
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
+	"go.jetpack.io/devbox/pkgslice"
 	"go.jetpack.io/devbox/planner"
 	"golang.org/x/exp/slices"
 )
@@ -74,7 +75,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 // the devbox environment.
 func (d *Devbox) Remove(pkgs ...string) error {
 	// Remove packages from config.
-	d.cfg.Packages = exclude(d.cfg.Packages, pkgs)
+	d.cfg.Packages = pkgslice.Exclude(d.cfg.Packages, pkgs)
 	return d.saveCfg()
 }
 
