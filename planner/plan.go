@@ -8,6 +8,7 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/pkgslice"
 )
 
 type planError struct {
@@ -106,6 +107,10 @@ func MergePlans(plans ...*Plan) *Plan {
 			panic(err) // TODO: propagate error.
 		}
 	}
+
+	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
+	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
+
 	return plan
 }
 
