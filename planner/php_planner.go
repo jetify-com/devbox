@@ -12,7 +12,7 @@ import (
 )
 
 // https://github.com/NixOS/nixpkgs/tree/nixos-22.05/pkgs/development/interpreters/php
-// These seem to change somehwat frequently, so we may need an automated way to
+// These seem to change somewhat frequently, so we may need an automated way to
 // keep this in sync.
 //
 // Keep reverse sorted
