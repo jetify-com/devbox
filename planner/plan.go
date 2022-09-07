@@ -10,6 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+type planError struct {
+	error
+}
+
 type Plan struct {
 	SharedPlan
 
@@ -21,7 +25,7 @@ type Plan struct {
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 
-	errors []error
+	Errors []planError `json:"errors,omitempty"`
 }
 
 // Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
@@ -69,21 +73,26 @@ func (p *Plan) Invalid() bool {
 		p.InstallStage == nil &&
 		p.BuildStage == nil &&
 		p.StartStage == nil &&
-		len(p.errors) > 0
+		len(p.Errors) > 0
 }
 
 // Error combines all errors into a single error. We use this instead of a
 // Error() string interface because some of the errors may be user errors, which
 // get formatted differently by some clients.
 func (p *Plan) Error() error {
-	if len(p.errors) == 0 {
+	if len(p.Errors) == 0 {
 		return nil
 	}
-	err := p.errors[0]
-	for _, err = range p.errors[1:] {
+	var err error = p.Errors[0]
+	for _, err = range p.Errors[1:] {
 		err = errors.Wrap(err, err.Error())
 	}
 	return err
+}
+
+func (p *Plan) WithError(err error) *Plan {
+	p.Errors = append(p.Errors, planError{err})
+	return p
 }
 
 func MergePlans(plans ...*Plan) *Plan {
@@ -98,4 +107,8 @@ func MergePlans(plans ...*Plan) *Plan {
 		}
 	}
 	return plan
+}
+
+func (p planError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.Error())
 }

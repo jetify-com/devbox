@@ -22,8 +22,8 @@ func GetPlan(srcDir string) *Plan {
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 	}
-	for _, planner := range getRelevantPlans(srcDir) {
-		result = MergePlans(result, planner.GetPlan(srcDir))
+	for _, p := range getRelevantPlanners(srcDir) {
+		result = MergePlans(result, p.GetPlan(srcDir))
 	}
 	return result
 }
@@ -31,8 +31,8 @@ func GetPlan(srcDir string) *Plan {
 func IsBuildable(srcDir string) (bool, error) {
 	buildables := []*Plan{}
 	unbuildables := []*Plan{}
-	for _, planner := range getRelevantPlans(srcDir) {
-		if plan := planner.GetPlan(srcDir); plan.Buildable() {
+	for _, p := range getRelevantPlanners(srcDir) {
+		if plan := p.GetPlan(srcDir); plan.Buildable() {
 			buildables = append(buildables, plan)
 		} else {
 			unbuildables = append(unbuildables, plan)
@@ -54,7 +54,7 @@ func IsBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func getRelevantPlans(srcDir string) []Planner {
+func getRelevantPlanners(srcDir string) []Planner {
 	result := []Planner{}
 	for _, planner := range PLANNERS {
 		if planner.IsRelevant(srcDir) {
