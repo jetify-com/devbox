@@ -85,7 +85,7 @@ func (p *Plan) Error() error {
 	if len(p.Errors) == 0 {
 		return nil
 	}
-	var combined error = p.Errors[0].error
+	combined := p.Errors[0].error
 	for _, err := range p.Errors[1:] {
 		combined = errors.Wrap(combined, err.Error())
 	}
