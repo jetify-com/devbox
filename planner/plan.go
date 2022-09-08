@@ -63,9 +63,6 @@ func (s *Stage) GetInputFiles() []string {
 	if s == nil {
 		return []string{}
 	}
-	if s.InputFiles == nil {
-		return []string{}
-	}
 	return s.InputFiles
 }
 
