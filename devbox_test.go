@@ -50,16 +50,34 @@ func testIndividualPlan(t *testing.T, testPath string) {
 		assert.NoError(err, "plan.json should parse correctly")
 		expected.Errors = nil
 
-		// For now we only compare the DevPackages and RuntimePackages fields:
 		assert.ElementsMatch(expected.DevPackages, plan.DevPackages, "DevPackages should match")
 		assert.ElementsMatch(expected.RuntimePackages, plan.RuntimePackages, "RuntimePackages should match")
 		assert.Equal(expected.InstallStage.GetCommand(), plan.InstallStage.GetCommand(), "Install stage should match")
 		assert.Equal(expected.BuildStage.GetCommand(), plan.BuildStage.GetCommand(), "Build stage should match")
 		assert.Equal(expected.StartStage.GetCommand(), plan.StartStage.GetCommand(), "Start stage should match")
+		// Check that input files are the same for all stages.
+		// Depending on where the test command is invoked, the input file paths can be different.
+		// We will compare the file name only.
+		assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(plan.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
+		assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(plan.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
+		assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(plan.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
 	})
 }
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func getFileNames(paths []string) []string {
+	names := []string{}
+	for _, path := range paths {
+		if path == "." {
+			names = append(names, path)
+		} else {
+			names = append(names, filepath.Base(path))
+		}
+	}
+
+	return names
 }

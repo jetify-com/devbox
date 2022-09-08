@@ -1,0 +1,29 @@
+{
+  "install_stage": {
+    "command": "yarn install",
+    "input_files": [
+      "package.json",
+      "yarn.lock"
+    ]
+  },
+  "build_stage": {
+    "command": "yarn build",
+    "input_files": [
+      "."
+    ]
+  },
+  "start_stage": {
+    "command": "yarn start",
+    "input_files": [
+      "."
+    ]
+  },
+  "dev_packages": [
+    "nodejs",
+    "yarn"
+  ],
+  "runtime_packages": [
+    "nodejs",
+    "yarn"
+  ]
+}

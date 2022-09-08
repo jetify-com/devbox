@@ -1,24 +1,27 @@
 {
   "install_stage": {
+    "command": "npm install",
+    "input_files": [
+      "package.json",
+      "package-lock.json"
+    ]
+  },
+  "build_stage": {
     "command": "",
     "input_files": [
       "."
     ]
   },
-  "build_stage": {
-    "command": ""
-  },
   "start_stage": {
-    "command": "",
+    "command": "node index.js",
     "input_files": [
       "."
     ]
   },
   "dev_packages": [
-    "python310",
-    "poetry"
+    "nodejs"
   ],
   "runtime_packages": [
-    "python310"
+    "nodejs"
   ]
 }

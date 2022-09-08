@@ -1,0 +1,5 @@
+{
+  "name": "nodejs-npm",
+  "main": "index.js",
+  "dependencies": {}
+}
