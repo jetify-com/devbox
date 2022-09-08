@@ -7,9 +7,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-// TODO: consider using cue's JSON marshaller instead of
-// "encoding/json" ... it might have extra functionality related
-// to the cue language.
 func MarshalToml(v interface{}) ([]byte, error) {
 	return toml.Marshal(v)
 }

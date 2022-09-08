@@ -6,17 +6,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type Metadata struct {
+	Tags []string
+}
+
 type MyConfig struct {
 	Version int
 	Name    string
-	Tags    []string
+	Meta    *Metadata
 }
 
 var testTomlCfg = &MyConfig{
 	Version: 2,
 	Name:    "go-toml",
-	Tags:    []string{"go", "toml"},
+	Meta: &Metadata{
+		Tags: []string{"go", "toml"},
+	},
 }
+
+var testTomlStr = `Version = 2
+Name = 'go-toml'
+
+[Meta]
+Tags = ['go', 'toml']
+`
 
 func TestMarshalToml(t *testing.T) {
 	req := require.New(t)
@@ -24,21 +37,13 @@ func TestMarshalToml(t *testing.T) {
 	bytes, err := Marshal(testTomlCfg, ".toml")
 	req.NoError(err)
 
-	expected := `Version = 2
-Name = 'go-toml'
-Tags = ['go', 'toml']
-`
-	req.Equal(expected, string(bytes))
+	req.Equal(testTomlStr, string(bytes))
 }
 
 func TestUnmarshalToml(t *testing.T) {
 	req := require.New(t)
-	tomlStr := `Version = 2
-Name = 'go-toml'
-Tags = ['go', 'toml']
-`
 	cfg := &MyConfig{}
-	err := Unmarshal([]byte(tomlStr), ".toml", cfg)
+	err := Unmarshal([]byte(testTomlStr), ".toml", cfg)
 	req.NoError(err)
 	req.Equal(testTomlCfg, cfg)
 }
