@@ -1,15 +1,21 @@
 {
-  "dev_packages": [
-    "go_1_19"
-  ],
-  "runtime_packages": [],
   "install_stage": {
-    "command": "go get"
+    "command": "go get",
+    "input_files": [
+      "."
+    ]
   },
   "build_stage": {
     "command": "CGO_ENABLED=0 go build -o app"
   },
   "start_stage": {
-    "command": "./app"
-  }
+    "command": "./app",
+    "input_files": [
+      "."
+    ]
+  },
+  "dev_packages": [
+    "go_1_19"
+  ],
+  "runtime_packages": []
 }

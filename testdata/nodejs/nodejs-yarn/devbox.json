@@ -1,0 +1,12 @@
+{
+  "packages": [],
+  "install_stage": {
+    "command": "yarn install"
+  },
+  "build_stage": {
+    "command": "yarn build"
+  },
+  "start_stage": {
+    "command": "yarn start"
+  }
+}

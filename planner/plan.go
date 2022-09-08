@@ -59,6 +59,13 @@ func (s *Stage) GetCommand() string {
 	return s.Command
 }
 
+func (s *Stage) GetInputFiles() []string {
+	if s == nil {
+		return []string{}
+	}
+	return s.InputFiles
+}
+
 func (p *Plan) String() string {
 	b, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
