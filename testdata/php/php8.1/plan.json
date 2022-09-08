@@ -1,0 +1,17 @@
+{
+  "dev_packages": [
+    "php81",
+    "php81.Packages.composer"
+  ],
+  "runtime_packages": [
+    "php81",
+    "php81.Packages.composer"
+  ],
+  "install_stage": {
+    "command": "composer install --no-dev --no-ansi"
+  },
+  "build_stage": {},
+  "start_stage": {
+    "command": "php -S 0.0.0.0:8080 -t public"
+  }
+}
