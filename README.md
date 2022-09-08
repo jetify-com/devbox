@@ -154,6 +154,9 @@ Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devb
 + Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project. 
 + File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
 
+## Contributing
+Devbox is an opensource project so contributions are always welcome. Please read [our contributing guide](CONTRIBUTING.md) before submitting pull requests.
+
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
