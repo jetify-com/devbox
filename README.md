@@ -143,10 +143,7 @@ Devbox currently detects the following languages:
 
 - Go
 - Python (Poetry)
-
-Partial support:
-
-- PHP - auto-detection for shell, but requires manual stage configuration for dockerfile building
+- PHP
 
 Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
 Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/#package-your-application-as-a-docker-image).
