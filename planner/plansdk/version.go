@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package plansdk
 
 import (
 	"regexp"
@@ -11,17 +11,17 @@ import (
 )
 
 // Handles very simple numeric semver versions (e.g. "1.2.3")
-type version string
+type Version string
 
-func newVersion(v string) (*version, error) {
-	ver := version(v)
+func NewVersion(v string) (*Version, error) {
+	ver := Version(v)
 	if ver.exact() == "" {
 		return nil, errors.New("invalid version")
 	}
 	return &ver, nil
 }
 
-func (v version) parts() []string {
+func (v Version) parts() []string {
 	// This regex allows starting versions with ^ or >=
 	// It ignored anything after a comma (including the comma)
 	// Maybe consider using https://github.com/aquasecurity/go-pep440-version
@@ -34,7 +34,7 @@ func (v version) parts() []string {
 	return []string{}
 }
 
-func (v version) exact() string {
+func (v Version) exact() string {
 	parts := v.parts()
 	if len(parts) > 0 {
 		return strings.Join(parts, "")
@@ -42,7 +42,7 @@ func (v version) exact() string {
 	return ""
 }
 
-func (v version) major() string {
+func (v Version) Major() string {
 	parts := v.parts()
 	if len(parts) == 0 {
 		return ""
@@ -50,7 +50,7 @@ func (v version) major() string {
 	return parts[0]
 }
 
-func (v version) majorMinor() string {
+func (v Version) MajorMinor() string {
 	parts := v.parts()
 	if len(parts) == 0 {
 		return ""
@@ -61,6 +61,6 @@ func (v version) majorMinor() string {
 	return parts[0]
 }
 
-func (v version) majorMinorConcatenated() string {
-	return strings.ReplaceAll(v.majorMinor(), ".", "")
+func (v Version) MajorMinorConcatenated() string {
+	return strings.ReplaceAll(v.MajorMinor(), ".", "")
 }

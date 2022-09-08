@@ -1,30 +1,31 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package javascript
 
 import (
 	"fmt"
 	"path/filepath"
 
 	"go.jetpack.io/devbox/cuecfg"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
-type NodeJSPlanner struct{}
+type Planner struct{}
 
 // NodeJsPlanner implements interface Planner (compile-time check)
-var _ Planner = (*NodeJSPlanner)(nil)
+var _ plansdk.Planner = (*Planner)(nil)
 
-func (n *NodeJSPlanner) Name() string {
-	return "NodeJsPlanner"
+func (n *Planner) Name() string {
+	return "javascript.Planner"
 }
 
-func (n *NodeJSPlanner) IsRelevant(srcDir string) bool {
+func (n *Planner) IsRelevant(srcDir string) bool {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
-	return fileExists(packageJSONPath)
+	return plansdk.FileExists(packageJSONPath)
 }
 
-func (n *NodeJSPlanner) GetPlan(srcDir string) *Plan {
+func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	packages := []string{n.nodePackage(srcDir)}
 	pkgManager := "npm"
 	inputFiles := []string{
@@ -32,35 +33,35 @@ func (n *NodeJSPlanner) GetPlan(srcDir string) *Plan {
 	}
 
 	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
-	if fileExists(npmPkgLockPath) {
+	if plansdk.FileExists(npmPkgLockPath) {
 		inputFiles = append(inputFiles, npmPkgLockPath)
 	}
 
 	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
-	if fileExists(yarnPkgLockPath) {
+	if plansdk.FileExists(yarnPkgLockPath) {
 		pkgManager = "yarn"
 		packages = append(packages, "yarn")
 		inputFiles = append(inputFiles, yarnPkgLockPath)
 	}
 
-	return &Plan{
+	return &plansdk.Plan{
 		DevPackages: packages,
 		// TODO: Optimize runtime packages to remove npm or yarn if startStage command use Node directly.
 		RuntimePackages: packages,
 
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
+		SharedPlan: plansdk.SharedPlan{
+			InstallStage: &plansdk.Stage{
 				InputFiles: inputFiles,
 				Command:    fmt.Sprintf("%s install", pkgManager),
 			},
 
-			BuildStage: &Stage{
+			BuildStage: &plansdk.Stage{
 				// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
 				InputFiles: []string{"."},
 				// Command: "" (command should be set by users. Some apps don't require a build command.)
 			},
 
-			StartStage: &Stage{
+			StartStage: &plansdk.Stage{
 				// Start command could be `Node server.js`, `npm serve`, `yarn start`, or anything really.
 				// For now we use `node index.js` as the default.
 				Command: "node index.js",
@@ -75,10 +76,10 @@ type nodeProject struct {
 	} `json:"engines,omitempty"`
 }
 
-func (n *NodeJSPlanner) nodePackage(srcDir string) string {
+func (n *Planner) nodePackage(srcDir string) string {
 	v := n.nodeVersion(srcDir)
 	if v != nil {
-		switch v.major() {
+		switch v.Major() {
 		case "10":
 			return "nodejs-10_x"
 		case "12":
@@ -93,10 +94,10 @@ func (n *NodeJSPlanner) nodePackage(srcDir string) string {
 	return "nodejs"
 }
 
-func (n *NodeJSPlanner) nodeVersion(srcDir string) *version {
+func (n *Planner) nodeVersion(srcDir string) *plansdk.Version {
 	p := n.nodeProject(srcDir)
 	if p != nil {
-		if v, err := newVersion(p.Engines.Node); err == nil {
+		if v, err := plansdk.NewVersion(p.Engines.Node); err == nil {
 			return v
 		}
 	}
@@ -104,7 +105,7 @@ func (n *NodeJSPlanner) nodeVersion(srcDir string) *version {
 	return nil
 }
 
-func (n *NodeJSPlanner) nodeProject(srcDir string) *nodeProject {
+func (n *Planner) nodeProject(srcDir string) *nodeProject {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
 	p := &nodeProject{}
 	_ = cuecfg.ReadFile(packageJSONPath, p)

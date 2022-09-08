@@ -3,35 +3,84 @@
 
 package planner
 
-import "go.jetpack.io/devbox/boxcli/usererr"
+import (
+	"go.jetpack.io/devbox/boxcli/usererr"
+	"go.jetpack.io/devbox/planner/languages/c"
+	"go.jetpack.io/devbox/planner/languages/clojure"
+	"go.jetpack.io/devbox/planner/languages/cplusplus"
+	"go.jetpack.io/devbox/planner/languages/crystal"
+	"go.jetpack.io/devbox/planner/languages/csharp"
+	"go.jetpack.io/devbox/planner/languages/dart"
+	"go.jetpack.io/devbox/planner/languages/deno"
+	"go.jetpack.io/devbox/planner/languages/elixir"
+	"go.jetpack.io/devbox/planner/languages/erlang"
+	"go.jetpack.io/devbox/planner/languages/fsharp"
+	"go.jetpack.io/devbox/planner/languages/golang"
+	"go.jetpack.io/devbox/planner/languages/haskell"
+	"go.jetpack.io/devbox/planner/languages/java"
+	"go.jetpack.io/devbox/planner/languages/javascript"
+	"go.jetpack.io/devbox/planner/languages/kotlin"
+	"go.jetpack.io/devbox/planner/languages/lua"
+	"go.jetpack.io/devbox/planner/languages/nim"
+	"go.jetpack.io/devbox/planner/languages/objectivec"
+	"go.jetpack.io/devbox/planner/languages/ocaml"
+	"go.jetpack.io/devbox/planner/languages/perl"
+	"go.jetpack.io/devbox/planner/languages/php"
+	"go.jetpack.io/devbox/planner/languages/python"
+	"go.jetpack.io/devbox/planner/languages/ruby"
+	"go.jetpack.io/devbox/planner/languages/rust"
+	"go.jetpack.io/devbox/planner/languages/scala"
+	"go.jetpack.io/devbox/planner/languages/swift"
+	"go.jetpack.io/devbox/planner/languages/typescript"
+	"go.jetpack.io/devbox/planner/languages/zig"
+	"go.jetpack.io/devbox/planner/plansdk"
+)
 
-type Planner interface {
-	Name() string
-	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) *Plan
+var PLANNERS = []plansdk.Planner{
+	&c.Planner{},
+	&clojure.Planner{},
+	&cplusplus.Planner{},
+	&crystal.Planner{},
+	&csharp.Planner{},
+	&dart.Planner{},
+	&deno.Planner{},
+	&elixir.Planner{},
+	&erlang.Planner{},
+	&fsharp.Planner{},
+	&golang.Planner{},
+	&haskell.Planner{},
+	&java.Planner{},
+	&javascript.Planner{},
+	&kotlin.Planner{},
+	&lua.Planner{},
+	&nim.Planner{},
+	&objectivec.Planner{},
+	&ocaml.Planner{},
+	&perl.Planner{},
+	&php.Planner{},
+	&python.Planner{},
+	&ruby.Planner{},
+	&rust.Planner{},
+	&scala.Planner{},
+	&swift.Planner{},
+	&typescript.Planner{},
+	&zig.Planner{},
 }
 
-var PLANNERS = []Planner{
-	&GoPlanner{},
-	&PHPPlanner{},
-	&PythonPoetryPlanner{},
-	&NodeJSPlanner{},
-}
-
-func GetPlan(srcDir string) *Plan {
-	result := &Plan{
+func GetPlan(srcDir string) *plansdk.Plan {
+	result := &plansdk.Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 	}
 	for _, p := range getRelevantPlanners(srcDir) {
-		result = MergePlans(result, p.GetPlan(srcDir))
+		result = plansdk.MergePlans(result, p.GetPlan(srcDir))
 	}
 	return result
 }
 
 func IsBuildable(srcDir string) (bool, error) {
-	buildables := []*Plan{}
-	unbuildables := []*Plan{}
+	buildables := []*plansdk.Plan{}
+	unbuildables := []*plansdk.Plan{}
 	for _, p := range getRelevantPlanners(srcDir) {
 		if plan := p.GetPlan(srcDir); plan.Buildable() {
 			buildables = append(buildables, plan)
@@ -55,8 +104,8 @@ func IsBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func getRelevantPlanners(srcDir string) []Planner {
-	result := []Planner{}
+func getRelevantPlanners(srcDir string) []plansdk.Planner {
+	result := []plansdk.Planner{}
 	for _, planner := range PLANNERS {
 		if planner.IsRelevant(srcDir) {
 			result = append(result, planner)
