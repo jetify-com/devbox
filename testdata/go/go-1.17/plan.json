@@ -2,5 +2,14 @@
   "dev_packages": [
     "go_1_17"
   ],
-  "runtime_packages": []
+  "runtime_packages": [],
+  "install_stage": {
+    "command": "go get"
+  },
+  "build_stage": {
+    "command": "CGO_ENABLED=0 go build -o app"
+  },
+  "start_stage": {
+    "command": "./app"
+  }
 }

@@ -52,6 +52,13 @@ type Stage struct {
 	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
 }
 
+func (s *Stage) GetCommand() string {
+	if s == nil {
+		return ""
+	}
+	return s.Command
+}
+
 func (p *Plan) String() string {
 	b, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
@@ -85,11 +92,11 @@ func (p *Plan) Error() error {
 	if len(p.Errors) == 0 {
 		return nil
 	}
-	var err error = p.Errors[0]
-	for _, err = range p.Errors[1:] {
-		err = errors.Wrap(err, err.Error())
+	combined := p.Errors[0].error
+	for _, err := range p.Errors[1:] {
+		combined = errors.Wrap(combined, err.Error())
 	}
-	return err
+	return combined
 }
 
 func (p *Plan) WithError(err error) *Plan {
