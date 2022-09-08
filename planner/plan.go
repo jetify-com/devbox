@@ -85,11 +85,11 @@ func (p *Plan) Error() error {
 	if len(p.Errors) == 0 {
 		return nil
 	}
-	var err error = p.Errors[0]
-	for _, err = range p.Errors[1:] {
-		err = errors.Wrap(err, err.Error())
+	var combined error = p.Errors[0].error
+	for _, err := range p.Errors[1:] {
+		combined = errors.Wrap(combined, err.Error())
 	}
-	return err
+	return combined
 }
 
 func (p *Plan) WithError(err error) *Plan {
