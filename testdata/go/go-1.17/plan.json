@@ -1,0 +1,6 @@
+{
+  "dev_packages": [
+    "go_1_17"
+  ],
+  "runtime_packages": []
+}
