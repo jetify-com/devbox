@@ -32,6 +32,8 @@ func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		filepath.Join(srcDir, "package.json"),
 	}
 
+	postBuildCmdHook := "npm prune --production"
+
 	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
 	if plansdk.FileExists(npmPkgLockPath) {
 		inputFiles = append(inputFiles, npmPkgLockPath)
@@ -42,6 +44,7 @@ func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		pkgManager = "yarn"
 		packages = append(packages, "yarn")
 		inputFiles = append(inputFiles, yarnPkgLockPath)
+		postBuildCmdHook = "yarn install --production --ignore-scripts --prefer-offline"
 	}
 
 	return &plansdk.Plan{
@@ -59,6 +62,7 @@ func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
 				// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
 				InputFiles: []string{"."},
 				// Command: "" (command should be set by users. Some apps don't require a build command.)
+				PostCommandHook: postBuildCmdHook,
 			},
 
 			StartStage: &plansdk.Stage{
