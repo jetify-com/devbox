@@ -50,15 +50,8 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 		Command: "poetry add pex -n --no-ansi && " +
 			"poetry install --no-dev -n --no-ansi",
 	}
-	plan.BuildStage = &Stage{
-		Command: fmt.Sprintf(
-			"PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex $(poetry run python -c \"%s\")",
-			g.entrypointScript(srcDir),
-		),
-	}
-	plan.StartStage = &Stage{
-		Command: "PEX_ROOT=/tmp/.pex python ./app.pex",
-	}
+	plan.BuildStage = &Stage{Command: g.buildCommand(srcDir)}
+	plan.StartStage = &Stage{Command: "python ./app.pex"}
 	return plan
 }
 
@@ -77,7 +70,7 @@ func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
 	return defaultVersion
 }
 
-func (g *PythonPoetryPlanner) entrypointScript(srcDir string) string {
+func (g *PythonPoetryPlanner) buildCommand(srcDir string) string {
 	project := g.PyProject(srcDir)
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
@@ -85,7 +78,7 @@ func (g *PythonPoetryPlanner) entrypointScript(srcDir string) string {
 	moduleName := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
 	if _, ok := project.Tool.Poetry.Scripts[moduleName]; ok {
 		// return moduleName, nil
-		return g.formatEntrypointScript(moduleName, moduleName)
+		return g.formatBuildCommand(moduleName, moduleName)
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
@@ -95,7 +88,7 @@ func (g *PythonPoetryPlanner) entrypointScript(srcDir string) string {
 	if len(scripts) > 0 {
 		script = scripts[0]
 	}
-	return g.formatEntrypointScript(moduleName, script)
+	return g.formatBuildCommand(moduleName, script)
 }
 
 type pyProject struct {
@@ -165,32 +158,29 @@ func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func (g *PythonPoetryPlanner) formatEntrypointScript(module, script string) string {
-	scriptFlag := ""
-	if script != "" {
-		scriptFlag = fmt.Sprintf("'--script %s'", script)
-	} else {
-		// This error is part of the script, but will only show up if the __main__
-		// module is not in package and there are no scripts
-		scriptFlag = fmt.Sprintf(
-			// python hackiness to allow exception in inline ternary
-			"(_ for _ in ()).throw(Exception('No __main__ module or console script found in for %s'))",
+func (g *PythonPoetryPlanner) formatBuildCommand(module, script string) string {
+
+	// If no scripts, just run the module directly always.
+	if script == "" {
+		return fmt.Sprintf(
+			"poetry run pex . -o app.pex -m %s --validate-entry-point",
 			module,
 		)
 	}
 
-	const pythonEntrypointScript = `
-	import pkgutil;
-	modules = [name for _, name, _ in pkgutil.iter_modules(['%[1]s'])];
-	print('-m %[1]s' if '__main__' in modules else %[2]s);
-	`
-	return strings.TrimSpace(strings.ReplaceAll(
-		fmt.Sprintf(
-			pythonEntrypointScript,
-			module,
-			scriptFlag,
-		),
-		"\n",
-		"",
-	))
+	entrypointScript := fmt.Sprintf(
+		`$(poetry run python -c "import pkgutil;
+import %[1]s;
+modules = [name for _, name, _ in pkgutil.iter_modules(%[1]s.__path__)];
+print('-m %[1]s' if '__main__' in modules else '--script %[2]s');")
+`,
+		module,
+		script,
+	)
+
+	return fmt.Sprintf(
+		"poetry run pex . -o app.pex %s --validate-entry-point &>/dev/null || "+
+			"(echo 'Build failed. Could not find entrypoint' && exit 1)",
+		strings.TrimSpace(strings.ReplaceAll(entrypointScript, "\n", "")),
+	)
 }
