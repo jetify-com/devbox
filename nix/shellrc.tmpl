@@ -41,6 +41,8 @@ PATH="$PATH:{{ . }}"
 
 {{- end }}
 
+{{ .PreInitHook }}
+
 # End Devbox Pre-init Hook
 
 {{- if .OriginalInit }}

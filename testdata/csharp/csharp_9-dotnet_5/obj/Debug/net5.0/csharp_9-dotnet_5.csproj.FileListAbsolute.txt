@@ -1,0 +1,15 @@
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/csharp_9-dotnet_5.deps.json
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/csharp_9-dotnet_5.runtimeconfig.json
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/csharp_9-dotnet_5.runtimeconfig.dev.json
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/csharp_9-dotnet_5.dll
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/ref/csharp_9-dotnet_5.dll
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/bin/Debug/net5.0/csharp_9-dotnet_5.pdb
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.csproj.AssemblyReference.cache
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.GeneratedMSBuildEditorConfig.editorconfig
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.AssemblyInfoInputs.cache
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.AssemblyInfo.cs
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.csproj.CoreCompileInputs.cache
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.dll
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/ref/csharp_9-dotnet_5.dll
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.pdb
+/Users/savil/code/jetpack/devbox/testdata/csharp/csharp_9-dotnet_5/obj/Debug/net5.0/csharp_9-dotnet_5.genruntimeconfig.cache

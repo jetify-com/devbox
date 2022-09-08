@@ -4,8 +4,15 @@
 package rust
 
 import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
+
+const cargoToml = "Cargo.toml"
 
 type Planner struct{}
 
@@ -17,9 +24,82 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	return false
+	cargoTomlPath := filepath.Join(srcDir, cargoToml)
+	return plansdk.FileExists(cargoTomlPath)
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+	plan, err := p.getPlan(srcDir)
+	if err != nil {
+		fmt.Printf("[WARNING] error in RustPlanner.GetPlan: %s", err)
+	}
+	return plan
+}
+
+func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+
+	// NOTE: I'm not convinced we need these packages to be included in the long term.
+	// The link indicates we need libiconv for macOS, but maybe not for linux. For now,
+	// including them by default, but this could be likely optimized once we understand better.
+	//
+	// libiconv due to error:
+	//     ld: library not found for -liconv. clang-11: error: linker command failed with exit code 1
+	// https://discourse.nixos.org/t/nix-shell-rust-hello-world-ld-linkage-issue/17381/2
+	//
+	// gcc due to error:
+	//     linker `cc` not found
+	// https://github.com/NixOS/nixpkgs/issues/103642
+	packages := []string{"rustup", "libiconv", "gcc"}
+
+	version, err := p.rustVersion(srcDir)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	rustupVersion := "stable"
+	if version != nil {
+		rustupVersion = version.Exact()
+	}
+
+	rustupDefaultCmd := fmt.Sprintf("rustup default %s", rustupVersion)
+
+	return &plansdk.Plan{
+		DevPackages:     packages,
+		RuntimePackages: packages,
+		Shell: plansdk.PlanShell{
+			PreInitHook: rustupDefaultCmd,
+		},
+	}, nil
+}
+
+func (p *Planner) rustVersion(srcDir string) (*plansdk.Version, error) {
+	cfg, err := p.cargoManifest(srcDir)
+	if err != nil {
+		return nil, err
+	}
+	if cfg.PackageField.RustVersion == "" {
+		return nil, nil
+	}
+
+	if rustVersion, err := plansdk.NewVersion(cfg.PackageField.RustVersion); err != nil {
+		return nil, err
+	} else {
+		return rustVersion, nil
+	}
+}
+
+type cargoManifest struct {
+	// NOTE: 'package' is a protected keyword in golang so we cannot name this field 'package'.
+	PackageField struct {
+		RustVersion string `toml:"rust-version,omitempty"`
+	} `toml:"package,omitempty"`
+}
+
+func (p *Planner) cargoManifest(srcDir string) (*cargoManifest, error) {
+	cargoTomlPath := filepath.Join(srcDir, cargoToml)
+	cfg := &cargoManifest{}
+	err := cuecfg.ReadFile(cargoTomlPath, cfg)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return cfg, nil
 }

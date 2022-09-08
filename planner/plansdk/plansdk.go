@@ -16,6 +16,14 @@ type PlanError struct {
 	error
 }
 
+// TODO savil. Find a better name? defining separately so I can initialize it in rust-planner
+type PlanShell struct {
+
+	// PreInitHook contains commands that will run at shell startup.
+	// These will run before the user's own init hook.
+	PreInitHook string `cue:"string" json:"init_hook,omitempty"`
+}
+
 type Plan struct {
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment.

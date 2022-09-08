@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "csharp_9-dotnet_5/1.0.0": {
+        "runtime": {
+          "csharp_9-dotnet_5.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "csharp_9-dotnet_5/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

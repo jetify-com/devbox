@@ -1,0 +1,30 @@
+{
+  "install_stage": {
+    "command": "",
+    "input_files": [
+      "."
+    ]
+  },
+  "build_stage": {
+    "command": ""
+  },
+  "start_stage": {
+    "command": "",
+    "input_files": [
+      "."
+    ]
+  },
+  "dev_packages": [
+    "rustup",
+    "libiconv",
+    "gcc"
+  ],
+  "runtime_packages": [
+    "rustup",
+    "libiconv",
+    "gcc"
+  ],
+  "shell": {
+    "init_hook": "rustup default stable"
+  }
+}
