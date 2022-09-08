@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.jetpack.io/devbox/boxcli/usererr"
 )
 
 // https://github.com/NixOS/nixpkgs/tree/nixos-22.05/pkgs/development/interpreters/php
@@ -49,7 +51,7 @@ func (g *PHPPlanner) GetPlan(srcDir string) *Plan {
 		},
 	}
 	if !fileExists(filepath.Join(srcDir, "public/index.php")) {
-		return plan
+		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
 	}
 
 	plan.InstallStage = &Stage{
