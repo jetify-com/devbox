@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO: add support for .cue and possible .toml
+// TODO: add support for .cue
 
 func Marshal(v any, extension string) ([]byte, error) {
 	err := cuego.Complete(v)
@@ -24,6 +24,8 @@ func Marshal(v any, extension string) ([]byte, error) {
 		return MarshalJSON(v)
 	case ".yml", ".yaml":
 		return MarshalYaml(v)
+	case ".toml":
+		return MarshalToml(v)
 	}
 	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
@@ -38,6 +40,12 @@ func Unmarshal(data []byte, extension string, v any) error {
 		return nil
 	case ".yml", ".yaml":
 		err := UnmarshalYaml(data, v)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	case ".toml":
+		err := UnmarshalToml(data, v)
 		if err != nil {
 			return errors.WithStack(err)
 		}
