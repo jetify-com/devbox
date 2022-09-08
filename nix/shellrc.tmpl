@@ -1,0 +1,62 @@
+{{- /*
+
+// This template defines the shellrc file that the devbox shell will run at
+// startup.
+//
+// It includes the user's original shellrc, which varies depending on their
+// shell. It will either be ~/.bashrc, ~/.zshrc, a path set in ENV, or something
+// else. It also appends any user-defined shell hooks from devbox.json.
+//
+// Devbox also needs to ensure that the shell's PATH, prompt, and a few other
+// things are set correctly at startup. To do this, it must run some commands
+// before and after the user's shellrc. These commands are in the
+// "Devbox Pre/Post-init Hook" sections.
+//
+// The devbox pre/post-init hooks assume two environment variables are already
+// set:
+//
+// - ORIGINAL_PATH - embedded into the command built by Shell.execCommand. It
+//                   preserves the PATH at the time `devbox shell` is invoked.
+// - PURE_NIX_PATH - set by the shell hook in shell.nix.tmpl. It preserves the
+//                   PATH set by Nix's "pure" shell mode.
+
+ */ -}}
+
+# Begin Devbox Pre-init Hook
+
+# Update the $PATH so that the user's init script has access to all of their
+# non-devbox programs.
+export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+
+# End Devbox Pre-init Hook
+
+{{- if .OriginalInit }}
+
+# Begin {{ .OriginalInitPath }}
+
+{{ .OriginalInit }}
+
+# End {{ .OriginalInitPath }}
+
+{{- end }}
+
+# Begin Devbox Post-init Hook
+
+# Update the $PATH again so that the Nix packages take priority over the
+# programs outside of devbox.
+export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+
+# Prepend to the prompt to make it clear we're in a devbox shell.
+export PS1="(devbox) $PS1"
+
+# End Devbox Post-init Hook
+
+{{- if .UserHook }}
+
+# Begin Devbox User Hook
+
+{{ .UserHook }}
+
+# End Devbox User Hook
+
+{{- end }}
