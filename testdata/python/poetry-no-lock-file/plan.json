@@ -1,0 +1,9 @@
+{
+  "dev_packages": [
+    "python310",
+    "poetry"
+  ],
+  "runtime_packages": [
+    "python310"
+  ]
+}
