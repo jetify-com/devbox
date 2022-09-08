@@ -143,6 +143,7 @@ Devbox currently detects the following languages:
 
 - Go
 - Python (Poetry)
+- NodeJS
 - PHP
 
 Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
