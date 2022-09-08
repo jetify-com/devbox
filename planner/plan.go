@@ -52,6 +52,13 @@ type Stage struct {
 	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
 }
 
+func (s *Stage) GetCommand() string {
+	if s == nil {
+		return ""
+	}
+	return s.Command
+}
+
 func (p *Plan) String() string {
 	b, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {

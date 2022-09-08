@@ -1,0 +1,3 @@
+[tool.poetry]
+name = "some-package"
+packages = [{ include = "some_package", from ="my_source" }] 

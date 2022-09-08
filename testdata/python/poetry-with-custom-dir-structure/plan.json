@@ -1,0 +1,18 @@
+{
+  "dev_packages": [
+    "python310",
+    "poetry"
+  ],
+  "runtime_packages": [
+    "python310"
+  ],
+  "install_stage": {
+    "command": "poetry add pex -n --no-ansi && poetry install --no-dev -n --no-ansi"
+  },
+  "build_stage": {
+    "command": "poetry run pex . -o app.pex -m some_package --validate-entry-point"
+  },
+  "start_stage": {
+    "command": "python ./app.pex"
+  }
+}

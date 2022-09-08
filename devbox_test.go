@@ -53,6 +53,9 @@ func testIndividualPlan(t *testing.T, testPath string) {
 		// For now we only compare the DevPackages and RuntimePackages fields:
 		assert.ElementsMatch(expected.DevPackages, plan.DevPackages, "DevPackages should match")
 		assert.ElementsMatch(expected.RuntimePackages, plan.RuntimePackages, "RuntimePackages should match")
+		assert.Equal(expected.InstallStage.GetCommand(), plan.InstallStage.GetCommand(), "Install stage should match")
+		assert.Equal(expected.BuildStage.GetCommand(), plan.BuildStage.GetCommand(), "Build stage should match")
+		assert.Equal(expected.StartStage.GetCommand(), plan.StartStage.GetCommand(), "Start stage should match")
 	})
 }
 

@@ -1,0 +1,2 @@
+def script():
+  pass
