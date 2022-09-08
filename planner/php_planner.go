@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.jetpack.io/devbox/boxcli/usererr"
 )
 
 // https://github.com/NixOS/nixpkgs/tree/nixos-22.05/pkgs/development/interpreters/php
@@ -32,17 +34,33 @@ func (g *PHPPlanner) Name() string {
 }
 
 func (g *PHPPlanner) IsRelevant(srcDir string) bool {
-	return fileExists(filepath.Join(srcDir, "composer.lock"))
+	return fileExists(filepath.Join(srcDir, "composer.lock")) ||
+		fileExists(filepath.Join(srcDir, "composer.json"))
 }
 
 func (g *PHPPlanner) GetPlan(srcDir string) *Plan {
 	v := g.version(srcDir)
-	return &Plan{
+	plan := &Plan{
 		DevPackages: []string{
 			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
 		},
+		RuntimePackages: []string{
+			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
+			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
+		},
 	}
+	if !fileExists(filepath.Join(srcDir, "public/index.php")) {
+		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
+	}
+
+	plan.InstallStage = &Stage{
+		Command: "composer install --no-dev --no-ansi",
+	}
+	plan.StartStage = &Stage{
+		Command: "php -S 0.0.0.0:8080 -t public",
+	}
+	return plan
 }
 
 func (g *PHPPlanner) version(srcDir string) *version {
