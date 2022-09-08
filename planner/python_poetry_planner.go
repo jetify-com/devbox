@@ -25,7 +25,8 @@ func (g *PythonPoetryPlanner) Name() string {
 }
 
 func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
-	return fileExists(filepath.Join(srcDir, "poetry.lock"))
+	return fileExists(filepath.Join(srcDir, "poetry.lock")) ||
+		fileExists(filepath.Join(srcDir, "pyproject.toml"))
 }
 
 func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
