@@ -30,17 +30,17 @@ type Planner struct{}
 // PHPPlanner implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *Planner) Name() string {
+func (p *Planner) Name() string {
 	return "php.Planner"
 }
 
-func (g *Planner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(filepath.Join(srcDir, "composer.lock")) ||
 		plansdk.FileExists(filepath.Join(srcDir, "composer.json"))
 }
 
-func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	v := g.version(srcDir)
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	v := p.version(srcDir)
 	plan := &plansdk.Plan{
 		DevPackages: []string{
 			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
@@ -64,7 +64,7 @@ func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return plan
 }
 
-func (g *Planner) version(srcDir string) *plansdk.Version {
+func (p *Planner) version(srcDir string) *plansdk.Version {
 	latestVersion, _ := plansdk.NewVersion(supportedPHPVersions[0])
 	composerJSONPath := filepath.Join(srcDir, "composer.json")
 	content, err := os.ReadFile(composerJSONPath)

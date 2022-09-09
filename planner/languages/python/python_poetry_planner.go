@@ -21,17 +21,17 @@ type Planner struct{}
 // PythonPoetryPlanner implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *Planner) Name() string {
+func (p *Planner) Name() string {
 	return "python.Planner"
 }
 
-func (g *Planner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(filepath.Join(srcDir, "poetry.lock")) ||
 		plansdk.FileExists(filepath.Join(srcDir, "pyproject.toml"))
 }
 
-func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	version := g.PythonVersion(srcDir)
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	version := p.PythonVersion(srcDir)
 	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
 	plan := &plansdk.Plan{
 		DevPackages: []string{
@@ -40,7 +40,7 @@ func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		RuntimePackages: []string{pythonPkg},
 	}
-	if buildable, err := g.isBuildable(srcDir); !buildable {
+	if buildable, err := p.isBuildable(srcDir); !buildable {
 		return plan.WithError(err)
 	}
 
@@ -52,35 +52,35 @@ func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		Command: "poetry add pex -n --no-ansi && " +
 			"poetry install --no-dev -n --no-ansi",
 	}
-	plan.BuildStage = &plansdk.Stage{Command: g.buildCommand(srcDir)}
+	plan.BuildStage = &plansdk.Stage{Command: p.buildCommand(srcDir)}
 	plan.StartStage = &plansdk.Stage{Command: "python ./app.pex"}
 	return plan
 }
 
 // TODO: This can be generalized to all python planners
-func (g *Planner) PythonVersion(srcDir string) *plansdk.Version {
+func (p *Planner) PythonVersion(srcDir string) *plansdk.Version {
 	defaultVersion, _ := plansdk.NewVersion("3.10.6")
-	p := g.PyProject(srcDir)
+	project := p.PyProject(srcDir)
 
-	if p == nil {
+	if project == nil {
 		return defaultVersion
 	}
 
-	if v, err := plansdk.NewVersion(p.Tool.Poetry.Dependencies.Python); err == nil {
+	if v, err := plansdk.NewVersion(project.Tool.Poetry.Dependencies.Python); err == nil {
 		return v
 	}
 	return defaultVersion
 }
 
-func (g *Planner) buildCommand(srcDir string) string {
-	project := g.PyProject(srcDir)
+func (p *Planner) buildCommand(srcDir string) string {
+	project := p.PyProject(srcDir)
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.
 	moduleName := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
 	if _, ok := project.Tool.Poetry.Scripts[moduleName]; ok {
 		// return moduleName, nil
-		return g.formatBuildCommand(moduleName, moduleName)
+		return p.formatBuildCommand(moduleName, moduleName)
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
@@ -90,7 +90,7 @@ func (g *Planner) buildCommand(srcDir string) string {
 	if len(scripts) > 0 {
 		script = scripts[0]
 	}
-	return g.formatBuildCommand(moduleName, script)
+	return p.formatBuildCommand(moduleName, script)
 }
 
 type pyProject struct {
@@ -109,19 +109,19 @@ type pyProject struct {
 	} `toml:"tool"`
 }
 
-func (g *Planner) PyProject(srcDir string) *pyProject {
+func (p *Planner) PyProject(srcDir string) *pyProject {
 	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
 	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {
 		return nil
 	}
-	p := pyProject{}
-	_ = toml.Unmarshal(content, &p)
-	return &p
+	proj := pyProject{}
+	_ = toml.Unmarshal(content, &proj)
+	return &proj
 }
 
-func (g *Planner) isBuildable(srcDir string) (bool, error) {
-	project := g.PyProject(srcDir)
+func (p *Planner) isBuildable(srcDir string) (bool, error) {
+	project := p.PyProject(srcDir)
 	if project == nil {
 		return false, usererr.New("Could not build container for python " +
 			"application. pyproject.toml is missing and needed to install python " +
@@ -160,7 +160,7 @@ func (g *Planner) isBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func (g *Planner) formatBuildCommand(module, script string) string {
+func (p *Planner) formatBuildCommand(module, script string) string {
 
 	// If no scripts, just run the module directly always.
 	if script == "" {

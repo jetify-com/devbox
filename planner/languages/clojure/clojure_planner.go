@@ -10,14 +10,14 @@ type Planner struct{}
 // Implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *Planner) Name() string {
+func (p *Planner) Name() string {
 	return "clojure.Planner"
 }
 
-func (g *Planner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	return false
 }
 
-func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return &plansdk.Plan{}
 }

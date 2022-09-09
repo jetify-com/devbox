@@ -25,16 +25,16 @@ const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't det
 // GoPlanner implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *Planner) Name() string {
+func (p *Planner) Name() string {
 	return "golang.Planner"
 }
 
-func (g *Planner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	goModPath := filepath.Join(srcDir, "go.mod")
 	return fileExists(goModPath)
 }
 
-func (g *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	goPkg := getGoPackage(srcDir)
 	return &plansdk.Plan{
 		DevPackages: []string{
