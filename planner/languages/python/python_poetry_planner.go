@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package python
 
 import (
 	"fmt"
@@ -11,39 +11,40 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 	"go.jetpack.io/devbox/boxcli/usererr"
+	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
-type PythonPoetryPlanner struct{}
+type Planner struct{}
 
 // PythonPoetryPlanner implements interface Planner (compile-time check)
-var _ Planner = (*PythonPoetryPlanner)(nil)
+var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *PythonPoetryPlanner) Name() string {
-	return "PythonPoetryPlanner"
+func (p *Planner) Name() string {
+	return "python.Planner"
 }
 
-func (g *PythonPoetryPlanner) IsRelevant(srcDir string) bool {
-	return fileExists(filepath.Join(srcDir, "poetry.lock")) ||
-		fileExists(filepath.Join(srcDir, "pyproject.toml"))
+func (p *Planner) IsRelevant(srcDir string) bool {
+	return plansdk.FileExists(filepath.Join(srcDir, "poetry.lock")) ||
+		plansdk.FileExists(filepath.Join(srcDir, "pyproject.toml"))
 }
 
-func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
-	version := g.PythonVersion(srcDir)
-	pythonPkg := fmt.Sprintf("python%s", version.majorMinorConcatenated())
-	plan := &Plan{
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	version := p.PythonVersion(srcDir)
+	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
+	plan := &plansdk.Plan{
 		DevPackages: []string{
 			pythonPkg,
 			"poetry",
 		},
 		RuntimePackages: []string{pythonPkg},
 	}
-	if buildable, err := g.isBuildable(srcDir); !buildable {
+	if buildable, err := p.isBuildable(srcDir); !buildable {
 		return plan.WithError(err)
 	}
 
-	plan.InstallStage = &Stage{
+	plan.InstallStage = &plansdk.Stage{
 		// pex is is incompatible with certain less common python versions,
 		// but because versions are sometimes expressed open-ended (e.g. ^3.10)
 		// It will cause `poetry add pex` to fail. One solution is to use: --version
@@ -51,35 +52,35 @@ func (g *PythonPoetryPlanner) GetPlan(srcDir string) *Plan {
 		Command: "poetry add pex -n --no-ansi && " +
 			"poetry install --no-dev -n --no-ansi",
 	}
-	plan.BuildStage = &Stage{Command: g.buildCommand(srcDir)}
-	plan.StartStage = &Stage{Command: "python ./app.pex"}
+	plan.BuildStage = &plansdk.Stage{Command: p.buildCommand(srcDir)}
+	plan.StartStage = &plansdk.Stage{Command: "python ./app.pex"}
 	return plan
 }
 
 // TODO: This can be generalized to all python planners
-func (g *PythonPoetryPlanner) PythonVersion(srcDir string) *version {
-	defaultVersion, _ := newVersion("3.10.6")
-	p := g.PyProject(srcDir)
+func (p *Planner) PythonVersion(srcDir string) *plansdk.Version {
+	defaultVersion, _ := plansdk.NewVersion("3.10.6")
+	project := p.PyProject(srcDir)
 
-	if p == nil {
+	if project == nil {
 		return defaultVersion
 	}
 
-	if v, err := newVersion(p.Tool.Poetry.Dependencies.Python); err == nil {
+	if v, err := plansdk.NewVersion(project.Tool.Poetry.Dependencies.Python); err == nil {
 		return v
 	}
 	return defaultVersion
 }
 
-func (g *PythonPoetryPlanner) buildCommand(srcDir string) string {
-	project := g.PyProject(srcDir)
+func (p *Planner) buildCommand(srcDir string) string {
+	project := p.PyProject(srcDir)
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
 	// This could be improved.
 	moduleName := strings.ReplaceAll(project.Tool.Poetry.Name, "-", "_")
 	if _, ok := project.Tool.Poetry.Scripts[moduleName]; ok {
 		// return moduleName, nil
-		return g.formatBuildCommand(moduleName, moduleName)
+		return p.formatBuildCommand(moduleName, moduleName)
 	}
 	// otherwise use the first script alphabetically
 	// (go-toml doesn't preserve order, we could parse ourselves)
@@ -89,7 +90,7 @@ func (g *PythonPoetryPlanner) buildCommand(srcDir string) string {
 	if len(scripts) > 0 {
 		script = scripts[0]
 	}
-	return g.formatBuildCommand(moduleName, script)
+	return p.formatBuildCommand(moduleName, script)
 }
 
 type pyProject struct {
@@ -108,19 +109,19 @@ type pyProject struct {
 	} `toml:"tool"`
 }
 
-func (g *PythonPoetryPlanner) PyProject(srcDir string) *pyProject {
+func (p *Planner) PyProject(srcDir string) *pyProject {
 	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
 	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {
 		return nil
 	}
-	p := pyProject{}
-	_ = toml.Unmarshal(content, &p)
-	return &p
+	proj := pyProject{}
+	_ = toml.Unmarshal(content, &proj)
+	return &proj
 }
 
-func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
-	project := g.PyProject(srcDir)
+func (p *Planner) isBuildable(srcDir string) (bool, error) {
+	project := p.PyProject(srcDir)
 	if project == nil {
 		return false, usererr.New("Could not build container for python " +
 			"application. pyproject.toml is missing and needed to install python " +
@@ -136,14 +137,14 @@ func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
 		// Using packages disables auto-detection of __main__ module.
 		for _, pkg := range project.Tool.Poetry.Packages {
 			if pkg.Include == packageName &&
-				fileExists(filepath.Join(srcDir, pkg.From, pkg.Include, "__main__.py")) {
+				plansdk.FileExists(filepath.Join(srcDir, pkg.From, pkg.Include, "__main__.py")) {
 				return true, nil
 			}
 		}
 
 		// Use setup tools auto-detect directory structure
-	} else if fileExists(filepath.Join(srcDir, packageName, "__main__.py")) ||
-		fileExists(filepath.Join(srcDir, "src", packageName, "__main__.py")) {
+	} else if plansdk.FileExists(filepath.Join(srcDir, packageName, "__main__.py")) ||
+		plansdk.FileExists(filepath.Join(srcDir, "src", packageName, "__main__.py")) {
 
 		return true, nil
 	}
@@ -159,7 +160,7 @@ func (g *PythonPoetryPlanner) isBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func (g *PythonPoetryPlanner) formatBuildCommand(module, script string) string {
+func (p *Planner) formatBuildCommand(module, script string) string {
 
 	// If no scripts, just run the module directly always.
 	if script == "" {

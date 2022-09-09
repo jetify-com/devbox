@@ -1,16 +1,17 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package golang
 
 import (
 	"os"
 	"path/filepath"
 
+	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/mod/modfile"
 )
 
-type GoPlanner struct{}
+type Planner struct{}
 
 var versionMap = map[string]string{
 	// Map go versions to the corresponding nixpkgs:
@@ -22,31 +23,31 @@ var versionMap = map[string]string{
 const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't determine a version.
 
 // GoPlanner implements interface Planner (compile-time check)
-var _ Planner = (*GoPlanner)(nil)
+var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *GoPlanner) Name() string {
-	return "GoPlanner"
+func (p *Planner) Name() string {
+	return "golang.Planner"
 }
 
-func (g *GoPlanner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	goModPath := filepath.Join(srcDir, "go.mod")
 	return fileExists(goModPath)
 }
 
-func (g *GoPlanner) GetPlan(srcDir string) *Plan {
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	goPkg := getGoPackage(srcDir)
-	return &Plan{
+	return &plansdk.Plan{
 		DevPackages: []string{
 			goPkg,
 		},
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
+		SharedPlan: plansdk.SharedPlan{
+			InstallStage: &plansdk.Stage{
 				Command: "go get",
 			},
-			BuildStage: &Stage{
+			BuildStage: &plansdk.Stage{
 				Command: "CGO_ENABLED=0 go build -o app",
 			},
-			StartStage: &Stage{
+			StartStage: &plansdk.Stage{
 				Command: "./app",
 			},
 		},

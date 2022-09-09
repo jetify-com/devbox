@@ -6,12 +6,12 @@ package devbox
 import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/cuecfg"
-	"go.jetpack.io/devbox/planner"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 // Config defines a devbox environment as JSON.
 type Config struct {
-	planner.SharedPlan
+	plansdk.SharedPlan
 
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment.

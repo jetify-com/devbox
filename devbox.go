@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox/nix"
 	"go.jetpack.io/devbox/pkgslice"
 	"go.jetpack.io/devbox/planner"
+	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/exp/slices"
 )
 
@@ -99,13 +100,13 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // environment.
-func (d *Devbox) Plan() *planner.Plan {
-	basePlan := &planner.Plan{
+func (d *Devbox) Plan() *plansdk.Plan {
+	basePlan := &plansdk.Plan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		SharedPlan:      d.cfg.SharedPlan,
 	}
-	return planner.MergePlans(basePlan, planner.GetPlan(d.srcDir))
+	return plansdk.MergePlans(basePlan, planner.GetPlan(d.srcDir))
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define

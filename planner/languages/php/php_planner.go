@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package php
 
 import (
 	"encoding/json"
@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/boxcli/usererr"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 // https://github.com/NixOS/nixpkgs/tree/nixos-22.05/pkgs/development/interpreters/php
@@ -24,47 +25,47 @@ var supportedPHPVersions = []string{
 	"7.4",
 }
 
-type PHPPlanner struct{}
+type Planner struct{}
 
 // PHPPlanner implements interface Planner (compile-time check)
-var _ Planner = (*PHPPlanner)(nil)
+var _ plansdk.Planner = (*Planner)(nil)
 
-func (g *PHPPlanner) Name() string {
-	return "PHPPlanner"
+func (p *Planner) Name() string {
+	return "php.Planner"
 }
 
-func (g *PHPPlanner) IsRelevant(srcDir string) bool {
-	return fileExists(filepath.Join(srcDir, "composer.lock")) ||
-		fileExists(filepath.Join(srcDir, "composer.json"))
+func (p *Planner) IsRelevant(srcDir string) bool {
+	return plansdk.FileExists(filepath.Join(srcDir, "composer.lock")) ||
+		plansdk.FileExists(filepath.Join(srcDir, "composer.json"))
 }
 
-func (g *PHPPlanner) GetPlan(srcDir string) *Plan {
-	v := g.version(srcDir)
-	plan := &Plan{
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	v := p.version(srcDir)
+	plan := &plansdk.Plan{
 		DevPackages: []string{
-			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
-			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
+			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
+			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
 		},
 		RuntimePackages: []string{
-			fmt.Sprintf("php%s", v.majorMinorConcatenated()),
-			fmt.Sprintf("php%sPackages.composer", v.majorMinorConcatenated()),
+			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
+			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
 		},
 	}
-	if !fileExists(filepath.Join(srcDir, "public/index.php")) {
+	if !plansdk.FileExists(filepath.Join(srcDir, "public/index.php")) {
 		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
 	}
 
-	plan.InstallStage = &Stage{
+	plan.InstallStage = &plansdk.Stage{
 		Command: "composer install --no-dev --no-ansi",
 	}
-	plan.StartStage = &Stage{
+	plan.StartStage = &plansdk.Stage{
 		Command: "php -S 0.0.0.0:8080 -t public",
 	}
 	return plan
 }
 
-func (g *PHPPlanner) version(srcDir string) *version {
-	latestVersion, _ := newVersion(supportedPHPVersions[0])
+func (p *Planner) version(srcDir string) *plansdk.Version {
+	latestVersion, _ := plansdk.NewVersion(supportedPHPVersions[0])
 	composerJSONPath := filepath.Join(srcDir, "composer.json")
 	content, err := os.ReadFile(composerJSONPath)
 
@@ -84,21 +85,21 @@ func (g *PHPPlanner) version(srcDir string) *version {
 		return latestVersion
 	}
 
-	version, err := newVersion(composerJSON.Config.Platform.PHP)
+	version, err := plansdk.NewVersion(composerJSON.Config.Platform.PHP)
 	if err != nil {
 		return latestVersion
 	}
 
 	// Look for major minor match first.
 	for _, supportedVersion := range supportedPHPVersions {
-		if strings.HasPrefix(supportedVersion, version.majorMinor()) {
+		if strings.HasPrefix(supportedVersion, version.MajorMinor()) {
 			return version
 		}
 	}
 
 	// If no major minor match, just try to find a major match.
 	for _, supportedVersion := range supportedPHPVersions {
-		if strings.HasPrefix(supportedVersion, version.major()) {
+		if strings.HasPrefix(supportedVersion, version.Major()) {
 			return version
 		}
 	}
