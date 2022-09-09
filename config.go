@@ -16,6 +16,12 @@ type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment.
 	Packages []string `cue:"[...string]" json:"packages"`
+
+	// Shell configures the devbox shell environment.
+	Shell struct {
+		// InitHook contains commands that will run at shell startup.
+		InitHook string `json:"init_hook,omitempty"`
+	} `json:"shell,omitempty"`
 }
 
 // ReadConfig reads a devbox config file.
