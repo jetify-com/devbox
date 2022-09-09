@@ -14,7 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
-	"go.jetpack.io/devbox/planner"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 //go:embed tmpl/* tmpl/.*
@@ -23,7 +23,7 @@ var tmplFS embed.FS
 var shellFiles = []string{".gitignore", "shell.nix"}
 var buildFiles = []string{".gitignore", "development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
-func generate(rootPath string, plan *planner.Plan, files []string) error {
+func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range files {
@@ -36,7 +36,7 @@ func generate(rootPath string, plan *planner.Plan, files []string) error {
 	return nil
 }
 
-func writeFromTemplate(path string, plan *planner.Plan, tmplName string) error {
+func writeFromTemplate(path string, plan *plansdk.Plan, tmplName string) error {
 	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?

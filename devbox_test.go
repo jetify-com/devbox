@@ -8,7 +8,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
-	"go.jetpack.io/devbox/planner"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 func TestDevboxPlan(t *testing.T) {
@@ -45,7 +45,7 @@ func testIndividualPlan(t *testing.T, testPath string) {
 		data, err := os.ReadFile(goldenFile)
 		assert.NoError(err, "plan.json should be readable")
 
-		expected := &planner.Plan{}
+		expected := &plansdk.Plan{}
 		err = json.Unmarshal(data, &expected)
 		assert.NoError(err, "plan.json should parse correctly")
 		expected.Errors = nil

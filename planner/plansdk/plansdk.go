@@ -1,17 +1,18 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package planner
+package plansdk
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/pkgslice"
 )
 
-type planError struct {
+type PlanError struct {
 	error
 }
 
@@ -26,7 +27,7 @@ type Plan struct {
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 
-	Errors []planError `json:"errors,omitempty"`
+	Errors []PlanError `json:"errors,omitempty"`
 }
 
 // Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
@@ -64,6 +65,12 @@ func (s *Stage) GetInputFiles() []string {
 		return []string{}
 	}
 	return s.InputFiles
+}
+
+type Planner interface {
+	Name() string
+	IsRelevant(srcDir string) bool
+	GetPlan(srcDir string) *Plan
 }
 
 func (p *Plan) String() string {
@@ -107,7 +114,7 @@ func (p *Plan) Error() error {
 }
 
 func (p *Plan) WithError(err error) *Plan {
-	p.Errors = append(p.Errors, planError{err})
+	p.Errors = append(p.Errors, PlanError{err})
 	return p
 }
 
@@ -143,6 +150,11 @@ func MergePlans(plans ...*Plan) *Plan {
 	return plan
 }
 
-func (p planError) MarshalJSON() ([]byte, error) {
+func (p PlanError) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.Error())
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
