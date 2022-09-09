@@ -7,7 +7,7 @@
     ]
   },
   "build_stage": {
-    "command": "yarn build",
+    "command": "yarn build && yarn install --production --ignore-scripts --prefer-offline",
     "input_files": [
       "."
     ]
