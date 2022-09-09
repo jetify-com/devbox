@@ -162,6 +162,9 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for t
 + File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
 + Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
+## Contributing
+Devbox is an opensource project so contributions are always welcome. Please read [our contributing guide](CONTRIBUTING.md) before submitting pull requests.
+
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
