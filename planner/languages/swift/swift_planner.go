@@ -13,7 +13,7 @@ type Planner struct{}
 var _ plansdk.Planner = (*Planner)(nil)
 
 func (g *Planner) Name() string {
-	return "CPlanner"
+	return "swift.Planner"
 }
 
 func (g *Planner) IsRelevant(srcDir string) bool {
