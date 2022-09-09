@@ -16,11 +16,13 @@ permissions:
 
 jobs:
   golangci-lint:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-12]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: Set up go
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version-file: ./go.mod
           cache: false # use golangci cache instead
@@ -29,15 +31,52 @@ jobs:
         with:
           args: --timeout=10m
 
-  golang-tests:
+  test-linux:
     runs-on: ubuntu-latest
+    needs: golangci-lint
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: ./go.mod
           cache: true
-      - name: Build the module
-        run: go build -v ./...
-      - name: Run all tests
-        run: go test -v ./...
+      - name: Build devbox
+        run: go install ./cmd/devbox
+      - name: Install additional shells
+        run: |
+          sudo apt-get update
+          sudo apt-get install dash zsh
+      - name: Install Nix
+        run: sh <(curl -L https://nixos.org/nix/install) --daemon
+      - name: Run tests
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          go test ./boxcli
+
+  test-darwin:
+    runs-on: macos-12
+    needs: golangci-lint
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+          cache: true
+      - name: Build devbox
+        run: go install ./cmd/devbox
+      - name: Install additional shells
+        env:
+          HOMEBREW_NO_ANALYTICS: 1
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_EMOJI: 1
+          HOMEBREW_NO_ENV_HINTS: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: |
+          brew update
+          brew install dash zsh
+      - name: Install Nix
+        run: sh <(curl -L https://nixos.org/nix/install) --daemon
+      - name: Run tests
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          go test ./boxcli
