@@ -13,39 +13,39 @@ import (
 
 // TODO: add support for .cue
 
-func Marshal(value any, extension string) ([]byte, error) {
-	err := cuego.Complete(value)
+func Marshal(valuePtr any, extension string) ([]byte, error) {
+	err := cuego.Complete(valuePtr)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	switch extension {
 	case ".json":
-		return MarshalJSON(value)
+		return MarshalJSON(valuePtr)
 	case ".yml", ".yaml":
-		return MarshalYaml(value)
+		return MarshalYaml(valuePtr)
 	case ".toml":
-		return MarshalToml(value)
+		return MarshalToml(valuePtr)
 	}
 	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
 
-func Unmarshal(data []byte, extension string, value any) error {
+func Unmarshal(data []byte, extension string, valuePtr any) error {
 	switch extension {
 	case ".json":
-		err := UnmarshalJSON(data, value)
+		err := UnmarshalJSON(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ".yml", ".yaml":
-		err := UnmarshalYaml(data, value)
+		err := UnmarshalYaml(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ".toml":
-		err := UnmarshalToml(data, value)
+		err := UnmarshalToml(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -54,14 +54,14 @@ func Unmarshal(data []byte, extension string, value any) error {
 	return errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
 
-func InitFile(path string, value any) (bool, error) {
+func InitFile(path string, valuePtr any) (bool, error) {
 	if _, err := os.Stat(path); err == nil {
 		// File already exists, don't create a new one.
 		// TODO: should we read and write again, in case the schema needs updating?
 		return false, nil
 	} else if errors.Is(err, os.ErrNotExist) {
 		// File does not exist, create a new one:
-		return true, WriteFile(path, value)
+		return true, WriteFile(path, valuePtr)
 	} else {
 		// Error case:
 		return false, errors.WithStack(err)
@@ -69,13 +69,13 @@ func InitFile(path string, value any) (bool, error) {
 
 }
 
-func ReadFile(path string, value any) error {
+func ParseFile(path string, valuePtr any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return Unmarshal(data, filepath.Ext(path), value)
+	return Unmarshal(data, filepath.Ext(path), valuePtr)
 }
 
 func WriteFile(path string, value any) error {

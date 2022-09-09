@@ -108,7 +108,7 @@ func (n *Planner) nodeVersion(srcDir string) *plansdk.Version {
 func (n *Planner) nodeProject(srcDir string) *nodeProject {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
 	p := &nodeProject{}
-	_ = cuecfg.ReadFile(packageJSONPath, p)
+	_ = cuecfg.ParseFile(packageJSONPath, p)
 
 	return p
 }
