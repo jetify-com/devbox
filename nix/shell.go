@@ -149,7 +149,10 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 
 	// This is a best-effort to include the user's existing shellrc. If we
 	// can't read it, then just omit it from the devbox shellrc.
-	userShellrc, _ := os.ReadFile(userShellrcPath)
+	userShellrc, err := os.ReadFile(userShellrcPath)
+	if err != nil {
+		userShellrc = []byte{}
+	}
 
 	path = filepath.Join(tmp, filepath.Base(userShellrcPath))
 	shellrcf, err := os.Create(path)
