@@ -157,7 +157,7 @@ func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
 func (p *Planner) nodeProject(srcDir string) *nodeProject {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
 	project := &nodeProject{}
-	_ = cuecfg.ReadFile(packageJSONPath, project)
+	_ = cuecfg.ParseFile(packageJSONPath, project)
 
 	return project
 }

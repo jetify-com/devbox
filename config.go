@@ -27,7 +27,7 @@ type Config struct {
 // ReadConfig reads a devbox config file.
 func ReadConfig(path string) (*Config, error) {
 	cfg := &Config{}
-	err := cuecfg.ReadFile(path, cfg)
+	err := cuecfg.ParseFile(path, cfg)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
