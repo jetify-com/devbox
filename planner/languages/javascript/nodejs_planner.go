@@ -28,20 +28,8 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	pkgManager := p.packageManager(srcDir)
 	project := p.nodeProject(srcDir)
-	packages := []string{p.nodePackage(project)}
-	inputFiles := []string{
-		filepath.Join(srcDir, "package.json"),
-	}
-
-	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
-	if plansdk.FileExists(npmPkgLockPath) {
-		inputFiles = append(inputFiles, npmPkgLockPath)
-	}
-
-	if pkgManager == "yarn" {
-		packages = append(packages, "yarn")
-		inputFiles = append(inputFiles, filepath.Join(srcDir, "yarn.lock"))
-	}
+	packages := p.packages(pkgManager, project)
+	inputFiles := p.inputFiles(srcDir)
 
 	return &plansdk.Plan{
 		DevPackages: packages,
@@ -113,6 +101,34 @@ func (p *Planner) packageManager(srcDir string) string {
 	return "npm"
 }
 
+func (p *Planner) packages(pkgManager string, project *nodeProject) []string {
+	nodeJSPkg := p.nodePackage(project)
+	pkgs := []string{nodeJSPkg}
+
+	if pkgManager == "yarn" {
+		return append(pkgs, "yarn")
+	}
+	return pkgs
+}
+
+func (p *Planner) inputFiles(srcDir string) []string {
+	inputFiles := []string{
+		filepath.Join(srcDir, "package.json"),
+	}
+
+	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
+	if plansdk.FileExists(npmPkgLockPath) {
+		inputFiles = append(inputFiles, npmPkgLockPath)
+	}
+
+	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
+	if plansdk.FileExists(yarnPkgLockPath) {
+		inputFiles = append(inputFiles, yarnPkgLockPath)
+	}
+
+	return inputFiles
+}
+
 func (p *Planner) buildCommand(pkgManager string, project *nodeProject) string {
 	buildScript := project.Scripts.Build
 	postBuildCmdHook := "npm prune --production"
@@ -138,10 +154,10 @@ func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
 	return fmt.Sprintf("%s start", pkgManager)
 }
 
-func (n *Planner) nodeProject(srcDir string) *nodeProject {
+func (p *Planner) nodeProject(srcDir string) *nodeProject {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
-	p := &nodeProject{}
-	_ = cuecfg.ReadFile(packageJSONPath, p)
+	project := &nodeProject{}
+	_ = cuecfg.ReadFile(packageJSONPath, project)
 
-	return p
+	return project
 }

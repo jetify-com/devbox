@@ -6,7 +6,7 @@
     ]
   },
   "build_stage": {
-    "command": "",
+    "command": "npm prune --production",
     "input_files": [
       "."
     ]

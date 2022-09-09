@@ -46,9 +46,7 @@ RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.InstallS
 COPY --link {{ $files }} ./
 RUN true
   {{- end }}{{- end }}
-  {{ if .BuildStage.Command }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
-  {{- end }}
 {{- end }}
 
 
