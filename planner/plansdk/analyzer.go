@@ -18,21 +18,21 @@ type Analyzer struct {
 	rootDir string
 }
 
-func NewAnalyzer(rootDir string) *Analyzer {
+func NewAnalyzer(rootDir string) (*Analyzer, error) {
 	abs, err := filepath.Abs(rootDir)
 	if err != nil {
-		abs = rootDir
+		return nil, err
 	}
 
 	return &Analyzer{
 		rootDir: abs,
-	}
+	}, nil
 }
 
 // AbsPath resolves the given path and turns it into an absolute path relative
 // to the root directory of the analyzer. If the given path is already absolute
 // it leaves it as is.
-func (a *Analyzer) AbsPath(path string) string {
+func (a *Analyzer) absPath(path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}
@@ -47,7 +47,7 @@ func (a *Analyzer) GlobFiles(patterns ...string) []string {
 	results := []string{}
 
 	for _, p := range patterns {
-		pattern := a.AbsPath(p)
+		pattern := a.absPath(p)
 		matches, err := doublestar.FilepathGlob(pattern)
 		if err != nil {
 			continue
@@ -58,7 +58,7 @@ func (a *Analyzer) GlobFiles(patterns ...string) []string {
 }
 
 func (a *Analyzer) FileExists(relPath string) bool {
-	_, err := os.Stat(a.AbsPath(relPath))
+	_, err := os.Stat(a.absPath(relPath))
 	return err == nil
 }
 
@@ -68,6 +68,6 @@ func (a *Analyzer) HasAnyFile(patterns ...string) bool {
 }
 
 func (a *Analyzer) ParseFile(relPath string, ptr any) error {
-	abs := a.AbsPath(relPath)
+	abs := a.absPath(relPath)
 	return cuecfg.ParseFile(abs, ptr)
 }
