@@ -11,7 +11,7 @@ import (
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
-func TestDevboxPlan(t *testing.T) {
+func TestDevbox(t *testing.T) {
 	testPaths, err := doublestar.FilepathGlob("./testdata/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
@@ -22,11 +22,11 @@ func TestDevboxPlan(t *testing.T) {
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
 	for _, testPath := range testPaths {
-		testIndividualPlan(t, testPath)
+		testExample(t, testPath)
 	}
 }
 
-func testIndividualPlan(t *testing.T, testPath string) {
+func testExample(t *testing.T, testPath string) {
 	baseDir := filepath.Dir(testPath)
 	t.Run(baseDir, func(t *testing.T) {
 		assert := assert.New(t)
@@ -36,6 +36,9 @@ func testIndividualPlan(t *testing.T, testPath string) {
 		box, err := Open(baseDir)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 		plan := box.Plan()
+
+		err = box.Generate()
+		assert.NoError(err, "devbox generate should not fail")
 
 		if !hasGoldenFile {
 			assert.NotEmpty(plan.DevPackages, "the plan should have dev packages")
@@ -48,20 +51,25 @@ func testIndividualPlan(t *testing.T, testPath string) {
 		expected := &plansdk.Plan{}
 		err = json.Unmarshal(data, &expected)
 		assert.NoError(err, "plan.json should parse correctly")
-		expected.Errors = nil
 
-		assert.ElementsMatch(expected.DevPackages, plan.DevPackages, "DevPackages should match")
-		assert.ElementsMatch(expected.RuntimePackages, plan.RuntimePackages, "RuntimePackages should match")
-		assert.Equal(expected.InstallStage.GetCommand(), plan.InstallStage.GetCommand(), "Install stage should match")
-		assert.Equal(expected.BuildStage.GetCommand(), plan.BuildStage.GetCommand(), "Build stage should match")
-		assert.Equal(expected.StartStage.GetCommand(), plan.StartStage.GetCommand(), "Start stage should match")
-		// Check that input files are the same for all stages.
-		// Depending on where the test command is invoked, the input file paths can be different.
-		// We will compare the file name only.
-		assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(plan.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
-		assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(plan.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
-		assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(plan.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
+		assertPlansMatch(t, expected, plan)
 	})
+}
+
+func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan) {
+	assert := assert.New(t)
+
+	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
+	assert.ElementsMatch(expected.RuntimePackages, actual.RuntimePackages, "RuntimePackages should match")
+	assert.Equal(expected.InstallStage.GetCommand(), actual.InstallStage.GetCommand(), "Install stage should match")
+	assert.Equal(expected.BuildStage.GetCommand(), actual.BuildStage.GetCommand(), "Build stage should match")
+	assert.Equal(expected.StartStage.GetCommand(), actual.StartStage.GetCommand(), "Start stage should match")
+	// Check that input files are the same for all stages.
+	// Depending on where the test command is invoked, the input file paths can be different.
+	// We will compare the file name only.
+	assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(actual.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
+	assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(actual.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
+	assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(actual.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
 }
 
 func fileExists(path string) bool {
