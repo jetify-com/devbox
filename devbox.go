@@ -131,7 +131,13 @@ func (d *Devbox) Shell() error {
 		return errors.WithStack(err)
 	}
 	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	return nix.Shell(nixDir)
+	sh, err := nix.DetectShell()
+	if err != nil {
+		// Fall back to using a plain Nix shell.
+		sh = &nix.Shell{}
+	}
+	sh.UserInitHook = d.cfg.Shell.InitHook
+	return sh.Run(nixDir)
 }
 
 // saveCfg writes the config file to the devbox directory.
