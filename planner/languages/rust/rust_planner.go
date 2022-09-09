@@ -6,12 +6,14 @@ package rust
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
+// `cargo new` generates a file with uppercase Cargo.toml, so we default to this
 const cargoToml = "Cargo.toml"
 
 type Planner struct{}
@@ -24,14 +26,16 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	cargoTomlPath := filepath.Join(srcDir, cargoToml)
-	return plansdk.FileExists(cargoTomlPath)
+	return p.cargoTomlPath(srcDir) != ""
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	plan, err := p.getPlan(srcDir)
 	if err != nil {
-		fmt.Printf("[WARNING] error in RustPlanner.GetPlan: %s", err)
+		if plan == nil {
+			plan = &plansdk.Plan{}
+		}
+		plan.WithError(err)
 	}
 	return plan
 }
@@ -51,13 +55,9 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	// https://github.com/NixOS/nixpkgs/issues/103642
 	packages := []string{"rustup", "libiconv", "gcc"}
 
-	version, err := p.rustVersion(srcDir)
+	rustupVersion, err := p.rustVersion(srcDir)
 	if err != nil {
 		return nil, errors.WithStack(err)
-	}
-	rustupVersion := "stable"
-	if version != nil {
-		rustupVersion = version.Exact()
 	}
 
 	rustupDefaultCmd := fmt.Sprintf("rustup default %s", rustupVersion)
@@ -71,19 +71,19 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	}, nil
 }
 
-func (p *Planner) rustVersion(srcDir string) (*plansdk.Version, error) {
+func (p *Planner) rustVersion(srcDir string) (string, error) {
 	cfg, err := p.cargoManifest(srcDir)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if cfg.PackageField.RustVersion == "" {
-		return nil, nil
+		return "stable", nil
 	}
 
 	if rustVersion, err := plansdk.NewVersion(cfg.PackageField.RustVersion); err != nil {
-		return nil, err
+		return "", err
 	} else {
-		return rustVersion, nil
+		return rustVersion.Exact(), nil
 	}
 }
 
@@ -102,4 +102,20 @@ func (p *Planner) cargoManifest(srcDir string) (*cargoManifest, error) {
 		return nil, errors.WithStack(err)
 	}
 	return cfg, nil
+}
+
+// Tries to find Cargo.toml or cargo.toml. Returns the path with srcDir if found
+// and empty-string if not found.
+func (p *Planner) cargoTomlPath(srcDir string) string {
+
+	cargoTomlPath := filepath.Join(srcDir, cargoToml)
+	if plansdk.FileExists(cargoTomlPath) {
+		return cargoTomlPath
+	}
+
+	lowerCargoTomlPath := filepath.Join(srcDir, strings.ToLower(cargoToml))
+	if plansdk.FileExists(lowerCargoTomlPath) {
+		return lowerCargoTomlPath
+	}
+	return ""
 }
