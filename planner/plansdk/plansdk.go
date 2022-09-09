@@ -50,8 +50,7 @@ type SharedPlan struct {
 type Stage struct {
 	Command string `cue:"string" json:"command"`
 	// InputFiles is internal for planners only.
-	InputFiles      []string `cue:"[...string]" json:"input_files,omitempty"`
-	PostCommandHook string   `cue:"string" json:"post_command_hook,omitempty"`
+	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
 }
 
 func (s *Stage) GetCommand() string {

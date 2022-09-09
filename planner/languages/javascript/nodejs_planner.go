@@ -16,35 +16,31 @@ type Planner struct{}
 // NodeJsPlanner implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
-func (n *Planner) Name() string {
+func (p *Planner) Name() string {
 	return "javascript.Planner"
 }
 
-func (n *Planner) IsRelevant(srcDir string) bool {
+func (p *Planner) IsRelevant(srcDir string) bool {
 	packageJSONPath := filepath.Join(srcDir, "package.json")
 	return plansdk.FileExists(packageJSONPath)
 }
 
-func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	packages := []string{n.nodePackage(srcDir)}
-	pkgManager := "npm"
+func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	pkgManager := p.packageManager(srcDir)
+	project := p.nodeProject(srcDir)
+	packages := []string{p.nodePackage(project)}
 	inputFiles := []string{
 		filepath.Join(srcDir, "package.json"),
 	}
-
-	postBuildCmdHook := "npm prune --production"
 
 	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
 	if plansdk.FileExists(npmPkgLockPath) {
 		inputFiles = append(inputFiles, npmPkgLockPath)
 	}
 
-	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
-	if plansdk.FileExists(yarnPkgLockPath) {
-		pkgManager = "yarn"
+	if pkgManager == "yarn" {
 		packages = append(packages, "yarn")
-		inputFiles = append(inputFiles, yarnPkgLockPath)
-		postBuildCmdHook = "yarn install --production --ignore-scripts --prefer-offline"
+		inputFiles = append(inputFiles, filepath.Join(srcDir, "yarn.lock"))
 	}
 
 	return &plansdk.Plan{
@@ -61,27 +57,28 @@ func (n *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			BuildStage: &plansdk.Stage{
 				// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
 				InputFiles: []string{"."},
-				// Command: "" (command should be set by users. Some apps don't require a build command.)
-				PostCommandHook: postBuildCmdHook,
+				Command:    p.buildCommand(pkgManager, project),
 			},
 
 			StartStage: &plansdk.Stage{
-				// Start command could be `Node server.js`, `npm serve`, `yarn start`, or anything really.
-				// For now we use `node index.js` as the default.
-				Command: "node index.js",
+				Command: p.startCommand(pkgManager, project),
 			},
 		},
 	}
 }
 
 type nodeProject struct {
+	Scripts struct {
+		Build string `json:"build,omitempty"`
+		Start string `json:"start,omitempty"`
+	}
 	Engines struct {
 		Node string `json:"node,omitempty"`
 	} `json:"engines,omitempty"`
 }
 
-func (n *Planner) nodePackage(srcDir string) string {
-	v := n.nodeVersion(srcDir)
+func (p *Planner) nodePackage(project *nodeProject) string {
+	v := p.nodeVersion(project)
 	if v != nil {
 		switch v.Major() {
 		case "10":
@@ -98,15 +95,47 @@ func (n *Planner) nodePackage(srcDir string) string {
 	return "nodejs"
 }
 
-func (n *Planner) nodeVersion(srcDir string) *plansdk.Version {
-	p := n.nodeProject(srcDir)
+func (p *Planner) nodeVersion(project *nodeProject) *plansdk.Version {
 	if p != nil {
-		if v, err := plansdk.NewVersion(p.Engines.Node); err == nil {
+		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
 			return v
 		}
 	}
 
 	return nil
+}
+
+func (p *Planner) packageManager(srcDir string) string {
+	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
+	if plansdk.FileExists(yarnPkgLockPath) {
+		return "yarn"
+	}
+	return "npm"
+}
+
+func (p *Planner) buildCommand(pkgManager string, project *nodeProject) string {
+	buildScript := project.Scripts.Build
+	postBuildCmdHook := "npm prune --production"
+
+	if pkgManager == "yarn" {
+		postBuildCmdHook = "yarn install --production --ignore-scripts --prefer-offline"
+	}
+	if buildScript == "" {
+		return postBuildCmdHook
+	}
+
+	return fmt.Sprintf("%s build && %s", pkgManager, postBuildCmdHook)
+}
+
+func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
+	startScript := project.Scripts.Start
+	if startScript == "" {
+		// Start command could be `Node server.js`, `npm serve`, or anything really.
+		// For now we use `node index.js` as the default.
+		return "node index.js"
+	}
+
+	return fmt.Sprintf("%s start", pkgManager)
 }
 
 func (n *Planner) nodeProject(srcDir string) *nodeProject {

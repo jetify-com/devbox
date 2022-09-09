@@ -49,9 +49,6 @@ RUN true
   {{ if .BuildStage.Command }}
 RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{.BuildStage.Command}}
   {{- end }}
-  {{ if .BuildStage.PostCommandHook }}
-RUN --mount=type=cache,target=/nix/store,from=base,source=/nix/store {{ .BuildStage.PostCommandHook }}
-  {{- end }}
 {{- end }}
 
 
