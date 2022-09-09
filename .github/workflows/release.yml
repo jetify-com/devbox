@@ -6,8 +6,8 @@ on:
   # Build/Release on demand
   workflow_dispatch:
     inputs:
-      is_snapshot_release:
-        description: "Publish Release:"
+      is_prerelease:
+        description: "Pre-release?"
         required: false
         default: false
         type: boolean
@@ -26,11 +26,11 @@ jobs:
   tests:
     uses: ./.github/workflows/tests.yaml
 
-  release-snapshot:
+  prerelease:
     runs-on: ubuntu-latest
     environment: release
     needs: tests
-    if: ${{ inputs.is_snapshot_release || github.event.schedule }}
+    if: ${{ inputs.is_prerelease || github.event.schedule }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
