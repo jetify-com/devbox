@@ -1,0 +1,19 @@
+{
+  "install_stage": {
+    "input_files": [
+      "."
+    ]
+  },
+  "start_stage": {
+    "command": "mkdir -p /var/cache/nginx/client_body && mkdir -p /var/log/nginx/ && nginx -c /app/nginx.conf -g 'daemon off;'",
+    "input_files": [
+      "."
+    ]
+  },
+  "dev_packages": [
+    "nginx"
+  ],
+  "runtime_packages": [
+    "nginx"
+  ]
+}
