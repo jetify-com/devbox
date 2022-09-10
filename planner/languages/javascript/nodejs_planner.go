@@ -37,20 +37,9 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		RuntimePackages: packages,
 
 		SharedPlan: plansdk.SharedPlan{
-			InstallStage: &plansdk.Stage{
-				InputFiles: inputFiles,
-				Command:    fmt.Sprintf("%s install", pkgManager),
-			},
-
-			BuildStage: &plansdk.Stage{
-				// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
-				InputFiles: []string{"."},
-				Command:    p.buildCommand(pkgManager, project),
-			},
-
-			StartStage: &plansdk.Stage{
-				Command: p.startCommand(pkgManager, project),
-			},
+			InstallStage: plansdk.NewStage(fmt.Sprintf("%s install", pkgManager), inputFiles...),
+			BuildStage:   plansdk.NewStage(p.buildCommand(pkgManager, project)),
+			StartStage:   plansdk.NewStage(p.startCommand(pkgManager, project)),
 		},
 	}
 }

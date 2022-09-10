@@ -50,7 +50,14 @@ type SharedPlan struct {
 type Stage struct {
 	Command string `cue:"string" json:"command"`
 	// InputFiles is internal for planners only.
-	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
+	inputFiles []string
+}
+
+func NewStage(command string, inputFiles ...string) *Stage {
+	return &Stage{
+		Command:    command,
+		inputFiles: inputFiles,
+	}
 }
 
 func (s *Stage) GetCommand() string {
@@ -60,11 +67,11 @@ func (s *Stage) GetCommand() string {
 	return s.Command
 }
 
-func (s *Stage) GetInputFiles() []string {
-	if s == nil {
-		return []string{}
+func (s *Stage) InputFiles() []string {
+	if s == nil || len(s.inputFiles) == 0 {
+		return []string{"."}
 	}
-	return s.InputFiles
+	return s.inputFiles
 }
 
 type Planner interface {
@@ -137,15 +144,6 @@ func MergePlans(plans ...*Plan) *Plan {
 
 	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
-
-	// Set default files for install stage to copy.
-	if plan.SharedPlan.InstallStage.InputFiles == nil {
-		plan.SharedPlan.InstallStage.InputFiles = []string{"."}
-	}
-	// Set default files for install stage to copy over from build step.
-	if plan.SharedPlan.StartStage.InputFiles == nil {
-		plan.SharedPlan.StartStage.InputFiles = []string{"."}
-	}
 
 	return plan
 }
