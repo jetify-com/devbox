@@ -1,0 +1,32 @@
+# Begin Devbox Pre-init Hook
+
+# Don't allow the user's shellrc to re-source Nix since we're already in Nix.
+export __ETC_PROFILE_NIX_SOURCED=1
+
+# Put the Nix packages at the beginning of the PATH to give them priority over
+# programs outside of devbox.
+export PATH="$PURE_NIX_PATH"
+
+# Append any paths that were in the environment at the time the user launched
+# devbox. This gives the shell access to non-devbox programs, while still
+# preferring the ones that Nix installed.
+PATH="$PATH:/a/test/path"
+
+# End Devbox Pre-init Hook
+
+# Begin Devbox Post-init Hook
+
+# Update the $PATH again so that the Nix packages take priority over the
+# programs outside of devbox.
+export PATH="$PURE_NIX_PATH:$PATH"
+
+# Prepend to the prompt to make it clear we're in a devbox shell.
+export PS1="(devbox) $PS1"
+
+# End Devbox Post-init Hook
+
+# Begin Devbox User Hook
+
+echo "Hello from a devbox shell hook!"
+
+# End Devbox User Hook
