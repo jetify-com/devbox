@@ -13,6 +13,9 @@ import (
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
+// Source and reference: https://github.com/oxalica/rust-overlay
+const RustOxalicaOverlay = "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"
+
 // `cargo new` generates a file with uppercase Cargo.toml, so we default to this
 const cargoToml = "Cargo.toml"
 
@@ -42,48 +45,39 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 
 func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
-	// NOTE: I'm not convinced we need these packages to be included in the long term.
-	// The link indicates we need libiconv for macOS, but maybe not for linux. For now,
-	// including them by default, but this could be likely optimized once we understand better.
-	//
-	// libiconv due to error:
-	//     ld: library not found for -liconv. clang-11: error: linker command failed with exit code 1
-	// https://discourse.nixos.org/t/nix-shell-rust-hello-world-ld-linkage-issue/17381/2
-	//
-	// gcc due to error:
-	//     linker `cc` not found
-	// https://github.com/NixOS/nixpkgs/issues/103642
-	packages := []string{"rustup", "libiconv", "gcc"}
-
-	rustupVersion, err := p.rustVersion(srcDir)
+	rustVersion, err := p.rustOxalicaVersion(srcDir)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	rustupDefaultCmd := fmt.Sprintf("rustup default %s", rustupVersion)
+	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
+	rustPkgRuntime := fmt.Sprintf("rust-bin.stable.%s.minimal", rustVersion)
 
 	return &plansdk.Plan{
-		DevPackages:     packages,
-		RuntimePackages: packages,
-		Shell: plansdk.PlanShell{
-			PreInitHook: rustupDefaultCmd,
-		},
+		Overlays:        []string{RustOxalicaOverlay},
+		DevPackages:     []string{rustPkgDev},
+		RuntimePackages: []string{rustPkgRuntime},
 	}, nil
 }
 
-func (p *Planner) rustVersion(srcDir string) (string, error) {
+// Follows the Oxalica convention where it needs to be either:
+// 1. latest
+// 2. "<version", including the quotation marks. Example: "1.62.0"
+//
+// This result is spliced into (for example) "rust-bin.stable.<result>.default"
+func (p *Planner) rustOxalicaVersion(srcDir string) (string, error) {
 	cfg, err := p.cargoManifest(srcDir)
 	if err != nil {
 		return "", err
 	}
 	if cfg.PackageField.RustVersion == "" {
-		return "stable", nil
+		return "latest", nil
 	}
 
 	if rustVersion, err := plansdk.NewVersion(cfg.PackageField.RustVersion); err != nil {
 		return "", err
 	} else {
-		return rustVersion.Exact(), nil
+		return fmt.Sprintf("\"%s\"", rustVersion.Exact()), nil
 	}
 }
 

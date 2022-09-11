@@ -14,17 +14,13 @@
       "."
     ]
   },
+  "overlays": [
+    "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"
+  ],
   "dev_packages": [
-    "rustup",
-    "libiconv",
-    "gcc"
+    "rust-bin.stable.latest.default"
   ],
   "runtime_packages": [
-    "rustup",
-    "libiconv",
-    "gcc"
-  ],
-  "shell": {
-    "init_hook": "rustup default stable"
-  }
+    "rust-bin.stable.latest.minimal"
+  ]
 }

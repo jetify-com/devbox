@@ -38,9 +38,6 @@ type Shell struct {
 	binPath         string
 	userShellrcPath string
 
-	// PreInitHook contains commands that will run at shell startup
-	PreInitHook string
-
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
 }
