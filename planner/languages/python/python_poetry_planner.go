@@ -45,6 +45,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	}
 
 	plan.InstallStage = &plansdk.Stage{
+		InputFiles: []string{"."},
 		// pex is is incompatible with certain less common python versions,
 		// but because versions are sometimes expressed open-ended (e.g. ^3.10)
 		// It will cause `poetry add pex` to fail. One solution is to use: --version
@@ -53,7 +54,10 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			"poetry install --no-dev -n --no-ansi",
 	}
 	plan.BuildStage = &plansdk.Stage{Command: p.buildCommand(srcDir)}
-	plan.StartStage = &plansdk.Stage{Command: "python ./app.pex"}
+	plan.StartStage = &plansdk.Stage{
+		InputFiles: []string{"."},
+		Command:    "python ./app.pex",
+	}
 	return plan
 }
 

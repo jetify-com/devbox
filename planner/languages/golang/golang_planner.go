@@ -42,13 +42,15 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		SharedPlan: plansdk.SharedPlan{
 			InstallStage: &plansdk.Stage{
-				Command: "go get",
+				InputFiles: []string{"."},
+				Command:    "go get",
 			},
 			BuildStage: &plansdk.Stage{
 				Command: "CGO_ENABLED=0 go build -o app",
 			},
 			StartStage: &plansdk.Stage{
-				Command: "./app",
+				InputFiles: []string{"."},
+				Command:    "./app",
 			},
 		},
 	}

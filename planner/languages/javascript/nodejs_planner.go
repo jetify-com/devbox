@@ -49,7 +49,8 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			},
 
 			StartStage: &plansdk.Stage{
-				Command: p.startCommand(pkgManager, project),
+				InputFiles: []string{"."},
+				Command:    p.startCommand(pkgManager, project),
 			},
 		},
 	}

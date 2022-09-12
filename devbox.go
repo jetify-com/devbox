@@ -106,7 +106,12 @@ func (d *Devbox) Plan() *plansdk.Plan {
 		RuntimePackages: d.cfg.Packages,
 		SharedPlan:      d.cfg.SharedPlan,
 	}
-	return plansdk.MergePlans(basePlan, planner.GetPlan(d.srcDir))
+	plannerPlan := planner.GetPlan(d.srcDir)
+
+	plan := plansdk.MergePlans(basePlan, plannerPlan)
+	plan.SharedPlan = plansdk.OverrideSharedPlan(basePlan, plannerPlan)
+
+	return plan
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
