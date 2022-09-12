@@ -131,16 +131,18 @@ func (p *Planner) inputFiles(srcDir string) []string {
 
 func (p *Planner) buildCommand(pkgManager string, project *nodeProject) string {
 	buildScript := project.Scripts.Build
+	defaultBuildCmd := "npm run build"
 	postBuildCmdHook := "npm prune --production"
 
 	if pkgManager == "yarn" {
+		defaultBuildCmd = "yarn build"
 		postBuildCmdHook = "yarn install --production --ignore-scripts --prefer-offline"
 	}
 	if buildScript == "" {
 		return postBuildCmdHook
 	}
 
-	return fmt.Sprintf("%s build && %s", pkgManager, postBuildCmdHook)
+	return fmt.Sprintf("%s && %s", defaultBuildCmd, postBuildCmdHook)
 }
 
 func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
