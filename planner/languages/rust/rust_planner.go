@@ -60,7 +60,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
 // Follows the Oxalica convention where it needs to be either:
 // 1. latest
-// 2. "<version", including the quotation marks. Example: "1.62.0"
+// 2. "<version>", including the quotation marks. Example: "1.62.0"
 //
 // This result is spliced into (for example) "rust-bin.stable.<result>.default"
 func (p *Planner) rustOxalicaVersion(srcDir string) (string, error) {
@@ -87,14 +87,18 @@ type cargoManifest struct {
 }
 
 func (p *Planner) cargoManifest(srcDir string) (*cargoManifest, error) {
-	cargoTomlPath := filepath.Join(srcDir, cargoToml)
 	manifest := &cargoManifest{}
-	err := cuecfg.ReadFile(cargoTomlPath, manifest)
+	// Since this Planner has been deemed relevant, we expect a valid cargoTomlPath
+	err := cuecfg.ReadFile(p.cargoTomlPath(srcDir), manifest)
 	return manifest, errors.WithStack(err)
 }
 
 // Tries to find Cargo.toml or cargo.toml. Returns the path with srcDir if found
 // and empty-string if not found.
+//
+// NOTE: `cargo build` succeeded with lowercase cargo.toml, but `cargo build --release`
+// will insist on `Cargo.toml`. We are lenient and tolerate both, until the user
+// tries `devbox build` which relies upon `cargo build --release` to complain about this.
 func (p *Planner) cargoTomlPath(srcDir string) string {
 
 	cargoTomlPath := filepath.Join(srcDir, cargoToml)
