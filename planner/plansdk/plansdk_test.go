@@ -84,8 +84,10 @@ func TestMergePlans(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestOverrideSharedPlans(t *testing.T) {
+func TestMergeUserPlans(t *testing.T) {
 	plannerPlan := &Plan{
+		DevPackages:     []string{"nodejs"},
+		RuntimePackages: []string{"nodejs"},
 		SharedPlan: SharedPlan{
 			InstallStage: &Stage{
 				InputFiles: []string{"package.json"},
@@ -111,6 +113,8 @@ func TestOverrideSharedPlans(t *testing.T) {
 				SharedPlan: SharedPlan{},
 			},
 			out: &Plan{
+				DevPackages:     []string{"nodejs"},
+				RuntimePackages: []string{"nodejs"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"package.json"},
@@ -129,6 +133,8 @@ func TestOverrideSharedPlans(t *testing.T) {
 		{
 			name: "different input files",
 			in: &Plan{
+				DevPackages:     []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs", "yarn"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"package.json", "yarn.lock"},
@@ -145,6 +151,8 @@ func TestOverrideSharedPlans(t *testing.T) {
 				},
 			},
 			out: &Plan{
+				DevPackages:     []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs", "yarn"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"package.json", "yarn.lock"},
@@ -174,6 +182,8 @@ func TestOverrideSharedPlans(t *testing.T) {
 				},
 			},
 			out: &Plan{
+				DevPackages:     []string{"nodejs"},
+				RuntimePackages: []string{"nodejs"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"app"},
@@ -195,9 +205,9 @@ func TestOverrideSharedPlans(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert := assert.New(t)
-			got := OverrideSharedPlan(tc.in, plannerPlan)
+			got := MergeUserPlan(tc.in, plannerPlan)
 
-			assert.Equal(tc.out.SharedPlan, got, "SharedPlan should match")
+			assert.Equal(tc.out, got, "plans should match")
 		})
 	}
 }

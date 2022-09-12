@@ -140,33 +140,36 @@ func MergePlans(plans ...*Plan) *Plan {
 
 	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
-	plan.SharedPlan = PickSharedPlan(plans...)
+	plan.SharedPlan = findBuildablePlan(plans...).SharedPlan
 
 	return plan
 }
 
-func PickSharedPlan(plans ...*Plan) SharedPlan {
+func findBuildablePlan(plans ...*Plan) *Plan {
 	for _, p := range plans {
 		// For now, pick the first buildable plan.
 		if p.Buildable() {
-			return p.SharedPlan
+			return p
 		}
 	}
-	return SharedPlan{}
+	return &Plan{}
 }
 
-func OverrideSharedPlan(dst *Plan, src *Plan) SharedPlan {
+func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) *Plan {
+	plan := MergePlans(userPlan, automatedPlan)
 	sharedPlan := &Plan{
-		SharedPlan: dst.SharedPlan,
+		SharedPlan: userPlan.SharedPlan,
 	}
-	// fields in the dst plan:
-	//   if empty, will inherit the corresponding src fields
-	//   if set, will override corresponding src fields
-	if err := mergo.Merge(sharedPlan, src); err != nil {
+	// fields in sharedPlan:
+	//   if empty, will inherit the corresponding fields in the automatedPlan
+	//   if set, will override corresponding automatedPlan fields
+	if err := mergo.Merge(sharedPlan, automatedPlan); err != nil {
 		panic(err) // TODO: propagate error.
 	}
 
-	return sharedPlan.SharedPlan
+	plan.SharedPlan = sharedPlan.SharedPlan
+
+	return plan
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {
