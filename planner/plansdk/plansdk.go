@@ -27,6 +27,8 @@ type Plan struct {
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 
+	Definitions []string `cue:"[...string]" json:"definitions"`
+
 	Errors []PlanError `json:"errors,omitempty"`
 }
 
