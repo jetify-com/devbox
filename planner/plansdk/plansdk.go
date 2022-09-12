@@ -155,7 +155,7 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 	return &Plan{}
 }
 
-func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) *Plan {
+func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
 	plan := MergePlans(userPlan, automatedPlan)
 	sharedPlan := &Plan{
 		SharedPlan: userPlan.SharedPlan,
@@ -164,12 +164,12 @@ func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) *Plan {
 	//   if empty, will inherit the corresponding fields in the automatedPlan
 	//   if set, will override corresponding automatedPlan fields
 	if err := mergo.Merge(sharedPlan, automatedPlan); err != nil {
-		panic(err) // TODO: propagate error.
+		return nil, err
 	}
 
 	plan.SharedPlan = sharedPlan.SharedPlan
 
-	return plan
+	return plan, nil
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {

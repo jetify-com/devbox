@@ -134,7 +134,7 @@ func TestMergeUserPlans(t *testing.T) {
 			name: "different input files",
 			in: &Plan{
 				DevPackages:     []string{"nodejs", "yarn"},
-				RuntimePackages: []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"package.json", "yarn.lock"},
@@ -152,7 +152,7 @@ func TestMergeUserPlans(t *testing.T) {
 			},
 			out: &Plan{
 				DevPackages:     []string{"nodejs", "yarn"},
-				RuntimePackages: []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs"},
 				SharedPlan: SharedPlan{
 					InstallStage: &Stage{
 						InputFiles: []string{"package.json", "yarn.lock"},
@@ -205,8 +205,9 @@ func TestMergeUserPlans(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert := assert.New(t)
-			got := MergeUserPlan(tc.in, plannerPlan)
+			got, err := MergeUserPlan(tc.in, plannerPlan)
 
+			assert.NoError(err)
 			assert.Equal(tc.out, got, "plans should match")
 		})
 	}
