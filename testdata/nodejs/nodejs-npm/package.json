@@ -1,5 +1,9 @@
 {
   "name": "nodejs-npm",
   "main": "index.js",
+  "scripts": {
+    "build": "echo building...",
+    "start": "node index.js"
+  },
   "dependencies": {}
 }

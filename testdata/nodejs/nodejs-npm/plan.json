@@ -7,13 +7,13 @@
     ]
   },
   "build_stage": {
-    "command": "npm prune --production",
+    "command": "npm run build && npm prune --production",
     "input_files": [
       "."
     ]
   },
   "start_stage": {
-    "command": "node index.js",
+    "command": "npm start",
     "input_files": [
       "."
     ]
