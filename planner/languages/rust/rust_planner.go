@@ -53,8 +53,8 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
 
 	return &plansdk.Plan{
-		Overlays:        []string{RustOxalicaOverlay},
-		DevPackages:     []string{rustPkgDev},
+		Overlays:    []string{RustOxalicaOverlay},
+		DevPackages: []string{rustPkgDev},
 	}, nil
 }
 
@@ -64,19 +64,19 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 //
 // This result is spliced into (for example) "rust-bin.stable.<result>.default"
 func (p *Planner) rustOxalicaVersion(srcDir string) (string, error) {
-	cfg, err := p.cargoManifest(srcDir)
+	manifest, err := p.cargoManifest(srcDir)
 	if err != nil {
 		return "", err
 	}
-	if cfg.PackageField.RustVersion == "" {
+	if manifest.PackageField.RustVersion == "" {
 		return "latest", nil
 	}
 
-	if rustVersion, err := plansdk.NewVersion(cfg.PackageField.RustVersion); err != nil {
+	rustVersion, err := plansdk.NewVersion(manifest.PackageField.RustVersion)
+	if err != nil {
 		return "", err
-	} else {
-		return fmt.Sprintf("\"%s\"", rustVersion.Exact()), nil
 	}
+	return fmt.Sprintf("\"%s\"", rustVersion.Exact()), nil
 }
 
 type cargoManifest struct {
@@ -88,12 +88,9 @@ type cargoManifest struct {
 
 func (p *Planner) cargoManifest(srcDir string) (*cargoManifest, error) {
 	cargoTomlPath := filepath.Join(srcDir, cargoToml)
-	cfg := &cargoManifest{}
-	err := cuecfg.ReadFile(cargoTomlPath, cfg)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return cfg, nil
+	manifest := &cargoManifest{}
+	err := cuecfg.ReadFile(cargoTomlPath, manifest)
+	return manifest, errors.WithStack(err)
 }
 
 // Tries to find Cargo.toml or cargo.toml. Returns the path with srcDir if found
