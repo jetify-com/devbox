@@ -20,7 +20,5 @@
   "dev_packages": [
     "rust-bin.stable.latest.default"
   ],
-  "runtime_packages": [
-    "rust-bin.stable.latest.minimal"
-  ]
+  "runtime_packages": []
 }

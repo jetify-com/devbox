@@ -51,12 +51,10 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	}
 
 	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
-	rustPkgRuntime := fmt.Sprintf("rust-bin.stable.%s.minimal", rustVersion)
 
 	return &plansdk.Plan{
 		Overlays:        []string{RustOxalicaOverlay},
 		DevPackages:     []string{rustPkgDev},
-		RuntimePackages: []string{rustPkgRuntime},
 	}, nil
 }
 
