@@ -118,12 +118,12 @@ func (p *Planner) version(srcDir string) *plansdk.Version {
 
 func (p *Planner) definitions(srcDir string, v *plansdk.Version) []string {
 	extensions, err := p.extensions(srcDir)
-	if err != nil {
+	if len(extensions) == 0 || err != nil {
 		return []string{}
 	}
 	return []string{
 		fmt.Sprintf(
-			"php%s = pkgs.php%s.withExtensions ({ all, ... }: with all; [ %s ]);",
+			"php%s = pkgs.php%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
 			v.MajorMinorConcatenated(),
 			v.MajorMinorConcatenated(),
 			strings.Join(extensions, " "),
@@ -138,7 +138,7 @@ func (p *Planner) extensions(srcDir string) ([]string, error) {
 	}
 
 	extensions := []string{}
-	for requirement, _ := range project.Require {
+	for requirement := range project.Require {
 		if strings.HasPrefix(requirement, "ext-") {
 			name := strings.Split(requirement, "-")[1]
 			if name != "" && name != "json" {
