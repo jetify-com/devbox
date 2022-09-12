@@ -14,7 +14,7 @@
       "."
     ]
   },
-  "overlays": [
+  "nix_overlays": [
     "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"
   ],
   "dev_packages": [

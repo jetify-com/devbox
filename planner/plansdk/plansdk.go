@@ -17,6 +17,8 @@ type PlanError struct {
 }
 
 type Plan struct {
+	NixOverlays []string `cur:"[...string]" json:"nix_overlays"`
+
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
@@ -123,7 +125,7 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 		err := mergo.Merge(
 			mergedPlan,
 			&Plan{
-				Overlays:        p.Overlays,
+				NixOverlays:     p.NixOverlays,
 				DevPackages:     p.DevPackages,
 				RuntimePackages: p.RuntimePackages,
 				Definitions:     p.Definitions,
@@ -137,7 +139,7 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 	}
 
 	plan := findBuildablePlan(plans...)
-	plan.Overlays = pkgslice.Unique(plan.Overlays)
+	plan.NixOverlays = pkgslice.Unique(plan.NixOverlays)
 	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
 	plan.Definitions = mergedPlan.Definitions
