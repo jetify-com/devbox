@@ -67,15 +67,20 @@ var PLANNERS = []plansdk.Planner{
 	&zig.Planner{},
 }
 
-func GetPlan(srcDir string) *plansdk.Plan {
+func GetPlan(srcDir string) (*plansdk.Plan, error) {
 	result := &plansdk.Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 	}
+	var err error
 	for _, p := range getRelevantPlanners(srcDir) {
-		result = plansdk.MergePlans(result, p.GetPlan(srcDir))
+		result, err = plansdk.MergePlans(result, p.GetPlan(srcDir))
+		if err != nil {
+			return nil, err
+		}
+
 	}
-	return result
+	return result, nil
 }
 
 func IsBuildable(srcDir string) (bool, error) {

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
@@ -50,6 +51,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
 		},
+		Definitions: p.definitions(srcDir, v),
 	}
 	if !plansdk.FileExists(filepath.Join(srcDir, "public/index.php")) {
 		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
@@ -66,28 +68,33 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return plan
 }
 
+type composerPackages struct {
+	Config struct {
+		Platform struct {
+			PHP string `json:"php"`
+		} `json:"platform"`
+	} `json:"config"`
+	Require map[string]string `json:"require"`
+}
+
 func (p *Planner) version(srcDir string) *plansdk.Version {
 	latestVersion, _ := plansdk.NewVersion(supportedPHPVersions[0])
-	composerJSONPath := filepath.Join(srcDir, "composer.json")
-	content, err := os.ReadFile(composerJSONPath)
+	project, err := p.parseComposerPackages(srcDir)
 
 	if err != nil {
 		return latestVersion
 	}
 
-	composerJSON := struct {
-		Config struct {
-			Platform struct {
-				PHP string `json:"php"`
-			} `json:"platform"`
-		} `json:"config"`
-	}{}
-	if err := json.Unmarshal(content, &composerJSON); err != nil ||
-		composerJSON.Config.Platform.PHP == "" {
+	composerPHPVersion := project.Require["php"]
+	if composerPHPVersion == "" {
+		composerPHPVersion = project.Config.Platform.PHP
+	}
+
+	if composerPHPVersion == "" {
 		return latestVersion
 	}
 
-	version, err := plansdk.NewVersion(composerJSON.Config.Platform.PHP)
+	version, err := plansdk.NewVersion(composerPHPVersion)
 	if err != nil {
 		return latestVersion
 	}
@@ -109,4 +116,50 @@ func (p *Planner) version(srcDir string) *plansdk.Version {
 	// Old version of php detected. They'll need to make changes regardless, we
 	// might as well pick the latest version.
 	return latestVersion
+}
+
+func (p *Planner) definitions(srcDir string, v *plansdk.Version) []string {
+	extensions, err := p.extensions(srcDir)
+	if len(extensions) == 0 || err != nil {
+		return []string{}
+	}
+	return []string{
+		fmt.Sprintf(
+			"php%s = pkgs.php%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
+			v.MajorMinorConcatenated(),
+			v.MajorMinorConcatenated(),
+			strings.Join(extensions, " "),
+		),
+	}
+}
+
+func (p *Planner) extensions(srcDir string) ([]string, error) {
+	project, err := p.parseComposerPackages(srcDir)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	extensions := []string{}
+	for requirement := range project.Require {
+		if strings.HasPrefix(requirement, "ext-") {
+			name := strings.Split(requirement, "-")[1]
+			if name != "" && name != "json" {
+				extensions = append(extensions, name)
+			}
+		}
+	}
+
+	return extensions, nil
+}
+
+func (p *Planner) parseComposerPackages(srcDir string) (*composerPackages, error) {
+	composerJSONPath := filepath.Join(srcDir, "composer.json")
+	content, err := os.ReadFile(composerJSONPath)
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	project := &composerPackages{}
+	return project, errors.WithStack(json.Unmarshal(content, project))
 }
