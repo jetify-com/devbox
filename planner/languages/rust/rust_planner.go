@@ -14,7 +14,7 @@ import (
 )
 
 // Source and reference: https://github.com/oxalica/rust-overlay
-const RustOxalicaOverlay = "https://github.com/oxalica/rust-overlay/archive/master.tar.gz"
+const RustOxalicaOverlay = "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
 
 // `cargo new` generates a file with uppercase Cargo.toml, so we default to this
 const cargoToml = "Cargo.toml"

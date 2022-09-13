@@ -1,14 +1,12 @@
-use ferris_says::say;
-
-use std::io::{stdout, BufWriter};
+use rustc_version::{version};
+use semver::{Version};
 
 fn main() {
-    let stdout = stdout();
-    let message = String::from("Hello fellow Rustaceans!");
-    let width = message.chars().count();
+    let installed_version = version().unwrap();
+    println!("Installed version is {}", installed_version);
 
-    let mut writer = BufWriter::new(stdout.lock());
-    say(message.as_bytes(), width, &mut writer).unwrap();
+    let expected_version = "1.62.0";
+    if installed_version != Version::parse(expected_version).unwrap() {
+        panic!("Expected version {} but got installed version: {}", expected_version, installed_version)
+    }
 }
-    
-
