@@ -35,7 +35,8 @@ func testExample(t *testing.T, testPath string) {
 
 		box, err := Open(baseDir)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
-		plan := box.Plan()
+		plan, err := box.Plan()
+		assert.NoError(err, "devbox plan should not fail")
 
 		err = box.Generate()
 		assert.NoError(err, "devbox generate should not fail")
@@ -70,6 +71,8 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(actual.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
 	assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(actual.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
 	assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(actual.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
+
+	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
 }
 
 func fileExists(path string) bool {

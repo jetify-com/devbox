@@ -1,18 +1,12 @@
 {
   "install_stage": {
-    "command": "",
-    "input_files": [
-      "."
-    ]
+    "command": ""
   },
   "build_stage": {
     "command": ""
   },
   "start_stage": {
-    "command": "",
-    "input_files": [
-      "."
-    ]
+    "command": ""
   },
   "dev_packages": [
     "python310",

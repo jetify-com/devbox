@@ -21,11 +21,11 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 
 	switch extension {
 	case ".json":
-		return MarshalJSON(valuePtr)
+		return marshalJSON(valuePtr)
 	case ".yml", ".yaml":
-		return MarshalYaml(valuePtr)
+		return marshalYaml(valuePtr)
 	case ".toml":
-		return MarshalToml(valuePtr)
+		return marshalToml(valuePtr)
 	}
 	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
@@ -33,19 +33,19 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 func Unmarshal(data []byte, extension string, valuePtr any) error {
 	switch extension {
 	case ".json":
-		err := UnmarshalJSON(data, valuePtr)
+		err := unmarshalJSON(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ".yml", ".yaml":
-		err := UnmarshalYaml(data, valuePtr)
+		err := unmarshalYaml(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
 	case ".toml":
-		err := UnmarshalToml(data, valuePtr)
+		err := unmarshalToml(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
 		}
