@@ -25,6 +25,7 @@ require golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.1 // indirect
+	github.com/creekorful/mvnparser v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
