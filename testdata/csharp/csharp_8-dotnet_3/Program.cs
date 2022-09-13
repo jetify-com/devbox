@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace csharp_9_dotnet_5
+namespace csharp_8_dotnet_3
 {
-
     public class VersionMismatchException : Exception
     {
         public VersionMismatchException(string msg): base(msg)
@@ -17,7 +16,7 @@ namespace csharp_9_dotnet_5
             string version = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
             Console.WriteLine("Installed version is: {0}", version);
 
-            string expectedVersion = ".NET 5";
+            string expectedVersion = ".NET Core 3";
             if (!version.StartsWith(expectedVersion))
             {
                 string msg = string.Format("Expected version '{0}', but got version: '{1}'", expectedVersion, version);

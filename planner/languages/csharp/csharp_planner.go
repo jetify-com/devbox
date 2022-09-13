@@ -4,8 +4,6 @@
 package csharp
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -42,7 +40,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		// Added this Printf because `devbox shell` was silently swallowing this error.
 		// TODO savil. Have `devbox shell` error out or print it instead.
-		fmt.Printf("error in getPlan: %s\n", err)
+		// fmt.Printf("error in getPlan: %s\n", err)
 		plan = &plansdk.Plan{}
 		plan.WithError(err)
 	}
@@ -77,18 +75,9 @@ func project(srcDir string) (*Project, error) {
 	}
 	projectFilePath := paths[0]
 
-	content, err := os.ReadFile(projectFilePath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
 	proj := &Project{}
-	err = cuecfg.Unmarshal(content, ".xml", &proj)
-	if err != nil {
-		return nil, err
-	}
-
-	return proj, nil
+	err = cuecfg.ParseFile(projectFilePath, proj)
+	return proj, err
 }
 
 // The TargetFramework is more complicated than below, but I'm picking out what

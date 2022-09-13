@@ -26,7 +26,7 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 		return marshalYaml(valuePtr)
 	case ".toml":
 		return marshalToml(valuePtr)
-	case ".xml":
+	case ".xml", ".csproj":
 		return marshalXML(valuePtr)
 	}
 	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
@@ -52,7 +52,7 @@ func Unmarshal(data []byte, extension string, valuePtr any) error {
 			return errors.WithStack(err)
 		}
 		return nil
-	case ".xml":
+	case ".xml", ".csproj":
 		err := unmarshalXML(data, valuePtr)
 		if err != nil {
 			return errors.WithStack(err)
