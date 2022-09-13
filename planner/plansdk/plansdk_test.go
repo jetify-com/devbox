@@ -22,7 +22,6 @@ func TestMergePlans(t *testing.T) {
 	expected := &Plan{
 		DevPackages:     []string{"foo", "bar", "baz"},
 		RuntimePackages: []string{"a", "b", "c"},
-		SharedPlan:      SharedPlan{},
 	}
 	actual, err := MergePlans(plan1, plan2)
 	assert.NoError(t, err)
@@ -30,26 +29,20 @@ func TestMergePlans(t *testing.T) {
 
 	// Base plan (the first one) takes precedence:
 	plan1 = &Plan{
-		SharedPlan: SharedPlan{
-			BuildStage: &Stage{
-				Command: "plan1",
-			},
+		BuildStage: &Stage{
+			Command: "plan1",
 		},
 	}
 	plan2 = &Plan{
-		SharedPlan: SharedPlan{
-			BuildStage: &Stage{
-				Command: "plan2",
-			},
+		BuildStage: &Stage{
+			Command: "plan2",
 		},
 	}
 	expected = &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
-		SharedPlan: SharedPlan{
-			BuildStage: &Stage{
-				Command: "plan1",
-			},
+		BuildStage: &Stage{
+			Command: "plan1",
 		},
 	}
 	actual, err = MergePlans(plan1, plan2)
@@ -58,28 +51,22 @@ func TestMergePlans(t *testing.T) {
 
 	// InputFiles can be overwritten:
 	plan1 = &Plan{
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
-				InputFiles: []string{"package.json"},
-			},
-			StartStage: &Stage{
-				InputFiles: []string{"input"},
-			},
+		InstallStage: &Stage{
+			InputFiles: []string{"package.json"},
+		},
+		StartStage: &Stage{
+			InputFiles: []string{"input"},
 		},
 	}
-	plan2 = &Plan{
-		SharedPlan: SharedPlan{},
-	}
+	plan2 = &Plan{}
 	expected = &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
-				InputFiles: []string{"package.json"},
-			},
-			StartStage: &Stage{
-				InputFiles: []string{"input"},
-			},
+		InstallStage: &Stage{
+			InputFiles: []string{"package.json"},
+		},
+		StartStage: &Stage{
+			InputFiles: []string{"input"},
 		},
 	}
 	actual, err = MergePlans(plan1, plan2)
@@ -91,18 +78,16 @@ func TestMergeUserPlans(t *testing.T) {
 	plannerPlan := &Plan{
 		DevPackages:     []string{"nodejs"},
 		RuntimePackages: []string{"nodejs"},
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
-				InputFiles: []string{"package.json"},
-				Command:    "npm install",
-			},
-			BuildStage: &Stage{
-				InputFiles: []string{"."},
-			},
-			StartStage: &Stage{
-				InputFiles: []string{"."},
-				Command:    "npm start",
-			},
+		InstallStage: &Stage{
+			InputFiles: []string{"package.json"},
+			Command:    "npm install",
+		},
+		BuildStage: &Stage{
+			InputFiles: []string{"."},
+		},
+		StartStage: &Stage{
+			InputFiles: []string{"."},
+			Command:    "npm start",
 		},
 	}
 	cases := []struct {
@@ -112,24 +97,20 @@ func TestMergeUserPlans(t *testing.T) {
 	}{
 		{
 			name: "empty base plan",
-			in: &Plan{
-				SharedPlan: SharedPlan{},
-			},
+			in:   &Plan{},
 			out: &Plan{
 				DevPackages:     []string{"nodejs"},
 				RuntimePackages: []string{"nodejs"},
-				SharedPlan: SharedPlan{
-					InstallStage: &Stage{
-						InputFiles: []string{"package.json"},
-						Command:    "npm install",
-					},
-					BuildStage: &Stage{
-						InputFiles: []string{"."},
-					},
-					StartStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "npm start",
-					},
+				InstallStage: &Stage{
+					InputFiles: []string{"package.json"},
+					Command:    "npm install",
+				},
+				BuildStage: &Stage{
+					InputFiles: []string{"."},
+				},
+				StartStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "npm start",
 				},
 			},
 		},
@@ -138,68 +119,60 @@ func TestMergeUserPlans(t *testing.T) {
 			in: &Plan{
 				DevPackages:     []string{"nodejs", "yarn"},
 				RuntimePackages: []string{"nodejs"},
-				SharedPlan: SharedPlan{
-					InstallStage: &Stage{
-						InputFiles: []string{"package.json", "yarn.lock"},
-						Command:    "",
-					},
-					BuildStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "",
-					},
-					StartStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "npm start",
-					},
+				InstallStage: &Stage{
+					InputFiles: []string{"package.json", "yarn.lock"},
+					Command:    "",
+				},
+				BuildStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "",
+				},
+				StartStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "npm start",
 				},
 			},
 			out: &Plan{
 				DevPackages:     []string{"nodejs", "yarn"},
 				RuntimePackages: []string{"nodejs"},
-				SharedPlan: SharedPlan{
-					InstallStage: &Stage{
-						InputFiles: []string{"package.json", "yarn.lock"},
-						Command:    "npm install",
-					},
-					BuildStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "",
-					},
-					StartStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "npm start",
-					},
+				InstallStage: &Stage{
+					InputFiles: []string{"package.json", "yarn.lock"},
+					Command:    "npm install",
+				},
+				BuildStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "",
+				},
+				StartStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "npm start",
 				},
 			},
 		},
 		{
 			name: "custom build command",
 			in: &Plan{
-				SharedPlan: SharedPlan{
-					InstallStage: &Stage{
-						InputFiles: []string{"app"},
-					},
-					BuildStage: &Stage{
-						Command: "npm run build",
-					},
+				InstallStage: &Stage{
+					InputFiles: []string{"app"},
+				},
+				BuildStage: &Stage{
+					Command: "npm run build",
 				},
 			},
 			out: &Plan{
 				DevPackages:     []string{"nodejs"},
 				RuntimePackages: []string{"nodejs"},
-				SharedPlan: SharedPlan{
-					InstallStage: &Stage{
-						InputFiles: []string{"app"},
-						Command:    "npm install",
-					},
-					BuildStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "npm run build",
-					},
-					StartStage: &Stage{
-						InputFiles: []string{"."},
-						Command:    "npm start",
-					},
+				InstallStage: &Stage{
+					InputFiles: []string{"app"},
+					Command:    "npm install",
+				},
+				BuildStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "npm run build",
+				},
+				StartStage: &Stage{
+					InputFiles: []string{"."},
+					Command:    "npm start",
 				},
 			},
 		},

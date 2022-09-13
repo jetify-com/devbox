@@ -17,8 +17,6 @@ type PlanError struct {
 }
 
 type Plan struct {
-	SharedPlan
-
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
@@ -26,15 +24,6 @@ type Plan struct {
 	// in both the development environment and the final container that runs the
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
-
-	Definitions []string `cue:"[...string]" json:"definitions"`
-
-	Errors []PlanError `json:"errors,omitempty"`
-}
-
-// Note: The SharedPlan struct is exposed in `devbox.json` – be thoughful of how
-// we evolve the schema, and make sure we keep backwards compatibility.
-type SharedPlan struct {
 	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
 	// Ex: pip install, yarn install, go get
@@ -47,6 +36,11 @@ type SharedPlan struct {
 	// starting (running) the application.
 	// Ex: python main.py
 	StartStage *Stage `json:"start_stage,omitempty"`
+
+	Definitions []string `cue:"[...string]" json:"definitions"`
+	// Errors from plan generation. This usually means
+	// the user application may not be buildable.
+	Errors []PlanError `json:"errors,omitempty"`
 }
 
 type Stage struct {
@@ -121,10 +115,13 @@ func (p *Plan) WithError(err error) *Plan {
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {
-	plan := &Plan{}
+	mergedPlan := &Plan{
+		DevPackages:     []string{},
+		RuntimePackages: []string{},
+	}
 	for _, p := range plans {
 		err := mergo.Merge(
-			plan,
+			mergedPlan,
 			&Plan{
 				DevPackages:     p.DevPackages,
 				RuntimePackages: p.RuntimePackages,
@@ -138,9 +135,10 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 		}
 	}
 
-	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
-	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
-	plan.SharedPlan = findBuildablePlan(plans...).SharedPlan
+	plan := findBuildablePlan(plans...)
+	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
+	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
+	plan.Definitions = mergedPlan.Definitions
 
 	return plan, nil
 }
@@ -156,21 +154,26 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 }
 
 func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
-	plan, err := MergePlans(userPlan, automatedPlan)
-	if err != nil {
-		return nil, err
+	plan := &Plan{
+		InstallStage: userPlan.InstallStage,
+		BuildStage:   userPlan.BuildStage,
+		StartStage:   userPlan.StartStage,
 	}
-	sharedPlan := &Plan{
-		SharedPlan: userPlan.SharedPlan,
-	}
-	// fields in sharedPlan:
+	// fields in plan:
 	//   if empty, will inherit the corresponding fields in the automatedPlan
 	//   if set, will override corresponding automatedPlan fields
-	if err := mergo.Merge(sharedPlan, automatedPlan); err != nil {
+	if err := mergo.Merge(plan, automatedPlan); err != nil {
 		return nil, err
 	}
 
-	plan.SharedPlan = sharedPlan.SharedPlan
+	// Merging devPackages and runtimePackages fields.
+	packagesPlan, err := MergePlans(userPlan, automatedPlan)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	plan.DevPackages = packagesPlan.DevPackages
+	plan.RuntimePackages = packagesPlan.RuntimePackages
 
 	return plan, nil
 }

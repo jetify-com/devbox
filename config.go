@@ -6,22 +6,33 @@ package devbox
 import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/cuecfg"
-	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 // Config defines a devbox environment as JSON.
 type Config struct {
-	plansdk.SharedPlan
-
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment.
 	Packages []string `cue:"[...string]" json:"packages"`
+	// InstallStage defines the actions that should be taken when
+	// installing language-specific libraries.
+	InstallStage *Stage `json:"install_stage,omitempty"`
+	// BuildStage defines the actions that should be taken when
+	// compiling the application binary.
+	BuildStage *Stage `json:"build_stage,omitempty"`
+	// StartStage defines the actions that should be taken when
+	// starting (running) the application.
+	StartStage *Stage `json:"start_stage,omitempty"`
 
 	// Shell configures the devbox shell environment.
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
 		InitHook string `json:"init_hook,omitempty"`
 	} `json:"shell,omitempty"`
+}
+
+// This contains a subset of fields from plansdk.Stage
+type Stage struct {
+	Command string `cue:"string" json:"command"`
 }
 
 // ReadConfig reads a devbox config file.

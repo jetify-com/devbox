@@ -36,22 +36,20 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		// TODO: Optimize runtime packages to remove npm or yarn if startStage command use Node directly.
 		RuntimePackages: packages,
 
-		SharedPlan: plansdk.SharedPlan{
-			InstallStage: &plansdk.Stage{
-				InputFiles: inputFiles,
-				Command:    fmt.Sprintf("%s install", pkgManager),
-			},
+		InstallStage: &plansdk.Stage{
+			InputFiles: inputFiles,
+			Command:    fmt.Sprintf("%s install", pkgManager),
+		},
 
-			BuildStage: &plansdk.Stage{
-				// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
-				InputFiles: []string{"."},
-				Command:    p.buildCommand(pkgManager, project),
-			},
+		BuildStage: &plansdk.Stage{
+			// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
+			InputFiles: []string{"."},
+			Command:    p.buildCommand(pkgManager, project),
+		},
 
-			StartStage: &plansdk.Stage{
-				InputFiles: []string{"."},
-				Command:    p.startCommand(pkgManager, project),
-			},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    p.startCommand(pkgManager, project),
 		},
 	}
 }
