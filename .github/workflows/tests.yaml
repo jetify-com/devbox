@@ -33,7 +33,6 @@ jobs:
 
   test-linux:
     runs-on: ubuntu-latest
-    needs: golangci-lint
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -51,11 +50,10 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test ./boxcli
+          go test -v ./...
 
   test-darwin:
     runs-on: macos-12
-    needs: golangci-lint
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -79,4 +77,4 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test ./boxcli
+          go test -v ./...
