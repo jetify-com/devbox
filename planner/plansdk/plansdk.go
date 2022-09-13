@@ -122,14 +122,17 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan := &Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{},
-			BuildStage:   &Stage{},
-			StartStage:   &Stage{},
-		},
 	}
 	for _, p := range plans {
-		err := mergo.Merge(plan, p, mergo.WithAppendSlice)
+		err := mergo.Merge(
+			plan,
+			&Plan{
+				DevPackages:     p.DevPackages,
+				RuntimePackages: p.RuntimePackages,
+			},
+			// Only WithAppendSlice the dev and runtime packages field.
+			mergo.WithAppendSlice,
+		)
 		if err != nil {
 			panic(err) // TODO: propagate error.
 		}
@@ -137,17 +140,36 @@ func MergePlans(plans ...*Plan) *Plan {
 
 	plan.DevPackages = pkgslice.Unique(plan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
-
-	// Set default files for install stage to copy.
-	if plan.SharedPlan.InstallStage.InputFiles == nil {
-		plan.SharedPlan.InstallStage.InputFiles = []string{"."}
-	}
-	// Set default files for install stage to copy over from build step.
-	if plan.SharedPlan.StartStage.InputFiles == nil {
-		plan.SharedPlan.StartStage.InputFiles = []string{"."}
-	}
+	plan.SharedPlan = findBuildablePlan(plans...).SharedPlan
 
 	return plan
+}
+
+func findBuildablePlan(plans ...*Plan) *Plan {
+	for _, p := range plans {
+		// For now, pick the first buildable plan.
+		if p.Buildable() {
+			return p
+		}
+	}
+	return &Plan{}
+}
+
+func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
+	plan := MergePlans(userPlan, automatedPlan)
+	sharedPlan := &Plan{
+		SharedPlan: userPlan.SharedPlan,
+	}
+	// fields in sharedPlan:
+	//   if empty, will inherit the corresponding fields in the automatedPlan
+	//   if set, will override corresponding automatedPlan fields
+	if err := mergo.Merge(sharedPlan, automatedPlan); err != nil {
+		return nil, err
+	}
+
+	plan.SharedPlan = sharedPlan.SharedPlan
+
+	return plan, nil
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {

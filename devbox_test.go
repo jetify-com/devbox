@@ -35,7 +35,8 @@ func testExample(t *testing.T, testPath string) {
 
 		box, err := Open(baseDir)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
-		plan := box.Plan()
+		plan, err := box.Plan()
+		assert.NoError(err, "devbox plan should not fail")
 
 		err = box.Generate()
 		assert.NoError(err, "devbox generate should not fail")

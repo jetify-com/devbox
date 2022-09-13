@@ -56,10 +56,12 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	}
 
 	plan.InstallStage = &plansdk.Stage{
-		Command: "composer install --no-dev --no-ansi",
+		InputFiles: []string{"."},
+		Command:    "composer install --no-dev --no-ansi",
 	}
 	plan.StartStage = &plansdk.Stage{
-		Command: "php -S 0.0.0.0:8080 -t public",
+		InputFiles: []string{"."},
+		Command:    "php -S 0.0.0.0:8080 -t public",
 	}
 	return plan
 }

@@ -22,19 +22,7 @@ func TestMergePlans(t *testing.T) {
 	expected := &Plan{
 		DevPackages:     []string{"foo", "bar", "baz"},
 		RuntimePackages: []string{"a", "b", "c"},
-		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
-				Command:    "",
-				InputFiles: []string{"."},
-			},
-			BuildStage: &Stage{
-				Command: "",
-			},
-			StartStage: &Stage{
-				Command:    "",
-				InputFiles: []string{"."},
-			},
-		},
+		SharedPlan:      SharedPlan{},
 	}
 	actual := MergePlans(plan1, plan2)
 	assert.Equal(t, expected, actual)
@@ -58,16 +46,8 @@ func TestMergePlans(t *testing.T) {
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 		SharedPlan: SharedPlan{
-			InstallStage: &Stage{
-				Command:    "",
-				InputFiles: []string{"."},
-			},
 			BuildStage: &Stage{
 				Command: "plan1",
-			},
-			StartStage: &Stage{
-				Command:    "",
-				InputFiles: []string{"."},
 			},
 		},
 	}
@@ -93,18 +73,142 @@ func TestMergePlans(t *testing.T) {
 		RuntimePackages: []string{},
 		SharedPlan: SharedPlan{
 			InstallStage: &Stage{
-				Command:    "",
 				InputFiles: []string{"package.json"},
 			},
-			BuildStage: &Stage{
-				Command: "",
-			},
 			StartStage: &Stage{
-				Command:    "",
 				InputFiles: []string{"input"},
 			},
 		},
 	}
 	actual = MergePlans(plan1, plan2)
 	assert.Equal(t, expected, actual)
+}
+
+func TestMergeUserPlans(t *testing.T) {
+	plannerPlan := &Plan{
+		DevPackages:     []string{"nodejs"},
+		RuntimePackages: []string{"nodejs"},
+		SharedPlan: SharedPlan{
+			InstallStage: &Stage{
+				InputFiles: []string{"package.json"},
+				Command:    "npm install",
+			},
+			BuildStage: &Stage{
+				InputFiles: []string{"."},
+			},
+			StartStage: &Stage{
+				InputFiles: []string{"."},
+				Command:    "npm start",
+			},
+		},
+	}
+	cases := []struct {
+		name string
+		in   *Plan
+		out  *Plan
+	}{
+		{
+			name: "empty base plan",
+			in: &Plan{
+				SharedPlan: SharedPlan{},
+			},
+			out: &Plan{
+				DevPackages:     []string{"nodejs"},
+				RuntimePackages: []string{"nodejs"},
+				SharedPlan: SharedPlan{
+					InstallStage: &Stage{
+						InputFiles: []string{"package.json"},
+						Command:    "npm install",
+					},
+					BuildStage: &Stage{
+						InputFiles: []string{"."},
+					},
+					StartStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "npm start",
+					},
+				},
+			},
+		},
+		{
+			name: "different input files",
+			in: &Plan{
+				DevPackages:     []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs"},
+				SharedPlan: SharedPlan{
+					InstallStage: &Stage{
+						InputFiles: []string{"package.json", "yarn.lock"},
+						Command:    "",
+					},
+					BuildStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "",
+					},
+					StartStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "npm start",
+					},
+				},
+			},
+			out: &Plan{
+				DevPackages:     []string{"nodejs", "yarn"},
+				RuntimePackages: []string{"nodejs"},
+				SharedPlan: SharedPlan{
+					InstallStage: &Stage{
+						InputFiles: []string{"package.json", "yarn.lock"},
+						Command:    "npm install",
+					},
+					BuildStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "",
+					},
+					StartStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "npm start",
+					},
+				},
+			},
+		},
+		{
+			name: "custom build command",
+			in: &Plan{
+				SharedPlan: SharedPlan{
+					InstallStage: &Stage{
+						InputFiles: []string{"app"},
+					},
+					BuildStage: &Stage{
+						Command: "npm run build",
+					},
+				},
+			},
+			out: &Plan{
+				DevPackages:     []string{"nodejs"},
+				RuntimePackages: []string{"nodejs"},
+				SharedPlan: SharedPlan{
+					InstallStage: &Stage{
+						InputFiles: []string{"app"},
+						Command:    "npm install",
+					},
+					BuildStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "npm run build",
+					},
+					StartStage: &Stage{
+						InputFiles: []string{"."},
+						Command:    "npm start",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+			got, err := MergeUserPlan(tc.in, plannerPlan)
+
+			assert.NoError(err)
+			assert.Equal(tc.out, got, "plans should match")
+		})
+	}
 }
