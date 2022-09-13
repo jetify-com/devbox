@@ -5,7 +5,6 @@
 package devbox
 
 import (
-	"encoding/json"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -102,11 +101,7 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 // Plan creates a plan of the actions that devbox will take to generate its
 // environment.
 func (d *Devbox) Plan() (*plansdk.Plan, error) {
-	userPlan, err := d.convertToPlan()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
+	userPlan := d.convertToPlan()
 	automatedPlan, err := planner.GetPlan(d.srcDir)
 	if err != nil {
 		return nil, err
@@ -157,26 +152,22 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) convertToPlan() (*plansdk.Plan, error) {
+func (d *Devbox) convertToPlan() *plansdk.Plan {
 	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
 	planStages := []*plansdk.Stage{{}, {}, {}}
 
 	for i, stage := range configStages {
-		b, err := json.Marshal(stage)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		err = json.Unmarshal(b, planStages[i])
-		if err != nil {
-			return nil, errors.WithStack(err)
+		if stage != nil {
+			planStages[i] = &plansdk.Stage{
+				Command: stage.Command,
+			}
 		}
 	}
-
 	return &plansdk.Plan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		InstallStage:    planStages[0],
 		BuildStage:      planStages[1],
 		StartStage:      planStages[2],
-	}, nil
+	}
 }
