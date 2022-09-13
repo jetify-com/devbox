@@ -89,7 +89,7 @@ type cargoManifest struct {
 func (p *Planner) cargoManifest(srcDir string) (*cargoManifest, error) {
 	manifest := &cargoManifest{}
 	// Since this Planner has been deemed relevant, we expect a valid cargoTomlPath
-	err := cuecfg.ReadFile(p.cargoTomlPath(srcDir), manifest)
+	err := cuecfg.ParseFile(p.cargoTomlPath(srcDir), manifest)
 	return manifest, errors.WithStack(err)
 }
 
