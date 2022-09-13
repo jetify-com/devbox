@@ -78,12 +78,14 @@ func fileExists(path string) bool {
 
 func parseXML(pomXMLPath string) (int, error) {
 	// read the XML file as a byte array.
-	byteValue, _ := os.ReadFile(pomXMLPath)
+	byteArray, err := os.ReadFile(pomXMLPath)
+	if err != nil {
+		return 0, nil
+	}
 
 	var project mvnparser.MavenProject
-	// unmarshaling our byteArray which contains our
-	// pom file content into 'project'
-	xml.Unmarshal(byteValue, &project)
+	// unmarshaling byteArray which contains our pom file content into 'project'
+	xml.Unmarshal(byteArray, &project)
 	compilerSourceVersion, ok := project.Properties["maven.compiler.source"]
 	if ok {
 		sourceVersion, err := strconv.Atoi(compilerSourceVersion)
