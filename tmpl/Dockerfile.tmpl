@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # BASE IMAGE
-FROM nixos/nix:2.10.3 as base
+FROM nixos/nix:2.11.0 as base
 WORKDIR /scratch
 # Setup shell so that we catch any errors early
 SHELL [ "/bin/sh", "-eux", "-o", "pipefail", "-c"]
