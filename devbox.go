@@ -101,12 +101,7 @@ func (d *Devbox) Build(opts ...docker.BuildOptions) error {
 // Plan creates a plan of the actions that devbox will take to generate its
 // environment.
 func (d *Devbox) Plan() (*plansdk.Plan, error) {
-	userPlan := &plansdk.Plan{
-		DevPackages:     d.cfg.Packages,
-		RuntimePackages: d.cfg.Packages,
-		SharedPlan:      d.cfg.SharedPlan,
-	}
-
+	userPlan := d.convertToPlan()
 	automatedPlan, err := planner.GetPlan(d.srcDir)
 	if err != nil {
 		return nil, err
@@ -155,4 +150,24 @@ func (d *Devbox) Shell() error {
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.srcDir, configFilename)
 	return cuecfg.WriteFile(cfgPath, d.cfg)
+}
+
+func (d *Devbox) convertToPlan() *plansdk.Plan {
+	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
+	planStages := []*plansdk.Stage{{}, {}, {}}
+
+	for i, stage := range configStages {
+		if stage != nil {
+			planStages[i] = &plansdk.Stage{
+				Command: stage.Command,
+			}
+		}
+	}
+	return &plansdk.Plan{
+		DevPackages:     d.cfg.Packages,
+		RuntimePackages: d.cfg.Packages,
+		InstallStage:    planStages[0],
+		BuildStage:      planStages[1],
+		StartStage:      planStages[2],
+	}
 }
