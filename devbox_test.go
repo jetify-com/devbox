@@ -71,6 +71,8 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(actual.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
 	assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(actual.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
 	assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(actual.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
+
+	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
 }
 
 func fileExists(path string) bool {

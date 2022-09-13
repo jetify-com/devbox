@@ -120,23 +120,21 @@ func (p *Plan) WithError(err error) *Plan {
 	return p
 }
 
-func MergePlans(plans ...*Plan) *Plan {
-	plan := &Plan{
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-	}
+func MergePlans(plans ...*Plan) (*Plan, error) {
+	plan := &Plan{}
 	for _, p := range plans {
 		err := mergo.Merge(
 			plan,
 			&Plan{
 				DevPackages:     p.DevPackages,
 				RuntimePackages: p.RuntimePackages,
+				Definitions:     p.Definitions,
 			},
-			// Only WithAppendSlice the dev and runtime packages field.
+			// Only WithAppendSlice definitions, dev, and runtime packages field.
 			mergo.WithAppendSlice,
 		)
 		if err != nil {
-			panic(err) // TODO: propagate error.
+			return nil, err
 		}
 	}
 
@@ -144,7 +142,7 @@ func MergePlans(plans ...*Plan) *Plan {
 	plan.RuntimePackages = pkgslice.Unique(plan.RuntimePackages)
 	plan.SharedPlan = findBuildablePlan(plans...).SharedPlan
 
-	return plan
+	return plan, nil
 }
 
 func findBuildablePlan(plans ...*Plan) *Plan {
@@ -158,7 +156,10 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 }
 
 func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
-	plan := MergePlans(userPlan, automatedPlan)
+	plan, err := MergePlans(userPlan, automatedPlan)
+	if err != nil {
+		return nil, err
+	}
 	sharedPlan := &Plan{
 		SharedPlan: userPlan.SharedPlan,
 	}

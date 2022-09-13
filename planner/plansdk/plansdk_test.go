@@ -24,7 +24,8 @@ func TestMergePlans(t *testing.T) {
 		RuntimePackages: []string{"a", "b", "c"},
 		SharedPlan:      SharedPlan{},
 	}
-	actual := MergePlans(plan1, plan2)
+	actual, err := MergePlans(plan1, plan2)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 
 	// Base plan (the first one) takes precedence:
@@ -51,7 +52,8 @@ func TestMergePlans(t *testing.T) {
 			},
 		},
 	}
-	actual = MergePlans(plan1, plan2)
+	actual, err = MergePlans(plan1, plan2)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 
 	// InputFiles can be overwritten:
@@ -80,7 +82,8 @@ func TestMergePlans(t *testing.T) {
 			},
 		},
 	}
-	actual = MergePlans(plan1, plan2)
+	actual, err = MergePlans(plan1, plan2)
+	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
 

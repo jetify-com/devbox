@@ -107,7 +107,11 @@ func (d *Devbox) Plan() (*plansdk.Plan, error) {
 		SharedPlan:      d.cfg.SharedPlan,
 	}
 
-	return plansdk.MergeUserPlan(userPlan, planner.GetPlan(d.srcDir))
+	automatedPlan, err := planner.GetPlan(d.srcDir)
+	if err != nil {
+		return nil, err
+	}
+	return plansdk.MergeUserPlan(userPlan, automatedPlan)
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
