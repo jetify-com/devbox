@@ -18,7 +18,7 @@ the directory because the nix shell might not have access. For example your root
 maybe be described as `root ./static/;` and access log `access_log /tmp/access.log;`
 
 Shell nginx is compiled to use `/tmp/cache` as the default cache directory. See 
-(nginx planner)[nginx_planner.go] for implementation.
+[nginx planner](nginx_planner.go) for implementation.
 
 ## How nginx works when building
 
