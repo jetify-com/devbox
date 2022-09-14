@@ -142,7 +142,7 @@ func (d *Devbox) Shell() error {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook
+	sh.UserInitHook = d.cfg.Shell.InitHook.String()
 	return sh.Run(nixDir)
 }
 
