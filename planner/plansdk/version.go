@@ -15,7 +15,7 @@ type Version string
 
 func NewVersion(v string) (*Version, error) {
 	ver := Version(v)
-	if ver.exact() == "" {
+	if ver.Exact() == "" {
 		return nil, errors.New("invalid version")
 	}
 	return &ver, nil
@@ -34,7 +34,7 @@ func (v Version) parts() []string {
 	return []string{}
 }
 
-func (v Version) exact() string {
+func (v Version) Exact() string {
 	parts := v.parts()
 	if len(parts) > 0 {
 		return strings.Join(parts, "")
