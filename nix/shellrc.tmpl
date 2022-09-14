@@ -12,21 +12,34 @@
 // before and after the user's shellrc. These commands are in the
 // "Devbox Pre/Post-init Hook" sections.
 //
-// The devbox pre/post-init hooks assume two environment variables are already
-// set:
+// The devbox pre/post-init hooks assume a PURE_NIX_PATH environment variable is
+// already set by the shell hook in shell.nix.tmpl. It preserves the PATH set by
+// Nix's "pure" shell mode.
 //
-// - ORIGINAL_PATH - embedded into the command built by Shell.execCommand. It
-//                   preserves the PATH at the time `devbox shell` is invoked.
-// - PURE_NIX_PATH - set by the shell hook in shell.nix.tmpl. It preserves the
-//                   PATH set by Nix's "pure" shell mode.
+// This file is useful for debugging shell errors, so try to keep the generated
+// content readable.
 
  */ -}}
 
 # Begin Devbox Pre-init Hook
 
-# Update the $PATH so that the user's init script has access to all of their
-# non-devbox programs.
-export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+# Don't allow the user's shellrc to re-source Nix since we're already in Nix.
+export __ETC_PROFILE_NIX_SOURCED=1
+
+# Put the Nix packages at the beginning of the PATH to give them priority over
+# programs outside of devbox.
+export PATH="$PURE_NIX_PATH"
+
+{{- if .Paths }}
+
+# Append any paths that were in the environment at the time the user launched
+# devbox. This gives the shell access to non-devbox programs, while still
+# preferring the ones that Nix installed.
+{{- range .Paths }}
+PATH="$PATH:{{ . }}"
+{{- end }}
+
+{{- end }}
 
 # End Devbox Pre-init Hook
 
@@ -44,7 +57,7 @@ export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
 
 # Update the $PATH again so that the Nix packages take priority over the
 # programs outside of devbox.
-export PATH="$PURE_NIX_PATH:$ORIGINAL_PATH"
+export PATH="$PURE_NIX_PATH:$PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"

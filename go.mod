@@ -6,6 +6,8 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/bmatcuk/doublestar/v4 v4.2.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/fatih/color v1.13.0
+	github.com/google/go-cmp v0.4.0
 	github.com/imdario/mergo v0.3.13
 	github.com/pelletier/go-toml/v2 v2.0.5
 	github.com/pkg/errors v0.9.1
@@ -24,7 +26,6 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
