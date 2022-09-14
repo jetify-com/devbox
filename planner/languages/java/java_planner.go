@@ -4,14 +4,12 @@
 package java
 
 import (
-	"encoding/xml"
-	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
@@ -38,54 +36,50 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	// Checking for pom.xml (maven) only for now
 	// TODO: add build.gradle file detection
 	pomXMLPath := filepath.Join(srcDir, "pom.xml")
-	return fileExists(pomXMLPath)
+	return plansdk.FileExists(pomXMLPath)
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	javaPkg := getJavaPackage(srcDir)
-	return &plansdk.Plan{
+	plan := &plansdk.Plan{
 		DevPackages: []string{
-			javaPkg,
 			defaultMaven,
 		},
 	}
+	javaPkg, err := getJavaPackage(srcDir)
+	if err != nil {
+		return plan.WithError(err)
+	}
+	plan.DevPackages = append(plan.DevPackages, javaPkg)
+	return plan
 }
 
-func getJavaPackage(srcDir string) string {
+func getJavaPackage(srcDir string) (string, error) {
 	pomXMLPath := filepath.Join(srcDir, "pom.xml")
-	javaVersion := parseJavaVersion(pomXMLPath)
+	javaVersion, err := parseJavaVersion(pomXMLPath)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
 	v, ok := jVersionMap[javaVersion]
 	if ok {
-		return v
+		return v, nil
 	} else {
-		return defaultJava
+		return defaultJava, nil
 	}
 }
 
-func parseJavaVersion(pomXMLPath string) int {
+func parseJavaVersion(pomXMLPath string) (int, error) {
 	parsedVersion, err := parseXML(pomXMLPath)
 	if err != nil {
-		fmt.Printf("error parsing java version from pom file: %v", err)
-		return 0
+		return 0, errors.WithMessage(err, "error parsing java version from pom file")
 	}
-	return parsedVersion
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+	return parsedVersion, nil
 }
 
 func parseXML(pomXMLPath string) (int, error) {
-	// read the XML file as a byte array.
-	byteArray, err := os.ReadFile(pomXMLPath)
-	if err != nil {
-		return 0, errors.WithStack(err)
-	}
 
 	var project mvnparser.MavenProject
-	// unmarshaling byteArray which contains our pom file content into 'project'
-	err = xml.Unmarshal(byteArray, &project)
+	// parsing pom.xml and putting its content in 'project'
+	err := cuecfg.ParseFile(pomXMLPath, &project)
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}
