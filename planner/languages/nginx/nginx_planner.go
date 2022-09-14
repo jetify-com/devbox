@@ -6,6 +6,7 @@ package nginx
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 )
@@ -40,13 +41,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		StartStage: &plansdk.Stage{
 			// Create user/group and directories
-			Command: "addgroup --system --gid 101 nginx && " +
-				"adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos \"nginx user\" --shell /bin/false --uid 101 nginx &&" +
-				"mkdir -p /var/cache/nginx/client_body && " +
-				"mkdir -p /var/log/nginx/ && " +
-				"echo Starting nginx with command " +
-				"\"nginx -c /app/nginx.conf -g 'daemon off;'\" &&" +
-				"nginx -c /app/nginx.conf -g 'daemon off;'",
+			Command:    fmt.Sprintf(startCommand, p.buildConfig(srcDir)),
 			InputFiles: plansdk.AllFiles(),
 		},
 		// These definitions are only used in shell. Since nix is lazy, it won't
@@ -71,6 +66,15 @@ func (p *Planner) buildConfig(srcDir string) string {
 	}
 	return "shell-nginx.conf"
 }
+
+var startCommand = strings.TrimSpace(`
+	addgroup --system --gid 101 nginx && \
+	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
+	mkdir -p /var/cache/nginx/client_body && \
+	mkdir -p /var/log/nginx/ && \
+	echo Starting nginx with command \"nginx -c /app/%[1]s -g 'daemon off;'\" && \
+	nginx -c /app/%[1]s -g 'daemon off;'
+`)
 
 const customNginxDefintion = `
 custom-nginx = pkgs.nginx.overrideAttrs (oldAttrs: rec {
