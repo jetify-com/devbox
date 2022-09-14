@@ -68,26 +68,17 @@ func getJavaPackage(srcDir string) (string, error) {
 }
 
 func parseJavaVersion(pomXMLPath string) (int, error) {
-	parsedVersion, err := parseXML(pomXMLPath)
-	if err != nil {
-		return 0, errors.WithMessage(err, "error parsing java version from pom file")
-	}
-	return parsedVersion, nil
-}
-
-func parseXML(pomXMLPath string) (int, error) {
-
 	var project mvnparser.MavenProject
 	// parsing pom.xml and putting its content in 'project'
 	err := cuecfg.ParseFile(pomXMLPath, &project)
 	if err != nil {
-		return 0, errors.WithStack(err)
+		return 0, errors.WithMessage(err, "error parsing java version from pom file")
 	}
 	compilerSourceVersion, ok := project.Properties["maven.compiler.source"]
 	if ok {
 		sourceVersion, err := strconv.Atoi(compilerSourceVersion)
 		if err != nil {
-			return 0, errors.WithStack(err)
+			return 0, errors.WithMessage(err, "error parsing java version from pom file")
 		}
 		return sourceVersion, nil
 	}
