@@ -1,4 +1,12 @@
 {
+  "dev_packages": [
+    "php81",
+    "php81Packages.composer"
+  ],
+  "runtime_packages": [
+    "php81",
+    "php81Packages.composer"
+  ],
   "install_stage": {
     "command": "composer install --no-dev --no-ansi",
     "input_files": [
@@ -14,15 +22,7 @@
       "."
     ]
   },
-  "dev_packages": [
-    "php81",
-    "php81Packages.composer"
-  ],
-  "runtime_packages": [
-    "php81",
-    "php81Packages.composer"
-  ],
   "definitions": [
-    "php81 = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [ mbstring imagick ]));"
+    "php81 = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [ imagick mbstring ]));"
   ]
 }
