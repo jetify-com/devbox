@@ -37,9 +37,12 @@ mkShell {
       echo "PURE_NIX_PATH=$PURE_NIX_PATH"
       echo "PATH=$PATH"
       {{- end }}
+      {{ if .ShellWelcomeMessage }}
+      echo "{{ .ShellWelcomeMessage }}"
+      {{- end }}
     '';
   packages = [
-  {{- range .DevPackages}}
+  {{- range .ShellAndDevPackages}}
     {{.}}
   {{end -}}
   ];

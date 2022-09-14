@@ -16,12 +16,24 @@ type PlanError struct {
 	error
 }
 
+// TODO: Plan currently has a bunch of fields that it should not export.
+// Two reasons why we need this right now:
+// 1/ So that individual planners can use the fields
+// 2/ So that we print them out correctly in `devbox plan`
+//
+// (1) can be solved by using a WithOption pattern, (e.g. NewPlan(..., WithWelcomeMessage(...)))
+// (2) can be solved by using a custom JSON marshaler.
 type Plan struct {
+	ShellWelcomeMessage string `json:"shell_welcome_message,omitempty"`
+
 	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
 
 	// DevPackages is the slice of Nix packages that devbox makes available in
-	// its development environment.
+	// its development environment. They are also available in shell.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
+
+	// ShellPackages are only available in the shell environment.
+	ShellPackages []string `cue:"[...string]" json:"shell_packages"`
 	// RuntimePackages is the slice of Nix packages that devbox makes available in
 	// in both the development environment and the final container that runs the
 	// application.
@@ -94,6 +106,10 @@ func (p *Plan) Error() error {
 func (p *Plan) WithError(err error) *Plan {
 	p.Errors = append(p.Errors, PlanError{err})
 	return p
+}
+
+func (p *Plan) ShellAndDevPackages() []string {
+	return pkgslice.Unique(append(p.DevPackages, p.ShellPackages...))
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {

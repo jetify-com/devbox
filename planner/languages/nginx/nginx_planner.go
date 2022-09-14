@@ -20,13 +20,15 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	return plansdk.FileExists(filepath.Join(srcDir, "nginx.conf"))
+	return plansdk.FileExists(filepath.Join(srcDir, "nginx.conf")) ||
+		plansdk.FileExists(filepath.Join(srcDir, "shell-nginx.conf"))
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	fmt.Println(srcDir)
 	return &plansdk.Plan{
-		DevPackages: []string{
+		ShellWelcomeMessage: "\n##### WARNING: nginx planner is experimental #####\n\nUse \"shell-nginx\" to start the server\n",
+		ShellPackages: []string{
 			"custom-nginx",
 			"shell-nginx",
 		},
@@ -37,19 +39,37 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			InputFiles: plansdk.AllFiles(),
 		},
 		StartStage: &plansdk.Stage{
-			// These 2 directories are required and are not created by nginx?
-			Command: "mkdir -p /var/cache/nginx/client_body && " +
+			// Create user/group and directories
+			Command: "addgroup --system --gid 101 nginx && " +
+				"adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos \"nginx user\" --shell /bin/false --uid 101 nginx &&" +
+				"mkdir -p /var/cache/nginx/client_body && " +
 				"mkdir -p /var/log/nginx/ && " +
+				"echo Starting nginx with command " +
+				"\"nginx -c /app/nginx.conf -g 'daemon off;'\" &&" +
 				"nginx -c /app/nginx.conf -g 'daemon off;'",
 			InputFiles: plansdk.AllFiles(),
 		},
-		// These definitions are only used in dev.
+		// These definitions are only used in shell. Since nix is lazy, it won't
+		// actually build them at all if they are not used.
 		Definitions: []string{
 			customNginxDefintion,
-			fmt.Sprintf(nginxShellStartScript, srcDir),
-			// nginxOverwriteDefintion,
+			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
 		},
 	}
+}
+
+func (p *Planner) shellConfig(srcDir string) string {
+	if plansdk.FileExists(filepath.Join(srcDir, "shell-nginx.conf")) {
+		return "shell-nginx.conf"
+	}
+	return "nginx.conf"
+}
+
+func (p *Planner) buildConfig(srcDir string) string {
+	if plansdk.FileExists(filepath.Join(srcDir, "nginx.conf")) {
+		return "nginx.conf"
+	}
+	return "shell-nginx.conf"
 }
 
 const customNginxDefintion = `
@@ -65,12 +85,8 @@ custom-nginx = pkgs.nginx.overrideAttrs (oldAttrs: rec {
 
 const nginxShellStartScript = `
 shell-nginx = pkgs.writeShellScriptBin "shell-nginx" ''
-	echo "Starting nginx with command:"
-	echo "nginx -p %[1]s -c shell-nginx.conf -e /tmp/error.log -g \"pid /tmp/mynginx.pid;daemon off;\""
-  nginx -p %[1]s -c shell-nginx.conf -e /tmp/error.log -g "pid /tmp/mynginx.pid;daemon off;"
-'';`
 
-const nginxOverwriteDefintion = `
-nginx = pkgs.writeScriptBin "nginx" ''
-	exec ${nginxCustom}/bin/nginx -c ${./../../shell-nginx.conf} -e /tmp/error.log -g "pid /tmp/mynginx.pid;daemon off;"
+echo "Starting nginx with command:"
+echo "nginx -p %[1]s -c %[2]s -e /tmp/error.log -g \"pid /tmp/mynginx.pid;daemon off;\""
+nginx -p %[1]s -c %[2]s -e /tmp/error.log -g "pid /tmp/shell-nginx.pid;daemon off;"
 '';`
