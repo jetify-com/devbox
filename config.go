@@ -8,6 +8,11 @@ import (
 	"go.jetpack.io/devbox/cuecfg"
 )
 
+type ConfigShell struct {
+	// InitHook contains commands that will run at shell startup.
+	InitHook string `json:"init_hook,omitempty"`
+}
+
 // Config defines a devbox environment as JSON.
 type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
@@ -24,10 +29,7 @@ type Config struct {
 	StartStage *Stage `json:"start_stage,omitempty"`
 
 	// Shell configures the devbox shell environment.
-	Shell struct {
-		// InitHook contains commands that will run at shell startup.
-		InitHook string `json:"init_hook,omitempty"`
-	} `json:"shell,omitempty"`
+	Shell *ConfigShell `json:"shell,omitempty"`
 }
 
 // This contains a subset of fields from plansdk.Stage
