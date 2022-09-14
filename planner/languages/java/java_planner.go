@@ -80,14 +80,14 @@ func parseXML(pomXMLPath string) (int, error) {
 	// read the XML file as a byte array.
 	byteArray, err := os.ReadFile(pomXMLPath)
 	if err != nil {
-		return 0, nil
+		return 0, errors.WithStack(err)
 	}
 
 	var project mvnparser.MavenProject
 	// unmarshaling byteArray which contains our pom file content into 'project'
 	err = xml.Unmarshal(byteArray, &project)
 	if err != nil {
-		return 0, nil
+		return 0, errors.WithStack(err)
 	}
 	compilerSourceVersion, ok := project.Properties["maven.compiler.source"]
 	if ok {
