@@ -5,15 +5,16 @@
     ]
   },
   "start_stage": {
-    "command": "mkdir -p /var/cache/nginx/client_body && mkdir -p /var/log/nginx/ && nginx -c /app/nginx.conf -g 'daemon off;'",
+    "command": "addgroup --system --gid 101 nginx && adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos \"nginx user\" --shell /bin/false --uid 101 nginx &&mkdir -p /var/cache/nginx/client_body && mkdir -p /var/log/nginx/ && echo Starting nginx with command \"nginx -c /app/nginx.conf -g 'daemon off;'\" &&nginx -c /app/nginx.conf -g 'daemon off;'",
     "input_files": [
       "."
     ]
   },
-  "dev_packages": [
-    "nginx"
-  ],
   "runtime_packages": [
     "nginx"
+  ],
+  "definitions": [
+    "\ncustom-nginx = pkgs.nginx.overrideAttrs (oldAttrs: rec {\n\tconfigureFlags = oldAttrs.configureFlags ++ [\n\t\t\t\"--http-client-body-temp-path=/tmp/cache/client_body\"\n\t\t\t\"--http-proxy-temp-path=/tmp/cache/proxy\"\n\t\t\t\"--http-fastcgi-temp-path=/tmp/cache/fastcgi\"\n\t\t\t\"--http-uwsgi-temp-path=/tmp/cache/uwsgi\"\n\t\t\t\"--http-scgi-temp-path=/tmp/cache/scgi\"\n\t\t];\n});",
+    "\nshell-nginx = pkgs.writeShellScriptBin \"shell-nginx\" ''\n\necho \"Starting nginx with command:\"\necho \"nginx -p testdata/nginx -c shell-nginx.conf -e /tmp/error.log -g \\\"pid /tmp/mynginx.pid;daemon off;\\\"\"\nnginx -p testdata/nginx -c shell-nginx.conf -e /tmp/error.log -g \"pid /tmp/shell-nginx.pid;daemon off;\"\n'';"
   ]
 }
