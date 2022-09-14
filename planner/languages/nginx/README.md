@@ -1,6 +1,6 @@
 # Nginx Static Planner
 
-Warning: this planner is experimental. The detection, API, and nix derivations may all change.
+**Warning:** this planner is experimental. The detection, API, and nix derivations may all change.
 
 ## How detection works
 
