@@ -1,24 +1,19 @@
 {
-  "install_stage": {
-    "command": "",
-    "input_files": [
-      "."
-    ]
-  },
-  "build_stage": {
-    "command": ""
-  },
-  "start_stage": {
-    "command": "",
-    "input_files": [
-      "."
-    ]
-  },
   "nix_overlays": [
     "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
   ],
   "dev_packages": [
     "rust-bin.stable.latest.default"
   ],
-  "runtime_packages": []
+  "runtime_packages": [],
+  "install_stage": {
+    "command": ""
+  },
+  "build_stage": {
+    "command": ""
+  },
+  "start_stage": {
+    "command": ""
+  },
+  "definitions": null
 }
