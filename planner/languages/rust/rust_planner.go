@@ -55,7 +55,6 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	}
 
 	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
-	rustPkgRuntime := fmt.Sprintf("rust-bin.stable.%s.minimal", rustVersion)
 
 	return &plansdk.Plan{
 		NixOverlays: []string{RustOxalicaOverlay},
@@ -64,7 +63,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		// 2. https://stackoverflow.com/a/56166959
 		DevPackages: []string{rustPkgDev, "gcc"},
 		// 'gcc' needs to be present to execute the binary
-		RuntimePackages: []string{rustPkgRuntime, "gcc"},
+		RuntimePackages: []string{"gcc"},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			Command:    "cargo build --release",
