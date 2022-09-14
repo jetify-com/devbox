@@ -118,7 +118,7 @@ func (s *Shell) Run(nixPath string) error {
 
 // execCommand is a command that replaces the current shell with s.
 func (s *Shell) execCommand() string {
-	shellrc, err := writeDevboxShellrc(s.userShellrcPath, s.UserInitHook)
+	shellrc, err := writeDevboxShellrc(s.userShellrcPath, s.UserInitHook, os.Environ())
 	if err != nil {
 		debug.Log("Failed to write devbox shellrc: %v", err)
 		return "exec " + s.binPath
@@ -126,20 +126,25 @@ func (s *Shell) execCommand() string {
 
 	switch s.name {
 	case shBash:
-		return fmt.Sprintf(`exec /usr/bin/env ORIGINAL_PATH="%s" %s --rcfile "%s"`,
-			os.Getenv("PATH"), s.binPath, shellrc)
+		return fmt.Sprintf(`exec %s --rcfile "%s"`, s.binPath, shellrc)
 	case shZsh:
-		return fmt.Sprintf(`exec /usr/bin/env ORIGINAL_PATH="%s" ZDOTDIR="%s" %s`,
-			os.Getenv("PATH"), filepath.Dir(shellrc), s.binPath)
+		return fmt.Sprintf(`exec /usr/bin/env ZDOTDIR="%s" %s`, filepath.Dir(shellrc), s.binPath)
 	case shKsh, shPosix:
-		return fmt.Sprintf(`exec /usr/bin/env ORIGINAL_PATH="%s" ENV="%s" %s `,
-			os.Getenv("PATH"), shellrc, s.binPath)
+		return fmt.Sprintf(`exec /usr/bin/env ENV="%s" %s`, shellrc, s.binPath)
 	default:
 		return "exec " + s.binPath
 	}
 }
 
-func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, err error) {
+func writeDevboxShellrc(userShellrcPath string, userHook string, env []string) (path string, err error) {
+	if userShellrcPath == "" {
+		// If this happens, then there's a bug with how we detect shells
+		// and their shellrc paths. If the shell is unknown or we can't
+		// determine the shellrc path, then we should launch a fallback
+		// shell instead.
+		panic("writeDevboxShellrc called with an empty user shellrc path; use the fallback shell instead")
+	}
+
 	// We need a temp dir (as opposed to a temp file) because zsh uses
 	// ZDOTDIR to point to a new directory containing the .zshrc.
 	tmp, err := os.MkdirTemp("", "devbox")
@@ -154,7 +159,22 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 		userShellrc = []byte{}
 	}
 
-	path = filepath.Join(tmp, filepath.Base(userShellrcPath))
+	var envPath []string
+	for _, kv := range env {
+		key, val, _ := strings.Cut(kv, "=")
+		if key == "PATH" {
+			envPath = filepath.SplitList(val)
+			break
+		}
+	}
+
+	// If the user already has a shellrc file, then give the devbox shellrc
+	// file the same name. Otherwise, use an arbitrary name of "shellrc".
+	shellrcName := "shellrc"
+	if userShellrcPath != "" {
+		shellrcName = filepath.Base(userShellrcPath)
+	}
+	path = filepath.Join(tmp, shellrcName)
 	shellrcf, err := os.Create(path)
 	if err != nil {
 		return "", fmt.Errorf("write to shell init file: %v", err)
@@ -167,10 +187,12 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 	}()
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
+		Paths            []string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
 	}{
+		Paths:            envPath,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(userShellrcPath),
 		UserHook:         strings.TrimSpace(userHook),

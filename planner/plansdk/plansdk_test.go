@@ -20,6 +20,7 @@ func TestMergePlans(t *testing.T) {
 		RuntimePackages: []string{"b", "c"},
 	}
 	expected := &Plan{
+		NixOverlays:     []string{},
 		DevPackages:     []string{"foo", "bar", "baz"},
 		RuntimePackages: []string{"a", "b", "c"},
 	}
@@ -39,6 +40,7 @@ func TestMergePlans(t *testing.T) {
 		},
 	}
 	expected = &Plan{
+		NixOverlays:     []string{},
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 		BuildStage: &Stage{
@@ -60,6 +62,7 @@ func TestMergePlans(t *testing.T) {
 	}
 	plan2 = &Plan{}
 	expected = &Plan{
+		NixOverlays:     []string{},
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
 		InstallStage: &Stage{

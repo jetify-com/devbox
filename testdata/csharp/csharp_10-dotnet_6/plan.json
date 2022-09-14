@@ -1,0 +1,6 @@
+{
+  "dev_packages": [
+    "dotnet-sdk"
+  ],
+  "runtime_packages": []
+}

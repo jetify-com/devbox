@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -148,6 +149,8 @@ func (p *Planner) extensions(srcDir string) ([]string, error) {
 			}
 		}
 	}
+
+	sort.Strings(extensions)
 
 	return extensions, nil
 }
