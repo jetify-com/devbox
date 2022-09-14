@@ -3,17 +3,28 @@
     "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
   ],
   "dev_packages": [
-    "rust-bin.stable.\"1.62.0\".default"
+    "rust-bin.stable.\"1.62.0\".minimal",
+    "rust-bin.stable.\"1.62.0\".default",
+    "gcc"
   ],
-  "runtime_packages": [],
+  "runtime_packages": [
+    "rust-bin.stable.\"1.62.0\".minimal",
+    "gcc"
+  ],
   "install_stage": {
     "command": ""
   },
   "build_stage": {
-    "command": ""
+    "command": "cargo build --release",
+    "input_files": [
+      "."
+    ]
   },
   "start_stage": {
-    "command": ""
+    "command": "./target/release/hello-rust",
+    "input_files": [
+      "."
+    ]
   },
   "definitions": null
 }
