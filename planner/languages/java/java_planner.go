@@ -85,7 +85,10 @@ func parseXML(pomXMLPath string) (int, error) {
 
 	var project mvnparser.MavenProject
 	// unmarshaling byteArray which contains our pom file content into 'project'
-	xml.Unmarshal(byteArray, &project)
+	err = xml.Unmarshal(byteArray, &project)
+	if err != nil {
+		return 0, nil
+	}
 	compilerSourceVersion, ok := project.Properties["maven.compiler.source"]
 	if ok {
 		sourceVersion, err := strconv.Atoi(compilerSourceVersion)
