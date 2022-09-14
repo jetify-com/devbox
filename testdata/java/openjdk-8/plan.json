@@ -1,22 +1,17 @@
 {
+    "dev_packages": [
+        "maven",
+        "jdk8"
+    ],
+    "runtime_packages": [],
     "install_stage": {
-        "command": "",
-        "input_files": [
-            "."
-        ]
+        "command": ""
     },
     "build_stage": {
         "command": ""
     },
     "start_stage": {
-        "command": "",
-        "input_files": [
-            "."
-        ]
+        "command": ""
     },
-    "dev_packages": [
-        "maven",
-        "jdk8"
-    ],
-    "runtime_packages": []
+    "definitions": null
 }
