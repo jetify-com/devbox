@@ -4,7 +4,6 @@
   ],
   "dev_packages": [
     "rust-bin.stable.latest.default",
-    "binutils",
     "gcc"
   ],
   "runtime_packages": [
