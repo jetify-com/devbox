@@ -45,7 +45,11 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 
 func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
-	rustVersion, err := p.rustOxalicaVersion(srcDir)
+	manifest, err := p.cargoManifest(srcDir)
+	if err != nil {
+		return nil, err
+	}
+	rustVersion, err := p.rustOxalicaVersion(manifest)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -54,7 +58,20 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
 	return &plansdk.Plan{
 		NixOverlays: []string{RustOxalicaOverlay},
-		DevPackages: []string{rustPkgDev},
+		// 'gcc' added as a linker for libc (C toolchain)
+		// 1. https://softwareengineering.stackexchange.com/a/332254
+		// 2. https://stackoverflow.com/a/56166959
+		DevPackages: []string{rustPkgDev, "gcc"},
+		// 'gcc' needs to be present to execute the binary
+		RuntimePackages: []string{"gcc"},
+		BuildStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    "cargo build --release",
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    fmt.Sprintf("./target/release/%s", manifest.PackageField.Name),
+		},
 	}, nil
 }
 
@@ -63,11 +80,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 // 2. "<version>", including the quotation marks. Example: "1.62.0"
 //
 // This result is spliced into (for example) "rust-bin.stable.<result>.default"
-func (p *Planner) rustOxalicaVersion(srcDir string) (string, error) {
-	manifest, err := p.cargoManifest(srcDir)
-	if err != nil {
-		return "", err
-	}
+func (p *Planner) rustOxalicaVersion(manifest *cargoManifest) (string, error) {
 	if manifest.PackageField.RustVersion == "" {
 		return "latest", nil
 	}
@@ -82,6 +95,7 @@ func (p *Planner) rustOxalicaVersion(srcDir string) (string, error) {
 type cargoManifest struct {
 	// NOTE: 'package' is a protected keyword in golang so we cannot name this field 'package'.
 	PackageField struct {
+		Name        string `toml:"name,omitempty"`
 		RustVersion string `toml:"rust-version,omitempty"`
 	} `toml:"package,omitempty"`
 }
