@@ -68,9 +68,21 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	// Check that input files are the same for all stages.
 	// Depending on where the test command is invoked, the input file paths can be different.
 	// We will compare the file name only.
-	assert.ElementsMatch(expected.InstallStage.GetInputFiles(), getFileNames(actual.InstallStage.GetInputFiles()), "InstallStage.InputFiles should match")
-	assert.ElementsMatch(expected.BuildStage.GetInputFiles(), getFileNames(actual.BuildStage.GetInputFiles()), "BuildStage.InputFiles should match")
-	assert.ElementsMatch(expected.StartStage.GetInputFiles(), getFileNames(actual.StartStage.GetInputFiles()), "StartStage.InputFiles should match")
+	assert.ElementsMatch(
+		expected.InstallStage.GetInputFiles(),
+		getFileNames(actual.InstallStage.GetInputFiles()),
+		"InstallStage.InputFiles should match",
+	)
+	assert.ElementsMatch(
+		expected.BuildStage.GetInputFiles(),
+		getFileNames(actual.BuildStage.GetInputFiles()),
+		"BuildStage.InputFiles should match",
+	)
+	assert.ElementsMatch(
+		expected.StartStage.GetInputFiles(),
+		actual.StartStage.GetInputFiles(),
+		"StartStage.InputFiles should match",
+	)
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
 }
