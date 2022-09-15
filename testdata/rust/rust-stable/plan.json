@@ -8,7 +8,7 @@
   ],
   "runtime_packages": [
     "rust-bin.stable.latest.default",
-    "binutils"
+    "glibc"
   ],
   "install_stage": {
     "command": ""

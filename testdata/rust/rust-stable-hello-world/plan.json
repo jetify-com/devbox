@@ -7,7 +7,7 @@
     "gcc"
   ],
   "runtime_packages": [
-    "binutils"
+    "glibc"
   ],
   "install_stage": {
     "command": ""

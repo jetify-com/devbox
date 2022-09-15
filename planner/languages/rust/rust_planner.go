@@ -62,7 +62,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		// 1. https://softwareengineering.stackexchange.com/a/332254
 		// 2. https://stackoverflow.com/a/56166959
 		DevPackages:     []string{rustPkgDev, "gcc"},
-		RuntimePackages: []string{"binutils"},
+		RuntimePackages: []string{"glibc"},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			Command:    "cargo build --release",
