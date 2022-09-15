@@ -3,13 +3,13 @@
     "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
   ],
   "dev_packages": [
-    "rust-bin.stable.latest.minimal",
     "rust-bin.stable.latest.default",
+    "binutils",
     "gcc"
   ],
   "runtime_packages": [
-    "rust-bin.stable.latest.minimal",
-    "gcc"
+    "rust-bin.stable.latest.default",
+    "binutils"
   ],
   "install_stage": {
     "command": ""
@@ -21,9 +21,9 @@
     ]
   },
   "start_stage": {
-    "command": "./target/release/hello-rust",
+    "command": "./hello-rust",
     "input_files": [
-      "."
+      "target/release/hello-rust"
     ]
   },
   "definitions": null

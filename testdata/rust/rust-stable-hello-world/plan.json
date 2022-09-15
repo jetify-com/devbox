@@ -4,10 +4,11 @@
   ],
   "dev_packages": [
     "rust-bin.stable.latest.default",
+    "binutils",
     "gcc"
   ],
   "runtime_packages": [
-    "gcc"
+    "binutils"
   ],
   "install_stage": {
     "command": ""
@@ -19,9 +20,9 @@
     ]
   },
   "start_stage": {
-    "command": "./target/release/rust-stable-hello-world",
+    "command": "./rust-stable-hello-world",
     "input_files": [
-      "."
+      "target/release/rust-stable-hello-world"
     ]
   },
   "definitions": null
