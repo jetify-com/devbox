@@ -15,10 +15,11 @@ with a few options. If you want to see what this wrapper does, use `cat $(which 
 
 In shell everything is local so you should avoid pointing to assets or files outside 
 the directory because the nix shell might not have access. For example your root
-maybe be described as `root ./static/;` and access log `access_log /tmp/access.log;`
+maybe be described as `root ./static/;`. 
 
-Shell nginx is compiled to use `/tmp/cache` as the default cache directory. See 
-[nginx planner](nginx_planner.go) for implementation.
+We generate a helper config `.devbox/gen/shell-helper-nginx.conf` that you can 
+include in your `shell-nginx.conf` that sets a few defaults to ensure nginx can 
+run in a nix shell. It should be included in the server.http block.
 
 ## How nginx works when building
 

@@ -42,7 +42,7 @@ mkShell {
       {{- end }}
     '';
   packages = [
-  {{- range .ShellAndDevPackages}}
+  {{- range .DevPackages}}
     {{.}}
   {{end -}}
   ];

@@ -32,8 +32,6 @@ type Plan struct {
 	// its development environment. They are also available in shell.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
 
-	// ShellPackages are only available in the shell environment.
-	ShellPackages []string `cue:"[...string]" json:"shell_packages"`
 	// RuntimePackages is the slice of Nix packages that devbox makes available in
 	// in both the development environment and the final container that runs the
 	// application.
@@ -55,6 +53,10 @@ type Plan struct {
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
+
+	// GeneratedFiles is a map of name => content for files that should be generated
+	// in the .devbox/gen directory.
+	GeneratedFiles map[string][]byte `json:"generated_files,omitempty"`
 }
 
 type Planner interface {
@@ -106,10 +108,6 @@ func (p *Plan) Error() error {
 func (p *Plan) WithError(err error) *Plan {
 	p.Errors = append(p.Errors, PlanError{err})
 	return p
-}
-
-func (p *Plan) ShellAndDevPackages() []string {
-	return pkgslice.Unique(append(p.DevPackages, p.ShellPackages...))
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {

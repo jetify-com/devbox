@@ -4,12 +4,16 @@
 package nginx
 
 import (
+	_ "embed"
 	"fmt"
 	"path/filepath"
 	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 )
+
+//go:embed shell-helper-nginx.conf
+var shellHelperNginxConfig []byte
 
 type Planner struct{}
 
@@ -28,9 +32,9 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	fmt.Println(srcDir)
 	return &plansdk.Plan{
-		ShellWelcomeMessage: "\n##### WARNING: nginx planner is experimental #####\n\nUse \"shell-nginx\" to start the server\n",
-		ShellPackages: []string{
-			"custom-nginx",
+		ShellWelcomeMessage: fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
+		DevPackages: []string{
+			"nginx",
 			"shell-nginx",
 		},
 		RuntimePackages: []string{
@@ -44,11 +48,11 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			Command:    fmt.Sprintf(startCommand, p.buildConfig(srcDir)),
 			InputFiles: plansdk.AllFiles(),
 		},
-		// These definitions are only used in shell. Since nix is lazy, it won't
-		// actually build them at all if they are not used.
 		Definitions: []string{
-			customNginxDefintion,
 			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
+		},
+		GeneratedFiles: map[string][]byte{
+			"shell-helper-nginx.conf": shellHelperNginxConfig,
 		},
 	}
 }
@@ -67,6 +71,17 @@ func (p *Planner) buildConfig(srcDir string) string {
 	return "shell-nginx.conf"
 }
 
+var welcomeMessage = `
+##### WARNING: nginx planner is experimental #####
+
+You may need to add 
+
+\"include ./.devbox/gen/shell-helper-nginx.conf;\" 
+
+to your %s file to ensure the server can start in the nix shell.
+
+Use "shell-nginx" to start the server
+`
 var startCommand = strings.TrimSpace(`
 	addgroup --system --gid 101 nginx && \
 	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
@@ -75,17 +90,6 @@ var startCommand = strings.TrimSpace(`
 	echo Starting nginx with command \"nginx -c /app/%[1]s -g 'daemon off;'\" && \
 	nginx -c /app/%[1]s -g 'daemon off;'
 `)
-
-const customNginxDefintion = `
-custom-nginx = pkgs.nginx.overrideAttrs (oldAttrs: rec {
-	configureFlags = oldAttrs.configureFlags ++ [
-			"--http-client-body-temp-path=/tmp/cache/client_body"
-			"--http-proxy-temp-path=/tmp/cache/proxy"
-			"--http-fastcgi-temp-path=/tmp/cache/fastcgi"
-			"--http-uwsgi-temp-path=/tmp/cache/uwsgi"
-			"--http-scgi-temp-path=/tmp/cache/scgi"
-		];
-});`
 
 const nginxShellStartScript = `
 shell-nginx = pkgs.writeShellScriptBin "shell-nginx" ''
