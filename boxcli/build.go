@@ -25,6 +25,9 @@ func BuildCmd() *cobra.Command {
 	command.Flags().StringVar(
 		&flags.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
 
+	command.Flags().StringSliceVar(
+		&flags.Platforms, "platform", []string{}, "Platform to build the container")
+
 	return command
 }
 
