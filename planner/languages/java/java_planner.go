@@ -88,12 +88,13 @@ func (p *Planner) installCommand(srcDir string) string {
 }
 
 func (p *Planner) startCommand(srcDir string) (string, error) {
-	targetDir := fmt.Sprintf("%s/target", srcDir)
-	jarFilePath, err := plansdk.GetFileWithExtention(targetDir, ".jar")
+	pomXMLPath := fmt.Sprintf("%s/pom.xml", srcDir)
+	var parsedPom mvnparser.MavenProject
+	err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", errors.WithMessage(err, "error parsing the pom file")
 	}
-	return fmt.Sprintf("java -jar %s", jarFilePath), nil
+	return fmt.Sprintf("java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
 }
 
 func getJavaPackage(srcDir string) (string, error) {
@@ -111,13 +112,13 @@ func getJavaPackage(srcDir string) (string, error) {
 }
 
 func parseJavaVersion(pomXMLPath string) (int, error) {
-	var project mvnparser.MavenProject
+	var parsedPom mvnparser.MavenProject
 	// parsing pom.xml and putting its content in 'project'
-	err := cuecfg.ParseFile(pomXMLPath, &project)
+	err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
 	if err != nil {
 		return 0, errors.WithMessage(err, "error parsing java version from pom file")
 	}
-	compilerSourceVersion, ok := project.Properties["maven.compiler.source"]
+	compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
 	if ok {
 		sourceVersion, err := strconv.Atoi(compilerSourceVersion)
 		if err != nil {
