@@ -1,9 +1,10 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package csharp
+package dotnet
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -17,13 +18,17 @@ type Project struct {
 	} `xml:"PropertyGroup,omitempty"`
 }
 
+const CSharpExtension = "csproj"
+const FSharpExtension = "fsproj"
+
+// The .Net Planner supports C# and F# languages.
 type Planner struct{}
 
 // Implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
 func (p *Planner) Name() string {
-	return "csharp.Planner"
+	return "dotnet.Planner"
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
@@ -32,7 +37,11 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 		// We should log that an error has occurred.
 		return false
 	}
-	return a.HasAnyFile("*.csproj")
+	isRelevant := a.HasAnyFile(
+		fmt.Sprintf("*.%s", CSharpExtension),
+		fmt.Sprintf("*.%s", FSharpExtension),
+	)
+	return isRelevant
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
@@ -40,7 +49,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		// Added this Printf because `devbox shell` was silently swallowing this error.
 		// TODO savil. Have `devbox shell` error out or print it instead.
-		// fmt.Printf("error in getPlan: %s\n", err)
+		fmt.Printf("error in getPlan: %+v\n", err)
 		plan = &plansdk.Plan{}
 		plan.WithError(err)
 	}
@@ -98,14 +107,22 @@ func project(srcDir string) (*Project, error) {
 		// We should log that an error has occurred.
 		return nil, err
 	}
-	paths := a.GlobFiles("*.csproj")
+	paths := a.GlobFiles(
+		fmt.Sprintf("*.%s", CSharpExtension),
+		fmt.Sprintf("*.%s", FSharpExtension),
+	)
 	if len(paths) < 1 {
-		return nil, errors.Errorf("expected to find a .csproj file in directory %s", srcDir)
+		return nil, errors.Errorf(
+			"expected to find a %s or %s file in directory %s",
+			CSharpExtension,
+			FSharpExtension,
+			srcDir,
+		)
 	}
 	projectFilePath := paths[0]
 
 	proj := &Project{}
-	err = cuecfg.ParseFile(projectFilePath, proj)
+	err = cuecfg.ParseFileWithExtension(projectFilePath, ".xml", proj)
 	return proj, err
 }
 

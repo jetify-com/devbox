@@ -9,9 +9,9 @@ import (
 	"go.jetpack.io/devbox/planner/languages/clojure"
 	"go.jetpack.io/devbox/planner/languages/cplusplus"
 	"go.jetpack.io/devbox/planner/languages/crystal"
-	"go.jetpack.io/devbox/planner/languages/csharp"
 	"go.jetpack.io/devbox/planner/languages/dart"
 	"go.jetpack.io/devbox/planner/languages/deno"
+	"go.jetpack.io/devbox/planner/languages/dotnet"
 	"go.jetpack.io/devbox/planner/languages/elixir"
 	"go.jetpack.io/devbox/planner/languages/erlang"
 	"go.jetpack.io/devbox/planner/languages/fsharp"
@@ -41,7 +41,7 @@ var PLANNERS = []plansdk.Planner{
 	&clojure.Planner{},
 	&cplusplus.Planner{},
 	&crystal.Planner{},
-	&csharp.Planner{},
+	&dotnet.Planner{},
 	&dart.Planner{},
 	&deno.Planner{},
 	&elixir.Planner{},
