@@ -60,6 +60,35 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
 	return &plansdk.Plan{
 		DevPackages: []string{dotNetPkg},
+
+		// TODO replace dotNetPkg to reduce runtime image size
+		//
+		// Including dotNetPkg results in the image size being large (~700MB for csharp_10-dotnet_6 testdata project)
+		// To reduce size, I tried compiling a I tried compiling a "self-contained executable" as explained in
+		// https://docs.microsoft.com/en-us/dotnet/core/deploying/ by doing `dotnet publish -r <RID>`.
+		// This resulted in some errors:
+		// Error #1. An error for missing `libstdc++`. Adding nix pkg `libstdcxx5` didn't help.
+		// Adding `gcc` resolved it (but results in image size being 300MB)
+		// Error #2. An error for missing `libicu`. Adding nix pkg `icu` didn't help. TODO need to resolve this issue.
+		RuntimePackages: []string{dotNetPkg},
+
+		BuildStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+
+			// TODO modify this command to reduce image size
+			//
+			// Useful references for improving this publish command to reduce image size:
+			// dotnet publish -r linux-x64 -p:PublishSingleFile:true
+			// - for dotnet publish options: https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish
+			// - for -r options: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
+			// - for publishing a single file: https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli
+			Command: "dotnet publish",
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			// TODO to invoke single-executable: ./bin/Debug/net6.0/linux-64/publish/<projectName>
+			Command: "dotnet run",
+		},
 	}, nil
 }
 

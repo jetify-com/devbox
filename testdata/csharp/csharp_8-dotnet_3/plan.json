@@ -2,5 +2,23 @@
   "dev_packages": [
     "dotnet-sdk_3"
   ],
-  "runtime_packages": []
+  "runtime_packages": [
+    "dotnet-sdk_3"
+  ],
+  "install_stage": {
+    "command": ""
+  },
+  "build_stage": {
+    "command": "dotnet publish",
+    "input_files": [
+      "."
+    ]
+  },
+  "start_stage": {
+    "command": "dotnet run",
+    "input_files": [
+      "."
+    ]
+  },
+  "definitions": null
 }
