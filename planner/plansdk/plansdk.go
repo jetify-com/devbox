@@ -136,6 +136,14 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 	}
 
 	plan := findBuildablePlan(plans...)
+	if plan == nil {
+		if len(plans) > 0 {
+			// all plans contain errors. We default to the first one.
+			plan = plans[0]
+		} else {
+			plan = &Plan{}
+		}
+	}
 	plan.NixOverlays = pkgslice.Unique(mergedPlan.NixOverlays)
 	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
@@ -151,7 +159,7 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 			return p
 		}
 	}
-	return &Plan{}
+	return nil
 }
 
 func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
