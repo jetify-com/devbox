@@ -52,7 +52,11 @@ func TestWriteDevboxShellrc(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			gotPath, err := writeDevboxShellrc(test.shellrcPath, test.hook, test.env)
+			s := &Shell{
+				userShellrcPath: test.shellrcPath,
+				UserInitHook:    test.hook,
+			}
+			gotPath, err := s.writeDevboxShellrc(test.env)
 			if err != nil {
 				t.Fatal("Got writeDevboxShellrc error:", err)
 			}

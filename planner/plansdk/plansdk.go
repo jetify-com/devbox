@@ -23,6 +23,8 @@ type PlanError struct {
 //
 // (1) can be solved by using a WithOption pattern, (e.g. NewPlan(..., WithWelcomeMessage(...)))
 // (2) can be solved by using a custom JSON marshaler.
+
+// Plan tells devbox how to start shells and build projects.
 type Plan struct {
 	ShellWelcomeMessage string `json:"shell_welcome_message,omitempty"`
 
@@ -55,8 +57,8 @@ type Plan struct {
 	Errors []PlanError `json:"errors,omitempty"`
 
 	// GeneratedFiles is a map of name => content for files that should be generated
-	// in the .devbox/gen directory.
-	GeneratedFiles map[string][]byte `json:"generated_files,omitempty"`
+	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
+	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 }
 
 type Planner interface {

@@ -14,8 +14,8 @@ To run shell nginx you can use the `shell-nginx` wrapper. This wrapper calls ngi
 with a few options. If you want to see what this wrapper does, use `cat $(which shell-nginx)`
 
 In shell everything is local so you should avoid pointing to assets or files outside 
-the directory because the nix shell might not have access. For example your root
-maybe be described as `root ./static/;`. 
+the devbox.json directory because the nix shell might not have access. For example 
+your root maybe be described as `root ./static/;`. 
 
 We generate a helper config `.devbox/gen/shell-helper-nginx.conf` that you can 
 include in your `shell-nginx.conf` that sets a few defaults to ensure nginx can 

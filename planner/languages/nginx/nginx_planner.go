@@ -13,7 +13,7 @@ import (
 )
 
 //go:embed shell-helper-nginx.conf
-var shellHelperNginxConfig []byte
+var shellHelperNginxConfig string
 
 type Planner struct{}
 
@@ -30,7 +30,6 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	fmt.Println(srcDir)
 	return &plansdk.Plan{
 		ShellWelcomeMessage: fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
 		DevPackages: []string{
@@ -51,7 +50,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		Definitions: []string{
 			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
 		},
-		GeneratedFiles: map[string][]byte{
+		GeneratedFiles: map[string]string{
 			"shell-helper-nginx.conf": shellHelperNginxConfig,
 		},
 	}
@@ -71,7 +70,7 @@ func (p *Planner) buildConfig(srcDir string) string {
 	return "shell-nginx.conf"
 }
 
-var welcomeMessage = `
+const welcomeMessage = `
 ##### WARNING: nginx planner is experimental #####
 
 You may need to add 
@@ -80,8 +79,9 @@ You may need to add
 
 to your %s file to ensure the server can start in the nix shell.
 
-Use "shell-nginx" to start the server
+Use \"shell-nginx\" to start the server
 `
+
 var startCommand = strings.TrimSpace(`
 	addgroup --system --gid 101 nginx && \
 	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
