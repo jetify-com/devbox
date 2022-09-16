@@ -5,7 +5,7 @@
     ]
   },
   "start_stage": {
-    "command": "addgroup --system --gid 101 nginx && \\\n\tadduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos \"nginx user\" --shell /bin/false --uid 101 nginx && \\\n\tmkdir -p /var/cache/nginx/client_body && \\\n\tmkdir -p /var/log/nginx/ && \\\n\techo Starting nginx with command \\\"nginx -c /app/nginx.conf -g 'daemon off;'\\\" && \\\n\tnginx -c /app/nginx.conf -g 'daemon off;'",
+    "command": "addgroup --system --gid 101 nginx && \\\n\tadduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos \"nginx user\" --shell /bin/false --uid 101 nginx && \\\n\tmkdir -p /var/cache/nginx/client_body && \\\n\tmkdir -p /var/log/nginx/ && \\\n\tPKG_PATH=$(readlink -f $(which nginx) | sed -r \"s/\\/bin\\/nginx//g\") && \\\n\tln -s /app/nginx.conf $PKG_PATH/conf/devbox-nginx.conf && \\\n\techo Starting nginx with command \\\"nginx -c conf/devbox-nginx.conf -g 'daemon off;'\\\" && \\\n\tnginx -c conf/devbox-nginx.conf -g 'daemon off;'",
     "input_files": [
       "."
     ]
