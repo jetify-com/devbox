@@ -87,8 +87,10 @@ var startCommand = strings.TrimSpace(`
 	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
 	mkdir -p /var/cache/nginx/client_body && \
 	mkdir -p /var/log/nginx/ && \
-	echo Starting nginx with command \"nginx -c /app/%[1]s -g 'daemon off;'\" && \
-	nginx -c /app/%[1]s -g 'daemon off;'
+	PKG_PATH=$(readlink -f $(which nginx) | sed -r "s/\/bin\/nginx//g") && \
+	ln -s /app/%[1]s $PKG_PATH/conf/devbox-%[1]s && \
+	echo Starting nginx with command \"nginx -c conf/devbox-%[1]s -g 'daemon off;'\" && \
+	nginx -c conf/devbox-%[1]s -g 'daemon off;'
 `)
 
 const nginxShellStartScript = `
