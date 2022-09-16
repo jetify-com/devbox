@@ -19,5 +19,19 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+	return &plansdk.Plan{
+		DevPackages:     []string{"elixir"},
+		RuntimePackages: []string{"elixir"},
+		InstallStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+		},
+		BuildStage: &plansdk.Stage{
+			Command: "mix compile",
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{"./_build/"},
+			Command: "mix run",
+		},
+	},
+	}
 }
