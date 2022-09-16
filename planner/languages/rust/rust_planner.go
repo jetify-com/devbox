@@ -61,16 +61,15 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		// 'gcc' added as a linker for libc (C toolchain)
 		// 1. https://softwareengineering.stackexchange.com/a/332254
 		// 2. https://stackoverflow.com/a/56166959
-		DevPackages: []string{rustPkgDev, "gcc"},
-		// 'gcc' needs to be present to execute the binary
-		RuntimePackages: []string{"gcc"},
+		DevPackages:     []string{rustPkgDev, "gcc"},
+		RuntimePackages: []string{"glibc"},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			Command:    "cargo build --release",
 		},
 		StartStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			Command:    fmt.Sprintf("./target/release/%s", manifest.PackageField.Name),
+			InputFiles: []string{fmt.Sprintf("target/release/%s", manifest.PackageField.Name)},
+			Command:    fmt.Sprintf("./%s", manifest.PackageField.Name),
 		},
 	}, nil
 }
