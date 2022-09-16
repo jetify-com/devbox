@@ -4,6 +4,7 @@
 package java
 
 import (
+	"fmt"
 	"path/filepath"
 	"strconv"
 
@@ -21,7 +22,7 @@ var jVersionMap = map[int]string{
 	17: "jdk17_headless",
 }
 
-// jdk points to openJDK version 17. OpenJDK v18 is not yet available in nix packages
+// "jdk" points to openJDK version 17. OpenJDK v18 is not yet available in nix packages
 const defaultJava = "jdk"
 const defaultMaven = "maven"
 
@@ -36,21 +37,63 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	// Checking for pom.xml (maven) only for now
 	// TODO: add build.gradle file detection
 	pomXMLPath := filepath.Join(srcDir, "pom.xml")
+	fmt.Printf("plansdk.FileExists(pomXMLPath): %v\n", plansdk.FileExists(pomXMLPath))
 	return plansdk.FileExists(pomXMLPath)
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+	// Creating an empty plan so that we can communicate an error to the use
 	plan := &plansdk.Plan{
 		DevPackages: []string{
 			defaultMaven,
 		},
 	}
 	javaPkg, err := getJavaPackage(srcDir)
+	fmt.Printf("javaPkg: %v\n", javaPkg)
 	if err != nil {
 		return plan.WithError(err)
 	}
-	plan.DevPackages = append(plan.DevPackages, javaPkg)
-	return plan
+	startCommand, err := p.startCommand(srcDir)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return plan.WithError(err)
+	}
+	installStage := p.installCommand(srcDir)
+	fmt.Printf("installStage: %v\n", installStage)
+	return &plansdk.Plan{
+		DevPackages: []string{
+			defaultMaven,
+			javaPkg,
+		},
+		RuntimePackages: []string{
+			defaultMaven,
+			javaPkg,
+		},
+		InstallStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    installStage,
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    startCommand,
+		},
+	}
+}
+
+// This method is added because we plan to differentiate Gradle and Maven.
+// Otherwise, we could just assign the value without calling this.
+func (p *Planner) installCommand(srcDir string) string {
+	// TODO: Add support for Gradle install command
+	return "mvn clean install"
+}
+
+func (p *Planner) startCommand(srcDir string) (string, error) {
+	targetDir := fmt.Sprintf("%s/target", srcDir)
+	jarFilePath, err := plansdk.GetFileWithExtention(targetDir, ".jar")
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return fmt.Sprintf("java -jar %s", jarFilePath), nil
 }
 
 func getJavaPackage(srcDir string) (string, error) {
