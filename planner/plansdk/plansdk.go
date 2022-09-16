@@ -5,7 +5,10 @@ package plansdk
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
@@ -113,6 +116,7 @@ func (p *Plan) Error() error {
 
 func (p *Plan) WithError(err error) *Plan {
 	p.Errors = append(p.Errors, PlanError{err})
+	fmt.Printf("p.Errors: %v\n", p.Errors)
 	return p
 }
 
@@ -190,4 +194,25 @@ func (p PlanError) MarshalJSON() ([]byte, error) {
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// Walks through all the files in the provided 'path' and returns the file that matches
+// with 'fileExtention'. If multiple matches exist, it returns an error.
+func GetFileWithExtention(path string, fileExtention string) (string, error) {
+	var a []string
+	filepath.WalkDir(path, func(s string, d fs.DirEntry, e error) error {
+		if e != nil {
+			return e
+		}
+		if filepath.Ext(d.Name()) == fileExtention {
+			a = append(a, s)
+		}
+		return nil
+	})
+	if len(a) == 0 {
+		return "", errors.Errorf("Did not find any file with extention %s \n", fileExtention)
+	} else if len(a) > 1 {
+		return "", errors.Errorf("Found multiple files with extention %s \n", fileExtention)
+	}
+	return a[0], nil
 }
