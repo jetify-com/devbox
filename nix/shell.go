@@ -211,7 +211,7 @@ func (s *Shell) writeDevboxShellrc(env []string) (path string, err error) {
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
-		WelcomeMessage:   s.welcomeMessage,
+		WelcomeMessage:   strings.TrimSpace(s.welcomeMessage),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
