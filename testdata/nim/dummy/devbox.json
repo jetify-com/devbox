@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "nim"
+  ],
+  "shell": {
+    "init_hook": null
+  }
+}

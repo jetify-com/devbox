@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "openssl"
+  ],
+  "shell": {
+    "init_hook": null
+  }
+}
