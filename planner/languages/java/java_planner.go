@@ -37,7 +37,6 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	// Checking for pom.xml (maven) only for now
 	// TODO: add build.gradle file detection
 	pomXMLPath := filepath.Join(srcDir, "pom.xml")
-	fmt.Printf("plansdk.FileExists(pomXMLPath): %v\n", plansdk.FileExists(pomXMLPath))
 	return plansdk.FileExists(pomXMLPath)
 }
 
@@ -49,17 +48,14 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 	}
 	javaPkg, err := getJavaPackage(srcDir)
-	fmt.Printf("javaPkg: %v\n", javaPkg)
 	if err != nil {
 		return plan.WithError(err)
 	}
 	startCommand, err := p.startCommand(srcDir)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
 		return plan.WithError(err)
 	}
 	installStage := p.installCommand(srcDir)
-	fmt.Printf("installStage: %v\n", installStage)
 	return &plansdk.Plan{
 		DevPackages: []string{
 			defaultMaven,

@@ -5,7 +5,6 @@ package plansdk
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/imdario/mergo"
@@ -114,7 +113,6 @@ func (p *Plan) Error() error {
 
 func (p *Plan) WithError(err error) *Plan {
 	p.Errors = append(p.Errors, PlanError{err})
-	fmt.Printf("p.Errors: %v\n", p.Errors)
 	return p
 }
 
