@@ -22,6 +22,6 @@
   ],
   "shell_init_hook": "echo \"\n##### WARNING: nginx planner is experimental #####\n\nYou may need to add\n\n\\\"include ./.devbox/gen/shell-helper-nginx.conf;\\\"\n\nto your shell-nginx.conf file to ensure the server can start in the nix shell.\n\nUse \\\"shell-nginx\\\" to start the server\n\";",
   "generated_files": {
-    "shell-helper-nginx.conf": "access_log /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//access.log;\nclient_body_temp_path /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//client_body;\nproxy_temp_path /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//proxy;\nfastcgi_temp_path /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//fastcgi;\nuwsgi_temp_path /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//uwsgi;\nscgi_temp_path /var/folders/ym/6p8vqqf11w97jlrf2q3gdwph0000gn/T//scgi;\n"
+    "shell-helper-nginx.conf": "access_log /tmp/access.log;\nclient_body_temp_path /tmp/client_body;\nproxy_temp_path /tmp/proxy;\nfastcgi_temp_path /tmp/fastcgi;\nuwsgi_temp_path /tmp/uwsgi;\nscgi_temp_path /tmp/scgi;\n"
   }
 }
