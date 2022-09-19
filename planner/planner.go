@@ -32,7 +32,6 @@ import (
 	"go.jetpack.io/devbox/planner/languages/rust"
 	"go.jetpack.io/devbox/planner/languages/scala"
 	"go.jetpack.io/devbox/planner/languages/swift"
-	"go.jetpack.io/devbox/planner/languages/typescript"
 	"go.jetpack.io/devbox/planner/languages/zig"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
@@ -65,7 +64,6 @@ var PLANNERS = []plansdk.Planner{
 	&rust.Planner{},
 	&scala.Planner{},
 	&swift.Planner{},
-	&typescript.Planner{},
 	&zig.Planner{},
 }
 
