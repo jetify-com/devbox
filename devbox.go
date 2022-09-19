@@ -81,15 +81,15 @@ func (d *Devbox) Remove(pkgs ...string) error {
 }
 
 // Build creates a Docker image containing a shell with the devbox environment.
-func (d *Devbox) Build(opts ...docker.BuildOptions) error {
+func (d *Devbox) Build(flags *docker.BuildFlags) error {
 	if ok, err := planner.IsBuildable(d.srcDir); !ok {
 		return err
 	}
 	defaultFlags := &docker.BuildFlags{
-		Name:           "devbox",
+		Name:           flags.Name,
 		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
 	}
-	opts = append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, opts...)
+	opts := append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, docker.WithFlags(flags))
 
 	err := d.Generate()
 	if err != nil {
