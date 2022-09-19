@@ -15,10 +15,11 @@ import (
 
 func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "shell [<dir>]",
-		Short: "Start a new shell with access to your packages",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  runShellCmd,
+		Use:               "shell [<dir>]",
+		Short:             "Start a new shell with access to your packages",
+		Args:              cobra.MaximumNArgs(1),
+		PersistentPreRunE: nixShellPersistentPreRunE,
+		RunE:              runShellCmd,
 	}
 	return command
 }
@@ -46,4 +47,12 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
 	}
 	return err
+}
+
+func nixShellPersistentPreRunE(cmd *cobra.Command, args []string) error {
+	_, err := exec.LookPath("nix-shell")
+	if err != nil {
+		return errors.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
+	}
+	return nil
 }

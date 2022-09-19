@@ -11,10 +11,11 @@ import (
 
 func AddCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "add <pkg>...",
-		Short: "Add a new package to your devbox",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  addCmdFunc(),
+		Use:               "add <pkg>...",
+		Short:             "Add a new package to your devbox",
+		Args:              cobra.MinimumNArgs(1),
+		PersistentPreRunE: nixShellPersistentPreRunE,
+		RunE:              addCmdFunc(),
 	}
 
 	return command
