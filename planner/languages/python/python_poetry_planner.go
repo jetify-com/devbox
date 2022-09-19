@@ -16,21 +16,21 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Planner struct{}
+type PoetryPlanner struct{}
 
 // PythonPoetryPlanner implements interface Planner (compile-time check)
-var _ plansdk.Planner = (*Planner)(nil)
+var _ plansdk.Planner = (*PoetryPlanner)(nil)
 
-func (p *Planner) Name() string {
+func (p *PoetryPlanner) Name() string {
 	return "python.Planner"
 }
 
-func (p *Planner) IsRelevant(srcDir string) bool {
+func (p *PoetryPlanner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(filepath.Join(srcDir, "poetry.lock")) ||
 		plansdk.FileExists(filepath.Join(srcDir, "pyproject.toml"))
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *PoetryPlanner) GetPlan(srcDir string) *plansdk.Plan {
 	version := p.PythonVersion(srcDir)
 	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
 	plan := &plansdk.Plan{
@@ -62,7 +62,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 }
 
 // TODO: This can be generalized to all python planners
-func (p *Planner) PythonVersion(srcDir string) *plansdk.Version {
+func (p *PoetryPlanner) PythonVersion(srcDir string) *plansdk.Version {
 	defaultVersion, _ := plansdk.NewVersion("3.10.6")
 	project := p.PyProject(srcDir)
 
@@ -76,7 +76,7 @@ func (p *Planner) PythonVersion(srcDir string) *plansdk.Version {
 	return defaultVersion
 }
 
-func (p *Planner) buildCommand(srcDir string) string {
+func (p *PoetryPlanner) buildCommand(srcDir string) string {
 	project := p.PyProject(srcDir)
 	// Assume name follows https://peps.python.org/pep-0508/#names
 	// Do simple replacement "-" -> "_" and check if any script matches name.
@@ -113,7 +113,7 @@ type pyProject struct {
 	} `toml:"tool"`
 }
 
-func (p *Planner) PyProject(srcDir string) *pyProject {
+func (p *PoetryPlanner) PyProject(srcDir string) *pyProject {
 	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
 	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {
@@ -124,7 +124,7 @@ func (p *Planner) PyProject(srcDir string) *pyProject {
 	return &proj
 }
 
-func (p *Planner) isBuildable(srcDir string) (bool, error) {
+func (p *PoetryPlanner) isBuildable(srcDir string) (bool, error) {
 	project := p.PyProject(srcDir)
 	if project == nil {
 		return false, usererr.New("Could not build container for python " +
@@ -164,7 +164,7 @@ func (p *Planner) isBuildable(srcDir string) (bool, error) {
 	return true, nil
 }
 
-func (p *Planner) formatBuildCommand(module, script string) string {
+func (p *PoetryPlanner) formatBuildCommand(module, script string) string {
 
 	// If no scripts, just run the module directly always.
 	if script == "" {
