@@ -3,7 +3,10 @@
         "maven",
         "jdk11"
     ],
-    "runtime_packages": [],
+    "runtime_packages": [
+        "maven",
+        "jdk11"
+    ],
     "install_stage": {
         "command": "mvn clean install"
     },

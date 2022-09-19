@@ -3,7 +3,10 @@
         "maven",
         "jdk17_headless"
     ],
-    "runtime_packages": [],
+    "runtime_packages": [
+        "maven",
+        "jdk17_headless"
+    ],
     "install_stage": {
         "command": "mvn clean install"
     },

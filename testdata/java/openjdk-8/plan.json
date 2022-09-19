@@ -3,7 +3,10 @@
         "maven",
         "jdk8"
     ],
-    "runtime_packages": [],
+    "runtime_packages": [
+        "maven",
+        "jdk8"
+    ],
     "install_stage": {
         "command": "mvn clean install"
     },
