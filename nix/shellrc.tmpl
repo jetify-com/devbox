@@ -1,49 +1,22 @@
 {{- /*
 
-// This template defines the shellrc file that the devbox shell will run at
-// startup.
-//
-// It includes the user's original shellrc, which varies depending on their
-// shell. It will either be ~/.bashrc, ~/.zshrc, a path set in ENV, or something
-// else. It also appends any user-defined shell hooks from devbox.json.
-//
-// Devbox also needs to ensure that the shell's PATH, prompt, and a few other
-// things are set correctly at startup. To do this, it must run some commands
-// before and after the user's shellrc. These commands are in the
-// "Devbox Pre/Post-init Hook" sections.
-//
-// The devbox pre/post-init hooks assume a PURE_NIX_PATH environment variable is
-// already set by the shell hook in shell.nix.tmpl. It preserves the PATH set by
-// Nix's "pure" shell mode.
-//
-// This file is useful for debugging shell errors, so try to keep the generated
-// content readable.
+This template defines the shellrc file that the devbox shell will run at
+startup.
 
- */ -}}
+It includes the user's original shellrc, which varies depending on their shell.
+It will either be ~/.bashrc, ~/.zshrc, a path set in ENV, or something else. It
+also appends any user-defined shell hooks from devbox.json.
 
-# Begin Devbox Pre-init Hook
+Devbox needs to ensure that the shell's PATH, prompt, and a few other things are
+set correctly after the user's shellrc runs. The commands to do this are in
+the "Devbox Post-init Hook" section.
 
-# Don't allow the user's shellrc to re-source Nix since we're already in Nix.
-export __ETC_PROFILE_NIX_SOURCED=1
+This file is useful for debugging shell errors, so try to keep the generated
+content readable.
 
-# Put the Nix packages at the beginning of the PATH to give them priority over
-# programs outside of devbox.
-export PATH="$PURE_NIX_PATH"
+*/ -}}
 
-{{- if .Paths }}
-
-# Append any paths that were in the environment at the time the user launched
-# devbox. This gives the shell access to non-devbox programs, while still
-# preferring the ones that Nix installed.
-{{- range .Paths }}
-PATH="$PATH:{{ . }}"
-{{- end }}
-
-{{- end }}
-
-# End Devbox Pre-init Hook
-
-{{- if .OriginalInit }}
+{{- if .OriginalInit -}}
 
 # Begin {{ .OriginalInitPath }}
 
@@ -51,13 +24,41 @@ PATH="$PATH:{{ . }}"
 
 # End {{ .OriginalInitPath }}
 
-{{- end }}
+{{ end -}}
 
 # Begin Devbox Post-init Hook
 
-# Update the $PATH again so that the Nix packages take priority over the
-# programs outside of devbox.
-export PATH="$PURE_NIX_PATH:$PATH"
+# We need to do some processing on the PATH to ensure that any NIX_STORE paths
+# stay at the front.
+#
+# Use IFS to split the PATH by ':' and then loop over each directory. Do the
+# splitting in a subshell so that the change to IFS is temporary.
+#
+# The first case pattern matches a path that has the Nix store as a prefix, in
+# which case we append it to nix_path. The second case pattern matches
+# everything else and appends to non_nix_path. At the end, we join them with
+# nix_path at the front.
+#
+# Some notes:
+# 	- We do `for ... in $(echo $PATH)` instead of `for ... in $PATH` because
+# 	  zsh doesn't do word splitting on unquoted variables.
+# 	- The syntax `${nix_path:+$nix_path:}` means, "if nix_path is already
+# 	  set, write `$nix_path:` (with the colon) instead." This ensures we
+# 	  don't start with a colon on the first append.
+# 	- You can't have comments in a subshell, hence this one long comment at
+# 	  the top.
+# 	- Keep this as POSIX as possible to maximize compatibility with
+# 	  different shells.
+PATH="$(
+	IFS=:
+	for path_dir in $(echo $PATH); do
+		case "$path_dir" in
+			$NIX_STORE/*) nix_path="${nix_path:+$nix_path:}${path_dir}" ;;
+			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
+		esac
+	done
+	echo "${nix_path:+$nix_path:}${non_nix_path}"
+)"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"

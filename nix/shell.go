@@ -94,20 +94,42 @@ func rcfilePath(basename string) string {
 }
 
 func (s *Shell) Run(nixPath string) error {
+	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
+	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
+	// assume they are.
+	nixProfileDirs := splitNixList(os.Getenv("NIX_PROFILES"))
+
+	// Copy the current PATH into nix-shell, but clean and remove some
+	// directories that are incompatible.
+	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
+	env := append(os.Environ(),
+		"PARENT_PATH="+parentPath,
+		"NIX_PROFILES="+strings.Join(nixProfileDirs, " "),
+
+		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
+		// inside the devbox shell.
+		"__ETC_PROFILE_NIX_SOURCED=1",
+	)
+
 	// Launch a fallback shell if we couldn't find the path to the user's
 	// default shell.
 	if s.binPath == "" {
-		cmd := exec.Command("nix-shell", nixPath)
+		cmd := exec.Command("nix-shell", "--pure")
+		cmd.Args = append(cmd.Args, toKeepArgs(env)...)
+		cmd.Args = append(cmd.Args, nixPath)
+		cmd.Env = env
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		debug.Log("Unrecognized user shell, falling back to: %v", cmd.Args)
+		debug.Log("Unable to detect the user's shell, falling back to: %v", cmd.Args)
 		return errors.WithStack(cmd.Run())
 	}
 
-	cmd := exec.Command("nix-shell", nixPath)
-	cmd.Args = append(cmd.Args, "--pure", "--command", s.execCommand())
+	cmd := exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
+	cmd.Args = append(cmd.Args, toKeepArgs(env)...)
+	cmd.Args = append(cmd.Args, nixPath)
+	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -116,27 +138,59 @@ func (s *Shell) Run(nixPath string) error {
 	return errors.WithStack(cmd.Run())
 }
 
-// execCommand is a command that replaces the current shell with s.
+// execCommand is a command that replaces the current shell with s. This is what
+// Run sets the nix-shell --command flag to.
 func (s *Shell) execCommand() string {
-	shellrc, err := writeDevboxShellrc(s.userShellrcPath, s.UserInitHook, os.Environ())
-	if err != nil {
-		debug.Log("Failed to write devbox shellrc: %v", err)
-		return "exec " + s.binPath
+	// We exec env, which will then exec the shell. This lets us set
+	// additional environment variables before any of the shell's init
+	// scripts run.
+	args := []string{
+		"exec",
+		"env",
+
+		// Correct SHELL to be the one we're about to exec.
+		fmt.Sprintf(`"SHELL=%s"`, s.binPath),
 	}
 
+	// userShellrcPath is empty when we know the path to the user's shell,
+	// but we don't recognize its name. In this case we don't know how to
+	// override the shellrc file, so just launch the shell without any
+	// additional args.
+	if s.userShellrcPath == "" {
+		return strings.Join(append(args, s.binPath), " ")
+	}
+
+	// Create a devbox shellrc file that runs the user's shellrc + the shell
+	// hook in devbox.json.
+	shellrc, err := writeDevboxShellrc(s.userShellrcPath, s.UserInitHook)
+	if err != nil {
+		// Fall back to just launching the shell without a custom
+		// shellrc.
+		debug.Log("Failed to write devbox shellrc: %v", err)
+		return strings.Join(append(args, s.binPath), " ")
+	}
+
+	// Shells have different ways of overriding the shellrc, so we need to
+	// look at the name to know which env vars or args to set.
+	var (
+		extraEnv  []string
+		extraArgs []string
+	)
 	switch s.name {
 	case shBash:
-		return fmt.Sprintf(`exec %s --rcfile "%s"`, s.binPath, shellrc)
+		extraArgs = []string{"--rcfile", fmt.Sprintf(`"%s"`, shellrc)}
 	case shZsh:
-		return fmt.Sprintf(`exec /usr/bin/env ZDOTDIR="%s" %s`, filepath.Dir(shellrc), s.binPath)
+		extraEnv = []string{fmt.Sprintf(`"ZDOTDIR=%s"`, filepath.Dir(shellrc))}
 	case shKsh, shPosix:
-		return fmt.Sprintf(`exec /usr/bin/env ENV="%s" %s`, shellrc, s.binPath)
-	default:
-		return "exec " + s.binPath
+		extraEnv = []string{fmt.Sprintf(`"ENV=%s"`, shellrc)}
 	}
+	args = append(args, extraEnv...)
+	args = append(args, s.binPath)
+	args = append(args, extraArgs...)
+	return strings.Join(args, " ")
 }
 
-func writeDevboxShellrc(userShellrcPath string, userHook string, env []string) (path string, err error) {
+func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, err error) {
 	if userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells
 		// and their shellrc paths. If the shell is unknown or we can't
@@ -159,15 +213,6 @@ func writeDevboxShellrc(userShellrcPath string, userHook string, env []string) (
 		userShellrc = []byte{}
 	}
 
-	var envPath []string
-	for _, kv := range env {
-		key, val, _ := strings.Cut(kv, "=")
-		if key == "PATH" {
-			envPath = filepath.SplitList(val)
-			break
-		}
-	}
-
 	// If the user already has a shellrc file, then give the devbox shellrc
 	// file the same name. Otherwise, use an arbitrary name of "shellrc".
 	shellrcName := "shellrc"
@@ -187,12 +232,10 @@ func writeDevboxShellrc(userShellrcPath string, userHook string, env []string) (
 	}()
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
-		Paths            []string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
 	}{
-		Paths:            envPath,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(userShellrcPath),
 		UserHook:         strings.TrimSpace(userHook),
@@ -203,4 +246,115 @@ func writeDevboxShellrc(userShellrcPath string, userHook string, env []string) (
 
 	debug.Log("Wrote devbox shellrc to: %s", path)
 	return path, nil
+}
+
+// envToKeep is the set of environment variables that we want to copy verbatim
+// to the new devbox shell.
+var envToKeep = map[string]bool{
+	// POSIX
+	//
+	// Variables that are part of the POSIX standard.
+	"HOME":   true,
+	"OLDPWD": true,
+	"PWD":    true,
+	"TERM":   true,
+	"TZ":     true,
+	"USER":   true,
+
+	// POSIX Locale
+	//
+	// Variables that are part of the POSIX standard which define
+	// the shell's locale.
+	"LC_ALL":      true, // Sets and overrides all of the variables below.
+	"LANG":        true, // Default to use for any of the variables below that are unset or null.
+	"LC_COLLATE":  true, // Collation order.
+	"LC_CTYPE":    true, // Character classification and case conversion.
+	"LC_MESSAGES": true, // Formats of informative and diagnostic messages and interactive responses.
+	"LC_MONETARY": true, // Monetary formatting.
+	"LC_NUMERIC":  true, // Numeric, non-monetary formatting.
+	"LC_TIME":     true, // Date and time formats.
+
+	// Common
+	//
+	// Variables that most programs agree on, but aren't strictly
+	// part of POSIX.
+	"TERM_PROGRAM":         true, // Name of the terminal the shell is running in.
+	"TERM_PROGRAM_VERSION": true, // The version of TERM_PROGRAM.
+	"SHLVL":                true, // The number of nested shells.
+
+	// Apple Terminal
+	//
+	// Special-cased variables that macOS's Terminal.app sets before
+	// launching the shell. It's not clear what exactly all of these do,
+	// but it seems like omitting them can cause problems.
+	"TERM_SESSION_ID":        true,
+	"SHELL_SESSIONS_DISABLE": true, // Respect session save/resume setting (see /etc/zshrc_Apple_Terminal).
+	"SECURITYSESSIONID":      true,
+
+	// Nix + Devbox
+	//
+	// Variables specific to running in a Nix shell and devbox shell.
+	"PARENT_PATH":               true, // The PATH of the parent shell (where `devbox shell` was invoked).
+	"__ETC_PROFILE_NIX_SOURCED": true, // Prevents Nix from being sourced again inside a devbox shell.
+}
+
+// toKeepArgs takes a slice of environment variables in key=value format and
+// builds a slice of "--keep" arguments that tell nix-shell which ones to
+// keep.
+//
+// See envToKeep for the full set of kept environment variables.
+func toKeepArgs(env []string) []string {
+	args := make([]string, 0, len(envToKeep)*2)
+	for _, kv := range env {
+		key, _, _ := strings.Cut(kv, "=")
+		if envToKeep[key] {
+			args = append(args, "--keep", key)
+		}
+	}
+	return args
+}
+
+// splitNixList splits and cleans a list of space-delimited paths. It is similar
+// to filepath.SplitList for Nix environment variables, which do not use
+// filepath.ListSeparator.
+func splitNixList(s string) []string {
+	split := strings.Fields(s)
+	for i, dir := range split {
+		split[i] = filepath.Clean(dir)
+	}
+	return split
+}
+
+// cleanEnvPath takes a string formatted as a shell PATH and cleans it for
+// passing to nix-shell. It does the following rules for each entry:
+//
+//  1. Applies filepath.Clean.
+//  2. Removes the path if it's relative (must begin with '/' and not be '.').
+//  3. Removes the path if it's a descendant of a Nix profile directory.
+func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
+	split := filepath.SplitList(pathEnv)
+	if len(split) == 0 {
+		return ""
+	}
+
+	cleaned := make([]string, 0, len(split))
+	for _, path := range split {
+		path = filepath.Clean(path)
+		if path == "." || path[0] != '/' {
+			// Don't allow relative paths.
+			continue
+		}
+
+		keep := true
+		for _, profileDir := range nixProfileDirs {
+			if strings.HasPrefix(path, profileDir) {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			cleaned = append(cleaned, path)
+		}
+	}
+	return strings.Join(cleaned, string(filepath.ListSeparator))
 }
