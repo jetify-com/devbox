@@ -3,7 +3,13 @@
 
 package dart
 
-import "go.jetpack.io/devbox/planner/plansdk"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/cuecfg"
+	"go.jetpack.io/devbox/planner/plansdk"
+)
 
 type Planner struct{}
 
@@ -15,9 +21,63 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	return false
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return false
+	}
+	return a.HasAnyFile("pubspec.yaml")
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+	plan, err := p.getPlan(srcDir)
+	if err != nil {
+		// Lets log this
+		return nil
+	}
+	return plan
+}
+
+func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+	pubspec, err := pubspec(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return nil, err
+	}
+
+	return &plansdk.Plan{
+		DevPackages: []string{"dart"},
+		InstallStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    "dart pub get",
+		},
+		BuildStage: &plansdk.Stage{
+			Command: fmt.Sprintf("dart compile exe bin/%s", pubspec.Name),
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: []string{fmt.Sprintf("./bin/%s.exe", pubspec.Name)},
+			Command:    fmt.Sprintf("./%s.exe", pubspec.Name),
+		},
+	}, nil
+}
+
+type Pubspec struct {
+	Name string `yaml:"name,omitempty"`
+}
+
+func pubspec(srcDir string) (*Pubspec, error) {
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return nil, err
+	}
+	paths := a.GlobFiles("pubspec.yaml")
+	if len(paths) < 1 {
+		return nil, errors.Errorf("expected to find a pubspec.yaml file in directory %s", srcDir)
+	}
+	projectFilePath := paths[0]
+
+	pubspec := &Pubspec{}
+	err = cuecfg.ParseFile(projectFilePath, pubspec)
+	return pubspec, err
 }
