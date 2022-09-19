@@ -8,13 +8,19 @@
         "jdk"
     ],
     "install_stage": {
-        "command": "mvn clean install"
+        "command": "mvn clean install",
+        "input_files": [
+            "."
+        ]
     },
     "build_stage": {
         "command": ""
     },
     "start_stage": {
-        "command": "java -jar target/devbox-maven-app-1.0-SNAPSHOT.jar"
+        "command": "java -jar target/devbox-maven-app-1.0-SNAPSHOT.jar",
+        "input_files": [
+            "."
+        ]
     },
     "definitions": null
 }

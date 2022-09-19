@@ -41,7 +41,7 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	// Creating an empty plan so that we can communicate an error to the use
+	// Creating an empty plan so that we can communicate an error to the user
 	plan := &plansdk.Plan{
 		DevPackages: []string{
 			defaultMaven,
