@@ -86,7 +86,9 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
 	assert.Equal(expected.ShellInitHook, actual.ShellInitHook, "ShellInitHook should match")
-	assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
+	if expected.GeneratedFiles != nil {
+		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
+	}
 }
 
 func fileExists(path string) bool {
