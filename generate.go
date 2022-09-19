@@ -33,6 +33,13 @@ func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 		}
 	}
 
+	for name, content := range plan.GeneratedFiles {
+		filePath := filepath.Join(outPath, name)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	return nil
 }
 

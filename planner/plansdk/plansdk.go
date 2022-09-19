@@ -16,12 +16,24 @@ type PlanError struct {
 	error
 }
 
+// TODO: Plan currently has a bunch of fields that it should not export.
+// Two reasons why we need this right now:
+// 1/ So that individual planners can use the fields
+// 2/ So that we print them out correctly in `devbox plan`
+//
+// (1) can be solved by using a WithOption pattern, (e.g. NewPlan(..., WithWelcomeMessage(...)))
+// (2) can be solved by using a custom JSON marshaler.
+
+// Plan tells devbox how to start shells and build projects.
 type Plan struct {
+	ShellWelcomeMessage string `json:"shell_welcome_message,omitempty"`
+
 	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
 
 	// DevPackages is the slice of Nix packages that devbox makes available in
-	// its development environment.
+	// its development environment. They are also available in shell.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
+
 	// RuntimePackages is the slice of Nix packages that devbox makes available in
 	// in both the development environment and the final container that runs the
 	// application.
@@ -43,26 +55,10 @@ type Plan struct {
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
-}
 
-type Stage struct {
-	Command string `cue:"string" json:"command"`
-	// InputFiles is internal for planners only.
-	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
-}
-
-func (s *Stage) GetCommand() string {
-	if s == nil {
-		return ""
-	}
-	return s.Command
-}
-
-func (s *Stage) GetInputFiles() []string {
-	if s == nil {
-		return []string{}
-	}
-	return s.InputFiles
+	// GeneratedFiles is a map of name => content for files that should be generated
+	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
+	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 }
 
 type Planner interface {

@@ -21,6 +21,7 @@ import (
 	"go.jetpack.io/devbox/planner/languages/javascript"
 	"go.jetpack.io/devbox/planner/languages/kotlin"
 	"go.jetpack.io/devbox/planner/languages/lua"
+	"go.jetpack.io/devbox/planner/languages/nginx"
 	"go.jetpack.io/devbox/planner/languages/nim"
 	"go.jetpack.io/devbox/planner/languages/objectivec"
 	"go.jetpack.io/devbox/planner/languages/ocaml"
@@ -53,6 +54,7 @@ var PLANNERS = []plansdk.Planner{
 	&javascript.Planner{},
 	&kotlin.Planner{},
 	&lua.Planner{},
+	&nginx.Planner{},
 	&nim.Planner{},
 	&objectivec.Planner{},
 	&ocaml.Planner{},

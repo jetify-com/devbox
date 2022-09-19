@@ -39,11 +39,14 @@ type Shell struct {
 	userShellrcPath string
 
 	// UserInitHook contains commands that will run at shell startup.
-	UserInitHook string
+	UserInitHook   string
+	welcomeMessage string
 }
 
+type ShellOption func(*Shell)
+
 // DetectShell attempts to determine the user's default shell.
-func DetectShell() (*Shell, error) {
+func DetectShell(opts ...ShellOption) (*Shell, error) {
 	path := os.Getenv("SHELL")
 	if path == "" {
 		return nil, errors.New("unable to detect the current shell")
@@ -77,10 +80,21 @@ func DetectShell() (*Shell, error) {
 	default:
 		sh.name = shUnknown
 	}
+
+	for _, opt := range opts {
+		opt(sh)
+	}
+
 	debug.Log("Detected shell: %s", sh.binPath)
 	debug.Log("Recognized shell as: %s", sh.binPath)
 	debug.Log("Looking for user's shell init file at: %s", sh.userShellrcPath)
 	return sh, nil
+}
+
+func WithWelcomeMessage(message string) ShellOption {
+	return func(s *Shell) {
+		s.welcomeMessage = message
+	}
 }
 
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
@@ -162,7 +176,7 @@ func (s *Shell) execCommand() string {
 
 	// Create a devbox shellrc file that runs the user's shellrc + the shell
 	// hook in devbox.json.
-	shellrc, err := writeDevboxShellrc(s.userShellrcPath, s.UserInitHook)
+	shellrc, err := s.writeDevboxShellrc()
 	if err != nil {
 		// Fall back to just launching the shell without a custom
 		// shellrc.
@@ -190,8 +204,8 @@ func (s *Shell) execCommand() string {
 	return strings.Join(args, " ")
 }
 
-func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, err error) {
-	if userShellrcPath == "" {
+func (s *Shell) writeDevboxShellrc() (path string, err error) {
+	if s.userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells
 		// and their shellrc paths. If the shell is unknown or we can't
 		// determine the shellrc path, then we should launch a fallback
@@ -208,7 +222,7 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 
 	// This is a best-effort to include the user's existing shellrc. If we
 	// can't read it, then just omit it from the devbox shellrc.
-	userShellrc, err := os.ReadFile(userShellrcPath)
+	userShellrc, err := os.ReadFile(s.userShellrcPath)
 	if err != nil {
 		userShellrc = []byte{}
 	}
@@ -216,8 +230,8 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 	// If the user already has a shellrc file, then give the devbox shellrc
 	// file the same name. Otherwise, use an arbitrary name of "shellrc".
 	shellrcName := "shellrc"
-	if userShellrcPath != "" {
-		shellrcName = filepath.Base(userShellrcPath)
+	if s.userShellrcPath != "" {
+		shellrcName = filepath.Base(s.userShellrcPath)
 	}
 	path = filepath.Join(tmp, shellrcName)
 	shellrcf, err := os.Create(path)
@@ -235,10 +249,12 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
+		WelcomeMessage   string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
-		OriginalInitPath: filepath.Clean(userShellrcPath),
-		UserHook:         strings.TrimSpace(userHook),
+		OriginalInitPath: filepath.Clean(s.userShellrcPath),
+		UserHook:         strings.TrimSpace(s.UserInitHook),
+		WelcomeMessage:   strings.TrimSpace(s.welcomeMessage),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
