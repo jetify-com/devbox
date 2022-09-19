@@ -5,9 +5,7 @@ package boxcli
 
 import (
 	"context"
-	"errors"
 	"os"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/boxcli/midcobra"
@@ -21,13 +19,6 @@ func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable shells and containers",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			_, err := exec.LookPath("nix-shell")
-			if err != nil {
-				return errors.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
-			}
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
