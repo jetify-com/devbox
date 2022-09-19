@@ -26,6 +26,8 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 		return marshalYaml(valuePtr)
 	case ".toml":
 		return marshalToml(valuePtr)
+	case ".xml":
+		return marshalXML(valuePtr)
 	}
 	return nil, errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
@@ -50,6 +52,12 @@ func Unmarshal(data []byte, extension string, valuePtr any) error {
 			return errors.WithStack(err)
 		}
 		return nil
+	case ".xml":
+		err := unmarshalXML(data, valuePtr)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
 	}
 	return errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
@@ -70,12 +78,18 @@ func InitFile(path string, valuePtr any) (bool, error) {
 }
 
 func ParseFile(path string, valuePtr any) error {
+	return ParseFileWithExtension(path, filepath.Ext(path), valuePtr)
+}
+
+// ParserFileWithExtension lets the caller override the extension of the `path` filename
+// For example, project.csproj files should be treated as having extension .xml
+func ParseFileWithExtension(path string, ext string, valuePtr any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return Unmarshal(data, filepath.Ext(path), valuePtr)
+	return Unmarshal(data, ext, valuePtr)
 }
 
 func WriteFile(path string, value any) error {

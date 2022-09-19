@@ -181,7 +181,6 @@ func (s *Shell) execCommand() string {
 		extraArgs = []string{"--rcfile", fmt.Sprintf(`"%s"`, shellrc)}
 	case shZsh:
 		extraEnv = []string{fmt.Sprintf(`"ZDOTDIR=%s"`, filepath.Dir(shellrc))}
-
 	case shKsh, shPosix:
 		extraEnv = []string{fmt.Sprintf(`"ENV=%s"`, shellrc)}
 	}
@@ -233,11 +232,9 @@ func writeDevboxShellrc(userShellrcPath string, userHook string) (path string, e
 	}()
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
-		Paths            []string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
-		Locale           []string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(userShellrcPath),

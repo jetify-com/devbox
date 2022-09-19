@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreappUNSUPPORTED</TargetFramework>
+    <RootNamespace>dotnet_2</RootNamespace>
+  </PropertyGroup>
+
+</Project>

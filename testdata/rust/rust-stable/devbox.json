@@ -1,0 +1,3 @@
+{
+  "packages": ["rust-bin.stable.latest.default"]
+}

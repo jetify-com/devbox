@@ -1,0 +1,28 @@
+{
+  "nix_overlays": [
+    "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
+  ],
+  "dev_packages": [
+    "rust-bin.stable.latest.default",
+    "gcc"
+  ],
+  "runtime_packages": [
+    "glibc"
+  ],
+  "install_stage": {
+    "command": ""
+  },
+  "build_stage": {
+    "command": "cargo build --release",
+    "input_files": [
+      "."
+    ]
+  },
+  "start_stage": {
+    "command": "./rust-stable-hello-world",
+    "input_files": [
+      "target/release/rust-stable-hello-world"
+    ]
+  },
+  "definitions": null
+}

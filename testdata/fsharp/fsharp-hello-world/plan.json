@@ -1,0 +1,24 @@
+{
+  "dev_packages": [
+    "dotnet-sdk"
+  ],
+  "runtime_packages": [
+    "dotnet-sdk"
+  ],
+  "install_stage": {
+    "command": ""
+  },
+  "build_stage": {
+    "command": "dotnet publish",
+    "input_files": [
+      "."
+    ]
+  },
+  "start_stage": {
+    "command": "dotnet run",
+    "input_files": [
+      "."
+    ]
+  },
+  "definitions": null
+}

@@ -20,10 +20,14 @@ func BuildCmd() *cobra.Command {
 		RunE:  buildCmdFunc(flags),
 	}
 
+	command.Flags().StringVar(
+		&flags.Name, "name", "devbox", "name for the container")
 	command.Flags().BoolVar(
 		&flags.NoCache, "no-cache", false, "Do not use a cache")
 	command.Flags().StringVar(
 		&flags.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
+	command.Flags().StringSliceVar(
+		&flags.Tags, "tags", []string{}, "tags for the container")
 
 	return command
 }
@@ -38,6 +42,6 @@ func buildCmdFunc(flags *docker.BuildFlags) runFunc {
 			return errors.WithStack(err)
 		}
 
-		return box.Build(docker.WithFlags(flags))
+		return box.Build(flags)
 	}
 }
