@@ -6,14 +6,12 @@ package nginx
 import (
 	_ "embed"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 )
-
-//go:embed shell-helper-nginx.conf
-var shellHelperNginxConfig string
 
 type Planner struct{}
 
@@ -51,7 +49,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
 		},
 		GeneratedFiles: map[string]string{
-			"shell-helper-nginx.conf": shellHelperNginxConfig,
+			"shell-helper-nginx.conf": fmt.Sprintf(shellHelperNginxConfig, os.TempDir()),
 		},
 	}
 }
@@ -73,9 +71,9 @@ func (p *Planner) buildConfig(srcDir string) string {
 const welcomeMessage = `
 ##### WARNING: nginx planner is experimental #####
 
-You may need to add 
+You may need to add
 
-\"include ./.devbox/gen/shell-helper-nginx.conf;\" 
+\"include ./.devbox/gen/shell-helper-nginx.conf;\"
 
 to your %s file to ensure the server can start in the nix shell.
 
@@ -100,3 +98,11 @@ echo "Starting nginx with command:"
 echo "nginx -p %[1]s -c %[2]s -e /tmp/error.log -g \"pid /tmp/mynginx.pid;daemon off;\""
 nginx -p %[1]s -c %[2]s -e /tmp/error.log -g "pid /tmp/shell-nginx.pid;daemon off;"
 '';`
+
+const shellHelperNginxConfig = `access_log %[1]s/access.log;
+client_body_temp_path %[1]s/client_body;
+proxy_temp_path %[1]s/proxy;
+fastcgi_temp_path %[1]s/fastcgi;
+uwsgi_temp_path %[1]s/uwsgi;
+scgi_temp_path %[1]s/scgi;
+`
