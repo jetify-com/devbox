@@ -24,7 +24,6 @@ func TestWriteDevboxShellrc(t *testing.T) {
 	// into a slice of tests cases.
 	tests := make([]struct {
 		name            string
-		env             []string
 		hook            string
 		shellrcPath     string
 		goldShellrcPath string
@@ -33,9 +32,6 @@ func TestWriteDevboxShellrc(t *testing.T) {
 	for i, path := range testdirs {
 		test := &tests[i]
 		test.name = filepath.Base(path)
-		if b, err := os.ReadFile(filepath.Join(path, "env")); err == nil {
-			test.env = strings.Split(string(b), "\n")
-		}
 		if b, err := os.ReadFile(filepath.Join(path, "hook")); err == nil {
 			test.hook = string(b)
 		}
@@ -57,7 +53,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 				UserInitHook:    test.hook,
 				welcomeMessage:  "Welcome to the devbox!",
 			}
-			gotPath, err := s.writeDevboxShellrc(test.env)
+			gotPath, err := s.writeDevboxShellrc()
 			if err != nil {
 				t.Fatal("Got writeDevboxShellrc error:", err)
 			}

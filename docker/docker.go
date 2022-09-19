@@ -76,7 +76,7 @@ func Build(path string, opts ...BuildOptions) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(os.Environ(), "BUILDKIT=1")
+	cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
 	cmd.Dir = dir
 	return errors.WithStack(cmd.Run())
 }

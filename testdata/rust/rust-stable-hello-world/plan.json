@@ -7,7 +7,7 @@
     "gcc"
   ],
   "runtime_packages": [
-    "gcc"
+    "glibc"
   ],
   "install_stage": {
     "command": ""
@@ -19,9 +19,9 @@
     ]
   },
   "start_stage": {
-    "command": "./target/release/rust-stable-hello-world",
+    "command": "./rust-stable-hello-world",
     "input_files": [
-      "."
+      "target/release/rust-stable-hello-world"
     ]
   },
   "definitions": null

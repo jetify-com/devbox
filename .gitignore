@@ -22,3 +22,8 @@ dist
 __pycache__/
 *.py[cod]
 *$py.class
+
+
+# Java
+*.class
+*.jar

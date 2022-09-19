@@ -21,20 +21,17 @@ mkShell {
   shellHook =
     ''
       echo "Starting a devbox shell..."
-      export name="devbox"
+
+      # We're technically no longer in a Nix shell after this hook because we
+      # exec a devbox shell.
       export IN_NIX_SHELL=0
       export DEVBOX_SHELL_ENABLED=1
 
-      # We set PURE_NIX_PATH in case the user's init files in the devbox shell
-      # end up modifying PATH.
-      export PURE_NIX_PATH="$PATH"
-
-      # Make sure we include a basic path for the devbox shell. Otherwise it may
-      # fail to start.
-      export PATH=$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+      # Append the parent shell's PATH so that we retain access to
+      # non-Nix programs, while still preferring the Nix ones.
+      export "PATH=$PATH:$PARENT_PATH"
 
       {{ if debug }}
-      echo "PURE_NIX_PATH=$PURE_NIX_PATH"
       echo "PATH=$PATH"
       {{- end }}
     '';

@@ -81,15 +81,15 @@ func (d *Devbox) Remove(pkgs ...string) error {
 }
 
 // Build creates a Docker image containing a shell with the devbox environment.
-func (d *Devbox) Build(opts ...docker.BuildOptions) error {
+func (d *Devbox) Build(flags *docker.BuildFlags) error {
 	if ok, err := planner.IsBuildable(d.srcDir); !ok {
 		return err
 	}
 	defaultFlags := &docker.BuildFlags{
-		Name:           "devbox",
+		Name:           flags.Name,
 		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
 	}
-	opts = append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, opts...)
+	opts := append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, docker.WithFlags(flags))
 
 	err := d.Generate()
 	if err != nil {
@@ -142,7 +142,7 @@ func (d *Devbox) Shell() error {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook
+	sh.UserInitHook = d.cfg.Shell.InitHook.String()
 	return sh.Run(nixDir)
 }
 

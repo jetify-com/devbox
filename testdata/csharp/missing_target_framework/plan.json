@@ -1,4 +1,14 @@
 {
   "dev_packages": [],
-  "runtime_packages": []
+  "runtime_packages": [],
+  "install_stage": {
+    "command": ""
+  },
+  "build_stage": {
+    "command": ""
+  },
+  "start_stage": {
+    "command": ""
+  },
+  "definitions": null
 }
