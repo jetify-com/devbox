@@ -42,6 +42,6 @@ func buildCmdFunc(flags *docker.BuildFlags) runFunc {
 			return errors.WithStack(err)
 		}
 
-		return box.Build(flags.Name, docker.WithFlags(flags))
+		return box.Build(flags)
 	}
 }
