@@ -47,9 +47,6 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	plan, err := p.getPlan(srcDir)
 	if err != nil {
-		// Added this Printf because `devbox shell` was silently swallowing this error.
-		// TODO savil. Have `devbox shell` error out or print it instead.
-		fmt.Printf("error in getPlan: %+v\n", err)
 		plan = &plansdk.Plan{}
 		plan.WithError(err)
 	}
