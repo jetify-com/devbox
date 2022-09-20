@@ -26,6 +26,8 @@ var jVersionMap = map[int]string{
 const defaultJava = "jdk"
 const defaultMaven = "maven"
 
+const binUtils = "binutils"
+
 // Implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
 
@@ -56,18 +58,23 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		return plan.WithError(err)
 	}
 	installStage := p.installCommand(srcDir)
+	buildCommand := p.buildCommand()
 	return &plansdk.Plan{
 		DevPackages: []string{
 			defaultMaven,
 			javaPkg,
+			binUtils,
 		},
 		RuntimePackages: []string{
-			defaultMaven,
-			javaPkg,
+			binUtils,
 		},
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			Command:    installStage,
+		},
+		BuildStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    buildCommand,
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{"."},
@@ -83,6 +90,16 @@ func (p *Planner) installCommand(srcDir string) string {
 	return "mvn clean install"
 }
 
+func (p *Planner) buildCommand() string {
+	return "jlink --verbose " +
+		"--add-modules ALL-MODULE-PATH " +
+		"--strip-debug" +
+		" --no-man-pages " +
+		" --no-header-files " +
+		" --compress=2 " +
+		"--output ./customjre"
+}
+
 func (p *Planner) startCommand(srcDir string) (string, error) {
 	pomXMLPath := fmt.Sprintf("%s/pom.xml", srcDir)
 	var parsedPom mvnparser.MavenProject
@@ -90,7 +107,7 @@ func (p *Planner) startCommand(srcDir string) (string, error) {
 	if err != nil {
 		return "", errors.WithMessage(err, "error parsing the pom file")
 	}
-	return fmt.Sprintf("java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
+	return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
 }
 
 func getJavaPackage(srcDir string) (string, error) {

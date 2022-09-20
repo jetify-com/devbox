@@ -1,11 +1,11 @@
 {
     "dev_packages": [
         "maven",
-        "jdk8"
+        "jdk8",
+        "binutils"
     ],
     "runtime_packages": [
-        "maven",
-        "jdk8"
+        "binutils"
     ],
     "install_stage": {
         "command": "mvn clean install",
@@ -14,10 +14,13 @@
         ]
     },
     "build_stage": {
-        "command": ""
+        "command": "jlink --verbose --add-modules ALL-MODULE-PATH --strip-debug --no-man-pages  --no-header-files  --compress=2 --output ./customjre",
+        "input_files": [
+            "."
+        ]
     },
     "start_stage": {
-        "command": "java -jar target/devbox-maven-app-1.0-SNAPSHOT.jar",
+        "command": "./customjre/bin/java -jar target/devbox-maven-app-1.0-SNAPSHOT.jar",
         "input_files": [
             "."
         ]
