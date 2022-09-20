@@ -51,8 +51,8 @@ const (
 	// waiting for a shell prompt.
 	shellMaxStartupReads = 10_000
 
-	shellReadTimeout  = 2 * time.Minute
-	shellWriteTimeout = 2 * time.Minute
+	shellReadTimeout  = 3 * time.Minute
+	shellWriteTimeout = 3 * time.Minute
 )
 
 // shellIO allows tests to write input and read output to and from a shell.
