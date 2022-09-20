@@ -50,9 +50,10 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test -v ./...
+          go test ./...
 
   test-darwin:
+    if: ${{ false }} # disable until we figure out Homebrew rate limiting
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -69,6 +70,7 @@ jobs:
           HOMEBREW_NO_EMOJI: 1
           HOMEBREW_NO_ENV_HINTS: 1
           HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
         run: |
           brew update
           brew install dash zsh
@@ -77,4 +79,4 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test -v ./...
+          go test ./...
