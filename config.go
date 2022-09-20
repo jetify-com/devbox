@@ -107,7 +107,7 @@ type ConfigShellCmds struct {
 // tabs as the first line. If it starts with fewer tabs, then it is not
 // unindented at all.
 func (s *ConfigShellCmds) AppendScript(script string) {
-	script = strings.TrimLeft(script, "\r\n")
+	script = strings.TrimLeft(script, "\r\n ")
 	script = strings.TrimRightFunc(script, unicode.IsSpace)
 	if len(script) == 0 {
 		return

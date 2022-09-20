@@ -203,7 +203,7 @@ func TestAppendScript(t *testing.T) {
 		{
 			name:     "LeadingNewlineAndSpace",
 			script:   "\n    echo test",
-			wantCmds: []string{"    echo test"},
+			wantCmds: []string{"echo test"},
 		},
 		{
 			name:     "TrailingWhitespace",
