@@ -63,9 +63,13 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		// 2. https://stackoverflow.com/a/56166959
 		DevPackages:     []string{rustPkgDev, "gcc"},
 		RuntimePackages: []string{"glibc"},
+		InstallStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    "cargo fetch",
+		},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
-			Command:    "cargo build --release",
+			Command:    "cargo build --release --offline",
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{fmt.Sprintf("target/release/%s", manifest.PackageField.Name)},
