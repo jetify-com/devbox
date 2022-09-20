@@ -137,8 +137,11 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 
 	plan := findBuildablePlan(plans...)
 	if plan == nil {
-		if len(plans) > 0 {
-			// all plans contain errors. We default to the first one.
+		if len(plans) == 1 {
+			// One single plan contains errors. We return that plan.
+			// For devbox shell, the build part of the plan is ignored.
+			// For devbox build, len(plans) will be either 0 or 1
+			// as planner.IsBuildable will return error if >1 planners are detected.
 			plan = plans[0]
 		} else {
 			plan = &Plan{}
