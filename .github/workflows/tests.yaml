@@ -50,9 +50,10 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test -v ./...
+          go test ./...
 
   test-darwin:
+    if: ${{ false }} # disable until we figure out Homebrew rate limiting
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -77,4 +78,4 @@ jobs:
       - name: Run tests
         run: |
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-          go test -v ./...
+          go test ./...
