@@ -1,0 +1,32 @@
+name: debug
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Runner type to debug on"
+        required: true
+        default: "ubuntu-latest"
+        type: choice
+        options:
+          - macos-12
+          - ubuntu-latest
+permissions:
+  contents: read
+jobs:
+  golangci-lint:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Get rate limits
+        run: |
+          curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: ${{ github.token }}" \
+            https://api.github.com/rate_limit | jq .
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+      - uses: mxschmitt/action-tmate@v3
+        with:
+          args: --timeout=10m
+          limit-access-to-actor: true
