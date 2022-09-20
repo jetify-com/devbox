@@ -10,10 +10,13 @@
     "glibc"
   ],
   "install_stage": {
-    "command": ""
+    "command": "cargo fetch",
+    "input_files": [
+      "."
+    ]
   },
   "build_stage": {
-    "command": "cargo build --release",
+    "command": "cargo build --release --offline",
     "input_files": [
       "."
     ]
