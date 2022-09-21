@@ -11,9 +11,8 @@ on:
         required: false
         default: false
         type: boolean
-  # Nightly releases
   schedule:
-    - cron: "45 8 * * 1-5"
+    - cron: "45 8 * * 4" # Weekly pre-release on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
