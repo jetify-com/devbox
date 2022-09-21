@@ -38,8 +38,12 @@ func testExample(t *testing.T, testPath string) {
 		plan, err := box.Plan()
 		assert.NoError(err, "devbox plan should not fail")
 
+		generateErrorFile := filepath.Join(baseDir, "has_generate_error")
+		hasGenerateErrorFile := fileExists(generateErrorFile)
 		err = box.Generate()
-		assert.NoError(err, "devbox generate should not fail")
+		if !hasGenerateErrorFile {
+			assert.NoError(err, "devbox generate should not fail")
+		}
 
 		if !hasGoldenFile {
 			assert.NotEmpty(plan.DevPackages, "the plan should have dev packages")

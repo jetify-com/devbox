@@ -113,10 +113,6 @@ func (p *Plan) WithError(err error) *Plan {
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {
-	if len(plans) == 1 {
-		// If only a single plan, then simply return the plan.
-		return plans[0], nil
-	}
 	mergedPlan := &Plan{}
 	for _, p := range plans {
 		err := mergo.Merge(
