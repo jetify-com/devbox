@@ -31,6 +31,10 @@ mkShell {
       # non-Nix programs, while still preferring the Nix ones.
       export "PATH=$PATH:$PARENT_PATH"
 
+      {{- range $i, $value := .DevPackages}}
+      export DEVBOX_$(echo {{$value}} | sed "s/\./_/g")=${pkgs.{{.}}}
+      {{end -}}
+
       {{ if debug }}
       echo "PATH=$PATH"
       {{- end }}
