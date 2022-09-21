@@ -38,7 +38,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		runtimePkgs = []string{"zig"}
 		startStage = &plansdk.Stage{
-			InputFiles: []string{"."},
+			InputFiles: plansdk.AllFiles(),
 			Command:    "zig build run",
 		}
 	} else {
@@ -53,7 +53,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		DevPackages:     []string{"zig"},
 		RuntimePackages: runtimePkgs,
 		BuildStage: &plansdk.Stage{
-			InputFiles: []string{"."},
+			InputFiles: plansdk.AllFiles(),
 			Command:    "zig build install",
 		},
 		StartStage: startStage,
