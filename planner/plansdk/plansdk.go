@@ -113,11 +113,11 @@ func (p *Plan) WithError(err error) *Plan {
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {
-	mergedPlan := &Plan{
-		NixOverlays:     []string{},
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
+	if len(plans) == 1 {
+		// If only a single plan, then simply return the plan.
+		return plans[0], nil
 	}
+	mergedPlan := &Plan{}
 	for _, p := range plans {
 		err := mergo.Merge(
 			mergedPlan,
@@ -136,17 +136,6 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 	}
 
 	plan := findBuildablePlan(plans...)
-	if plan == nil {
-		if len(plans) == 1 {
-			// One single plan contains errors. We return that plan.
-			// For devbox shell, the build part of the plan is ignored.
-			// For devbox build, len(plans) will be either 0 or 1
-			// as planner.IsBuildable will return error if >1 planners are detected.
-			plan = plans[0]
-		} else {
-			plan = &Plan{}
-		}
-	}
 	plan.NixOverlays = pkgslice.Unique(mergedPlan.NixOverlays)
 	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
@@ -162,7 +151,7 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 			return p
 		}
 	}
-	return nil
+	return &Plan{}
 }
 
 func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
