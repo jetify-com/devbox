@@ -1,6 +1,8 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
+// Next + Nix = Nixt
+// Next generation nix engine written in go
 package nixt
 
 import (
@@ -30,8 +32,12 @@ func New() *Nixt {
 }
 
 func (n *Nixt) Install(pkgs ...string) {
+	// Hard-code installation path and path to download from for now.
+	// Real implementation needs to determine these based on the package names.
 	basePath := "/opt/store/yx99qh8pqwaqkb1n3dv7w2nf42mykkmh-hello-2.12.1"
 	narURL := "https://cache.nixos.org/nar/1v7834r3k46s5pjnmi00nkf4wxp6pgyypjwysv8wqv5i663wncpm.nar.xz"
+
+	// Download NAR file (using grab to get resumable downloads!)
 	resp, err := grab.Get(n.storePath, narURL)
 	if err != nil {
 		log.Fatal(err)
@@ -43,11 +49,13 @@ func (n *Nixt) Install(pkgs ...string) {
 		log.Fatal(err)
 	}
 
+	// Extract using .xz
 	xzr, err := xz.NewReader(f)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Extract using NAR (Nix Archive)
 	nr, err := nar.NewReader(xzr)
 	if err != nil {
 		log.Fatal(err)
@@ -113,6 +121,9 @@ func (n *Nixt) Install(pkgs ...string) {
 			log.Fatalf("Unrecognized NAR header type: %s\n", hdr.Type)
 		}
 	}
+
+	// TODO: Create symlinks from a place that would be in the path to the installed binaries.
+	// For example, add symlinks from ~/bin to /opt/store/.../bin/<bin_name>
 }
 
 // func (n *Nixt) Resolve(pkgs ...string) []string {
