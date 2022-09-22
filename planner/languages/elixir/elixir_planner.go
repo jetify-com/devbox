@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -31,7 +32,15 @@ type ElixirProject struct {
 	elixirPackage string
 }
 
-const defaultPkg = "elixir_1_14" // Default to the latest
+func getAvailableVersions(versionMap map[string]string) []string {
+	keys := make([]string, 0, len(versionMap))
+	for k := range versionMap {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+const defaultPkg = "elixir" // Default to the Nix Default
 
 // Implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
@@ -55,31 +64,41 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			elixirProject.elixirPackage,
 		},
 		RuntimePackages: []string{
+			"bash",
 			"systemd",
 			"ncurses",
 		},
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"mix.exs"},
-			Command:    "mix deps.get --only-prod",
+			Command: strings.TrimSpace(`
+			mix local.hex --force && \
+			mix local.rebar --force && \
+			mix deps.get --only-prod`),
 		},
 		BuildStage: &plansdk.Stage{
 			InputFiles: plansdk.AllFiles(),
-			Command:    "MIX_ENV=prod mix compile && MIX_ENV=prod mix release --overwrite",
+			Command: strings.TrimSpace(`
+			MIX_ENV=prod mix compile && \
+			MIX_ENV=prod mix release --overwrite`),
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{fmt.Sprintf("_build/prod/rel/%s", elixirProject.name)},
-			Command:    fmt.Sprintf("bin/%s start", elixirProject.name),
+			Command:    fmt.Sprintf(`bin/%s start`, elixirProject.name),
 		},
 	}
 }
 
 func getElixirProject(srcDir string) (ElixirProject, error) {
 	mixPath := filepath.Join(srcDir, "mix.exs")
-	elixirPackage, err := getElixirPackage(mixPath)
+	mixContents, err := os.ReadFile(mixPath)
+	if err != nil {
+		log.Fatalf("Unable to read your mix.exs file. Failed with: %f", err)
+	}
+	elixirPackage, err := getElixirPackage(string(mixContents))
 	if err != nil {
 		log.Fatal(err)
 	}
-	appname, err := getElixirAppName(mixPath)
+	appname, err := getElixirAppName(string(mixContents))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,45 +109,38 @@ func getElixirProject(srcDir string) (ElixirProject, error) {
 	}, nil
 }
 
-func getElixirPackage(mixPath string) (string, error) {
-	elixirVersion := parseElixirVersion(mixPath)
-	log.Printf(fmt.Sprintf("Elixir Version: %s", elixirVersion))
+func getElixirPackage(mixContents string) (string, error) {
+	elixirVersion, err := parseElixirVersion(mixContents)
+	if err != nil {
+		log.Printf("No Elixir version specified in your mix.exs. Using default Nix version 1.13")
+		return defaultPkg, nil
+	}
 	v, ok := versionMap[string(elixirVersion)]
 	if ok {
+		log.Printf("Using Elixir Package: %s", elixirVersion)
 		return v, nil
 	} else {
-		return "", errors.New("Could not find a Nix package for Elixir that matched your required version")
+		return "", errors.Errorf("Could not find a Nix package for Elixir that matched your required version. You requested: %s. Available versions: %s", elixirVersion, strings.Join(getAvailableVersions(versionMap), ", "))
 	}
 }
 
-func parseElixirVersion(mixPath string) string {
-	log.Print(mixPath)
-	contents, err := os.ReadFile(mixPath)
-	if err != nil {
-		log.Print(err)
-		return ""
-	}
+func parseElixirVersion(mixContents string) (string, error) {
 	r := regexp.MustCompile(`(?:elixir: "\D*)([0-9.]*)`)
-	match := r.FindStringSubmatch(string(contents))[1]
-	log.Print(match)
+	match := r.FindStringSubmatch(mixContents)
 	if len(match) < 1 {
-		return ""
+		return "", errors.New("No version set in mix.exs")
 	} else {
-		return match
+		return match[1], nil
 	}
 }
 
-func getElixirAppName(mixPath string) (string, error) {
-	contents, err := os.ReadFile(mixPath)
-	if err != nil {
-		return "", errors.New("Unable to read your mix.exs file")
-	}
+func getElixirAppName(mixContents string) (string, error) {
 	r := regexp.MustCompile(`(?:app: )(?:\:)([a-z\_]*)`)
-	match := r.FindStringSubmatch(string(contents))[1]
-	log.Print(match)
+	match := r.FindStringSubmatch(mixContents)
 	if len(match) <= 1 {
 		return "", errors.New("Unable to parse an app name from your mix.exs")
 	} else {
-		return match, nil
+		log.Printf("Detected app name: %s", match[1])
+		return match[1], nil
 	}
 }
