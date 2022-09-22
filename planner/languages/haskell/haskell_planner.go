@@ -4,8 +4,29 @@
 package haskell
 
 import (
+	"fmt"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
+
+const (
+	packageYaml = "package.yaml"
+	stackYaml   = "stack.yaml"
+)
+
+// This Project struct corresponds to the package.yaml generated during `stack new <project-name>`.
+// The generated code will have stack.yaml, package.yaml and <project-name>.cabal files. This can be
+// rather confusing. In short:
+// - stack.yaml: has project config
+// - package.yaml: has a description of the package
+// - <project-name>.cabal: also has a description of the package but in "cabal file format".
+//
+// Cabal is an older build system for Haskell, while Stack is more modern, so I think Stack wraps over Cabal.
+type Project struct {
+	Name string `yaml:"name,omitempty"`
+}
 
 type Planner struct{}
 
@@ -17,9 +38,74 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	return false
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return false
+	}
+	isRelevant := a.HasAnyFile(stackYaml)
+
+	return isRelevant
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+	plan, err := p.getPlan(srcDir)
+	if err != nil {
+		return nil
+	}
+	return plan
+}
+
+func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+
+	project, err := getProject(srcDir)
+	if err != nil {
+		return nil, err
+	}
+
+	exeName := fmt.Sprintf("%s-exe", project.Name)
+	packages := []string{"stack", "libiconv", "libffi", "binutils", "ghc"}
+
+	return &plansdk.Plan{
+		DevPackages:     packages,
+		RuntimePackages: packages,
+		InstallStage: &plansdk.Stage{
+			InputFiles: []string{"."},
+			Command:    "stack build --system-ghc --dependencies-only",
+		},
+		BuildStage: &plansdk.Stage{
+			Command: "stack build --system-ghc",
+		},
+		StartStage: &plansdk.Stage{
+			// The image size can be very large (> 2GB). Consider copying the binary
+			// from `$(stack path --local-install-root --system-ghc)/bin`. Not doing
+			// it because I haven't investigated if this would work in all scenarios.
+			// Idea from: https://gist.github.com/TimWSpence/9b89b0915bf5224128e4b96abfd4ce02
+			// https://medium.com/permutive/optimized-docker-builds-for-haskell-76a9808eb10b
+			InputFiles: []string{"."},
+			Command:    fmt.Sprintf("stack exec --system-ghc %s", exeName),
+		},
+	}, nil
+}
+
+func getProject(srcDir string) (*Project, error) {
+
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return nil, err
+	}
+	paths := a.GlobFiles(packageYaml)
+	if len(paths) < 1 {
+		return nil, errors.Errorf(
+			"expected to find a %s file in directory %s",
+			packageYaml,
+			srcDir,
+		)
+	}
+	projectFilePath := paths[0]
+
+	project := &Project{}
+	err = cuecfg.ParseFile(projectFilePath, &project)
+	return project, err
 }
