@@ -47,9 +47,13 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		RuntimePackages: []string{
 			pkg,
 		},
+		InstallStage: &plansdk.Stage{
+			InputFiles: plansdk.AllFiles(),
+			Command:    "bundle config set --local deployment 'true' && bundle install",
+		},
 		StartStage: &plansdk.Stage{
 			InputFiles: plansdk.AllFiles(),
-			Command:    "ruby app.rb",
+			Command:    "bundle exec ruby app.rb",
 		},
 	}
 }
