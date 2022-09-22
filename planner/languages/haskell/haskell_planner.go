@@ -98,7 +98,7 @@ func getProject(srcDir string) (*Project, error) {
 	paths := a.GlobFiles(packageYaml)
 	if len(paths) < 1 {
 		return nil, errors.Errorf(
-			"expected to find a %s or %s file in directory %s",
+			"expected to find a %s file in directory %s",
 			packageYaml,
 			srcDir,
 		)
