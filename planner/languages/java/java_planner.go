@@ -4,9 +4,12 @@
 package java
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
@@ -16,17 +19,30 @@ import (
 
 type Planner struct{}
 
+// jdk nix packages
 var jVersionMap = map[int]string{
 	8:  "jdk8",
 	11: "jdk11",
 	17: "jdk17_headless",
 }
 
-// "jdk" points to openJDK version 17. OpenJDK v18 is not yet available in nix packages
-const defaultJava = "jdk"
-const defaultMaven = "maven"
+// default nix packages
+const (
+	defaultJava   = "jdk" // "jdk" points to openJDK version 17. OpenJDK v18 is not yet available in nix packages
+	defaultMaven  = "maven"
+	defaultGradle = "gradle"
+)
 
+// misc. nix packages
 const binUtils = "binutils"
+
+// builder tool specific names
+const (
+	MAVEN_TYPE     = "maven"
+	GRADLE_TYPE    = "gradle"
+	mavenFileName  = "pom.xml"
+	gradleFileName = "build.gradle"
+)
 
 // Implements interface Planner (compile-time check)
 var _ plansdk.Planner = (*Planner)(nil)
@@ -36,38 +52,45 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	// Checking for pom.xml (maven) only for now
-	// TODO: add build.gradle file detection
-	pomXMLPath := filepath.Join(srcDir, "pom.xml")
-	return plansdk.FileExists(pomXMLPath)
+	pomXMLPath := filepath.Join(srcDir, mavenFileName)
+	buildGradlePath := filepath.Join(srcDir, gradleFileName)
+	return plansdk.FileExists(pomXMLPath) || plansdk.FileExists(buildGradlePath)
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	// Creating an empty plan so that we can communicate an error to the user
 	plan := &plansdk.Plan{
-		DevPackages: []string{
-			defaultMaven,
-		},
+		DevPackages: []string{},
 	}
-	javaPkg, err := getJavaPackage(srcDir)
+
+	pomXMLPath := filepath.Join(srcDir, mavenFileName)
+	buildGradlePath := filepath.Join(srcDir, gradleFileName)
+	var builderTool string = ""
+	if plansdk.FileExists(pomXMLPath) {
+		builderTool = MAVEN_TYPE
+	} else if plansdk.FileExists(buildGradlePath) {
+		builderTool = GRADLE_TYPE
+	} else {
+		err := errors.New("Could not locate a Maven or Gradle file.")
+		return plan.WithError(err)
+	}
+	devPackages, err := p.devPackages(srcDir, builderTool)
 	if err != nil {
 		return plan.WithError(err)
 	}
-	startCommand, err := p.startCommand(srcDir)
+	runtimePackages, err := p.runtimePackages(srcDir, builderTool)
 	if err != nil {
 		return plan.WithError(err)
 	}
-	installStage := p.installCommand(srcDir)
-	buildCommand := p.buildCommand()
+	startCommand, err := p.startCommand(srcDir, builderTool)
+	if err != nil {
+		return plan.WithError(err)
+	}
+	installStage := p.installCommand(srcDir, builderTool)
+	buildCommand := p.buildCommand(builderTool)
 	return &plansdk.Plan{
-		DevPackages: []string{
-			defaultMaven,
-			javaPkg,
-			binUtils,
-		},
-		RuntimePackages: []string{
-			binUtils,
-		},
+		DevPackages:     devPackages,
+		RuntimePackages: runtimePackages,
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			Command:    installStage,
@@ -83,36 +106,78 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	}
 }
 
+func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, error) {
+	javaPkg, err := getJavaPackage(srcDir, builderTool)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	devPackagesMap := map[string][]string{
+		MAVEN_TYPE: {
+			defaultMaven,
+			javaPkg,
+			binUtils,
+		},
+		GRADLE_TYPE: {
+			defaultGradle,
+			javaPkg,
+			binUtils,
+		},
+	}
+
+	return devPackagesMap[builderTool], nil
+}
+
+func (p *Planner) runtimePackages(srcDir string, builderTool string) ([]string, error) {
+	runtimePackagesMap := map[string][]string{
+		MAVEN_TYPE: {
+			binUtils,
+		},
+		GRADLE_TYPE: {
+			binUtils,
+		},
+	}
+
+	return runtimePackagesMap[builderTool], nil
+}
+
 // This method is added because we plan to differentiate Gradle and Maven.
 // Otherwise, we could just assign the value without calling this.
-func (p *Planner) installCommand(srcDir string) string {
-	// TODO: Add support for Gradle install command
-	return "mvn clean install"
-}
-
-func (p *Planner) buildCommand() string {
-	return "jlink --verbose " +
-		"--add-modules ALL-MODULE-PATH " +
-		"--strip-debug" +
-		" --no-man-pages " +
-		" --no-header-files " +
-		" --compress=2 " +
-		"--output ./customjre"
-}
-
-func (p *Planner) startCommand(srcDir string) (string, error) {
-	pomXMLPath := fmt.Sprintf("%s/pom.xml", srcDir)
-	var parsedPom mvnparser.MavenProject
-	err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
-	if err != nil {
-		return "", errors.WithMessage(err, "error parsing the pom file")
+func (p *Planner) installCommand(srcDir string, builderTool string) string {
+	installCommandMap := map[string]string{
+		MAVEN_TYPE:  "mvn clean install",
+		GRADLE_TYPE: "./gradlew build",
 	}
-	return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
+	return installCommandMap[builderTool]
 }
 
-func getJavaPackage(srcDir string) (string, error) {
-	pomXMLPath := filepath.Join(srcDir, "pom.xml")
-	javaVersion, err := parseJavaVersion(pomXMLPath)
+func (p *Planner) buildCommand(builderTool string) string {
+	return "jlink --verbose" +
+		" --add-modules ALL-MODULE-PATH" +
+		" --strip-debug" +
+		" --no-man-pages" +
+		" --no-header-files" +
+		" --compress=2" +
+		" --output ./customjre"
+}
+
+func (p *Planner) startCommand(srcDir string, builderTool string) (string, error) {
+	if builderTool == MAVEN_TYPE {
+		pomXMLPath := fmt.Sprintf("%s/%s", srcDir, mavenFileName)
+		var parsedPom mvnparser.MavenProject
+		err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
+		if err != nil {
+			return "", errors.WithMessage(err, "error parsing the pom file")
+		}
+		return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
+	} else if builderTool == GRADLE_TYPE {
+		return "export JAVA_HOME=./customjre && ./gradlew run", nil
+	}
+	return "", nil
+}
+
+func getJavaPackage(srcDir string, builderTool string) (string, error) {
+	javaVersion, err := parseJavaVersion(srcDir, builderTool)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -124,19 +189,46 @@ func getJavaPackage(srcDir string) (string, error) {
 	}
 }
 
-func parseJavaVersion(pomXMLPath string) (int, error) {
-	var parsedPom mvnparser.MavenProject
-	// parsing pom.xml and putting its content in 'project'
-	err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
-	if err != nil {
-		return 0, errors.WithMessage(err, "error parsing java version from pom file")
-	}
-	compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
-	if ok {
-		sourceVersion, err := strconv.Atoi(compilerSourceVersion)
+func parseJavaVersion(srcDir string, builderTool string) (int, error) {
+
+	if builderTool == MAVEN_TYPE {
+		pomXMLPath := filepath.Join(srcDir, mavenFileName)
+		var parsedPom mvnparser.MavenProject
+		// parsing pom.xml and putting its content in 'project'
+		err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
 		if err != nil {
 			return 0, errors.WithMessage(err, "error parsing java version from pom file")
 		}
+		compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
+		if ok {
+			sourceVersion, err := strconv.Atoi(compilerSourceVersion)
+			if err != nil {
+				return 0, errors.WithMessage(err, "error parsing java version from pom file")
+			}
+			return sourceVersion, nil
+		}
+	} else if builderTool == GRADLE_TYPE {
+		buildGradlePath := filepath.Join(srcDir, gradleFileName)
+		readFile, err := os.Open(buildGradlePath)
+		if err != nil {
+			errors.WithMessage(err, "error parsing java version from gradle file")
+		}
+		fileScanner := bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		sourceVersion := 0
+		// parsing gradle file line by line
+		for fileScanner.Scan() {
+			line := fileScanner.Text()
+			if strings.Contains(line, "sourceCompatibility = ") {
+				compilerSourceVersion := strings.TrimSpace(strings.Split(line, "=")[1])
+				sourceVersion, err = strconv.Atoi(compilerSourceVersion)
+				if err != nil {
+					return 0, errors.WithMessage(err, "error parsing java version from gradle file")
+				}
+				break
+			}
+		}
+		readFile.Close()
 		return sourceVersion, nil
 	}
 
