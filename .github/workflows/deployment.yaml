@@ -12,7 +12,7 @@ env:
   JETPACK_SECRET_KEY: ${{ secrets.JETPACK_SECRET_KEY }}
 
 jobs:
-  deploy-docs:
+  deploy-to-prod:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

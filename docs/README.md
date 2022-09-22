@@ -5,7 +5,9 @@ This website is built using [Docusaurus 2](https://docusaurus.io/), a modern sta
 ### Installation
 
 ```
-$ yarn
+$ cd docs/app     # from the devbox root directory
+$ devbox shell    # optional, develop inside a devbox
+$ yarn install    # run in devbox shell
 ```
 
 ### Local Development
@@ -26,16 +28,6 @@ This command generates static content into the `build` directory and can be serv
 
 ### Deployment
 
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+When a pull request is opened, it will automatically deploy via CICD to a preview.
+When a pull request is merged, it will automatically deploy to production.
+Check https://www.jetpack.io/devbox/ after merge to see the latest changes.
