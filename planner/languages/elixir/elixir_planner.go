@@ -54,13 +54,18 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		DevPackages: []string{
 			elixirProject.elixirPackage,
 		},
+		RuntimePackages: []string{
+			"bash",
+			"systemd",
+			"ncurses",
+		},
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"mix.exs"},
 			Command:    "mix deps.get --only-prod",
 		},
 		BuildStage: &plansdk.Stage{
 			InputFiles: plansdk.AllFiles(),
-			Command:    "MIX_ENV=prod mix compile && MIX_ENV=prod mix release",
+			Command:    "MIX_ENV=prod mix compile && MIX_ENV=prod mix release --overwrite",
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{fmt.Sprintf("_build/prod/rel/%s", elixirProject.name)},
