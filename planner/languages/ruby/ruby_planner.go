@@ -5,11 +5,12 @@ package ruby
 
 import (
 	"bufio"
-	"go.jetpack.io/devbox/planner/plansdk"
-	"golang.org/x/mod/semver"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"go.jetpack.io/devbox/planner/plansdk"
+	"golang.org/x/mod/semver"
 )
 
 type Planner struct{}
