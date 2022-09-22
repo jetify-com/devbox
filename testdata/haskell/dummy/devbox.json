@@ -1,8 +1,0 @@
-{
-  "packages": [
-    "stack"
-  ],
-  "shell": {
-    "init_hook": null
-  }
-}
