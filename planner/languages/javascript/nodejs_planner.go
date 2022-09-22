@@ -44,7 +44,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		BuildStage: &plansdk.Stage{
 			// Copy the rest of the directory over, since at install stage we only copied package.json and its lock file.
 			InputFiles: []string{"."},
-			Command:    p.buildCommand(pkgManager, project),
+			Command:    p.buildCommand(srcDir, pkgManager, project),
 		},
 
 		StartStage: &plansdk.Stage{
@@ -64,22 +64,25 @@ type nodeProject struct {
 	} `json:"engines,omitempty"`
 }
 
+var versionMap = map[string]string{
+	// Map node versions to the corresponding nixpkgs:
+	"10": "nodejs-10_x",
+	"12": "nodejs-12_x",
+	"16": "nodejs-16_x",
+	"18": "nodejs-18_x",
+}
+var defaultNodeJSPkg = "nodejs"
+
 func (p *Planner) nodePackage(project *nodeProject) string {
 	v := p.nodeVersion(project)
 	if v != nil {
-		switch v.Major() {
-		case "10":
-			return "nodejs-10_x"
-		case "12":
-			return "nodejs-12_x"
-		case "16":
-			return "nodejs-16_x"
-		case "18":
-			return "nodejs-18_x"
+		pkg, ok := versionMap[v.Major()]
+		if ok {
+			return pkg
 		}
 	}
 
-	return "nodejs"
+	return defaultNodeJSPkg
 }
 
 func (p *Planner) nodeVersion(project *nodeProject) *plansdk.Version {
@@ -128,20 +131,29 @@ func (p *Planner) inputFiles(srcDir string) []string {
 	return inputFiles
 }
 
-func (p *Planner) buildCommand(pkgManager string, project *nodeProject) string {
+var buildCmdMap = map[string]string{
+	// Map package manager to build command:
+	"npm":  "npm run build",
+	"yarn": "yarn build",
+}
+var postBuildCmdHookMap = map[string]string{
+	// Map package manager to post build hook command:
+	"npm":  "npm prune --production",
+	"yarn": "yarn install --production --ignore-scripts --prefer-offline",
+}
+
+func (p *Planner) buildCommand(srcDir string, pkgManager string, project *nodeProject) string {
 	buildScript := project.Scripts.Build
-	defaultBuildCmd := "npm run build"
-	postBuildCmdHook := "npm prune --production"
-
-	if pkgManager == "yarn" {
-		defaultBuildCmd = "yarn build"
-		postBuildCmdHook = "yarn install --production --ignore-scripts --prefer-offline"
+	if buildScript != "" {
+		return fmt.Sprintf("%s && %s", buildCmdMap[pkgManager], postBuildCmdHookMap[pkgManager])
+	} else {
+		if p.hasTypescriptConfig(srcDir) {
+			return fmt.Sprintf("%s && %s", "npx tsc", postBuildCmdHookMap[pkgManager])
+		} else {
+			// Still runs the post build command hook to clean up dev packages.
+			return postBuildCmdHookMap[pkgManager]
+		}
 	}
-	if buildScript == "" {
-		return postBuildCmdHook
-	}
-
-	return fmt.Sprintf("%s && %s", defaultBuildCmd, postBuildCmdHook)
 }
 
 func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
@@ -161,4 +173,9 @@ func (p *Planner) nodeProject(srcDir string) *nodeProject {
 	_ = cuecfg.ParseFile(packageJSONPath, project)
 
 	return project
+}
+
+func (p *Planner) hasTypescriptConfig(srcDir string) bool {
+	tsPath := filepath.Join(srcDir, "tsconfig.json")
+	return plansdk.FileExists(tsPath)
 }
