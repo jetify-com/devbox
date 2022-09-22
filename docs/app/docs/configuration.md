@@ -14,8 +14,8 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
     "install_stage": {
         "command": "..."
     },
-    "build_stage":{
-        "command":"..."
+    "build_stage": {
+        "command": "..."
     },
     "start_stage": {
         "command": "..."
@@ -45,7 +45,7 @@ This is an example `devbox.json` that customizes the prompt and prints a welcome
 
 When run, you'll see:
 
-```
+```text
 > devbox shell
 Installing nix packages. This may take a while...
 Starting a devbox shell...
@@ -57,9 +57,9 @@ Welcome! See CONTRIBUTING.md for tips on contributing to devbox.
 
 Stages are used to configure and run commands at different points of container creation. For languages that support autodetction, Devbox will automatically detect and configure the correct stage commands for your project based on your source code. You can override any of these stages by configuring them in your devbox.json
 
-* The **install stage** will run after your base container has been initialized and your Nix packages are installed. This stage should be used to download and build your application's dependencies
-* The **build stage** runs after the install stage, and should be used to build or bundle your application.
-* The **start stage** will run when your container is started. This stage should include any commands needed to start and run your application.
+-   The **install stage** will run after your base container has been initialized and your Nix packages are installed. This stage should be used to download and build your application's dependencies
+-   The **build stage** runs after the install stage, and should be used to build or bundle your application.
+-   The **start stage** will run when your container is started. This stage should include any commands needed to start and run your application.
 
 Each stage takes a single command that will be run when the stage is reached in your container build.
 
