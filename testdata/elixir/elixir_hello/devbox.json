@@ -1,7 +1,5 @@
 {
-    "packages": [
-        "elixir"
-    ],
+    "packages": [],
     "shell": {
         "init_hook": [
             "mkdir -p .nix-mix",
