@@ -149,6 +149,22 @@ func (d *Devbox) Shell() error {
 	return sh.Run(nixDir)
 }
 
+func (d *Devbox) Exec(cmds ...string) error {
+	plan, err := d.Plan()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if plan.Invalid() {
+		return plan.Error()
+	}
+	err = generate(d.srcDir, plan, shellFiles)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	return nix.Exec(nixDir, cmds)
+}
+
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.srcDir, configFilename)
