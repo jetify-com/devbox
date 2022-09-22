@@ -69,7 +69,7 @@ var PLANNERS = []plansdk.Planner{
 	&zig.Planner{},
 }
 
-func GetPlan(srcDir string) (*plansdk.Plan, error) {
+func GetShellPlan(srcDir string) (*plansdk.Plan, error) {
 	result := &plansdk.Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
@@ -86,7 +86,7 @@ func GetPlan(srcDir string) (*plansdk.Plan, error) {
 }
 
 // Return one buildable plan from all planners.
-func FindBuildablePlan(srcDir string) (*plansdk.Plan, error) {
+func GetBuildPlan(srcDir string) (*plansdk.Plan, error) {
 	buildables := []*plansdk.Plan{}
 	unbuildables := []*plansdk.Plan{}
 	for _, p := range getRelevantPlanners(srcDir) {

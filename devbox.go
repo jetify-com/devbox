@@ -97,20 +97,20 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) Plan() (*plansdk.Plan, error) {
+func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
 	userPlan := d.convertToPlan()
-	automatedPlan, err := planner.GetPlan(d.srcDir)
+	shellPlan, err := planner.GetShellPlan(d.srcDir)
 	if err != nil {
 		return nil, err
 	}
-	return plansdk.MergeUserPlan(userPlan, automatedPlan)
+	return plansdk.MergeUserPlan(userPlan, shellPlan)
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) BuildPlan() (*plansdk.Plan, error) {
 	userPlan := d.convertToPlan()
-	buildPlan, err := planner.FindBuildablePlan(d.srcDir)
+	buildPlan, err := planner.GetBuildPlan(d.srcDir)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (d *Devbox) Shell() error {
 	if err := d.generateShellFiles(); err != nil {
 		return errors.WithStack(err)
 	}
-	plan, err := d.Plan()
+	plan, err := d.ShellPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -176,7 +176,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	shellPlan, err := d.Plan()
+	shellPlan, err := d.ShellPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}
