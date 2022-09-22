@@ -18,6 +18,8 @@ import (
 
 type Planner struct{}
 
+var NoElixirVersionSetErr = errors.New("No version set in mix.exs")
+
 var versionMap = map[string]string{
 	"1.9":  "elixir_1_9",
 	"1.10": "elixir_1_10",
@@ -87,22 +89,22 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	}
 }
 
-func getElixirProject(srcDir string) (ElixirProject, error) {
+func getElixirProject(srcDir string) (*ElixirProject, error) {
 	mixPath := filepath.Join(srcDir, "mix.exs")
 	mixContents, err := os.ReadFile(mixPath)
 	if err != nil {
-		log.Fatalf("Unable to read your mix.exs file. Failed with: %f", err)
+		return nil, errors.Errorf("Unable to read your mix.exs file. Failed with %s", err)
 	}
 	elixirPackage, err := getElixirPackage(string(mixContents))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	appname, err := getElixirAppName(string(mixContents))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return ElixirProject{
+	return &ElixirProject{
 		name:          appname,
 		elixirPackage: elixirPackage,
 	}, nil
@@ -110,11 +112,11 @@ func getElixirProject(srcDir string) (ElixirProject, error) {
 
 func getElixirPackage(mixContents string) (string, error) {
 	elixirVersion, err := parseElixirVersion(mixContents)
-	if err != nil {
+	if err == NoElixirVersionSetErr {
 		log.Printf("No Elixir version specified in your mix.exs. Using default Nix version 1.13")
 		return defaultPkg, nil
 	}
-	v, ok := versionMap[string(elixirVersion)]
+	v, ok := versionMap[elixirVersion]
 	if ok {
 		log.Printf("Using Elixir Package: %s", elixirVersion)
 		return v, nil
@@ -124,10 +126,10 @@ func getElixirPackage(mixContents string) (string, error) {
 }
 
 func parseElixirVersion(mixContents string) (string, error) {
-	r := regexp.MustCompile(`(?:elixir: "\D*)([0-9.]*)`)
+	r := regexp.MustCompile(`(?:elixir: "\D*)([0-9].[0-9]*)`)
 	match := r.FindStringSubmatch(mixContents)
 	if len(match) < 1 {
-		return "", errors.New("No version set in mix.exs")
+		return "", NoElixirVersionSetErr
 	} else {
 		return match[1], nil
 	}
