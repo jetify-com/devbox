@@ -112,7 +112,7 @@ func getElixirProject(srcDir string) (*ElixirProject, error) {
 
 func getElixirPackage(mixContents string) (string, error) {
 	elixirVersion, err := parseElixirVersion(mixContents)
-	if err == NoElixirVersionSetErr {
+	if errors.Is(err, NoElixirVersionSetErr) {
 		log.Printf("No Elixir version specified in your mix.exs. Using default Nix version 1.13")
 		return defaultPkg, nil
 	}
