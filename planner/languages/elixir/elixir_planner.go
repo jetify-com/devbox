@@ -55,7 +55,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			elixirProject.elixirPackage,
 		},
 		InstallStage: &plansdk.Stage{
-			InputFiles: []string{"mix.eks"},
+			InputFiles: []string{"mix.exs"},
 			Command:    "mix deps.get --only-prod",
 		},
 		BuildStage: &plansdk.Stage{
@@ -88,7 +88,8 @@ func getElixirProject(srcDir string) (ElixirProject, error) {
 
 func getElixirPackage(mixPath string) (string, error) {
 	elixirVersion := parseElixirVersion(mixPath)
-	v, ok := versionMap[elixirVersion]
+	log.Printf(fmt.Sprintf("Elixir Version: %s", elixirVersion))
+	v, ok := versionMap[string(elixirVersion)]
 	if ok {
 		return v, nil
 	} else {
@@ -97,16 +98,19 @@ func getElixirPackage(mixPath string) (string, error) {
 }
 
 func parseElixirVersion(mixPath string) string {
+	log.Print(mixPath)
 	contents, err := os.ReadFile(mixPath)
 	if err != nil {
+		log.Print(err)
 		return ""
 	}
-	r := regexp.MustCompile(`(?:^elixir: "\\D*)(\\d\.\\d*)`)
-	match := r.FindStringSubmatch(string(contents))
-	if len(match) != 1 {
+	r := regexp.MustCompile(`(?:elixir: "\D*)([0-9.]*)`)
+	match := r.FindStringSubmatch(string(contents))[1]
+	log.Print(match)
+	if len(match) < 1 {
 		return ""
 	} else {
-		return match[0]
+		return match
 	}
 }
 
@@ -115,11 +119,12 @@ func getElixirAppName(mixPath string) (string, error) {
 	if err != nil {
 		return "", errors.New("Unable to read your mix.exs file")
 	}
-	r := regexp.MustCompile(`(?:^app: )(?:\:)([a-z\_]*)`)
-	match := r.FindStringSubmatch(string(contents))
-	if len(match) != 1 {
+	r := regexp.MustCompile(`(?:app: )(?:\:)([a-z\_]*)`)
+	match := r.FindStringSubmatch(string(contents))[1]
+	log.Print(match)
+	if len(match) <= 1 {
 		return "", errors.New("Unable to parse an app name from your mix.exs")
 	} else {
-		return match[0], nil
+		return match, nil
 	}
 }
