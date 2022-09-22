@@ -1,0 +1,49 @@
+name: docs-preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  JETPACK_SECRET_KEY: ${{ secrets.JETPACK_SECRET_KEY }}
+
+jobs:
+  deploy-docs-preview:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: dorny/paths-filter@v2
+          id: filter
+          with:
+            filters: |
+              docs:
+                - 'docs/**'
+        - uses: bahmutov/npm-install@v1
+          if: steps.filter.outputs.docs == 'true'
+          with:
+            working-directory: docs/app
+        - name: Mount docs node_modules
+          if: steps.filter.outputs.docs == 'true'
+          uses: actions/cache@v3
+          with:
+            path: docs/app/node_modules
+            key: docs-node-modules
+        - name: Docs build
+          if: steps.filter.outputs.docs == 'true'
+          run: |
+            yarn install
+            yarn run build
+          working-directory: docs/app
+        - name: Deploy docs preview
+          if: steps.filter.outputs.docs == 'true'
+          run: |
+            curl https://get.jetpack.io -fsSL | bash -s -- -y
+            jetpack up docs \
+              --ttl 300 --debug \
+              -n jetpack-io-preview-$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-zA-Z]/-/g")
