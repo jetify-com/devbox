@@ -82,16 +82,13 @@ func (d *Devbox) Remove(pkgs ...string) error {
 
 // Build creates a Docker image containing a shell with the devbox environment.
 func (d *Devbox) Build(flags *docker.BuildFlags) error {
-	if ok, err := planner.IsBuildable(d.srcDir); !ok {
-		return err
-	}
 	defaultFlags := &docker.BuildFlags{
 		Name:           flags.Name,
 		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
 	}
 	opts := append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, docker.WithFlags(flags))
 
-	err := d.Generate()
+	err := d.generateBuildFiles()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -99,40 +96,46 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
-// environment.
-func (d *Devbox) Plan() (*plansdk.Plan, error) {
+// shell environment.
+func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
 	userPlan := d.convertToPlan()
-	automatedPlan, err := planner.GetPlan(d.srcDir)
+	shellPlan, err := planner.GetShellPlan(d.srcDir)
 	if err != nil {
 		return nil, err
 	}
-	return plansdk.MergeUserPlan(userPlan, automatedPlan)
+	return plansdk.MergeUserPlan(userPlan, shellPlan)
+}
+
+// Plan creates a plan of the actions that devbox will take to generate its
+// shell environment.
+func (d *Devbox) BuildPlan() (*plansdk.Plan, error) {
+	userPlan := d.convertToPlan()
+	buildPlan, err := planner.GetBuildPlan(d.srcDir)
+	if err != nil {
+		return nil, err
+	}
+	return plansdk.MergeUserPlan(userPlan, buildPlan)
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
 // the devbox environment.
 func (d *Devbox) Generate() error {
-	plan, err := d.Plan()
-	if err != nil {
+	if err := d.generateShellFiles(); err != nil {
 		return errors.WithStack(err)
 	}
-	if plan.Invalid() {
-		return plan.Error()
+	if err := d.generateBuildFiles(); err != nil {
+		return errors.WithStack(err)
 	}
-	return generate(d.srcDir, plan, append(shellFiles, buildFiles...))
+	return nil
 }
 
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {
-	plan, err := d.Plan()
-	if err != nil {
+	if err := d.generateShellFiles(); err != nil {
 		return errors.WithStack(err)
 	}
-	if plan.Invalid() {
-		return plan.Error()
-	}
-	err = generate(d.srcDir, plan, shellFiles)
+	plan, err := d.ShellPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -170,4 +173,26 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 		BuildStage:      planStages[1],
 		StartStage:      planStages[2],
 	}
+}
+
+func (d *Devbox) generateShellFiles() error {
+	shellPlan, err := d.ShellPlan()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if shellPlan.Invalid() {
+		return shellPlan.Error()
+	}
+	return generate(d.srcDir, shellPlan, shellFiles)
+}
+
+func (d *Devbox) generateBuildFiles() error {
+	buildPlan, err := d.BuildPlan()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if buildPlan.Invalid() {
+		return buildPlan.Error()
+	}
+	return generate(d.srcDir, buildPlan, buildFiles)
 }

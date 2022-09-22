@@ -113,11 +113,7 @@ func (p *Plan) WithError(err error) *Plan {
 }
 
 func MergePlans(plans ...*Plan) (*Plan, error) {
-	mergedPlan := &Plan{
-		NixOverlays:     []string{},
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-	}
+	mergedPlan := &Plan{}
 	for _, p := range plans {
 		err := mergo.Merge(
 			mergedPlan,

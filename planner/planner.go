@@ -69,7 +69,7 @@ var PLANNERS = []plansdk.Planner{
 	&zig.Planner{},
 }
 
-func GetPlan(srcDir string) (*plansdk.Plan, error) {
+func GetShellPlan(srcDir string) (*plansdk.Plan, error) {
 	result := &plansdk.Plan{
 		DevPackages:     []string{},
 		RuntimePackages: []string{},
@@ -85,7 +85,8 @@ func GetPlan(srcDir string) (*plansdk.Plan, error) {
 	return result, nil
 }
 
-func IsBuildable(srcDir string) (bool, error) {
+// Return one buildable plan from all planners.
+func GetBuildPlan(srcDir string) (*plansdk.Plan, error) {
 	buildables := []*plansdk.Plan{}
 	unbuildables := []*plansdk.Plan{}
 	for _, p := range getRelevantPlanners(srcDir) {
@@ -100,15 +101,15 @@ func IsBuildable(srcDir string) (bool, error) {
 	// unbuildable plans?
 	if len(buildables) == 0 && len(unbuildables) > 0 {
 		if err := unbuildables[0].Error(); err != nil {
-			return false, err
+			return nil, err
 		}
-		return false, usererr.New("Unable to build project")
+		return nil, usererr.New("Unable to build project")
 	}
 	if len(buildables) > 1 {
 		// TODO(Landau) Ideally we give the user a way to resolve this
-		return false, usererr.New("Multiple buildable plans found: %v", buildables)
+		return nil, usererr.New("Multiple buildable plans found: %v", buildables)
 	}
-	return true, nil
+	return buildables[0], nil
 }
 
 func getRelevantPlanners(srcDir string) []plansdk.Planner {
