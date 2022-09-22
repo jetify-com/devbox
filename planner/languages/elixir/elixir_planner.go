@@ -55,7 +55,6 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			elixirProject.elixirPackage,
 		},
 		RuntimePackages: []string{
-			"bash",
 			"systemd",
 			"ncurses",
 		},
