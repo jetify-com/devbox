@@ -21,7 +21,7 @@ Devbox will use the nginx provided by the Nix Package manager. It is currently n
 
 ### Included Nix Packages
 
-- `nginx`
+-   `nginx`
 
 ### Default Stages
 
@@ -29,11 +29,11 @@ These stages can be customized by adding them to your `devbox.json`. See the [Co
 
 ### Install Stage
 
-*No install stage for nginx planner*
+Skipped: _No install stage for nginx planner_
 
 ### Build Stage
 
-*No build stage for nginx planner*
+Skipped: _No build stage for nginx planner_
 
 ### Start Stage
 
