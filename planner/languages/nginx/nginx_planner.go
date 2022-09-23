@@ -29,10 +29,8 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return &plansdk.Plan{
-		ShellWelcomeMessage: fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
 		DevPackages: []string{
 			"nginx",
-			"shell-nginx",
 		},
 		RuntimePackages: []string{
 			"nginx",
@@ -45,11 +43,12 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			Command:    fmt.Sprintf(startCommand, p.buildConfig(srcDir)),
 			InputFiles: plansdk.AllFiles(),
 		},
-		Definitions: []string{
-			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
-		},
 		GeneratedFiles: map[string]string{
 			"shell-helper-nginx.conf": fmt.Sprintf(shellHelperNginxConfig, os.TempDir()),
+			"shell-nginx.sh":          fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
+		},
+		ShellInitHook: []string{
+			fmt.Sprintf(". %s", filepath.Join(srcDir, ".devbox/gen/shell-nginx.sh")),
 		},
 	}
 }
@@ -68,18 +67,6 @@ func (p *Planner) buildConfig(srcDir string) string {
 	return "shell-nginx.conf"
 }
 
-const welcomeMessage = `
-##### WARNING: nginx planner is experimental #####
-
-You may need to add
-
-\"include ./.devbox/gen/shell-helper-nginx.conf;\"
-
-to your %s file to ensure the server can start in the nix shell.
-
-Use \"shell-nginx\" to start the server
-`
-
 var startCommand = strings.TrimSpace(`
 	addgroup --system --gid 101 nginx && \
 	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
@@ -92,12 +79,35 @@ var startCommand = strings.TrimSpace(`
 `)
 
 const nginxShellStartScript = `
-shell-nginx = pkgs.writeShellScriptBin "shell-nginx" ''
+#!/bin/bash
 
-echo "Starting nginx with command:"
-echo "nginx -p %[1]s -c %[2]s -e /tmp/error.log -g \"pid /tmp/mynginx.pid;daemon off;\""
-nginx -p %[1]s -c %[2]s -e /tmp/error.log -g "pid /tmp/shell-nginx.pid;daemon off;"
-'';`
+welcome() {
+	echo "##### WARNING: nginx planner is experimental #####
+
+	You may need to add
+
+	\"include shell-helper-nginx.conf;\"
+
+	to your %[2]s file to ensure the server can start in the nix shell.
+
+	Use \"shell-nginx\" to start the server"
+}
+
+pkg_path=$(readlink -f $(which nginx) | sed -r "s/\/bin\/nginx//g")
+conf_path=$pkg_path/conf
+
+mkdir -p %[1]s/.devbox/gen/nginx
+ln -sf $conf_path/* %[1]s/.devbox/gen/nginx/
+ln -sf $(pwd)/%[1]s/.devbox/gen/shell-helper-nginx.conf %[1]s/.devbox/gen/nginx/shell-helper-nginx.conf
+for file in %[1]s/*; do if [[ ! $file = .devbox ]]; then ln -sf $(pwd)/%[1]s/$file .devbox/gen/nginx/$file; fi; done
+
+shell-nginx() {
+	echo "Starting nginx with command:"
+	echo "nginx -p %[1]s -c %[1]s/.devbox/gen/nginx/%[2]s -e /tmp/error.log -g \"pid /tmp/mynginx.pid;daemon off;\""
+	nginx -p %[1]s -c %[1]s/.devbox/gen/nginx/%[2]s -e /tmp/error.log -g "pid /tmp/shell-nginx.pid;daemon off;"
+}
+welcome
+`
 
 const shellHelperNginxConfig = `access_log %[1]s/access.log;
 client_body_temp_path %[1]s/client_body;

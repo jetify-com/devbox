@@ -42,9 +42,3 @@ export PS1="(devbox) $PS1"
 echo "Hello from a devbox shell hook!"
 
 # End Devbox User Hook
-
-# Begin Shell Welcome Message
-
-echo "Welcome to the devbox!"
-
-# End Shell Welcome Message

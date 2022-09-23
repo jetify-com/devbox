@@ -88,8 +88,7 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 		"StartStage.InputFiles should match",
 	)
 
-	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-	assert.Equal(expected.ShellWelcomeMessage, actual.ShellWelcomeMessage, "ShellWelcomeMessage should match")
+	assert.ElementsMatch(expected.PackageExtensions, actual.PackageExtensions, "PackageExtensions should match")
 	if expected.GeneratedFiles != nil {
 		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
 	}

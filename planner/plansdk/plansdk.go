@@ -26,18 +26,17 @@ type PlanError struct {
 
 // Plan tells devbox how to start shells and build projects.
 type Plan struct {
-	ShellWelcomeMessage string `json:"shell_welcome_message,omitempty"`
-
 	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
-
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment. They are also available in shell.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
-
 	// RuntimePackages is the slice of Nix packages that devbox makes available in
 	// in both the development environment and the final container that runs the
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
+	// packageExtensions is the slice of Nix packages that devbox wants to extend
+	// to include extra packages that needs global installation.
+	PackageExtensions []string `cue:"[...string]" json:"package_extensions,omitempty"`
 	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
 	// Ex: pip install, yarn install, go get
@@ -50,15 +49,15 @@ type Plan struct {
 	// starting (running) the application.
 	// Ex: python main.py
 	StartStage *Stage `json:"start_stage,omitempty"`
-
-	Definitions []string `cue:"[...string]" json:"definitions"`
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
-
 	// GeneratedFiles is a map of name => content for files that should be generated
 	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
 	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
+	// This is an array of shell init hook that gets appended in front of
+	// the shell { initHook } defined by users.
+	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook"`
 }
 
 type Planner interface {
@@ -118,10 +117,11 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 		err := mergo.Merge(
 			mergedPlan,
 			&Plan{
-				NixOverlays:     p.NixOverlays,
-				DevPackages:     p.DevPackages,
-				RuntimePackages: p.RuntimePackages,
-				Definitions:     p.Definitions,
+				NixOverlays:       p.NixOverlays,
+				DevPackages:       p.DevPackages,
+				RuntimePackages:   p.RuntimePackages,
+				PackageExtensions: p.PackageExtensions,
+				ShellInitHook:     p.ShellInitHook,
 			},
 			// Only WithAppendSlice overlays, definitions, dev, and runtime packages fields.
 			mergo.WithAppendSlice,
@@ -135,7 +135,7 @@ func MergePlans(plans ...*Plan) (*Plan, error) {
 	plan.NixOverlays = pkgslice.Unique(mergedPlan.NixOverlays)
 	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
 	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
-	plan.Definitions = mergedPlan.Definitions
+	plan.ShellInitHook = mergedPlan.ShellInitHook
 
 	return plan, nil
 }
@@ -144,7 +144,9 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 	for _, p := range plans {
 		// For now, pick the first buildable plan.
 		if p.Buildable() {
-			return p
+			// Make a copy so that the original plan is not modified.
+			newP := *p
+			return &newP
 		}
 	}
 	return &Plan{}
@@ -164,13 +166,15 @@ func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
 	}
 
 	// Merging devPackages and runtimePackages fields.
-	packagesPlan, err := MergePlans(userPlan, automatedPlan)
+	// Order here matters because user defined shell hook should be executed last
+	mergedWithSlicePlan, err := MergePlans(automatedPlan, userPlan)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	plan.DevPackages = packagesPlan.DevPackages
-	plan.RuntimePackages = packagesPlan.RuntimePackages
+	plan.DevPackages = mergedWithSlicePlan.DevPackages
+	plan.RuntimePackages = mergedWithSlicePlan.RuntimePackages
+	plan.ShellInitHook = mergedWithSlicePlan.ShellInitHook
 
 	return plan, nil
 }

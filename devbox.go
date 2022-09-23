@@ -140,12 +140,15 @@ func (d *Devbox) Shell() error {
 		return errors.WithStack(err)
 	}
 	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(nix.WithWelcomeMessage(plan.ShellWelcomeMessage))
+	sh, err := nix.DetectShell()
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook.String()
+	initHook := ConfigShellCmds{
+		Cmds: plan.ShellInitHook,
+	}
+	sh.UserInitHook = initHook.String()
 	return sh.Run(nixDir)
 }
 
@@ -188,6 +191,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 		InstallStage:    planStages[0],
 		BuildStage:      planStages[1],
 		StartStage:      planStages[2],
+		ShellInitHook:   d.cfg.Shell.InitHook.Cmds,
 	}
 }
 

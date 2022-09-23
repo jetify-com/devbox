@@ -11,14 +11,9 @@
     ]
   },
   "dev_packages": [
-    "shell-nginx",
     "nginx"
   ],
   "runtime_packages": [
     "nginx"
-  ],
-  "definitions": [
-    "\nshell-nginx = pkgs.writeShellScriptBin \"shell-nginx\" ''\n\necho \"Starting nginx with command:\"\necho \"nginx -p testdata/nginx -c shell-nginx.conf -e /tmp/error.log -g \\\"pid /tmp/mynginx.pid;daemon off;\\\"\"\nnginx -p testdata/nginx -c shell-nginx.conf -e /tmp/error.log -g \"pid /tmp/shell-nginx.pid;daemon off;\"\n'';"
-  ],
-  "shell_welcome_message": "\n##### WARNING: nginx planner is experimental #####\n\nYou may need to add\n\n\\\"include ./.devbox/gen/shell-helper-nginx.conf;\\\"\n\nto your shell-nginx.conf file to ensure the server can start in the nix shell.\n\nUse \\\"shell-nginx\\\" to start the server\n"
+  ]
 }

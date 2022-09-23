@@ -39,8 +39,7 @@ type Shell struct {
 	userShellrcPath string
 
 	// UserInitHook contains commands that will run at shell startup.
-	UserInitHook   string
-	welcomeMessage string
+	UserInitHook string
 }
 
 type ShellOption func(*Shell)
@@ -89,12 +88,6 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 	debug.Log("Recognized shell as: %s", sh.binPath)
 	debug.Log("Looking for user's shell init file at: %s", sh.userShellrcPath)
 	return sh, nil
-}
-
-func WithWelcomeMessage(message string) ShellOption {
-	return func(s *Shell) {
-		s.welcomeMessage = message
-	}
 }
 
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
@@ -249,12 +242,10 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
-		WelcomeMessage   string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
-		WelcomeMessage:   strings.TrimSpace(s.welcomeMessage),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)

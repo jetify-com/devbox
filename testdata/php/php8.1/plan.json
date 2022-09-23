@@ -22,7 +22,7 @@
       "."
     ]
   },
-  "definitions": [
+  "package_extensions": [
     "php81 = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [ imagick mbstring ]));"
   ]
 }

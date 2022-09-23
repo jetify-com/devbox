@@ -74,13 +74,3 @@ export PS1="(devbox) $PS1"
 # End Devbox User Hook
 
 {{- end }}
-
-# Begin Shell Welcome Message
-
-{{- if .WelcomeMessage }}
-
-echo "{{ .WelcomeMessage }}"
-
-{{- end }}
-
-# End Shell Welcome Message

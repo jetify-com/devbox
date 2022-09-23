@@ -78,9 +78,3 @@ PATH="$(
 export PS1="(devbox) $PS1"
 
 # End Devbox Post-init Hook
-
-# Begin Shell Welcome Message
-
-echo "Welcome to the devbox!"
-
-# End Shell Welcome Message

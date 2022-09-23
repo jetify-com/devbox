@@ -52,7 +52,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
 		},
-		Definitions: p.definitions(srcDir, v),
+		PackageExtensions: p.pkgExtensions(srcDir, v),
 	}
 	if !plansdk.FileExists(filepath.Join(srcDir, "public/index.php")) {
 		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
@@ -119,7 +119,7 @@ func (p *Planner) version(srcDir string) *plansdk.Version {
 	return latestVersion
 }
 
-func (p *Planner) definitions(srcDir string, v *plansdk.Version) []string {
+func (p *Planner) pkgExtensions(srcDir string, v *plansdk.Version) []string {
 	extensions, err := p.extensions(srcDir)
 	if len(extensions) == 0 || err != nil {
 		return []string{}
