@@ -213,7 +213,7 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 		}
 		fileScanner := bufio.NewScanner(readFile)
 		fileScanner.Split(bufio.ScanLines)
-		var sourceVersion *plansdk.Version
+		sourceVersion, _ := plansdk.NewVersion("0")
 		// parsing gradle file line by line
 		for fileScanner.Scan() {
 			line := fileScanner.Text()
