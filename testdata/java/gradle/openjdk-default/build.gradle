@@ -9,8 +9,6 @@ apply plugin: 'java'
 apply plugin: 'application'
 
 mainClassName = 'hello.HelloWorld'
-sourceCompatibility = 17
-targetCompatibility = 17
 jar {
     manifest {
         attributes 'Main-Class': 'hello.HelloWorld'
