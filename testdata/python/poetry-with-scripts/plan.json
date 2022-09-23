@@ -1,12 +1,19 @@
 {
+  "dev_packages": [
+    "python310",
+    "poetry"
+  ],
+  "runtime_packages": [
+    "python310"
+  ],
   "install_stage": {
-    "command": "poetry add pex -n --no-ansi \u0026\u0026 poetry install --no-dev -n --no-ansi",
+    "command": "poetry add pex -n --no-ansi && poetry install --no-dev -n --no-ansi",
     "input_files": [
       "."
     ]
   },
   "build_stage": {
-    "command": "poetry run pex . -o app.pex $(poetry run python -c \"import pkgutil;import poetry_with_scripts;modules = [name for _, name, _ in pkgutil.iter_modules(poetry_with_scripts.__path__)];print('-m poetry_with_scripts' if '__main__' in modules else '--script script');\") --validate-entry-point \u0026\u003e/dev/null || (echo 'Build failed. Could not find entrypoint' \u0026\u0026 exit 1)"
+    "command": "poetry run pex . -o app.pex $(poetry run python -c \"import pkgutil;import poetry_with_scripts;modules = [name for _, name, _ in pkgutil.iter_modules(poetry_with_scripts.__path__)];print('-m poetry_with_scripts' if '__main__' in modules else '--script script');\") --validate-entry-point &>/dev/null || (echo 'Build failed. Could not find entrypoint' && exit 1)"
   },
   "start_stage": {
     "command": "python ./app.pex",
@@ -14,11 +21,5 @@
       "."
     ]
   },
-  "dev_packages": [
-    "python310",
-    "poetry"
-  ],
-  "runtime_packages": [
-    "python310"
-  ]
+  "definitions": null
 }
