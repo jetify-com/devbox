@@ -6,16 +6,16 @@
     "dotnet-sdk"
   ],
   "install_stage": {
-    "command": ""
-  },
-  "build_stage": {
-    "command": "dotnet publish",
+    "command": "dotnet restore --packages nuget-packages",
     "input_files": [
       "."
     ]
   },
+  "build_stage": {
+    "command": "dotnet publish -c Publish --no-restore"
+  },
   "start_stage": {
-    "command": "dotnet run",
+    "command": "dotnet run -c Publish --no-build",
     "input_files": [
       "."
     ]
