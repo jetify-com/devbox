@@ -7,7 +7,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
+	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func PkgExists(pkg string) bool {
@@ -20,6 +24,15 @@ type Info struct {
 	Name    string
 	Version string
 	System  string
+}
+
+func Exec(path string, command []string) error {
+	runCmd := strings.Join(command, " ")
+	cmd := exec.Command("nix-shell", path, "--run", runCmd)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return errors.WithStack(cmd.Run())
 }
 
 func PkgInfo(pkg string) (*Info, bool) {

@@ -1,0 +1,45 @@
+name: docs-deployment
+
+concurrency: deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  JETPACK_SECRET_KEY: ${{ secrets.JETPACK_SECRET_KEY }}
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+      - uses: bahmutov/npm-install@v1
+        if: steps.filter.outputs.docs == 'true' || github.event.workflow_dispatch
+        with:
+          working-directory: docs/app
+      - name: Mount docs node_modules
+        if: steps.filter.outputs.docs == 'true' || github.event.workflow_dispatch
+        uses: actions/cache@v3
+        with:
+          path: docs/app/node_modules
+          key: docs-node-modules
+      - name: docs build
+        if: steps.filter.outputs.docs == 'true' || github.event.workflow_dispatch
+        run: |
+          yarn install
+          yarn run build
+        working-directory: docs/app
+      - name: Deploy docs to production
+        if: steps.filter.outputs.docs == 'true' || github.event.workflow_dispatch
+        run: |
+          curl https://get.jetpack.io -fsSL | bash -s -- -y
+          jetpack up docs --environment=prod --debug

@@ -15,9 +15,9 @@ import (
 
 func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:               "shell [<dir>]",
+		Use:               "shell [<dir>] -- [<cmd>]",
 		Short:             "Start a new shell with access to your packages",
-		Args:              cobra.MaximumNArgs(1),
+		Args:              validateShellArgs,
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE:              runShellCmd,
 	}
@@ -25,7 +25,7 @@ func ShellCmd() *cobra.Command {
 }
 
 func runShellCmd(cmd *cobra.Command, args []string) error {
-	path := pathArg(args)
+	path, cmds := parseShellArgs(cmd, args)
 
 	// Check the directory exists.
 	box, err := devbox.Open(path)
@@ -40,12 +40,12 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Installing nix packages. This may take a while...")
 
-	err = box.Shell()
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		cmd.SilenceErrors = true
-		cmd.SilenceUsage = true
+	if len(cmds) > 0 {
+		err = box.Exec(cmds...)
+	} else {
+		err = box.Shell()
 	}
+
 	return err
 }
 
@@ -55,4 +55,23 @@ func nixShellPersistentPreRunE(cmd *cobra.Command, args []string) error {
 		return errors.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
 	}
 	return nil
+}
+
+func validateShellArgs(cmd *cobra.Command, args []string) error {
+	lenAtDash := cmd.ArgsLenAtDash()
+	if lenAtDash > 1 {
+		return fmt.Errorf("accepts at most 1 directory, received %d", lenAtDash)
+	}
+	return nil
+}
+
+func parseShellArgs(cmd *cobra.Command, args []string) (string, []string) {
+	index := cmd.ArgsLenAtDash()
+	if index < 0 {
+		index = 0
+	}
+
+	path := pathArg(args[:index])
+	cmds := args[index:]
+	return path, cmds
 }
