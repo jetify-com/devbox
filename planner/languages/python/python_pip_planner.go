@@ -61,8 +61,8 @@ func (p *PIPPlanner) isBuildable(srcDir string) error {
 
 	return usererr.New(
 		"setup.py not found. Please create a setup.py file to build your project." +
-			" The distribution name must case-insensitive match the package (dir) " +
-			"name. Dashes are converted to underscores.",
+			" The distribution name must be a case-insensitive match of the package" +
+			" (dir) name. Dashes are converted to underscores.",
 	)
 }
 
@@ -71,8 +71,8 @@ func (p *PIPPlanner) shellInitHook(srcDir string) string {
 	venvActivatePath := filepath.Join(srcDir, ".venv", "bin", "activate")
 	script := strings.TrimSpace(`
 echo "Creating/Using virtual environment in %[1]s";
-python -m venv %[1]s;
-source %[2]s;`)
+python -m venv "%[1]s";
+source "%[2]s";`)
 	return fmt.Sprintf(script, venvPath, venvActivatePath)
 }
 

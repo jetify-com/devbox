@@ -20,5 +20,5 @@
   "runtime_packages": [
     "python3"
   ],
-  "shell_init_hook": "echo \"Creating/Using virtual environment in testdata/python/pip-example/.venv\";\npython -m venv testdata/python/pip-example/.venv;\nsource testdata/python/pip-example/.venv/bin/activate;"
+  "shell_init_hook": "echo \"Creating/Using virtual environment in testdata/python/pip-example/.venv\";\npython -m venv \"testdata/python/pip-example/.venv\";\nsource \"testdata/python/pip-example/.venv/bin/activate\";"
 }

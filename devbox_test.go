@@ -12,7 +12,7 @@ import (
 )
 
 func TestDevbox(t *testing.T) {
-	os.Setenv("TMPDIR", "/tmp")
+	t.Setenv("TMPDIR", "/tmp")
 	testPaths, err := doublestar.FilepathGlob("./testdata/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
