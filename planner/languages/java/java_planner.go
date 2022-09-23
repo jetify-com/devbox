@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/creekorful/mvnparser"
@@ -20,10 +19,10 @@ import (
 type Planner struct{}
 
 // jdk nix packages
-var jVersionMap = map[int]string{
-	8:  "jdk8",
-	11: "jdk11",
-	17: "jdk17_headless",
+var jVersionMap = map[string]string{
+	"8":  "jdk8",
+	"11": "jdk11",
+	"17": "jdk17_headless",
 }
 
 // default nix packages
@@ -180,7 +179,7 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	v, ok := jVersionMap[javaVersion]
+	v, ok := jVersionMap[javaVersion.Major()]
 	if ok {
 		return v, nil
 	} else {
@@ -188,7 +187,7 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 	}
 }
 
-func parseJavaVersion(srcDir string, builderTool string) (int, error) {
+func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, error) {
 
 	if builderTool == MavenType {
 		pomXMLPath := filepath.Join(srcDir, mavenFileName)
@@ -196,13 +195,13 @@ func parseJavaVersion(srcDir string, builderTool string) (int, error) {
 		// parsing pom.xml and putting its content in 'project'
 		err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
 		if err != nil {
-			return 0, errors.WithMessage(err, "error parsing java version from pom file")
+			return nil, errors.WithMessage(err, "error parsing java version from pom file")
 		}
 		compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
 		if ok {
-			sourceVersion, err := strconv.Atoi(compilerSourceVersion)
+			sourceVersion, err := plansdk.NewVersion(compilerSourceVersion)
 			if err != nil {
-				return 0, errors.WithMessage(err, "error parsing java version from pom file")
+				return nil, errors.WithMessage(err, "error parsing java version from pom file")
 			}
 			return sourceVersion, nil
 		}
@@ -210,19 +209,19 @@ func parseJavaVersion(srcDir string, builderTool string) (int, error) {
 		buildGradlePath := filepath.Join(srcDir, gradleFileName)
 		readFile, err := os.Open(buildGradlePath)
 		if err != nil {
-			return 0, errors.WithMessage(err, "error parsing java version from gradle file")
+			return nil, errors.WithMessage(err, "error parsing java version from gradle file")
 		}
 		fileScanner := bufio.NewScanner(readFile)
 		fileScanner.Split(bufio.ScanLines)
-		sourceVersion := 0
+		var sourceVersion *plansdk.Version
 		// parsing gradle file line by line
 		for fileScanner.Scan() {
 			line := fileScanner.Text()
 			if strings.Contains(line, "sourceCompatibility = ") {
 				compilerSourceVersion := strings.TrimSpace(strings.Split(line, "=")[1])
-				sourceVersion, err = strconv.Atoi(compilerSourceVersion)
+				sourceVersion, err = plansdk.NewVersion(compilerSourceVersion)
 				if err != nil {
-					return 0, errors.WithMessage(err, "error parsing java version from gradle file")
+					return nil, errors.WithMessage(err, "error parsing java version from gradle file")
 				}
 				break
 			}
@@ -231,5 +230,5 @@ func parseJavaVersion(srcDir string, builderTool string) (int, error) {
 		return sourceVersion, nil
 	}
 
-	return 0, nil
+	return nil, nil
 }
