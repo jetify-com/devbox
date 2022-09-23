@@ -188,6 +188,7 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 }
 
 func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, error) {
+	sourceVersion, _ := plansdk.NewVersion("0")
 
 	if builderTool == MavenType {
 		pomXMLPath := filepath.Join(srcDir, mavenFileName)
@@ -199,11 +200,10 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 		}
 		compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
 		if ok {
-			sourceVersion, err := plansdk.NewVersion(compilerSourceVersion)
+			sourceVersion, err = plansdk.NewVersion(compilerSourceVersion)
 			if err != nil {
 				return nil, errors.WithMessage(err, "error parsing java version from pom file")
 			}
-			return sourceVersion, nil
 		}
 	} else if builderTool == GradleType {
 		buildGradlePath := filepath.Join(srcDir, gradleFileName)
@@ -213,7 +213,6 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 		}
 		fileScanner := bufio.NewScanner(readFile)
 		fileScanner.Split(bufio.ScanLines)
-		sourceVersion, _ := plansdk.NewVersion("0")
 		// parsing gradle file line by line
 		for fileScanner.Scan() {
 			line := fileScanner.Text()
@@ -227,8 +226,7 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 			}
 		}
 		readFile.Close()
-		return sourceVersion, nil
 	}
 
-	return nil, nil
+	return sourceVersion, nil
 }
