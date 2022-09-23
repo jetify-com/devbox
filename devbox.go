@@ -5,6 +5,7 @@
 package devbox
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -19,6 +20,26 @@ import (
 
 // configFilename is name of the JSON file that defines a devbox environment.
 const configFilename = "devbox.json"
+
+var errNoDevboxJSON = func(dir string) error {
+
+	// We try to prettify the `dir` before printing
+	if dir == "." {
+		dir = "this directory"
+	} else {
+		// Instead of a long absolute directory, print the relative directory
+
+		wd, err := os.Getwd()
+		// if an error occurs, then just use `dir`
+		if err == nil {
+			relDir, err := filepath.Rel(wd, dir)
+			if err == nil {
+				dir = relDir
+			}
+		}
+	}
+	return errors.Errorf("No devbox.json found in %s. Did you run `devbox init` yet?", dir)
+}
 
 // InitConfig creates a default devbox config file if one doesn't already
 // exist.
@@ -37,6 +58,10 @@ type Devbox struct {
 // Open opens a devbox by reading the config file in dir.
 func Open(dir string) (*Devbox, error) {
 	cfgPath := filepath.Join(dir, configFilename)
+
+	if !plansdk.FileExists(cfgPath) {
+		return nil, errNoDevboxJSON(dir)
+	}
 
 	cfg, err := ReadConfig(cfgPath)
 	if err != nil {
