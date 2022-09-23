@@ -78,10 +78,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		return plan.WithError(err)
 	}
-	runtimePackages, err := p.runtimePackages(builderTool)
-	if err != nil {
-		return plan.WithError(err)
-	}
+	runtimePackages := p.runtimePackages(builderTool)
 	startCommand, err := p.startCommand(srcDir, builderTool)
 	if err != nil {
 		return plan.WithError(err)
@@ -128,7 +125,7 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 	return devPackagesMap[builderTool], nil
 }
 
-func (p *Planner) runtimePackages(builderTool string) ([]string, error) {
+func (p *Planner) runtimePackages(builderTool string) []string {
 	runtimePackagesMap := map[string][]string{
 		MavenType: {
 			binUtils,
@@ -138,7 +135,7 @@ func (p *Planner) runtimePackages(builderTool string) ([]string, error) {
 		},
 	}
 
-	return runtimePackagesMap[builderTool], nil
+	return runtimePackagesMap[builderTool]
 }
 
 // This method is added because we plan to differentiate Gradle and Maven.
