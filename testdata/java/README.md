@@ -15,7 +15,7 @@ Maven is an all-in-one CI-CD tool for building testing and deploying Java projec
 ## Java with Gradle
 To test a sample Gradle app with devbox, follow the steps below:
 
-1. Create a dummy folder: `dommy/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
+1. Create a dummy folder: `dummy/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
     - Replace `jdk` with the version of JDK you want. Get the exact nix-pkg name from `search.nixos.org`.
 2. Then do `devbox shell` to get a shell with that `jdk` nix pkg.
 3. Then do: `gradle init`
