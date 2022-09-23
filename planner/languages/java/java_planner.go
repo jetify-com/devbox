@@ -63,34 +63,31 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		DevPackages: []string{},
 	}
 
-	pomXMLPath := filepath.Join(srcDir, mavenFileName)
-	buildGradlePath := filepath.Join(srcDir, gradleFileName)
-	var builderTool string
-	if plansdk.FileExists(pomXMLPath) {
-		builderTool = MavenType
-	} else if plansdk.FileExists(buildGradlePath) {
-		builderTool = GradleType
-	} else {
-		err := errors.New("Could not locate a Maven or Gradle file.")
+	builderTool, err := p.packageManager(srcDir)
+	if err != nil {
 		return plan.WithError(err)
 	}
+
 	devPackages, err := p.devPackages(srcDir, builderTool)
 	if err != nil {
 		return plan.WithError(err)
 	}
-	runtimePackages := p.runtimePackages(builderTool)
+
 	startCommand, err := p.startCommand(srcDir, builderTool)
 	if err != nil {
 		return plan.WithError(err)
 	}
-	installStage := p.installCommand(builderTool)
+
+	runtimePackages := p.runtimePackages(builderTool)
+	installCommand := p.installCommand(builderTool)
 	buildCommand := p.buildCommand(builderTool)
+
 	return &plansdk.Plan{
 		DevPackages:     devPackages,
 		RuntimePackages: runtimePackages,
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"."},
-			Command:    installStage,
+			Command:    installCommand,
 		},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
@@ -100,6 +97,18 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			InputFiles: []string{"."},
 			Command:    startCommand,
 		},
+	}
+}
+
+func (p *Planner) packageManager(srcDir string) (string, error) {
+	pomXMLPath := filepath.Join(srcDir, mavenFileName)
+	buildGradlePath := filepath.Join(srcDir, gradleFileName)
+	if plansdk.FileExists(pomXMLPath) {
+		return MavenType, nil
+	} else if plansdk.FileExists(buildGradlePath) {
+		return GradleType, nil
+	} else {
+		return "", errors.New("Could not locate a Maven or Gradle file.")
 	}
 }
 
@@ -126,16 +135,9 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 }
 
 func (p *Planner) runtimePackages(builderTool string) []string {
-	runtimePackagesMap := map[string][]string{
-		MavenType: {
-			binUtils,
-		},
-		GradleType: {
-			binUtils,
-		},
+	return []string{
+		binUtils,
 	}
-
-	return runtimePackagesMap[builderTool]
 }
 
 // This method is added because we plan to differentiate Gradle and Maven.
