@@ -29,7 +29,9 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return &plansdk.Plan{
-		ShellWelcomeMessage: fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
+		ShellInitHook: plansdk.WelcomeMessage(
+			fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
+		),
 		DevPackages: []string{
 			"nginx",
 			"shell-nginx",

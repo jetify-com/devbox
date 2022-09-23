@@ -142,7 +142,7 @@ Devbox makes it easy to package your application into an OCI-compliant container
 Devbox currently detects the following languages/stacks:
 
 - Go
-- Python (Poetry)
+- Python ([See notes](planner/languages/python/))
 - NodeJS
 - PHP
 - static nginx (Experimental - [see notes](planner/languages/nginx))

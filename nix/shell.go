@@ -37,10 +37,10 @@ type Shell struct {
 	name            name
 	binPath         string
 	userShellrcPath string
+	planInitHook    string
 
 	// UserInitHook contains commands that will run at shell startup.
-	UserInitHook   string
-	welcomeMessage string
+	UserInitHook string
 }
 
 type ShellOption func(*Shell)
@@ -91,9 +91,9 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 	return sh, nil
 }
 
-func WithWelcomeMessage(message string) ShellOption {
+func WithPlanInitHook(hook string) ShellOption {
 	return func(s *Shell) {
-		s.welcomeMessage = message
+		s.planInitHook = hook
 	}
 }
 
@@ -249,12 +249,12 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
-		WelcomeMessage   string
+		PlanInitHook     string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
-		WelcomeMessage:   strings.TrimSpace(s.welcomeMessage),
+		PlanInitHook:     strings.TrimSpace(s.planInitHook),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)

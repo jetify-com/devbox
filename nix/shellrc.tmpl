@@ -75,12 +75,12 @@ export PS1="(devbox) $PS1"
 
 {{- end }}
 
-# Begin Shell Welcome Message
+# Begin Plan Init Hook
 
-{{- if .WelcomeMessage }}
+{{- if .PlanInitHook }}
 
-echo "{{ .WelcomeMessage }}"
+{{ .PlanInitHook }}
 
 {{- end }}
 
-# End Shell Welcome Message
+# End Plan Init Hook

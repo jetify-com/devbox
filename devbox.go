@@ -140,7 +140,7 @@ func (d *Devbox) Shell() error {
 		return errors.WithStack(err)
 	}
 	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(nix.WithWelcomeMessage(plan.ShellWelcomeMessage))
+	sh, err := nix.DetectShell(nix.WithPlanInitHook(plan.ShellInitHook))
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}

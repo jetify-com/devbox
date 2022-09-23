@@ -12,6 +12,7 @@ import (
 )
 
 func TestDevbox(t *testing.T) {
+	t.Setenv("TMPDIR", "/tmp")
 	testPaths, err := doublestar.FilepathGlob("./testdata/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
@@ -89,7 +90,7 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	)
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-	assert.Equal(expected.ShellWelcomeMessage, actual.ShellWelcomeMessage, "ShellWelcomeMessage should match")
+	assert.Equal(expected.ShellInitHook, actual.ShellInitHook, "ShellInitHook should match")
 	if expected.GeneratedFiles != nil {
 		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
 	}

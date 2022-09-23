@@ -5,6 +5,7 @@ package plansdk
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/imdario/mergo"
@@ -26,7 +27,7 @@ type PlanError struct {
 
 // Plan tells devbox how to start shells and build projects.
 type Plan struct {
-	ShellWelcomeMessage string `json:"shell_welcome_message,omitempty"`
+	ShellInitHook string `json:"shell_init_hook,omitempty"`
 
 	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
 
@@ -182,4 +183,8 @@ func (p PlanError) MarshalJSON() ([]byte, error) {
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func WelcomeMessage(s string) string {
+	return fmt.Sprintf(`echo "%s";`, s)
 }
