@@ -68,10 +68,11 @@ func validateShellArgs(cmd *cobra.Command, args []string) error {
 func parseShellArgs(cmd *cobra.Command, args []string) (string, []string) {
 	index := cmd.ArgsLenAtDash()
 	if index < 0 {
-		index = 0
+		return pathArg(args), []string{}
 	}
 
 	path := pathArg(args[:index])
 	cmds := args[index:]
+
 	return path, cmds
 }
