@@ -1,0 +1,19 @@
+rock_manifest = {
+   doc = {
+      us = {
+         ["doc.css"] = "c6544af339619553247c3449e6705aae",
+         ["examples.html"] = "faf35b5ce8fdf5ecccc0adf75b9c995e",
+         ["index.html"] = "85a80a58c5d7da070a6f73c16e28a558",
+         ["license.html"] = "ad986de294bf24c9ba55cff3995ffe84",
+         ["luafilesystem.png"] = "81e923e976e99f894ea0aa8b52baff29",
+         ["manual.html"] = "45a398a40ceaf95becbdc7c7bd4109e2"
+      }
+   },
+   lib = {
+      ["lfs.so"] = "5e04243493721d9cf174f5b983c61241"
+   },
+   ["luafilesystem-1.8.0-1.rockspec"] = "272438e687d6e0d98f2422cb364d6ab6",
+   tests = {
+      ["test.lua"] = "6223591583d35d2709e2b4877a62625d"
+   }
+}

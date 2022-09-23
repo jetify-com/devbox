@@ -1,0 +1,227 @@
+commands = {}
+dependencies = {
+   ["lua-hello-world"] = {
+      ["dev-1"] = {}
+   },
+   luafilesystem = {
+      ["1.8.0-1"] = {
+         {
+            constraints = {
+               {
+                  op = ">=",
+                  version = {
+                     5, 1, string = "5.1"
+                  }
+               }
+            },
+            name = "lua"
+         }
+      }
+   },
+   penlight = {
+      ["1.13.1-1"] = {
+         {
+            constraints = {},
+            name = "luafilesystem"
+         }
+      }
+   }
+}
+modules = {
+   lfs = {
+      "luafilesystem/1.8.0-1"
+   },
+   ["pl.Date"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.List"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.Map"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.MultiMap"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.OrderedMap"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.Set"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.app"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.array2d"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.class"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.compat"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.comprehension"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.config"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.data"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.dir"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.file"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.func"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.import_into"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.init"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.input"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.lapp"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.lexer"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.luabalanced"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.operator"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.path"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.permute"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.pretty"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.seq"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.sip"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.strict"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.stringio"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.stringx"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.tablex"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.template"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.test"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.text"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.types"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.url"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.utils"] = {
+      "penlight/1.13.1-1"
+   },
+   ["pl.xml"] = {
+      "penlight/1.13.1-1"
+   }
+}
+repository = {
+   ["lua-hello-world"] = {
+      ["dev-1"] = {
+         {
+            arch = "installed",
+            commands = {},
+            dependencies = {},
+            modules = {}
+         }
+      }
+   },
+   luafilesystem = {
+      ["1.8.0-1"] = {
+         {
+            arch = "installed",
+            commands = {},
+            dependencies = {},
+            modules = {
+               lfs = "lfs.so"
+            }
+         }
+      }
+   },
+   penlight = {
+      ["1.13.1-1"] = {
+         {
+            arch = "installed",
+            commands = {},
+            dependencies = {
+               luafilesystem = "1.8.0-1"
+            },
+            modules = {
+               ["pl.Date"] = "pl/Date.lua",
+               ["pl.List"] = "pl/List.lua",
+               ["pl.Map"] = "pl/Map.lua",
+               ["pl.MultiMap"] = "pl/MultiMap.lua",
+               ["pl.OrderedMap"] = "pl/OrderedMap.lua",
+               ["pl.Set"] = "pl/Set.lua",
+               ["pl.app"] = "pl/app.lua",
+               ["pl.array2d"] = "pl/array2d.lua",
+               ["pl.class"] = "pl/class.lua",
+               ["pl.compat"] = "pl/compat.lua",
+               ["pl.comprehension"] = "pl/comprehension.lua",
+               ["pl.config"] = "pl/config.lua",
+               ["pl.data"] = "pl/data.lua",
+               ["pl.dir"] = "pl/dir.lua",
+               ["pl.file"] = "pl/file.lua",
+               ["pl.func"] = "pl/func.lua",
+               ["pl.import_into"] = "pl/import_into.lua",
+               ["pl.init"] = "pl/init.lua",
+               ["pl.input"] = "pl/input.lua",
+               ["pl.lapp"] = "pl/lapp.lua",
+               ["pl.lexer"] = "pl/lexer.lua",
+               ["pl.luabalanced"] = "pl/luabalanced.lua",
+               ["pl.operator"] = "pl/operator.lua",
+               ["pl.path"] = "pl/path.lua",
+               ["pl.permute"] = "pl/permute.lua",
+               ["pl.pretty"] = "pl/pretty.lua",
+               ["pl.seq"] = "pl/seq.lua",
+               ["pl.sip"] = "pl/sip.lua",
+               ["pl.strict"] = "pl/strict.lua",
+               ["pl.stringio"] = "pl/stringio.lua",
+               ["pl.stringx"] = "pl/stringx.lua",
+               ["pl.tablex"] = "pl/tablex.lua",
+               ["pl.template"] = "pl/template.lua",
+               ["pl.test"] = "pl/test.lua",
+               ["pl.text"] = "pl/text.lua",
+               ["pl.types"] = "pl/types.lua",
+               ["pl.url"] = "pl/url.lua",
+               ["pl.utils"] = "pl/utils.lua",
+               ["pl.xml"] = "pl/xml.lua"
+            }
+         }
+      }
+   }
+}

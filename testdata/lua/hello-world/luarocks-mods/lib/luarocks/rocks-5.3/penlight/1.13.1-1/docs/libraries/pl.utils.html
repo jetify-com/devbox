@@ -1,0 +1,1604 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Error_handling">Error handling </a></li>
+<li><a href="#File_handling">File handling </a></li>
+<li><a href="#OS_functions">OS functions </a></li>
+<li><a href="#String_functions">String functions </a></li>
+<li><a href="#Functional">Functional </a></li>
+<li><a href="#Deprecation">Deprecation </a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><strong>pl.utils</strong></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.utils</code></h1>
+<p>Generally useful routines.</p>
+<p> See  <a href="../manual/01-introduction.md.html#Generally_useful_functions_">the Guide</a>.</p>
+
+<p> Dependencies: <a href="../libraries/pl.compat.html#">pl.compat</a>, all exported fields and functions from
+ <a href="../libraries/pl.compat.html#">pl.compat</a> are also available in this module.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pack">pack (...)</a></td>
+	<td class="summary">pack an argument list into a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#unpack">unpack (t[, i[, j]])</a></td>
+	<td class="summary">unpack a table and return its contents.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#printf">printf (fmt, ...)</a></td>
+	<td class="summary">print an arbitrary number of arguments using a format.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fprintf">fprintf (f, fmt, ...)</a></td>
+	<td class="summary">write an arbitrary number of arguments to a file using a format.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#import">import (t, T)</a></td>
+	<td class="summary">take a table and 'inject' it into the local namespace.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#choose">choose (cond, value1, value2)</a></td>
+	<td class="summary">return either of two values, depending on a condition.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#array_tostring">array_tostring (t[, temp[, tostr]])</a></td>
+	<td class="summary">convert an array of values to strings.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_type">is_type (obj, tp)</a></td>
+	<td class="summary">is the object of the specified type?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#npairs">npairs (t[, i_start=1[, i_end=t.n or #t[, step=1]]])</a></td>
+	<td class="summary">an iterator with indices, similar to <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>, but with a range.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#kpairs">kpairs (t)</a></td>
+	<td class="summary">an iterator over all non-integer keys (inverse of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>).</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#patterns">patterns</a></td>
+	<td class="summary">Some standard patterns</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stdmt">stdmt</a></td>
+	<td class="summary">Standard meta-tables as used by other Penlight modules</td>
+	</tr>
+</table>
+<h2><a href="#Error_handling">Error handling </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#assert_arg">assert_arg (n, val, tp, verify, msg, lev)</a></td>
+	<td class="summary">assert that the given argument is in fact of the correct type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#enum">enum (...)</a></td>
+	<td class="summary">creates an Enum or constants lookup table for improved error handling.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#function_arg">function_arg (idx, f, msg)</a></td>
+	<td class="summary">process a function argument.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assert_string">assert_string (n, val)</a></td>
+	<td class="summary">assert the common case that the argument is a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#on_error">on_error (mode)</a></td>
+	<td class="summary">control the error strategy used by Penlight.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#raise">raise (err)</a></td>
+	<td class="summary">used by Penlight functions to return errors.</td>
+	</tr>
+</table>
+<h2><a href="#File_handling">File handling </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#readfile">readfile (filename, is_bin)</a></td>
+	<td class="summary">return the contents of a file as a string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#writefile">writefile (filename, str, is_bin)</a></td>
+	<td class="summary">write a string to a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#readlines">readlines (filename)</a></td>
+	<td class="summary">return the contents of a file as a list of lines</td>
+	</tr>
+</table>
+<h2><a href="#OS_functions">OS functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#executeex">executeex (cmd, bin)</a></td>
+	<td class="summary">execute a shell command and return the output.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#quote_arg">quote_arg (argument)</a></td>
+	<td class="summary">Quote and escape an argument of a command.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#quit">quit ([code], msg, ...)</a></td>
+	<td class="summary">error out of this program gracefully.</td>
+	</tr>
+</table>
+<h2><a href="#String_functions">String functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#escape">escape (s)</a></td>
+	<td class="summary">escape any Lua 'magic' characters in a string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#split">split (s, re, plain, n)</a></td>
+	<td class="summary">split a string into a list of strings separated by a delimiter.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#splitv">splitv (s, re, plain, n)</a></td>
+	<td class="summary">split a string into a number of return values.</td>
+	</tr>
+</table>
+<h2><a href="#Functional">Functional </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#memoize">memoize (func)</a></td>
+	<td class="summary">'memoize' a function (cache returned value for next call).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add_function_factory">add_function_factory (mt, fun)</a></td>
+	<td class="summary">associate a function factory with a type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string_lambda">string_lambda (lf)</a></td>
+	<td class="summary">an anonymous function as a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bind1">bind1 (fn, p)</a></td>
+	<td class="summary">bind the first argument of the function to a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bind2">bind2 (fn, p)</a></td>
+	<td class="summary">bind the second argument of the function to a value.</td>
+	</tr>
+</table>
+<h2><a href="#Deprecation">Deprecation </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#set_deprecation_func">set_deprecation_func (func)</a></td>
+	<td class="summary">Sets a deprecation warning function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#raise_deprecation">raise_deprecation (opts)</a></td>
+	<td class="summary">raises a deprecation warning.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pack"></a>
+    <strong>pack (...)</strong>
+    </dt>
+    <dd>
+    pack an argument list into a table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         any arguments
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table with field <code>n</code> set to the length
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../libraries/pl.compat.html#table.pack">compat.pack</a></li>
+         <li><a href="../libraries/pl.utils.html#npairs">utils.npairs</a></li>
+         <li><a href="../libraries/pl.utils.html#unpack">utils.unpack</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "unpack"></a>
+    <strong>unpack (t[, i[, j]])</strong>
+    </dt>
+    <dd>
+    unpack a table and return its contents. </p>
+
+<p> NOTE: this implementation differs from the Lua implementation in the way
+ that this one DOES honor the <code>n</code> field in the table <code>t</code>, such that it is 'nil-safe'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         table to unpack
+        </li>
+        <li><span class="parameter">i</span>
+         index from which to start unpacking, defaults to 1
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">j</span>
+         index of the last element to unpack, defaults to <code>t.n</code> or else <code>#t</code>
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        multiple return values from the table
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../libraries/pl.compat.html#table.unpack">compat.unpack</a></li>
+         <li><a href="../libraries/pl.utils.html#pack">utils.pack</a></li>
+         <li><a href="../libraries/pl.utils.html#npairs">utils.npairs</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> t = <span class="global">table</span>.pack(<span class="keyword">nil</span>, <span class="keyword">nil</span>, <span class="keyword">nil</span>, <span class="number">4</span>)
+<span class="keyword">local</span> a, b, c, d = <span class="global">table</span>.<span class="global">unpack</span>(t)   <span class="comment">-- this <a href="../libraries/pl.utils.html#unpack">unpack</a> is NOT nil-safe, so d == nil
+</span>
+<span class="keyword">local</span> a, b, c, d = utils.<span class="global">unpack</span>(t)   <span class="comment">-- this is nil-safe, so d == 4</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "printf"></a>
+    <strong>printf (fmt, ...)</strong>
+    </dt>
+    <dd>
+    print an arbitrary number of arguments using a format.
+ Output will be sent to <code>stdout</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fmt</span>
+         The format (see <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.format">string.format</a>)
+        </li>
+        <li><span class="parameter">...</span>
+         Extra arguments for format
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fprintf"></a>
+    <strong>fprintf (f, fmt, ...)</strong>
+    </dt>
+    <dd>
+    write an arbitrary number of arguments to a file using a format.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         File handle to write to.
+        </li>
+        <li><span class="parameter">fmt</span>
+         The format (see <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.format">string.format</a>).
+        </li>
+        <li><span class="parameter">...</span>
+         Extra arguments for format
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "import"></a>
+    <strong>import (t, T)</strong>
+    </dt>
+    <dd>
+    take a table and 'inject' it into the local namespace.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         The table (table), or module name (string), defaults to this <a href="../libraries/pl.utils.html">utils</a> module table
+        </li>
+        <li><span class="parameter">T</span>
+         An optional destination table (defaults to callers environment)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "choose"></a>
+    <strong>choose (cond, value1, value2)</strong>
+    </dt>
+    <dd>
+    return either of two values, depending on a condition.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cond</span>
+         A condition
+        </li>
+        <li><span class="parameter">value1</span>
+         Value returned if cond is truthy
+        </li>
+        <li><span class="parameter">value2</span>
+         Value returned if cond is falsy
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "array_tostring"></a>
+    <strong>array_tostring (t[, temp[, tostr]])</strong>
+    </dt>
+    <dd>
+    convert an array of values to strings.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a list-like table
+        </li>
+        <li><span class="parameter">temp</span>
+         (table) buffer to use, otherwise allocate
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">tostr</span>
+         custom tostring function, called with (value,index). Defaults to <a href="https://www.lua.org/manual/5.1/manual.html#pdf-tostring">tostring</a>.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the converted buffer
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_type"></a>
+    <strong>is_type (obj, tp)</strong>
+    </dt>
+    <dd>
+    is the object of the specified type?
+ If the type is a string, then use type, otherwise compare with metatable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+         An object to check
+        </li>
+        <li><span class="parameter">tp</span>
+         String of what type it should be
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">utils.is_type(<span class="string">"hello world"</span>, <span class="string">"string"</span>)   <span class="comment">--&gt; true
+</span><span class="comment">-- or check metatable
+</span><span class="keyword">local</span> my_mt = {}
+<span class="keyword">local</span> my_obj = <span class="global">setmetatable</span>(my_obj, my_mt)
+utils.is_type(my_obj, my_mt)  <span class="comment">--&gt; true</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "npairs"></a>
+    <strong>npairs (t[, i_start=1[, i_end=t.n or #t[, step=1]]])</strong>
+    </dt>
+    <dd>
+    an iterator with indices, similar to <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>, but with a range.
+ This is a nil-safe index based iterator that will return <code>nil</code> when there
+ is a hole in a list. To be safe ensure that table <code>t.n</code> contains the length.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the table to iterate over
+        </li>
+        <li><span class="parameter">i_start</span>
+            <span class="types"><span class="type">integer</span></span>
+         start index
+         (<em>default</em> 1)
+        </li>
+        <li><span class="parameter">i_end</span>
+            <span class="types"><span class="type">integer</span></span>
+         end index
+         (<em>default</em> t.n or #t)
+        </li>
+        <li><span class="parameter">step</span>
+            <span class="types"><span class="type">integer</span></span>
+         step size
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">integer</span></span>
+        index</li>
+        <li>
+           <span class="types"><span class="type">any</span></span>
+        value at index (which can be <code>nil</code>!)</li>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../libraries/pl.utils.html#pack">utils.pack</a></li>
+         <li><a href="../libraries/pl.utils.html#unpack">utils.unpack</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> t = utils.pack(<span class="keyword">nil</span>, <span class="number">123</span>, <span class="keyword">nil</span>)  <span class="comment">-- adds an <code>n</code> field when packing
+</span>
+<span class="keyword">for</span> i, v <span class="keyword">in</span> utils.npairs(t, <span class="number">2</span>) <span class="keyword">do</span>  <span class="comment">-- start at index 2
+</span>  t[i] = <span class="global">tostring</span>(t[i])
+<span class="keyword">end</span>
+
+<span class="comment">-- t = { n = 3, [2] = "123", [3] = "nil" }</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "kpairs"></a>
+    <strong>kpairs (t)</strong>
+    </dt>
+    <dd>
+    an iterator over all non-integer keys (inverse of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>).
+ It will skip any key that is an integer number, so negative indices or an
+ array with holes will not return those either (so it returns slightly less than
+ 'the inverse of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>').</p>
+
+<p> This uses <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pairs">pairs</a> under the hood, so any value that is iterable using <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pairs">pairs</a>
+ will work with this function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the table to iterate over
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">key</span></span>
+
+
+</li>
+        <li>
+           <span class="types"><span class="type">value</span></span>
+
+
+</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> t = {
+  <span class="string">"hello"</span>,
+  <span class="string">"world"</span>,
+  hello = <span class="string">"hallo"</span>,
+  world = <span class="string">"Welt"</span>,
+}
+
+<span class="keyword">for</span> k, v <span class="keyword">in</span> utils.kpairs(t) <span class="keyword">do</span>
+  <span class="global">print</span>(<span class="string">"German: "</span>, v)
+<span class="keyword">end</span>
+
+<span class="comment">-- output;
+</span><span class="comment">-- German: hallo
+</span><span class="comment">-- German: Welt</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "patterns"></a>
+    <strong>patterns</strong>
+    </dt>
+    <dd>
+    Some standard patterns
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">FLOAT</span>
+        floating point number
+        </li>
+        <li><span class="parameter">INTEGER</span>
+        integer number
+        </li>
+        <li><span class="parameter">IDEN</span>
+        identifier
+        </li>
+        <li><span class="parameter">FILE</span>
+        file
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stdmt"></a>
+    <strong>stdmt</strong>
+    </dt>
+    <dd>
+    Standard meta-tables as used by other Penlight modules
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">List</span>
+         the List metatable
+        </li>
+        <li><span class="parameter">Map</span>
+         the Map metatable
+        </li>
+        <li><span class="parameter">Set</span>
+         the Set metatable
+        </li>
+        <li><span class="parameter">MultiMap</span>
+         the MultiMap metatable
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Error_handling"></a>Error handling </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "assert_arg"></a>
+    <strong>assert_arg (n, val, tp, verify, msg, lev)</strong>
+    </dt>
+    <dd>
+    assert that the given argument is in fact of the correct type.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         argument index
+        </li>
+        <li><span class="parameter">val</span>
+         the value
+        </li>
+        <li><span class="parameter">tp</span>
+         the type
+        </li>
+        <li><span class="parameter">verify</span>
+         an optional verification function
+        </li>
+        <li><span class="parameter">msg</span>
+         an optional custom message
+        </li>
+        <li><span class="parameter">lev</span>
+         optional stack position for trace, default 2
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the validated value
+    </ol>
+
+    <h3>Raises:</h3>
+    if <code>val</code> is not the correct type
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> param1 = assert_arg(<span class="number">1</span>,<span class="string">"hello"</span>,<span class="string">'table'</span>)  <span class="comment">--&gt; error: argument 1 expected a 'table', got a 'string'
+</span><span class="keyword">local</span> param4 = assert_arg(<span class="number">4</span>,<span class="string">'!@#$%^&amp;*'</span>,<span class="string">'string'</span>,path.isdir,<span class="string">'not a directory'</span>)
+     <span class="comment">--&gt; error: argument 4: '!@#$%^&amp;*' not a directory</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "enum"></a>
+    <strong>enum (...)</strong>
+    </dt>
+    <dd>
+    creates an Enum or constants lookup table for improved error handling.
+ This helps prevent magic strings in code by throwing errors for accessing
+ non-existing values, and/or converting strings/identifiers to other values.</p>
+
+<p> Calling on the object does the same, but returns a soft error; <code>nil + err</code>, if
+ the call is succesful (the key exists), it will return the value.</p>
+
+<p> When calling with varargs or an array the values will be equal to the keys.
+ The enum object is read-only.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> or <span class="type">vararg</span></span>
+         the input for the Enum. If varargs or an array then the
+ values in the Enum will be equal to the names (must be strings), if a hash-table
+ then values remain (any type), and the keys must be strings.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Enum object (read-only table/object)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="comment">-- Enum access at runtime
+</span><span class="keyword">local</span> obj = {}
+obj.MOVEMENT = utils.enum(<span class="string">"FORWARD"</span>, <span class="string">"REVERSE"</span>, <span class="string">"LEFT"</span>, <span class="string">"RIGHT"</span>)
+
+<span class="keyword">if</span> current_movement == obj.MOVEMENT.FORWARD <span class="keyword">then</span>
+  <span class="comment">-- do something
+</span>
+<span class="keyword">elseif</span> current_movement == obj.MOVEMENT.REVERES <span class="keyword">then</span>
+  <span class="comment">-- throws error due to typo 'REVERES', so a silent mistake becomes a hard error
+</span>  <span class="comment">-- "'REVERES' is not a valid value (expected one of: 'FORWARD', 'REVERSE', 'LEFT', 'RIGHT')"
+</span>
+<span class="keyword">end</span></pre></li>
+        <li><pre class="example"><span class="comment">-- standardized error codes
+</span><span class="keyword">local</span> obj = {
+  ERR = utils.enum {
+    NOT_FOUND = <span class="string">"the item was not found"</span>,
+    OUT_OF_BOUNDS = <span class="string">"the index is outside the allowed range"</span>
+  },
+
+  some_method = <span class="keyword">function</span>(self)
+    <span class="keyword">return</span> self.ERR.OUT_OF_BOUNDS
+  <span class="keyword">end</span>,
+}
+
+<span class="keyword">local</span> result, err = obj:some_method()
+<span class="keyword">if</span> <span class="keyword">not</span> result <span class="keyword">then</span>
+  <span class="keyword">if</span> err == obj.ERR.NOT_FOUND <span class="keyword">then</span>
+    <span class="comment">-- check on error code, not magic strings
+</span>
+  <span class="keyword">else</span>
+    <span class="comment">-- return the error description, contained in the constant
+</span>    <span class="keyword">return</span> <span class="keyword">nil</span>, <span class="string">"error: "</span>..err  <span class="comment">-- "error: the index is outside the allowed range"
+</span>  <span class="keyword">end</span>
+<span class="keyword">end</span></pre></li>
+        <li><pre class="example"><span class="comment">-- validating/converting user-input
+</span><span class="keyword">local</span> color = <span class="string">"purple"</span>
+<span class="keyword">local</span> ansi_colors = utils.enum {
+  black     = <span class="number">30</span>,
+  red       = <span class="number">31</span>,
+  green     = <span class="number">32</span>,
+}
+<span class="keyword">local</span> color_code, err = ansi_colors(color) <span class="comment">-- calling on the object, returns the value from the enum
+</span><span class="keyword">if</span> <span class="keyword">not</span> color_code <span class="keyword">then</span>
+  <span class="global">print</span>(<span class="string">"bad 'color', "</span> .. err)
+  <span class="comment">-- "bad 'color', 'purple' is not a valid value (expected one of: 'black', 'red', 'green')"
+</span>  <span class="global">os</span>.exit(<span class="number">1</span>)
+<span class="keyword">end</span></pre></li>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "function_arg"></a>
+    <strong>function_arg (idx, f, msg)</strong>
+    </dt>
+    <dd>
+    process a function argument.
+ This is used throughout Penlight and defines what is meant by a function:
+ Something that is callable, or an operator string as defined by <code>pl.operator</code>,
+ such as '>' or '#'. If a function factory has been registered for the type, it will
+ be called to get the function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+         argument index
+        </li>
+        <li><span class="parameter">f</span>
+         a function, operator string, or callable object
+        </li>
+        <li><span class="parameter">msg</span>
+         optional error message
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a callable
+    </ol>
+
+    <h3>Raises:</h3>
+    if idx is not a number or if f is not callable
+
+
+
+</dd>
+    <dt>
+    <a name = "assert_string"></a>
+    <strong>assert_string (n, val)</strong>
+    </dt>
+    <dd>
+    assert the common case that the argument is a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+         argument index
+        </li>
+        <li><span class="parameter">val</span>
+         a value that must be a string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the validated value
+    </ol>
+
+    <h3>Raises:</h3>
+    val must be a string
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> val = <span class="number">42</span>
+<span class="keyword">local</span> param2 = utils.assert_string(<span class="number">2</span>, val) <span class="comment">--&gt; error: argument 2 expected a 'string', got a 'number'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "on_error"></a>
+    <strong>on_error (mode)</strong>
+    </dt>
+    <dd>
+
+<p>control the error strategy used by Penlight.
+ This is a global setting that controls how <a href="../libraries/pl.utils.html#raise">utils.raise</a> behaves:</p>
+
+<ul>
+    <li>'default': return <code>nil + error</code> (this is the default)</li>
+    <li>'error': throw a Lua error</li>
+    <li>'quit': exit the program</li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+         either 'default', 'quit'  or 'error'
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#raise">utils.raise</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "raise"></a>
+    <strong>raise (err)</strong>
+    </dt>
+    <dd>
+    used by Penlight functions to return errors.  Its global behaviour is controlled
+ by <a href="../libraries/pl.utils.html#on_error">utils.on_error</a>.
+ To use this function you MUST use it in conjunction with <code>return</code>, since it might
+ return <code>nil + error</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">err</span>
+         the error string.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#on_error">utils.on_error</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> some_condition <span class="keyword">then</span>
+  <span class="keyword">return</span> utils.raise(<span class="string">"some condition was not met"</span>)  <span class="comment">-- MUST use 'return'!
+</span><span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="File_handling"></a>File handling </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "readfile"></a>
+    <strong>readfile (filename, is_bin)</strong>
+    </dt>
+    <dd>
+    return the contents of a file as a string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         The file path
+        </li>
+        <li><span class="parameter">is_bin</span>
+         open in binary mode
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        file contents
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "writefile"></a>
+    <strong>writefile (filename, str, is_bin)</strong>
+    </dt>
+    <dd>
+    write a string to a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         The file path
+        </li>
+        <li><span class="parameter">str</span>
+         The string
+        </li>
+        <li><span class="parameter">is_bin</span>
+         open in binary mode
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        true or nil</li>
+        <li>
+        error message</li>
+    </ol>
+
+    <h3>Raises:</h3>
+    error if filename or str aren't strings
+
+
+
+</dd>
+    <dt>
+    <a name = "readlines"></a>
+    <strong>readlines (filename)</strong>
+    </dt>
+    <dd>
+    return the contents of a file as a list of lines
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+         The file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        file contents as a table
+    </ol>
+
+    <h3>Raises:</h3>
+    error if filename is not a string
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="OS_functions"></a>OS functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "executeex"></a>
+    <strong>executeex (cmd, bin)</strong>
+    </dt>
+    <dd>
+    execute a shell command and return the output.
+ This function redirects the output to tempfiles and returns the content of those files.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmd</span>
+         a shell command
+        </li>
+        <li><span class="parameter">bin</span>
+         boolean, if true, read output as binary file
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        true if successful</li>
+        <li>
+        actual return code</li>
+        <li>
+        stdout output (string)</li>
+        <li>
+        errout output (string)</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "quote_arg"></a>
+    <strong>quote_arg (argument)</strong>
+    </dt>
+    <dd>
+    Quote and escape an argument of a command.
+ Quotes a single (or list of) argument(s) of a command to be passed
+ to <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.execute">os.execute</a>, <code>pl.utils.execute</code> or <a href="../libraries/pl.utils.html#executeex">pl.utils.executeex</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">argument</span>
+         (string or table/list) the argument to quote. If a list then
+ all arguments in the list will be returned as a single string quoted.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        quoted and escaped argument.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> options = utils.quote_arg {
+    <span class="string">"-lluacov"</span>,
+    <span class="string">"-e"</span>,
+    <span class="string">"utils = print(require('pl.utils')._VERSION"</span>,
+}
+<span class="comment">-- returns: -lluacov -e 'utils = print(require('\''pl.utils'\'')._VERSION'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "quit"></a>
+    <strong>quit ([code], msg, ...)</strong>
+    </dt>
+    <dd>
+    error out of this program gracefully.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">code</span>
+         The exit code, defaults to -<code>1</code> if omitted
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">msg</span>
+         The exit message will be sent to <code>stderr</code> (will be formatted with the extra parameters)
+        </li>
+        <li><span class="parameter">...</span>
+         extra arguments for message's format'
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#fprintf">utils.fprintf</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">utils.quit(-<span class="number">1</span>, <span class="string">"Error '%s' happened"</span>, <span class="string">"42"</span>)
+<span class="comment">-- is equivalent to
+</span>utils.quit(<span class="string">"Error '%s' happened"</span>, <span class="string">"42"</span>)  <span class="comment">--&gt; Error '42' happened</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="String_functions"></a>String functions </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "escape"></a>
+    <strong>escape (s)</strong>
+    </dt>
+    <dd>
+    escape any Lua 'magic' characters in a string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         The input string
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "split"></a>
+    <strong>split (s, re, plain, n)</strong>
+    </dt>
+    <dd>
+    split a string into a list of strings separated by a delimiter.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         The input string
+        </li>
+        <li><span class="parameter">re</span>
+         optional A Lua string pattern; defaults to '%s+'
+        </li>
+        <li><span class="parameter">plain</span>
+         optional If truthy don't use Lua patterns
+        </li>
+        <li><span class="parameter">n</span>
+         optional maximum number of elements (if there are more, the last will remian un-split)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a list-like table
+    </ol>
+
+    <h3>Raises:</h3>
+    error if s is not a string
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#splitv">splitv</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "splitv"></a>
+    <strong>splitv (s, re, plain, n)</strong>
+    </dt>
+    <dd>
+    split a string into a number of return values.
+ Identical to <a href="../libraries/pl.utils.html#split">split</a> but returns multiple sub-strings instead of
+ a single list of sub-strings.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         the string
+        </li>
+        <li><span class="parameter">re</span>
+         A Lua string pattern; defaults to '%s+'
+        </li>
+        <li><span class="parameter">plain</span>
+         don't use Lua patterns
+        </li>
+        <li><span class="parameter">n</span>
+         optional maximum number of splits
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        n values
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#split">split</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">first,<span class="global">next</span> = splitv(<span class="string">'user=jane=doe'</span>,<span class="string">'='</span>, <span class="keyword">false</span>, <span class="number">2</span>)
+<span class="global">assert</span>(first == <span class="string">"user"</span>)
+<span class="global">assert</span>(<span class="global">next</span> == <span class="string">"jane=doe"</span>)</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Functional"></a>Functional </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "memoize"></a>
+    <strong>memoize (func)</strong>
+    </dt>
+    <dd>
+    'memoize' a function (cache returned value for next call).
+ This is useful if you have a function which is relatively expensive,
+ but you don't know in advance what values will be required, so
+ building a table upfront is wasteful/impossible.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+         a function of at least one argument
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function with at least one argument, which is used as the key.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_function_factory"></a>
+    <strong>add_function_factory (mt, fun)</strong>
+    </dt>
+    <dd>
+    associate a function factory with a type.
+ A function factory takes an object of the given type and
+ returns a function for evaluating it
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mt</span>
+            <span class="types"><span class="type">tab</span></span>
+         metatable
+        </li>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a callable that returns a function
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string_lambda"></a>
+    <strong>string_lambda (lf)</strong>
+    </dt>
+    <dd>
+    an anonymous function as a string.  This string is either of the form
+ '|args| expression' or is a function of one argument, '_'
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lf</span>
+         function as a string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">string_lambda <span class="string">'|x|x+1'</span> (<span class="number">2</span>) == <span class="number">3</span>
+string_lambda <span class="string">'_+1'</span> (<span class="number">2</span>) == <span class="number">3</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bind1"></a>
+    <strong>bind1 (fn, p)</strong>
+    </dt>
+    <dd>
+    bind the first argument of the function to a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+         a function of at least two values (may be an operator string)
+        </li>
+        <li><span class="parameter">p</span>
+         a value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function such that f(x) is fn(p,x)
+    </ol>
+
+    <h3>Raises:</h3>
+    same as <a href="../libraries/pl.utils.html#function_arg">function_arg</a>
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.func.html#bind1">func.bind1</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> f(msg, name)
+  <span class="global">print</span>(msg .. <span class="string">" "</span> .. name)
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> hello = utils.bind1(f, <span class="string">"Hello"</span>)
+
+<span class="global">print</span>(hello(<span class="string">"world"</span>))     <span class="comment">--&gt; "Hello world"
+</span><span class="global">print</span>(hello(<span class="string">"sunshine"</span>))  <span class="comment">--&gt; "Hello sunshine"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bind2"></a>
+    <strong>bind2 (fn, p)</strong>
+    </dt>
+    <dd>
+    bind the second argument of the function to a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+         a function of at least two values (may be an operator string)
+        </li>
+        <li><span class="parameter">p</span>
+         a value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function such that f(x) is fn(x,p)
+    </ol>
+
+    <h3>Raises:</h3>
+    same as <a href="../libraries/pl.utils.html#function_arg">function_arg</a>
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> f(a, b, c)
+  <span class="global">print</span>(a .. <span class="string">" "</span> .. b .. <span class="string">" "</span> .. c)
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> hello = utils.bind1(f, <span class="string">"world"</span>)
+
+<span class="global">print</span>(hello(<span class="string">"Hello"</span>, <span class="string">"!"</span>))  <span class="comment">--&gt; "Hello world !"
+</span><span class="global">print</span>(hello(<span class="string">"Bye"</span>, <span class="string">"?"</span>))    <span class="comment">--&gt; "Bye world ?"</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Deprecation"></a>Deprecation </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "set_deprecation_func"></a>
+    <strong>set_deprecation_func (func)</strong>
+    </dt>
+    <dd>
+    Sets a deprecation warning function.
+ An application can override this function to support proper output of
+ deprecation warnings. The warnings can be generated from libraries or
+ functions by calling <a href="../libraries/pl.utils.html#raise_deprecation">utils.raise_deprecation</a>. The default function
+ will write to the 'warn' system (introduced in Lua 5.4, or the compatibility
+ function from the <a href="../libraries/pl.compat.html">compat</a> module for earlier versions).</p>
+
+<p> Note: only applications should set/change this function, libraries should not.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+         a callback with signature: <code>function(msg, trace)</code> both arguments are strings, the latter being optional.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#raise_deprecation">utils.raise_deprecation</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- write to the Nginx logs with OpenResty
+</span>utils.set_deprecation_func(<span class="keyword">function</span>(msg, trace)
+  ngx.log(ngx.WARN, msg, (trace <span class="keyword">and</span> (<span class="string">" "</span> .. trace) <span class="keyword">or</span> <span class="keyword">nil</span>))
+<span class="keyword">end</span>)
+
+<span class="comment">-- disable deprecation warnings
+</span>utils.set_deprecation_func()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "raise_deprecation"></a>
+    <strong>raise_deprecation (opts)</strong>
+    </dt>
+    <dd>
+    raises a deprecation warning.
+ For options see the usage example below.</p>
+
+<p> Note: the <code>opts.deprecated_after</code> field is the last version in which
+ a feature or option was NOT YET deprecated! Because when writing the code it
+ is quite often not known in what version the code will land. But the last
+ released version is usually known.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span>
+         options table
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#set_deprecation_func">utils.set_deprecation_func</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">warn(<span class="string">"@on"</span>)   <span class="comment">-- enable Lua warnings, they are usually off by default
+</span>
+<span class="keyword">function</span> stringx.islower(str)
+  raise_deprecation {
+    source = <span class="string">"Penlight "</span> .. utils._VERSION,                   <span class="comment">-- optional
+</span>    message = <span class="string">"function 'islower' was renamed to 'is_lower'"</span>, <span class="comment">-- required
+</span>    version_removed = <span class="string">"2.0.0"</span>,                                <span class="comment">-- optional
+</span>    deprecated_after = <span class="string">"1.2.3"</span>,                               <span class="comment">-- optional
+</span>    no_trace = <span class="keyword">true</span>,                                          <span class="comment">-- optional
+</span>  }
+  <span class="keyword">return</span> stringx.is_lower(str)
+<span class="keyword">end</span>
+<span class="comment">-- output: "[Penlight 1.9.2] function 'islower' was renamed to 'is_lower' (deprecated after 1.2.3, scheduled for removal in 2.0.0)"</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

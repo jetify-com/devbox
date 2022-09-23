@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><strong>pl.app</strong></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.app</code></h1>
+<p>Application support functions.</p>
+<p> See <a href="../manual/01-introduction.md.html#Application_Support">the Guide</a></p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.path.html#">pl.path</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#script_name">script_name ()</a></td>
+	<td class="summary">return the name of the current script running.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#require_here">require_here (base, nofollow)</a></td>
+	<td class="summary">prefixes the current script's path to the Lua module path.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#appfile">appfile (file)</a></td>
+	<td class="summary">return a suitable path for files private to this application.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#platform">platform ()</a></td>
+	<td class="summary">return string indicating operating system.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#lua">lua ()</a></td>
+	<td class="summary">return the full command-line used to invoke this script.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse_args">parse_args (args, flags_with_values, flags_valid)</a></td>
+	<td class="summary">parse command-line arguments into flags and parameters.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "script_name"></a>
+    <strong>script_name ()</strong>
+    </dt>
+    <dd>
+    return the name of the current script running.
+ The name will be the name as passed on the command line
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string filename
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "require_here"></a>
+    <strong>require_here (base, nofollow)</strong>
+    </dt>
+    <dd>
+    prefixes the current script's path to the Lua module path.
+ Applies to both the source and the binary module paths. It makes it easy for
+ the main file of a multi-file program to access its modules in the same directory.
+ <code>base</code> allows these modules to be put in a specified subdirectory, to allow for
+ cleaner deployment and resolve potential conflicts between a script name and its
+ library directory.</p>
+
+<p> Note: the path is prefixed, so it is searched first when requiring modules.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">base</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         optional base directory (absolute, or relative path).
+        </li>
+        <li><span class="parameter">nofollow</span>
+            <span class="types"><span class="type">bool</span></span>
+         always use the invocation's directory, even if the invoked file is a symlink
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        the current script's path with a trailing slash
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "appfile"></a>
+    <strong>appfile (file)</strong>
+    </dt>
+    <dd>
+    return a suitable path for files private to this application.
+ These will look like '~/.SNAME/file', with '~' as with expanduser and
+ SNAME is the name of the script without .lua extension.
+ If the directory does not exist, it will be created.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a filename (w/out path)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        a full pathname, or nil</li>
+        <li>
+        cannot create directory error</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- when run from a script called 'testapp' (on Windows):
+</span><span class="keyword">local</span> app = <span class="global">require</span> <span class="string">'pl.app'</span>
+<span class="global">print</span>(app.appfile <span class="string">'test.txt'</span>)
+<span class="comment">-- C:\Documents and Settings\steve\.testapp\test.txt</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "platform"></a>
+    <strong>platform ()</strong>
+    </dt>
+    <dd>
+    return string indicating operating system.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        'Windows','OSX' or whatever uname returns (e.g. 'Linux')
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "lua"></a>
+    <strong>lua ()</strong>
+    </dt>
+    <dd>
+    return the full command-line used to invoke this script.
+ It will not include the scriptname itself, see <a href="../libraries/pl.app.html#script_name">app.script_name</a>.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        command-line</li>
+        <li>
+        name of Lua program used</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- execute:  lua -lluacov -e 'print(_VERSION)' myscript.lua
+</span>
+<span class="comment">-- myscript.lua
+</span><span class="global">print</span>(<span class="global">require</span>(<span class="string">"pl.app"</span>).lua())  <span class="comment">--&gt; "lua -lluacov -e 'print(_VERSION)'", "lua"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "parse_args"></a>
+    <strong>parse_args (args, flags_with_values, flags_valid)</strong>
+    </dt>
+    <dd>
+    parse command-line arguments into flags and parameters.
+ Understands GNU-style command-line flags; short (<code>-f</code>) and long (<code>--flag</code>).</p>
+
+<p> These may be given a value with either '=' or ':' (<code>-k:2</code>,<code>--alpha=3.2</code>,<code>-n2</code>),
+ a number value can be given without a space. If the flag is marked
+ as having a value, then a space-separated value is also accepted (<code>-i hello</code>),
+ see the <code>flags_with_values</code> argument).</p>
+
+<p> Multiple short args can be combined like so: ( <code>-abcd</code>).</p>
+
+<p> When specifying the <code>flags_valid</code> parameter, its contents can also contain
+ aliasses, to convert short/long flags to the same output name. See the
+ example below.</p>
+
+<p> Note: if a flag is repeated, the last value wins.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">{string}</a></span>
+         an array of strings (default is the global <code>arg</code>)
+        </li>
+        <li><span class="parameter">flags_with_values</span>
+            <span class="types"><span class="type">tab</span></span>
+         any flags that take values, either list or hash
+ table e.g. <code>{ out=true }</code> or <code>{ &quot;out&quot; }</code>.
+        </li>
+        <li><span class="parameter">flags_valid</span>
+            <span class="types"><span class="type">tab</span></span>
+         (optional) flags that are valid, either list or hashtable.
+ If not given, everything
+ will be accepted(everything in <code>flags_with_values</code> will automatically be allowed)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        a table of flags (flag=value pairs)</li>
+        <li>
+        an array of parameters</li>
+    </ol>
+
+    <h3>Raises:</h3>
+    if args is nil, then the global <code>args</code> must be available!
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- Simple form:
+</span><span class="keyword">local</span> flags, params = app.parse_args(<span class="keyword">nil</span>,
+     { <span class="string">"hello"</span>, <span class="string">"world"</span> },  <span class="comment">-- list of flags taking values
+</span>     { <span class="string">"l"</span>, <span class="string">"a"</span>, <span class="string">"b"</span>})      <span class="comment">-- list of allowed flags (value ones will be added)
+</span>
+<span class="comment">-- More complex example using aliasses:
+</span><span class="keyword">local</span> valid = {
+    long = <span class="string">"l"</span>,           <span class="comment">-- if 'l' is specified, it is reported as 'long'
+</span>    new = { <span class="string">"n"</span>, <span class="string">"old"</span> }, <span class="comment">-- here both 'n' and 'old' will go into 'new'
+</span>}
+<span class="keyword">local</span> values = {
+    <span class="string">"value"</span>,   <span class="comment">-- will automatically be added to the allowed set of flags
+</span>    <span class="string">"new"</span>,     <span class="comment">-- will mark 'n' and 'old' as requiring a value as well
+</span>}
+<span class="keyword">local</span> flags, params = app.parse_args(<span class="keyword">nil</span>, values, valid)
+
+<span class="comment">-- command:  myapp.lua -l --old:hello --value world param1 param2
+</span><span class="comment">-- will yield:
+</span>flags = {
+    long = <span class="keyword">true</span>,     <span class="comment">-- input from 'l'
+</span>    new = <span class="string">"hello"</span>,   <span class="comment">-- input from 'old'
+</span>    value = <span class="string">"world"</span>, <span class="comment">-- allowed because it was in 'values', note: space separated!
+</span>}
+params = {
+    [<span class="number">1</span>] = <span class="string">"param1"</span>
+    [<span class="number">2</span>] = <span class="string">"param2"</span>
+}</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,1356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><strong>pl.xml</strong></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.xml</code></h1>
+<p>XML LOM Utilities.</p>
+<p> This implements some useful things on <a href="http://matthewwild.co.uk/projects/luaexpat/lom.html">LOM</a> documents, such as returned by <code>lxp.lom.parse</code>.
+ In particular, it can convert LOM back into XML text, with optional pretty-printing control.
+ It is based on stanza.lua from <a href="http://hg.prosody.im/trunk/file/4621c92d2368/util/stanza.lua">Prosody</a></p>
+
+
+<pre>
+&gt; d = xml.parse <span class="string">"&lt;nodes&gt;&lt;node id='1'&gt;alice&lt;/node&gt;&lt;/nodes&gt;"</span>
+&gt; = d
+&lt;nodes&gt;&lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;&lt;/nodes&gt;
+&gt; = xml.<span class="global">tostring</span>(d,<span class="string">''</span>,<span class="string">'  '</span>)
+&lt;nodes&gt;
+   &lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;
+&lt;/nodes&gt;
+</pre>
+
+<p> Can be used as a lightweight one-stop-shop for simple XML processing; a simple XML parser is included
+ but the default is to use <code>lxp.lom</code> if it can be found.
+ <pre>
+ Prosody IM
+ Copyright (C) 2008-2010 Matthew Wild
+ Copyright (C) 2008-2010 Waqas Hussain--
+ classic Lua XML parser by Roberto Ierusalimschy.
+ modified to output LOM format.
+ http://lua-users.org/wiki/LuaXml
+ </pre>
+ See <a href="../manual/06-data.md.html#XML">the Guide</a></p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a></p>
+
+<p> Soft Dependencies: <code>lxp.lom</code> (fallback is to use basic Lua parser)</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (tag[, attr={}])</a></td>
+	<td class="summary">create a new document node.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse">parse (text_or_filename, is_file, use_basic)</a></td>
+	<td class="summary">parse an XML document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#elem">elem (tag, items)</a></td>
+	<td class="summary">Create a Node with a set of children (text or Nodes) and attributes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tags">tags (list)</a></td>
+	<td class="summary">given a list of names, return a number of element constructors.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:addtag">Doc:addtag (tag[, attrs={}])</a></td>
+	<td class="summary">Adds a document Node, at current position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:text">Doc:text (text)</a></td>
+	<td class="summary">Adds a text node, at current position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:up">Doc:up ()</a></td>
+	<td class="summary">Moves current position up one level.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:reset">Doc:reset ()</a></td>
+	<td class="summary">Resets current position to top level.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:add_direct_child">Doc:add_direct_child (child)</a></td>
+	<td class="summary">Append a child to the currrent Node (ignoring current position).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:add_child">Doc:add_child (child)</a></td>
+	<td class="summary">Append a child at the current position (without changing position).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:set_attribs">Doc:set_attribs (t)</a></td>
+	<td class="summary">Set attributes of a document node.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:set_attrib">Doc:set_attrib (a, v)</a></td>
+	<td class="summary">Set a single attribute of a document node.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:get_attribs">Doc:get_attribs ()</a></td>
+	<td class="summary">Gets the attributes of a document node.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc.subst">Doc.subst (template, data)</a></td>
+	<td class="summary">create a substituted copy of a document,</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:child_with_name">Doc:child_with_name (tag)</a></td>
+	<td class="summary">Return the first child with a given tag name (non-recursive).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:get_elements_with_name">Doc:get_elements_with_name (tag[, dont_recurse=false])</a></td>
+	<td class="summary">Returns all elements in a document that have a given tag.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:children">Doc:children ()</a></td>
+	<td class="summary">Iterator over all children of a document node, including text nodes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:first_childtag">Doc:first_childtag ()</a></td>
+	<td class="summary">Return the first child element of a node, if it exists.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:matching_tags">Doc:matching_tags ([tag=nil[, xmlns=nil]])</a></td>
+	<td class="summary">Iterator that matches tag names, and a namespace (non-recursive).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:childtags">Doc:childtags ()</a></td>
+	<td class="summary">Iterator over all child tags of a document node.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:maptags">Doc:maptags (callback)</a></td>
+	<td class="summary">Visit child Nodes of a node and call a function, possibly modifying the document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#xml_escape">xml_escape (str)</a></td>
+	<td class="summary">Escapes a string for safe use in xml.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#xml_unescape">xml_unescape (str)</a></td>
+	<td class="summary">Unescapes a string from xml.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tostring">tostring (doc[, b_ind[, t_ind[, a_ind[, xml_preface]]]])</a></td>
+	<td class="summary">Function to pretty-print an XML document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:tostring">Doc:tostring ([b_ind[, t_ind[, a_ind[, xml_preface="&lt;?xml version='1.0'?&gt;"]]]])</a></td>
+	<td class="summary">Method to pretty-print an XML document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:get_text">Doc:get_text ()</a></td>
+	<td class="summary">get the full text value of an element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#clone">clone (doc[, strsubst])</a></td>
+	<td class="summary">Returns a copy of a document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:filter">Doc:filter ([strsubst])</a></td>
+	<td class="summary">Returns a copy of a document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compare">compare (t1, t2)</a></td>
+	<td class="summary">Compare two documents or elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#is_tag">is_tag (d)</a></td>
+	<td class="summary">is this value a document element?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#walk">walk (doc, depth_first, operation)</a></td>
+	<td class="summary">Calls a function recursively over Nodes in the document.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parsehtml">parsehtml (s)</a></td>
+	<td class="summary">Parse a well-formed HTML file as a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#basic_parse">basic_parse (s, all_text, html)</a></td>
+	<td class="summary">Parse a simple XML document using a pure Lua parser based on Robero Ierusalimschy's original version.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Doc:match">Doc:match (pat)</a></td>
+	<td class="summary">does something...</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (tag[, attr={}])</strong>
+    </dt>
+    <dd>
+    create a new document node.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the tag name
+        </li>
+        <li><span class="parameter">attr</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         attributes (table of name-value pairs)
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the Node object
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#elem">xml.elem</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>, { hello = <span class="string">"world"</span>, answer = <span class="string">"42"</span> })
+<span class="global">print</span>(doc)  <span class="comment">--&gt;  &lt;main hello='world' answer='42'/&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "parse"></a>
+    <strong>parse (text_or_filename, is_file, use_basic)</strong>
+    </dt>
+    <dd>
+    parse an XML document.  By default, this uses lxp.lom.parse, but
+ falls back to basic_parse, or if <code>use_basic</code> is truthy
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text_or_filename</span>
+          file or string representation
+        </li>
+        <li><span class="parameter">is_file</span>
+         whether text<em>or</em>file is a file name or not
+        </li>
+        <li><span class="parameter">use_basic</span>
+         do a basic parse
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        a parsed LOM document with the document metatatables set</li>
+        <li>
+        nil, error the error can either be a file error or a parse error</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "elem"></a>
+    <strong>elem (tag, items)</strong>
+    </dt>
+    <dd>
+    Create a Node with a set of children (text or Nodes) and attributes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a tag name
+        </li>
+        <li><span class="parameter">items</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         either a single child (text or Node), or a table where the hash
+ part is the attributes and the list part is the children (text or Nodes).
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the new Node
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../libraries/pl.xml.html#new">xml.new</a></li>
+         <li><a href="../libraries/pl.xml.html#tags">xml.tags</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.elem(<span class="string">"top"</span>, <span class="string">"hello world"</span>)                <span class="comment">-- &lt;top&gt;hello world&lt;/top&gt;
+</span><span class="keyword">local</span> doc = xml.elem(<span class="string">"main"</span>, xml.new(<span class="string">"child"</span>))            <span class="comment">-- &lt;main&gt;&lt;child/&gt;&lt;/main&gt;
+</span><span class="keyword">local</span> doc = xml.elem(<span class="string">"main"</span>, { <span class="string">"this "</span>, <span class="string">"is "</span>, <span class="string">"nice"</span> })  <span class="comment">-- &lt;main&gt;this is nice&lt;/main&gt;
+</span><span class="keyword">local</span> doc = xml.elem(<span class="string">"main"</span>, { xml.new <span class="string">"this"</span>,
+                               xml.new <span class="string">"is"</span>,
+                               xml.new <span class="string">"nice"</span> })          <span class="comment">-- &lt;main&gt;&lt;this/&gt;&lt;is/&gt;&lt;nice/&gt;&lt;/main&gt;
+</span><span class="keyword">local</span> doc = xml.elem(<span class="string">"main"</span>, { hello = <span class="string">"world"</span> })         <span class="comment">-- &lt;main hello='world'/&gt;
+</span><span class="keyword">local</span> doc = xml.elem(<span class="string">"main"</span>, {
+  <span class="string">"prefix"</span>,
+  xml.elem(<span class="string">"child"</span>, { <span class="string">"this "</span>, <span class="string">"is "</span>, <span class="string">"nice"</span>}),
+  <span class="string">"postfix"</span>,
+  attrib = <span class="string">"value"</span>
+})   <span class="comment">-- &lt;main attrib='value'&gt;prefix&lt;child&gt;this is nice&lt;/child&gt;postfix&lt;/main&gt;"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "tags"></a>
+    <strong>tags (list)</strong>
+    </dt>
+    <dd>
+    given a list of names, return a number of element constructors.
+ If passing a comma-separated string, then whitespace surrounding the values
+ will be stripped.</p>
+
+<p> The returned constructor functions are a shortcut to <a href="../libraries/pl.xml.html#elem">xml.elem</a> where you
+ no longer provide the tag-name, but only the <code>items</code> table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">list</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         a list of names, or a comma-separated string.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (multiple) constructor functions; <code>function(items)</code>. For the <code>items</code>
+ parameter see <a href="../libraries/pl.xml.html#elem">xml.elem</a>.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#elem">xml.elem</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> new_parent, new_child = xml.tags <span class="string">'mom, kid'</span>
+doc = new_parent {new_child <span class="string">'Bob'</span>, new_child <span class="string">'Annie'</span>}
+<span class="comment">-- &lt;mom&gt;&lt;kid&gt;Bob&lt;/kid&gt;&lt;kid&gt;Annie&lt;/kid&gt;&lt;/mom&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Doc:addtag"></a>
+    <strong>Doc:addtag (tag[, attrs={}])</strong>
+    </dt>
+    <dd>
+    Adds a document Node, at current position.
+ This updates the last inserted position to the new Node.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the tag name
+        </li>
+        <li><span class="parameter">attrs</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         attributes (table of name-value pairs)
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>)
+doc:addtag(<span class="string">"penlight"</span>, { hello = <span class="string">"world"</span>})
+doc:addtag(<span class="string">"expat"</span>)  <span class="comment">-- added to 'penlight' since position moved
+</span><span class="global">print</span>(doc)  <span class="comment">--&gt;  &lt;main&gt;&lt;penlight hello='world'&gt;&lt;expat/&gt;&lt;/penlight&gt;&lt;/main&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Doc:text"></a>
+    <strong>Doc:text (text)</strong>
+    </dt>
+    <dd>
+    Adds a text node, at current position.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>)
+doc:text(<span class="string">"penlight"</span>)
+doc:text(<span class="string">"expat"</span>)
+<span class="global">print</span>(doc)  <span class="comment">--&gt;  &lt;main&gt;&lt;penlightexpat&lt;/main&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Doc:up"></a>
+    <strong>Doc:up ()</strong>
+    </dt>
+    <dd>
+    Moves current position up one level.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:reset"></a>
+    <strong>Doc:reset ()</strong>
+    </dt>
+    <dd>
+    Resets current position to top level.
+ Resets to the <code>self</code> node.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:add_direct_child"></a>
+    <strong>Doc:add_direct_child (child)</strong>
+    </dt>
+    <dd>
+    Append a child to the currrent Node (ignoring current position).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">child</span>
+         a child node (either text or a document)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>)
+doc:add_direct_child(<span class="string">"dog"</span>)
+doc:add_direct_child(xml.new(<span class="string">"child"</span>))
+doc:add_direct_child(<span class="string">"cat"</span>)
+<span class="global">print</span>(doc)  <span class="comment">--&gt;  &lt;main&gt;dog&lt;child/&gt;cat&lt;/main&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Doc:add_child"></a>
+    <strong>Doc:add_child (child)</strong>
+    </dt>
+    <dd>
+    Append a child at the current position (without changing position).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">child</span>
+         a child node (either text or a document)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>)
+doc:addtag(<span class="string">"one"</span>)
+doc:add_child(xml.new(<span class="string">"item1"</span>))
+doc:add_child(xml.new(<span class="string">"item2"</span>))
+doc:add_child(xml.new(<span class="string">"item3"</span>))
+<span class="global">print</span>(doc)  <span class="comment">--&gt;  &lt;main&gt;&lt;one&gt;&lt;item1/&gt;&lt;item2/&gt;&lt;item3/&gt;&lt;/one&gt;&lt;/main&gt;</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Doc:set_attribs"></a>
+    <strong>Doc:set_attribs (t)</strong>
+    </dt>
+    <dd>
+    Set attributes of a document node.
+ Will add/overwite values, but will not remove existing ones.
+ Operates on the Node itself, will not take position into account.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         a table containing attribute/value pairs
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:set_attrib"></a>
+    <strong>Doc:set_attrib (a, v)</strong>
+    </dt>
+    <dd>
+    Set a single attribute of a document node.
+ Operates on the Node itself, will not take position into account.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         attribute
+        </li>
+        <li><span class="parameter">v</span>
+         its value, pass in <code>nil</code> to delete the attribute
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the current node (<code>self</code>)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:get_attribs"></a>
+    <strong>Doc:get_attribs ()</strong>
+    </dt>
+    <dd>
+    Gets the attributes of a document node.
+ Operates on the Node itself, will not take position into account.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table with attributes (attribute/value pairs)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc.subst"></a>
+    <strong>Doc.subst (template, data)</strong>
+    </dt>
+    <dd>
+    create a substituted copy of a document,
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">template</span>
+         may be a document or a string representation which will be parsed and cached
+        </li>
+        <li><span class="parameter">data</span>
+         a table of name-value pairs or a list of such tables
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an XML document
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:child_with_name"></a>
+    <strong>Doc:child_with_name (tag)</strong>
+    </dt>
+    <dd>
+    Return the first child with a given tag name (non-recursive).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+         the tag name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the child Node found or <code>nil</code> if not found
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:get_elements_with_name"></a>
+    <strong>Doc:get_elements_with_name (tag[, dont_recurse=false])</strong>
+    </dt>
+    <dd>
+    Returns all elements in a document that have a given tag.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a tag name
+        </li>
+        <li><span class="parameter">dont_recurse</span>
+            <span class="types"><span class="type">boolean</span></span>
+         optionally only return the immediate children with this tag name
+         (<em>default</em> false)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a list of elements found, list will be empty if none was found.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:children"></a>
+    <strong>Doc:children ()</strong>
+    </dt>
+    <dd>
+    Iterator over all children of a document node, including text nodes.
+ This function is not recursive, so returns only direct child nodes.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        iterator that returns a single Node per iteration.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:first_childtag"></a>
+    <strong>Doc:first_childtag ()</strong>
+    </dt>
+    <dd>
+    Return the first child element of a node, if it exists.
+ This will skip text nodes.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        first child Node or <code>nil</code> if there is none.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:matching_tags"></a>
+    <strong>Doc:matching_tags ([tag=nil[, xmlns=nil]])</strong>
+    </dt>
+    <dd>
+    Iterator that matches tag names, and a namespace (non-recursive).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tag</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         tag names to return. Returns all tags if not provided.
+         (<em>default</em> nil)
+        </li>
+        <li><span class="parameter">xmlns</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the namespace value ('xmlns' attribute) to return. If not
+ provided will match all namespaces.
+         (<em>default</em> nil)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        iterator that returns a single Node per iteration.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:childtags"></a>
+    <strong>Doc:childtags ()</strong>
+    </dt>
+    <dd>
+    Iterator over all child tags of a document node.  This will skip over
+ text nodes.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        iterator that returns a single Node per iteration.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:maptags"></a>
+    <strong>Doc:maptags (callback)</strong>
+    </dt>
+    <dd>
+    Visit child Nodes of a node and call a function, possibly modifying the document.
+ Text elements will be skipped.
+ This is not recursive, so only direct children will be passed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+         a function with signature <code>function(node)</code>, passed the node.
+ The element will be updated with the returned value, or deleted if it returns <code>nil</code>.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "xml_escape"></a>
+    <strong>xml_escape (str)</strong>
+    </dt>
+    <dd>
+    Escapes a string for safe use in xml.
+ Handles quotes(single+double), less-than, greater-than, and ampersand.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         string value to escape
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        escaped string
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> esc = xml.xml_escape(<span class="string">[["'&lt;&gt;&amp;]]</span>)  <span class="comment">--&gt; "&amp;quot;&amp;apos;&amp;lt;&amp;gt;&amp;amp;"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "xml_unescape"></a>
+    <strong>xml_unescape (str)</strong>
+    </dt>
+    <dd>
+    Unescapes a string from xml.
+ Handles quotes(single+double), less-than, greater-than, and ampersand.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         string value to unescape
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        unescaped string
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> unesc = xml.xml_escape(<span class="string">"&amp;quot;&amp;apos;&amp;lt;&amp;gt;&amp;amp;"</span>)  <span class="comment">--&gt; [["'&lt;&gt;&amp;]]</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "tostring"></a>
+    <strong>tostring (doc[, b_ind[, t_ind[, a_ind[, xml_preface]]]])</strong>
+    </dt>
+    <dd>
+    Function to pretty-print an XML document.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">doc</span>
+         an XML document
+        </li>
+        <li><span class="parameter">b_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         an initial block-indent (required when <code>t_ind</code> is set)
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">t_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         an tag-indent for each level (required when <code>a_ind</code> is set)
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">a_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         if given, indent each attribute pair and put on a separate line
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">xml_preface</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">bool</span></span>
+         force prefacing with default or custom <?xml...>, if truthy then <code>&amp;lt;?xml version=&apos;1.0&apos;?&amp;gt;</code> will be used as default.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representation
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#Doc:tostring">Doc:tostring</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Doc:tostring"></a>
+    <strong>Doc:tostring ([b_ind[, t_ind[, a_ind[, xml_preface="&lt;?xml version='1.0'?&gt;"]]]])</strong>
+    </dt>
+    <dd>
+    Method to pretty-print an XML document.
+ Invokes <a href="../libraries/pl.xml.html#tostring">xml.tostring</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         an initial indent (required when <code>t_ind</code> is set)
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">t_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         an indent for each level (required when <code>a_ind</code> is set)
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">a_ind</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> or <span class="type">int</span></span>
+         if given, indent each attribute pair and put on a separate line
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">xml_preface</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         force prefacing with default or custom <?xml...>
+         (<em>default</em> "&lt;?xml version='1.0'?&gt;")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string representation
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#tostring">xml.tostring</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Doc:get_text"></a>
+    <strong>Doc:get_text ()</strong>
+    </dt>
+    <dd>
+    get the full text value of an element.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a single string with all text elements concatenated
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> doc = xml.new(<span class="string">"main"</span>)
+doc:text(<span class="string">"one"</span>)
+doc:add_child(xml.elem <span class="string">"two"</span>)
+doc:text(<span class="string">"three"</span>)
+
+<span class="keyword">local</span> t = doc:get_text()    <span class="comment">--&gt;  "onethree"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "clone"></a>
+    <strong>clone (doc[, strsubst])</strong>
+    </dt>
+    <dd>
+
+<p>Returns a copy of a document.
+ The <code>strsubst</code> parameter is a callback with signature <code>function(object, kind, parent)</code>.</p>
+
+<p> Param <code>kind</code> has the following values, and parameters:</p>
+
+<ul>
+    <li><p><code>&quot;*TAG&quot;</code>: <code>object</code> is the tag-name, <code>parent</code> is the Node object. Returns the new tag name.</p></li>
+    <li><p><code>&quot;*TEXT&quot;</code>: <code>object</code> is the text-element, <code>parent</code> is the Node object. Returns the new text value.</p></li>
+    <li><p>other strings not prefixed with <code>*</code>: <code>kind</code> is the attribute name, <code>object</code> is the
+    attribute value, <code>parent</code> is the Node object. Returns the new attribute value.</p></li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">doc</span>
+            <span class="types"><span class="type">Node</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a Node object or string (text node)
+        </li>
+        <li><span class="parameter">strsubst</span>
+            <span class="types"><span class="type">function</span></span>
+         an optional function for handling string copying
+ which could do substitution, etc.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        copy of the document
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#Doc:filter">Doc:filter</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Doc:filter"></a>
+    <strong>Doc:filter ([strsubst])</strong>
+    </dt>
+    <dd>
+    Returns a copy of a document.
+ This is the method version of <a href="../libraries/pl.xml.html#clone">xml.clone</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">strsubst</span>
+            <span class="types"><span class="type">function</span></span>
+         an optional function for handling string copying
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.xml.html#clone">xml.clone</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "compare"></a>
+    <strong>compare (t1, t2)</strong>
+    </dt>
+    <dd>
+    Compare two documents or elements.
+ Equality is based on tag, child nodes (text and tags), attributes and order
+ of those (order only fails if both are given, and not equal).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t1</span>
+            <span class="types"><span class="type">Node</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a Node object or string (text node)
+        </li>
+        <li><span class="parameter">t2</span>
+            <span class="types"><span class="type">Node</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a Node object or string (text node)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        <code>true</code> when the Nodes are equal.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "is_tag"></a>
+    <strong>is_tag (d)</strong>
+    </dt>
+    <dd>
+    is this value a document element?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">d</span>
+         any value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        <code>true</code> if it is a <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> with property <code>tag</code> being a string value.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "walk"></a>
+    <strong>walk (doc, depth_first, operation)</strong>
+    </dt>
+    <dd>
+    Calls a function recursively over Nodes in the document.
+ Will only call on tags, it will skip text nodes.
+ The function signature for <code>operation</code> is <code>function(tag_name, Node)</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">doc</span>
+            <span class="types"><span class="type">Node</span> or <a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a Node object or string (text node)
+        </li>
+        <li><span class="parameter">depth_first</span>
+            <span class="types"><span class="type">boolean</span></span>
+         visit child nodes first, then the current node
+        </li>
+        <li><span class="parameter">operation</span>
+            <span class="types"><span class="type">function</span></span>
+         a function which will receive the current tag name and current node.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "parsehtml"></a>
+    <strong>parsehtml (s)</strong>
+    </dt>
+    <dd>
+    Parse a well-formed HTML file as a string.
+ Tags are case-insenstive, DOCTYPE is ignored, and empty elements can be .. empty.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         the HTML
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "basic_parse"></a>
+    <strong>basic_parse (s, all_text, html)</strong>
+    </dt>
+    <dd>
+    Parse a simple XML document using a pure Lua parser based on Robero Ierusalimschy's original version.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         the XML document to be parsed.
+        </li>
+        <li><span class="parameter">all_text</span>
+          if true, preserves all whitespace. Otherwise only text containing non-whitespace is included.
+        </li>
+        <li><span class="parameter">html</span>
+         if true, uses relaxed HTML rules for parsing
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Doc:match"></a>
+    <strong>Doc:match (pat)</strong>
+    </dt>
+    <dd>
+    does something...
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pat</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

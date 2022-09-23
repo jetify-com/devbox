@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>LuaFileSystem</title>
+    <link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo">
+        <a href="http://keplerproject.github.io/luafilesystem">
+		<img alt="LuaFileSystem" src="luafilesystem.png"/>
+	    </a>
+    </div>
+	<div id="product_name"><big><strong>LuaFileSystem</strong></big></div>
+	<div id="product_description">File System Library for the Lua Programming Language</div>
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1>LuaFileSystem</h1>
+	<ul>
+		<li><a href="index.html">Home</a>
+			<ul>
+				<li><a href="index.html#overview">Overview</a></li>
+				<li><a href="index.html#status">Status</a></li>
+				<li><a href="index.html#download">Download</a></li>
+				<li><a href="index.html#history">History</a></li>
+				<li><a href="index.html#credits">Credits</a></li>
+			</ul>
+		</li>
+		<li><a href="manual.html">Manual</a>
+			<ul>
+				<li><a href="manual.html#introduction">Introduction</a></li>
+				<li><a href="manual.html#building">Building</a></li>
+				<li><a href="manual.html#installation">Installation</a></li>
+				<li><a href="manual.html#reference">Reference</a></li>
+			</ul>
+		</li>
+		<li><strong>Examples</strong></li>
+        <li><a href="https://github.com/keplerproject/luafilesystem">Project</a>
+            <ul>
+                <li><a href="https://github.com/keplerproject/luafilesystem/issues">Bug Tracker</a></li>
+                <li><a href="https://github.com/keplerproject/luafilesystem">Git</a></li>
+            </ul>
+        </li>
+		<li><a href="license.html">License</a></li>
+	</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h2><a name="example"></a>Examples</h2>
+
+<h3>Directory iterator</h3>
+
+<p>The following example iterates over a directory and recursively lists the
+attributes for each file inside it.</p>
+
+<pre class="example">
+local lfs = require"lfs"
+
+function attrdir (path)
+    for file in lfs.dir(path) do
+        if file ~= "." and file ~= ".." then
+            local f = path..'/'..file
+            print ("\t "..f)
+            local attr = lfs.attributes (f)
+            assert (type(attr) == "table")
+            if attr.mode == "directory" then
+                attrdir (f)
+            else
+                for name, value in pairs(attr) do
+                    print (name, value)
+                end
+            end
+        end
+    end
+end
+
+attrdir (".")
+</pre>
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer">Valid XHTML 1.0!</a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->
+
+</body>
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Sequences">Sequences </a></li>
+<li><a href="#Sequence_Wrappers">Sequence Wrappers </a></li>
+<li><a href="#List_Comprehensions">List Comprehensions </a></li>
+<li><a href="#Creating_Functions_from_Functions">Creating Functions from Functions </a></li>
+<li><a href="#Placeholder_Expressions">Placeholder Expressions </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><strong>Functional Programming</strong></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Functional Programming</h2>
+
+<p><a name="Sequences"></a></p>
+<h3>Sequences</h3>
+
+
+<p>A Lua iterator (in its simplest form) is a function which can be repeatedly
+called to return a set of one or more values. The <code>for in</code> statement understands
+these iterators, and loops until the function returns <code>nil</code>. There are standard
+sequence adapters for tables in Lua (<a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a> and <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pairs">pairs</a>), and <a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.lines">io.lines</a>
+returns an iterator over all the lines in a file. In the Penlight libraries, such
+iterators are also called <em>sequences</em>.  A sequence of single values (say from
+<a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.lines">io.lines</a>) is called <em>single-valued</em>, whereas the sequence defined by <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pairs">pairs</a> is
+<em>double-valued</em>.</p>
+
+<p><a href="../libraries/pl.seq.html#">pl.seq</a> provides a number of useful iterators, and some functions which operate
+on sequences.  At first sight this example looks like an attempt to write Python
+in Lua, (with the sequence being inclusive):</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> i <span class="keyword">in</span> seq.range(<span class="number">1</span>,<span class="number">4</span>) <span class="keyword">do</span> <span class="global">print</span>(i) <span class="keyword">end</span>
+<span class="number">1</span>
+<span class="number">2</span>
+<span class="number">3</span>
+<span class="number">4</span>
+</pre>
+
+<p>But <a href="../libraries/pl.seq.html#range">range</a> is actually equivalent to Python's <code>xrange</code>, since it generates a
+sequence, not a list.  To get a list, use <code>seq.copy(seq.range(1,10))</code>, which
+takes any single-value sequence and makes a table from the result. <a href="../libraries/pl.seq.html#list">seq.list</a> is
+like <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a> except that it does not give you the index, just the value.</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> x <span class="keyword">in</span> seq.list {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>} <span class="keyword">do</span> <span class="global">print</span>(x) <span class="keyword">end</span>
+<span class="number">1</span>
+<span class="number">2</span>
+<span class="number">3</span>
+</pre>
+
+<p><a href="../libraries/pl.seq.html#enum">enum</a> takes a sequence and turns it into a double-valued sequence consisting of
+a sequence number and the value, so <code>enum(list(ls))</code> is actually equivalent to
+<a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>. A more interesting example prints out a file with line numbers:</p>
+
+
+<pre>
+<span class="keyword">for</span> i,v <span class="keyword">in</span> seq.enum(<span class="global">io</span>.lines(fname)) <span class="keyword">do</span> <span class="global">print</span>(i..<span class="string">' '</span>..v) <span class="keyword">end</span>
+</pre>
+
+<p>Sequences can be <em>combined</em>, either by 'zipping' them or by concatenating them.</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> x,y <span class="keyword">in</span> seq.zip(l1,l2) <span class="keyword">do</span> <span class="global">print</span>(x,y) <span class="keyword">end</span>
+<span class="number">10</span>      <span class="number">1</span>
+<span class="number">20</span>      <span class="number">2</span>
+<span class="number">30</span>      <span class="number">3</span>
+&gt; <span class="keyword">for</span> x <span class="keyword">in</span> seq.splice(l1,l2) <span class="keyword">do</span> <span class="global">print</span>(x) <span class="keyword">end</span>
+<span class="number">10</span>
+<span class="number">20</span>
+<span class="number">30</span>
+<span class="number">1</span>
+<span class="number">2</span>
+<span class="number">3</span>
+</pre>
+
+<p><a href="../libraries/pl.seq.html#printall">seq.printall</a> is useful for printing out single-valued sequences, and provides
+some finer control over formating, such as a delimiter, the number of fields per
+line, and a format string to use (@see string.format)</p>
+
+
+<pre>
+&gt; seq.printall(seq.random(<span class="number">10</span>))
+<span class="number">0.0012512588885159</span> <span class="number">0.56358531449324</span> <span class="number">0.19330423902097</span> ....
+&gt; seq.printall(seq.random(<span class="number">10</span>), <span class="string">','</span>, <span class="number">4</span>, <span class="string">'%4.2f'</span>)
+<span class="number">0.17</span>,<span class="number">0.86</span>,<span class="number">0.71</span>,<span class="number">0.51</span>
+<span class="number">0.30</span>,<span class="number">0.01</span>,<span class="number">0.09</span>,<span class="number">0.36</span>
+<span class="number">0.15</span>,<span class="number">0.17</span>,
+</pre>
+
+<p><a href="../libraries/pl.seq.html#map">map</a> will apply a function to a sequence.</p>
+
+
+<pre>
+&gt; seq.printall(seq.map(<span class="global">string</span>.upper, {<span class="string">'one'</span>,<span class="string">'two'</span>}))
+ONE TWO
+&gt; seq.printall(seq.map(<span class="string">'+'</span>, {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}, <span class="number">1</span>))
+<span class="number">11</span> <span class="number">21</span> <span class="number">31</span>
+</pre>
+
+<p><a href="../libraries/pl.seq.html#filter">filter</a> will filter a sequence using a boolean function (often called a
+<em>predicate</em>). For instance, this code only prints lines in a file which are
+composed of digits:</p>
+
+
+<pre>
+<span class="keyword">for</span> l <span class="keyword">in</span> seq.filter(<span class="global">io</span>.lines(file), stringx.isdigit) <span class="keyword">do</span> <span class="global">print</span>(l) <span class="keyword">end</span>
+</pre>
+
+<p>The following returns a table consisting of all the positive values in the
+original table (equivalent to <code>tablex.filter(ls, &apos;&gt;&apos;, 0)</code>)</p>
+
+
+<pre>
+ls = seq.copy(seq.filter(ls, <span class="string">'&gt;'</span>, <span class="number">0</span>))
+</pre>
+
+<p>We're already encounted <a href="../libraries/pl.seq.html#sum">seq.sum</a> when discussing <a href="../libraries/pl.input.html#numbers">input.numbers</a>. This can also
+be expressed with <a href="../libraries/pl.seq.html#reduce">seq.reduce</a>:</p>
+
+
+<pre>
+&gt; seq.reduce(<span class="keyword">function</span>(x,y) <span class="keyword">return</span> x + y <span class="keyword">end</span>, seq.list{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+<span class="number">10</span>
+</pre>
+
+<p><a href="../libraries/pl.seq.html#reduce">seq.reduce</a> applies a binary function in a recursive fashion, so that:</p>
+
+
+<pre>
+reduce(op,{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}) =&gt; op(<span class="number">1</span>,reduce(op,{<span class="number">2</span>,<span class="number">3</span>}) =&gt; op(<span class="number">1</span>,op(<span class="number">2</span>,<span class="number">3</span>))
+</pre>
+
+<p>it's now possible to easily generate other cumulative operations; the standard
+operations declared in <a href="../libraries/pl.operator.html#">pl.operator</a> are useful here:</p>
+
+
+<pre>
+&gt; ops = <span class="global">require</span> <span class="string">'pl.operator'</span>
+&gt; <span class="comment">-- can also say '*' instead of ops.mul
+</span>&gt; = seq.reduce(ops.mul,input.numbers <span class="string">'1 2 3 4'</span>)
+<span class="number">24</span>
+</pre>
+
+<p>There are functions to extract statistics from a sequence of numbers:</p>
+
+
+<pre>
+&gt; l1 = List {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+&gt; l2 = List {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+&gt; = seq.minmax(l1)
+<span class="number">10</span>      <span class="number">30</span>
+&gt; = seq.sum(l1)
+<span class="number">60</span>      <span class="number">3</span>
+</pre>
+
+<p>It is common to get sequences where values are repeated, say the words in a file.
+<a href="../libraries/pl.seq.html#count_map">count_map</a> will take such a sequence and count the values, returning a table
+where the <em>keys</em> are the unique values, and the value associated with each key is
+the number of times they occurred:</p>
+
+
+<pre>
+&gt; t = seq.count_map {<span class="string">'one'</span>,<span class="string">'fred'</span>,<span class="string">'two'</span>,<span class="string">'one'</span>,<span class="string">'two'</span>,<span class="string">'two'</span>}
+&gt; = t
+{one=<span class="number">2</span>,fred=<span class="number">1</span>,two=<span class="number">3</span>}
+</pre>
+
+<p>This will also work on numerical sequences, but you cannot expect the result to
+be a proper list, i.e. having no 'holes'. Instead, you always need to use <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pairs">pairs</a>
+to iterate over the result - note that there is a hole at index 5:</p>
+
+
+<pre>
+&gt; t = seq.count_map {<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>,<span class="number">2</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">2</span>,<span class="number">6</span>}
+&gt; <span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="global">pairs</span>(t) <span class="keyword">do</span> <span class="global">print</span>(k,v) <span class="keyword">end</span>
+<span class="number">1</span>       <span class="number">1</span>
+<span class="number">2</span>       <span class="number">4</span>
+<span class="number">3</span>       <span class="number">1</span>
+<span class="number">4</span>       <span class="number">2</span>
+<span class="number">6</span>       <span class="number">1</span>
+</pre>
+
+<p><code>unique</code> uses <a href="../libraries/pl.seq.html#count_map">count_map</a> to return a list of the unique values, that is, just
+the keys of the resulting table.</p>
+
+<p><a href="../libraries/pl.seq.html#last">last</a> turns a single-valued sequence into a double-valued sequence with the
+current value and the last value:</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> current,last <span class="keyword">in</span> seq.last {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>} <span class="keyword">do</span> <span class="global">print</span> (current,last) <span class="keyword">end</span>
+<span class="number">20</span>      <span class="number">10</span>
+<span class="number">30</span>      <span class="number">20</span>
+<span class="number">40</span>      <span class="number">30</span>
+</pre>
+
+<p>This makes it easy to do things like identify repeated lines in a file, or
+construct differences between values. <a href="../libraries/pl.seq.html#filter">filter</a> can handle double-valued sequences
+as well, so one could filter such a sequence to only return cases where the
+current value is less than the last value by using <a href="../libraries/pl.operator.html#lt">operator.lt</a> or just '&lt;'.
+This code then copies the resulting code into a table.</p>
+
+
+<pre>
+&gt; ls = {<span class="number">10</span>,<span class="number">9</span>,<span class="number">10</span>,<span class="number">3</span>}
+&gt; = seq.copy(seq.filter(seq.last(s),<span class="string">'&lt;'</span>))
+{<span class="number">9</span>,<span class="number">3</span>}
+</pre>
+
+<p><a name="Sequence_Wrappers"></a></p>
+<h3>Sequence Wrappers</h3>
+
+<p>The functions in <a href="../libraries/pl.seq.html#">pl.seq</a> cover the common patterns when dealing with sequences,
+but chaining these functions together can lead to ugly code. Consider the last
+example of the previous section; <a href="../libraries/pl.seq.html#">seq</a> is repeated three times and the resulting
+expression has to be read right-to-left. The first issue can be helped by local
+aliases, so that the expression becomes <code>copy(filter(last(s),&apos;&lt;&apos;))</code> but the
+second issue refers to the somewhat unnatural order of functional application.
+We tend to prefer reading operations from left to right, which is one reason why
+object-oriented notation has become popular. Sequence adapters allow this
+expression to be written like so:</p>
+
+
+<pre>
+seq(s):last():filter(<span class="string">'&lt;'</span>):copy()
+</pre>
+
+<p>With this notation, the operation becomes a chain of method calls running from
+left to right.</p>
+
+<p>'Sequence' is not a basic Lua type, they are generally functions or callable
+objects. The expression <code>seq(s)</code> wraps a sequence in a <em>sequence wrapper</em>, which
+is an object which understands all the functions in <a href="../libraries/pl.seq.html#">pl.seq</a> as methods. This
+object then explicitly represents sequences.</p>
+
+<p>As a special case, the  constructor (which is when you call the table <a href="../libraries/pl.seq.html#">seq</a>) will
+make a wrapper for a plain list-like table. Here we apply the length operator to
+a sequence of strings, and print them out.</p>
+
+
+<pre>
+&gt; seq{<span class="string">'one'</span>,<span class="string">'tw'</span>,<span class="string">'t'</span>} :map <span class="string">'#'</span> :printall()
+<span class="number">3</span> <span class="number">2</span> <span class="number">1</span>
+</pre>
+
+<p>As a convenience, there is a function <a href="../libraries/pl.seq.html#lines">seq.lines</a> which behaves just like
+<a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.lines">io.lines</a> except it wraps the result as an explicit sequence type. This takes
+the first 10 lines from standard input, makes it uppercase, turns it into a
+sequence with a count and the value, glues these together with the concatenation
+operator, and finally prints out the sequence delimited by a newline.</p>
+
+
+<pre>
+seq.lines():take(<span class="number">10</span>):upper():enum():map(<span class="string">'..'</span>):printall <span class="string">'\n'</span>
+</pre>
+
+<p>Note the method <code>upper</code>, which is not a <a href="../libraries/pl.seq.html#">seq</a> function. if an unknown method is
+called, sequence wrappers apply that method to all the values in the sequence
+(this is implicit use of <a href="../libraries/pl.seq.html#mapmethod">mapmethod</a>)</p>
+
+<p>It is straightforward to create custom sequences that can be used in this way. On
+Unix, <code>/dev/random</code> gives you an <em>endless</em> sequence of random bytes, so we use
+<a href="../libraries/pl.seq.html#take">take</a> to limit the sequence, and then <a href="../libraries/pl.seq.html#map">map</a> to scale the result into the desired
+range. The key step is to use <a href="../libraries/pl.seq.html#">seq</a> to wrap the iterator function:</p>
+
+
+<pre>
+<span class="comment">-- random.lua
+</span><span class="keyword">local</span> seq = <span class="global">require</span> <span class="string">'pl.seq'</span>
+
+<span class="keyword">function</span> dev_random()
+    <span class="keyword">local</span> f = <span class="global">io</span>.open(<span class="string">'/dev/random'</span>)
+    <span class="keyword">local</span> byte = <span class="global">string</span>.byte
+    <span class="keyword">return</span> seq(<span class="keyword">function</span>()
+        <span class="comment">-- read two bytes into a string and convert into a 16-bit number
+</span>        <span class="keyword">local</span> s = f:read(<span class="number">2</span>)
+        <span class="keyword">return</span> byte(s,<span class="number">1</span>) + <span class="number">256</span>*byte(s,<span class="number">2</span>)
+    <span class="keyword">end</span>)
+<span class="keyword">end</span>
+
+<span class="comment">-- print 10 random numbers from 0 to 1 !
+</span>dev_random():take(<span class="number">10</span>):map(<span class="string">'%'</span>,<span class="number">100</span>):map(<span class="string">'/'</span>,<span class="number">100</span>):printall <span class="string">','</span>
+</pre>
+
+<p>Another Linux one-liner depends on the <code>/proc</code> filesystem and makes a list of all
+the currently running processes:</p>
+
+
+<pre>
+pids = seq(lfs.dir <span class="string">'/proc'</span>):filter(stringx.isdigit):map(<span class="global">tonumber</span>):copy()
+</pre>
+
+<p>This version of Penlight has an experimental feature which relies on the fact
+that <em>all</em> Lua types can have metatables, including functions. This makes
+<em>implicit sequence wrapping</em> possible:</p>
+
+
+<pre>
+&gt; seq.import()
+&gt; seq.random(<span class="number">5</span>):printall(<span class="string">','</span>,<span class="number">5</span>,<span class="string">'%4.1f'</span>)
+ <span class="number">0.0</span>, <span class="number">0.1</span>, <span class="number">0.4</span>, <span class="number">0.1</span>, <span class="number">0.2</span>
+</pre>
+
+<p>This avoids the awkward <code>seq(seq.random(5))</code> construction. Or the iterator can
+come from somewhere else completely:</p>
+
+
+<pre>
+&gt; (<span class="string">'one two three'</span>):gfind(<span class="string">'%a+'</span>):printall(<span class="string">','</span>)
+one,two,three,
+</pre>
+
+<p>After <code>seq.import</code>, it is no longer necessary to explicitly wrap sequence
+functions.</p>
+
+<p>But there is a price to pay for this convenience. <em>Every</em> function is affected,
+so that any function can be used, appropriate or not:</p>
+
+
+<pre>
+&gt; <span class="global">math</span>.sin:printall()
+..seq.lua:<span class="number">287</span>: bad argument #<span class="number">1</span> to <span class="string">'(for generator)'</span> (number expected, got <span class="keyword">nil</span>)
+&gt; a = <span class="global">tostring</span>
+&gt; = a:find(<span class="string">' '</span>)
+<span class="keyword">function</span>: <span class="number">0042</span>C920
+</pre>
+
+<p>What function is returned? It's almost certain to be something that makes no
+sense in the current context. So implicit sequences may make certain kinds of
+programming mistakes harder to catch - they are best used for interactive
+exploration and small scripts.</p>
+
+<p><a id="comprehensions"/></p>
+
+<p><a name="List_Comprehensions"></a></p>
+<h3>List Comprehensions</h3>
+
+<p>List comprehensions are a compact way to create tables by specifying their
+elements. In Python, you can say this:</p>
+
+
+<pre>
+ls = [x <span class="keyword">for</span> x <span class="keyword">in</span> range(<span class="number">5</span>)]  # == [<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]
+</pre>
+
+<p>In Lua, using <a href="../libraries/pl.comprehension.html#">pl.comprehension</a>:</p>
+
+
+<pre>
+&gt; C = <span class="global">require</span>(<span class="string">'pl.comprehension'</span>).new()
+&gt; = C (<span class="string">'x for x=1,10'</span>) ()
+{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>,<span class="number">10</span>}
+</pre>
+
+<p><code>C</code> is a function which compiles a list comprehension <em>string</em> into a <em>function</em>.
+In this case, the function has no arguments. The parentheses are redundant for a
+function taking a string argument, so this works as well:</p>
+
+
+<pre>
+&gt; = C <span class="string">'x^2 for x=1,4'</span> ()
+{<span class="number">1</span>,<span class="number">4</span>,<span class="number">9</span>,<span class="number">16</span>}
+&gt; = C <span class="string">'{x,x^2} for x=1,4'</span> ()
+{{<span class="number">1</span>,<span class="number">1</span>},{<span class="number">2</span>,<span class="number">4</span>},{<span class="number">3</span>,<span class="number">9</span>},{<span class="number">4</span>,<span class="number">16</span>}}
+</pre>
+
+<p>Note that the expression can be <em>any</em> function of the variable <code>x</code>!</p>
+
+<p>The basic syntax so far is <code>&lt;expr&gt; for &lt;set&gt;</code>, where <code>&lt;set&gt;</code> can be anything that
+the Lua <code>for</code> statement understands. <code>&lt;set&gt;</code> can also just be the variable, in
+which case the values will come from the <em>argument</em> of the comprehension. Here
+I'm emphasizing that a comprehension is a function which can take a list argument:</p>
+
+
+<pre>
+&gt; = C <span class="string">'2*x for x'</span> {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+{<span class="number">2</span>,<span class="number">4</span>,<span class="number">6</span>}
+&gt; dbl = C <span class="string">'2*x for x'</span>
+&gt; = dbl {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+{<span class="number">20</span>,<span class="number">40</span>,<span class="number">60</span>}
+</pre>
+
+<p>Here is a somewhat more explicit way of saying the same thing; <code>_1</code> is a
+<em>placeholder</em> refering to the <em>first</em> argument passed to the comprehension.</p>
+
+
+<pre>
+&gt; = C <span class="string">'2*x for _,x in pairs(_1)'</span> {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+{<span class="number">20</span>,<span class="number">40</span>,<span class="number">60</span>}
+&gt; = C <span class="string">'_1(x) for x'</span>(<span class="global">tostring</span>,{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{<span class="string">'1'</span>,<span class="string">'2'</span>,<span class="string">'3'</span>,<span class="string">'4'</span>}
+</pre>
+
+<p>This extended syntax is useful when you wish to collect the result of some
+iterator, such as <a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.lines">io.lines</a>. This comprehension creates a function which creates
+a table of all the lines in a file:</p>
+
+
+<pre>
+&gt; f = <span class="global">io</span>.open(<span class="string">'array.lua'</span>)
+&gt; lines = C <span class="string">'line for line in _1:lines()'</span> (f)
+&gt; = #lines
+<span class="number">118</span>
+</pre>
+
+<p>There are a number of functions that may be applied to the result of a
+comprehension:</p>
+
+
+<pre>
+&gt; = C <span class="string">'min(x for x)'</span> {<span class="number">1</span>,<span class="number">44</span>,<span class="number">0</span>}
+<span class="number">0</span>
+&gt; = C <span class="string">'max(x for x)'</span> {<span class="number">1</span>,<span class="number">44</span>,<span class="number">0</span>}
+<span class="number">44</span>
+&gt; = C <span class="string">'sum(x for x)'</span> {<span class="number">1</span>,<span class="number">44</span>,<span class="number">0</span>}
+<span class="number">45</span>
+</pre>
+
+<p>(These are equivalent to a reduce operation on a list.)</p>
+
+<p>After the <code>for</code> part, there may be a condition, which filters the output. This
+comprehension collects the even numbers from a list:</p>
+
+
+<pre>
+&gt; = C <span class="string">'x for x if x % 2 == 0'</span> {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>}
+{<span class="number">2</span>,<span class="number">4</span>}
+</pre>
+
+<p>There may be a number of <code>for</code> parts:</p>
+
+
+<pre>
+&gt; = C <span class="string">'{x,y} for x = 1,2 for y = 1,2'</span> ()
+{{<span class="number">1</span>,<span class="number">1</span>},{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">2</span>,<span class="number">1</span>},{<span class="number">2</span>,<span class="number">2</span>}}
+&gt; = C <span class="string">'{x,y} for x for y'</span> ({<span class="number">1</span>,<span class="number">2</span>},{<span class="number">10</span>,<span class="number">20</span>})
+{{<span class="number">1</span>,<span class="number">10</span>},{<span class="number">1</span>,<span class="number">20</span>},{<span class="number">2</span>,<span class="number">10</span>},{<span class="number">2</span>,<span class="number">20</span>}}
+</pre>
+
+<p>These comprehensions are useful when dealing with functions of more than one
+variable, and are not so easily achieved with the other Penlight functional forms.</p>
+
+<p><a id="func"/></p>
+
+<p><a name="Creating_Functions_from_Functions"></a></p>
+<h3>Creating Functions from Functions</h3>
+
+
+<p>Lua functions may be treated like any other value, although of course you cannot
+multiply or add them. One operation that makes sense is <em>function composition</em>,
+which chains function calls (so <code>(f * g)(x)</code> is <code>f(g(x))</code>.)</p>
+
+
+<pre>
+&gt; func = <span class="global">require</span> <span class="string">'pl.func'</span>
+&gt; printf = func.compose(<span class="global">io</span>.write,<span class="global">string</span>.format)
+&gt; printf(<span class="string">"hello %s\n"</span>,<span class="string">'world'</span>)
+hello world
+<span class="keyword">true</span>
+</pre>
+
+<p>Many functions require you to pass a function as an argument, say to apply to all
+values of a sequence or as a callback. Often useful functions have the wrong
+number of arguments. So there is a need to construct a function of one argument
+from one of two arguments, <em>binding</em> the extra argument to a given value.</p>
+
+<p><em>partial application</em> takes a function of n arguments and returns a function of n-1
+arguments where the first argument is bound to some value:</p>
+
+
+<pre>
+&gt; p2 = func.bind1(<span class="global">print</span>,<span class="string">'start&gt;'</span>)
+&gt; p2(<span class="string">'hello'</span>,<span class="number">2</span>)
+start&gt;  hello   <span class="number">2</span>
+&gt; ops = <span class="global">require</span> <span class="string">'pl.operator'</span>
+&gt; = tablex.filter({<span class="number">1</span>,-<span class="number">2</span>,<span class="number">10</span>,-<span class="number">1</span>,<span class="number">2</span>},bind1(ops.gt,<span class="number">0</span>))
+{-<span class="number">2</span>,-<span class="number">1</span>}
+&gt; tablex.filter({<span class="number">1</span>,-<span class="number">2</span>,<span class="number">10</span>,-<span class="number">1</span>,<span class="number">2</span>},bind1(ops.le,<span class="number">0</span>))
+{<span class="number">1</span>,<span class="number">10</span>,<span class="number">2</span>}
+</pre>
+
+<p>The last example unfortunately reads backwards, because <a href="../libraries/pl.func.html#bind1">bind1</a> alway binds the
+first argument!  Also unfortunately, in my youth I confused 'currying' with
+'partial application', so the old name for <a href="../libraries/pl.func.html#bind1">bind1</a> is <code>curry</code> - this alias still exists.</p>
+
+<p>This is a specialized form of function argument binding. Here is another way
+to say the <a href="https://www.lua.org/manual/5.1/manual.html#pdf-print">print</a> example:</p>
+
+
+<pre>
+&gt; p2 = func.bind(<span class="global">print</span>,<span class="string">'start&gt;'</span>,func._1,func._2)
+&gt; p2(<span class="string">'hello'</span>,<span class="number">2</span>)
+start&gt;  hello   <span class="number">2</span>
+</pre>
+
+<p>where <code>_1</code> and <code>_2</code> are <em>placeholder variables</em>, corresponding to the first and
+second argument respectively.</p>
+
+<p>Having <a href="../libraries/pl.func.html#">func</a> all over the place is distracting, so it's useful to pull all of
+<a href="../libraries/pl.func.html#">pl.func</a> into the local context. Here is the filter example, this time the right
+way around:</p>
+
+
+<pre>
+&gt; utils.import <span class="string">'pl.func'</span>
+&gt; tablex.filter({<span class="number">1</span>,-<span class="number">2</span>,<span class="number">10</span>,-<span class="number">1</span>,<span class="number">2</span>},bind(ops.gt, _1, <span class="number">0</span>))
+{<span class="number">1</span>,<span class="number">10</span>,<span class="number">2</span>}
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#merge">tablex.merge</a> does a general merge of two tables. This example shows the
+usefulness of binding the last argument of a function.</p>
+
+
+<pre>
+&gt; S1 = {john=<span class="number">27</span>, jane=<span class="number">31</span>, mary=<span class="number">24</span>}
+&gt; S2 = {jane=<span class="number">31</span>, jones=<span class="number">50</span>}
+&gt; intersection = bind(tablex.merge, _1, _2, <span class="keyword">false</span>)
+&gt; union = bind(tablex.merge, _1, _2, <span class="keyword">true</span>)
+&gt; = intersection(S1,S2)
+{jane=<span class="number">31</span>}
+&gt; = union(S1,S2)
+{mary=<span class="number">24</span>,jane=<span class="number">31</span>,john=<span class="number">27</span>,jones=<span class="number">50</span>}
+</pre>
+
+<p>When using <a href="../libraries/pl.func.html#bind">bind</a> with <a href="https://www.lua.org/manual/5.1/manual.html#pdf-print">print</a>, we got a function of precisely two arguments,
+whereas we really want our function to use varargs like <a href="https://www.lua.org/manual/5.1/manual.html#pdf-print">print</a>. This is the role
+of <code>_0</code>:</p>
+
+
+<pre>
+&gt; _DEBUG = <span class="keyword">true</span>
+&gt; p = bind(<span class="global">print</span>,<span class="string">'start&gt;'</span>, _0)
+<span class="keyword">return</span> <span class="keyword">function</span> (fn,_v1)
+    <span class="keyword">return</span> <span class="keyword">function</span>(...) <span class="keyword">return</span> fn(_v1,...) <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+&gt; p(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>)
+start&gt;  <span class="number">1</span>       <span class="number">2</span>       <span class="number">3</span>       <span class="number">4</span>       <span class="number">5</span>
+</pre>
+
+<p>I've turned on the global <code>_DEBUG</code> flag, so that the function generated is
+printed out. It is actually a function which <em>generates</em> the required function;
+the first call <em>binds the value</em> of <code>_v1</code> to 'start>'.</p>
+
+<p><a name="Placeholder_Expressions"></a></p>
+<h3>Placeholder Expressions</h3>
+
+<p>A common pattern in Penlight is a function which applies another function to all
+elements in a table or a sequence, such as <a href="../libraries/pl.tablex.html#map">tablex.map</a> or <a href="../libraries/pl.seq.html#filter">seq.filter</a>. Lua does
+anonymous functions well, although they can be a bit tedious to type:</p>
+
+
+<pre>
+&gt; = tablex.map(<span class="keyword">function</span>(x) <span class="keyword">return</span> x*x <span class="keyword">end</span>, {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{<span class="number">1</span>,<span class="number">4</span>,<span class="number">9</span>,<span class="number">16</span>}
+</pre>
+
+<p><a href="../libraries/pl.func.html#">pl.func</a> allows you to define <em>placeholder expressions</em>, which can cut down on
+the typing required, and also make your intent clearer. First, we bring contents
+of <a href="../libraries/pl.func.html#">pl.func</a> into our context, and then supply an expression using placeholder
+variables, such as <code>_1</code>,<code>_2</code>,etc. (C++ programmers will recognize this from the
+Boost libraries.)</p>
+
+
+<pre>
+&gt; utils.import <span class="string">'pl.func'</span>
+&gt; = tablex.map(_1*_1, {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{<span class="number">1</span>,<span class="number">4</span>,<span class="number">9</span>,<span class="number">16</span>}
+</pre>
+
+<p>Functions of up to 5 arguments can be generated.</p>
+
+
+<pre>
+&gt; = tablex.map2(_1+_2,{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}, {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>})
+{<span class="number">11</span>,<span class="number">22</span>,<span class="number">33</span>}
+</pre>
+
+<p>These expressions can use arbitrary functions, altho they must first be
+registered with the functional library. <a href="../libraries/pl.func.html#register">func.register</a> brings in a single
+function, and <a href="../libraries/pl.func.html#import">func.import</a> brings in a whole table of functions, such as <a href="https://www.lua.org/manual/5.1/manual.html#5.6">math</a>.</p>
+
+
+<pre>
+&gt; sin = register(<span class="global">math</span>.sin)
+&gt; = tablex.map(sin(_1), {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{<span class="number">0.8414709848079</span>,<span class="number">0.90929742682568</span>,<span class="number">0.14112000805987</span>,-<span class="number">0.75680249530793</span>}
+&gt; import <span class="string">'math'</span>
+&gt; = tablex.map(cos(<span class="number">2</span>*_1),{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{-<span class="number">0.41614683654714</span>,-<span class="number">0.65364362086361</span>,<span class="number">0.96017028665037</span>,-<span class="number">0.14550003380861</span>}
+</pre>
+
+<p>A common operation is calling a method of a set of objects:</p>
+
+
+<pre>
+&gt; = tablex.map(_1:sub(<span class="number">1</span>,<span class="number">1</span>), {<span class="string">'one'</span>,<span class="string">'four'</span>,<span class="string">'x'</span>})
+{<span class="string">'o'</span>,<span class="string">'f'</span>,<span class="string">'x'</span>}
+</pre>
+
+<p>There are some restrictions on what operators can be used in PEs. For instance,
+because the <code>__len</code> metamethod cannot be overriden by plain Lua tables, we need
+to define a special function to express `#_1':</p>
+
+
+<pre>
+&gt; = tablex.map(Len(_1), {<span class="string">'one'</span>,<span class="string">'four'</span>,<span class="string">'x'</span>})
+{<span class="number">3</span>,<span class="number">4</span>,<span class="number">1</span>}
+</pre>
+
+<p>Likewise for comparison operators, which cannot be overloaded for <em>different</em>
+types, and thus also have to be expressed as a special function:</p>
+
+
+<pre>
+&gt; = tablex.filter(Gt(_1,<span class="number">0</span>), {<span class="number">1</span>,-<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>,-<span class="number">3</span>})
+{<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>}
+</pre>
+
+<p>It is useful to express the fact that a function returns multiple values. For
+instance, <a href="../libraries/pl.tablex.html#pairmap">tablex.pairmap</a>  expects a function that will be called with the key
+and the value, and returns the new value and the key, in that order.</p>
+
+
+<pre>
+&gt; = pairmap(Args(_2,_1:upper()),{fred=<span class="number">1</span>,alice=<span class="number">2</span>})
+{ALICE=<span class="number">2</span>,FRED=<span class="number">1</span>}
+</pre>
+
+<p>PEs cannot contain <code>nil</code> values, since PE function arguments are represented as
+an array. Instead, a special value called <code>Nil</code> is provided.  So say
+<code>_1:f(Nil,1)</code> instead of <code>_1:f(nil,1)</code>.</p>
+
+<p>A placeholder expression cannot be automatically used as a Lua function. The
+technical reason is that the call operator must be overloaded to construct
+function calls like <code>_1(1)</code>.  If you want to force a PE to return a function, use
+<a href="../libraries/pl.func.html#I">func.I</a>.</p>
+
+
+<pre>
+&gt; = tablex.map(_1(<span class="number">10</span>),{I(<span class="number">2</span>*_1),I(_1*_1),I(_1+<span class="number">2</span>)})
+{<span class="number">20</span>,<span class="number">100</span>,<span class="number">12</span>}
+</pre>
+
+<p>Here we make a table of functions taking a single argument, and then call them
+all with a value of 10.</p>
+
+<p>The essential idea with PEs is to 'quote' an expression so that it is not
+immediately evaluated, but instead turned into a function that can be applied
+later to some arguments. The basic mechanism is to wrap values and placeholders
+so that the usual Lua operators have the effect of building up an <em>expression
+tree</em>. (It turns out that you can do <em>symbolic algebra</em> using PEs, see
+<a href="../examples/symbols.lua.html#">symbols.lua</a> in the examples directory, and its test runner <code>testsym.lua</code>, which
+demonstrates symbolic differentiation.)</p>
+
+<p>The rule is that if any operator has a PE operand, the result will be quoted.
+Sometimes we need to quote things explicitly. For instance, say we want to pass a
+function to a filter that must return true if the element value is in a set.
+<code>set[_1]</code> is the obvious expression, but it does not give the desired result,
+since it evaluates directly, giving <code>nil</code>. Indexing works differently than a
+binary operation like addition (set+_1 <em>is</em> properly quoted) so there is a need
+for an explicit quoting or wrapping operation. This is the job of the <code>_</code>
+function; the PE in this case should be <code>_(set)[_1]</code>.  This works for functions
+as well, as a convenient alternative to registering functions: <code>_(math.sin)(_1)</code>.
+This is equivalent to using the `lines' method:</p>
+
+
+<pre>
+<span class="keyword">for</span> line <span class="keyword">in</span> I(_(f):read()) <span class="keyword">do</span> <span class="global">print</span>(line) <span class="keyword">end</span>
+</pre>
+
+<p>Now this will work for <em>any</em> 'file-like' object which which has a <code>read</code> method
+returning the next line. If you had a LuaSocket client which was being 'pushed'
+by lines sent from a server, then <code>_(s):receive &apos;*l&apos;</code> would create an iterator
+for accepting input. These forms can be convenient for adapting your data flow so
+that it can be passed to the sequence functions in `pl.seq'.</p>
+
+<p>Placeholder expressions can be mixed with sequence wrapper expressions.
+<a href="../libraries/pl.lexer.html#lua">lexer.lua</a> will give us a double-valued sequence of tokens, where the first
+value is a type, and the second is a value. We filter out only the values where
+the type is 'iden', extract the actual value using <code>map</code>, get the unique values
+and finally copy to a list.</p>
+
+
+<pre>
+&gt; str = <span class="string">'for i=1,10 do for j = 1,10 do print(i,j) end end'</span>
+&gt; = seq(lexer.lua(str)):filter(<span class="string">'=='</span>,<span class="string">'iden'</span>):map(_2):unique():copy()
+{i,<span class="global">print</span>,j}
+</pre>
+
+<p>This is a particularly intense line (and I don't always suggest making everything
+a one-liner!); the key is the behaviour of <code>map</code>, which will take both values of
+the sequence, so <code>_2</code> returns the value part. (Since <code>filter</code> here takes extra
+arguments, it only operates on the type values.)</p>
+
+<p>There are some performance considerations to using placeholder expressions.
+Instantiating a PE requires constructing and compiling a function, which is not
+such a fast operation. So to get best performance, factor out PEs from loops like
+this;</p>
+
+
+<pre>
+<span class="keyword">local</span> fn = I(_1:f() + _2:g())
+<span class="keyword">for</span> i = <span class="number">1</span>,n <span class="keyword">do</span>
+    res[i] = tablex.map2(fn,first[i],second[i])
+<span class="keyword">end</span>
+</pre>
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

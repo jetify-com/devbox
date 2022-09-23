@@ -1,0 +1,397 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Extra_String_Methods">Extra String Methods </a></li>
+<li><a href="#String_Templates">String Templates </a></li>
+<li><a href="#Another_Style_of_Template">Another Style of Template </a></li>
+<li><a href="#File_style_I_O_on_Strings">File-style I/O on Strings </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><strong>Strings. Higher-level operations on strings.</strong></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Strings. Higher-level operations on strings.</h2>
+
+<p><a name="Extra_String_Methods"></a></p>
+<h3>Extra String Methods</h3>
+
+
+<p>These are convenient borrowings from Python, as described in 3.6.1 of the Python
+reference, but note that indices in Lua always begin at one. <a href="../libraries/pl.stringx.html#">stringx</a> defines
+functions like <a href="../libraries/pl.stringx.html#isalpha">isalpha</a> and <a href="../libraries/pl.stringx.html#isdigit">isdigit</a>, which return <code>true</code> if s is only composed
+of letters or digits respectively. <a href="../libraries/pl.stringx.html#startswith">startswith</a> and <a href="../libraries/pl.stringx.html#endswith">endswith</a> are convenient
+ways to find substrings. (<a href="../libraries/pl.stringx.html#endswith">endswith</a> works as in Python 2.5, so that `f:endswith
+{'.bat','.exe','.cmd'}` will be true for any filename which ends with these
+extensions.) There are justify methods and whitespace trimming functions like
+<a href="../libraries/pl.stringx.html#strip">strip</a>.</p>
+
+
+<pre>
+&gt; stringx.import()
+&gt; (<span class="string">'bonzo.dog'</span>):endswith {<span class="string">'.dog'</span>,<span class="string">'.cat'</span>}
+<span class="keyword">true</span>
+&gt; (<span class="string">'bonzo.txt'</span>):endswith {<span class="string">'.dog'</span>,<span class="string">'.cat'</span>}
+<span class="keyword">false</span>
+&gt; (<span class="string">'bonzo.cat'</span>):endswith {<span class="string">'.dog'</span>,<span class="string">'.cat'</span>}
+<span class="keyword">true</span>
+&gt; (<span class="string">' stuff'</span>):ljust(<span class="number">20</span>,<span class="string">'+'</span>)
+<span class="string">'++++++++++++++ stuff'</span>
+&gt; (<span class="string">'  stuff '</span>):lstrip()
+<span class="string">'stuff '</span>
+&gt; (<span class="string">'  stuff '</span>):rstrip()
+<span class="string">'  stuff'</span>
+&gt; (<span class="string">'  stuff '</span>):strip()
+<span class="string">'stuff'</span>
+&gt; <span class="keyword">for</span> s <span class="keyword">in</span> (<span class="string">'one\ntwo\nthree\n'</span>):lines() <span class="keyword">do</span> <span class="global">print</span>(s) <span class="keyword">end</span>
+one
+two
+three
+</pre>
+
+<p>Most of these can be fairly easily implemented using the Lua string library,
+which is more general and powerful. But they are convenient operations to have
+easily at hand. Note that can be injected into the <a href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a> table if you use
+<a href="../libraries/pl.stringx.html#import">stringx.import</a>, but a simple alias like <code>local stringx = require &apos;pl.stringx&apos;</code>
+is preferrable. This is the recommended practice when writing modules for
+consumption by other people, since it is bad manners to change the global state
+of the rest of the system. Magic may be used for convenience, but there is always
+a price.</p>
+
+
+<p><a name="String_Templates"></a></p>
+<h3>String Templates</h3>
+
+
+<p>Another borrowing from Python, string templates allow you to substitute values
+looked up in a table:</p>
+
+
+<pre>
+<span class="keyword">local</span> Template = <span class="global">require</span> (<span class="string">'pl.text'</span>).Template
+t = Template(<span class="string">'${here} is the $answer'</span>)
+<span class="global">print</span>(t:substitute {here = <span class="string">'Lua'</span>, answer = <span class="string">'best'</span>})
+==&gt;
+Lua is the best
+</pre>
+
+<p>'$ variables' can optionally have curly braces; this form is useful if you are
+glueing text together to make variables, e.g <code>${prefix}_name_${postfix}</code>. The
+<code>substitute</code> method will throw an error if a $ variable is not found in the
+table, and the <code>safe_substitute</code> method will not.</p>
+
+<p>The Lua implementation has an extra method, <code>indent_substitute</code> which is very
+useful for inserting blocks of text, because it adjusts indentation. Consider
+this example:</p>
+
+
+<pre>
+<span class="comment">-- testtemplate.lua
+</span><span class="keyword">local</span> Template = <span class="global">require</span> (<span class="string">'pl.text'</span>).Template
+
+t = Template <span class="string">[[
+    for i = 1,#$t do
+        $body
+    end
+]]</span>
+
+body = Template <span class="string">[[
+local row = $t[i]
+for j = 1,#row do
+    fun(row[j])
+end
+]]</span>
+
+<span class="global">print</span>(t:indent_substitute {body=body,t=<span class="string">'tbl'</span>})
+</pre>
+
+<p>And the output is:</p>
+
+
+<pre>
+<span class="keyword">for</span> i = <span class="number">1</span>,#tbl <span class="keyword">do</span>
+    <span class="keyword">local</span> row = tbl[i]
+    <span class="keyword">for</span> j = <span class="number">1</span>,#row <span class="keyword">do</span>
+        fun(row[j])
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p><code>indent_substitute</code> can substitute templates, and in which case they themselves
+will be substituted using the given table. So in this case, <code>$t</code> was substituted
+twice.</p>
+
+<p><a href="../libraries/pl.text.html#">pl.text</a> also has a number of useful functions like <code>dedent</code>, which strips all
+the initial indentation from a multiline string. As in Python, this is useful for
+preprocessing multiline strings if you like indenting them with your code. The
+function <code>wrap</code> is passed a long string (a <em>paragraph</em>) and returns a list of
+lines that fit into a desired line width. As an extension, there is also <code>indent</code>
+for indenting multiline strings.</p>
+
+<p>New in Penlight with the 0.9 series is <code>text.format_operator</code>. Calling this
+enables Python-style string formating using the modulo operator <code>%</code>:</p>
+
+
+<pre>
+&gt; text.format_operator()
+&gt; = <span class="string">'%s[%d]'</span> % {<span class="string">'dog'</span>,<span class="number">1</span>}
+dog[<span class="number">1</span>]
+</pre>
+
+<p>So in its simplest form it saves the typing involved with <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.format">string.format</a>; it
+will also expand <code>$</code> variables using named fields:</p>
+
+
+<pre>
+&gt; = <span class="string">'$animal[$num]'</span> % {animal=<span class="string">'dog'</span>,num=<span class="number">1</span>}
+dog[<span class="number">1</span>]
+</pre>
+
+<p>As with <a href="../libraries/pl.stringx.html#import">stringx.import</a> you have to do this explicitly, since all strings share the same
+metatable. But in your own scripts you can feel free to do this.</p>
+
+<p><a name="Another_Style_of_Template"></a></p>
+<h3>Another Style of Template</h3>
+
+<p>A new module is <a href="../libraries/pl.template.html#">template</a>, which is a version of Rici Lake's <a href="http://lua-users.org/wiki/SlightlyLessSimpleLuaPreprocessor">Lua
+Preprocessor</a>.  This
+allows you to mix Lua code with your templates in a straightforward way. There
+are only two rules:</p>
+
+<ul>
+    <li>Lines begining with <code>#</code> are Lua</li>
+    <li>Otherwise, anything inside <code>$()</code> is a Lua expression.</li>
+</ul>
+
+<p>So a template generating an HTML list would look like this:</p>
+
+
+<pre>
+&lt;ul&gt;
+# <span class="keyword">for</span> i,val <span class="keyword">in</span> <span class="global">ipairs</span>(T) <span class="keyword">do</span>
+&lt;li&gt;$(i) = $(val:upper())&lt;/li&gt;
+# <span class="keyword">end</span>
+&lt;/ul&gt;
+</pre>
+
+<p>Assume the text is inside <code>tmpl</code>, then the template can be expanded using:</p>
+
+
+<pre>
+<span class="keyword">local</span> template = <span class="global">require</span> <span class="string">'pl.template'</span>
+<span class="keyword">local</span> my_env = {
+  <span class="global">ipairs</span> = <span class="global">ipairs</span>,
+  T = {<span class="string">'one'</span>,<span class="string">'two'</span>,<span class="string">'three'</span>}
+}
+res = template.substitute(tmpl, my_env)
+</pre>
+
+<p>and we get</p>
+
+
+<pre>
+&lt;ul&gt;
+&lt;li&gt;<span class="number">1</span> = ONE&lt;/li&gt;
+&lt;li&gt;<span class="number">2</span> = TWO&lt;/li&gt;
+&lt;li&gt;<span class="number">3</span> = THREE&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<p>There is a single function, <a href="../libraries/pl.template.html#substitute">template.substitute</a> which is passed a template
+string and an environment table.   This table may contain some special fields,
+like <code>\_parent</code> which can be set to a table representing a 'fallback' environment
+in case a symbol was not found. <code>\_brackets</code> is usually '()' and <code>\_escape</code> is
+usually '#' but it's sometimes necessary to redefine these if the defaults
+interfere with the target language - for instance, <code>$(V)</code> has another meaning in
+Make, and <code>#</code> means a preprocessor line in C/C++.</p>
+
+<p>Finally, if something goes wrong, passing <code>_debug</code> will cause the intermediate
+Lua code to be dumped if there's a problem.</p>
+
+<p>Here is a C code generation example; something that could easily be extended to
+be a minimal Lua extension skeleton generator.</p>
+
+
+<pre>
+<span class="keyword">local</span> subst = <span class="global">require</span> <span class="string">'pl.template'</span>.substitute
+
+<span class="keyword">local</span> templ = <span class="string">[[
+#include &lt;lua.h&gt;
+#include &lt;lauxlib.h&gt;
+#include &lt;lualib.h&gt;
+
+&gt; for _,f in ipairs(mod) do
+static int l_$(f.name) (lua_State *L) {
+
+}
+&gt; end
+
+static const luaL_reg $(mod.name)[] = {
+&gt; for _,f in ipairs(mod) do
+    {"$(f.name)",l_$(f.name)},
+&gt; end
+    {NULL,NULL}
+};
+
+int luaopen_$(mod.name) {
+   luaL_register (L, "$(mod.name)", $(mod.name));
+    return 1;
+}
+]]</span>
+
+<span class="global">print</span>(subst(templ,{
+    _escape = <span class="string">'&gt;'</span>,
+    <span class="global">ipairs</span> = <span class="global">ipairs</span>,
+    mod = {
+        name = <span class="string">'baggins'</span>;
+        {name=<span class="string">'frodo'</span>},
+        {name=<span class="string">'bilbo'</span>}
+    }
+}))
+</pre>
+
+<p><a name="File_style_I_O_on_Strings"></a></p>
+<h3>File-style I/O on Strings</h3>
+
+<p><a href="../libraries/pl.stringio.html#">pl.stringio</a>  provides just three functions; <a href="../libraries/pl.stringio.html#open">stringio.open</a> is passed a string,
+and returns a file-like object for reading. It supports a <code>read</code> method, which
+takes the same arguments as standard file objects:</p>
+
+
+<pre>
+&gt; f = stringio.open <span class="string">'first line\n10 20 30\n'</span>
+&gt; = f:read()
+first line
+&gt; = f:read(<span class="string">'*n'</span>,<span class="string">'*n'</span>,<span class="string">'*n'</span>)
+<span class="number">10</span>    <span class="number">20</span>    <span class="number">30</span>
+</pre>
+
+<p><code>lines</code> and <code>seek</code> are also supported.</p>
+
+<p><code>stringio.lines</code> is a useful short-cut for iterating over all the lines in a
+string.</p>
+
+<p><a href="../libraries/pl.stringio.html#create">stringio.create</a> creates a writeable file-like object. You then use <code>write</code> to
+this stream, and finally extract the builded string using <code>value</code>.  This 'string
+builder' pattern is useful for efficiently creating large strings.</p>
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

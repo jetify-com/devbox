@@ -1,0 +1,1070 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><strong>pl.path</strong></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.path</code></h1>
+<p>Path manipulation and file queries.</p>
+<p> This is modelled after Python's os.path library (10.1); see <a href="../manual/04-paths.md.html#">the Guide</a>.</p>
+
+<p> NOTE: the functions assume the paths being dealt with to originate
+ from the OS the application is running on. Windows drive letters are not
+ to be used when running on a Unix system for example. The one exception
+ is Windows paths to allow both forward and backward slashes (since Lua
+ also accepts those)</p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="http://stevedonovan.github.io/lua-stdlibs/modules/lfs.html">lfs</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#dir">dir ()</a></td>
+	<td class="summary">Lua iterator over the entries of a given directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mkdir">mkdir ()</a></td>
+	<td class="summary">Creates a directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#rmdir">rmdir ()</a></td>
+	<td class="summary">Removes a directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#attrib">attrib ()</a></td>
+	<td class="summary">Gets attributes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#currentdir">currentdir ()</a></td>
+	<td class="summary">Get the working directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#link_attrib">link_attrib ()</a></td>
+	<td class="summary">Gets symlink attributes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#chdir">chdir ()</a></td>
+	<td class="summary">Changes the working directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isdir">isdir (P)</a></td>
+	<td class="summary">is this a directory?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isfile">isfile (P)</a></td>
+	<td class="summary">is this a file?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getsize">getsize (P)</a></td>
+	<td class="summary">return size of a file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#exists">exists (P)</a></td>
+	<td class="summary">does a path exist?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getatime">getatime (P)</a></td>
+	<td class="summary">Return the time of last access as the number of seconds since the epoch.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getmtime">getmtime (P)</a></td>
+	<td class="summary">Return the time of last modification as the number of seconds since the epoch.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getctime">getctime (P)</a></td>
+	<td class="summary">Return the system's ctime as the number of seconds since the epoch.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#splitpath">splitpath (P)</a></td>
+	<td class="summary">given a path, return the directory part and a file part.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#abspath">abspath (P[, pwd])</a></td>
+	<td class="summary">return an absolute path.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#splitext">splitext (P)</a></td>
+	<td class="summary">given a path, return the root part and the extension part.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dirname">dirname (P)</a></td>
+	<td class="summary">return the directory part of a path</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#basename">basename (P)</a></td>
+	<td class="summary">return the file part of a path</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#extension">extension (P)</a></td>
+	<td class="summary">get the extension part of a path.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isabs">isabs (P)</a></td>
+	<td class="summary">is this an absolute path?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#join">join (p1, p2, ...)</a></td>
+	<td class="summary">return the path resulting from combining the individual paths.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#normcase">normcase (P)</a></td>
+	<td class="summary">normalize the case of a pathname.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#normpath">normpath (P)</a></td>
+	<td class="summary">normalize a path name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#relpath">relpath (P[, start])</a></td>
+	<td class="summary">relative path from current directory or optional start point</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#expanduser">expanduser (P)</a></td>
+	<td class="summary">Replace a starting '~' with the user's home directory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tmpname">tmpname ()</a></td>
+	<td class="summary">Return a suitable full path to a new temporary file name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#common_prefix">common_prefix (path1, path2)</a></td>
+	<td class="summary">return the largest common prefix path of two paths.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#package_path">package_path (mod)</a></td>
+	<td class="summary">return the full path where a particular Lua module would be found.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#is_windows">is_windows</a></td>
+	<td class="summary">are we running Windows?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sep">sep</a></td>
+	<td class="summary">path separator for this platform.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dirsep">dirsep</a></td>
+	<td class="summary">separator for PATH for this platform</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "dir"></a>
+    <strong>dir ()</strong>
+    </dt>
+    <dd>
+    Lua iterator over the entries of a given directory.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.dir</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mkdir"></a>
+    <strong>mkdir ()</strong>
+    </dt>
+    <dd>
+    Creates a directory.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.mkdir</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "rmdir"></a>
+    <strong>rmdir ()</strong>
+    </dt>
+    <dd>
+    Removes a directory.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.rmdir</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "attrib"></a>
+    <strong>attrib ()</strong>
+    </dt>
+    <dd>
+    Gets attributes.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.attributes</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "currentdir"></a>
+    <strong>currentdir ()</strong>
+    </dt>
+    <dd>
+    Get the working directory.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.currentdir</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "link_attrib"></a>
+    <strong>link_attrib ()</strong>
+    </dt>
+    <dd>
+    Gets symlink attributes.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.symlinkattributes</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "chdir"></a>
+    <strong>chdir ()</strong>
+    </dt>
+    <dd>
+    Changes the working directory.
+ On Windows, if a drive is specified, it also changes the current drive. If
+ only specifying the drive, it will only switch drive, but not modify the path.
+ Implicit link to <a href="https://keplerproject.github.io/luafilesystem/manual.html#reference"><code>luafilesystem.chdir</code></a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isdir"></a>
+    <strong>isdir (P)</strong>
+    </dt>
+    <dd>
+    is this a directory?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isfile"></a>
+    <strong>isfile (P)</strong>
+    </dt>
+    <dd>
+    is this a file?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getsize"></a>
+    <strong>getsize (P)</strong>
+    </dt>
+    <dd>
+    return size of a file.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "exists"></a>
+    <strong>exists (P)</strong>
+    </dt>
+    <dd>
+    does a path exist?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the file path if it exists (either as file, directory, socket, etc), nil otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getatime"></a>
+    <strong>getatime (P)</strong>
+    </dt>
+    <dd>
+    Return the time of last access as the number of seconds since the epoch.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getmtime"></a>
+    <strong>getmtime (P)</strong>
+    </dt>
+    <dd>
+    Return the time of last modification as the number of seconds since the epoch.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getctime"></a>
+    <strong>getctime (P)</strong>
+    </dt>
+    <dd>
+    Return the system's ctime as the number of seconds since the epoch.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "splitpath"></a>
+    <strong>splitpath (P)</strong>
+    </dt>
+    <dd>
+    given a path, return the directory part and a file part.
+ if there's no directory part, the first value will be empty
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        directory part</li>
+        <li>
+        file part</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> dir, file = path.splitpath(<span class="string">"some/dir/myfile.txt"</span>)
+<span class="global">assert</span>(dir == <span class="string">"some/dir"</span>)
+<span class="global">assert</span>(file == <span class="string">"myfile.txt"</span>)
+
+<span class="keyword">local</span> dir, file = path.splitpath(<span class="string">"some/dir/"</span>)
+<span class="global">assert</span>(dir == <span class="string">"some/dir"</span>)
+<span class="global">assert</span>(file == <span class="string">""</span>)
+
+<span class="keyword">local</span> dir, file = path.splitpath(<span class="string">"some_dir"</span>)
+<span class="global">assert</span>(dir == <span class="string">""</span>)
+<span class="global">assert</span>(file == <span class="string">"some_dir"</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "abspath"></a>
+    <strong>abspath (P[, pwd])</strong>
+    </dt>
+    <dd>
+    return an absolute path.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+        <li><span class="parameter">pwd</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         optional start path to use (default is current dir)
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "splitext"></a>
+    <strong>splitext (P)</strong>
+    </dt>
+    <dd>
+    given a path, return the root part and the extension part.
+ if there's no extension part, the second value will be empty
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        root part (everything upto the "."", maybe empty)</li>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        extension part (including the ".", maybe empty)</li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> file_path, ext = path.splitext(<span class="string">"/bonzo/dog_stuff/cat.txt"</span>)
+<span class="global">assert</span>(file_path == <span class="string">"/bonzo/dog_stuff/cat"</span>)
+<span class="global">assert</span>(ext == <span class="string">".txt"</span>)
+
+<span class="keyword">local</span> file_path, ext = path.splitext(<span class="string">""</span>)
+<span class="global">assert</span>(file_path == <span class="string">""</span>)
+<span class="global">assert</span>(ext == <span class="string">""</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "dirname"></a>
+    <strong>dirname (P)</strong>
+    </dt>
+    <dd>
+    return the directory part of a path
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        everything before the last dir-separator
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.path.html#splitpath">splitpath</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.dirname(<span class="string">"/some/path/file.txt"</span>)   <span class="comment">-- "/some/path"
+</span>path.dirname(<span class="string">"file.txt"</span>)              <span class="comment">-- "" (empty string)</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "basename"></a>
+    <strong>basename (P)</strong>
+    </dt>
+    <dd>
+    return the file part of a path
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+
+
+
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.path.html#splitpath">splitpath</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.basename(<span class="string">"/some/path/file.txt"</span>)  <span class="comment">-- "file.txt"
+</span>path.basename(<span class="string">"/some/path/file/"</span>)     <span class="comment">-- "" (empty string)</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "extension"></a>
+    <strong>extension (P)</strong>
+    </dt>
+    <dd>
+    get the extension part of a path.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+
+
+
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.path.html#splitext">splitext</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.extension(<span class="string">"/some/path/file.txt"</span>) <span class="comment">-- ".txt"
+</span>path.extension(<span class="string">"/some/path/file_txt"</span>) <span class="comment">-- "" (empty string)</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "isabs"></a>
+    <strong>isabs (P)</strong>
+    </dt>
+    <dd>
+    is this an absolute path?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.isabs(<span class="string">"hello/path"</span>)    <span class="comment">-- false
+</span>path.isabs(<span class="string">"/hello/path"</span>)   <span class="comment">-- true
+</span><span class="comment">-- Windows;
+</span>path.isabs(<span class="string">"hello\path"</span>)    <span class="comment">-- false
+</span>path.isabs(<span class="string">"\hello\path"</span>)   <span class="comment">-- true
+</span>path.isabs(<span class="string">"C:\hello\path"</span>) <span class="comment">-- true
+</span>path.isabs(<span class="string">"C:hello\path"</span>)  <span class="comment">-- false</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "join"></a>
+    <strong>join (p1, p2, ...)</strong>
+    </dt>
+    <dd>
+    return the path resulting from combining the individual paths.
+ if the second (or later) path is absolute, we return the last absolute path (joined with any non-absolute paths following).
+ empty elements (except the last) will be ignored.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">p1</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+        <li><span class="parameter">p2</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+        <li><span class="parameter">...</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         more file paths
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        the combined path
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.join(<span class="string">"/first"</span>,<span class="string">"second"</span>,<span class="string">"third"</span>)   <span class="comment">-- "/first/second/third"
+</span>path.join(<span class="string">"first"</span>,<span class="string">"second/third"</span>)      <span class="comment">-- "first/second/third"
+</span>path.join(<span class="string">"/first"</span>,<span class="string">"/second"</span>,<span class="string">"third"</span>)  <span class="comment">-- "/second/third"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "normcase"></a>
+    <strong>normcase (P)</strong>
+    </dt>
+    <dd>
+
+<p>normalize the case of a pathname.  On Unix, this returns the path unchanged,
+ for Windows it converts;</p>
+
+<ul>
+    <li>the path to lowercase</li>
+    <li>forward slashes to backward slashes</li>
+</ul>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path.normcase(<span class="string">"/Some/Path/File.txt"</span>)
+<span class="comment">-- Windows: "\some\path\file.txt"
+</span><span class="comment">-- Others : "/Some/Path/File.txt"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "normpath"></a>
+    <strong>normpath (P)</strong>
+    </dt>
+    <dd>
+    normalize a path name.
+ <code>A//B</code>, <code>A/./B</code>, and <code>A/foo/../B</code> all become <code>A/B</code>.</p>
+
+<p> An empty path results in '.'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "relpath"></a>
+    <strong>relpath (P[, start])</strong>
+    </dt>
+    <dd>
+    relative path from current directory or optional start point
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a path
+        </li>
+        <li><span class="parameter">start</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         optional start point (default current directory)
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "expanduser"></a>
+    <strong>expanduser (P)</strong>
+    </dt>
+    <dd>
+    Replace a starting '~' with the user's home directory.
+ In windows, if HOME isn't set, then USERPROFILE is used in preference to
+ HOMEDRIVE HOMEPATH. This is guaranteed to be writeable on all versions of Windows.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">P</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A file path
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tmpname"></a>
+    <strong>tmpname ()</strong>
+    </dt>
+    <dd>
+    Return a suitable full path to a new temporary file name.
+ unlike os.tmpname(), it always gives you a writeable path (uses TEMP environment variable on Windows)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "common_prefix"></a>
+    <strong>common_prefix (path1, path2)</strong>
+    </dt>
+    <dd>
+    return the largest common prefix path of two paths.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path1</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a file path
+        </li>
+        <li><span class="parameter">path2</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a file path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the common prefix (Windows: separators will be normalized, casing will be original)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "package_path"></a>
+    <strong>package_path (mod)</strong>
+    </dt>
+    <dd>
+    return the full path where a particular Lua module would be found.
+ Both package.path and package.cpath is searched, so the result may
+ either be a Lua file or a shared library.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mod</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         name of the module
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        on success: path of module, lua or binary</li>
+        <li>
+        on error: nil, error string listing paths tried</li>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "is_windows"></a>
+    <strong>is_windows</strong>
+    </dt>
+    <dd>
+    are we running Windows?
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sep"></a>
+    <strong>sep</strong>
+    </dt>
+    <dd>
+    path separator for this platform.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dirsep"></a>
+    <strong>dirsep</strong>
+    </dt>
+    <dd>
+    separator for PATH for this platform
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

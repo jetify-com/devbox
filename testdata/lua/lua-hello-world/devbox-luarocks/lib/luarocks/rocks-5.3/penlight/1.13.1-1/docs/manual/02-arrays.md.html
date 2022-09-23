@@ -1,0 +1,914 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Python_style_Lists">Python-style Lists </a></li>
+<li><a href="#Map_and_Set_classes">Map and Set classes </a></li>
+<li><a href="#Useful_Operations_on_Tables">Useful Operations on Tables </a></li>
+<li><a href="#Operations_on_two_dimensional_tables">Operations on two-dimensional tables </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><strong>Tables and Arrays</strong></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Tables and Arrays</h2>
+
+<p><a id="list"/></p>
+
+<p><a name="Python_style_Lists"></a></p>
+<h3>Python-style Lists</h3>
+
+<p>One of the elegant things about Lua is that tables do the job of both lists and
+dicts (as called in Python) or vectors and maps, (as called in C++), and they do
+it efficiently.  However, if we are dealing with 'tables with numerical indices'
+we may as well call them lists and look for operations which particularly make
+sense for lists. The Penlight <a href="../classes/pl.List.html#">List</a> class was originally written by Nick Trout
+for Lua 5.0, and translated to 5.1 and extended by myself.  It seemed that
+borrowing from Python was a good idea, and this eventually grew into Penlight.</p>
+
+<p>Here is an example showing <a href="../classes/pl.List.html#">List</a> in action; it redefines <code>__tostring</code>, so that
+it can print itself out more sensibly:</p>
+
+
+<pre>
+&gt; List = <span class="global">require</span> <span class="string">'pl.List'</span>  <span class="comment">--&gt; automatic with require 'pl' &lt;---
+</span>&gt; l = List()
+&gt; l:append(<span class="number">10</span>)
+&gt; l:append(<span class="number">20</span>)
+&gt; = l
+{<span class="number">10</span>,<span class="number">20</span>}
+&gt; l:extend {<span class="number">30</span>,<span class="number">40</span>}
+{<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>}
+&gt; l:insert(<span class="number">1</span>,<span class="number">5</span>)
+{<span class="number">5</span>,<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>}
+&gt; = l:pop()
+<span class="number">40</span>
+&gt; = l
+{<span class="number">5</span>,<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+&gt; = l:index(<span class="number">30</span>)
+<span class="number">4</span>
+&gt; = l:contains(<span class="number">30</span>)
+<span class="keyword">true</span>
+&gt; = l:reverse()  <span class="comment">---&gt; note: doesn't make a copy!
+</span>{<span class="number">30</span>,<span class="number">20</span>,<span class="number">10</span>,<span class="number">5</span>}
+</pre>
+
+<p>Although methods like <code>sort</code> and <code>reverse</code> operate in-place and change the list,
+they do return the original list. This makes it possible to do <em>method chaining</em>,
+like <code>ls = ls:append(10):append(20):reverse():append(1)</code>. But (and this is an
+important but) no extra copy is made, so <code>ls</code> does not change identity. <a href="../classes/pl.List.html#">List</a>
+objects (like tables) are <em>mutable</em>, unlike strings. If you want a copy of a
+list, then <code>List(ls)</code> will do the job, i.e. it acts like a copy constructor.
+However, if passed any other table, <a href="../classes/pl.List.html#">List</a> will just set the metatable of the
+table and <em>not</em> make a copy.</p>
+
+<p>A particular feature of Python lists is <em>slicing</em>. This is fully supported in
+this version of <a href="../classes/pl.List.html#">List</a>, except we use 1-based indexing. So <a href="../classes/pl.List.html#List:slice">List.slice</a> works
+rather like <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.sub">string.sub</a>:</p>
+
+
+<pre>
+&gt; l = List {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>}
+&gt; = l:slice(<span class="number">1</span>,<span class="number">1</span>)  <span class="comment">---&gt; note: creates a new list!
+</span>{<span class="number">10</span>}
+&gt; = l:slice(<span class="number">2</span>,<span class="number">2</span>)
+{<span class="number">20</span>}
+&gt; = l:slice(<span class="number">2</span>,<span class="number">3</span>)
+{<span class="number">20</span>,<span class="number">30</span>}
+&gt; = l:slice(<span class="number">2</span>,-<span class="number">2</span>)
+{<span class="number">20</span>,<span class="number">30</span>}
+&gt; = l:slice_assign(<span class="number">2</span>,<span class="number">2</span>,{<span class="number">21</span>,<span class="number">22</span>,<span class="number">23</span>})
+{<span class="number">10</span>,<span class="number">21</span>,<span class="number">22</span>,<span class="number">23</span>,<span class="number">30</span>,<span class="number">40</span>}
+&gt; = l:chop(<span class="number">1</span>,<span class="number">1</span>)
+{<span class="number">21</span>,<span class="number">22</span>,<span class="number">23</span>,<span class="number">30</span>,<span class="number">40</span>}
+</pre>
+
+<p>Functions like <code>slice_assign</code> and <code>chop</code> modify the list; the first is equivalent
+to Python<code>l[i1:i2] = seq</code> and the second to <code>del l[i1:i2]</code>.</p>
+
+<p>List objects are ultimately just Lua 'list-like' tables, but they have extra
+operations defined on them, such as equality and concatention.  For regular
+tables, equality is only true if the two tables are <em>identical objects</em>, whereas
+two lists are equal if they have the same contents, i.e. that <code>l1[i]==l2[i]</code> for
+all elements.</p>
+
+
+<pre>
+&gt; l1 = List {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+&gt; l2 = List {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+&gt; = l1 == l2
+<span class="keyword">true</span>
+&gt; = l1..l2
+{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+</pre>
+
+<p>The <a href="../classes/pl.List.html#">List</a> constructor can be passed a function. If so, it's assumed that this is
+an iterator function that can be repeatedly called to generate a sequence.  One
+such function is <a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.lines">io.lines</a>; the following short, intense little script counts
+the number of lines in standard input:</p>
+
+
+<pre>
+<span class="comment">-- linecount.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+ls = List(<span class="global">io</span>.lines())
+<span class="global">print</span>(#ls)
+</pre>
+
+<p><a href="../classes/pl.List.html#List.iterate">List.iterate</a> captures what <a href="../classes/pl.List.html#">List</a> considers a sequence. In particular, it can
+also iterate over all 'characters' in a string:</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> ch <span class="keyword">in</span> List.iterate <span class="string">'help'</span> <span class="keyword">do</span> <span class="global">io</span>.write(ch,<span class="string">' '</span>) <span class="keyword">end</span>
+h e l p &gt;
+</pre>
+
+<p>Since the function <code>iterate</code> is used internally by the <a href="../classes/pl.List.html#">List</a> constructor,
+strings can be made into lists of character strings very easily.</p>
+
+<p>There are a number of operations that go beyond the standard Python methods. For
+instance, you can <em>partition</em> a list into a table of sublists using a function.
+In the simplest form, you use a predicate (a function returning a boolean value)
+to partition the list into two lists, one of elements matching and another of
+elements not matching. But you can use any function; if we use <a href="https://www.lua.org/manual/5.1/manual.html#pdf-type">type</a> then the
+keys will be the standard Lua type names.</p>
+
+
+<pre>
+&gt; ls = List{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}
+&gt; ops = <span class="global">require</span> <span class="string">'pl.operator'</span>
+&gt; ls:partition(<span class="keyword">function</span>(x) <span class="keyword">return</span> x &gt; <span class="number">2</span> <span class="keyword">end</span>)
+{<span class="keyword">false</span>={<span class="number">1</span>,<span class="number">2</span>},<span class="keyword">true</span>={<span class="number">3</span>,<span class="number">4</span>}}
+&gt; ls = List{<span class="string">'one'</span>,<span class="global">math</span>.sin,List{<span class="number">1</span>},<span class="number">10</span>,<span class="number">20</span>,List{<span class="number">1</span>,<span class="number">2</span>}}
+&gt; ls:partition(<span class="global">type</span>)
+{<span class="keyword">function</span>={<span class="keyword">function</span>: <span class="number">00369110</span>},<span class="global">string</span>={one},number={<span class="number">10</span>,<span class="number">20</span>},<span class="global">table</span>={{<span class="number">1</span>},{<span class="number">1</span>,<span class="number">2</span>}}}
+</pre>
+
+<p>This is one <a href="../classes/pl.List.html#">List</a> method which returns a table which is not a <a href="../classes/pl.List.html#">List</a>. Bear in
+mind that you can always call a <a href="../classes/pl.List.html#">List</a> method on a plain table argument, so
+<code>List.partition(t,type)</code> works as expected. But these functions will only operate
+on the array part of the table.</p>
+
+<p>The 'nominal' type of the returned table is <code>pl.Multimap</code>, which describes a mapping
+between keys and multiple values. This does not mean that <code>pl.Multimap</code> is automatically
+loaded whenever you use <code>partition</code> (or <a href="../classes/pl.List.html#">List</a> for that matter); this is one of the
+standard metatables which are only filled out when the appropriate module is loaded.
+This allows tables to be tagged appropriately without causing excessive coupling.</p>
+
+<p>Stacks occur everywhere in computing. <a href="../classes/pl.List.html#">List</a> supports stack-like operations;
+there is already <code>pop</code> (remove and return last value) and <code>append</code> acts like
+<code>push</code> (add a value to the end). <code>push</code> is provided as an alias for <code>append</code>, and
+the other stack operation (size) is simply the size operator <code>#</code>.  Queues can
+also be implemented; you use <code>pop</code> to take values out of the queue, and <code>put</code> to
+insert a value at the begining.</p>
+
+<p>You may derive classes from <a href="../classes/pl.List.html#">List</a>, and since the list-returning methods
+are covariant, the result of <code>slice</code> etc will return lists of the derived type,
+not <a href="../classes/pl.List.html#">List</a>. For instance, consider the specialization of a <a href="../classes/pl.List.html#">List</a> type that contains
+numbers in <code>tests/test-list.lua</code>:</p>
+
+
+<pre>
+n1 = NA{<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+n2 = NA{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}
+ns = n1 + <span class="number">2</span>*n2
+asserteq(ns,{<span class="number">12</span>,<span class="number">24</span>,<span class="number">36</span>})
+min,max = ns:slice(<span class="number">1</span>,<span class="number">2</span>):minmax()
+asserteq(T(min,max),T(<span class="number">12</span>,<span class="number">24</span>))
+asserteq(n1:normalize():sum(),<span class="number">1</span>,<span class="number">1e-8</span>)
+</pre>
+
+<p><a name="Map_and_Set_classes"></a></p>
+<h3>Map and Set classes</h3>
+
+<p>The <a href="../classes/pl.Map.html#">Map</a> class exposes what Python would call a 'dict' interface, and accesses
+the hash part of the table. The name 'Map' is used to emphasize the interface,
+not the implementation; it is an object which maps keys onto values; <code>m[&apos;alice&apos;]</code>
+or the equivalent <code>m.alice</code> is the access operation.  This class also provides
+explicit <code>set</code> and <code>get</code> methods, which are trivial for regular maps but get
+interesting when <a href="../classes/pl.Map.html#">Map</a> is subclassed. The other operation is <code>update</code>, which
+extends a map by copying the keys and values from another table, perhaps
+overwriting existing keys:</p>
+
+
+<pre>
+&gt; Map = <span class="global">require</span> <span class="string">'pl.Map'</span>
+&gt; m = Map{one=<span class="number">1</span>,two=<span class="number">2</span>}
+&gt; m:update {three=<span class="number">3</span>,four=<span class="number">4</span>,two=<span class="number">20</span>}
+&gt; = m == M{one=<span class="number">1</span>,two=<span class="number">20</span>,three=<span class="number">3</span>,four=<span class="number">4</span>}
+<span class="keyword">true</span>
+</pre>
+
+<p>The method <code>values</code> returns a list of the values, and <code>keys</code> returns a list of
+the keys; there is no guarantee of order. <code>getvalues</code> is given a list of keys and
+returns a list of values associated with these keys:</p>
+
+
+<pre>
+&gt; m = Map{one=<span class="number">1</span>,two=<span class="number">2</span>,three=<span class="number">3</span>}
+&gt; = m:getvalues {<span class="string">'one'</span>,<span class="string">'three'</span>}
+{<span class="number">1</span>,<span class="number">3</span>}
+&gt; = m:getvalues(m:keys()) == m:values()
+<span class="keyword">true</span>
+</pre>
+
+<p>When querying the value of a <a href="../classes/pl.Map.html#">Map</a>, it is best to use the <code>get</code> method:</p>
+
+
+<pre>
+&gt; <span class="global">print</span>(m:get <span class="string">'one'</span>, m:get <span class="string">'two'</span>)
+<span class="number">1</span>     <span class="number">2</span>
+</pre>
+
+<p>The reason is that <code>m[key]</code> can be ambiguous; due to the current implementation,
+<code>m[&quot;get&quot;]</code> will always succeed, because if a value is not present in the map, it
+will be looked up in the <a href="../classes/pl.Map.html#">Map</a> metatable, which contains a method <code>get</code>. There is
+currently no simple solution to this annoying restriction.</p>
+
+<p>There are some useful classes which inherit from <a href="../classes/pl.Map.html#">Map</a>. An <a href="../classes/pl.OrderedMap.html#">OrderedMap</a> behaves
+like a <a href="../classes/pl.Map.html#">Map</a> but keeps its keys in order if you use its <code>set</code> method to add keys
+and values.  Like all the 'container' classes in Penlight, it defines an <code>iter</code>
+method for iterating over its values; this will return the keys and values in the
+order of insertion; the <code>keys</code> and <code>values</code> methods likewise.</p>
+
+<p>A <a href="../classes/pl.MultiMap.html#">MultiMap</a> allows multiple values to be associated with a given key. So <code>set</code>
+(as before) takes a key and a value, but calling it with the same key and a
+different value does not overwrite but adds a new value. <code>get</code> (or using <code>[]</code>)
+will return a list of values.</p>
+
+<p>A <a href="../classes/pl.Set.html#">Set</a> can be seen as a special kind of <a href="../classes/pl.Map.html#">Map</a>, where all the values are <code>true</code>,
+the keys are the values, and the order is not important. So in this case
+<a href="../classes/pl.Set.html#pl.Set:values">Set.values</a> is defined to return a list of the keys.  Sets can display
+themselves, and the basic operations like <code>union</code> (<code>+</code>) and <code>intersection</code> (<code>*</code>)
+are defined.</p>
+
+
+<pre>
+&gt; Set = <span class="global">require</span> <span class="string">'pl.Set'</span>
+&gt; = Set{<span class="string">'one'</span>,<span class="string">'two'</span>} == Set{<span class="string">'two'</span>,<span class="string">'one'</span>}
+<span class="keyword">true</span>
+&gt; fruit = Set{<span class="string">'apple'</span>,<span class="string">'banana'</span>,<span class="string">'orange'</span>}
+&gt; = fruit[<span class="string">'banana'</span>]
+<span class="keyword">true</span>
+&gt; = fruit[<span class="string">'hazelnut'</span>]
+<span class="keyword">nil</span>
+&gt; = fruit:values()
+{apple,orange,banana}
+&gt; colours = Set{<span class="string">'red'</span>,<span class="string">'orange'</span>,<span class="string">'green'</span>,<span class="string">'blue'</span>}
+&gt; = fruit,colours
+[apple,orange,banana]   [blue,green,orange,red]
+&gt; = fruit+colours
+[blue,green,apple,red,orange,banana]
+&gt; = fruit*colours
+[orange]
+</pre>
+
+<p>There are also the functions <a href="../classes/pl.Set.html#pl.Set:difference">Set.difference</a> and <code>Set.symmetric_difference</code>. The
+first answers the question 'what fruits are not colours?' and the second 'what
+are fruits and colours but not both?'</p>
+
+
+<pre>
+&gt; = fruit - colours
+[apple,banana]
+&gt; = fruit ^ colours
+[blue,green,apple,red,banana]
+</pre>
+
+<p>Adding elements to a set is simply <code>fruit[&apos;peach&apos;] = true</code> and removing is
+<code>fruit[&apos;apple&apos;] = nil</code> . To make this simplicity work properly, the <a href="../classes/pl.Set.html#">Set</a> class has no
+methods - either you use the operator forms or explicitly use <code>Set.intersect</code>
+etc. In this way we avoid the ambiguity that plagues <a href="../classes/pl.Map.html#">Map</a>.</p>
+
+
+<p>(See <a href="../classes/pl.Map.html#">pl.Map</a> and <a href="../classes/pl.Set.html#">pl.Set</a>)</p>
+
+<p><a name="Useful_Operations_on_Tables"></a></p>
+<h3>Useful Operations on Tables</h3>
+
+
+<p>Some notes on terminology: Lua tables are usually <em>list-like</em> (like an array) or
+<em>map-like</em> (like an associative array or dict); they can of course have a
+list-like and a map-like part. Some of the table operations only make sense for
+list-like tables, and some only for map-like tables. (The usual Lua terminology
+is the array part and the hash part of the table, which reflects the actual
+implementation used; it is more accurate to say that a Lua table is an
+associative map which happens to be particularly efficient at acting like an
+array.)</p>
+
+<p>The functions provided in <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> provide all the basic manipulations on Lua
+tables, but as we saw with the <a href="../classes/pl.List.html#">List</a> class, it is useful to build higher-level
+operations on top of those functions. For instance, to copy a table involves this
+kind of loop:</p>
+
+
+<pre>
+<span class="keyword">local</span> res = {}
+<span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="global">pairs</span>(T) <span class="keyword">do</span>
+    res[k] = v
+<span class="keyword">end</span>
+<span class="keyword">return</span> res
+</pre>
+
+<p>The <a href="../libraries/pl.tablex.html#">tablex</a> module provides this as <a href="../libraries/pl.tablex.html#copy">copy</a>, which does a <em>shallow</em> copy of a
+table. There is also <a href="../libraries/pl.tablex.html#deepcopy">deepcopy</a> which goes further than a simple loop in two
+ways; first, it also gives the copy the same metatable as the original (so it can
+copy objects like <a href="../classes/pl.List.html#">List</a> above) and any nested tables will also be copied, to
+arbitrary depth. There is also <a href="../libraries/pl.tablex.html#icopy">icopy</a> which operates on list-like tables, where
+you can set optionally set the start index of the source and destination as well.
+It ensures that any left-over elements will be deleted:</p>
+
+
+<pre>
+asserteq(icopy({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>}),{<span class="number">20</span>,<span class="number">30</span>})   <span class="comment">-- start at 1
+</span>asserteq(icopy({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>},<span class="number">2</span>),{<span class="number">1</span>,<span class="number">20</span>,<span class="number">30</span>}) <span class="comment">-- start at 2
+</span>asserteq(icopy({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>},<span class="number">2</span>,<span class="number">2</span>),{<span class="number">1</span>,<span class="number">30</span>}) <span class="comment">-- start at 2, copy from 2</span>
+</pre>
+
+<p>(This code from the <a href="../libraries/pl.tablex.html#">tablex</a> test module shows the use of <a href="../libraries/pl.test.html#asserteq">pl.test.asserteq</a>)</p>
+
+<p>Whereas, <a href="../libraries/pl.tablex.html#move">move</a> overwrites but does not delete the rest of the destination:</p>
+
+
+<pre>
+asserteq(move({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>}),{<span class="number">20</span>,<span class="number">30</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>})
+asserteq(move({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>},<span class="number">2</span>),{<span class="number">1</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>})
+asserteq(move({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">20</span>,<span class="number">30</span>},<span class="number">2</span>,<span class="number">2</span>),{<span class="number">1</span>,<span class="number">30</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>})
+</pre>
+
+<p>(The difference is somewhat like that between C's <code>strcpy</code> and <code>memmove</code>.)</p>
+
+<p>To summarize, use <a href="../libraries/pl.tablex.html#copy">copy</a> or <a href="../libraries/pl.tablex.html#deepcopy">deepcopy</a> to make a copy of an arbitrary table. To
+copy into a map-like table, use <a href="../libraries/pl.tablex.html#update">update</a>; to copy into a list-like table use
+<a href="../libraries/pl.tablex.html#icopy">icopy</a>, and <a href="../libraries/pl.tablex.html#move">move</a> if you are updating a range in the destination.</p>
+
+<p>To complete this set of operations, there is <a href="../libraries/pl.tablex.html#insertvalues">insertvalues</a> which works like
+<a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.insert">table.insert</a> except that one provides a table of values to be inserted, and
+<a href="../libraries/pl.tablex.html#removevalues">removevalues</a> which removes a range of values.</p>
+
+
+<pre>
+asserteq(insertvalues({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>},<span class="number">2</span>,{<span class="number">20</span>,<span class="number">30</span>}),{<span class="number">1</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+asserteq(insertvalues({<span class="number">1</span>,<span class="number">2</span>},{<span class="number">3</span>,<span class="number">4</span>}),{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+</pre>
+
+<p>Another example:</p>
+
+
+<pre>
+&gt; T = <span class="global">require</span> <span class="string">'pl.tablex'</span>
+&gt; t = {<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>}
+&gt; = T.removevalues(t,<span class="number">2</span>,<span class="number">3</span>)
+{<span class="number">10</span>,<span class="number">40</span>}
+&gt; = T.insertvalues(t,<span class="number">2</span>,{<span class="number">20</span>,<span class="number">30</span>})
+{<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>}
+</pre>
+
+<p>In a similar spirit to <a href="../libraries/pl.tablex.html#deepcopy">deepcopy</a>, <a href="../libraries/pl.tablex.html#deepcompare">deepcompare</a> will take two tables and return
+true only if they have exactly the same values and structure.</p>
+
+
+<pre>
+&gt; t1 = {<span class="number">1</span>,{<span class="number">2</span>,<span class="number">3</span>},<span class="number">4</span>}
+&gt; t2 = deepcopy(t1)
+&gt; = t1 == t2
+<span class="keyword">false</span>
+&gt; = deepcompare(t1,t2)
+<span class="keyword">true</span>
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#find">find</a> will return the index of a given value in a list-like table. Note that
+like <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.find">string.find</a> you can specify an index to start searching, so that all
+instances can be found. There is an optional fourth argument, which makes the
+search start at the end and go backwards, so we could define <a href="../libraries/pl.tablex.html#rfind">rfind</a> like so:</p>
+
+
+<pre>
+<span class="keyword">function</span> rfind(t,val,istart)
+    <span class="keyword">return</span> tablex.find(t,val,istart,<span class="keyword">true</span>)
+<span class="keyword">end</span>
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#find">find</a> does a linear search, so it can slow down code that depends on it.  If
+efficiency is required for large tables, consider using an <em>index map</em>.
+<a href="../libraries/pl.tablex.html#index_map">index_map</a> will return a table where the keys are the original values of the
+list, and the associated values are the indices. (It is almost exactly the
+representation needed for a <em>set</em>.)</p>
+
+
+<pre>
+&gt; t = {<span class="string">'one'</span>,<span class="string">'two'</span>,<span class="string">'three'</span>}
+&gt; = tablex.find(t,<span class="string">'two'</span>)
+<span class="number">2</span>
+&gt; = tablex.find(t,<span class="string">'four'</span>)
+<span class="keyword">nil</span>
+&gt; il = tablex.index_map(t)
+&gt; = il[<span class="string">'two'</span>]
+<span class="number">2</span>
+&gt; = il.two
+<span class="number">2</span>
+</pre>
+
+<p>A version of <a href="../libraries/pl.tablex.html#index_map">index_map</a> called <a href="../libraries/pl.tablex.html#makeset">makeset</a> is also provided, where the values are
+just <code>true</code>. This is useful because two such sets can be compared for equality
+using <a href="../libraries/pl.tablex.html#deepcompare">deepcompare</a>:</p>
+
+
+<pre>
+&gt; = deepcompare(makeset {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},makeset {<span class="number">2</span>,<span class="number">1</span>,<span class="number">3</span>})
+<span class="keyword">true</span>
+</pre>
+
+<p>Consider the problem of determining the new employees that have joined in a
+period. Assume we have two files of employee names:</p>
+
+
+<pre>
+(last-month.txt)
+smith,john
+brady,maureen
+mongale,thabo
+
+(this-month.txt)
+smith,john
+smit,johan
+brady,maureen
+mogale,thabo
+van der Merwe,Piet
+</pre>
+
+<p>To find out differences, just make the employee lists into sets, like so:</p>
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+
+<span class="keyword">function</span> read_employees(file)
+  <span class="keyword">local</span> ls = List(<span class="global">io</span>.lines(file)) <span class="comment">-- a list of employees
+</span>  <span class="keyword">return</span> tablex.makeset(ls)
+<span class="keyword">end</span>
+
+last = read_employees <span class="string">'last-month.txt'</span>
+this = read_employees <span class="string">'this-month.txt'</span>
+
+<span class="comment">-- who is in this but not in last?
+</span>diff = tablex.difference(this,last)
+
+<span class="comment">-- in a set, the keys are the values...
+</span><span class="keyword">for</span> e <span class="keyword">in</span> <span class="global">pairs</span>(diff) <span class="keyword">do</span> <span class="global">print</span>(e) <span class="keyword">end</span>
+
+<span class="comment">--  *output*
+</span><span class="comment">-- van der Merwe,Piet
+</span><span class="comment">-- smit,johan</span>
+</pre>
+
+<p>The <a href="../libraries/pl.tablex.html#difference">difference</a> operation is easy to write and read:</p>
+
+
+<pre>
+<span class="keyword">for</span> e <span class="keyword">in</span> <span class="global">pairs</span>(this) <span class="keyword">do</span>
+  <span class="keyword">if</span> <span class="keyword">not</span> last[e] <span class="keyword">then</span>
+    <span class="global">print</span>(e)
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p>Using <a href="../libraries/pl.tablex.html#difference">difference</a> here is not that it is a tricky thing to code, it is that you
+are stating your intentions clearly to other readers of your code. (And naturally
+to your future self, in six months time.)</p>
+
+<p><a href="../libraries/pl.tablex.html#find_if">find_if</a> will search a table using a function. The optional third argument is a
+value which will be passed as a second argument to the function. <a href="../libraries/pl.operator.html#">pl.operator</a>
+provides the Lua operators conveniently wrapped as functions, so the basic
+comparison functions are available:</p>
+
+
+<pre>
+&gt; ops = <span class="global">require</span> <span class="string">'pl.operator'</span>
+&gt; = tablex.find_if({<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">40</span>},ops.gt,<span class="number">20</span>)
+<span class="number">3</span>       <span class="keyword">true</span>
+</pre>
+
+<p>Note that <a href="../libraries/pl.tablex.html#find_if">find_if</a> will also return the <em>actual value</em> returned by the function,
+which of course is usually just  <code>true</code> for a boolean function, but any value
+which is not <code>nil</code> and not <code>false</code> can be usefully passed back.</p>
+
+<p><a href="../libraries/pl.tablex.html#deepcompare">deepcompare</a> does a thorough recursive comparison, but otherwise using the
+default equality operator. <a href="../libraries/pl.tablex.html#compare">compare</a> allows you to specify exactly what function
+to use when comparing two list-like tables, and <a href="../libraries/pl.tablex.html#compare_no_order">compare_no_order</a> is true if
+they contain exactly the same elements. Do note that the latter does not need an
+explicit comparison function - in this case the implementation is actually to
+compare the two sets, as above:</p>
+
+
+<pre>
+&gt; = compare_no_order({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},{<span class="number">2</span>,<span class="number">1</span>,<span class="number">3</span>})
+<span class="keyword">true</span>
+&gt; = compare_no_order({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},{<span class="number">2</span>,<span class="number">1</span>,<span class="number">3</span>},<span class="string">'=='</span>)
+<span class="keyword">true</span>
+</pre>
+
+<p>(Note the special string '==' above; instead of saying <code>ops.gt</code> or <code>ops.eq</code> we
+can use the strings '>' or '==' respectively.)</p>
+
+<p><a href="../libraries/pl.tablex.html#sort">sort</a> and <a href="../libraries/pl.tablex.html#sortv">sortv</a> return iterators that will iterate through the
+sorted elements of a table. <a href="../libraries/pl.tablex.html#sort">sort</a> iterates by sorted key order, and
+<a href="../libraries/pl.tablex.html#sortv">sortv</a> iterates by sorted value order. For example, given a table
+with names and ages, it is trivial to iterate over the elements:</p>
+
+
+<pre>
+&gt; t = {john=<span class="number">27</span>,jane=<span class="number">31</span>,mary=<span class="number">24</span>}
+&gt; <span class="keyword">for</span> name,age <span class="keyword">in</span> tablex.sort(t) <span class="keyword">do</span> <span class="global">print</span>(name,age) <span class="keyword">end</span>
+jane    <span class="number">31</span>
+john    <span class="number">27</span>
+mary    <span class="number">24</span>
+&gt; <span class="keyword">for</span> name,age <span class="keyword">in</span> tablex.sortv(t) <span class="keyword">do</span> <span class="global">print</span>(name,age) <span class="keyword">end</span>
+mary    <span class="number">24</span>
+john    <span class="number">27</span>
+jane    <span class="number">31</span>
+</pre>
+
+<p>There are several ways to merge tables in PL. If they are list-like, then see the
+operations defined by <a href="../classes/pl.List.html#">pl.List</a>, like concatenation. If they are map-like, then
+<a href="../libraries/pl.tablex.html#merge">merge</a> provides two basic operations. If the third arg is false, then the result
+only contains the keys that are in common between the two tables, and if true,
+then the result contains all the keys of both tables. These are in fact
+generalized set union and intersection operations:</p>
+
+
+<pre>
+&gt; S1 = {john=<span class="number">27</span>,jane=<span class="number">31</span>,mary=<span class="number">24</span>}
+&gt; S2 = {jane=<span class="number">31</span>,jones=<span class="number">50</span>}
+&gt; = tablex.merge(S1, S2, <span class="keyword">false</span>)
+{jane=<span class="number">31</span>}
+&gt; = tablex.merge(S1, S2, <span class="keyword">true</span>)
+{mary=<span class="number">24</span>,jane=<span class="number">31</span>,john=<span class="number">27</span>,jones=<span class="number">50</span>}
+</pre>
+
+<p>When working with tables, you will often find yourself writing loops like in the
+first example. Loops are second nature to programmers, but they are often not the
+most elegant and self-describing way of expressing an operation. Consider the
+<a href="../libraries/pl.tablex.html#map">map</a> function, which creates a new table by applying a function to each element
+of the original:</p>
+
+
+<pre>
+&gt; = map(<span class="global">math</span>.sin, {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{  <span class="number">0.84</span>,  <span class="number">0.91</span>,  <span class="number">0.14</span>, -<span class="number">0.76</span>}
+&gt; = map(<span class="keyword">function</span>(x) <span class="keyword">return</span> x*x <span class="keyword">end</span>, {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>})
+{<span class="number">1</span>,<span class="number">4</span>,<span class="number">9</span>,<span class="number">16</span>}
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#map">map</a> saves you from writing a loop, and the resulting code is often clearer, as
+well as being shorter. This is not to say that 'loops are bad' (although you will
+hear that from some extremists), just that it's good to capture standard
+patterns. Then the loops you do write will stand out and acquire more significance.</p>
+
+<p><a href="../libraries/pl.tablex.html#pairmap">pairmap</a> is interesting, because the function works with both the key and the
+value.</p>
+
+
+<pre>
+&gt; t = {fred=<span class="number">10</span>,bonzo=<span class="number">20</span>,alice=<span class="number">4</span>}
+&gt; = pairmap(<span class="keyword">function</span>(k,v) <span class="keyword">return</span> v <span class="keyword">end</span>, t)
+{<span class="number">4</span>,<span class="number">10</span>,<span class="number">20</span>}
+&gt; = pairmap(<span class="keyword">function</span>(k,v) <span class="keyword">return</span> k <span class="keyword">end</span>, t)
+{<span class="string">'alice'</span>,<span class="string">'fred'</span>,<span class="string">'bonzo'</span>}
+</pre>
+
+<p>(These are common enough operations that the first is defined as <a href="../libraries/pl.tablex.html#values">values</a> and the
+second as <a href="../libraries/pl.tablex.html#keys">keys</a>.) If the function returns two values, then the <em>second</em> value is
+considered to be the new key:</p>
+
+
+<pre>
+&gt; = pairmap(t,<span class="keyword">function</span>(k,v) <span class="keyword">return</span> v+<span class="number">10</span>, k:upper() <span class="keyword">end</span>)
+{BONZO=<span class="number">30</span>,FRED=<span class="number">20</span>,ALICE=<span class="number">14</span>}
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#map2">map2</a> applies a function to two tables:</p>
+
+
+<pre>
+&gt; map2(ops.add,{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">10</span>,<span class="number">20</span>})
+{<span class="number">11</span>,<span class="number">22</span>}
+&gt; map2(<span class="string">'*'</span>,{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">10</span>,<span class="number">20</span>})
+{<span class="number">10</span>,<span class="number">40</span>}
+</pre>
+
+<p>The various map operations generate tables; <a href="../libraries/pl.tablex.html#reduce">reduce</a> applies a function of two
+arguments over a table and returns the result as a scalar:</p>
+
+
+<pre>
+&gt; reduce (<span class="string">'+'</span>, {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>})
+<span class="number">6</span>
+&gt; reduce (<span class="string">'..'</span>, {<span class="string">'one'</span>,<span class="string">'two'</span>,<span class="string">'three'</span>})
+<span class="string">'onetwothree'</span>
+</pre>
+
+<p>Finally, <a href="../libraries/pl.tablex.html#zip">zip</a> sews different tables together:</p>
+
+
+<pre>
+&gt; = zip({<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},{<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>})
+{{<span class="number">1</span>,<span class="number">10</span>},{<span class="number">2</span>,<span class="number">20</span>},{<span class="number">3</span>,<span class="number">30</span>}}
+</pre>
+
+<p>Browsing through the documentation, you will find that <a href="../libraries/pl.tablex.html#">tablex</a> and <a href="../classes/pl.List.html#">List</a> share
+methods.  For instance, <a href="../libraries/pl.tablex.html#imap">tablex.imap</a> and <a href="../classes/pl.List.html#List:map">List.map</a> are basically the same
+function; they both operate over the array-part of the table and generate another
+table. This can also be expressed as a <em>list comprehension</em> <code>C &apos;f(x) for x&apos; (t)</code>
+which makes the operation more explicit. So why are there different ways to do
+the same thing? The main reason is that not all tables are Lists: the expression
+<code>ls:map(&apos;#&apos;)</code> will return a <em>list</em> of the lengths of any elements of <code>ls</code>. A list
+is a thin wrapper around a table, provided by the metatable <a href="../classes/pl.List.html#">List</a>. Sometimes you
+may wish to work with ordinary Lua tables; the <a href="../classes/pl.List.html#">List</a> interface is not a
+compulsory way to use Penlight table operations.</p>
+
+<p><a name="Operations_on_two_dimensional_tables"></a></p>
+<h3>Operations on two-dimensional tables</h3>
+
+
+<p>Two-dimensional tables are of course easy to represent in Lua, for instance
+<code>{{1,2},{3,4}}</code> where we store rows as subtables and index like so <code>A[col][row]</code>.
+This is the common representation used by matrix libraries like
+<a href="http://lua-users.org/wiki/LuaMatrix">LuaMatrix</a>. <a href="../libraries/pl.array2d.html#">pl.array2d</a> does not provide
+matrix operations, since that is the job for a specialized library, but rather
+provides generalizations of the higher-level operations provided by <a href="../libraries/pl.tablex.html#">pl.tablex</a>
+for one-dimensional arrays.</p>
+
+<p><a href="../libraries/pl.array2d.html#iter">iter</a> is a useful generalization of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-ipairs">ipairs</a>. (The extra parameter determines
+whether you want the indices as well.)</p>
+
+
+<pre>
+&gt; a = {{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">3</span>,<span class="number">4</span>}}
+&gt; <span class="keyword">for</span> i,j,v <span class="keyword">in</span> array2d.iter(a,<span class="keyword">true</span>) <span class="keyword">do</span> <span class="global">print</span>(i,j,v) <span class="keyword">end</span>
+<span class="number">1</span>       <span class="number">1</span>       <span class="number">1</span>
+<span class="number">1</span>       <span class="number">2</span>       <span class="number">2</span>
+<span class="number">2</span>       <span class="number">1</span>       <span class="number">3</span>
+<span class="number">2</span>       <span class="number">2</span>       <span class="number">4</span>
+</pre>
+
+<p>Note that you can always convert an arbitrary 2D array into a 'list of lists'
+with <code>List(tablex.map(List,a))</code></p>
+
+<p><a href="../libraries/pl.array2d.html#map">map</a> will apply a function over all elements (notice that extra arguments can be
+provided, so this operation is in effect <code>function(x) return x-1 end</code>)</p>
+
+
+<pre>
+&gt; array2d.map(<span class="string">'-'</span>,a,<span class="number">1</span>)
+{{<span class="number">0</span>,<span class="number">1</span>},{<span class="number">2</span>,<span class="number">3</span>}}
+</pre>
+
+<p>2D arrays are stored as an array of rows, but columns can be extracted:</p>
+
+
+<pre>
+&gt; array2d.column(a,<span class="number">1</span>)
+{<span class="number">1</span>,<span class="number">3</span>}
+</pre>
+
+<p>There are three equivalents to <a href="../libraries/pl.tablex.html#reduce">tablex.reduce</a>. You can either reduce along the
+rows (which is the most efficient) or reduce along the columns. Either one will
+give you a 1D array. And <a href="../libraries/pl.array2d.html#reduce2">reduce2</a> will apply two operations: the first one
+reduces the rows, and the second reduces the result.</p>
+
+
+<pre>
+&gt; array2d.reduce_rows(<span class="string">'+'</span>,a)
+{<span class="number">3</span>,<span class="number">7</span>}
+&gt; array2d.reduce_cols(<span class="string">'+'</span>,a)
+{<span class="number">4</span>,<span class="number">6</span>}
+&gt; <span class="comment">-- same as tablex.reduce('*',array.reduce_rows('+',a))
+</span>&gt; array2d.reduce2(<span class="string">'*'</span>,<span class="string">'+'</span>,a)
+<span class="number">21</span>    `
+</pre>
+
+<p><a href="../libraries/pl.tablex.html#map2">tablex.map2</a> applies an operation to two tables, giving another table.
+<a href="../libraries/pl.array2d.html#map2">array2d.map2</a> does this for 2D arrays. Note that you have to provide the <em>rank</em>
+of the arrays involved, since it's hard to always correctly deduce this from the
+data:</p>
+
+
+<pre>
+&gt; b = {{<span class="number">10</span>,<span class="number">20</span>},{<span class="number">30</span>,<span class="number">40</span>}}
+&gt; a = {{<span class="number">1</span>,<span class="number">2</span>},{<span class="number">3</span>,<span class="number">4</span>}}
+&gt; = array2d.map2(<span class="string">'+'</span>,<span class="number">2</span>,<span class="number">2</span>,a,b)  <span class="comment">-- two 2D arrays
+</span>{{<span class="number">11</span>,<span class="number">22</span>},{<span class="number">33</span>,<span class="number">44</span>}}
+&gt; = array2d.map2(<span class="string">'+'</span>,<span class="number">1</span>,<span class="number">2</span>,{<span class="number">10</span>,<span class="number">100</span>},a)  <span class="comment">-- 1D, 2D
+</span>{{<span class="number">11</span>,<span class="number">102</span>},{<span class="number">13</span>,<span class="number">104</span>}}
+&gt; = array2d.map2(<span class="string">'*'</span>,<span class="number">2</span>,<span class="number">1</span>,a,{<span class="number">1</span>,-<span class="number">1</span>})  <span class="comment">-- 2D, 1D
+</span>{{<span class="number">1</span>,-<span class="number">2</span>},{<span class="number">3</span>,-<span class="number">4</span>}}
+</pre>
+
+<p>Of course, you are not limited to simple arithmetic. Say we have a 2D array of
+strings, and wish to print it out with proper right justification. The first step
+is to create all the string lengths by mapping <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.len">string.len</a> over the array, the
+second is to reduce this along the columns using <a href="https://www.lua.org/manual/5.1/manual.html#pdf-math.max">math.max</a> to get maximum column
+widths, and last, apply <a href="../libraries/pl.stringx.html#rjust">stringx.rjust</a> with these widths.</p>
+
+
+<pre>
+maxlens = reduce_cols(<span class="global">math</span>.max,map(<span class="string">'#'</span>,lines))
+lines = map2(stringx.rjust,<span class="number">2</span>,<span class="number">1</span>,lines,maxlens)
+</pre>
+
+<p>There is <a href="../libraries/pl.array2d.html#product">product</a> which returns  the <em>Cartesian product</em> of two 1D arrays. The
+result is a 2D array formed from applying the function to all possible pairs from
+the two arrays.</p>
+
+
+<pre>
+&gt; array2d.product(<span class="string">'{}'</span>,{<span class="number">1</span>,<span class="number">2</span>},{<span class="string">'a'</span>,<span class="string">'b'</span>})
+{{{<span class="number">1</span>,<span class="string">'b'</span>},{<span class="number">2</span>,<span class="string">'a'</span>}},{{<span class="number">1</span>,<span class="string">'a'</span>},{<span class="number">2</span>,<span class="string">'b'</span>}}}
+</pre>
+
+<p>There is a set of operations which work in-place on 2D arrays. You can
+<a href="../libraries/pl.array2d.html#swap_rows">swap_rows</a> and <a href="../libraries/pl.array2d.html#swap_cols">swap_cols</a>; the first really is a simple one-liner, but the idea
+here is to give the operation a name. <a href="../libraries/pl.array2d.html#remove_row">remove_row</a> and <a href="../libraries/pl.array2d.html#remove_col">remove_col</a> are
+generalizations of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.remove">table.remove</a>. Likewise, <a href="../libraries/pl.array2d.html#extract_rows">extract_rows</a> and <a href="../libraries/pl.array2d.html#extract_cols">extract_cols</a>
+are given arrays of indices and discard anything else. So, for instance,
+<code>extract_cols(A,{2,4})</code> will leave just columns 2 and 4 in the array.</p>
+
+<p><a href="../classes/pl.List.html#List:slice">List.slice</a> is often useful on 1D arrays; <a href="../libraries/pl.array2d.html#slice">slice</a> does the same thing, but is
+generally given a start (row,column) and a end (row,column).</p>
+
+
+<pre>
+&gt; A = {{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>},{<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>},{<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>}}
+&gt; B = slice(A,<span class="number">1</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">2</span>)
+&gt; write(B)
+ <span class="number">1</span> <span class="number">2</span>
+ <span class="number">4</span> <span class="number">5</span>
+&gt; B = slice(A,<span class="number">2</span>,<span class="number">2</span>)
+&gt; write(B,<span class="keyword">nil</span>,<span class="string">'%4.1f'</span>)
+ <span class="number">5.0</span> <span class="number">6.0</span>
+ <span class="number">8.0</span> <span class="number">9.0</span>
+</pre>
+
+<p>Here <a href="../libraries/pl.array2d.html#write">write</a> is used to print out an array nicely; the second parameter is <code>nil</code>,
+which is the default (stdout) but can be any file object and the third parameter
+is an optional format (as used in <a href="https://www.lua.org/manual/5.1/manual.html#pdf-string.format">string.format</a>).</p>
+
+<p><a href="../libraries/pl.array2d.html#parse_range">parse_range</a> will take a spreadsheet range like 'A1:B2' or 'R1C1:R2C2' and
+return the range as four numbers, which can be passed to <a href="../libraries/pl.array2d.html#slice">slice</a>. The rule is
+that <a href="../libraries/pl.array2d.html#slice">slice</a> will return an array of the appropriate shape depending on the
+range; if a range represents a row or a column, the result is 1D, otherwise 2D.</p>
+
+<p>This applies to <a href="../libraries/pl.array2d.html#iter">iter</a> as well, which can also optionally be given a range:</p>
+
+
+
+<pre>
+&gt; <span class="keyword">for</span> i,j,v <span class="keyword">in</span> iter(A,<span class="keyword">true</span>,<span class="number">2</span>,<span class="number">2</span>) <span class="keyword">do</span> <span class="global">print</span>(i,j,v) <span class="keyword">end</span>
+<span class="number">2</span>       <span class="number">2</span>       <span class="number">5</span>
+<span class="number">2</span>       <span class="number">3</span>       <span class="number">6</span>
+<span class="number">3</span>       <span class="number">2</span>       <span class="number">8</span>
+<span class="number">3</span>       <span class="number">3</span>       <span class="number">9</span>
+</pre>
+
+<p><a href="../libraries/pl.array2d.html#new">new</a> will construct a new 2D array with the given dimensions. You provide an
+initial value for the elements, which is interpreted as a function if it's
+callable. With <code>L</code> being <a href="../libraries/pl.utils.html#string_lambda">utils.string_lambda</a> we then have the following way to
+make an <em>identity matrix</em>:</p>
+
+
+<pre>
+asserteq(
+    array.new(<span class="number">3</span>,<span class="number">3</span>,L<span class="string">'|i,j| i==j and 1 or 0'</span>),
+    {{<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>},{<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>},{<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>}}
+)
+</pre>
+
+<p>Please note that most functions in <a href="../libraries/pl.array2d.html#">array2d</a> are <em>covariant</em>, that is, they
+return an array of the same type as they receive.  In particular, any objects
+created with <a href="../libraries/pl.data.html#new">data.new</a> or <code>matrix.new</code> will remain data or matrix objects when
+reshaped or sliced, etc.  Data objects have the <a href="../libraries/pl.array2d.html#">array2d</a> functions available as
+methods.</p>
+
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

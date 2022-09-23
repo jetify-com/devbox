@@ -3,7 +3,16 @@
 
 package lua
 
-import "go.jetpack.io/devbox/planner/plansdk"
+import (
+	"fmt"
+	"path/filepath"
+	"strings"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/planner/plansdk"
+)
+
+const rockspecExtension = "*.rockspec"
 
 type Planner struct{}
 
@@ -15,9 +24,80 @@ func (p *Planner) Name() string {
 }
 
 func (p *Planner) IsRelevant(srcDir string) bool {
-	return false
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		// We should log that an error has occurred.
+		return false
+	}
+	isRelevant := a.HasAnyFile(rockspecExtension)
+	return isRelevant
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+	plan, err := p.getPlan(srcDir)
+	if err != nil {
+		return nil
+	}
+	return plan
+}
+
+func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+	absRockspecFile, err := getRockspecFile(srcDir)
+	if err != nil {
+		return nil, err
+	}
+
+	absSrcDir, err := filepath.Abs(srcDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get abs from srcDir: %s", srcDir)
+	}
+	// rockspecFile := absRockspecFile
+	rockspecFile, err := filepath.Rel(absSrcDir, absRockspecFile)
+	if err != nil {
+		fmt.Printf("err is %s\n", err)
+		return nil, errors.Wrapf(err, "failed to get rel path from %s", srcDir)
+	}
+	fmt.Sprintf("rockspec file %s\n", rockspecFile)
+
+	packages := []string{"lua", "luarocks"}
+	return &plansdk.Plan{
+		DevPackages:     packages,
+		RuntimePackages: packages,
+		InstallStage: &plansdk.Stage{
+			InputFiles: plansdk.AllFiles(),
+			Command: fmt.Sprintf(
+				"luarocks --tree devbox-luarocks install --only"+
+					"-deps %s", rockspecFile,
+			),
+		},
+		BuildStage: &plansdk.Stage{
+			Command: "luarocks --tree devbox-luarocks build",
+		},
+		StartStage: &plansdk.Stage{
+			InputFiles: plansdk.AllFiles(),
+
+			// TODO savil. What is this command?
+			// Command: "luarocks --tree devbox-luarocks <something here>",
+			Command: strings.Join(
+				[]string{
+					"eval $(luarocks --tree devbox-luarocks path)",
+					"lua main.lua",
+				},
+				" && ",
+			),
+		},
+	}, nil
+}
+
+func getRockspecFile(srcDir string) (string, error) {
+	a, err := plansdk.NewAnalyzer(srcDir)
+	if err != nil {
+		return "", err
+	}
+
+	filepaths := a.GlobFiles(rockspecExtension)
+	if len(filepaths) != 1 {
+		return "", errors.Errorf("expected exactly one .rockspec file but received: %s", strings.Join(filepaths, ","))
+	}
+	return filepaths[0], nil
 }

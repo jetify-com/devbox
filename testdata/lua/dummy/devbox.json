@@ -1,0 +1,9 @@
+{
+  "packages": [
+    "lua",
+    "lua53Packages.luarocks"
+  ],
+  "shell": {
+    "init_hook": null
+  }
+}

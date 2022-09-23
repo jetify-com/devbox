@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><strong>pl.input</strong></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.input</code></h1>
+<p>Iterators for extracting words or numbers from an input source.</p>
+<p>
+
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+<span class="keyword">local</span> total,n = seq.sum(input.numbers())
+<span class="global">print</span>(<span class="string">'average'</span>,total/n)
+</pre>
+
+<p> <em>source</em> is defined as a string or a file-like object (i.e. has a read() method which returns the next line)</p>
+
+<p> See <a href="../manual/06-data.md.html#Reading_Unstructured_Text_Data">here</a></p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a></p>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#alltokens">alltokens (getter, pattern[, fn])</a></td>
+	<td class="summary">create an iterator over all tokens.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#create_getter">create_getter (f)</a></td>
+	<td class="summary">create a function which grabs the next value from a source.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#numbers">numbers (f)</a></td>
+	<td class="summary">generate a sequence of numbers from a source.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#words">words (f)</a></td>
+	<td class="summary">generate a sequence of words from a source.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fields">fields (ids, delim, f, opts)</a></td>
+	<td class="summary">parse an input source into fields.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "alltokens"></a>
+    <strong>alltokens (getter, pattern[, fn])</strong>
+    </dt>
+    <dd>
+    create an iterator over all tokens.
+ based on allwords from PiL, 7.1
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">getter</span>
+            <span class="types"><span class="type">func</span></span>
+         any function that returns a line of text
+        </li>
+        <li><span class="parameter">pattern</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">fn</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+          Optionally can pass a function to process each token as it's found.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an iterator
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "create_getter"></a>
+    <strong>create_getter (f)</strong>
+    </dt>
+    <dd>
+    create a function which grabs the next value from a source.  If the source is a string, then the getter
+ will return the string and thereafter return nil. If not specified then the source is assumed to be stdin.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         a string or a file-like object (i.e. has a read() method which returns the next line)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a getter function
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "numbers"></a>
+    <strong>numbers (f)</strong>
+    </dt>
+    <dd>
+    generate a sequence of numbers from a source.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         A source
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An iterator
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "words"></a>
+    <strong>words (f)</strong>
+    </dt>
+    <dd>
+    generate a sequence of words from a source.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         A source
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An iterator
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fields"></a>
+    <strong>fields (ids, delim, f, opts)</strong>
+    </dt>
+    <dd>
+    parse an input source into fields.
+ By default, will fail if it cannot convert a field to a number.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ids</span>
+         a list of field indices, or a maximum field index
+        </li>
+        <li><span class="parameter">delim</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         delimiter to parse fields (default space)
+        </li>
+        <li><span class="parameter">f</span>
+         a source @see create_getter
+        </li>
+        <li><span class="parameter">opts</span>
+            <span class="types"><span class="type">tab</span></span>
+         option table, <code>{no_fail=true}</code>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an iterator with the field values
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">for</span> x,y <span class="keyword">in</span> fields {<span class="number">2</span>,<span class="number">3</span>} <span class="keyword">do</span> <span class="global">print</span>(x,y) <span class="keyword">end</span> <span class="comment">-- 2nd and 3rd fields from stdin</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

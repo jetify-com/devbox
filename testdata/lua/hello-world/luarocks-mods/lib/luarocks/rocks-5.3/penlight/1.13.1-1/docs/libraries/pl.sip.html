@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><strong>pl.sip</strong></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.sip</code></h1>
+<p>Simple Input Patterns (SIP).</p>
+<p> SIP patterns start with '$', then a
+ one-letter type, and then an optional variable in curly braces.</p>
+
+
+<pre>
+sip.match(<span class="string">'$v=$q'</span>,<span class="string">'name="dolly"'</span>,res)
+==&gt; res=={<span class="string">'name'</span>,<span class="string">'dolly'</span>}
+sip.match(<span class="string">'($q{first},$q{second})'</span>,<span class="string">'("john","smith")'</span>,res)
+==&gt; res=={second=<span class="string">'smith'</span>,first=<span class="string">'john'</span>}
+</pre>
+
+<p> Type names:</p>
+
+
+<pre>
+v     identifier
+i     integer
+f     floating-point
+q     quoted <span class="global">string</span>
+([{&lt;  match up to closing bracket
+</pre>
+
+<p> See <a href="../manual/08-additional.md.html#Simple_Input_Patterns">the Guide</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#create_pattern">create_pattern (spec, options)</a></td>
+	<td class="summary">convert a SIP pattern into the equivalent Lua string pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compile">compile (spec, options)</a></td>
+	<td class="summary">convert a SIP pattern into a matching function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match">match (spec, line, res, options)</a></td>
+	<td class="summary">match a SIP pattern against a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#match_at_start">match_at_start (spec, line, res)</a></td>
+	<td class="summary">match a SIP pattern against the start of a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fields">fields (spec, f)</a></td>
+	<td class="summary">given a pattern and a file object, return an iterator over the results</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pattern">pattern (spec, fun)</a></td>
+	<td class="summary">register a match which will be used in the read function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#read">read (f, matches)</a></td>
+	<td class="summary">enter a loop which applies all registered matches to the input file.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "create_pattern"></a>
+    <strong>create_pattern (spec, options)</strong>
+    </dt>
+    <dd>
+    convert a SIP pattern into the equivalent Lua string pattern.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">options</span>
+         a table; only the <code>at_start</code> field is
+ currently meaningful and ensures that the pattern is anchored
+ at the start of the string.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a Lua string pattern.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "compile"></a>
+    <strong>compile (spec, options)</strong>
+    </dt>
+    <dd>
+    convert a SIP pattern into a matching function.
+ The returned function takes two arguments, the line and an empty table.
+ If the line matched the pattern, then this function returns true
+ and the table is filled with field-value pairs.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">options</span>
+         optional table; {at_start=true} ensures that the pattern
+ is anchored at the start of the string.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function if successful, or nil,error
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match"></a>
+    <strong>match (spec, line, res, options)</strong>
+    </dt>
+    <dd>
+    match a SIP pattern against a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">line</span>
+         a string
+        </li>
+        <li><span class="parameter">res</span>
+         a table to receive values
+        </li>
+        <li><span class="parameter">options</span>
+         (optional) option table
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or false
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "match_at_start"></a>
+    <strong>match_at_start (spec, line, res)</strong>
+    </dt>
+    <dd>
+    match a SIP pattern against the start of a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">line</span>
+         a string
+        </li>
+        <li><span class="parameter">res</span>
+         a table to receive values
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or false
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fields"></a>
+    <strong>fields (spec, f)</strong>
+    </dt>
+    <dd>
+    given a pattern and a file object, return an iterator over the results
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">f</span>
+         a file-like object.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pattern"></a>
+    <strong>pattern (spec, fun)</strong>
+    </dt>
+    <dd>
+    register a match which will be used in the read function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">spec</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a SIP pattern
+        </li>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function to be called with the results of the match
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.sip.html#read">read</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "read"></a>
+    <strong>read (f, matches)</strong>
+    </dt>
+    <dd>
+    enter a loop which applies all registered matches to the input file.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         a file-like object
+        </li>
+        <li><span class="parameter">matches</span>
+            <span class="types"><span class="type">array</span></span>
+         optional list of <code>{spec,fun}</code> pairs, as for <a href="../libraries/pl.sip.html#pattern">pattern</a> above.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

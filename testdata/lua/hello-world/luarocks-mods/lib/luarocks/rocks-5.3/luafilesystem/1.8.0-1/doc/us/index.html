@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>LuaFileSystem</title>
+    <link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo">
+        <a href="http://keplerproject.github.io/luafilesystem">
+		<img alt="LuaFileSystem" src="luafilesystem.png"/>
+	    </a>
+    </div>
+	<div id="product_name"><big><strong>LuaFileSystem</strong></big></div>
+	<div id="product_description">File System Library for the Lua Programming Language</div>
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1>LuaFileSystem</h1>
+	<ul>
+		<li><strong>Home</strong>
+			<ul> 
+				<li><a href="index.html#overview">Overview</a></li>
+				<li><a href="index.html#status">Status</a></li>
+				<li><a href="index.html#download">Download</a></li>
+				<li><a href="index.html#history">History</a></li>
+				<li><a href="index.html#credits">Credits</a></li>
+			</ul>
+		</li>
+		<li><a href="manual.html">Manual</a>
+			<ul>
+				<li><a href="manual.html#introduction">Introduction</a></li>
+				<li><a href="manual.html#building">Building</a></li>
+				<li><a href="manual.html#installation">Installation</a></li>
+				<li><a href="manual.html#reference">Reference</a></li>
+			</ul>
+		</li>
+		<li><a href="examples.html">Examples</a></li>
+        <li><a href="https://github.com/keplerproject/luafilesystem">Project</a>
+            <ul>
+                <li><a href="https://github.com/keplerproject/luafilesystem/issues">Bug Tracker</a></li>
+                <li><a href="https://github.com/keplerproject/luafilesystem">Git</a></li>
+            </ul>
+        </li>
+		<li><a href="license.html">License</a></li>
+	</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h2><a name="overview"></a>Overview</h2>
+
+<p>LuaFileSystem is a <a href="http://www.lua.org">Lua</a> library
+developed to complement the set of functions related to file
+systems offered by the standard Lua distribution.</p>
+
+<p>LuaFileSystem offers a portable way to access
+the underlying directory structure and file attributes.</p>
+
+<p>LuaFileSystem is free software and uses the same
+<a href="license.html">license</a> as Lua 5.x (MIT).</p>
+
+<h2><a name="status"></a>Status</h2>
+
+<p>Current version is 1.8.0. It works with Lua 5.1, 5.2, 5.3 and 5.4, and it runs on various
+flavors of Unix (including Linux, BSDs, macOS) and Windows.</p>
+
+<h2><a name="download"></a>Download</h2>
+
+<p>LuaFileSystem can be installed using <a href="https://luarocks.org">LuaRocks</a>:
+
+<pre class="example">
+$ luarocks install luafilesystem
+</pre>
+
+<p>Its source can be found at its <a href="http://github.com/keplerproject/luafilesystem">Github</a> page.</p>
+
+<h2><a name="history"></a>History</h2>
+
+<dl class="history">
+    <dt><strong>Version 1.8.0</strong> [22/Apr/2020]</dt>
+    <dd><ul>
+        <li>Lua 5.4 support</li>
+        <li>lfs.link and lfs.symlinkattributes now work on Windows</li>
+        <li>MACOSX_DEPLOYMENT_TARGET is configurable in the Makefile</li>
+        <li>Fallback to _POSIX_PATH_MAX when MAXPATHLEN is not avaliable</li>
+        <li>Fixed memory leak in case of realloc failure</li>
+    </ul></dd>
+
+    <dt><strong>Version 1.7.0</strong> [15/Sep/2017]</dt>
+    <dd><ul>
+        <li>symlinkattributes function now provides 'target' field, containing name of the file that the symlink points to.</li>
+        <li>attributes, symlinkattributes, touch, mkdir, and rmdir functions now return system-dependent error code as the third value on error.</li>
+        <li>Fixed detection of closed files for Lua 5.2+ in setmode, lock, and unlock functions.</li>
+        <li>Fixed various compiler warnings.</li>
+    </ul></dd>
+
+	<dt><strong>Version 1.6.3</strong> [15/Jan/2015]</dt>
+	<dd><ul>
+        <li>Lua 5.3 support.</li>
+        <li>Assorted bugfixes.</li>
+	</ul></dd>
+
+	<dt><strong>Version 1.6.2</strong> [??/Oct/2012]</dt>
+	<dd><ul>
+        <li>Full Lua 5.2 compatibility (with Lua 5.1 fallbacks)</li>
+	</ul></dd>
+
+	<dt><strong>Version 1.6.1</strong> [01/Oct/2012]</dt>
+	<dd><ul>
+        <li>fix build for Lua 5.2</li>
+	</ul></dd>
+
+	<dt><strong>Version 1.6.0</strong> [26/Sep/2012]</dt>
+	<dd><ul>
+       <li>getcwd fix for Android</li>
+        <li>support for Lua 5.2</li>
+        <li>add lfs.link</li>
+        <li>other bug fixes</li>
+	</ul></dd>
+ 
+	<dt><strong>Version 1.5.0</strong> [20/Oct/2009]</dt>
+	<dd><ul>
+	<li>Added explicit next and close methods to second return value of lfs.dir 
+(the directory object), for explicit iteration or explicit closing.</li>
+	<li>Added directory locking via lfs.lock_dir function (see the <a href="manual.html">manual</a>).</li>
+	</ul></dd>
+	<dt><strong>Version 1.4.2</strong> [03/Feb/2009]</dt>
+	<dd>
+		<ul>
+			<li>fixed bug
+				<code>lfs.attributes(filename, 'size')</code> overflow on files > 2 Gb again  (bug report and patch by KUBO Takehiro).</li>
+			<li>fixed bug
+				Compile error on Solaris 10 (bug report and patch by Aaron B).</li>
+			<li>fixed compilation problems with Borland C.</li>
+		</ul>
+	</dd>
+	
+    <dt><strong>Version 1.4.1</strong> [07/May/2008]</dt>
+	<dd>
+	<ul>
+	<li>documentation review</li>
+	<li>fixed Windows compilation issues</li>
+	<li>fixed bug in the Windows tests (patch by Shmuel Zeigerman)</li>
+	<li>fixed bug
+		<code>lfs.attributes(filename, 'size')</code> overflow on files > 2 Gb
+	</li>
+	</ul>
+	</dd>
+	
+    <dt><strong>Version 1.4.0</strong> [13/Feb/2008]</dt>
+    <dd>
+    <ul>
+	<li>added function
+	<a href="manual.html#setmode"><code>lfs.setmode</code></a>
+        (works only in Windows systems).</li>
+	<li><a href="manual.html#attributes"><code>lfs.attributes</code></a>
+	raises an error if attribute does not exist</li>
+    </ul>
+    </dd>
+    
+    <dt><strong>Version 1.3.0</strong> [26/Oct/2007]</dt>
+    <dd>
+    <ul>
+        <li>added function
+        <a href="manual.html#symlinkattributes"><code>lfs.symlinkattributes</code></a>
+        (works only in non Windows systems).</li>
+    </ul>
+    </dd>
+
+    <dt><strong>Version 1.2.1</strong> [08/May/2007]</dt>
+    <dd>
+    <ul>
+        <li>compatible only with Lua 5.1 (Lua 5.0 support was dropped)</li>
+    </ul>
+    </dd>
+
+    <dt><strong>Version 1.2</strong> [15/Mar/2006]</dt>
+    <dd>
+    <ul>
+        <li>added optional argument to
+        <a href="manual.html#attributes"><code>lfs.attributes</code></a></li>
+        <li>added function
+        <a href="manual.html#rmdir"><code>lfs.rmdir</code></a></li>
+        <li>bug correction on <a href="manual.html#dir"><code>lfs.dir</code></a></li>
+    </ul>
+    </dd>
+
+    <dt><strong>Version 1.1</strong> [30/May/2005]</dt>
+    <dd>
+    <ul>
+        <li>added function <a href="manual.html#touch"><code>lfs.touch</code></a>.</li>
+    </ul>
+    </dd>
+
+    <dt><strong>Version 1.0</strong> [21/Jan/2005]</dt>
+    <dd />
+
+    <dt><strong>Version 1.0 Beta</strong> [10/Nov/2004]</dt>
+    <dd />
+</dl>
+
+<h2><a name="credits"></a>Credits</h2>
+
+<p>LuaFileSystem was designed by Roberto Ierusalimschy,
+Andr&eacute; Carregal and Tom&aacute;s Guisasola as part of the
+<a href="https://github.com/keplerproject">Kepler Project</a>,
+which holds its copyright. LuaFileSystem is currently maintained by F&aacute;bio Mascarenhas.</p>
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer">Valid XHTML 1.0!</a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->
+
+</body>
+</html>

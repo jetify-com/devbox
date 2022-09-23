@@ -1,0 +1,382 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><strong>pl.lapp</strong></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.lapp</code></h1>
+<p>Simple command-line parsing using human-readable specification.</p>
+<p> Supports GNU-style parameters.</p>
+
+
+<pre>
+lapp = <span class="global">require</span> <span class="string">'pl.lapp'</span>
+<span class="keyword">local</span> args = lapp <span class="string">[[
+Does some calculations
+  -o,--offset (default 0.0)  Offset to add to scaled number
+  -s,--scale  (number)  Scaling factor
+  &lt;number&gt; (number) Number to be scaled
+]]</span>
+
+<span class="global">print</span>(args.offset + args.scale * args.number)
+</pre>
+
+<p> Lines beginning with <code>&apos;-&apos;</code> are flags; there may be a short and a long name;
+ lines beginning with <code>&apos;&lt;var&gt;&apos;</code> are arguments.  Anything in parens after
+ the flag/argument is either a default, a type name or a range constraint.</p>
+
+<p> See <a href="../manual/08-additional.md.html#Command_line_Programs_with_Lapp">the Guide</a></p>
+
+<p> Dependencies: <a href="../libraries/pl.sip.html#">pl.sip</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#quit">quit (msg, no_usage)</a></td>
+	<td class="summary">quit this script immediately.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#error">error (msg, no_usage)</a></td>
+	<td class="summary">print an error to stderr and quit.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#open">open (file[, opt])</a></td>
+	<td class="summary">open a file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assert">assert (condn, msg)</a></td>
+	<td class="summary">quit if the condition is false.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#add_type">add_type (name, converter[, constraint])</a></td>
+	<td class="summary">add a new type to Lapp.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#process_options_string">process_options_string (str, args)</a></td>
+	<td class="summary">process a Lapp options string.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#show_usage_error">show_usage_error</a></td>
+	<td class="summary">controls whether to dump usage on error.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "quit"></a>
+    <strong>quit (msg, no_usage)</strong>
+    </dt>
+    <dd>
+    quit this script immediately.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         optional message
+        </li>
+        <li><span class="parameter">no_usage</span>
+            <span class="types"><span class="type">bool</span></span>
+         suppress 'usage' display
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "error"></a>
+    <strong>error (msg, no_usage)</strong>
+    </dt>
+    <dd>
+    print an error to stderr and quit.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">msg</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a message
+        </li>
+        <li><span class="parameter">no_usage</span>
+            <span class="types"><span class="type">bool</span></span>
+         suppress 'usage' display
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "open"></a>
+    <strong>open (file[, opt])</strong>
+    </dt>
+    <dd>
+    open a file.
+ This will quit on error, and keep a list of file objects for later cleanup.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         filename
+        </li>
+        <li><span class="parameter">opt</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         same as second parameter of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-io.open">io.open</a>
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assert"></a>
+    <strong>assert (condn, msg)</strong>
+    </dt>
+    <dd>
+    quit if the condition is false.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">condn</span>
+            <span class="types"><span class="type">bool</span></span>
+         a condition
+        </li>
+        <li><span class="parameter">msg</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         message text
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "add_type"></a>
+    <strong>add_type (name, converter[, constraint])</strong>
+    </dt>
+    <dd>
+    add a new type to Lapp.  These appear in parens after the value like
+ a range constraint, e.g. '<ival> (integer) Process PID'
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         name of type
+        </li>
+        <li><span class="parameter">converter</span>
+         either a function to convert values, or a Lua type name.
+        </li>
+        <li><span class="parameter">constraint</span>
+            <span class="types"><span class="type">func</span></span>
+         optional function to verify values, should use lapp.error
+ if failed.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "process_options_string"></a>
+    <strong>process_options_string (str, args)</strong>
+    </dt>
+    <dd>
+    process a Lapp options string.
+ Usually called as <code>lapp()</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the options text
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">{string}</a></span>
+         a table of arguments (default is <code>_G.arg</code>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a table with parameter-value pairs
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "show_usage_error"></a>
+    <strong>show_usage_error</strong>
+    </dt>
+    <dd>
+    controls whether to dump usage on error.
+ Defaults to true
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

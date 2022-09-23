@@ -1,0 +1,1633 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Reading_Data_Files">Reading Data Files </a></li>
+<li><a href="#Reading_Unstructured_Text_Data">Reading Unstructured Text Data </a></li>
+<li><a href="#Reading_Columnar_Data">Reading Columnar Data </a></li>
+<li><a href="#Reading_Configuration_Files">Reading Configuration Files </a></li>
+<li><a href="#Lexical_Scanning">Lexical Scanning </a></li>
+<li><a href="#XML">XML </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><strong>Data</strong></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Data</h2>
+
+<p><a name="Reading_Data_Files"></a></p>
+<h3>Reading Data Files</h3>
+
+<p>The first thing to consider is this: do you actually need to write a custom file
+reader? And if the answer is yes, the next question is: can you write the reader
+in as clear a way as possible? Correctness, Robustness, and Speed; pick the first
+two and the third can be sorted out later, <em>if necessary</em>.</p>
+
+<p>A common sort of data file is the configuration file format commonly used on Unix
+systems. This format is often called a <em>property</em> file in the Java world.</p>
+
+
+<pre>
+# Read timeout <span class="keyword">in</span> seconds
+read.timeout=<span class="number">10</span>
+
+# Write timeout <span class="keyword">in</span> seconds
+write.timeout=<span class="number">10</span>
+</pre>
+
+<p>Here is a simple Lua implementation:</p>
+
+
+<pre>
+<span class="comment">-- property file parsing with Lua string patterns
+</span>props = []
+<span class="keyword">for</span> line <span class="keyword">in</span> <span class="global">io</span>.lines() <span class="keyword">do</span>
+    <span class="keyword">if</span> line:find(<span class="string">'#'</span>,<span class="number">1</span>,<span class="keyword">true</span>) ~= <span class="number">1</span> <span class="keyword">and</span> <span class="keyword">not</span> line:find(<span class="string">'^%s*$'</span>) <span class="keyword">then</span>
+        <span class="keyword">local</span> var,value = line:match(<span class="string">'([^=]+)=(.*)'</span>)
+        props[var] = value
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p>Very compact, but it suffers from a similar disease in equivalent Perl programs;
+it uses odd string patterns which are 'lexically noisy'. Noisy code like this
+slows the casual reader down. (For an even more direct way of doing this, see the
+next section, 'Reading Configuration Files')</p>
+
+<p>Another implementation, using the Penlight libraries:</p>
+
+
+<pre>
+<span class="comment">-- property file parsing with extended string functions
+</span><span class="global">require</span> <span class="string">'pl'</span>
+stringx.import()
+props = []
+<span class="keyword">for</span> line <span class="keyword">in</span> <span class="global">io</span>.lines() <span class="keyword">do</span>
+    <span class="keyword">if</span> <span class="keyword">not</span> line:startswith(<span class="string">'#'</span>) <span class="keyword">and</span> <span class="keyword">not</span> line:isspace() <span class="keyword">then</span>
+        <span class="keyword">local</span> var,value = line:splitv(<span class="string">'='</span>)
+        props[var] = value
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p>This is more self-documenting; it is generally better to make the code express
+the <em>intention</em>, rather than having to scatter comments everywhere - comments are
+necessary, of course, but mostly to give the higher view of your intention that
+cannot be expressed in code. It is slightly slower, true, but in practice the
+speed of this script is determined by I/O, so further optimization is unnecessary.</p>
+
+<p><a name="Reading_Unstructured_Text_Data"></a></p>
+<h3>Reading Unstructured Text Data</h3>
+
+<p>Text data is sometimes unstructured, for example a file containing words. The
+<a href="../libraries/pl.input.html#">pl.input</a> module has a number of functions which makes processing such files
+easier. For example, a script to count the number of words in standard input
+using <code>import.words</code>:</p>
+
+
+<pre>
+<span class="comment">-- countwords.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="keyword">local</span> k = <span class="number">1</span>
+<span class="keyword">for</span> w <span class="keyword">in</span> input.words(<span class="global">io</span>.stdin) <span class="keyword">do</span>
+    k = k + <span class="number">1</span>
+<span class="keyword">end</span>
+<span class="global">print</span>(<span class="string">'count'</span>,k)
+</pre>
+
+<p>Or this script to calculate the average of a set of numbers using <a href="../libraries/pl.input.html#numbers">input.numbers</a>:</p>
+
+
+<pre>
+<span class="comment">-- average.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="keyword">local</span> k = <span class="number">1</span>
+<span class="keyword">local</span> sum = <span class="number">0</span>
+<span class="keyword">for</span> n <span class="keyword">in</span> input.numbers(<span class="global">io</span>.stdin) <span class="keyword">do</span>
+    sum = sum + n
+    k = k + <span class="number">1</span>
+<span class="keyword">end</span>
+<span class="global">print</span>(<span class="string">'average'</span>,sum/k)
+</pre>
+
+<p>These scripts can be improved further by <em>eliminating loops</em> In the last case,
+there is a perfectly good function <a href="../libraries/pl.seq.html#sum">seq.sum</a> which can already take a sequence of
+numbers and calculate these numbers for us:</p>
+
+
+<pre>
+<span class="comment">-- average2.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="keyword">local</span> total,n = seq.sum(input.numbers())
+<span class="global">print</span>(<span class="string">'average'</span>,total/n)
+</pre>
+
+<p>A further simplification here is that if <code>numbers</code> or <code>words</code> are not passed an
+argument, they will grab their input from standard input.  The first script can
+be rewritten:</p>
+
+
+<pre>
+<span class="comment">-- countwords2.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="global">print</span>(<span class="string">'count'</span>,seq.count(input.words()))
+</pre>
+
+<p>A useful feature of a sequence generator like <code>numbers</code> is that it can read from
+a string source. Here is a script to calculate the sums of the numbers on each
+line in a file:</p>
+
+
+<pre>
+<span class="comment">-- sums.lua
+</span><span class="keyword">for</span> line <span class="keyword">in</span> <span class="global">io</span>.lines() <span class="keyword">do</span>
+    <span class="global">print</span>(seq.sum(input.numbers(line))
+<span class="keyword">end</span>
+</pre>
+
+<p><a name="Reading_Columnar_Data"></a></p>
+<h3>Reading Columnar Data</h3>
+
+<p>It is very common to find data in columnar form, either space or comma-separated,
+perhaps with an initial set of column headers. Here is a typical example:</p>
+
+
+<pre>
+EventID    Magnitude    LocationX    LocationY    LocationZ
+<span class="number">981124001</span>    <span class="number">2.0</span>    <span class="number">18988.4</span>    <span class="number">10047.1</span>    <span class="number">4149.7</span>
+<span class="number">981125001</span>    <span class="number">0.8</span>    <span class="number">19104.0</span>    <span class="number">9970.4</span>    <span class="number">5088.7</span>
+<span class="number">981127003</span>    <span class="number">0.5</span>    <span class="number">19012.5</span>    <span class="number">9946.9</span>    <span class="number">3831.2</span>
+...
+</pre>
+
+<p><a href="../libraries/pl.input.html#fields">input.fields</a> is designed to extract several columns, given some delimiter
+(default to whitespace).  Here is a script to calculate the average X location of
+all the events:</p>
+
+
+<pre>
+<span class="comment">-- avg-x.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="global">io</span>.read() <span class="comment">-- skip the header line
+</span><span class="keyword">local</span> sum,count = seq.sum(input.fields {<span class="number">3</span>})
+<span class="global">print</span>(sum/count)
+</pre>
+
+<p><a href="../libraries/pl.input.html#fields">input.fields</a> is passed either a field count, or a list of column indices,
+starting at one as usual. So in this case we're only interested in column 3.  If
+you pass it a field count, then you get every field up to that count:</p>
+
+
+<pre>
+<span class="keyword">for</span> id,mag,locX,locY,locZ <span class="keyword">in</span> input.fields (<span class="number">5</span>) <span class="keyword">do</span>
+....
+<span class="keyword">end</span>
+</pre>
+
+<p><a href="../libraries/pl.input.html#fields">input.fields</a> by default tries to convert each field to a number. It will skip
+lines which clearly don't match the pattern, but will abort the script if there
+are any fields which cannot be converted to numbers.</p>
+
+<p>The second parameter is a delimiter, by default spaces. ' ' is understood to mean
+'any number of spaces', i.e. '%s+'. Any Lua string pattern can be used.</p>
+
+<p>The third parameter is a <em>data source</em>, by default standard input (defined by
+<a href="../libraries/pl.input.html#create_getter">input.create_getter</a>.) It assumes that the data source has a <code>read</code> method which
+brings in the next line, i.e. it is a 'file-like' object. As a special case, a
+string will be split into its lines:</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> x,y <span class="keyword">in</span> input.fields(<span class="number">2</span>,<span class="string">' '</span>,<span class="string">'10 20\n30 40\n'</span>) <span class="keyword">do</span> <span class="global">print</span>(x,y) <span class="keyword">end</span>
+<span class="number">10</span>      <span class="number">20</span>
+<span class="number">30</span>      <span class="number">40</span>
+</pre>
+
+<p>Note the default behaviour for bad fields, which is to show the offending line
+number:</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> x,y <span class="keyword">in</span> input.fields(<span class="number">2</span>,<span class="string">' '</span>,<span class="string">'10 20\n30 40x\n'</span>) <span class="keyword">do</span> <span class="global">print</span>(x,y) <span class="keyword">end</span>
+<span class="number">10</span>      <span class="number">20</span>
+line <span class="number">2</span>: cannot convert <span class="string">'40x'</span> to number
+</pre>
+
+<p>This behaviour of <a href="../libraries/pl.input.html#fields">input.fields</a> is appropriate for a script which you want to
+fail immediately with an appropriate <em>user</em> error message if conversion fails.
+The fourth optional parameter is an options table: <code>{no_fail=true}</code> means that
+conversion is attempted but if it fails it just returns the string, rather as AWK
+would operate. You are then responsible for checking the type of the returned
+field. <code>{no_convert=true}</code> switches off conversion altogether and all fields are
+returned as strings.</p>
+
+
+<p>Sometimes it is useful to bring a whole dataset into memory, for operations such
+as extracting columns. Penlight provides a flexible reader specifically for
+reading this kind of data, using the <a href="../libraries/pl.data.html#">data</a> module. Given a file looking like this:</p>
+
+
+<pre>
+x,y
+<span class="number">10</span>,<span class="number">20</span>
+<span class="number">2</span>,<span class="number">5</span>
+<span class="number">40</span>,<span class="number">50</span>
+</pre>
+
+<p>Then <a href="../libraries/pl.data.html#read">data.read</a> will create a table like this, with each row represented by a
+sublist:</p>
+
+
+<pre>
+&gt; t = data.read <span class="string">'test.txt'</span>
+&gt; pretty.dump(t)
+{{<span class="number">10</span>,<span class="number">20</span>},{<span class="number">2</span>,<span class="number">5</span>},{<span class="number">40</span>,<span class="number">50</span>},fieldnames={<span class="string">'x'</span>,<span class="string">'y'</span>},delim=<span class="string">','</span>}
+</pre>
+
+<p>You can now analyze this returned table using the supplied methods. For instance,
+the method <a href="../libraries/pl.data.html#Data.column_by_name">column_by_name</a> returns a table of all the values of that column.</p>
+
+
+<pre>
+<span class="comment">-- testdata.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+d = data.read(<span class="string">'fev.txt'</span>)
+<span class="keyword">for</span> _,name <span class="keyword">in</span> <span class="global">ipairs</span>(d.fieldnames) <span class="keyword">do</span>
+    <span class="keyword">local</span> col = d:column_by_name(name)
+    <span class="keyword">if</span> <span class="global">type</span>(col[<span class="number">1</span>]) == <span class="string">'number'</span> <span class="keyword">then</span>
+        <span class="keyword">local</span> total,n = seq.sum(col)
+        utils.printf(<span class="string">"Average for %s is %f\n"</span>,name,total/n)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p><a href="../libraries/pl.data.html#read">data.read</a> tries to be clever when given data; by default it expects a first
+line of column names, unless any of them are numbers. It tries to deduce the
+column delimiter by looking at the first line. Sometimes it guesses wrong; these
+things can be specified explicitly. The second optional parameter is an options
+table: can override <code>delim</code> (a string pattern), <code>fieldnames</code> (a list or
+comma-separated string), specify <code>no_convert</code> (default is to convert), numfields
+(indices of columns known to be numbers, as a list) and <code>thousands_dot</code> (when the
+thousands separator in Excel CSV is '.')</p>
+
+<p>A very powerful feature is a way to execute SQL-like queries on such data:</p>
+
+
+<pre>
+<span class="comment">-- queries on tabular data
+</span><span class="global">require</span> <span class="string">'pl'</span>
+<span class="keyword">local</span> d = data.read(<span class="string">'xyz.txt'</span>)
+<span class="keyword">local</span> q = d:<span class="global">select</span>(<span class="string">'x,y,z where x &gt; 3 and z &lt; 2 sort by y'</span>)
+<span class="keyword">for</span> x,y,z <span class="keyword">in</span> q <span class="keyword">do</span>
+    <span class="global">print</span>(x,y,z)
+<span class="keyword">end</span>
+</pre>
+
+<p>Please note that the format of queries is restricted to the following syntax:</p>
+
+
+<pre>
+FIELDLIST [ <span class="string">'where'</span> CONDITION ] [ <span class="string">'sort by'</span> FIELD [asc|desc]]
+</pre>
+
+<p>Any valid Lua code can appear in <code>CONDITION</code>; remember it is <em>not</em> SQL and you
+have to use <code>==</code> (this warning comes from experience.)</p>
+
+<p>For this to work, <em>field names must be Lua identifiers</em>. So <a href="../libraries/pl.data.html#read">read</a> will massage
+fieldnames so that all non-alphanumeric chars are replaced with underscores.
+However, the <code>original_fieldnames</code> field always contains the original un-massaged
+fieldnames.</p>
+
+<p><a href="../libraries/pl.data.html#read">read</a> can handle standard CSV files fine, although doesn't try to be a
+full-blown CSV parser.  With the <code>csv=true</code> option, it's possible to have
+double-quoted fields, which may contain commas; then trailing commas become
+significant as well.</p>
+
+<p>Spreadsheet programs are not always the best tool to
+process such data, strange as this might seem to some people. This is a toy CSV
+file; to appreciate the problem, imagine thousands of rows and dozens of columns
+like this:</p>
+
+
+<pre>
+Department Name,Employee ID,Project,Hours Booked
+sales,<span class="number">1231</span>,overhead,<span class="number">4</span>
+sales,<span class="number">1255</span>,overhead,<span class="number">3</span>
+engineering,<span class="number">1501</span>,development,<span class="number">5</span>
+engineering,<span class="number">1501</span>,maintenance,<span class="number">3</span>
+engineering,<span class="number">1433</span>,maintenance,<span class="number">10</span>
+</pre>
+
+<p>The task is to reduce the dataset to a relevant set of rows and columns, perhaps
+do some processing on row data, and write the result out to a new CSV file. The
+<a href="../libraries/pl.data.html#Data.write_row">write_row</a> method uses the delimiter to write the row to a file;
+<code>Data.select_row</code> is like <code>Data.select</code>, except it iterates over <em>rows</em>, not
+fields; this is necessary if we are dealing with a lot of columns!</p>
+
+
+<pre>
+names = {[<span class="number">1501</span>]=<span class="string">'don'</span>,[<span class="number">1433</span>]=<span class="string">'dilbert'</span>}
+keepcols = {<span class="string">'Employee_ID'</span>,<span class="string">'Hours_Booked'</span>}
+t:write_row (outf,{<span class="string">'Employee'</span>,<span class="string">'Hours_Booked'</span>})
+q = t:select_row {
+    fields=keepcols,
+    where=<span class="keyword">function</span>(row) <span class="keyword">return</span> row[<span class="number">1</span>]==<span class="string">'engineering'</span> <span class="keyword">end</span>
+}
+<span class="keyword">for</span> row <span class="keyword">in</span> q <span class="keyword">do</span>
+    row[<span class="number">1</span>] = names[row[<span class="number">1</span>]]
+    t:write_row(outf,row)
+<span class="keyword">end</span>
+</pre>
+
+<p><code>Data.select_row</code> and <code>Data.select</code> can be passed a table specifying the query; a
+list of field names, a function defining the condition and an optional parameter
+<code>sort_by</code>. It isn't really necessary here, but if we had a more complicated row
+condition (such as belonging to a specified set) then it is not generally
+possible to express such a condition as a query string, without resorting to
+hackery such as global variables.</p>
+
+<p>With 1.0.3, you can specify explicit conversion functions for selected columns.
+For instance, this is a log file with a Unix date stamp:</p>
+
+
+<pre>
+Time Message
+<span class="number">1266840760</span> +# EE7C0600006F0D00C00F06010302054000000308010A00002B00407B00
+<span class="number">1266840760</span> closure data <span class="number">0.000000</span> <span class="number">1972</span> <span class="number">1972</span> <span class="number">0</span>
+<span class="number">1266840760</span> ++ <span class="number">1266840760</span> EE <span class="number">1</span>
+<span class="number">1266840760</span> +# EE7C0600006F0D00C00F06010302054000000408020A00002B00407B00
+<span class="number">1266840764</span> closure data <span class="number">0.000000</span> <span class="number">1972</span> <span class="number">1972</span> <span class="number">0</span>
+</pre>
+
+<p>We would like the first column as an actual date object, so the <code>convert</code>
+field sets an explicit conversion for column 1. (Note that we have to explicitly
+convert the string to a number first.)</p>
+
+
+<pre>
+Date = <span class="global">require</span> <span class="string">'pl.Date'</span>
+
+<span class="keyword">function</span> date_convert (ds)
+    <span class="keyword">return</span> Date(<span class="global">tonumber</span>(ds))
+<span class="keyword">end</span>
+
+d = data.read(f,{convert={[<span class="number">1</span>]=date_convert},last_field_collect=<span class="keyword">true</span>})
+</pre>
+
+<p>This gives us a two-column dataset, where the first column contains <a href="../classes/pl.Date.html#">Date</a> objects
+and the second column contains the rest of the line. Queries can then easily
+pick out events on a day of the week:</p>
+
+
+<pre>
+q = d:<span class="global">select</span> <span class="string">"Time,Message where Time:weekday_name()=='Sun'"</span>
+</pre>
+
+<p>Data does not have to come from files, nor does it necessarily come from the lab
+or the accounts department. On Linux, <code>ps aux</code> gives you a full listing of all
+processes running on your machine. It is straightforward to feed the output of
+this command into <a href="../libraries/pl.data.html#read">data.read</a> and perform useful queries on it. Notice that
+non-identifier characters like '%' get converted into underscores:</p>
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+f = <span class="global">io</span>.popen <span class="string">'ps aux'</span>
+s = data.read (f,{last_field_collect=<span class="keyword">true</span>})
+f:close()
+<span class="global">print</span>(s.fieldnames)
+<span class="global">print</span>(s:column_by_name <span class="string">'USER'</span>)
+qs = <span class="string">'COMMAND,_MEM where _MEM &gt; 5 and USER=="steve"'</span>
+<span class="keyword">for</span> name,mem <span class="keyword">in</span> s:<span class="global">select</span>(qs) <span class="keyword">do</span>
+    <span class="global">print</span>(mem,name)
+<span class="keyword">end</span>
+</pre>
+
+<p>I've always been an admirer of the AWK programming language; with <a href="../libraries/pl.data.html#filter">filter</a> you
+can get Lua programs which are just as compact:</p>
+
+
+<pre>
+<span class="comment">-- printxy.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+data.filter <span class="string">'x,y where x &gt; 3'</span>
+</pre>
+
+<p>It is common enough to have data files without headers of field names.
+<a href="../libraries/pl.data.html#read">data.read</a> makes a special exception for such files if all fields are numeric.
+Since there are no column names to use in query expressions, you can use AWK-like
+column indexes, e.g. '$1,$2 where $1 > 3'.  I have a little executable script on
+my system called <code>lf</code> which looks like this:</p>
+
+
+<pre>
+#!/usr/bin/env lua
+<span class="global">require</span> <span class="string">'pl.data'</span>.filter(arg[<span class="number">1</span>])
+</pre>
+
+<p>And it can be used generally as a filter command to extract columns from data.
+(The column specifications may be expressions or even constants.)</p>
+
+
+<pre>
+$ lf <span class="string">'$1,$5/10'</span> &lt; test.dat
+</pre>
+
+<p>(As with AWK, please note the single-quotes used in this command; this prevents
+the shell trying to expand the column indexes. If you are on Windows, then you
+must quote the expression in double-quotes so
+it is passed as one argument to your batch file.)</p>
+
+<p>As a tutorial resource, have a look at <a href="../examples/test-data.lua.html#">test-data.lua</a> in the PL tests directory
+for other examples of use, plus comments.</p>
+
+<p>The data returned by <a href="../libraries/pl.data.html#read">read</a> or constructed by <code>Data.copy_select</code> from a query is
+basically just an array of rows: <code>{{1,2},{3,4}}</code>. So you may use <a href="../libraries/pl.data.html#read">read</a> to pull
+in any array-like dataset, and process with any function that expects such a
+implementation. In particular, the functions in <a href="../libraries/pl.array2d.html#">array2d</a> will work fine with
+this data. In fact, these functions are available as methods; e.g.
+<a href="../libraries/pl.array2d.html#flatten">array2d.flatten</a> can be called directly like so to give us a one-dimensional list:</p>
+
+
+<pre>
+v = data.read(<span class="string">'dat.txt'</span>):flatten()
+</pre>
+
+<p>The data is also in exactly the right shape to be treated as matrices by
+<a href="http://lua-users.org/wiki/LuaMatrix">LuaMatrix</a>:</p>
+
+
+<pre>
+&gt; matrix = <span class="global">require</span> <span class="string">'matrix'</span>
+&gt; m = matrix(data.read <span class="string">'mat.txt'</span>)
+&gt; = m
+<span class="number">1</span>       <span class="number">0.2</span>     <span class="number">0.3</span>
+<span class="number">0.2</span>     <span class="number">1</span>       <span class="number">0.1</span>
+<span class="number">0.1</span>     <span class="number">0.2</span>     <span class="number">1</span>
+&gt; = m^<span class="number">2</span>  <span class="comment">-- same as m*m
+</span><span class="number">1.07</span>    <span class="number">0.46</span>    <span class="number">0.62</span>
+<span class="number">0.41</span>    <span class="number">1.06</span>    <span class="number">0.26</span>
+<span class="number">0.24</span>    <span class="number">0.42</span>    <span class="number">1.05</span>
+</pre>
+
+<p><a href="../libraries/pl.data.html#write">write</a> will write matrices back to files for you.</p>
+
+<p>Finally, for the curious, the global variable <code>_DEBUG</code> can be used to print out
+the actual iterator function which a query generates and dynamically compiles. By
+using code generation, we can get pretty much optimal performance out of
+arbitrary queries.</p>
+
+
+<pre>
+&gt; lua -lpl -e <span class="string">"_DEBUG=true"</span> -e <span class="string">"data.filter 'x,y where x &gt; 4 sort by x'"</span> &lt; test.txt
+<span class="keyword">return</span> <span class="keyword">function</span> (t)
+        <span class="keyword">local</span> i = <span class="number">0</span>
+        <span class="keyword">local</span> v
+        <span class="keyword">local</span> ls = {}
+        <span class="keyword">for</span> i,v <span class="keyword">in</span> <span class="global">ipairs</span>(t) <span class="keyword">do</span>
+            <span class="keyword">if</span> v[<span class="number">1</span>] &gt; <span class="number">4</span>  <span class="keyword">then</span>
+                    ls[#ls+<span class="number">1</span>] = v
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        <span class="global">table</span>.sort(ls,<span class="keyword">function</span>(v1,v2)
+            <span class="keyword">return</span> v1[<span class="number">1</span>] &lt; v2[<span class="number">1</span>]
+        <span class="keyword">end</span>)
+        <span class="keyword">local</span> n = #ls
+        <span class="keyword">return</span> <span class="keyword">function</span>()
+            i = i + <span class="number">1</span>
+            v = ls[i]
+            <span class="keyword">if</span> i &gt; n <span class="keyword">then</span> <span class="keyword">return</span> <span class="keyword">end</span>
+            <span class="keyword">return</span> v[<span class="number">1</span>],v[<span class="number">2</span>]
+        <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="number">10</span>,<span class="number">20</span>
+<span class="number">40</span>,<span class="number">50</span>
+</pre>
+
+<p><a name="Reading_Configuration_Files"></a></p>
+<h3>Reading Configuration Files</h3>
+
+<p>The <a href="../libraries/pl.config.html#">config</a> module provides a simple way to convert several kinds of
+configuration files into a Lua table. Consider the simple example:</p>
+
+
+<pre>
+# test.config
+# Read timeout <span class="keyword">in</span> seconds
+read.timeout=<span class="number">10</span>
+
+# Write timeout <span class="keyword">in</span> seconds
+write.timeout=<span class="number">5</span>
+
+#acceptable ports
+ports = <span class="number">1002</span>,<span class="number">1003</span>,<span class="number">1004</span>
+</pre>
+
+<p>This can be easily brought in using <a href="../libraries/pl.config.html#read">config.read</a> and the result shown using
+<a href="../libraries/pl.pretty.html#write">pretty.write</a>:</p>
+
+
+<pre>
+<span class="comment">-- readconfig.lua
+</span><span class="keyword">local</span> config = <span class="global">require</span> <span class="string">'pl.config'</span>
+<span class="keyword">local</span> pretty= <span class="global">require</span> <span class="string">'pl.pretty'</span>
+
+<span class="keyword">local</span> t = config.read(arg[<span class="number">1</span>])
+<span class="global">print</span>(pretty.write(t))
+</pre>
+
+<p>and the output of <code>lua readconfig.lua test.config</code> is:</p>
+
+
+<pre>
+{
+  ports = {
+    <span class="number">1002</span>,
+    <span class="number">1003</span>,
+    <span class="number">1004</span>
+  },
+  write_timeout = <span class="number">5</span>,
+  read_timeout = <span class="number">10</span>
+}
+</pre>
+
+<p>That is, <a href="../libraries/pl.config.html#read">config.read</a> will bring in all key/value pairs, ignore # comments, and
+ensure that the key names are proper Lua identifiers by replacing non-identifier
+characters with '_'. If the values are numbers, then they will be converted. (So
+the value of <code>t.write_timeout</code> is the number 5). In addition, any values which
+are separated by commas will be converted likewise into an array.</p>
+
+<p>Any line can be continued with a backslash. So this will all be considered one
+line:</p>
+
+
+<pre>
+names=one,two,three, \
+four,five,six,seven, \
+eight,nine,ten
+</pre>
+
+<p>Windows-style INI files are also supported. The section structure of INI files
+translates naturally to nested tables in Lua:</p>
+
+
+<pre>
+; test.ini
+[timeouts]
+read=<span class="number">10</span> ; Read timeout <span class="keyword">in</span> seconds
+write=<span class="number">5</span> ; Write timeout <span class="keyword">in</span> seconds
+[portinfo]
+ports = <span class="number">1002</span>,<span class="number">1003</span>,<span class="number">1004</span>
+</pre>
+
+<p> The output is:</p>
+
+
+<pre>
+{
+  portinfo = {
+    ports = {
+      <span class="number">1002</span>,
+      <span class="number">1003</span>,
+      <span class="number">1004</span>
+    }
+  },
+  timeouts = {
+    write = <span class="number">5</span>,
+    read = <span class="number">10</span>
+  }
+}
+</pre>
+
+<p>You can now refer to the write timeout as <code>t.timeouts.write</code>.</p>
+
+<p>As a final example of the flexibility of <a href="../libraries/pl.config.html#read">config.read</a>, if passed this simple
+comma-delimited file</p>
+
+
+<pre>
+one,two,three
+<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>
+<span class="number">40</span>,<span class="number">50</span>,<span class="number">60</span>
+<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>
+</pre>
+
+<p>it will produce the following table:</p>
+
+
+<pre>
+{
+  { <span class="string">"one"</span>, <span class="string">"two"</span>, <span class="string">"three"</span> },
+  { <span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span> },
+  { <span class="number">40</span>, <span class="number">50</span>, <span class="number">60</span>  },
+  { <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span> }
+}
+</pre>
+
+<p><a href="../libraries/pl.config.html#read">config.read</a> isn't designed to read all CSV files in general, but intended to
+support some Unix configuration files not structured as key-value pairs, such as
+'/etc/passwd'.</p>
+
+<p>This function is intended to be a Swiss Army Knife of configuration readers, but
+it does have to make assumptions, and you may not like them. So there is an
+optional extra parameter which allows some control, which is table that may have
+the following fields:</p>
+
+
+<pre>
+{
+   variablilize = <span class="keyword">true</span>,
+   convert_numbers = <span class="global">tonumber</span>,
+   trim_space = <span class="keyword">true</span>,
+   list_delim = <span class="string">','</span>,
+   trim_quotes = <span class="keyword">true</span>,
+   ignore_assign = <span class="keyword">false</span>,
+   keysep = <span class="string">'='</span>,
+   smart = <span class="keyword">false</span>,
+}
+</pre>
+
+<p><code>variablilize</code> is the option that converted <code>write.timeout</code> in the first example
+to the valid Lua identifier <code>write_timeout</code>.  If <code>convert_numbers</code> is true, then
+an attempt is made to convert any string that starts like a number. You can
+specify your own function (say one that will convert a string like '5224 kb' into
+a number.)</p>
+
+<p><code>trim_space</code> ensures that there is no starting or trailing whitespace with
+values, and <code>list_delim</code> is the character that will be used to decide whether to
+split a value up into a list (it may be a Lua string pattern such as '%s+'.)</p>
+
+<p>For instance, the password file in Unix is colon-delimited:</p>
+
+
+<pre>
+t = config.read(<span class="string">'/etc/passwd'</span>,{list_delim=<span class="string">':'</span>})
+</pre>
+
+<p>This produces the following output on my system (only last two lines shown):</p>
+
+
+<pre>
+{
+  ...
+  {
+    <span class="string">"user"</span>,
+    <span class="string">"x"</span>,
+    <span class="string">"1000"</span>,
+    <span class="string">"1000"</span>,
+    <span class="string">"user,,,"</span>,
+    <span class="string">"/home/user"</span>,
+    <span class="string">"/bin/bash"</span>
+  },
+  {
+    <span class="string">"sdonovan"</span>,
+    <span class="string">"x"</span>,
+    <span class="string">"1001"</span>,
+    <span class="string">"1001"</span>,
+    <span class="string">"steve donovan,28,,"</span>,
+    <span class="string">"/home/sdonovan"</span>,
+    <span class="string">"/bin/bash"</span>
+  }
+}
+</pre>
+
+<p>You can get this into a more sensible format, where the usernames are the keys,
+with this (the <a href="../libraries/pl.tablex.html#pairmap">tablex.pairmap</a> function must return value, key!)</p>
+
+
+<pre>
+t = tablex.pairmap(<span class="keyword">function</span>(k,v) <span class="keyword">return</span> v,v[<span class="number">1</span>] <span class="keyword">end</span>,t)
+</pre>
+
+<p>and you get:</p>
+
+
+<pre>
+{ ...
+  sdonovan = {
+    <span class="string">"sdonovan"</span>,
+    <span class="string">"x"</span>,
+    <span class="string">"1001"</span>,
+    <span class="string">"1001"</span>,
+    <span class="string">"steve donovan,28,,"</span>,
+    <span class="string">"/home/sdonovan"</span>,
+    <span class="string">"/bin/bash"</span>
+  }
+...
+}
+</pre>
+
+<p>Many common Unix configuration files can be read by tweaking these parameters.
+For <code>/etc/fstab</code>, the options <code>{list_delim=&apos;%s+&apos;,ignore_assign=true}</code> will
+correctly separate the columns.  It's common to find 'KEY VALUE' assignments in
+files such as <code>/etc/ssh/ssh_config</code>; the options <code>{keysep=&apos; &apos;}</code> make
+<a href="../libraries/pl.config.html#read">config.read</a> return a table where each KEY has a value VALUE.</p>
+
+<p>Files in the Linux <code>procfs</code> usually use ':` as the field delimiter:</p>
+
+
+<pre>
+&gt; t = config.read(<span class="string">'/proc/meminfo'</span>,{keysep=<span class="string">':'</span>})
+&gt; = t.MemFree
+<span class="number">220140</span> kB
+</pre>
+
+<p>That result is a string, since <a href="https://www.lua.org/manual/5.1/manual.html#pdf-tonumber">tonumber</a> doesn't like it, but defining the
+<code>convert_numbers</code> option as `function(s) return tonumber((s:gsub(' kB$','')))
+end` will get the memory figures as actual numbers in the result. (The extra
+parentheses are necessary so that <a href="https://www.lua.org/manual/5.1/manual.html#pdf-tonumber">tonumber</a> only gets the first result from
+<code>gsub</code>). From `tests/test-config.lua':</p>
+
+
+<pre>
+testconfig(<span class="string">[[
+MemTotal:        1024748 kB
+MemFree:          220292 kB
+]]</span>,
+{ MemTotal = <span class="number">1024748</span>, MemFree = <span class="number">220292</span> },
+{
+ keysep = <span class="string">':'</span>,
+ convert_numbers = <span class="keyword">function</span>(s)
+    s = s:gsub(<span class="string">' kB$'</span>,<span class="string">''</span>)
+    <span class="keyword">return</span> <span class="global">tonumber</span>(s)
+  <span class="keyword">end</span>
+ }
+)
+</pre>
+
+<p>The <code>smart</code> option lets <a href="../libraries/pl.config.html#read">config.read</a> make a reasonable guess for you; there
+are examples in <code>tests/test-config.lua</code>, but basically these common file
+formats (and those following the same pattern) can be processed directly in
+smart mode: 'etc/fstab', '/proc/XXXX/status', 'ssh_config' and 'pdatedb.conf'.</p>
+
+<p>Please note that <a href="../libraries/pl.config.html#read">config.read</a> can be passed a <em>file-like object</em>; if it's not a
+string and supports the <a href="../libraries/pl.data.html#read">read</a> method, then that will be used. For instance, to
+read a configuration from a string, use <a href="../libraries/pl.stringio.html#open">stringio.open</a>.</p>
+
+
+<p><a id="lexer"/></p>
+
+<p><a name="Lexical_Scanning"></a></p>
+<h3>Lexical Scanning</h3>
+
+<p>Although Lua's string pattern matching is very powerful, there are times when
+something more powerful is needed.  <a href="../libraries/pl.lexer.html#scan">pl.lexer.scan</a> provides lexical scanners
+which <em>tokenize</em> a string, classifying tokens into numbers, strings, etc.</p>
+
+
+<pre>
+&gt; lua -lpl
+Lua <span class="number">5.1</span>.<span class="number">4</span>  Copyright (C) <span class="number">1994</span>-<span class="number">2008</span> Lua.org, PUC-Rio
+&gt; tok = lexer.scan <span class="string">'alpha = sin(1.5)'</span>
+&gt; = tok()
+iden    alpha
+&gt; = tok()
+=       =
+&gt; = tok()
+iden    sin
+&gt; = tok()
+(       (
+&gt; = tok()
+number  <span class="number">1.5</span>
+&gt; = tok()
+)       )
+&gt; = tok()
+(<span class="keyword">nil</span>)
+</pre>
+
+<p>The scanner is a function, which is repeatedly called and returns the <em>type</em> and
+<em>value</em> of the token.  Recognized basic types are 'iden','string','number', and
+'space'. and everything else is represented by itself. Note that by default the
+scanner will skip any 'space' tokens.</p>
+
+<p>'comment' and 'keyword' aren't applicable to the plain scanner, which is not
+language-specific, but a scanner which understands Lua is available. It
+recognizes the Lua keywords, and understands both short and long comments and
+strings.</p>
+
+
+<pre>
+&gt; <span class="keyword">for</span> t,v <span class="keyword">in</span> lexer.lua <span class="string">'for i=1,n do'</span> <span class="keyword">do</span> <span class="global">print</span>(t,v) <span class="keyword">end</span>
+keyword <span class="keyword">for</span>
+iden    i
+=       =
+number  <span class="number">1</span>
+,       ,
+iden    n
+keyword <span class="keyword">do</span>
+</pre>
+
+<p>A lexical scanner is useful where you have highly-structured data which is not
+nicely delimited by newlines. For example, here is a snippet of a in-house file
+format which it was my task to maintain:</p>
+
+
+<pre>
+points
+    (<span class="number">818344.1</span>,-<span class="number">20389.7</span>,-<span class="number">0.1</span>),(<span class="number">818337.9</span>,-<span class="number">20389.3</span>,-<span class="number">0.1</span>),(<span class="number">818332.5</span>,-<span class="number">20387.8</span>,-<span class="number">0.1</span>)
+    ,(<span class="number">818327.4</span>,-<span class="number">20388</span>,-<span class="number">0.1</span>),(<span class="number">818322</span>,-<span class="number">20387.7</span>,-<span class="number">0.1</span>),(<span class="number">818316.3</span>,-<span class="number">20388.6</span>,-<span class="number">0.1</span>)
+    ,(<span class="number">818309.7</span>,-<span class="number">20389.4</span>,-<span class="number">0.1</span>),(<span class="number">818303.5</span>,-<span class="number">20390.6</span>,-<span class="number">0.1</span>),(<span class="number">818295.8</span>,-<span class="number">20388.3</span>,-<span class="number">0.1</span>)
+    ,(<span class="number">818290.5</span>,-<span class="number">20386.9</span>,-<span class="number">0.1</span>),(<span class="number">818285.2</span>,-<span class="number">20386.1</span>,-<span class="number">0.1</span>),(<span class="number">818279.3</span>,-<span class="number">20383.6</span>,-<span class="number">0.1</span>)
+    ,(<span class="number">818274</span>,-<span class="number">20381.2</span>,-<span class="number">0.1</span>),(<span class="number">818274</span>,-<span class="number">20380.7</span>,-<span class="number">0.1</span>);
+</pre>
+
+<p>Here is code to extract the points using <a href="../libraries/pl.lexer.html#">pl.lexer</a>:</p>
+
+
+<pre>
+<span class="comment">-- assume 's' contains the text above...
+</span><span class="keyword">local</span> lexer = <span class="global">require</span> <span class="string">'pl.lexer'</span>
+<span class="keyword">local</span> expecting = lexer.expecting
+<span class="keyword">local</span> append = <span class="global">table</span>.insert
+
+<span class="keyword">local</span> tok = lexer.scan(s)
+
+<span class="keyword">local</span> points = {}
+<span class="keyword">local</span> t,v = tok() <span class="comment">-- should be 'iden','points'
+</span>
+<span class="keyword">while</span> t ~= <span class="string">';'</span> <span class="keyword">do</span>
+    c = {}
+    expecting(tok,<span class="string">'('</span>)
+    c.x = expecting(tok,<span class="string">'number'</span>)
+    expecting(tok,<span class="string">','</span>)
+    c.y = expecting(tok,<span class="string">'number'</span>)
+    expecting(tok,<span class="string">','</span>)
+    c.z = expecting(tok,<span class="string">'number'</span>)
+    expecting(tok,<span class="string">')'</span>)
+    t,v = tok()  <span class="comment">-- either ',' or ';'
+</span>    append(points,c)
+<span class="keyword">end</span>
+</pre>
+
+<p>The <code>expecting</code> function grabs the next token and if the type doesn't match, it
+throws an error. (<a href="../libraries/pl.lexer.html#">pl.lexer</a>, unlike other PL libraries, raises errors if
+something goes wrong, so you should wrap your code in <a href="https://www.lua.org/manual/5.1/manual.html#pdf-pcall">pcall</a> to catch the error
+gracefully.)</p>
+
+<p>The scanners all have a second optional argument, which is a table which controls
+whether you want to exclude spaces and/or comments. The default for <a href="../libraries/pl.lexer.html#lua">lexer.lua</a>
+is <code>{space=true,comments=true}</code>.  There is a third optional argument which
+determines how string and number tokens are to be processsed.</p>
+
+<p>The ultimate highly-structured data is of course, program source. Here is a
+snippet from 'text-lexer.lua':</p>
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+
+lines = <span class="string">[[
+for k,v in pairs(t) do
+    if type(k) == 'number' then
+        print(v) -- array-like case
+    else
+        print(k,v)
+    end
+end
+]]</span>
+
+ls = List()
+<span class="keyword">for</span> tp,val <span class="keyword">in</span> lexer.lua(lines,{space=<span class="keyword">true</span>,comments=<span class="keyword">true</span>}) <span class="keyword">do</span>
+    <span class="global">assert</span>(tp ~= <span class="string">'space'</span> <span class="keyword">and</span> tp ~= <span class="string">'comment'</span>)
+    <span class="keyword">if</span> tp == <span class="string">'keyword'</span> <span class="keyword">then</span> ls:append(val) <span class="keyword">end</span>
+<span class="keyword">end</span>
+test.asserteq(ls,List{<span class="string">'for'</span>,<span class="string">'in'</span>,<span class="string">'do'</span>,<span class="string">'if'</span>,<span class="string">'then'</span>,<span class="string">'else'</span>,<span class="string">'end'</span>,<span class="string">'end'</span>})
+</pre>
+
+<p>Here is a useful little utility that identifies all common global variables found
+in a lua module (ignoring those declared locally for the moment):</p>
+
+
+<pre>
+<span class="comment">-- testglobal.lua
+</span><span class="global">require</span> <span class="string">'pl'</span>
+
+<span class="keyword">local</span> txt,err = utils.readfile(arg[<span class="number">1</span>])
+<span class="keyword">if</span> <span class="keyword">not</span> txt <span class="keyword">then</span> <span class="keyword">return</span> <span class="global">print</span>(err) <span class="keyword">end</span>
+
+<span class="keyword">local</span> globals = List()
+<span class="keyword">for</span> t,v <span class="keyword">in</span> lexer.lua(txt) <span class="keyword">do</span>
+    <span class="keyword">if</span> t == <span class="string">'iden'</span> <span class="keyword">and</span> _G[v] <span class="keyword">then</span>
+        globals:append(v)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+pretty.dump(seq.count_map(globals))
+</pre>
+
+<p>Rather then dumping the whole list, with its duplicates, we pass it through
+<a href="../libraries/pl.seq.html#count_map">seq.count_map</a> which turns the list into a table where the keys are the values,
+and the associated values are the number of times those values occur in the
+sequence. Typical output looks like this:</p>
+
+
+<pre>
+{
+  <span class="global">type</span> = <span class="number">2</span>,
+  <span class="global">pairs</span> = <span class="number">2</span>,
+  <span class="global">table</span> = <span class="number">2</span>,
+  <span class="global">print</span> = <span class="number">3</span>,
+  <span class="global">tostring</span> = <span class="number">2</span>,
+  <span class="global">require</span> = <span class="number">1</span>,
+  <span class="global">ipairs</span> = <span class="number">4</span>
+}
+</pre>
+
+<p>You could further pass this through <a href="../libraries/pl.tablex.html#keys">tablex.keys</a> to get a unique list of
+symbols. This can be useful when writing 'strict' Lua modules, where all global
+symbols must be defined as locals at the top of the file.</p>
+
+<p>For a more detailed use of <a href="../libraries/pl.lexer.html#scan">lexer.scan</a>, please look at <a href="../examples/testxml.lua.html#">testxml.lua</a> in the
+examples directory.</p>
+
+<p><a name="XML"></a></p>
+<h3>XML</h3>
+
+<p>New in the 0.9.7 release is some support for XML. This is a large topic, and
+Penlight does not provide a full XML stack, which is properly the task of a more
+specialized library.</p>
+
+<h4>Parsing and Pretty-Printing</h4>
+
+<p>The semi-standard XML parser in the Lua universe is <a href="http://matthewwild.co.uk/projects/luaexpat/">lua-expat</a>.
+In particular,
+it has a function called <code>lxp.lom.parse</code> which will parse XML into the Lua Object
+Model (LOM) format. However, it does not provide a way to convert this data back
+into XML text.  <a href="../libraries/pl.xml.html#parse">xml.parse</a> will use this function, <em>if</em> <code>lua-expat</code> is
+available, and otherwise switches back to a pure Lua parser originally written by
+Roberto Ierusalimschy.</p>
+
+<p>The resulting document object knows how to render itself as a string, which is
+useful for debugging:</p>
+
+
+<pre>
+&gt; d = xml.parse <span class="string">"&lt;nodes&gt;&lt;node id='1'&gt;alice&lt;/node&gt;&lt;/nodes&gt;"</span>
+&gt; = d
+&lt;nodes&gt;&lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;&lt;/nodes&gt;
+&gt; pretty.dump (d)
+{
+  {
+    <span class="string">"alice"</span>,
+    attr = {
+      <span class="string">"id"</span>,
+      id = <span class="string">"1"</span>
+    },
+    tag = <span class="string">"node"</span>
+  },
+  attr = {
+  },
+  tag = <span class="string">"nodes"</span>
+}
+</pre>
+
+<p>Looking at the actual shape of the data reveals the structure of LOM:</p>
+
+<ul>
+    <li>every element has a <code>tag</code> field with its name</li>
+    <li>plus a <code>attr</code> field which is a table containing the attributes as fields, and
+    also as an array. It is always present.</li>
+    <li>the children of the element are the array part of the element, so <code>d[1]</code> is
+    the first child of <code>d</code>, etc.</li>
+</ul>
+
+<p>It could be argued that having attributes also as the array part of <code>attr</code> is not
+essential (you cannot depend on attribute order in XML) but that's how
+it goes with this standard.</p>
+
+<p><code>lua-expat</code> is another <em>soft dependency</em> of Penlight; generally, the fallback
+parser is good enough for straightforward XML as is commonly found in
+configuration files, etc. <code>doc.basic_parse</code> is not intended to be a proper
+conforming parser (it's only sixty lines) but it handles simple kinds of
+documents that do not have comments or DTD directives. It is intelligent enough
+to ignore the <code>&lt;?xml</code> directive and that is about it.</p>
+
+<p>You can get pretty-printing by explicitly calling <a href="../libraries/pl.xml.html#tostring">xml.tostring</a> and passing it
+the initial indent and the per-element indent:</p>
+
+
+<pre>
+&gt; = xml.<span class="global">tostring</span>(d,<span class="string">''</span>,<span class="string">'  '</span>)
+
+&lt;nodes&gt;
+  &lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;
+&lt;/nodes&gt;
+</pre>
+
+<p>There is a fourth argument which is the <em>attribute indent</em>:</p>
+
+
+<pre>
+&gt; a = xml.parse <span class="string">"&lt;frodo name='baggins' age='50' type='hobbit'/&gt;"</span>
+&gt; = xml.<span class="global">tostring</span>(a,<span class="string">''</span>,<span class="string">'  '</span>,<span class="string">'  '</span>)
+
+&lt;frodo
+  <span class="global">type</span>=<span class="string">'hobbit'</span>
+  name=<span class="string">'baggins'</span>
+  age=<span class="string">'50'</span>
+/&gt;
+</pre>
+
+<h4>Parsing and Working with Configuration Files</h4>
+
+<p>It's common to find configurations expressed with XML these days. It's
+straightforward to 'walk' the <a href="http://matthewwild.co.uk/projects/luaexpat/lom.html">LOM</a>
+data and extract the data in the form you want:</p>
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+
+<span class="keyword">local</span> config = <span class="string">[[
+&lt;config&gt;
+    &lt;alpha&gt;1.3&lt;/alpha&gt;
+    &lt;beta&gt;10&lt;/beta&gt;
+    &lt;name&gt;bozo&lt;/name&gt;
+&lt;/config&gt;
+]]</span>
+<span class="keyword">local</span> d,err = xml.parse(config)
+
+<span class="keyword">local</span> t = {}
+<span class="keyword">for</span> item <span class="keyword">in</span> d:childtags() <span class="keyword">do</span>
+    t[item.tag] = item[<span class="number">1</span>]
+<span class="keyword">end</span>
+
+pretty.dump(t)
+<span class="comment">---&gt;
+</span>{
+  beta = <span class="string">"10"</span>,
+  alpha = <span class="string">"1.3"</span>,
+  name = <span class="string">"bozo"</span>
+}
+</pre>
+
+<p>The only gotcha is that here we must use the <code>Doc:childtags</code> method, which will
+skip over any text elements.</p>
+
+<p>A more involved example is this excerpt from <code>serviceproviders.xml</code>, which is
+usually found at <code>/usr/share/mobile-broadband-provider-info/serviceproviders.xml</code>
+on Debian/Ubuntu Linux systems.</p>
+
+
+<pre>
+d = xml.parse <span class="string">[[
+&lt;serviceproviders format="2.0"&gt;
+...
+&lt;country code="za"&gt;
+    &lt;provider&gt;
+        &lt;name&gt;Cell-c&lt;/name&gt;
+        &lt;gsm&gt;
+            &lt;network-id mcc="655" mnc="07"/&gt;
+            &lt;apn value="internet"&gt;
+                &lt;username&gt;Cellcis&lt;/username&gt;
+                &lt;dns&gt;196.7.0.138&lt;/dns&gt;
+                &lt;dns&gt;196.7.142.132&lt;/dns&gt;
+            &lt;/apn&gt;
+        &lt;/gsm&gt;
+    &lt;/provider&gt;
+    &lt;provider&gt;
+        &lt;name&gt;MTN&lt;/name&gt;
+        &lt;gsm&gt;
+            &lt;network-id mcc="655" mnc="10"/&gt;
+            &lt;apn value="internet"&gt;
+                &lt;dns&gt;196.11.240.241&lt;/dns&gt;
+                &lt;dns&gt;209.212.97.1&lt;/dns&gt;
+            &lt;/apn&gt;
+        &lt;/gsm&gt;
+    &lt;/provider&gt;
+    &lt;provider&gt;
+        &lt;name&gt;Vodacom&lt;/name&gt;
+        &lt;gsm&gt;
+            &lt;network-id mcc="655" mnc="01"/&gt;
+            &lt;apn value="internet"&gt;
+                &lt;dns&gt;196.207.40.165&lt;/dns&gt;
+                &lt;dns&gt;196.43.46.190&lt;/dns&gt;
+            &lt;/apn&gt;
+            &lt;apn value="unrestricted"&gt;
+                &lt;name&gt;Unrestricted&lt;/name&gt;
+                &lt;dns&gt;196.207.32.69&lt;/dns&gt;
+                &lt;dns&gt;196.43.45.190&lt;/dns&gt;
+            &lt;/apn&gt;
+        &lt;/gsm&gt;
+    &lt;/provider&gt;
+    &lt;provider&gt;
+        &lt;name&gt;Virgin Mobile&lt;/name&gt;
+        &lt;gsm&gt;
+            &lt;apn value="vdata"&gt;
+                &lt;dns&gt;196.7.0.138&lt;/dns&gt;
+                &lt;dns&gt;196.7.142.132&lt;/dns&gt;
+            &lt;/apn&gt;
+        &lt;/gsm&gt;
+    &lt;/provider&gt;
+&lt;/country&gt;
+....
+&lt;/serviceproviders&gt;
+]]</span>
+</pre>
+
+<p>Getting the names of the providers per-country is straightforward:</p>
+
+
+<pre>
+<span class="keyword">local</span> t = {}
+<span class="keyword">for</span> country <span class="keyword">in</span> d:childtags() <span class="keyword">do</span>
+    <span class="keyword">local</span> providers = {}
+    t[country.attr.code] = providers
+    <span class="keyword">for</span> provider <span class="keyword">in</span> country:childtags() <span class="keyword">do</span>
+        <span class="global">table</span>.insert(providers,provider:child_with_name(<span class="string">'name'</span>):get_text())
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+pretty.dump(t)
+<span class="comment">--&gt;
+</span>{
+  za = {
+    <span class="string">"Cell-c"</span>,
+    <span class="string">"MTN"</span>,
+    <span class="string">"Vodacom"</span>,
+    <span class="string">"Virgin Mobile"</span>
+  }
+  ....
+}
+</pre>
+
+<h4>Generating XML with 'xmlification'</h4>
+
+<p>This feature is inspired by the <code>htmlify</code> function used by
+<a href="http://keplerproject.github.com/orbit/">Orbit</a> to simplify HTML generation,
+except that no function environment magic is used; the <code>tags</code> function returns a
+set of <em>constructors</em> for elements of the given tag names.</p>
+
+
+<pre>
+&gt; nodes, node = xml.tags <span class="string">'nodes, node'</span>
+&gt; = node <span class="string">'alice'</span>
+&lt;node&gt;alice&lt;/node&gt;
+&gt; = nodes { node {id=<span class="string">'1'</span>,<span class="string">'alice'</span>}}
+&lt;nodes&gt;&lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;&lt;/nodes&gt;
+</pre>
+
+<p>The flexibility of Lua tables is very useful here, since both the attributes and
+the children of an element can be encoded naturally. The argument to these tag
+constructors is either a single value (like a string) or a table where the
+attributes are the named keys and the children are the array values.</p>
+
+<h4>Generating XML using Templates</h4>
+
+<p>A template is a little XML document which contains dollar-variables. The <code>subst</code>
+method on a document is fed an array of tables containing values for these
+variables. Note how the parent tag name is specified:</p>
+
+
+<pre>
+&gt; templ = xml.parse <span class="string">"&lt;node id='$id'&gt;$name&lt;/node&gt;"</span>
+&gt; = templ:subst {tag=<span class="string">'nodes'</span>, {id=<span class="number">1</span>,name=<span class="string">'alice'</span>},{id=<span class="number">2</span>,name=<span class="string">'john'</span>}}
+&lt;nodes&gt;&lt;node id=<span class="string">'1'</span>&gt;alice&lt;/node&gt;&lt;node id=<span class="string">'2'</span>&gt;john&lt;/node&gt;&lt;/nodes&gt;
+</pre>
+
+<p>Substitution is very related to <em>filtering</em> documents. One of the annoying things
+about XML is that it is a document markup language first, and a data language
+second. Standard parsers will assume you really care about all those extra
+text elements. Consider this fragment, which has been changed by a five-year old:</p>
+
+
+<pre>
+T = <span class="string">[[
+  &lt;weather&gt;
+    boops!
+    &lt;current_conditions&gt;
+      &lt;condition data='$condition'/&gt;
+      &lt;temp_c data='$temp'/&gt;
+      &lt;bo&gt;whoops!&lt;/bo&gt;
+    &lt;/current_conditions&gt;
+  &lt;/weather&gt;
+]]</span>
+</pre>
+
+<p>Conformant parsers will give you text elements with the line feed after <code>&lt;current_conditions&gt;</code>
+although it makes handling the data more irritating.</p>
+
+
+<pre>
+<span class="keyword">local</span> <span class="keyword">function</span> parse (str)
+    <span class="keyword">return</span> xml.parse(str,<span class="keyword">false</span>,<span class="keyword">true</span>)
+<span class="keyword">end</span>
+</pre>
+
+<p>Second argument means 'string, not file' and third argument means use the built-in
+Lua parser (instead of LuaExpat if available) which <em>by default</em> is not interested in
+keeping such strings.</p>
+
+<p>How to remove the string <code>boops!</code>?  <code>clone</code> (also called <a href="../libraries/pl.data.html#filter">filter</a> when called as a
+method) copies a LOM document. It can be passed a filter function, which is applied
+to each string found. The powerful thing about this is that this function receives
+structural information - the parent node, and whether this was a tag name, a text
+element or a attribute name:</p>
+
+
+<pre>
+d = parse (T)
+c = d:filter(<span class="keyword">function</span>(s,kind,parent)
+    <span class="global">print</span>(stringx.strip(s),kind,parent <span class="keyword">and</span> parent.tag <span class="keyword">or</span> <span class="string">'?'</span>)
+    <span class="keyword">if</span> kind == <span class="string">'*TEXT'</span> <span class="keyword">and</span> #parent &gt; <span class="number">1</span> <span class="keyword">then</span> <span class="keyword">return</span> <span class="keyword">nil</span> <span class="keyword">end</span>
+    <span class="keyword">return</span> s
+<span class="keyword">end</span>)
+<span class="comment">---&gt;
+</span>weather    *TAG    ?
+boops!    *TEXT    weather
+current_conditions    *TAG    weather
+condition    *TAG    current_conditions
+$condition    data    condition
+temp_c    *TAG    current_conditions
+$temp    data    temp_c
+bo    *TAG    current_conditions
+whoops!    *TEXT    bo
+</pre>
+
+<p>We can pull out 'boops' and not 'whoops' by discarding text elements which are not
+the single child of an element.</p>
+
+
+
+<h4>Extracting Data using Templates</h4>
+
+<p>Matching goes in the opposite direction.  We have a document, and would like to
+extract values from it using a pattern.</p>
+
+<p>A common use of this is parsing the XML result of API queries.  The
+<a href="http://blog.programmableweb.com/2010/02/08/googles-secret-weather-api/">(undocumented and subsequently discontinued) Google Weather
+API</a> is a
+good example. Grabbing the result of
+`http://www.google.com/ig/api?weather=Johannesburg,ZA" we get something like
+this, after pretty-printing:</p>
+
+
+<pre>
+&lt;xml_api_reply version=<span class="string">'1'</span>&gt;
+  &lt;weather module_id=<span class="string">'0'</span> tab_id=<span class="string">'0'</span> mobile_zipped=<span class="string">'1'</span> section=<span class="string">'0'</span> row=<span class="string">'0'</span>
+</pre>
+
+<p>mobile_row='0'></p>
+
+<pre>
+&lt;forecast_information&gt;
+  &lt;city data=<span class="string">'Johannesburg, Gauteng'</span>/&gt;
+  &lt;postal_code data=<span class="string">'Johannesburg,ZA'</span>/&gt;
+  &lt;latitude_e6 data=<span class="string">''</span>/&gt;
+  &lt;longitude_e6 data=<span class="string">''</span>/&gt;
+  &lt;forecast_date data=<span class="string">'2010-10-02'</span>/&gt;
+  &lt;current_date_time data=<span class="string">'2010-10-02 18:30:00 +0000'</span>/&gt;
+  &lt;unit_system data=<span class="string">'US'</span>/&gt;
+&lt;/forecast_information&gt;
+&lt;current_conditions&gt;
+  &lt;condition data=<span class="string">'Clear'</span>/&gt;
+  &lt;temp_f data=<span class="string">'75'</span>/&gt;
+  &lt;temp_c data=<span class="string">'24'</span>/&gt;
+  &lt;humidity data=<span class="string">'Humidity: 19%'</span>/&gt;
+  &lt;icon data=<span class="string">'/ig/images/weather/sunny.gif'</span>/&gt;
+  &lt;wind_condition data=<span class="string">'Wind: NW at 7 mph'</span>/&gt;
+&lt;/current_conditions&gt;
+&lt;forecast_conditions&gt;
+  &lt;day_of_week data=<span class="string">'Sat'</span>/&gt;
+  &lt;low data=<span class="string">'60'</span>/&gt;
+  &lt;high data=<span class="string">'89'</span>/&gt;
+  &lt;icon data=<span class="string">'/ig/images/weather/sunny.gif'</span>/&gt;
+  &lt;condition data=<span class="string">'Clear'</span>/&gt;
+&lt;/forecast_conditions&gt;
+....
+/weather&gt;
+l_api_reply&gt;
+</pre>
+
+<p>Assume that the above XML has been read into <code>google</code>. The idea is to write a
+pattern looking like a template, and use it to extract some values of interest:</p>
+
+
+<pre>
+t = <span class="string">[[
+  &lt;weather&gt;
+    &lt;current_conditions&gt;
+      &lt;condition data='$condition'/&gt;
+      &lt;temp_c data='$temp'/&gt;
+    &lt;/current_conditions&gt;
+  &lt;/weather&gt;
+]]</span>
+
+<span class="keyword">local</span> res, ret = google:match(t)
+pretty.dump(res)
+</pre>
+
+<p>And the output is:</p>
+
+
+<pre>
+{
+  condition = <span class="string">"Clear"</span>,
+  temp = <span class="string">"24"</span>
+}
+</pre>
+
+<p>The <code>match</code> method can be passed a LOM document or some text, which will be
+parsed first.</p>
+
+<p>But what if we need to extract values from repeated elements? Match templates may
+contain 'array matches' which are enclosed in '{{..}}':</p>
+
+
+<pre>
+&lt;weather&gt;
+  {{&lt;forecast_conditions&gt;
+    &lt;day_of_week data=<span class="string">'$day'</span>/&gt;
+    &lt;low data=<span class="string">'$low'</span>/&gt;
+    &lt;high data=<span class="string">'$high'</span>/&gt;
+    &lt;condition data=<span class="string">'$condition'</span>/&gt;
+  &lt;/forecast_conditions&gt;}}
+&lt;/weather&gt;
+</pre>
+
+<p>And the match result is:</p>
+
+
+<pre>
+{
+  {
+    low = <span class="string">"60"</span>,
+    high = <span class="string">"89"</span>,
+    day = <span class="string">"Sat"</span>,
+    condition = <span class="string">"Clear"</span>,
+  },
+  {
+    low = <span class="string">"53"</span>,
+    high = <span class="string">"86"</span>,
+    day = <span class="string">"Sun"</span>,
+    condition = <span class="string">"Clear"</span>,
+  },
+  {
+    low = <span class="string">"57"</span>,
+    high = <span class="string">"87"</span>,
+    day = <span class="string">"Mon"</span>,
+    condition = <span class="string">"Clear"</span>,
+  },
+  {
+    low = <span class="string">"60"</span>,
+    high = <span class="string">"84"</span>,
+    day = <span class="string">"Tue"</span>,
+    condition = <span class="string">"Clear"</span>,
+  }
+}
+</pre>
+
+<p>With this array of tables, you can use <a href="../libraries/pl.tablex.html#">tablex</a> or <a href="../classes/pl.List.html#">List</a>
+to reshape into the desired form, if you choose.  Just as with reading a Unix password
+file with <a href="../libraries/pl.config.html#">config</a>, you can make the array into a map of days to conditions using:</p>
+
+
+<pre>
+<span class="backtick"><a href="../libraries/pl.tablex.html#pairmap">tablex.pairmap</a></span>(<span class="string">'|k,v| v,v.day'</span>,conditions)
+</pre>
+
+<p>(Here using the alternative string lambda option)</p>
+
+<p>However, xml matches can shape the structure of the output. By replacing the <code>day_of_week</code>
+line of the template with <code>&lt;day_of_week data=&apos;$_&apos;/&gt;</code> we get the same effect; <code>$_</code> is
+a special symbol that means that this captured value (or simply <em>capture</em>) becomes the key.</p>
+
+<p>Note that <code>$NUMBER</code> means a numerical index, so
+that <code>$1</code> is the first element of the resulting array, and so forth. You can mix
+numbered and named captures, but it's strongly advised to make the numbered captures
+form a proper array sequence (everything from <code>1</code> to <code>n</code> inclusive). <code>$0</code> has a
+special meaning; if it is the only capture (<code>{[0]=&apos;foo&apos;}</code>) then the table is
+collapsed into 'foo'.</p>
+
+
+<pre>
+&lt;weather&gt;
+  {{&lt;forecast_conditions&gt;
+    &lt;day_of_week data=<span class="string">'$_'</span>/&gt;
+    &lt;low data=<span class="string">'$1'</span>/&gt;
+    &lt;high data=<span class="string">'$2'</span>/&gt;
+    &lt;condition data=<span class="string">'$3'</span>/&gt;
+  &lt;/forecast_conditions&gt;}}
+&lt;/weather&gt;
+</pre>
+
+<p>Now the result is:</p>
+
+
+<pre>
+{
+  Tue = {
+    <span class="string">"60"</span>,
+    <span class="string">"84"</span>,
+    <span class="string">"Clear"</span>
+  },
+  Sun = {
+    <span class="string">"53"</span>,
+    <span class="string">"86"</span>,
+    <span class="string">"Clear"</span>
+  },
+  Sat = {
+    <span class="string">"60"</span>,
+    <span class="string">"89"</span>,
+    <span class="string">"Clear"</span>
+  },
+  Mon = {
+    <span class="string">"57"</span>,
+    <span class="string">"87"</span>,
+    <span class="string">"Clear"</span>
+  }
+}
+</pre>
+
+<p>Applying matches to this config file poses another problem, because the actual
+tags matched are themselves meaningful.</p>
+
+
+<pre>
+&lt;config&gt;
+    &lt;alpha&gt;<span class="number">1.3</span>&lt;/alpha&gt;
+    &lt;beta&gt;<span class="number">10</span>&lt;/beta&gt;
+    &lt;name&gt;bozo&lt;/name&gt;
+&lt;/config&gt;
+</pre>
+
+<p>So there are tag 'wildcards' which are element names ending with a hyphen.</p>
+
+
+<pre>
+&lt;config&gt;
+    {{&lt;key-&gt;$value&lt;/key-&gt;}}
+&lt;/config&gt;
+</pre>
+
+<p>You will then get <code>{{alpha=&apos;1.3&apos;},...}</code>. The most convenient format would be
+returned by this (note that <code>_-</code> behaves just like <code>$_</code>):</p>
+
+
+<pre>
+&lt;config&gt;
+    {{&lt;_-&gt;$<span class="number">0</span>&lt;/_-&gt;}}
+&lt;/config&gt;
+</pre>
+
+<p>which would return <code>{alpha=&apos;1.3&apos;,beta=&apos;10&apos;,name=&apos;bozo&apos;}</code>.</p>
+
+<p>We could play this game endlessly, and encode ways of converting captures, but
+the scheme is complex enough, and it's easy to do the conversion later</p>
+
+
+<pre>
+<span class="keyword">local</span> numbers = {alpha=<span class="keyword">true</span>,beta=<span class="keyword">true</span>}
+<span class="keyword">for</span> k,v <span class="keyword">in</span> <span class="global">pairs</span>(res) <span class="keyword">do</span>
+    <span class="keyword">if</span> numbers[v] <span class="keyword">then</span> res[k] = <span class="global">tonumber</span>(v) <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<h4>HTML Parsing</h4>
+
+<p>HTML is an unusually degenerate form of XML, and Dennis Schridde has contributed
+a feature which makes parsing it easier.  For instance, from the tests:</p>
+
+
+<pre>
+doc = xml.parsehtml <span class="string">[[
+&lt;BODY&gt;
+Hello dolly&lt;br&gt;
+HTML is &lt;b&gt;slack&lt;/b&gt;&lt;br&gt;
+&lt;/BODY&gt;
+]]</span>
+
+asserteq(xml.<span class="global">tostring</span>(doc),<span class="string">[[
+&lt;body&gt;
+Hello dolly&lt;br/&gt;
+HTML is &lt;b&gt;slack&lt;/b&gt;&lt;br/&gt;&lt;/body&gt;]]</span>)
+</pre>
+
+<p>That is, all tags are converted to lowercase, and empty HTML elements like <code>br</code>
+are properly closed; attributes do not need to be quoted.</p>
+
+<p>Also, DOCTYPE directives and comments are skipped. For truly badly formed HTML,
+this is not the tool for you!</p>
+
+
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

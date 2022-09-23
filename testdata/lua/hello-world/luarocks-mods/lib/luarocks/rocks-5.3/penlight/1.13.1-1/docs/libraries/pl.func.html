@@ -1,0 +1,460 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><strong>pl.func</strong></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.func</code></h1>
+<p>Functional helpers like composition, binding and placeholder expressions.</p>
+<p> Placeholder expressions are useful for short anonymous functions, and were
+ inspired by the Boost Lambda library.</p>
+
+
+<pre>
+&gt; utils.import <span class="string">'pl.func'</span>
+&gt; ls = List{<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>}
+&gt; = ls:map(_1+<span class="number">1</span>)
+{<span class="number">11</span>,<span class="number">21</span>,<span class="number">31</span>}
+</pre>
+
+<p> They can also be used to <em>bind</em> particular arguments of a function.</p>
+
+
+<pre>
+&gt; p = bind(<span class="global">print</span>,<span class="string">'start&gt;'</span>,_0)
+&gt; p(<span class="number">10</span>,<span class="number">20</span>,<span class="number">30</span>)
+&gt; start&gt;   <span class="number">10</span>   <span class="number">20</span>  <span class="number">30</span>
+</pre>
+
+<p> See <a href="../manual/07-functional.md.html#Creating_Functions_from_Functions">the Guide</a></p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.tablex.html#">pl.tablex</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#import">import (tname, context)</a></td>
+	<td class="summary">wrap a table of functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#register">register (fun[, name])</a></td>
+	<td class="summary">register a function for use in placeholder expressions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tail">tail (ls)</a></td>
+	<td class="summary">all elements of a table except the first.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#repr">repr (e, lastpred)</a></td>
+	<td class="summary">create a string representation of a placeholder expression.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#instantiate">instantiate (e)</a></td>
+	<td class="summary">instantiate a PE into an actual function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#I">I (e)</a></td>
+	<td class="summary">instantiate a PE unless it has already been done.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bind1">bind1 (fn, p)</a></td>
+	<td class="summary">bind the first parameter of the function to a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#compose">compose (f, g)</a></td>
+	<td class="summary">create a function which chains two functions.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bind">bind (fn, ...)</a></td>
+	<td class="summary">bind the arguments of a function to given values.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "import"></a>
+    <strong>import (tname, context)</strong>
+    </dt>
+    <dd>
+    wrap a table of functions.  This makes them available for use in
+ placeholder expressions.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tname</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a table name
+        </li>
+        <li><span class="parameter">context</span>
+            <span class="types"><span class="type">tab</span></span>
+         context to put results, defaults to environment of caller
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "register"></a>
+    <strong>register (fun[, name])</strong>
+    </dt>
+    <dd>
+    register a function for use in placeholder expressions.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function
+        </li>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         an optional name
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a placeholder functiond
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tail"></a>
+    <strong>tail (ls)</strong>
+    </dt>
+    <dd>
+    all elements of a table except the first.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ls</span>
+            <span class="types"><span class="type">tab</span></span>
+         a list-like table.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "repr"></a>
+    <strong>repr (e, lastpred)</strong>
+    </dt>
+    <dd>
+    create a string representation of a placeholder expression.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">e</span>
+         a placeholder expression
+        </li>
+        <li><span class="parameter">lastpred</span>
+         not used
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "instantiate"></a>
+    <strong>instantiate (e)</strong>
+    </dt>
+    <dd>
+    instantiate a PE into an actual function.  First we find the largest placeholder used,
+ e.g. <em>2; from this a list of the formal parameters can be build. Then we collect and replace
+ any non-PE values from the PE, and build up a constant binding list.
+ Finally, the expression can be compiled, and e.</em><em>PE</em>function is set.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">e</span>
+         a placeholder expression
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "I"></a>
+    <strong>I (e)</strong>
+    </dt>
+    <dd>
+    instantiate a PE unless it has already been done.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">e</span>
+         a placeholder expression
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the function
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "bind1"></a>
+    <strong>bind1 (fn, p)</strong>
+    </dt>
+    <dd>
+    bind the first parameter of the function to a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of one or more arguments
+        </li>
+        <li><span class="parameter">p</span>
+         a value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function of one less argument
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">(bind1(<span class="global">math</span>.max,<span class="number">10</span>))(<span class="number">20</span>) == <span class="global">math</span>.max(<span class="number">10</span>,<span class="number">20</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "compose"></a>
+    <strong>compose (f, g)</strong>
+    </dt>
+    <dd>
+    create a function which chains two functions.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least one argument
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">printf = compose(<span class="global">io</span>.write,<span class="global">string</span>.format)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bind"></a>
+    <strong>bind (fn, ...)</strong>
+    </dt>
+    <dd>
+    bind the arguments of a function to given values.
+ <code>bind(fn,v,_2)</code> is equivalent to <code>bind1(fn,v)</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         values or placeholder variables
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a function
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">(bind(f,_1,a))(b) == f(a,b)</pre></li>
+        <li><pre class="example">(bind(f,_2,_1))(a,b) == f(b,a)</pre></li>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

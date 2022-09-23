@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><strong>pl.file</strong></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pl.file</code></h1>
+<p>File manipulation functions: reading, writing, moving and copying.</p>
+<p> This module wraps a number of functions from other modules into a
+ file related module for convenience.</p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.dir.html#">pl.dir</a>, <a href="../libraries/pl.path.html#">pl.path</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#read">read ()</a></td>
+	<td class="summary">return the contents of a file as a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#write">write ()</a></td>
+	<td class="summary">write a string to a file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#copy">copy ()</a></td>
+	<td class="summary">copy a file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#move">move ()</a></td>
+	<td class="summary">move a file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#access_time">access_time ()</a></td>
+	<td class="summary">Return the time of last access as the number of seconds since the epoch.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#creation_time">creation_time ()</a></td>
+	<td class="summary">Return when the file was created.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#modified_time">modified_time ()</a></td>
+	<td class="summary">Return the time of last modification.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#delete">delete ()</a></td>
+	<td class="summary">Delete a file.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "read"></a>
+    <strong>read ()</strong>
+    </dt>
+    <dd>
+    return the contents of a file as a string.
+ This function is a copy of <a href="../libraries/pl.utils.html#readfile">utils.readfile</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "write"></a>
+    <strong>write ()</strong>
+    </dt>
+    <dd>
+    write a string to a file.
+ This function is a copy of <a href="../libraries/pl.utils.html#writefile">utils.writefile</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "copy"></a>
+    <strong>copy ()</strong>
+    </dt>
+    <dd>
+    copy a file.
+ This function is a copy of <a href="../libraries/pl.dir.html#copyfile">dir.copyfile</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "move"></a>
+    <strong>move ()</strong>
+    </dt>
+    <dd>
+    move a file.
+ This function is a copy of <a href="../libraries/pl.dir.html#movefile">dir.movefile</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "access_time"></a>
+    <strong>access_time ()</strong>
+    </dt>
+    <dd>
+    Return the time of last access as the number of seconds since the epoch.
+ This function is a copy of <a href="../libraries/pl.path.html#getatime">path.getatime</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "creation_time"></a>
+    <strong>creation_time ()</strong>
+    </dt>
+    <dd>
+    Return when the file was created.
+ This function is a copy of <a href="../libraries/pl.path.html#getctime">path.getctime</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "modified_time"></a>
+    <strong>modified_time ()</strong>
+    </dt>
+    <dd>
+    Return the time of last modification.
+ This function is a copy of <a href="../libraries/pl.path.html#getmtime">path.getmtime</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "delete"></a>
+    <strong>delete ()</strong>
+    </dt>
+    <dd>
+    Delete a file.
+ This function is a copy of <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.remove">os.remove</a>.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

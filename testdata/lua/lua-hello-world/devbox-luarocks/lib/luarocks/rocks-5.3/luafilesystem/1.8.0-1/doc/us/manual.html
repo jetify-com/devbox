@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>LuaFileSystem</title>
+    <link rel="stylesheet" href="doc.css" type="text/css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo">
+        <a href="http://keplerproject.github.io/luafilesystem">
+        <img alt="LuaFileSystem" src="luafilesystem.png"/>
+        </a>
+    </div>
+	<div id="product_name"><big><strong>LuaFileSystem</strong></big></div>
+	<div id="product_description">File System Library for the Lua Programming Language</div>
+</div> <!-- id="product" -->
+
+<div id="main">
+	
+<div id="navigation">
+<h1>LuaFileSystem</h1>
+	<ul>
+		<li><a href="index.html">Home</a>
+			<ul>
+				<li><a href="index.html#overview">Overview</a></li>
+				<li><a href="index.html#status">Status</a></li>
+				<li><a href="index.html#download">Download</a></li>
+				<li><a href="index.html#history">History</a></li>
+				<li><a href="index.html#credits">Credits</a></li>
+			</ul>
+		</li>
+		<li><strong>Manual</strong>
+			<ul>
+				<li><a href="manual.html#introduction">Introduction</a></li>
+				<li><a href="manual.html#building">Building</a></li>
+				<li><a href="manual.html#installation">Installation</a></li>
+				<li><a href="manual.html#reference">Reference</a></li>
+			</ul>
+		</li>
+		<li><a href="examples.html">Examples</a></li>
+        <li><a href="https://github.com/keplerproject/luafilesystem">Project</a>
+            <ul>
+                <li><a href="https://github.com/keplerproject/luafilesystem/issues">Bug Tracker</a></li>
+                <li><a href="https://github.com/keplerproject/luafilesystem">Git</a></li>
+            </ul>
+        </li>
+		<li><a href="license.html">License</a></li>
+	</ul>
+</div> <!-- id="navigation" -->
+
+<div id="content">
+
+<h2><a name="introduction"></a>Introduction</h2>
+
+<p>LuaFileSystem is a <a href="http://www.lua.org">Lua</a> library
+developed to complement the set of functions related to file
+systems offered by the standard Lua distribution.</p>
+
+<p>LuaFileSystem offers a portable way to access
+the underlying directory structure and file attributes.</p>
+
+<h2><a name="building"></a>Building</h2>
+
+<p>
+LuaFileSystem should be built with Lua 5.1 so the language library
+and header files for the target version must be installed properly.
+</p>
+
+<p>
+LuaFileSystem offers a Makefile and a separate configuration file,
+<code>config</code>,
+which should be edited to suit your installation before running
+<code>make</code>.
+The file has some definitions like paths to the external libraries,
+compiler options and the like.
+</p>
+
+<p>On Windows, the C runtime used to compile LuaFileSystem must be the same
+runtime that Lua uses, or some LuaFileSystem functions will not work.</p>
+
+<h2><a name="installation"></a>Installation</h2>
+
+<p>The easiest way to install LuaFileSystem is to use LuaRocks:</p>
+
+<pre class="example">
+luarocks install luafilesystem
+</pre>
+
+<p>If you prefer to install LuaFileSystem manually, the compiled binary should be copied to a directory in your
+<a href="http://www.lua.org/manual/5.1/manual.html#pdf-package.cpath">C path</a>.</p>
+
+<h2><a name="reference"></a>Reference</h2>
+
+<p>
+LuaFileSystem offers the following functions:
+</p>
+
+<dl class="reference">
+    <dt><a name="attributes"></a><strong><code>lfs.attributes (filepath [, request_name | result_table])</code></strong></dt>
+    <dd>Returns a table with the file attributes corresponding to
+    <code>filepath</code> (or <code>nil</code> followed by an error message and a system-dependent error code
+    in case of error).
+    If the second optional argument is given and is a string, then only the value of the
+    named attribute is returned (this use is equivalent to
+    <code>lfs.attributes(filepath)[request_name]</code>, but the table is not created
+    and only one attribute is retrieved from the O.S.).
+    if a table is passed as the second argument, it (<code>result_table</code>) is filled with attributes and returned instead of a new table.
+    The attributes are described as follows;
+    attribute <code>mode</code> is a string, all the others are numbers,
+    and the time related attributes use the same time reference of
+    <a href="http://www.lua.org/manual/5.1/manual.html#pdf-os.time"><code>os.time</code></a>: 
+        <dl>
+        <dt><strong><code>dev</code></strong></dt>
+        <dd>on Unix systems, this represents the device that the inode resides on. On Windows systems,
+        represents the drive number of the disk containing the file</dd>
+        
+        <dt><strong><code>ino</code></strong></dt>
+        <dd>on Unix systems, this represents the inode number. On Windows systems this has no meaning</dd>
+        
+        <dt><strong><code>mode</code></strong></dt>
+        <dd>string representing the associated protection mode (the values could be
+        <code>file</code>, <code>directory</code>, <code>link</code>, <code>socket</code>,
+        <code>named pipe</code>, <code>char device</code>, <code>block device</code> or
+        <code>other</code>)</dd>
+        
+        <dt><strong><code>nlink</code></strong></dt>
+		<dd>number of hard links to the file</dd>
+
+        <dt><strong><code>uid</code></strong></dt>
+		<dd>user-id of owner (Unix only, always 0 on Windows)</dd>
+
+        <dt><strong><code>gid</code></strong></dt>
+		<dd>group-id of owner (Unix only, always 0 on Windows)</dd>
+
+        <dt><strong><code>rdev</code></strong></dt>
+		<dd>on Unix systems, represents the device type, for special file inodes.
+        On Windows systems represents the same as <code>dev</code></dd>
+
+        <dt><strong><code>access</code></strong></dt>
+		<dd>time of last access</dd>
+
+        <dt><strong><code>modification</code></strong></dt>
+		<dd>time of last data modification</dd>
+
+        <dt><strong><code>change</code></strong></dt>
+		<dd>time of last file status change</dd>
+
+        <dt><strong><code>size</code></strong></dt>
+		<dd>file size, in bytes</dd>
+
+        <dt><strong><code>permissions</code></strong></dt>
+		<dd>file permissions string</dd>
+
+        <dt><strong><code>blocks</code></strong></dt>
+		<dd>block allocated for file; (Unix only)</dd>
+        
+        <dt><strong><code>blksize</code></strong></dt>
+		<dd>optimal file system I/O blocksize; (Unix only)</dd>
+	    </dl>
+    This function uses <code>stat</code> internally thus if the given
+    <code>filepath</code> is a symbolic link, it is followed (if it points to
+    another link the chain is followed recursively) and the information
+    is about the file it refers to.
+    To obtain information about the link itself, see function
+    <a href="#symlinkattributes">lfs.symlinkattributes</a>.
+	</dd>
+
+    <dt><a name="chdir"></a><strong><code>lfs.chdir (path)</code></strong></dt>
+    <dd>Changes the current working directory to the given
+    <code>path</code>.<br />
+    Returns <code>true</code> in case of success or <code>nil</code> plus an
+    error string.</dd>
+
+    <dt><a name="lock_dir"></a><strong><code>lfs.lock_dir(path, [seconds_stale])</code></strong></dt>
+    <dd>Creates a lockfile (called lockfile.lfs) in <code>path</code> if it does not
+  exist and returns the lock. If the lock already exists checks if
+  it's stale, using the second parameter (default for the second
+  parameter is <code>INT_MAX</code>, which in practice means the lock will never
+  be stale. To free the the lock call <code>lock:free()</code>. <br/>
+   In case of any errors it returns nil and the error message. In
+  particular, if the lock exists and is not stale it returns the
+  "File exists" message.</dd>
+        
+    <dt><a name="currentdir"></a><strong><code>lfs.currentdir ()</code></strong></dt>
+    <dd>Returns a string with the current working directory or <code>nil</code>
+    plus an error string.</dd>
+    
+    <dt><a name="dir"></a><strong><code>iter, dir_obj = lfs.dir (path)</code></strong></dt>
+    <dd>
+    Lua iterator over the entries of a given directory.
+    Each time the iterator is called with <code>dir_obj</code> it returns a directory entry's name as a string, or
+    <code>nil</code> if there are no more entries. You can also iterate by calling <code>dir_obj:next()</code>, and
+    explicitly close the directory before the iteration finished with <code>dir_obj:close()</code>.
+    Raises an error if <code>path</code> is not a directory.
+    </dd>
+    
+    <dt><a name="lock"></a><strong><code>lfs.lock (filehandle, mode[, start[, length]])</code></strong></dt>
+    <dd>Locks a file or a part of it. This function works on <em>open files</em>; the
+    file handle should be specified as the first argument.
+    The string <code>mode</code> could be either
+    <code>r</code> (for a read/shared lock) or <code>w</code> (for a
+    write/exclusive lock). The optional arguments <code>start</code>
+    and <code>length</code> can be used to specify a starting point and
+    its length; both should be numbers.<br />
+    Returns <code>true</code> if the operation was successful; in
+    case of error, it returns <code>nil</code> plus an error string.
+    </dd>
+
+    <dt><a name="link"></a><strong><code>lfs.link (old, new[, symlink])</code></strong></dt>
+    <dd>Creates a link. The first argument is the object to link to
+    and the second is the name of the link. If the optional third
+    argument is true, the link will by a symbolic link (by default, a
+    hard link is created).
+    </dd>
+    
+    <dt><a name="mkdir"></a><strong><code>lfs.mkdir (dirname)</code></strong></dt>
+    <dd>Creates a new directory. The argument is the name of the new
+    directory.<br />
+    Returns <code>true</code> in case of success or <code>nil</code>, an error message and
+    a system-dependent error code in case of error.
+    </dd>
+    
+    <dt><a name="rmdir"></a><strong><code>lfs.rmdir (dirname)</code></strong></dt>
+    <dd>Removes an existing directory. The argument is the name of the directory.<br />
+    Returns <code>true</code> in case of success or <code>nil</code>, an error message and
+    a system-dependent error code in case of error.
+
+    <dt><a name="setmode"></a><strong><code>lfs.setmode (file, mode)</code></strong></dt>
+    <dd>Sets the writing mode for a file. The mode string can be either <code>"binary"</code> or <code>"text"</code>.
+    Returns <code>true</code> followed the previous mode string for the file, or
+    <code>nil</code> followed by an error string in case of errors.
+    On non-Windows platforms, where the two modes are identical,
+    setting the mode has no effect, and the mode is always returned as <code>binary</code>.
+    </dd>
+    
+    <dt><a name="symlinkattributes"></a><strong><code>lfs.symlinkattributes (filepath [, request_name])</code></strong></dt>
+    <dd>Identical to <a href="#attributes">lfs.attributes</a> except that
+    it obtains information about the link itself (not the file it refers to).
+    It also adds a <strong><code>target</code></strong> field, containing
+    the file name that the symlink points to.
+    On Windows this function does not yet support links, and is identical to
+    <code>lfs.attributes</code>.
+    </dd>
+
+    <dt><a name="touch"></a><strong><code>lfs.touch (filepath [, atime [, mtime]])</code></strong></dt>
+    <dd>Set access and modification times of a file. This function is
+    a bind to <code>utime</code> function. The first argument is the
+    filename, the second argument (<code>atime</code>) is the access time,
+    and the third argument (<code>mtime</code>) is the modification time.
+    Both times are provided in seconds (which should be generated with
+    Lua standard function <code>os.time</code>).
+    If the modification time is omitted, the access time provided is used;
+    if both times are omitted, the current time is used.<br />
+    Returns <code>true</code> in case of success or <code>nil</code>, an error message and
+    a system-dependent error code in case of error.
+    </dd>
+    
+    <dt><a name="unlock"></a><strong><code>lfs.unlock (filehandle[, start[, length]])</code></strong></dt>
+    <dd>Unlocks a file or a part of it. This function works on
+    <em>open files</em>; the file handle should be specified as the first
+    argument. The optional arguments <code>start</code> and
+    <code>length</code> can be used to specify a starting point and its
+    length; both should be numbers.<br />
+    Returns <code>true</code> if the operation was successful;
+    in case of error, it returns <code>nil</code> plus an error string.
+    </dd>
+</dl>
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer">Valid XHTML 1.0!</a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->
+
+</body>
+</html>

@@ -1,0 +1,1049 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><strong>pl.Date</strong></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>pl.Date</code></h1>
+<p>Date and Date Format classes.</p>
+<p> See  <a href="../manual/05-dates.md.html#">the Guide</a>.</p>
+
+<p> NOTE: the date module is deprecated! see
+ https://github.com/lunarmodules/Penlight/issues/285</p>
+
+<p> Dependencies: <a href="../libraries/pl.class.html#">pl.class</a>, <a href="../libraries/pl.stringx.html#">pl.stringx</a>, <a href="../libraries/pl.utils.html#">pl.utils</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Date:set">Date:set (t)</a></td>
+	<td class="summary">set the current time of this Date object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.tzone">Date.tzone (ts)</a></td>
+	<td class="summary">get the time zone offset from UTC.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:toUTC">Date:toUTC ()</a></td>
+	<td class="summary">convert this date to UTC.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:toLocal">Date:toLocal ()</a></td>
+	<td class="summary">convert this UTC date to local.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:year">Date:year (y)</a></td>
+	<td class="summary">set the year.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:month">Date:month (m)</a></td>
+	<td class="summary">set the month.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:day">Date:day (d)</a></td>
+	<td class="summary">set the day.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:hour">Date:hour (h)</a></td>
+	<td class="summary">set the hour.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:min">Date:min (min)</a></td>
+	<td class="summary">set the minutes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:sec">Date:sec (sec)</a></td>
+	<td class="summary">set the seconds.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:yday">Date:yday (yday)</a></td>
+	<td class="summary">set the day of year.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:year">Date:year (y)</a></td>
+	<td class="summary">get the year.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:month">Date:month ()</a></td>
+	<td class="summary">get the month.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:day">Date:day ()</a></td>
+	<td class="summary">get the day.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:hour">Date:hour ()</a></td>
+	<td class="summary">get the hour.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:min">Date:min ()</a></td>
+	<td class="summary">get the minutes.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:sec">Date:sec ()</a></td>
+	<td class="summary">get the seconds.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:yday">Date:yday ()</a></td>
+	<td class="summary">get the day of year.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:weekday_name">Date:weekday_name (full)</a></td>
+	<td class="summary">name of day of week.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:month_name">Date:month_name (full)</a></td>
+	<td class="summary">name of month.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:is_weekend">Date:is_weekend ()</a></td>
+	<td class="summary">is this day on a weekend?.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:add">Date:add (t)</a></td>
+	<td class="summary">add to a date object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:last_day">Date:last_day ()</a></td>
+	<td class="summary">last day of the month.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:diff">Date:diff (other)</a></td>
+	<td class="summary">difference between two Date objects.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:__tostring">Date:__tostring ()</a></td>
+	<td class="summary">long numerical ISO data format version of this date.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:__eq">Date:__eq (other)</a></td>
+	<td class="summary">equality between Date objects.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:__lt">Date:__lt (other)</a></td>
+	<td class="summary">ordering between Date objects.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:__sub">Date:__sub ()</a></td>
+	<td class="summary">difference between Date objects.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date:__add">Date:__add (other)</a></td>
+	<td class="summary">add a date and an interval.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Interval">Date.Interval (t)</a></td>
+	<td class="summary">Date.Interval constructor</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Interval:__tostring">Date.Interval:__tostring ()</a></td>
+	<td class="summary">If it's an interval then the format is '2 hours 29 sec' etc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Format">Date.Format (fmt.)</a></td>
+	<td class="summary">Date.Format constructor.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Format:parse">Date.Format:parse (str)</a></td>
+	<td class="summary">parse a string into a Date object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Format:tostring">Date.Format:tostring (d)</a></td>
+	<td class="summary">convert a Date object into a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Date.Format:US_order">Date.Format:US_order (yesno)</a></td>
+	<td class="summary">force US order in dates like 9/11/2001</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.Date:Date">pl.Date:Date (t, ...)</a></td>
+	<td class="summary">Date constructor.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Date:set"></a>
+    <strong>Date:set (t)</strong>
+    </dt>
+    <dd>
+    set the current time of this Date object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">int</span></span>
+         seconds since epoch
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.tzone"></a>
+    <strong>Date.tzone (ts)</strong>
+    </dt>
+    <dd>
+    get the time zone offset from UTC.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ts</span>
+            <span class="types"><span class="type">int</span></span>
+         seconds ahead of UTC
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:toUTC"></a>
+    <strong>Date:toUTC ()</strong>
+    </dt>
+    <dd>
+    convert this date to UTC.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:toLocal"></a>
+    <strong>Date:toLocal ()</strong>
+    </dt>
+    <dd>
+    convert this UTC date to local.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:year"></a>
+    <strong>Date:year (y)</strong>
+    </dt>
+    <dd>
+    set the year.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         Four-digit year
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:month"></a>
+    <strong>Date:month (m)</strong>
+    </dt>
+    <dd>
+    set the month.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+            <span class="types"><span class="type">int</span></span>
+         month
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:day"></a>
+    <strong>Date:day (d)</strong>
+    </dt>
+    <dd>
+    set the day.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">d</span>
+            <span class="types"><span class="type">int</span></span>
+         day
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:hour"></a>
+    <strong>Date:hour (h)</strong>
+    </dt>
+    <dd>
+    set the hour.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">h</span>
+            <span class="types"><span class="type">int</span></span>
+         hour
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:min"></a>
+    <strong>Date:min (min)</strong>
+    </dt>
+    <dd>
+    set the minutes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">min</span>
+            <span class="types"><span class="type">int</span></span>
+         minutes
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:sec"></a>
+    <strong>Date:sec (sec)</strong>
+    </dt>
+    <dd>
+    set the seconds.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sec</span>
+            <span class="types"><span class="type">int</span></span>
+         seconds
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:yday"></a>
+    <strong>Date:yday (yday)</strong>
+    </dt>
+    <dd>
+    set the day of year.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">yday</span>
+            <span class="types"><span class="type">int</span></span>
+         day of year
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:year"></a>
+    <strong>Date:year (y)</strong>
+    </dt>
+    <dd>
+    get the year.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         Four-digit year
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:month"></a>
+    <strong>Date:month ()</strong>
+    </dt>
+    <dd>
+    get the month.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:day"></a>
+    <strong>Date:day ()</strong>
+    </dt>
+    <dd>
+    get the day.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:hour"></a>
+    <strong>Date:hour ()</strong>
+    </dt>
+    <dd>
+    get the hour.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:min"></a>
+    <strong>Date:min ()</strong>
+    </dt>
+    <dd>
+    get the minutes.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:sec"></a>
+    <strong>Date:sec ()</strong>
+    </dt>
+    <dd>
+    get the seconds.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:yday"></a>
+    <strong>Date:yday ()</strong>
+    </dt>
+    <dd>
+    get the day of year.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:weekday_name"></a>
+    <strong>Date:weekday_name (full)</strong>
+    </dt>
+    <dd>
+    name of day of week.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">full</span>
+            <span class="types"><span class="type">bool</span></span>
+         abbreviated if true, full otherwise.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        name
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:month_name"></a>
+    <strong>Date:month_name (full)</strong>
+    </dt>
+    <dd>
+    name of month.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">full</span>
+            <span class="types"><span class="type">int</span></span>
+         abbreviated if true, full otherwise.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        name
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:is_weekend"></a>
+    <strong>Date:is_weekend ()</strong>
+    </dt>
+    <dd>
+    is this day on a weekend?.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:add"></a>
+    <strong>Date:add (t)</strong>
+    </dt>
+    <dd>
+    add to a date object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         a table containing one of the following keys and a value:
+ one of <a href="../classes/pl.Date.html#Date:year">year</a>,<a href="../classes/pl.Date.html#Date:month">month</a>,<a href="../classes/pl.Date.html#Date:day">day</a>,<a href="../classes/pl.Date.html#Date:hour">hour</a>,<a href="../classes/pl.Date.html#Date:min">min</a>,<a href="../classes/pl.Date.html#Date:sec">sec</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        this date
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:last_day"></a>
+    <strong>Date:last_day ()</strong>
+    </dt>
+    <dd>
+    last day of the month.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        int day
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:diff"></a>
+    <strong>Date:diff (other)</strong>
+    </dt>
+    <dd>
+    difference between two Date objects.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+            <span class="types"><a class="type" href="../classes/pl.Date.html">Date</a></span>
+         Date object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/pl.Date.html#Date.Interval">Date.Interval</a></span>
+        object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:__tostring"></a>
+    <strong>Date:__tostring ()</strong>
+    </dt>
+    <dd>
+    long numerical ISO data format version of this date.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:__eq"></a>
+    <strong>Date:__eq (other)</strong>
+    </dt>
+    <dd>
+    equality between Date objects.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:__lt"></a>
+    <strong>Date:__lt (other)</strong>
+    </dt>
+    <dd>
+    ordering between Date objects.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:__sub"></a>
+    <strong>Date:__sub ()</strong>
+    </dt>
+    <dd>
+    difference between Date objects.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date:__add"></a>
+    <strong>Date:__add (other)</strong>
+    </dt>
+    <dd>
+    add a date and an interval.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+         either a <a href="../classes/pl.Date.html#Date.Interval">Date.Interval</a> object or a table such as
+ passed to <a href="../classes/pl.Date.html#Date:add">Date:add</a>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.Interval"></a>
+    <strong>Date.Interval (t)</strong>
+    </dt>
+    <dd>
+    Date.Interval constructor
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">int</span></span>
+         an interval in seconds
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.Interval:__tostring"></a>
+    <strong>Date.Interval:__tostring ()</strong>
+    </dt>
+    <dd>
+    If it's an interval then the format is '2 hours 29 sec' etc.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.Format"></a>
+    <strong>Date.Format (fmt.)</strong>
+    </dt>
+    <dd>
+    Date.Format constructor.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fmt.</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A string where the following fields are significant:</p>
+
+<ul>
+    <li>d day (either d or dd)</li>
+    <li>y year (either yy or yyy)</li>
+    <li>m month (either m or mm)</li>
+    <li>H hour (either H or HH)</li>
+    <li>M minute (either M or MM)</li>
+    <li>S second (either S or SS)</li>
+</ul>
+
+<p> Alternatively, if fmt is nil then this returns a flexible date parser
+ that tries various date/time schemes in turn:</p>
+
+<ul>
+    <li><a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>, like <code>2010-05-10 12:35:23Z</code> or <code>2008-10-03T14:30+02</code></li>
+    <li>times like 15:30 or 8.05pm  (assumed to be today's date)</li>
+    <li>dates like 28/10/02 (European order!) or 5 Feb 2012</li>
+    <li>month name like march or Mar (case-insensitive, first 3 letters); here the
+    day will be 1 and the year this current year</li>
+</ul>
+
+<p> A date in format 3 can be optionally followed by a time in format 2.
+ Please see test-date.lua in the tests folder for more examples.
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">df = Date.Format(<span class="string">"yyyy-mm-dd HH:MM:SS"</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Date.Format:parse"></a>
+    <strong>Date.Format:parse (str)</strong>
+    </dt>
+    <dd>
+    parse a string into a Date object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a date string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        date object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.Format:tostring"></a>
+    <strong>Date.Format:tostring (d)</strong>
+    </dt>
+    <dd>
+    convert a Date object into a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">d</span>
+         a date object, or a time value as returned by <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.time">os.time</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Date.Format:US_order"></a>
+    <strong>Date.Format:US_order (yesno)</strong>
+    </dt>
+    <dd>
+    force US order in dates like 9/11/2001
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">yesno</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.Date:Date"></a>
+    <strong>pl.Date:Date (t, ...)</strong>
+    </dt>
+    <dd>
+    Date constructor.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+
+<p> this can be either</p>
+
+<ul>
+    <li><code>nil</code> or empty - use current date and time</li>
+    <li>number - seconds since epoch (as returned by <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.time">os.time</a>). Resulting time is UTC</li>
+    <li><a href="../classes/pl.Date.html">Date</a> - make a copy of this date</li>
+    <li>table - table containing year, month, etc as for <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.time">os.time</a>. You may leave out year, month or day,
+    in which case current values will be used.</li>
+    <li>year (will be followed by month, day etc)</li>
+</ul>
+
+
+        </li>
+        <li><span class="parameter">...</span>
+          true if  Universal Coordinated Time, or two to five numbers: month,day,hour,min,sec
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,37 @@
+local url = require 'pl.url'
+local asserteq = require 'pl.test' . asserteq
+
+asserteq(url.quote(''), '')
+asserteq(url.quote('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+asserteq(url.quote('abcdefghijklmnopqrstuvwxyz'), 'abcdefghijklmnopqrstuvwxyz')
+asserteq(url.quote('0123456789'), '0123456789')
+asserteq(url.quote(' -_./'), '%20-_./')
+asserteq(url.quote('`~!@#$%^&*()'), '%60%7E%21%40%23%24%25%5E%26%2A%28%29')
+asserteq(url.quote('%2'), '%252')
+asserteq(url.quote('2R%1%%'), '2R%251%25%25')
+
+asserteq(url.quote('', true), '')
+asserteq(url.quote('ABCDEFGHIJKLMNOPQRSTUVWXYZ', true), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+asserteq(url.quote('abcdefghijklmnopqrstuvwxyz', true), 'abcdefghijklmnopqrstuvwxyz')
+asserteq(url.quote('0123456789'), '0123456789', true)
+asserteq(url.quote(' -_./', true), '+-_.%2F')
+asserteq(url.quote('`~!@#$%^&*()', true), '%60%7E%21%40%23%24%25%5E%26%2A%28%29')
+asserteq(url.quote('%2', true), '%252')
+asserteq(url.quote('2R%1%%', true), '2R%251%25%25')
+
+asserteq(url.unquote(''), '')
+asserteq(url.unquote('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+asserteq(url.unquote('abcdefghijklmnopqrstuvwxyz'), 'abcdefghijklmnopqrstuvwxyz')
+asserteq(url.unquote('0123456789'), '0123456789')
+asserteq(url.unquote(' -_./'), ' -_./')
+asserteq(url.unquote('+-_.%2F'), ' -_./')
+asserteq(url.unquote('%20-_./'), ' -_./')
+asserteq(url.unquote('%60%7E%21%40%23%24%25%5E%26%2A%28%29'), '`~!@#$%^&*()')
+asserteq(url.unquote('%252'), '%2')
+asserteq(url.unquote('2%52%1%%'), '2R%1%%')
+asserteq(url.unquote('2R%251%25%25'), '2R%1%%')
+
+asserteq(url.quote(true), true)
+asserteq(url.quote(42), 42)
+asserteq(url.unquote(true), true)
+asserteq(url.unquote(42), 42)

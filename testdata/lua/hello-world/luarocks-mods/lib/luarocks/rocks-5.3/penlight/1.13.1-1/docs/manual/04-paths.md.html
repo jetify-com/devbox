@@ -1,0 +1,329 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Working_with_Paths">Working with Paths </a></li>
+<li><a href="#File_Operations">File Operations </a></li>
+<li><a href="#Directory_Operations">Directory Operations </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><strong>Paths and Directories</strong></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h2>Paths and Directories</h2>
+
+<p><a name="Working_with_Paths"></a></p>
+<h3>Working with Paths</h3>
+
+<p>Programs should not depend on quirks of your operating system. They will be
+harder to read, and need to be ported for other systems.  The worst of course is
+hardcoding paths like 'c:\' in programs, and wondering why Vista complains so
+much. But even something like <code>dir..&apos;\&apos;..file</code> is a problem, since Unix can't
+understand backslashes in this way. <code>dir..&apos;/&apos;..file</code> is <em>usually</em> portable, but
+it's best to put this all into a simple function, <a href="../libraries/pl.path.html#join">path.join</a>. If you
+consistently use <a href="../libraries/pl.path.html#join">path.join</a>, then it's much easier to write cross-platform code,
+since it handles the directory separator for you.</p>
+
+<p><a href="../libraries/pl.path.html#">pl.path</a> provides the same functionality as Python's <code>os.path</code> module (11.1).</p>
+
+
+<pre>
+&gt; p = <span class="string">'c:\\bonzo\\DOG.txt'</span>
+&gt; = path.normcase (p)  <span class="comment">---&gt; only makes sense on Windows
+</span>c:\bonzo\dog.txt
+&gt; = path.splitext (p)
+c:\bonzo\DOG    .txt
+&gt; = path.extension (p)
+.txt
+&gt; = path.basename (p)
+DOG.txt
+&gt; = path.exists(p)
+<span class="keyword">false</span>
+&gt; = path.join (<span class="string">'fred'</span>,<span class="string">'alice.txt'</span>)
+fred\alice.txt
+&gt; = path.exists <span class="string">'pretty.lua'</span>
+<span class="keyword">true</span>
+&gt; = path.getsize <span class="string">'pretty.lua'</span>
+<span class="number">2125</span>
+&gt; = path.isfile <span class="string">'pretty.lua'</span>
+<span class="keyword">true</span>
+&gt; = path.isdir <span class="string">'pretty.lua'</span>
+<span class="keyword">false</span>
+</pre>
+
+<p>It is very important for all programmers, not just on Unix, to only write to
+where they are allowed to write. <a href="../libraries/pl.path.html#expanduser">path.expanduser</a> will expand '~' (tilde) into
+the home directory. Depending on your OS, this will be a guaranteed place where
+you can create files:</p>
+
+
+<pre>
+&gt; = path.expanduser <span class="string">'~/mydata.txt'</span>
+<span class="string">'C:\Documents and Settings\SJDonova/mydata.txt'</span>
+
+&gt; = path.expanduser <span class="string">'~/mydata.txt'</span>
+/home/sdonovan/mydata.txt
+</pre>
+
+<p>Under Windows, <a href="https://www.lua.org/manual/5.1/manual.html#pdf-os.tmpname">os.tmpname</a> returns a path which leads to your drive root full of
+temporary files. (And increasingly, you do not have access to this root folder.)
+This is corrected by <a href="../libraries/pl.path.html#tmpname">path.tmpname</a>, which uses the environment variable TMP:</p>
+
+
+<pre>
+&gt; <span class="global">os</span>.tmpname()  <span class="comment">-- not a good place to put temporary files!
+</span><span class="string">'\s25g.'</span>
+&gt; path.tmpname()
+<span class="string">'C:\DOCUME~1\SJDonova\LOCALS~1\Temp\s25g.1'</span>
+</pre>
+
+<p>A useful extra function is <a href="../libraries/pl.path.html#package_path">pl.path.package_path</a>, which will tell you the path
+of a particular Lua module.  So on my system, <code>package_path(&apos;pl.path&apos;)</code> returns
+'C:\Program Files\Lua\5.1\lualibs\pl\path.lua', and <code>package_path(&apos;ifs&apos;)</code> returns
+'C:\Program Files\Lua\5.1\clibs\lfs.dll'. It is implemented in terms of
+<a href="https://www.lua.org/manual/5.1/manual.html#pdf-package.searchpath">package.searchpath</a>, which is a new function in Lua 5.2 which has been
+implemented for Lua 5.1 in Penlight.</p>
+
+<p><a name="File_Operations"></a></p>
+<h3>File Operations</h3>
+
+<p><a href="../libraries/pl.file.html#">pl.file</a> is a new module that provides more sensible names for common file
+operations. For instance, <a href="https://www.lua.org/manual/5.1/manual.html#pdf-file:read">file.read</a> and <a href="https://www.lua.org/manual/5.1/manual.html#pdf-file:write">file.write</a> are aliases for
+<a href="../libraries/pl.utils.html#readfile">utils.readfile</a> and <a href="../libraries/pl.utils.html#writefile">utils.writefile</a>.</p>
+
+<p>Smaller files can be efficiently read and written in one operation. <a href="https://www.lua.org/manual/5.1/manual.html#pdf-file:read">file.read</a>
+is passed a filename and returns the contents as a string, if successful; if not,
+then it returns <code>nil</code> and the actual error message. There is an optional boolean
+parameter if you want the file to be read in binary mode (this makes no
+difference on Unix but remains important with Windows.)</p>
+
+<p>In previous versions of Penlight, <a href="../libraries/pl.utils.html#readfile">utils.readfile</a> would read standard input if
+the file was not specified, but this can lead to nasty bugs; use <code>io.read &apos;*a&apos;</code>
+to grab all of standard input.</p>
+
+<p>Similarly, <a href="https://www.lua.org/manual/5.1/manual.html#pdf-file:write">file.write</a> takes a filename and a string which will be written to
+that file.</p>
+
+<p>For example, this little script converts a file into upper case:</p>
+
+
+<pre>
+<span class="global">require</span> <span class="string">'pl'</span>
+<span class="global">assert</span>(#arg == <span class="number">2</span>, <span class="string">'supply two filenames'</span>)
+text = <span class="global">assert</span>(file.read(arg[<span class="number">1</span>]))
+<span class="global">assert</span>(file.write(arg[<span class="number">2</span>],text:upper()))
+</pre>
+
+<p>Copying files is suprisingly tricky. <a href="../libraries/pl.file.html#copy">file.copy</a> and <a href="../libraries/pl.file.html#move">file.move</a> attempt to use
+the best implementation possible. On Windows, they link to the API functions
+<code>CopyFile</code> and <code>MoveFile</code>, but only if the <code>alien</code> package is installed (this is
+true for Lua for Windows.) Otherwise, the system copy command is used. This can
+be ugly when writing Windows GUI applications, because of the dreaded flashing
+black-box problem with launching processes.</p>
+
+<p><a name="Directory_Operations"></a></p>
+<h3>Directory Operations</h3>
+
+<p><a href="../libraries/pl.dir.html#">pl.dir</a> provides some useful functions for working with directories. <code>fnmatch</code>
+will match a filename against a shell pattern, and <code>filter</code> will return any files
+in the supplied list which match the given pattern, which correspond to the
+functions in the Python <code>fnmatch</code> module. <code>getdirectories</code> will return all
+directories contained in a directory, and <code>getfiles</code> will return all files in a
+directory which match a shell pattern. These functions return the files as a
+table, unlike <a href="http://stevedonovan.github.io/lua-stdlibs/modules/lfs.html#dir">lfs.dir</a> which returns an iterator.)</p>
+
+<p><a href="../libraries/pl.dir.html#makepath">dir.makepath</a> can create a full path, creating subdirectories as necessary;
+<code>rmtree</code> is the Nuclear Option of file deleting functions, since it will
+recursively clear out and delete all directories found begining at a path (there
+is a similar function with this name in the Python <code>shutils</code> module.)</p>
+
+
+<pre>
+&gt; = dir.makepath <span class="string">'t\\temp\\bonzo'</span>
+&gt; = path.isdir <span class="string">'t\\temp\\bonzo'</span>
+<span class="keyword">true</span>
+&gt; = dir.rmtree <span class="string">'t'</span>
+</pre>
+
+<p><a href="../libraries/pl.dir.html#rmtree">dir.rmtree</a> depends on <a href="../libraries/pl.dir.html#walk">dir.walk</a>, which is a powerful tool for scanning a whole
+directory tree. Here is the implementation of <a href="../libraries/pl.dir.html#rmtree">dir.rmtree</a>:</p>
+
+
+<pre>
+<span class="comment">--- remove a whole directory tree.
+</span><span class="comment">-- @param path A directory path
+</span><span class="keyword">function</span> dir.rmtree(fullpath)
+    <span class="keyword">for</span> root,dirs,files <span class="keyword">in</span> dir.walk(fullpath) <span class="keyword">do</span>
+        <span class="keyword">for</span> i,f <span class="keyword">in</span> <span class="global">ipairs</span>(files) <span class="keyword">do</span>
+            <span class="global">os</span>.remove(path.join(root,f))
+        <span class="keyword">end</span>
+        lfs.rmdir(root)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre>
+
+<p><a href="../libraries/pl.dir.html#clonetree">dir.clonetree</a> clones directory trees. The first argument is a path that must
+exist, and the second path is the path to be cloned. (Note that this path cannot
+be <em>inside</em> the first path, since this leads to madness.)  By default, it will
+then just recreate the directory structure. You can in addition provide a
+function, which will be applied for all files found.</p>
+
+
+<pre>
+<span class="comment">-- make a copy of my libs folder
+</span><span class="global">require</span> <span class="string">'pl'</span>
+p1 = <span class="string">[[d:\dev\lua\libs]]</span>
+p2 = <span class="string">[[D:\dev\lua\libs\..\tests]]</span>
+dir.clonetree(p1,p2,dir.copyfile)
+</pre>
+
+<p>A more sophisticated version, which only copies files which have been modified:</p>
+
+
+<pre>
+<span class="comment">-- p1 and p2 as before, or from arg[1] and arg[2]
+</span>dir.clonetree(p1,p2,<span class="keyword">function</span>(f1,f2)
+  <span class="keyword">local</span> res
+  <span class="keyword">local</span> t1,t2 = path.getmtime(f1),path.getmtime(f2)
+  <span class="comment">-- f2 might not exist, so be careful about t2
+</span>  <span class="keyword">if</span> <span class="keyword">not</span> t2 <span class="keyword">or</span> t1 &gt; t2 <span class="keyword">then</span>
+    res = dir.copyfile(f1,f2)
+  <span class="keyword">end</span>
+  <span class="keyword">return</span> res <span class="comment">-- indicates successful operation
+</span><span class="keyword">end</span>)
+</pre>
+
+<p><a href="../libraries/pl.dir.html#clonetree">dir.clonetree</a> uses <a href="../libraries/pl.path.html#common_prefix">path.common_prefix</a>. With <code>p1</code> and <code>p2</code> defined above, the
+common path is 'd:\dev\lua'. So 'd:\dev\lua\libs\testfunc.lua' is copied to
+'d:\dev\lua\test\testfunc.lua', etc.</p>
+
+<p>If you need to find the common path of list of files, then <a href="../libraries/pl.tablex.html#reduce">tablex.reduce</a> will
+do the job:</p>
+
+
+<pre>
+&gt; p3 = <span class="string">[[d:\dev]]</span>
+&gt; = tablex.reduce(path.common_prefix,{p1,p2,p3})
+<span class="string">'d:\dev'</span>
+</pre>
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

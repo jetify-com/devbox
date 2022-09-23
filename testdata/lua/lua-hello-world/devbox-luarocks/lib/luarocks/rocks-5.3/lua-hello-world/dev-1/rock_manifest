@@ -1,0 +1,3 @@
+rock_manifest = {
+   ["lua-hello-world-dev-1.rockspec"] = "989c753032518608827fce69410a44db"
+}

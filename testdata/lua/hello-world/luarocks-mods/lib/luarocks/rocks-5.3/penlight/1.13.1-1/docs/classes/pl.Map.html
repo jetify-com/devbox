@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Methods">Methods</a></li>
+<li><a href="#Metamethods">Metamethods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><strong>pl.Map</strong></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>pl.Map</code></h1>
+<p>A Map class.</p>
+<p>
+
+
+
+<pre>
+&gt; Map = <span class="global">require</span> <span class="string">'pl.Map'</span>
+&gt; m = Map{one=<span class="number">1</span>,two=<span class="number">2</span>}
+&gt; m:update {three=<span class="number">3</span>,four=<span class="number">4</span>,two=<span class="number">20</span>}
+&gt; = m == M{one=<span class="number">1</span>,two=<span class="number">20</span>,three=<span class="number">3</span>,four=<span class="number">4</span>}
+<span class="keyword">true</span>
+</pre>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.class.html#">pl.class</a>, <a href="../libraries/pl.tablex.html#">pl.tablex</a>, <a href="../libraries/pl.pretty.html#">pl.pretty</a></p>
+</p>
+
+
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map.keys">pl.Map.keys</a></td>
+	<td class="summary">list of keys.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map.values">pl.Map.values</a></td>
+	<td class="summary">list of values.</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:iter">pl.Map:iter ()</a></td>
+	<td class="summary">return an iterator over all key-value pairs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:items">pl.Map:items ()</a></td>
+	<td class="summary">return a List of all key-value pairs, sorted by the keys.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:setdefault">pl.Map:setdefault (key, default)</a></td>
+	<td class="summary">set a value in the map if it doesn't exist yet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:len">pl.Map:len ()</a></td>
+	<td class="summary">size of map.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:set">pl.Map:set (key, val)</a></td>
+	<td class="summary">put a value into the map.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:get">pl.Map:get (key)</a></td>
+	<td class="summary">get a value from the map.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:getvalues">pl.Map:getvalues (keys)</a></td>
+	<td class="summary">get a list of values indexed by a list of keys.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:update">pl.Map:update (table)</a></td>
+	<td class="summary">update the map using key/value pairs from another table.</td>
+	</tr>
+</table>
+<h2><a href="#Metamethods">Metamethods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:__eq">pl.Map:__eq (m)</a></td>
+	<td class="summary">equality between maps.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.Map:__tostring">pl.Map:__tostring ()</a></td>
+	<td class="summary">string representation of a map.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.Map.keys"></a>
+    <strong>pl.Map.keys</strong>
+    </dt>
+    <dd>
+    list of keys.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map.values"></a>
+    <strong>pl.Map.values</strong>
+    </dt>
+    <dd>
+    list of values.
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.Map:iter"></a>
+    <strong>pl.Map:iter ()</strong>
+    </dt>
+    <dd>
+    return an iterator over all key-value pairs.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:items"></a>
+    <strong>pl.Map:items ()</strong>
+    </dt>
+    <dd>
+    return a List of all key-value pairs, sorted by the keys.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:setdefault"></a>
+    <strong>pl.Map:setdefault (key, default)</strong>
+    </dt>
+    <dd>
+    set a value in the map if it doesn't exist yet.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         the key
+        </li>
+        <li><span class="parameter">default</span>
+         value to set
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the value stored in the map (existing value, or the new value)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:len"></a>
+    <strong>pl.Map:len ()</strong>
+    </dt>
+    <dd>
+    size of map.
+ note: this is a relatively expensive operation!
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:set"></a>
+    <strong>pl.Map:set (key, val)</strong>
+    </dt>
+    <dd>
+    put a value into the map.
+ This will remove the key if the value is <code>nil</code>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         the key
+        </li>
+        <li><span class="parameter">val</span>
+         the value
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:get"></a>
+    <strong>pl.Map:get (key)</strong>
+    </dt>
+    <dd>
+    get a value from the map.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         the key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the value, or nil if not found.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:getvalues"></a>
+    <strong>pl.Map:getvalues (keys)</strong>
+    </dt>
+    <dd>
+    get a list of values indexed by a list of keys.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">keys</span>
+         a list-like table of keys
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:update"></a>
+    <strong>pl.Map:update (table)</strong>
+    </dt>
+    <dd>
+    update the map using key/value pairs from another table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+            <span class="types"><span class="type">tab</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Metamethods"></a>Metamethods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.Map:__eq"></a>
+    <strong>pl.Map:__eq (m)</strong>
+    </dt>
+    <dd>
+    equality between maps.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">m</span>
+            <span class="types"><a class="type" href="../classes/pl.Map.html">Map</a></span>
+         another map.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.Map:__tostring"></a>
+    <strong>pl.Map:__tostring ()</strong>
+    </dt>
+    <dd>
+    string representation of a map.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

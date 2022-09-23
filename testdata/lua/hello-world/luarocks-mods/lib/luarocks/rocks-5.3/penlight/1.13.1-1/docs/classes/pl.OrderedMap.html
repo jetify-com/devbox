@@ -1,0 +1,417 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Methods">Methods</a></li>
+<li><a href="#Metamethods">Metamethods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><a href="../classes/pl.List.html">pl.List</a></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><strong>pl.OrderedMap</strong></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>pl.OrderedMap</code></h1>
+<p>OrderedMap, a map which preserves ordering.</p>
+<p> Derived from <a href="../classes/pl.Map.html#">pl.Map</a>.</p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.tablex.html#">pl.tablex</a>, <a href="../libraries/pl.class.html#">pl.class</a>, <a href="../classes/pl.List.html#">pl.List</a>, <a href="../classes/pl.Map.html#">pl.Map</a></p>
+
+
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:_init">pl.OrderedMap:_init (t)</a></td>
+	<td class="summary">construct an OrderedMap.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:update">pl.OrderedMap:update (t)</a></td>
+	<td class="summary">update an OrderedMap using a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:set">pl.OrderedMap:set (key, val)</a></td>
+	<td class="summary">set the key's value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:insert">pl.OrderedMap:insert (pos, key, val)</a></td>
+	<td class="summary">insert a key/value pair before a given position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:keys">pl.OrderedMap:keys ()</a></td>
+	<td class="summary">return the keys in order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:values">pl.OrderedMap:values ()</a></td>
+	<td class="summary">return the values in order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:sort">pl.OrderedMap:sort (cmp)</a></td>
+	<td class="summary">sort the keys.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:iter">pl.OrderedMap:iter ()</a></td>
+	<td class="summary">iterate over key-value pairs in order.</td>
+	</tr>
+</table>
+<h2><a href="#Metamethods">Metamethods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:__pairs">pl.OrderedMap:__pairs ()</a></td>
+	<td class="summary">iterate over an ordered map (5.2).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pl.OrderedMap:__tostring">pl.OrderedMap:__tostring ()</a></td>
+	<td class="summary">string representation of an ordered map.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.OrderedMap:_init"></a>
+    <strong>pl.OrderedMap:_init (t)</strong>
+    </dt>
+    <dd>
+    construct an OrderedMap.
+ Will throw an error if the argument is bad.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         optional initialization table, same as for <a href="../classes/pl.OrderedMap.html#pl.OrderedMap:update">OrderedMap:update</a>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:update"></a>
+    <strong>pl.OrderedMap:update (t)</strong>
+    </dt>
+    <dd>
+    update an OrderedMap using a table.
+ If the table is itself an OrderedMap, then its entries will be appended.
+ if it s a table of the form <code>{{key1=val1},{key2=val2},...}</code> these will be appended.</p>
+
+<p> Otherwise, it is assumed to be a map-like table, and order of extra entries is arbitrary.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">tab</span></span>
+         a table.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the map, or nil in case of error</li>
+        <li>
+        the error message</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:set"></a>
+    <strong>pl.OrderedMap:set (key, val)</strong>
+    </dt>
+    <dd>
+    set the key's value.    This key will be appended at the end of the map.</p>
+
+<p> If the value is nil, then the key is removed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         the key
+        </li>
+        <li><span class="parameter">val</span>
+         the value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the map
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:insert"></a>
+    <strong>pl.OrderedMap:insert (pos, key, val)</strong>
+    </dt>
+    <dd>
+    insert a key/value pair before a given position.
+ Note: if the map already contains the key, then this effectively
+ moves the item to the new position by first removing at the old position.
+ Has no effect if the key does not exist and val is nil
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pos</span>
+            <span class="types"><span class="type">int</span></span>
+         a position starting at 1
+        </li>
+        <li><span class="parameter">key</span>
+         the key
+        </li>
+        <li><span class="parameter">val</span>
+         the value; if nil use the old value
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:keys"></a>
+    <strong>pl.OrderedMap:keys ()</strong>
+    </dt>
+    <dd>
+    return the keys in order.
+ (Not a copy!)
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        List
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:values"></a>
+    <strong>pl.OrderedMap:values ()</strong>
+    </dt>
+    <dd>
+    return the values in order.
+ this is relatively expensive.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        List
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:sort"></a>
+    <strong>pl.OrderedMap:sort (cmp)</strong>
+    </dt>
+    <dd>
+    sort the keys.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmp</span>
+            <span class="types"><span class="type">func</span></span>
+         a comparison function as for <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.sort">table.sort</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the map
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:iter"></a>
+    <strong>pl.OrderedMap:iter ()</strong>
+    </dt>
+    <dd>
+    iterate over key-value pairs in order.
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Metamethods"></a>Metamethods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "pl.OrderedMap:__pairs"></a>
+    <strong>pl.OrderedMap:__pairs ()</strong>
+    </dt>
+    <dd>
+    iterate over an ordered map (5.2).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pl.OrderedMap:__tostring"></a>
+    <strong>pl.OrderedMap:__tostring ()</strong>
+    </dt>
+    <dd>
+    string representation of an ordered map.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

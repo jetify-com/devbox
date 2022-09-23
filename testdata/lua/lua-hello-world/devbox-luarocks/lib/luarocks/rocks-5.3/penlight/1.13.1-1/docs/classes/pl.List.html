@@ -1,0 +1,1443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Penlight Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Penlight</h1>
+
+<ul>
+  <li><a href="https://github.com/lunarmodules/Penlight">GitHub Project</a></li>
+  <li><a href="../index.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#metamethods">metamethods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/pl.Date.html">pl.Date</a></li>
+  <li><strong>pl.List</strong></li>
+  <li><a href="../classes/pl.Map.html">pl.Map</a></li>
+  <li><a href="../classes/pl.MultiMap.html">pl.MultiMap</a></li>
+  <li><a href="../classes/pl.OrderedMap.html">pl.OrderedMap</a></li>
+  <li><a href="../classes/pl.Set.html">pl.Set</a></li>
+</ul>
+<h2>Libraries</h2>
+<ul class="nowrap">
+  <li><a href="../libraries/pl.html">pl</a></li>
+  <li><a href="../libraries/pl.app.html">pl.app</a></li>
+  <li><a href="../libraries/pl.array2d.html">pl.array2d</a></li>
+  <li><a href="../libraries/pl.class.html">pl.class</a></li>
+  <li><a href="../libraries/pl.compat.html">pl.compat</a></li>
+  <li><a href="../libraries/pl.comprehension.html">pl.comprehension</a></li>
+  <li><a href="../libraries/pl.config.html">pl.config</a></li>
+  <li><a href="../libraries/pl.data.html">pl.data</a></li>
+  <li><a href="../libraries/pl.dir.html">pl.dir</a></li>
+  <li><a href="../libraries/pl.file.html">pl.file</a></li>
+  <li><a href="../libraries/pl.func.html">pl.func</a></li>
+  <li><a href="../libraries/pl.import_into.html">pl.import_into</a></li>
+  <li><a href="../libraries/pl.input.html">pl.input</a></li>
+  <li><a href="../libraries/pl.lapp.html">pl.lapp</a></li>
+  <li><a href="../libraries/pl.lexer.html">pl.lexer</a></li>
+  <li><a href="../libraries/pl.luabalanced.html">pl.luabalanced</a></li>
+  <li><a href="../libraries/pl.operator.html">pl.operator</a></li>
+  <li><a href="../libraries/pl.path.html">pl.path</a></li>
+  <li><a href="../libraries/pl.permute.html">pl.permute</a></li>
+  <li><a href="../libraries/pl.pretty.html">pl.pretty</a></li>
+  <li><a href="../libraries/pl.seq.html">pl.seq</a></li>
+  <li><a href="../libraries/pl.sip.html">pl.sip</a></li>
+  <li><a href="../libraries/pl.strict.html">pl.strict</a></li>
+  <li><a href="../libraries/pl.stringio.html">pl.stringio</a></li>
+  <li><a href="../libraries/pl.stringx.html">pl.stringx</a></li>
+  <li><a href="../libraries/pl.tablex.html">pl.tablex</a></li>
+  <li><a href="../libraries/pl.template.html">pl.template</a></li>
+  <li><a href="../libraries/pl.test.html">pl.test</a></li>
+  <li><a href="../libraries/pl.text.html">pl.text</a></li>
+  <li><a href="../libraries/pl.types.html">pl.types</a></li>
+  <li><a href="../libraries/pl.url.html">pl.url</a></li>
+  <li><a href="../libraries/pl.utils.html">pl.utils</a></li>
+  <li><a href="../libraries/pl.xml.html">pl.xml</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+  <li><a href="../manual/02-arrays.md.html">Tables and Arrays</a></li>
+  <li><a href="../manual/03-strings.md.html">Strings. Higher-level operations on strings.</a></li>
+  <li><a href="../manual/04-paths.md.html">Paths and Directories</a></li>
+  <li><a href="../manual/05-dates.md.html">Date and Time</a></li>
+  <li><a href="../manual/06-data.md.html">Data</a></li>
+  <li><a href="../manual/07-functional.md.html">Functional Programming</a></li>
+  <li><a href="../manual/08-additional.md.html">Additional Libraries</a></li>
+  <li><a href="../manual/09-discussion.md.html">Technical Choices</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/seesubst.lua.html">seesubst.lua</a></li>
+  <li><a href="../examples/sipscan.lua.html">sipscan.lua</a></li>
+  <li><a href="../examples/symbols.lua.html">symbols.lua</a></li>
+  <li><a href="../examples/test-cmp.lua.html">test-cmp.lua</a></li>
+  <li><a href="../examples/test-data.lua.html">test-data.lua</a></li>
+  <li><a href="../examples/test-listcallbacks.lua.html">test-listcallbacks.lua</a></li>
+  <li><a href="../examples/test-pretty.lua.html">test-pretty.lua</a></li>
+  <li><a href="../examples/test-symbols.lua.html">test-symbols.lua</a></li>
+  <li><a href="../examples/testclone.lua.html">testclone.lua</a></li>
+  <li><a href="../examples/testconfig.lua.html">testconfig.lua</a></li>
+  <li><a href="../examples/testglobal.lua.html">testglobal.lua</a></li>
+  <li><a href="../examples/testinputfields.lua.html">testinputfields.lua</a></li>
+  <li><a href="../examples/testinputfields2.lua.html">testinputfields2.lua</a></li>
+  <li><a href="../examples/testxml.lua.html">testxml.lua</a></li>
+  <li><a href="../examples/which.lua.html">which.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>pl.List</code></h1>
+<p>Python-style list class.</p>
+<p> <strong>Please Note</strong>: methods that change the list will return the list.
+ This is to allow for method chaining, but please note that <code>ls = ls:sort()</code>
+ does not mean that a new copy of the list is made. In-place (mutable) methods
+ are marked as returning 'the list' in this documentation.</p>
+
+<p> See the Guide for further <a href="../manual/02-arrays.md.html#Python_style_Lists">discussion</a></p>
+
+<p> See <a href="http://www.python.org/doc/current/tut/tut.html">http://www.python.org/doc/current/tut/tut.html</a>, section 5.1</p>
+
+<p> <strong>Note</strong>: The comments before some of the functions are from the Python docs
+ and contain Python code.</p>
+
+<p> Written for Lua version Nick Trout 4.0; Redone for Lua 5.1, Steve Donovan.</p>
+
+<p> Dependencies: <a href="../libraries/pl.utils.html#">pl.utils</a>, <a href="../libraries/pl.tablex.html#">pl.tablex</a>, <a href="../libraries/pl.class.html#">pl.class</a></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#List.new">List.new ([t])</a></td>
+	<td class="summary">Create a new list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:clone">List:clone ()</a></td>
+	<td class="summary">Make a copy of an existing list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:append">List:append (i)</a></td>
+	<td class="summary">Add an item to the end of the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:extend">List:extend (L)</a></td>
+	<td class="summary">Extend the list by appending all the items in the given list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:insert">List:insert (i, x)</a></td>
+	<td class="summary">Insert an item at a given position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:put">List:put (x)</a></td>
+	<td class="summary">Insert an item at the begining of the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:remove">List:remove (i)</a></td>
+	<td class="summary">Remove an element given its index.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:remove_value">List:remove_value (x)</a></td>
+	<td class="summary">Remove the first item from the list whose value is given.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:pop">List:pop ([i])</a></td>
+	<td class="summary">Remove the item at the given position in the list, and return it.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:index">List:index (x[, idx=1])</a></td>
+	<td class="summary">Return the index in the list of the first item whose value is given.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:contains">List:contains (x)</a></td>
+	<td class="summary">Does this list contain the value?</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:count">List:count (x)</a></td>
+	<td class="summary">Return the number of times value appears in the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:sort">List:sort ([cmp='<'])</a></td>
+	<td class="summary">Sort the items of the list, in place.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:sorted">List:sorted ([cmp='<'])</a></td>
+	<td class="summary">Return a sorted copy of this list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:reverse">List:reverse ()</a></td>
+	<td class="summary">Reverse the elements of the list, in place.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:minmax">List:minmax ()</a></td>
+	<td class="summary">Return the minimum and the maximum value of the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:slice">List:slice (first, last)</a></td>
+	<td class="summary">Emulate list slicing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:clear">List:clear ()</a></td>
+	<td class="summary">Empty the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List.range">List.range (start[, finish[, incr=1]])</a></td>
+	<td class="summary">Emulate Python's range(x) function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:len">List:len ()</a></td>
+	<td class="summary">list:len() is the same as #list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:chop">List:chop (i1, i2)</a></td>
+	<td class="summary">Remove a subrange of elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:splice">List:splice (idx, list)</a></td>
+	<td class="summary">Insert a sublist into a list
+ equivalent to 's[idx:idx] = list' in Python</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:slice_assign">List:slice_assign (i1, i2, seq)</a></td>
+	<td class="summary">General slice assignment s[i1:i2] = seq.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:join">List:join ([delim=''])</a></td>
+	<td class="summary">Join the elements of a list using a delimiter.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:concat">List:concat ([delim=''])</a></td>
+	<td class="summary">Join a list of strings.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:foreach">List:foreach (fun, ...)</a></td>
+	<td class="summary">Call the function on each element of the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:foreachm">List:foreachm (name, ...)</a></td>
+	<td class="summary">Call the named method on each element of the list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:filter">List:filter (fun[, arg])</a></td>
+	<td class="summary">Create a list of all elements which match a function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List.split">List.split (s[, delim])</a></td>
+	<td class="summary">Split a string using a delimiter.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:map">List:map (fun, ...)</a></td>
+	<td class="summary">Apply a function to all elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:transform">List:transform (fun, ...)</a></td>
+	<td class="summary">Apply a function to all elements, in-place.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:map2">List:map2 (fun, ls, ...)</a></td>
+	<td class="summary">Apply a function to elements of two lists.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:mapm">List:mapm (name, ...)</a></td>
+	<td class="summary">apply a named method to all elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:reduce">List:reduce (fun)</a></td>
+	<td class="summary">'reduce' a list using a binary function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:partition">List:partition (fun, ...)</a></td>
+	<td class="summary">Partition a list using a classifier function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:iter">List:iter ()</a></td>
+	<td class="summary">return an iterator over all values.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List.iterate">List.iterate (seq)</a></td>
+	<td class="summary">Create an iterator over a seqence.</td>
+	</tr>
+</table>
+<h2><a href="#metamethods">metamethods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#List:__concat">List:__concat (L)</a></td>
+	<td class="summary">Concatenation operator.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:__eq">List:__eq (L)</a></td>
+	<td class="summary">Equality operator ==.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:__tostring">List:__tostring ()</a></td>
+	<td class="summary">How our list should be rendered as a string.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "List.new"></a>
+    <strong>List.new ([t])</strong>
+    </dt>
+    <dd>
+    Create a new list.  Can optionally pass a table;
+ passing another instance of List will cause a copy to be created;
+ this will return a plain table with an appropriate metatable.
+ we pass anything which isn't a simple table to iterate() to work out
+ an appropriate iterator
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+         An optional list-like table
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new List
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/pl.List.html#List.iterate">List.iterate</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">ls = List();  ls = List {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:clone"></a>
+    <strong>List:clone ()</strong>
+    </dt>
+    <dd>
+    Make a copy of an existing list.
+ The difference from a plain 'copy constructor' is that this returns
+ the actual List subtype.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:append"></a>
+    <strong>List:append (i)</strong>
+    </dt>
+    <dd>
+    Add an item to the end of the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+         An item
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:extend"></a>
+    <strong>List:extend (L)</strong>
+    </dt>
+    <dd>
+    Extend the list by appending all the items in the given list.
+ equivalent to 'a[len(a):] = L'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">L</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         Another List
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:insert"></a>
+    <strong>List:insert (i, x)</strong>
+    </dt>
+    <dd>
+    Insert an item at a given position.  i is the index of the
+ element before which to insert.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         index of element before whichh to insert
+        </li>
+        <li><span class="parameter">x</span>
+         A data item
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:put"></a>
+    <strong>List:put (x)</strong>
+    </dt>
+    <dd>
+    Insert an item at the begining of the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         a data item
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:remove"></a>
+    <strong>List:remove (i)</strong>
+    </dt>
+    <dd>
+    Remove an element given its index.
+ (equivalent of Python's del s[i])
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         the index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:remove_value"></a>
+    <strong>List:remove_value (x)</strong>
+    </dt>
+    <dd>
+    Remove the first item from the list whose value is given.
+ (This is called 'remove' in Python; renamed to avoid confusion
+ with table.remove)
+ Return nil if there is no such item.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A data value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:pop"></a>
+    <strong>List:pop ([i])</strong>
+    </dt>
+    <dd>
+    Remove the item at the given position in the list, and return it.
+ If no index is specified, a:pop() returns the last item in the list.
+ The item is also removed from the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         An index
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the item
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:index"></a>
+    <strong>List:index (x[, idx=1])</strong>
+    </dt>
+    <dd>
+    Return the index in the list of the first item whose value is given.
+ Return nil if there is no such item.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A data value
+        </li>
+        <li><span class="parameter">idx</span>
+            <span class="types"><span class="type">int</span></span>
+         where to start search
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the index, or nil if not found.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:contains"></a>
+    <strong>List:contains (x)</strong>
+    </dt>
+    <dd>
+    Does this list contain the value?
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A data value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or false
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:count"></a>
+    <strong>List:count (x)</strong>
+    </dt>
+    <dd>
+    Return the number of times value appears in the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A data value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        number of times x appears
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:sort"></a>
+    <strong>List:sort ([cmp='<'])</strong>
+    </dt>
+    <dd>
+    Sort the items of the list, in place.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmp</span>
+            <span class="types"><span class="type">func</span></span>
+         an optional comparison function
+         (<em>default</em> '<')
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:sorted"></a>
+    <strong>List:sorted ([cmp='<'])</strong>
+    </dt>
+    <dd>
+    Return a sorted copy of this list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmp</span>
+            <span class="types"><span class="type">func</span></span>
+         an optional comparison function
+         (<em>default</em> '<')
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:reverse"></a>
+    <strong>List:reverse ()</strong>
+    </dt>
+    <dd>
+    Reverse the elements of the list, in place.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:minmax"></a>
+    <strong>List:minmax ()</strong>
+    </dt>
+    <dd>
+    Return the minimum and the maximum value of the list.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        minimum value</li>
+        <li>
+        maximum value</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:slice"></a>
+    <strong>List:slice (first, last)</strong>
+    </dt>
+    <dd>
+    Emulate list slicing.   like  'list[first:last]' in Python.
+ If first or last are negative then they are relative to the end of the list
+ eg. slice(-2) gives last 2 entries in a list, and
+ slice(-4,-2) gives from -4th to -2nd
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">first</span>
+         An index
+        </li>
+        <li><span class="parameter">last</span>
+         An index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new List
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:clear"></a>
+    <strong>List:clear ()</strong>
+    </dt>
+    <dd>
+    Empty the list.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List.range"></a>
+    <strong>List.range (start[, finish[, incr=1]])</strong>
+    </dt>
+    <dd>
+    Emulate Python's range(x) function.
+ Include it in List table for tidiness
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start</span>
+            <span class="types"><span class="type">int</span></span>
+         A number
+        </li>
+        <li><span class="parameter">finish</span>
+            <span class="types"><span class="type">int</span></span>
+         A number greater than start; if absent,
+ then start is 1 and finish is start
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">incr</span>
+            <span class="types"><span class="type">int</span></span>
+         an increment (may be less than 1)
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a List from start .. finish
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">List.range(<span class="number">0</span>,<span class="number">3</span>) == List{<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>}</pre></li>
+        <li><pre class="example">List.range(<span class="number">4</span>) = List{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</pre></li>
+        <li><pre class="example">List.range(<span class="number">5</span>,<span class="number">1</span>,-<span class="number">1</span>) == List{<span class="number">5</span>,<span class="number">4</span>,<span class="number">3</span>,<span class="number">2</span>,<span class="number">1</span>}</pre></li>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:len"></a>
+    <strong>List:len ()</strong>
+    </dt>
+    <dd>
+    list:len() is the same as #list.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:chop"></a>
+    <strong>List:chop (i1, i2)</strong>
+    </dt>
+    <dd>
+    Remove a subrange of elements.
+ equivalent to 'del s[i1:i2]' in Python.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i1</span>
+            <span class="types"><span class="type">int</span></span>
+         start of range
+        </li>
+        <li><span class="parameter">i2</span>
+            <span class="types"><span class="type">int</span></span>
+         end of range
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:splice"></a>
+    <strong>List:splice (idx, list)</strong>
+    </dt>
+    <dd>
+    Insert a sublist into a list
+ equivalent to 's[idx:idx] = list' in Python
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">idx</span>
+            <span class="types"><span class="type">int</span></span>
+         index
+        </li>
+        <li><span class="parameter">list</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         list to insert
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">l = List{<span class="number">10</span>,<span class="number">20</span>}; l:splice(<span class="number">2</span>,{<span class="number">21</span>,<span class="number">22</span>});  <span class="global">assert</span>(l == List{<span class="number">10</span>,<span class="number">21</span>,<span class="number">22</span>,<span class="number">20</span>})</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:slice_assign"></a>
+    <strong>List:slice_assign (i1, i2, seq)</strong>
+    </dt>
+    <dd>
+    General slice assignment s[i1:i2] = seq.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i1</span>
+            <span class="types"><span class="type">int</span></span>
+          start index
+        </li>
+        <li><span class="parameter">i2</span>
+            <span class="types"><span class="type">int</span></span>
+          end index
+        </li>
+        <li><span class="parameter">seq</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         a list
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:join"></a>
+    <strong>List:join ([delim=''])</strong>
+    </dt>
+    <dd>
+    Join the elements of a list using a delimiter.
+ This method uses tostring on all elements.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">delim</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a delimiter string, can be empty.
+         (<em>default</em> '')
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:concat"></a>
+    <strong>List:concat ([delim=''])</strong>
+    </dt>
+    <dd>
+    Join a list of strings.  <br>
+ Uses <a href="https://www.lua.org/manual/5.1/manual.html#pdf-table.concat">table.concat</a> directly.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">delim</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a delimiter
+         (<em>default</em> '')
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:foreach"></a>
+    <strong>List:foreach (fun, ...)</strong>
+    </dt>
+    <dd>
+    Call the function on each element of the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function or callable object
+        </li>
+        <li><span class="parameter">...</span>
+         optional values to pass to function
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:foreachm"></a>
+    <strong>List:foreachm (name, ...)</strong>
+    </dt>
+    <dd>
+    Call the named method on each element of the list.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the method name
+        </li>
+        <li><span class="parameter">...</span>
+         optional values to pass to function
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:filter"></a>
+    <strong>List:filter (fun[, arg])</strong>
+    </dt>
+    <dd>
+    Create a list of all elements which match a function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a boolean function
+        </li>
+        <li><span class="parameter">arg</span>
+         optional argument to be passed as second argument of the predicate
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new filtered list.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List.split"></a>
+    <strong>List.split (s[, delim])</strong>
+    </dt>
+    <dd>
+    Split a string using a delimiter.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the string
+        </li>
+        <li><span class="parameter">delim</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the delimiter (default spaces)
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a List of strings
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.utils.html#split">pl.utils.split</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "List:map"></a>
+    <strong>List:map (fun, ...)</strong>
+    </dt>
+    <dd>
+    Apply a function to all elements.
+ Any extra arguments will be passed to the function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         arbitrary extra arguments.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list: {f(x) for x in self}
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.tablex.html#imap">pl.tablex.imap</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">List{<span class="string">'one'</span>,<span class="string">'two'</span>}:map(<span class="global">string</span>.upper) == {<span class="string">'ONE'</span>,<span class="string">'TWO'</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:transform"></a>
+    <strong>List:transform (fun, ...)</strong>
+    </dt>
+    <dd>
+    Apply a function to all elements, in-place.
+ Any extra arguments are passed to the function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         A function that takes at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         arbitrary extra arguments.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the list.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:map2"></a>
+    <strong>List:map2 (fun, ls, ...)</strong>
+    </dt>
+    <dd>
+    Apply a function to elements of two lists.
+ Any extra arguments will be passed to the function
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least two arguments
+        </li>
+        <li><span class="parameter">ls</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         another list
+        </li>
+        <li><span class="parameter">...</span>
+         arbitrary extra arguments.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list: {f(x,y) for x in self, for x in arg1}
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.tablex.html#imap2">pl.tablex.imap2</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "List:mapm"></a>
+    <strong>List:mapm (name, ...)</strong>
+    </dt>
+    <dd>
+    apply a named method to all elements.
+ Any extra arguments will be passed to the method.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         name of method
+        </li>
+        <li><span class="parameter">...</span>
+         extra arguments
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list of the results
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.seq.html#mapmethod">pl.seq.mapmethod</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "List:reduce"></a>
+    <strong>List:reduce (fun)</strong>
+    </dt>
+    <dd>
+    'reduce' a list using a binary function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of two arguments
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        result of the function
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../libraries/pl.tablex.html#reduce">pl.tablex.reduce</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "List:partition"></a>
+    <strong>List:partition (fun, ...)</strong>
+    </dt>
+    <dd>
+    Partition a list using a classifier function.
+ The function may return nil, but this will be converted to the string key '<nil>'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fun</span>
+            <span class="types"><span class="type">func</span></span>
+         a function of at least one argument
+        </li>
+        <li><span class="parameter">...</span>
+         will also be passed to the function
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/pl.MultiMap.html">MultiMap</a></span>
+        a table where the keys are the returned values, and the values are Lists
+ of values where the function returned that key.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/pl.MultiMap.html#">pl.MultiMap</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "List:iter"></a>
+    <strong>List:iter ()</strong>
+    </dt>
+    <dd>
+    return an iterator over all values.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List.iterate"></a>
+    <strong>List.iterate (seq)</strong>
+    </dt>
+    <dd>
+    Create an iterator over a seqence.
+ This captures the Python concept of 'sequence'.
+ For tables, iterates over all values with integer indices.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seq</span>
+         a sequence; a string (over characters), a table, a file object (over lines) or an iterator function
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="keyword">for</span> x <span class="keyword">in</span> iterate {<span class="number">1</span>,<span class="number">10</span>,<span class="number">22</span>,<span class="number">55</span>} <span class="keyword">do</span> <span class="global">io</span>.write(x,<span class="string">','</span>) <span class="keyword">end</span> ==&gt; <span class="number">1</span>,<span class="number">10</span>,<span class="number">22</span>,<span class="number">55</span></pre></li>
+        <li><pre class="example"><span class="keyword">for</span> ch <span class="keyword">in</span> iterate <span class="string">'help'</span> <span class="keyword">do</span> <span class="keyword">do</span> <span class="global">io</span>.write(ch,<span class="string">' '</span>) <span class="keyword">end</span> ==&gt; h e l p</pre></li>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="metamethods"></a>metamethods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "List:__concat"></a>
+    <strong>List:__concat (L)</strong>
+    </dt>
+    <dd>
+    Concatenation operator.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">L</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         another List
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new list consisting of the list with the elements of the new list appended
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:__eq"></a>
+    <strong>List:__eq (L)</strong>
+    </dt>
+    <dd>
+    Equality operator ==.   True iff all elements of two lists are equal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">L</span>
+            <span class="types"><a class="type" href="../classes/pl.List.html">List</a></span>
+         another List
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true or false
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "List:__tostring"></a>
+    <strong>List:__tostring ()</strong>
+    </dt>
+    <dd>
+    How our list should be rendered as a string.  Uses join().
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/pl.List.html#List:join">List:join</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
