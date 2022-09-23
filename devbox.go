@@ -150,7 +150,7 @@ func (d *Devbox) Shell() error {
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
-	plan, err := d.Plan()
+	plan, err := d.ShellPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}
