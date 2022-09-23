@@ -1,6 +1,13 @@
 {
+  "dev_packages": [
+    "python310",
+    "poetry"
+  ],
+  "runtime_packages": [
+    "python310"
+  ],
   "install_stage": {
-    "command": "poetry add pex -n --no-ansi \u0026\u0026 poetry install --no-dev -n --no-ansi",
+    "command": "poetry add pex -n --no-ansi && poetry install --no-dev -n --no-ansi",
     "input_files": [
       "."
     ]
@@ -14,11 +21,5 @@
       "."
     ]
   },
-  "dev_packages": [
-    "python310",
-    "poetry"
-  ],
-  "runtime_packages": [
-    "python310"
-  ]
+  "definitions": null
 }

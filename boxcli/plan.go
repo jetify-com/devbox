@@ -4,7 +4,8 @@
 package boxcli
 
 import (
-	"fmt"
+	"encoding/json"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -37,6 +38,9 @@ func runPlanCmd(cmd *cobra.Command, args []string) error {
 	if plan.Invalid() {
 		return plan.Error()
 	}
-	fmt.Println(plan)
-	return nil
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+	return errors.WithStack(enc.Encode(plan))
 }
