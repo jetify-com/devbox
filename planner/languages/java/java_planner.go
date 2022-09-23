@@ -38,8 +38,8 @@ const binUtils = "binutils"
 
 // builder tool specific names
 const (
-	MAVEN_TYPE     = "maven"
-	GRADLE_TYPE    = "gradle"
+	MavenType      = "maven"
+	GradleType     = "gradle"
 	mavenFileName  = "pom.xml"
 	gradleFileName = "build.gradle"
 )
@@ -65,11 +65,11 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 
 	pomXMLPath := filepath.Join(srcDir, mavenFileName)
 	buildGradlePath := filepath.Join(srcDir, gradleFileName)
-	var builderTool string = ""
+	var builderTool string
 	if plansdk.FileExists(pomXMLPath) {
-		builderTool = MAVEN_TYPE
+		builderTool = MavenType
 	} else if plansdk.FileExists(buildGradlePath) {
-		builderTool = GRADLE_TYPE
+		builderTool = GradleType
 	} else {
 		err := errors.New("Could not locate a Maven or Gradle file.")
 		return plan.WithError(err)
@@ -78,7 +78,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		return plan.WithError(err)
 	}
-	runtimePackages, err := p.runtimePackages(srcDir, builderTool)
+	runtimePackages, err := p.runtimePackages(builderTool)
 	if err != nil {
 		return plan.WithError(err)
 	}
@@ -86,7 +86,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if err != nil {
 		return plan.WithError(err)
 	}
-	installStage := p.installCommand(srcDir, builderTool)
+	installStage := p.installCommand(builderTool)
 	buildCommand := p.buildCommand(builderTool)
 	return &plansdk.Plan{
 		DevPackages:     devPackages,
@@ -113,12 +113,12 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 	}
 
 	devPackagesMap := map[string][]string{
-		MAVEN_TYPE: {
+		MavenType: {
 			defaultMaven,
 			javaPkg,
 			binUtils,
 		},
-		GRADLE_TYPE: {
+		GradleType: {
 			defaultGradle,
 			javaPkg,
 			binUtils,
@@ -128,12 +128,12 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 	return devPackagesMap[builderTool], nil
 }
 
-func (p *Planner) runtimePackages(srcDir string, builderTool string) ([]string, error) {
+func (p *Planner) runtimePackages(builderTool string) ([]string, error) {
 	runtimePackagesMap := map[string][]string{
-		MAVEN_TYPE: {
+		MavenType: {
 			binUtils,
 		},
-		GRADLE_TYPE: {
+		GradleType: {
 			binUtils,
 		},
 	}
@@ -143,10 +143,10 @@ func (p *Planner) runtimePackages(srcDir string, builderTool string) ([]string, 
 
 // This method is added because we plan to differentiate Gradle and Maven.
 // Otherwise, we could just assign the value without calling this.
-func (p *Planner) installCommand(srcDir string, builderTool string) string {
+func (p *Planner) installCommand(builderTool string) string {
 	installCommandMap := map[string]string{
-		MAVEN_TYPE:  "mvn clean install",
-		GRADLE_TYPE: "./gradlew build",
+		MavenType:  "mvn clean install",
+		GradleType: "./gradlew build",
 	}
 	return installCommandMap[builderTool]
 }
@@ -162,7 +162,7 @@ func (p *Planner) buildCommand(builderTool string) string {
 }
 
 func (p *Planner) startCommand(srcDir string, builderTool string) (string, error) {
-	if builderTool == MAVEN_TYPE {
+	if builderTool == MavenType {
 		pomXMLPath := fmt.Sprintf("%s/%s", srcDir, mavenFileName)
 		var parsedPom mvnparser.MavenProject
 		err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
@@ -170,7 +170,7 @@ func (p *Planner) startCommand(srcDir string, builderTool string) (string, error
 			return "", errors.WithMessage(err, "error parsing the pom file")
 		}
 		return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
-	} else if builderTool == GRADLE_TYPE {
+	} else if builderTool == GradleType {
 		return "export JAVA_HOME=./customjre && ./gradlew run", nil
 	}
 	return "", nil
@@ -191,7 +191,7 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 
 func parseJavaVersion(srcDir string, builderTool string) (int, error) {
 
-	if builderTool == MAVEN_TYPE {
+	if builderTool == MavenType {
 		pomXMLPath := filepath.Join(srcDir, mavenFileName)
 		var parsedPom mvnparser.MavenProject
 		// parsing pom.xml and putting its content in 'project'
@@ -207,11 +207,11 @@ func parseJavaVersion(srcDir string, builderTool string) (int, error) {
 			}
 			return sourceVersion, nil
 		}
-	} else if builderTool == GRADLE_TYPE {
+	} else if builderTool == GradleType {
 		buildGradlePath := filepath.Join(srcDir, gradleFileName)
 		readFile, err := os.Open(buildGradlePath)
 		if err != nil {
-			errors.WithMessage(err, "error parsing java version from gradle file")
+			return 0, errors.WithMessage(err, "error parsing java version from gradle file")
 		}
 		fileScanner := bufio.NewScanner(readFile)
 		fileScanner.Split(bufio.ScanLines)
