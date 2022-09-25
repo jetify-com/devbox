@@ -51,7 +51,7 @@ content readable.
 # 	  different shells.
 PATH="$(
 	IFS=:
-	for path_dir in $(echo $PATH); do
+	for path_dir in $(echo "$PATH"); do
 		case "$path_dir" in
 			$NIX_STORE/*) nix_path="${nix_path:+$nix_path:}${path_dir}" ;;
 			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
