@@ -41,7 +41,7 @@ func Open(dir string) (*Devbox, error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
 	if !plansdk.FileExists(cfgPath) {
-		return nil, missingDevboxJsonError(dir)
+		return nil, missingDevboxJSONError(dir)
 	}
 
 	cfg, err := ReadConfig(cfgPath)
@@ -219,7 +219,7 @@ func (d *Devbox) generateBuildFiles() error {
 	return generate(d.srcDir, buildPlan, buildFiles)
 }
 
-func missingDevboxJsonError(dir string) error {
+func missingDevboxJSONError(dir string) error {
 
 	// We try to prettify the `dir` before printing
 	if dir == "." {
