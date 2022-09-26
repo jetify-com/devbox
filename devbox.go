@@ -5,9 +5,11 @@
 package devbox
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
@@ -37,6 +39,10 @@ type Devbox struct {
 // Open opens a devbox by reading the config file in dir.
 func Open(dir string) (*Devbox, error) {
 	cfgPath := filepath.Join(dir, configFilename)
+
+	if !plansdk.FileExists(cfgPath) {
+		return nil, missingDevboxJSONError(dir)
+	}
 
 	cfg, err := ReadConfig(cfgPath)
 	if err != nil {
@@ -211,4 +217,24 @@ func (d *Devbox) generateBuildFiles() error {
 		return buildPlan.Error()
 	}
 	return generate(d.srcDir, buildPlan, buildFiles)
+}
+
+func missingDevboxJSONError(dir string) error {
+
+	// We try to prettify the `dir` before printing
+	if dir == "." {
+		dir = "this directory"
+	} else {
+		// Instead of a long absolute directory, print the relative directory
+
+		wd, err := os.Getwd()
+		// if an error occurs, then just use `dir`
+		if err == nil {
+			relDir, err := filepath.Rel(wd, dir)
+			if err == nil {
+				dir = relDir
+			}
+		}
+	}
+	return usererr.New("No devbox.json found in %s. Did you run `devbox init` yet?", dir)
 }
