@@ -312,6 +312,8 @@ var envToKeep = map[string]bool{
 	// Variables specific to running in a Nix shell and devbox shell.
 	"PARENT_PATH":               true, // The PATH of the parent shell (where `devbox shell` was invoked).
 	"__ETC_PROFILE_NIX_SOURCED": true, // Prevents Nix from being sourced again inside a devbox shell.
+	"NIX_SSL_CERT_FILE":         true, // The path to Nix-installed SSL certificates (used by some Nix programs).
+	"SSL_CERT_FILE":             true, // The path to non-Nix SSL certificates (used by some Nix and non-Nix programs).
 }
 
 // toKeepArgs takes a slice of environment variables in key=value format and
