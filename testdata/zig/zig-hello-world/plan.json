@@ -17,6 +17,5 @@
     "input_files": [
       "./zig-out/bin/"
     ]
-  },
-  "definitions": null
+  }
 }

@@ -52,7 +52,7 @@ type Plan struct {
 	// Ex: python main.py
 	StartStage *Stage `json:"start_stage,omitempty"`
 
-	Definitions []string `cue:"[...string]" json:"definitions"`
+	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
