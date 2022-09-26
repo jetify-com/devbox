@@ -2,6 +2,7 @@ package devbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -141,6 +142,109 @@ func TestConfigShellCmdsString(t *testing.T) {
 			if got.String() != test.want {
 				t.Errorf("got.String() != want\ngot:  %q\nwant: %q",
 					got.String(), test.want)
+			}
+		})
+	}
+}
+
+func ExampleConfigShellCmds_AppendScript() {
+	shCmds := ConfigShellCmds{}
+	shCmds.AppendScript(`
+		# This script will be unindented by the number of leading tabs
+		# on the first line.
+		if true; then
+			echo "this is always printed"
+		fi`,
+	)
+	b, _ := json.MarshalIndent(&shCmds, "", "  ")
+	fmt.Println(string(b))
+
+	// Output:
+	// [
+	//   "# This script will be unindented by the number of leading tabs",
+	//   "# on the first line.",
+	//   "if true; then",
+	//   "\techo \"this is always printed\"",
+	//   "fi"
+	// ]
+}
+
+func TestAppendScript(t *testing.T) {
+	tests := []struct {
+		name     string
+		script   string
+		wantCmds []string
+	}{
+		{
+			name:     "Empty",
+			script:   "",
+			wantCmds: nil,
+		},
+		{
+			name:     "OnlySpaces",
+			script:   " ",
+			wantCmds: nil,
+		},
+		{
+			name:     "Only newlines",
+			script:   "\r\n",
+			wantCmds: nil,
+		},
+		{
+			name:     "Simple",
+			script:   "echo test",
+			wantCmds: []string{"echo test"},
+		},
+		{
+			name:     "LeadingNewline",
+			script:   "\necho test",
+			wantCmds: []string{"echo test"},
+		},
+		{
+			name:     "LeadingNewlineAndSpace",
+			script:   "\n    echo test",
+			wantCmds: []string{"echo test"},
+		},
+		{
+			name:     "TrailingWhitespace",
+			script:   "echo test  \n",
+			wantCmds: []string{"echo test"},
+		},
+		{
+			name:   "SecondLineIndent",
+			script: "if true; then\n\techo test\nfi",
+			wantCmds: []string{
+				"if true; then",
+				"\techo test",
+				"fi",
+			},
+		},
+		{
+			name:   "Unindent",
+			script: "\n\tif true; then\n\t\techo test\n\tfi",
+			wantCmds: []string{
+				"if true; then",
+				"\techo test",
+				"fi",
+			},
+		},
+		{
+			name:   "UnindentTooFewTabs",
+			script: "\t\tif true; then\n\techo test\n\t\tfi",
+			wantCmds: []string{
+				"if true; then",
+				"\techo test",
+				"fi",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			shCmds := ConfigShellCmds{}
+			shCmds.AppendScript(test.script)
+			gotCmds := shCmds.Cmds
+			if diff := cmp.Diff(test.wantCmds, gotCmds); diff != "" {
+				t.Errorf("Got incorrect commands slice (-want +got):\n%s", diff)
 			}
 		})
 	}

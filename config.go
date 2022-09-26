@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/cuecfg"
@@ -91,6 +92,33 @@ type ConfigShellCmds struct {
 	//
 	MarshalAs CmdFormat
 	Cmds      []string
+}
+
+// AppendScript appends each line of a script to s.Cmds. It also applies the
+// following formatting rules:
+//
+//   - Trim leading newlines from the script.
+//   - Trim trailing whitespace from the script.
+//   - If the first line of the script begins with one or more tabs ('\t'), then
+//     unindent each line by that same number of tabs.
+//   - Remove trailing whitespace from each line.
+//
+// Note that unindenting only happens when a line starts with at least as many
+// tabs as the first line. If it starts with fewer tabs, then it is not
+// unindented at all.
+func (s *ConfigShellCmds) AppendScript(script string) {
+	script = strings.TrimLeft(script, "\r\n ")
+	script = strings.TrimRightFunc(script, unicode.IsSpace)
+	if len(script) == 0 {
+		return
+	}
+	prefixLen := strings.IndexFunc(script, func(r rune) bool { return r != '\t' })
+	prefix := strings.Repeat("\t", prefixLen)
+	for _, line := range strings.Split(script, "\n") {
+		line = strings.TrimRightFunc(line, unicode.IsSpace)
+		line = strings.TrimPrefix(line, prefix)
+		s.Cmds = append(s.Cmds, line)
+	}
 }
 
 // MarshalJSON marshals shell commands according to s.MarshalAs. It marshals
