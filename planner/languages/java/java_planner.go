@@ -136,6 +136,7 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 func (p *Planner) runtimePackages(builderTool string) []string {
 	return []string{
 		binUtils,
+		"fontconfig",
 	}
 }
 
@@ -169,7 +170,7 @@ func (p *Planner) startCommand(srcDir string, builderTool string) (string, error
 		}
 		return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
 	} else if builderTool == GradleType {
-		return "JAVA_HOME=./customjre && ./gradlew run", nil
+		return "export JAVA_HOME=./customjre && ./gradlew run", nil
 	}
 	return "", nil
 }
