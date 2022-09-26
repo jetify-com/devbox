@@ -12,13 +12,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 type Planner struct{}
 
-var NoElixirVersionSetErr = errors.New("No version set in mix.exs")
+var noElixirVersionSetErr = errors.New("No version set in mix.exs")
 
 var versionMap = map[string]string{
 	"1.9":  "elixir_1_9",
@@ -29,17 +30,13 @@ var versionMap = map[string]string{
 	"1.14": "elixir_1_14",
 }
 
-type ElixirProject struct {
+type elixirProject struct {
 	name          string
 	elixirPackage string
 }
 
 func getAvailableVersions(versionMap map[string]string) []string {
-	keys := make([]string, 0, len(versionMap))
-	for k := range versionMap {
-		keys = append(keys, k)
-	}
-	return keys
+	return lo.Keys(versionMap)
 }
 
 const defaultPkg = "elixir" // Default to the Nix Default
@@ -59,7 +56,8 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	elixirProject, err := getElixirProject(srcDir)
 	if err != nil {
-		log.Fatal(err)
+		plan := &plansdk.Plan{}
+		return plan.WithError(err)
 	}
 	return &plansdk.Plan{
 		DevPackages: []string{
@@ -89,7 +87,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	}
 }
 
-func getElixirProject(srcDir string) (*ElixirProject, error) {
+func getElixirProject(srcDir string) (*elixirProject, error) {
 	mixPath := filepath.Join(srcDir, "mix.exs")
 	mixContents, err := os.ReadFile(mixPath)
 	if err != nil {
@@ -104,7 +102,7 @@ func getElixirProject(srcDir string) (*ElixirProject, error) {
 		return nil, err
 	}
 
-	return &ElixirProject{
+	return &elixirProject{
 		name:          appname,
 		elixirPackage: elixirPackage,
 	}, nil
@@ -112,7 +110,7 @@ func getElixirProject(srcDir string) (*ElixirProject, error) {
 
 func getElixirPackage(mixContents string) (string, error) {
 	elixirVersion, err := parseElixirVersion(mixContents)
-	if errors.Is(err, NoElixirVersionSetErr) {
+	if errors.Is(err, noElixirVersionSetErr) {
 		log.Printf("No Elixir version specified in your mix.exs. Using default Nix version 1.13")
 		return defaultPkg, nil
 	}
@@ -129,7 +127,7 @@ func parseElixirVersion(mixContents string) (string, error) {
 	r := regexp.MustCompile(`(?:elixir: "\D*)([0-9].[0-9]*)`)
 	match := r.FindStringSubmatch(mixContents)
 	if len(match) < 1 {
-		return "", NoElixirVersionSetErr
+		return "", noElixirVersionSetErr
 	} else {
 		return match[1], nil
 	}

@@ -35,6 +35,7 @@ require (
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/samber/lo v1.28.2 // indirect
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
