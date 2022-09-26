@@ -1,7 +1,7 @@
 {
     "dev_packages": [
         "maven",
-        "jdk",
+        "jdk8",
         "binutils"
     ],
     "runtime_packages": [
@@ -14,7 +14,7 @@
         ]
     },
     "build_stage": {
-        "command": "jlink --verbose --add-modules ALL-MODULE-PATH --strip-debug --no-man-pages  --no-header-files  --compress=2 --output ./customjre",
+        "command": "jlink --verbose --add-modules ALL-MODULE-PATH --strip-debug --no-man-pages --no-header-files --compress=2 --output ./customjre",
         "input_files": [
             "."
         ]
