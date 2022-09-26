@@ -136,7 +136,6 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 func (p *Planner) runtimePackages(builderTool string) []string {
 	return []string{
 		binUtils,
-		"fontconfig",
 	}
 }
 
