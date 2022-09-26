@@ -1,4 +1,5 @@
 name: debug
+
 on:
   workflow_dispatch:
     inputs:
@@ -10,23 +11,47 @@ on:
         options:
           - macos-12
           - ubuntu-latest
+
 permissions:
   contents: read
+
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+  HOMEBREW_NO_ANALYTICS: 1
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_EMOJI: 1
+  HOMEBREW_NO_ENV_HINTS: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+
 jobs:
-  golangci-lint:
+  debug:
     runs-on: ${{ inputs.runner }}
+    timeout-minutes: 10
     steps:
       - name: Get rate limits
         run: |
-          curl \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: ${{ github.token }}" \
-            https://api.github.com/rate_limit | jq .
+          curl https://api.github.com/rate_limit \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              --show-error \
+              --silent \
+            | jq .
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: ./go.mod
+      - run: |
+          echo "Starting a tmate session for 10 minutes."
+          echo
+          echo "You can connect using the SSH command printed below to get an interactive shell"
+          echo "on this GitHub Actions runner. Access is limited to the public SSH keys"
+          echo "associated with your GitHub account."
+
+          curl https://api.github.com/users/${{ github.actor }}/keys \
+              -H "Accept: application/vnd.github+json" \
+              --show-error \
+              --silent \
+            | jq .
       - uses: mxschmitt/action-tmate@v3
         with:
-          args: --timeout=10m
           limit-access-to-actor: true
