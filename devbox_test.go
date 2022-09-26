@@ -12,6 +12,7 @@ import (
 )
 
 func TestDevbox(t *testing.T) {
+	t.Setenv("TMPDIR", "/tmp")
 	testPaths, err := doublestar.FilepathGlob("./testdata/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
@@ -35,11 +36,15 @@ func testExample(t *testing.T, testPath string) {
 
 		box, err := Open(baseDir)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
-		plan, err := box.Plan()
+		plan, err := box.ShellPlan()
 		assert.NoError(err, "devbox plan should not fail")
 
+		generateErrorFile := filepath.Join(baseDir, "has_generate_error")
+		hasGenerateErrorFile := fileExists(generateErrorFile)
 		err = box.Generate()
-		assert.NoError(err, "devbox generate should not fail")
+		if !hasGenerateErrorFile {
+			assert.NoError(err, "devbox generate should not fail")
+		}
 
 		if !hasGoldenFile {
 			assert.NotEmpty(plan.DevPackages, "the plan should have dev packages")
@@ -85,7 +90,7 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	)
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-	assert.Equal(expected.ShellWelcomeMessage, actual.ShellWelcomeMessage, "ShellWelcomeMessage should match")
+	assert.Equal(expected.ShellInitHook, actual.ShellInitHook, "ShellInitHook should match")
 	if expected.GeneratedFiles != nil {
 		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
 	}

@@ -51,7 +51,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 			s := &Shell{
 				userShellrcPath: test.shellrcPath,
 				UserInitHook:    test.hook,
-				welcomeMessage:  "Welcome to the devbox!",
+				planInitHook:    `echo "Welcome to the devbox!"`,
 			}
 			gotPath, err := s.writeDevboxShellrc()
 			if err != nil {

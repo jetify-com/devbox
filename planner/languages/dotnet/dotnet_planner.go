@@ -78,8 +78,15 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		// Error #2. An error for missing `libicu`. Adding nix pkg `icu` didn't help. TODO need to resolve this issue.
 		RuntimePackages: []string{dotNetPkg},
 
-		BuildStage: &plansdk.Stage{
+		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"."},
+			// --packages stores the downloaded packages in a local directory called nuget-packages
+			// Otherwise, the default location is ~/.nuget/packages,
+			// which is hard to copy over into StartStage
+			Command: "dotnet restore --packages nuget-packages",
+		},
+
+		BuildStage: &plansdk.Stage{
 
 			// TODO modify this command to reduce image size
 			//
@@ -88,12 +95,12 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 			// - for dotnet publish options: https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish
 			// - for -r options: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 			// - for publishing a single file: https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli
-			Command: "dotnet publish",
+			Command: "dotnet publish -c Publish --no-restore",
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{"."},
 			// TODO to invoke single-executable: ./bin/Debug/net6.0/linux-64/publish/<projectName>
-			Command: "dotnet run",
+			Command: "dotnet run -c Publish --no-build",
 		},
 	}, nil
 }

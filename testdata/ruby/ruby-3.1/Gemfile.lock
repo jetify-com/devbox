@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    colorize (0.8.1)
+
+PLATFORMS
+  x86_64-darwin-17
+  x86_64-linux
+
+DEPENDENCIES
+  colorize (~> 0.8.1)
+
+RUBY VERSION
+   ruby 3.1.2p20
+
+BUNDLED WITH
+   2.3.7
