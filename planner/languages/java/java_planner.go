@@ -79,7 +79,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 
 	runtimePackages := p.runtimePackages(builderTool)
 	installCommand := p.installCommand(builderTool)
-	buildCommand := p.buildCommand(builderTool)
+	buildCommand := p.buildCommand()
 
 	return &plansdk.Plan{
 		DevPackages:     devPackages,
@@ -149,7 +149,7 @@ func (p *Planner) installCommand(builderTool string) string {
 	return installCommandMap[builderTool]
 }
 
-func (p *Planner) buildCommand(builderTool string) string {
+func (p *Planner) buildCommand() string {
 	return "jlink --verbose" +
 		" --add-modules ALL-MODULE-PATH" +
 		" --strip-debug" +
@@ -169,7 +169,7 @@ func (p *Planner) startCommand(srcDir string, builderTool string) (string, error
 		}
 		return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
 	} else if builderTool == GradleType {
-		return "export JAVA_HOME=./customjre && ./gradlew run", nil
+		return "JAVA_HOME=./customjre && ./gradlew run", nil
 	}
 	return "", nil
 }
