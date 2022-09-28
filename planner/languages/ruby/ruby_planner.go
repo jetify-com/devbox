@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/mod/semver"
@@ -35,14 +36,22 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	v := parseRubyVersion(filepath.Join(srcDir, "Gemfile"))
+	gemfile := filepath.Join(srcDir, "Gemfile")
+	v := parseRubyVersion(gemfile)
 	pkg, ok := nixPackages[semver.MajorMinor(v)]
 	if !ok {
 		pkg = defaultPkg
 	}
+	cmd := "bundle exec ruby app.ru"
+	if hasRails(gemfile) {
+		cmd = "bin/rails server -b 0.0.0.0 -e production"
+	}
 	return &plansdk.Plan{
+		ShellInitHook: plansdk.WelcomeMessage("this is a test -- where does it show up?"),
 		DevPackages: []string{
 			pkg,
+			"gcc",     // for rails
+			"gnumake", // for rails
 		},
 		RuntimePackages: []string{
 			pkg,
@@ -53,7 +62,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: plansdk.AllFiles(),
-			Command:    "bundle exec ruby app.rb",
+			Command:    cmd,
 		},
 	}
 }
@@ -78,4 +87,12 @@ func parseRubyVersion(gemfile string) string {
 		return ""
 	}
 	return "" // not found
+}
+
+func hasRails(gemfile string) bool {
+	c, err := os.ReadFile(gemfile)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(c), "gem \"rails\"")
 }
