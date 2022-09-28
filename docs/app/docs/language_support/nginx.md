@@ -25,7 +25,7 @@ Devbox will use the nginx provided by the Nix Package manager. It is currently n
 
 ### Default Stages
 
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 
 ### Install Stage
 

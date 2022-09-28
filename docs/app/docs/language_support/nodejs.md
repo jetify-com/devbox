@@ -32,7 +32,7 @@ If no version is set, Devbox will use 16 as the default version
 
 ### Default Stages
 
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 
 ### Install Stage
 

@@ -31,7 +31,7 @@ If no version is specified, Devbox will default to Python 3.10
 
 ## Default Stages
 
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 
 ### Install Stage
 ```bash

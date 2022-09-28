@@ -20,7 +20,7 @@ Devbox uses the [nix-overlay from oxalica](https://github.com/oxalica/rust-overl
 
 ### Default Stages
 
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 
 ### Install Stage
 
