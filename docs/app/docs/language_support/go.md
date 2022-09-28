@@ -24,7 +24,7 @@ If no Go version can be detected, Devbox will default to 1.19.
   * `go_1_19`
 
 ### Default Stages
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 #### Install Stage 
 
 ```bash

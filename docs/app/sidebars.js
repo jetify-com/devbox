@@ -45,6 +45,9 @@ const sidebars = {
             id: 'language_support/go'
         }, {
             type: 'doc',
+            id: 'language_support/haskell'
+        }, {
+            type: 'doc',
             id: 'language_support/java'
         }, {
             type: 'doc',
@@ -61,8 +64,11 @@ const sidebars = {
         }, {
             type: 'doc',
             id: 'language_support/rust'
+        }, {
+        type: 'doc',
+        id: 'language_support/zig'
         }]
-    }],
+}],
 
 };
 

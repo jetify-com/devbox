@@ -30,7 +30,7 @@ If no version is set, Devbox will use .NET 6 as the default version. Devbox will
 
 ### Default Stages
 
-These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details
+These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 
 ### Install Stage
 
