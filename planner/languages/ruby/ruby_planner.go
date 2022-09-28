@@ -42,12 +42,18 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if !ok {
 		pkg = defaultPkg
 	}
-	cmd := "bundle exec ruby app.ru"
+	cmd := "bundle exec ruby app.rb"
 	if hasRails(gemfile) {
 		cmd = "bin/rails server -b 0.0.0.0 -e production"
 	}
 	return &plansdk.Plan{
-		ShellInitHook: plansdk.WelcomeMessage("this is a test -- where does it show up?"),
+		ShellInitHook: plansdk.WelcomeMessage(
+			"It looks like you are developing a Ruby project.\n" +
+				"To keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n" +
+				" > bundler config set --local deployment 'true'\n" +
+				" > bundler install\n" +
+				"And then run your ruby app with bundler. For example:\n" +
+				" > bundler exec ruby app.rb"),
 		DevPackages: []string{
 			pkg,
 			"gcc",     // for rails
