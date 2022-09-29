@@ -4,6 +4,9 @@
 package boxcli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -25,5 +28,31 @@ func runRemoveCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Remove(args...)
+	if err = box.Remove(args...); err != nil {
+		return err
+	}
+
+	if err := box.Generate(); err != nil {
+		return err
+	}
+
+	fmt.Print("Uninstalling nix packages. This may take a while...")
+	if err = uninstallDevPackages(args...); err != nil {
+		fmt.Println()
+		return err
+	}
+	fmt.Println("done.")
+
+	if isDevboxShellEnabled() {
+		successMsg := fmt.Sprintf("%s is now removed.", args[0])
+		if len(args) > 1 {
+			successMsg = fmt.Sprintf("%s are now removed.", strings.Join(args, ", "))
+		}
+		fmt.Print(successMsg)
+
+		// Sadface. This doesn't seem to work within devbox shell for now.
+		fmt.Println(" You may need to restart `devbox shell` for this to take effect.")
+	}
+
+	return nil
 }

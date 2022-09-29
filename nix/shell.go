@@ -17,6 +17,9 @@ import (
 	"go.jetpack.io/devbox/debug"
 )
 
+// ProfileDir contains the contents of the profile generated via `nix-env --profile ProfileDir <command>`
+const ProfileDir = ".devbox/profile"
+
 //go:embed shellrc.tmpl
 var shellrcText string
 var shellrcTmpl = template.Must(template.New("shellrc").Parse(shellrcText))
@@ -107,7 +110,7 @@ func rcfilePath(basename string) string {
 	return filepath.Join(home, basename)
 }
 
-func (s *Shell) Run(nixPath string) error {
+func (s *Shell) Run(nixShellFilePath string, srcDir string) error {
 	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
 	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
 	// assume they are.
@@ -116,7 +119,12 @@ func (s *Shell) Run(nixPath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
-	env := append(os.Environ(),
+
+	// Add the profile's binaries directory
+	parentPath = parentPath + string(filepath.ListSeparator) + ProfileDir + "/bin"
+
+	env := append(
+		os.Environ(),
 		"PARENT_PATH="+parentPath,
 		"NIX_PROFILES="+strings.Join(nixProfileDirs, " "),
 
@@ -130,7 +138,7 @@ func (s *Shell) Run(nixPath string) error {
 	if s.binPath == "" {
 		cmd := exec.Command("nix-shell", "--pure")
 		cmd.Args = append(cmd.Args, toKeepArgs(env)...)
-		cmd.Args = append(cmd.Args, nixPath)
+		cmd.Args = append(cmd.Args, nixShellFilePath)
 		cmd.Env = env
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -140,9 +148,9 @@ func (s *Shell) Run(nixPath string) error {
 		return errors.WithStack(cmd.Run())
 	}
 
-	cmd := exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
+	cmd := exec.Command("nix-shell", "--command", s.execCommand(srcDir), "--pure")
 	cmd.Args = append(cmd.Args, toKeepArgs(env)...)
-	cmd.Args = append(cmd.Args, nixPath)
+	cmd.Args = append(cmd.Args, nixShellFilePath)
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -154,7 +162,7 @@ func (s *Shell) Run(nixPath string) error {
 
 // execCommand is a command that replaces the current shell with s. This is what
 // Run sets the nix-shell --command flag to.
-func (s *Shell) execCommand() string {
+func (s *Shell) execCommand(srcDir string) string {
 	// We exec env, which will then exec the shell. This lets us set
 	// additional environment variables before any of the shell's init
 	// scripts run.
@@ -176,7 +184,7 @@ func (s *Shell) execCommand() string {
 
 	// Create a devbox shellrc file that runs the user's shellrc + the shell
 	// hook in devbox.json.
-	shellrc, err := s.writeDevboxShellrc()
+	shellrc, err := s.writeDevboxShellrc(srcDir)
 	if err != nil {
 		// Fall back to just launching the shell without a custom
 		// shellrc.
@@ -204,7 +212,7 @@ func (s *Shell) execCommand() string {
 	return strings.Join(args, " ")
 }
 
-func (s *Shell) writeDevboxShellrc() (path string, err error) {
+func (s *Shell) writeDevboxShellrc(srcDir string) (path string, err error) {
 	if s.userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells
 		// and their shellrc paths. If the shell is unknown or we can't
@@ -250,11 +258,13 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath string
 		UserHook         string
 		PlanInitHook     string
+		NixProfileDir    string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
+		NixProfileDir:    filepath.Join(srcDir, ProfileDir+"/bin"),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -365,14 +375,20 @@ func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
 
 		keep := true
 		for _, profileDir := range nixProfileDirs {
-			if strings.HasPrefix(path, profileDir) {
+			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or /Users/<username>/.nix-profile
+			// We want to keep the former, so that nix tools are available inside the shell.
+			// We want to filter out the latter, so that installed nix packages are not auto-included inside the shell.
+			//    This lets us maintain a veneer of pureness.
+			if strings.HasPrefix(path, profileDir) && strings.HasPrefix("/Users", profileDir) {
 				keep = false
 				break
 			}
 		}
+
 		if keep {
 			cleaned = append(cleaned, path)
 		}
 	}
+
 	return strings.Join(cleaned, string(filepath.ListSeparator))
 }

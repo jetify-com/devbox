@@ -53,7 +53,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 				UserInitHook:    test.hook,
 				planInitHook:    `echo "Welcome to the devbox!"`,
 			}
-			gotPath, err := s.writeDevboxShellrc()
+			gotPath, err := s.writeDevboxShellrc("" /*srcDir*/)
 			if err != nil {
 				t.Fatal("Got writeDevboxShellrc error:", err)
 			}

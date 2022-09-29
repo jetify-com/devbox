@@ -53,11 +53,24 @@ func Open(dir string) (*Devbox, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	// if dir is current directory, then get the full path
+	if dir == "." {
+		var err error
+		dir, err = os.Getwd()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
 	box := &Devbox{
 		cfg:    cfg,
 		srcDir: cfgDir,
 	}
 	return box, nil
+}
+
+func (d *Devbox) SourceDir() string {
+	return d.srcDir
 }
 
 // Add adds a Nix package to the config so that it's available in the devbox
@@ -149,14 +162,14 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	sh, err := nix.DetectShell(nix.WithPlanInitHook(plan.ShellInitHook))
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}
 	}
 	sh.UserInitHook = d.cfg.Shell.InitHook.String()
-	return sh.Run(nixDir)
+	return sh.Run(nixShellFilePath, d.srcDir)
 }
 
 func (d *Devbox) Exec(cmds ...string) error {

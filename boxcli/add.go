@@ -4,6 +4,9 @@
 package boxcli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -27,6 +30,31 @@ func addCmdFunc() runFunc {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		return box.Add(args...)
+
+		if err = box.Add(args...); err != nil {
+			return err
+		}
+
+		if err := box.Generate(); err != nil {
+			return err
+		}
+
+		fmt.Print("Installing nix packages. This may take a while...")
+		if err = installDevPackages(box.SourceDir()); err != nil {
+			fmt.Println()
+			return err
+		}
+		fmt.Println("done.")
+
+		if isDevboxShellEnabled() {
+			successMsg := fmt.Sprintf("%s is now installed.", args[0])
+			if len(args) > 1 {
+				successMsg = fmt.Sprintf("%s are now installed.", strings.Join(args, ", "))
+			}
+			fmt.Print(successMsg)
+			fmt.Println(" Run `hash -r` to ensure your shell is updated.")
+		}
+
+		return nil
 	}
 }

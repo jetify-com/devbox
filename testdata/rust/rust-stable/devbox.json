@@ -1,3 +1,8 @@
 {
-  "packages": ["rust-bin.stable.latest.default"]
+  "packages": [
+    "rust-bin.stable.latest.default"
+  ],
+  "shell": {
+    "init_hook": null
+  }
 }

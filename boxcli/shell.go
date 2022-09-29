@@ -7,10 +7,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/debug"
+	"go.jetpack.io/devbox/nix"
 )
 
 func ShellCmd() *cobra.Command {
@@ -34,12 +38,20 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	inDevboxShell := os.Getenv("DEVBOX_SHELL_ENABLED")
-	if inDevboxShell != "" && inDevboxShell != "0" && inDevboxShell != "false" {
+	if isDevboxShellEnabled() {
 		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
 	}
 
-	fmt.Println("Installing nix packages. This may take a while...")
+	if err := box.Generate(); err != nil {
+		return err
+	}
+
+	fmt.Print("Installing nix packages. This may take a while...")
+	if err = installDevPackages(box.SourceDir()); err != nil {
+		fmt.Println()
+		return err
+	}
+	fmt.Println("done.")
 
 	if len(cmds) > 0 {
 		err = box.Exec(cmds...)
@@ -80,4 +92,36 @@ func parseShellArgs(cmd *cobra.Command, args []string) (string, []string) {
 	cmds := args[index:]
 
 	return path, cmds
+}
+
+func isDevboxShellEnabled() bool {
+	inDevboxShell, err := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
+	if err != nil {
+		return false
+	}
+	return inDevboxShell
+}
+
+// Will move to store package
+func installDevPackages(srcDir string) error {
+
+	cmdStr := fmt.Sprintf("--profile %s --install -f %s/.devbox/gen/development.nix", nix.ProfileDir, srcDir)
+	cmdParts := strings.Split(cmdStr, " ")
+	execCmd := exec.Command("nix-env", cmdParts...)
+
+	debug.Log("running command: %s\n", execCmd.Args)
+	err := execCmd.Run()
+	return errors.WithStack(err)
+}
+
+// will move to store package
+func uninstallDevPackages(pkgs ...string) error {
+
+	cmdStr := fmt.Sprintf("--profile %s --uninstall %s", nix.ProfileDir, strings.Join(pkgs, ","))
+	cmdParts := strings.Split(cmdStr, " ")
+	execCmd := exec.Command("nix-env", cmdParts...)
+
+	debug.Log("running command: %s\n", execCmd.Args)
+	err := execCmd.Run()
+	return errors.WithStack(err)
 }
