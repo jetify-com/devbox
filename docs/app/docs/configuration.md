@@ -3,7 +3,7 @@ title: Configuration Guide
 sidebar_position: 5
 ---
 
-Your devbox configuration is stored in a `devbox.json` file, located in your project's root directory. This file can be edited directly, or using the [devbox CLI](cli_reference.md).
+Your devbox configuration is stored in a `devbox.json` file, located in your project's root directory. This file can be edited directly, or using the [devbox CLI](cli_reference/devbox.md).
 
 ```json
 {

@@ -16,7 +16,8 @@ import (
 func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:               "shell [<dir>] -- [<cmd>]",
-		Short:             "Start a new shell with access to your packages",
+		Short:             "Start a new shell or run a command with access to your packages",
+		Long:              "Start a new shell or run a command with access to your packages. \nIf invoked without `cmd`, this will start an interactive shell based on the devbox.json in your current directory, or the directory provided with `dir`. \nIf invoked with a `cmd`, this will start a shell based on the devbox.json provided in `dir`, run the command, and then exit.",
 		Args:              validateShellArgs,
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE:              runShellCmd,
