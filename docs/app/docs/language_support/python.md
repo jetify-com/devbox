@@ -44,12 +44,14 @@ These stages can be customized by adding them to your `devbox.json`. See the [Co
 
 ### Install Stage
 
-#### Poetry
+**Poetry**
+
 ```bash
 poetry add pex -n --no-ansi && poetry install --no-dev -n --no-ansi
 ```
 
-#### PIP
+**PIP**
+
 Devbox will first create and activate a virtual environment to install your packages
 
 ```bash
@@ -58,7 +60,8 @@ python -m venv .venv && source .venv/bin/activate && pip install -r requirements
 
 ### Build Stage
 
-#### Poetry
+**Poetry**
+
 Devbox will also look for a Poetry script in your Python project to set as your app's entrypoint. If there are multiple scripts configured, Devbox will choose one automatically using the following rules:
 
 1. If Devbox finds a script that matches your module name, it will set that script to run in your Start stage
@@ -68,7 +71,7 @@ Devbox will also look for a Poetry script in your Python project to set as your 
 PEX_ROOT=/tmp/.pex poetry run pex . -o app.pex --script <entrypoint>
 ```
 
-#### PIP
+**PIP**
 
 Devbox will first activate your virtual environment, and then run: 
 
