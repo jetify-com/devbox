@@ -6,13 +6,13 @@ Add a new package to your devbox
 devbox add <pkg>... [flags]
 ```
 
-### Options
+## Options
 
 ```text
   -h, --help   help for add
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
 

@@ -2,7 +2,7 @@
 
 Initialize a directory as a devbox project
 
-### Synopsis
+## Synopsis
 
 Intialize a directory as a devbox project. This will create an empty devbox.json in the current directory. You can then add packages using `devbox add`
 
@@ -10,13 +10,13 @@ Intialize a directory as a devbox project. This will create an empty devbox.json
 devbox init [<dir>] [flags]
 ```
 
-### Options
+## Options
 
 ```text
   -h, --help   help for init
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
 

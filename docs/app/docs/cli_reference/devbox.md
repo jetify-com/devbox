@@ -6,13 +6,13 @@ Instant, easy, predictable shells and containers
 devbox [flags]
 ```
 
-### Options
+## Options
 
 ```text
   -h, --help   help for devbox
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [devbox add](./devbox_add.md)	 - Add a new package to your devbox
 * [devbox build](./devbox_build.md)	 - Build an OCI image that can run as a container

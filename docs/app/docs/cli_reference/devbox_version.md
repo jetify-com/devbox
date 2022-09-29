@@ -6,14 +6,14 @@ Print version information
 devbox version [flags]
 ```
 
-### Options
+## Options
 
 ```text
   -h, --help      help for version
   -v, --verbose   Verbose: displays additional version information
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
 
