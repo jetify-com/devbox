@@ -2,13 +2,13 @@
 
 Add a new package to your devbox
 
-```
+```bash
 devbox add <pkg>... [flags]
 ```
 
 ### Options
 
-```
+```text
   -h, --help   help for add
 ```
 

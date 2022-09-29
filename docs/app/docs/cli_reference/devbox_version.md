@@ -2,13 +2,13 @@
 
 Print version information
 
-```
+```bash
 devbox version [flags]
 ```
 
 ### Options
 
-```
+```text
   -h, --help      help for version
   -v, --verbose   Verbose: displays additional version information
 ```

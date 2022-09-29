@@ -1,14 +1,14 @@
-## devbox
+# devbox CLI
 
 Instant, easy, predictable shells and containers
 
-```
+```bash
 devbox [flags]
 ```
 
 ### Options
 
-```
+```text
   -h, --help   help for devbox
 ```
 

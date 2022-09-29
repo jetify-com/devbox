@@ -2,13 +2,13 @@
 
 Remove a package from your devbox
 
-```
+```bash
 devbox rm <pkg>... [flags]
 ```
 
 ### Options
 
-```
+```text
   -h, --help   help for rm
 ```
 

@@ -7,13 +7,13 @@ Build an OCI image that can run as a container
 Builds your current source directory and devbox configuration as a Docker container. Devbox will create a plan for your container based on your source code, and then apply the packages and stage overrides in your devbox.json. 
  To learn more about how to configure your builds, see the [configuration reference](/docs/configuration_reference)
 
-```
+```bash
 devbox build [<dir>] [flags]
 ```
 
 ### Options
 
-```
+```text
       --engine string   Engine used to build the container: 'docker', 'podman' (default "docker")
   -h, --help            help for build
       --name string     name for the container (default "devbox")
