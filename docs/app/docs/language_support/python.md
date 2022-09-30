@@ -11,7 +11,7 @@ Devbox will automatically create a Python project plan whenever a `pyproject.tom
 
 ## Supported Versions
 
-Devbox will attempt to attempt to detect the version of Python to install using `tool.poetry.dependencies` section of your `pyproject.toml`. The following versions are supported: 
+Devbox will attempt to detect the version of Python to install using `tool.poetry.dependencies` section of your `pyproject.toml`. The following versions are supported: 
 
 * 2.7
 * 3.7
