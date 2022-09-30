@@ -95,7 +95,7 @@ const sidebars = {
             type: 'doc',
             id: 'language_support/ruby'
         }, {
-          type: 'doc',
+           type: 'doc',
             id: 'language_support/rust'
         }, {
             type: 'doc',
