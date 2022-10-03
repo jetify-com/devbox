@@ -64,7 +64,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
 		// Discard logs:
-		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, log.LstdFlags)),
+		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, 0)),
 		Verbose: false,
 	})
 
