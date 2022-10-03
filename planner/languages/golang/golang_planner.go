@@ -4,6 +4,7 @@
 package golang
 
 import (
+	"go/build"
 	"os"
 	"path/filepath"
 
@@ -37,11 +38,7 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	goPkg := getGoPackage(srcDir)
-	buildCmd, err := getGoBuildCommand(srcDir)
-	if err != nil {
-		plan := &plansdk.Plan{}
-		return plan.WithError(err)
-	}
+	buildCmd, buildErr := getGoBuildCommand(srcDir)
 	return &plansdk.Plan{
 		DevPackages: []string{
 			goPkg,
@@ -52,6 +49,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		BuildStage: &plansdk.Stage{
 			Command: buildCmd,
+			Warning: buildErr,
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{"."},
@@ -74,13 +72,12 @@ func getGoPackage(srcDir string) string {
 }
 
 func getGoBuildCommand(srcDir string) (string, error) {
-	mainFile := filepath.Join(srcDir, "main.go")
-	defaultBuildCmd := "CGO_ENABLED=0 go build -o app"
-	if fileExists(mainFile) {
-		return defaultBuildCmd, nil
+	p, err := build.ImportDir(srcDir, build.FindOnly)
+	var userError error
+	if err != nil || !p.IsCommand() {
+		userError = usererr.New("Cannot find main() in the directory. If you wish to specify a different import path, add `build_stage` in your devbox.json")
 	}
-
-	return "", usererr.New("Cannot find ./main.go file in the directory. If you wish to specify a different import path, add `build_stage` in your devbox.json")
+	return "CGO_ENABLED=0 go build -o app", userError
 }
 
 func parseGoVersion(gomodPath string) string {

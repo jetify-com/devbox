@@ -5,6 +5,7 @@
 package devbox
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -215,6 +216,9 @@ func (d *Devbox) generateBuildFiles() error {
 	}
 	if buildPlan.Invalid() {
 		return buildPlan.Error()
+	}
+	if buildPlan.Warning() != nil {
+		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
 	}
 	return generate(d.srcDir, buildPlan, buildFiles)
 }
