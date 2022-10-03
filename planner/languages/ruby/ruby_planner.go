@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/mod/semver"
@@ -35,14 +36,28 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	v := parseRubyVersion(filepath.Join(srcDir, "Gemfile"))
+	gemfile := filepath.Join(srcDir, "Gemfile")
+	v := parseRubyVersion(gemfile)
 	pkg, ok := nixPackages[semver.MajorMinor(v)]
 	if !ok {
 		pkg = defaultPkg
 	}
+	cmd := "bundle exec ruby app.rb"
+	if hasRails(gemfile) {
+		cmd = "bin/rails server -b 0.0.0.0 -e production"
+	}
 	return &plansdk.Plan{
+		ShellInitHook: plansdk.WelcomeMessage(
+			"It looks like you are developing a Ruby project.\n" +
+				"To keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n" +
+				" > bundler config set --local deployment 'true'\n" +
+				" > bundler install\n" +
+				"And then run your ruby app with bundler. For example:\n" +
+				" > bundler exec ruby app.rb"),
 		DevPackages: []string{
 			pkg,
+			"gcc",     // for rails
+			"gnumake", // for rails
 		},
 		RuntimePackages: []string{
 			pkg,
@@ -53,7 +68,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: plansdk.AllFiles(),
-			Command:    "bundle exec ruby app.rb",
+			Command:    cmd,
 		},
 	}
 }
@@ -78,4 +93,12 @@ func parseRubyVersion(gemfile string) string {
 		return ""
 	}
 	return "" // not found
+}
+
+func hasRails(gemfile string) bool {
+	c, err := os.ReadFile(gemfile)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(c), "gem \"rails\"")
 }

@@ -36,7 +36,7 @@ type Plan struct {
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
 
 	// RuntimePackages is the slice of Nix packages that devbox makes available in
-	// in both the development environment and the final container that runs the
+	// both the development environment and the final container that runs the
 	// application.
 	RuntimePackages []string `cue:"[...string]" json:"runtime_packages"`
 	// InstallStage defines the actions that should be taken when
@@ -53,6 +53,7 @@ type Plan struct {
 	StartStage *Stage `json:"start_stage,omitempty"`
 
 	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
+
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
@@ -113,6 +114,10 @@ func (p *Plan) WithError(err error) *Plan {
 	return p
 }
 
+// MergePlans merges multiple Plans into one. The merged plan's packages, definitions,
+// and overlays is the union of the packages, definitions, and overlays of the input plans,
+// respectively. The install/build/start stages of the merged plans are taken from the _first_
+// buildable plan (order matters!). If no plan is buildable, returns a non-buildable plan.
 func MergePlans(plans ...*Plan) (*Plan, error) {
 	mergedPlan := &Plan{}
 	for _, p := range plans {

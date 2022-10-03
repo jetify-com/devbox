@@ -108,6 +108,14 @@ func GetBuildPlan(srcDir string) (*plansdk.Plan, error) {
 		// TODO(Landau) Ideally we give the user a way to resolve this
 		return nil, usererr.New("Multiple buildable plans found: %v", buildables)
 	}
+	if len(buildables) == 0 {
+		return nil, usererr.New(
+			"Devbox could not find a buildable plan for this project. If your " +
+				"project/language is currently supported, please create an issue at " +
+				"https://github.com/jetpack-io/devbox/issues - if it's not supported " +
+				"you can request it!",
+		)
+	}
 	return buildables[0], nil
 }
 

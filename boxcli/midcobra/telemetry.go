@@ -5,6 +5,8 @@ package midcobra
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
@@ -59,7 +61,12 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{Verbose: false})
+	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
+		BatchSize: 1, /* no batching */
+		// Discard logs:
+		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, 0)),
+		Verbose: false,
+	})
 
 	defer func() {
 		_ = segmentClient.Close()

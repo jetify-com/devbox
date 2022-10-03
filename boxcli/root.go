@@ -33,6 +33,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(ShellCmd())
 	command.AddCommand(VersionCmd())
+	command.AddCommand(genDocsCmd())
 
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
 
