@@ -93,6 +93,9 @@ const sidebars = {
             id: 'language_support/python'
         }, {
             type: 'doc',
+            id: 'language_support/ruby'
+        }, {
+           type: 'doc',
             id: 'language_support/rust'
         }, {
             type: 'doc',
