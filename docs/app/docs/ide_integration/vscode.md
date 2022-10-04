@@ -38,7 +38,7 @@ Now your project in VS Code is setup to run and debug with the same Java that is
 
 ### Setting up Terminal
 
-To make sure the compiling and running your Java project happens inside devbox. We have to use a terminal. The following steps show how to run a Java application in Eclipse terminal but the steps are not exclusive to Eclipse and can be used by any unix terminal.
+The following steps show how to run a Java application in a devbox shell using the VS Code terminal. Note that most of these steps are not exclusive to VS Code and can also be used in any Linux or macOS terminal.
 
 1. Open VS Code terminal (`ctrl + shift + ~` in MacOS)
 2. Navigate to the projects root directory using `cd` command.
