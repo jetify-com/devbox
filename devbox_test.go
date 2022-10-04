@@ -39,7 +39,7 @@ func testExample(t *testing.T, testPath string) {
 		goldenFile := filepath.Join(baseDir, "plan.json")
 		hasGoldenFile := fileExists(goldenFile)
 
-		box, err := Open(baseDir)
+		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 
 		// Just for tests, we make srcDir be a relative path so that the paths in plan.json

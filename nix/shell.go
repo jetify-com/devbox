@@ -17,9 +17,6 @@ import (
 	"go.jetpack.io/devbox/debug"
 )
 
-// ProfileDir contains the contents of the profile generated via `nix-env --profile ProfileDir <command>`
-const ProfileDir = ".devbox/profile"
-
 //go:embed shellrc.tmpl
 var shellrcText string
 var shellrcTmpl = template.Must(template.New("shellrc").Parse(shellrcText))
@@ -44,6 +41,9 @@ type Shell struct {
 
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
+
+	// profileDir is the absolute path to the directory storing the nix-profile
+	profileDir string
 }
 
 type ShellOption func(*Shell)
@@ -100,6 +100,12 @@ func WithPlanInitHook(hook string) ShellOption {
 	}
 }
 
+func WithProfile(profileDir string) ShellOption {
+	return func(s *Shell) {
+		s.profileDir = profileDir
+	}
+}
+
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
 // user's home directory. It doesn't guarantee that the file exists.
 func rcfilePath(basename string) string {
@@ -110,7 +116,7 @@ func rcfilePath(basename string) string {
 	return filepath.Join(home, basename)
 }
 
-func (s *Shell) Run(nixShellFilePath string, srcDir string) error {
+func (s *Shell) Run(nixShellFilePath string) error {
 	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
 	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
 	// assume they are.
@@ -121,7 +127,7 @@ func (s *Shell) Run(nixShellFilePath string, srcDir string) error {
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
 
 	// Add the profile's binaries directory
-	parentPath = parentPath + string(filepath.ListSeparator) + ProfileDir + "/bin"
+	// parentPath = parentPath + string(filepath.ListSeparator) + ProfileDir + "/bin"
 
 	env := append(
 		os.Environ(),
@@ -148,7 +154,7 @@ func (s *Shell) Run(nixShellFilePath string, srcDir string) error {
 		return errors.WithStack(cmd.Run())
 	}
 
-	cmd := exec.Command("nix-shell", "--command", s.execCommand(srcDir), "--pure")
+	cmd := exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
 	cmd.Args = append(cmd.Args, toKeepArgs(env)...)
 	cmd.Args = append(cmd.Args, nixShellFilePath)
 	cmd.Env = env
@@ -162,7 +168,7 @@ func (s *Shell) Run(nixShellFilePath string, srcDir string) error {
 
 // execCommand is a command that replaces the current shell with s. This is what
 // Run sets the nix-shell --command flag to.
-func (s *Shell) execCommand(srcDir string) string {
+func (s *Shell) execCommand() string {
 	// We exec env, which will then exec the shell. This lets us set
 	// additional environment variables before any of the shell's init
 	// scripts run.
@@ -184,7 +190,7 @@ func (s *Shell) execCommand(srcDir string) string {
 
 	// Create a devbox shellrc file that runs the user's shellrc + the shell
 	// hook in devbox.json.
-	shellrc, err := s.writeDevboxShellrc(srcDir)
+	shellrc, err := s.writeDevboxShellrc()
 	if err != nil {
 		// Fall back to just launching the shell without a custom
 		// shellrc.
@@ -212,7 +218,7 @@ func (s *Shell) execCommand(srcDir string) string {
 	return strings.Join(args, " ")
 }
 
-func (s *Shell) writeDevboxShellrc(srcDir string) (path string, err error) {
+func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	if s.userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells
 		// and their shellrc paths. If the shell is unknown or we can't
@@ -258,13 +264,13 @@ func (s *Shell) writeDevboxShellrc(srcDir string) (path string, err error) {
 		OriginalInitPath string
 		UserHook         string
 		PlanInitHook     string
-		NixProfileDir    string
+		ProfileBinDir    string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
-		NixProfileDir:    filepath.Join(srcDir, ProfileDir+"/bin"),
+		ProfileBinDir:    s.profileDir + "/bin",
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)

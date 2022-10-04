@@ -26,7 +26,7 @@ func runPlanCmd(cmd *cobra.Command, args []string) error {
 	path := pathArg(args)
 
 	// Check the directory exists.
-	box, err := devbox.Open(path)
+	box, err := devbox.Open(path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}

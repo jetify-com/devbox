@@ -75,7 +75,7 @@ PATH="$(
 			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
 		esac
 	done
-	echo "${nix_path:+$nix_path:}${non_nix_path}"
+	echo "./devbox/profile/bin:${non_nix_path}"
 )"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.

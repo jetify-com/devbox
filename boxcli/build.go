@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -38,7 +40,7 @@ func buildCmdFunc(flags *docker.BuildFlags) runFunc {
 		path := pathArg(args)
 
 		// Check the directory exists.
-		box, err := devbox.Open(path)
+		box, err := devbox.Open(path, os.Stdout)
 		if err != nil {
 			return errors.WithStack(err)
 		}

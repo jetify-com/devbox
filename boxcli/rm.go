@@ -4,8 +4,7 @@
 package boxcli
 
 import (
-	"fmt"
-	"strings"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,35 +22,10 @@ func RemoveCmd() *cobra.Command {
 }
 
 func runRemoveCmd(cmd *cobra.Command, args []string) error {
-	box, err := devbox.Open(".")
+	box, err := devbox.Open(".", os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err = box.Remove(args...); err != nil {
-		return err
-	}
-
-	if err := box.Generate(); err != nil {
-		return err
-	}
-
-	fmt.Print("Uninstalling nix packages. This may take a while...")
-	// We need to reinstall the packages
-	if err = installDevPackages(box.SourceDir()); err != nil {
-		fmt.Println()
-		return err
-	}
-	fmt.Println("done.")
-
-	if isDevboxShellEnabled() {
-		successMsg := fmt.Sprintf("%s is now removed.", args[0])
-		if len(args) > 1 {
-			successMsg = fmt.Sprintf("%s are now removed.", strings.Join(args, ", "))
-		}
-		fmt.Print(successMsg)
-		fmt.Println(" Run `hash -r` to ensure your shell is updated.")
-	}
-
-	return nil
+	return box.Remove(args...)
 }

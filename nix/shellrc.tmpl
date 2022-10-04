@@ -61,7 +61,7 @@ PATH="$(
 			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
 		esac
 	done
-	echo "{{ .NixProfileDir }}:${non_nix_path}"
+	echo "{{ .ProfileBinDir }}:${non_nix_path}"
 )"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
