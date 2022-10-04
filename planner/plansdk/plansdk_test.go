@@ -115,68 +115,40 @@ func TestMergeUserPlans(t *testing.T) {
 					InputFiles: []string{"."},
 					Command:    "npm start",
 				},
+				NixOverlays: []string{},
 			},
 		},
 		{
-			name: "different input files",
+			name: "custom commands",
 			in: &Plan{
-				DevPackages:     []string{"nodejs", "yarn"},
-				RuntimePackages: []string{"nodejs"},
+				DevPackages:     []string{"yarn"},
+				RuntimePackages: []string{"yarn"},
 				InstallStage: &Stage{
-					InputFiles: []string{"package.json", "yarn.lock"},
-					Command:    "",
+					Command: "yarn install",
 				},
 				BuildStage: &Stage{
-					InputFiles: []string{"."},
-					Command:    "",
+					Command: "yarn build",
 				},
 				StartStage: &Stage{
-					InputFiles: []string{"."},
-					Command:    "npm start",
+					Command: "yarn start",
 				},
 			},
 			out: &Plan{
-				DevPackages:     []string{"nodejs", "yarn"},
-				RuntimePackages: []string{"nodejs"},
+				DevPackages:     []string{"yarn", "nodejs"},
+				RuntimePackages: []string{"yarn", "nodejs"},
 				InstallStage: &Stage{
-					InputFiles: []string{"package.json", "yarn.lock"},
-					Command:    "npm install",
+					InputFiles: []string{"package.json"},
+					Command:    "yarn install",
 				},
 				BuildStage: &Stage{
 					InputFiles: []string{"."},
-					Command:    "",
+					Command:    "yarn build",
 				},
 				StartStage: &Stage{
 					InputFiles: []string{"."},
-					Command:    "npm start",
+					Command:    "yarn start",
 				},
-			},
-		},
-		{
-			name: "custom build command",
-			in: &Plan{
-				InstallStage: &Stage{
-					InputFiles: []string{"app"},
-				},
-				BuildStage: &Stage{
-					Command: "npm run build",
-				},
-			},
-			out: &Plan{
-				DevPackages:     []string{"nodejs"},
-				RuntimePackages: []string{"nodejs"},
-				InstallStage: &Stage{
-					InputFiles: []string{"app"},
-					Command:    "npm install",
-				},
-				BuildStage: &Stage{
-					InputFiles: []string{"."},
-					Command:    "npm run build",
-				},
-				StartStage: &Stage{
-					InputFiles: []string{"."},
-					Command:    "npm start",
-				},
+				NixOverlays: []string{},
 			},
 		},
 	}

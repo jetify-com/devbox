@@ -4,9 +4,11 @@
 package golang
 
 import (
+	"go/build"
 	"os"
 	"path/filepath"
 
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/mod/modfile"
 )
@@ -36,6 +38,7 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 
 func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	goPkg := getGoPackage(srcDir)
+	buildCmd, buildErr := getGoBuildCommand(srcDir)
 	return &plansdk.Plan{
 		DevPackages: []string{
 			goPkg,
@@ -45,7 +48,8 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 			Command:    "go get",
 		},
 		BuildStage: &plansdk.Stage{
-			Command: "CGO_ENABLED=0 go build -o app",
+			Command: buildCmd,
+			Warning: buildErr,
 		},
 		StartStage: &plansdk.Stage{
 			InputFiles: []string{"."},
@@ -65,6 +69,15 @@ func getGoPackage(srcDir string) string {
 		// for the specified version of go?
 		return defaultPkg
 	}
+}
+
+func getGoBuildCommand(srcDir string) (string, error) {
+	p, err := build.ImportDir(srcDir, build.FindOnly)
+	var userError error
+	if err != nil || !p.IsCommand() {
+		userError = usererr.New("Cannot find main() in the directory. If you wish to specify a different import path, add `build_stage` in your devbox.json")
+	}
+	return "CGO_ENABLED=0 go build -o app", userError
 }
 
 func parseGoVersion(gomodPath string) string {

@@ -4,6 +4,10 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 	// InputFiles is internal for planners only.
 	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
+	// Warning is internal for planners only.
+	// If a stage has Warning, we will print it if
+	// a command override is not present in devbox.json
+	Warning error `json:"warning,omitempty"`
 }
 
 func (s *Stage) GetCommand() string {

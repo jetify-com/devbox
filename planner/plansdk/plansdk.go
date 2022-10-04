@@ -114,6 +114,25 @@ func (p *Plan) WithError(err error) *Plan {
 	return p
 }
 
+// Get warning as error format from all 3 stages
+func (p *Plan) Warning() error {
+	stages := []*Stage{p.InstallStage, p.BuildStage, p.StartStage}
+	stageWarnings := []error{}
+	for _, stage := range stages {
+		if stage != nil && stage.Warning != nil {
+			stageWarnings = append(stageWarnings, stage.Warning)
+		}
+	}
+	if len(stageWarnings) == 0 {
+		return nil
+	}
+	combined := stageWarnings[0]
+	for _, err := range stageWarnings[1:] {
+		combined = errors.Wrap(combined, err.Error())
+	}
+	return combined
+}
+
 // MergePlans merges multiple Plans into one. The merged plan's packages, definitions,
 // and overlays is the union of the packages, definitions, and overlays of the input plans,
 // respectively. The install/build/start stages of the merged plans are taken from the _first_
@@ -157,28 +176,40 @@ func findBuildablePlan(plans ...*Plan) *Plan {
 }
 
 func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
-	plan := &Plan{
-		InstallStage: userPlan.InstallStage,
-		BuildStage:   userPlan.BuildStage,
-		StartStage:   userPlan.StartStage,
-	}
-	// fields in plan:
-	//   if empty, will inherit the corresponding fields in the automatedPlan
-	//   if set, will override corresponding automatedPlan fields
-	if err := mergo.Merge(plan, automatedPlan); err != nil {
-		return nil, err
-	}
+	automatedStages := []*Stage{automatedPlan.InstallStage, automatedPlan.BuildStage, automatedPlan.StartStage}
+	userStages := []*Stage{userPlan.InstallStage, userPlan.BuildStage, userPlan.StartStage}
+	planStages := []*Stage{{}, {}, {}}
 
+	for i := range planStages {
+		planStages[i] = mergeUserStage(userStages[i], automatedStages[i])
+	}
 	// Merging devPackages and runtimePackages fields.
 	packagesPlan, err := MergePlans(userPlan, automatedPlan)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
+	plan := automatedPlan
+	plan.InstallStage = planStages[0]
+	plan.BuildStage = planStages[1]
+	plan.StartStage = planStages[2]
 	plan.DevPackages = packagesPlan.DevPackages
 	plan.RuntimePackages = packagesPlan.RuntimePackages
 
 	return plan, nil
+}
+
+func mergeUserStage(userStage *Stage, automatedStage *Stage) *Stage {
+	stage := automatedStage
+	if stage == nil {
+		stage = &Stage{}
+	}
+	// Override commands
+	if userStage != nil && userStage.Command != "" {
+		stage.Command = userStage.Command
+		// Clear out error as the user has overwritten the default.
+		stage.Warning = nil
+	}
+	return stage
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {
