@@ -1,5 +1,5 @@
 ---
-title: Eclipse integration
+title: Eclipse configuration
 ---
 
 
@@ -11,17 +11,16 @@ To create a devbox shell make sure to have devbox installed. If you don't have d
 
 1. `devbox init` if you don't have a devbox.json in the root directory of your project.
 2. `devbox add jdk` to make sure jdk gets installed in your devbox shell.
-3. `devbox shell` to activate and go into your devbox shell.
-4. `echo $JAVA_HOME` and copy the path to your java home inside the devbox shell. It should be something like this:
+3. `devbox shell -- 'echo $JAVA_HOME'` to activate your devbox shell temporarily to find the path to your java home. Copy and save the path. It should look something like:
     ```bash
     /nix/store/qaf9fysymdoj19qtyg7209s83lajz65b-zulu17.34.19-ca-jdk-17.0.3
     ```
-5. Open Eclipse IDE and create a new Java project if you don't have already
-6. From the top menu go to Run > Run Configurations > JRE and choose **Alternate JRE:**
-7. Click on **Installed JREs...**  and click **Add...** in the window of Installed JREs.
-8. Choose **Standard VM** as JRE Type and click Next.
-9. Paste the value you copied in step 4 in **JRE HOME** and put an arbitrary name such as "devbox-jre" in **JRE Name** and click Finish.
-10. Click **Apply and Close** in Installed JREs window. Then close Run Configurations.
+4. Open Eclipse IDE and create a new Java project if you don't have already
+5. From the top menu go to Run > Run Configurations > JRE and choose **Alternate JRE:**
+6. Click on **Installed JREs...**  and click **Add...** in the window of Installed JREs.
+7. Choose **Standard VM** as JRE Type and click Next.
+8. Paste the value you copied in step 4 in **JRE HOME** and put an arbitrary name such as "devbox-jre" in **JRE Name** and click Finish.
+9. Click **Apply and Close** in Installed JREs window. Then close Run Configurations.
 
 Now your project in Eclipse is setup to compile and run with the same Java that is installed in your devbox shell. Next step is to run your Java code inside Devbox.
 

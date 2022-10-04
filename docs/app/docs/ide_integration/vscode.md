@@ -1,5 +1,5 @@
 ---
-title: VSCode integration
+title: VSCode configuration
 ---
 
 
@@ -12,15 +12,14 @@ To create a devbox shell make sure to have devbox installed. If you don't have d
 
 1. `devbox init` if you don't have a devbox.json in the root directory of your project.
 2. `devbox add jdk` to make sure jdk gets installed in your devbox shell.
-3. `devbox shell` to activate and go into your devbox shell.
-4. `which java` and copy the path to your executable java binary inside the devbox shell. It should be something like this:
+3. `devbox shell -- 'which java` to activate devbox shell temporarily and find the path to your executable java binary inside the devbox shell. Copy and save that path. It should look something like this:
     ```bash
     /nix/store/qaf9fysymdoj19qtyg7209s83lajz65b-zulu17.34.19-ca-jdk-17.0.3/bin/java
     ```
-5. Open VS Code and create a new Java project if you don't have already. If VS Code prompts for installing Java support choose yes.
-6. Click on **Run and Debug** icon from the left sidebar.
-7. Click on **create a launch.json** link in the opened sidebar. If you don't see such a link, click on the small gear icon on the top of the open sidebar.
-8. Once the `launch.json` file is opened, update the `configurations` parameter to look like snippet below:
+4. Open VS Code and create a new Java project if you don't have already. If VS Code prompts for installing Java support choose yes.
+5. Click on **Run and Debug** icon from the left sidebar.
+6. Click on **create a launch.json** link in the opened sidebar. If you don't see such a link, click on the small gear icon on the top of the open sidebar.
+7. Once the `launch.json` file is opened, update the `configurations` parameter to look like snippet below:
     ```json
     {
         "type": "java",
@@ -32,7 +31,7 @@ To create a devbox shell make sure to have devbox installed. If you don't have d
     }
     ```
     Update the values in between < and > to match your project and environment.
-9. Click on **Run and Debug** or the green triangle at the top of the left sidebar to run and debug your project.
+8. Click on **Run and Debug** or the green triangle at the top of the left sidebar to run and debug your project.
 
 Now your project in VS Code is setup to run and debug with the same Java that is installed in your devbox shell. Next step is to run your Java code inside Devbox.
 
