@@ -5,7 +5,7 @@ title: VSCode configuration
 
 ## Java
 ___
-VS Code is used for development of many different languages. In the guide below, we cover setting up a Java environment that's created inside devbox shell to work with VS Code.
+VS Code is a popular editor that supports many different programming languages. This guide covers how to configure VS Code to work with a devbox Java environment.
 
 ### Setting up Run and Debugger
 To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
@@ -37,7 +37,7 @@ Now your project in VS Code is setup to run and debug with the same Java that is
 
 ### Setting up Terminal
 
-To make sure the compiling and running your Java project happens inside devbox. We have to use a terminal. The following steps show how to run a Java application in Eclipse terminal but the steps are not exclusive to Eclipse and can be used by any unix terminal.
+The following steps show how to run a Java application in a devbox shell using the VS Code terminal. Note that most of these steps are not exclusive to VS Code and can also be used in any Linux or macOS terminal.
 
 1. Open VS Code terminal (`ctrl + shift + ~` in MacOS)
 2. Navigate to the projects root directory using `cd` command.

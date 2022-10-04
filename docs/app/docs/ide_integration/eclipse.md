@@ -4,10 +4,10 @@ title: Eclipse configuration
 
 
 ## Java
-Eclipse IDE is mostly used for development of Java projects. Therefore, in this guide we cover setting up a Java environment that's created inside devbox shell to work with Eclipse IDE.
+This guide describes how to configure Eclipse to work with a devbox Java environment.
 
 ### Setting up Devbox shell
-To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
+To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then run the following commands from the root of your project's repo:
 
 1. `devbox init` if you don't have a devbox.json in the root directory of your project.
 2. `devbox add jdk` to make sure jdk gets installed in your devbox shell.
@@ -26,7 +26,7 @@ Now your project in Eclipse is setup to compile and run with the same Java that 
 
 ### Setting up Eclipse Terminal
 
-To make sure the compiling and running your Java project happens inside devbox. We have to use a terminal. The following steps show how to run a Java application in Eclipse terminal but the steps are not exclusive to Eclipse and can be used by any unix terminal.
+The following steps show how to run a Java application in a devbox shell using the Eclipse terminal. Note that most of these steps are not exclusive to Eclipse and can also be used in any Linux or macOS terminal.
 
 1. Press `ctrl + alt/opt + T` to open terminal window in Eclipse.
 2. Navigate to the projects root directory using `cd` command.
