@@ -247,13 +247,9 @@ func missingDevboxJSONError(dir string) error {
 
 func findConfigDir(dir string) (string, error) {
 
-	cur := dir
-	if cur == "" || cur == "." {
-		var err error
-		cur, err = os.Getwd()
-		if err != nil {
-			return "", errors.WithStack(err)
-		}
+	cur, err := filepath.Abs(dir)
+	if err != nil {
+		return "", errors.WithStack(err)
 	}
 
 	for cur != "/" {
