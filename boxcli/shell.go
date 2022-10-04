@@ -113,15 +113,3 @@ func installDevPackages(srcDir string) error {
 	err := execCmd.Run()
 	return errors.WithStack(err)
 }
-
-// will move to store package
-func uninstallDevPackages(pkgs ...string) error {
-
-	cmdStr := fmt.Sprintf("--profile %s --uninstall %s", nix.ProfileDir, strings.Join(pkgs, ","))
-	cmdParts := strings.Split(cmdStr, " ")
-	execCmd := exec.Command("nix-env", cmdParts...)
-
-	debug.Log("running command: %s\n", execCmd.Args)
-	err := execCmd.Run()
-	return errors.WithStack(err)
-}

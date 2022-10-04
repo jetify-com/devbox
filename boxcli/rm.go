@@ -37,7 +37,8 @@ func runRemoveCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Print("Uninstalling nix packages. This may take a while...")
-	if err = uninstallDevPackages(args...); err != nil {
+	// We need to reinstall the packages
+	if err = installDevPackages(box.SourceDir()); err != nil {
 		fmt.Println()
 		return err
 	}
@@ -49,9 +50,7 @@ func runRemoveCmd(cmd *cobra.Command, args []string) error {
 			successMsg = fmt.Sprintf("%s are now removed.", strings.Join(args, ", "))
 		}
 		fmt.Print(successMsg)
-
-		// Sadface. This doesn't seem to work within devbox shell for now.
-		fmt.Println(" You may need to restart `devbox shell` for this to take effect.")
+		fmt.Println(" Run `hash -r` to ensure your shell is updated.")
 	}
 
 	return nil
