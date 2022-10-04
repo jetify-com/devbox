@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
 	"go.jetpack.io/devbox/pkgslice"
@@ -39,11 +40,12 @@ type Devbox struct {
 
 // Open opens a devbox by reading the config file in dir.
 func Open(dir string) (*Devbox, error) {
-	cfgPath := filepath.Join(dir, configFilename)
 
-	if !plansdk.FileExists(cfgPath) {
-		return nil, missingDevboxJSONError(dir)
+	cfgDir, err := findConfigDir(dir)
+	if err != nil {
+		return nil, err
 	}
+	cfgPath := filepath.Join(cfgDir, configFilename)
 
 	cfg, err := ReadConfig(cfgPath)
 	if err != nil {
@@ -52,7 +54,7 @@ func Open(dir string) (*Devbox, error) {
 
 	box := &Devbox{
 		cfg:    cfg,
-		srcDir: dir,
+		srcDir: cfgDir,
 	}
 	return box, nil
 }
@@ -226,7 +228,7 @@ func (d *Devbox) generateBuildFiles() error {
 func missingDevboxJSONError(dir string) error {
 
 	// We try to prettify the `dir` before printing
-	if dir == "." {
+	if dir == "." || dir == "" {
 		dir = "this directory"
 	} else {
 		// Instead of a long absolute directory, print the relative directory
@@ -240,5 +242,29 @@ func missingDevboxJSONError(dir string) error {
 			}
 		}
 	}
-	return usererr.New("No devbox.json found in %s. Did you run `devbox init` yet?", dir)
+	return usererr.New("No devbox.json found in %s, or any parent directories. Did you run `devbox init` yet?", dir)
+}
+
+func findConfigDir(dir string) (string, error) {
+
+	cur := dir
+	if cur == "" || cur == "." {
+		var err error
+		cur, err = os.Getwd()
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+	}
+
+	for cur != "/" {
+		debug.Log("finding %s in dir: %s\n", configFilename, cur)
+		if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+			return cur, nil
+		}
+		cur = filepath.Dir(cur)
+	}
+	if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+		return cur, nil
+	}
+	return "", missingDevboxJSONError(dir)
 }
