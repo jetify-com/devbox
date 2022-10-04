@@ -4,7 +4,7 @@ title: Eclipse integration
 
 
 ## Java
-Eclipse IDE is mostly used for development of Java projects. Therefore, in this guide we cover setting up a Java environment that's created inside devbox shell to work with Eclipse IDE.
+This guide describes how to configure Eclipse to work with a devbox Java environment.
 
 ### Setting up Devbox shell
 To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
