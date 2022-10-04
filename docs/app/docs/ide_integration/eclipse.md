@@ -27,7 +27,7 @@ Now your project in Eclipse is setup to compile and run with the same Java that 
 
 ### Setting up Eclipse Terminal
 
-To make sure the compiling and running your Java project happens inside devbox. We have to use a terminal. The following steps show how to run a Java application in Eclipse terminal but the steps are not exclusive to Eclipse and can be used by any unix terminal.
+The following steps show how to run a Java application in a devbox shell using the Eclipse terminal. Note that most of these steps are not exclusive to Eclipse and can also be used in any Linux or macOS terminal.
 
 1. Press `ctrl + alt/opt + T` to open terminal window in Eclipse.
 2. Navigate to the projects root directory using `cd` command.
