@@ -7,7 +7,7 @@ title: Eclipse integration
 This guide describes how to configure Eclipse to work with a devbox Java environment.
 
 ### Setting up Devbox shell
-To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
+To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then run the following commands from the root of your project's repo:
 
 1. `devbox init` if you don't have a devbox.json in the root directory of your project.
 2. `devbox add jdk` to make sure jdk gets installed in your devbox shell.
