@@ -5,7 +5,7 @@ title: VSCode integration
 
 ## Java
 ___
-VS Code is used for development of many different languages. In the guide below, we cover setting up a Java environment that's created inside devbox shell to work with VS Code.
+VS Code is a popular editor that supports many different programming languages. This guide covers how to configure VS Code to work with a devbox Java environment.
 
 ### Setting up Run and Debugger
 To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
