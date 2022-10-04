@@ -47,6 +47,10 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 		err = box.Shell()
 	}
 
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return nil
+	}
 	return err
 }
 
