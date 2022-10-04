@@ -1,5 +1,5 @@
 ---
-title: Eclipse configuration
+title: Eclipse IDE configuration
 ---
 
 
