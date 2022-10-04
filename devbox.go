@@ -34,7 +34,8 @@ func InitConfig(dir string) (created bool, err error) {
 // Devbox provides an isolated development environment that contains a set of
 // Nix packages.
 type Devbox struct {
-	cfg    *Config
+	cfg *Config
+	// srcDir is the directory where the config file (devbox.json) resides
 	srcDir string
 }
 
@@ -247,6 +248,7 @@ func missingDevboxJSONError(dir string) error {
 
 func findConfigDir(dir string) (string, error) {
 
+	// Sanitize the directory and use the absolute path as canonical form
 	cur, err := filepath.Abs(dir)
 	if err != nil {
 		return "", errors.WithStack(err)
