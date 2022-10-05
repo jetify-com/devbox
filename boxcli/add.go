@@ -32,7 +32,13 @@ func AddCmd() *cobra.Command {
 
 func addCmdFunc(flags *addCmdFlags) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		box, err := devbox.Open(flags.config.path, os.Stdout)
+		dir := ""
+		if devbox.IsDevboxShellEnabled() {
+			if envdir := os.Getenv("DEVBOX_CONFIG_DIR"); envdir != "" {
+				dir = envdir
+			}
+		}
+		box, err := devbox.Open(dir, os.Stdout)
 		if err != nil {
 			return errors.WithStack(err)
 		}

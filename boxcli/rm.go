@@ -31,7 +31,15 @@ func RemoveCmd() *cobra.Command {
 }
 
 func runRemoveCmd(_ *cobra.Command, args []string, flags *removeCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+
+	dir := ""
+	if devbox.IsDevboxShellEnabled() {
+		if envdir := os.Getenv("DEVBOX_CONFIG_DIR"); envdir != "" {
+			dir = envdir
+		}
+	}
+
+	box, err := devbox.Open(dir, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
