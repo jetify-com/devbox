@@ -64,6 +64,10 @@ PATH="$(
 	echo "{{ .ProfileBinDir }}:${non_nix_path}"
 )"
 
+{{- if .HistoryFile }}
+HISTFILE={{.HistoryFile}}
+{{- end }}
+
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
 

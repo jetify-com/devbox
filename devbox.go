@@ -25,11 +25,16 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// profileDir contains the contents of the profile generated via `nix-env --profile profileDir <command>`
-const profileDir = ".devbox/profile"
+const (
+	// configFilename is name of the JSON file that defines a devbox environment.
+	configFilename = "devbox.json"
 
-// configFilename is name of the JSON file that defines a devbox environment.
-const configFilename = "devbox.json"
+	// profileDir contains the contents of the profile generated via `nix-env --profile profileDir <command>`
+	profileDir = ".devbox/profile"
+
+	// shellHistoryFile keeps the history of commands invoked inside devbox shell
+	shellHistoryFile = ".devbox/shell_history"
+)
 
 // InitConfig creates a default devbox config file if one doesn't already
 // exist.
@@ -175,7 +180,11 @@ func (d *Devbox) Shell() error {
 		return errors.WithStack(err)
 	}
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(nix.WithPlanInitHook(plan.ShellInitHook), nix.WithProfile(d.profileDir()))
+	sh, err := nix.DetectShell(
+		nix.WithPlanInitHook(plan.ShellInitHook),
+		nix.WithProfile(d.profileDir()),
+		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
+	)
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		sh = &nix.Shell{}
