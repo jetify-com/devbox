@@ -248,11 +248,11 @@ func (d *Devbox) generateBuildFiles() error {
 }
 
 func (d *Devbox) profileDir() string {
-	return d.srcDir + "/" + profileDir
+	return filepath.Join(d.srcDir, profileDir)
 }
 
 func (d *Devbox) profileBinDir() string {
-	return d.profileDir() + "/bin"
+	return filepath.Join(d.profileDir(), "bin")
 }
 
 func missingDevboxJSONError(dir string) error {
@@ -352,7 +352,7 @@ func (d *Devbox) ApplyDevNixDerivation() error {
 
 	cmdStr := fmt.Sprintf(
 		"--profile %s --install -f %s/.devbox/gen/development.nix",
-		d.srcDir+"/"+profileDir,
+		filepath.Join(d.srcDir, profileDir),
 		d.srcDir,
 	)
 	cmdParts := strings.Split(cmdStr, " ")

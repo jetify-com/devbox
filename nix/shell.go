@@ -126,9 +126,6 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	// directories that are incompatible.
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
 
-	// Add the profile's binaries directory
-	// parentPath = parentPath + string(filepath.ListSeparator) + ProfileDir + "/bin"
-
 	env := append(
 		os.Environ(),
 		"PARENT_PATH="+parentPath,
