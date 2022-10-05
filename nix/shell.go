@@ -43,7 +43,8 @@ type Shell struct {
 	UserInitHook string
 
 	// profileDir is the absolute path to the directory storing the nix-profile
-	profileDir string
+	profileDir  string
+	historyFile string
 }
 
 type ShellOption func(*Shell)
@@ -103,6 +104,12 @@ func WithPlanInitHook(hook string) ShellOption {
 func WithProfile(profileDir string) ShellOption {
 	return func(s *Shell) {
 		s.profileDir = profileDir
+	}
+}
+
+func WithHistoryFile(historyFile string) ShellOption {
+	return func(s *Shell) {
+		s.historyFile = historyFile
 	}
 }
 
@@ -262,12 +269,14 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		UserHook         string
 		PlanInitHook     string
 		ProfileBinDir    string
+		HistoryFile      string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
 		ProfileBinDir:    s.profileDir + "/bin",
+		HistoryFile:      strings.TrimSpace(s.historyFile),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
