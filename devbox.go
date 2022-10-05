@@ -314,7 +314,7 @@ const (
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
-	if err := d.Generate(); err != nil {
+	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
 
