@@ -24,7 +24,7 @@ Devbox provides a lot of benefits over pure Docker containers, Nix Shells, or ma
 Declare the list of tools needed by your project via a devbox.json file and run devbox shell. Everyone working on the project gets a shell environment with the exact same version of those tools.
 
 ### Try new tools without polluting your laptop
-Development environments created by Devbox are isolated from everything else in your laptop. Is there a tool you want to try without making a mess? Add it to a Devbox shell, and remove it when you don't want it anymore – all while keeping your laptop pristine. Removing or changing a pacakge in your dev environment is as easy as editing your `devbox.json`.
+Development environments created by Devbox are isolated from everything else in your laptop. Is there a tool you want to try without making a mess? Add it to a Devbox shell, and remove it when you don't want it anymore – all while keeping your laptop pristine. Removing or changing a package in your dev environment is as easy as editing your `devbox.json`.
 
 ### Don't sacrifice speed
 Devbox can create isolated environments right on your laptop, without an extra-layer of virtualization slowing your file system or every command. When you're ready to ship, it'll turn it into an equivalent container – but not before.
