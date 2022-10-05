@@ -42,6 +42,10 @@ zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
 
 # Begin Devbox Post-init Hook
 
+# TODO: this can likely be simplified, because we no longer expect any NIX_STORE paths.
+# These are replaced by having the NixProfilePath. However, refactoring
+# this is a bit risky due to the diff behavior of various shells, so not doing just yet.
+#
 # We need to do some processing on the PATH to ensure that any NIX_STORE paths
 # stay at the front.
 #
@@ -71,7 +75,7 @@ PATH="$(
 			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
 		esac
 	done
-	echo "${nix_path:+$nix_path:}${non_nix_path}"
+	echo "./devbox/profile/bin:${non_nix_path}"
 )"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.

@@ -20,7 +20,7 @@ import (
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-var shellFiles = []string{".gitignore", "shell.nix"}
+var shellFiles = []string{".gitignore", "development.nix", "shell.nix"}
 var buildFiles = []string{".gitignore", "development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
 func generate(rootPath string, plan *plansdk.Plan, files []string) error {

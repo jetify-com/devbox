@@ -41,6 +41,9 @@ type Shell struct {
 
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
+
+	// profileDir is the absolute path to the directory storing the nix-profile
+	profileDir string
 }
 
 type ShellOption func(*Shell)
@@ -97,6 +100,12 @@ func WithPlanInitHook(hook string) ShellOption {
 	}
 }
 
+func WithProfile(profileDir string) ShellOption {
+	return func(s *Shell) {
+		s.profileDir = profileDir
+	}
+}
+
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
 // user's home directory. It doesn't guarantee that the file exists.
 func rcfilePath(basename string) string {
@@ -107,7 +116,7 @@ func rcfilePath(basename string) string {
 	return filepath.Join(home, basename)
 }
 
-func (s *Shell) Run(nixPath string) error {
+func (s *Shell) Run(nixShellFilePath string) error {
 	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
 	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
 	// assume they are.
@@ -116,7 +125,9 @@ func (s *Shell) Run(nixPath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
-	env := append(os.Environ(),
+
+	env := append(
+		os.Environ(),
 		"PARENT_PATH="+parentPath,
 		"NIX_PROFILES="+strings.Join(nixProfileDirs, " "),
 
@@ -130,7 +141,7 @@ func (s *Shell) Run(nixPath string) error {
 	if s.binPath == "" {
 		cmd := exec.Command("nix-shell", "--pure")
 		cmd.Args = append(cmd.Args, toKeepArgs(env)...)
-		cmd.Args = append(cmd.Args, nixPath)
+		cmd.Args = append(cmd.Args, nixShellFilePath)
 		cmd.Env = env
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -142,7 +153,7 @@ func (s *Shell) Run(nixPath string) error {
 
 	cmd := exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
 	cmd.Args = append(cmd.Args, toKeepArgs(env)...)
-	cmd.Args = append(cmd.Args, nixPath)
+	cmd.Args = append(cmd.Args, nixShellFilePath)
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -250,11 +261,13 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath string
 		UserHook         string
 		PlanInitHook     string
+		ProfileBinDir    string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
+		ProfileBinDir:    s.profileDir + "/bin",
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -365,14 +378,20 @@ func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
 
 		keep := true
 		for _, profileDir := range nixProfileDirs {
-			if strings.HasPrefix(path, profileDir) {
+			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or /Users/<username>/.nix-profile
+			// We want to keep the former, so that nix tools are available inside the shell.
+			// We want to filter out the latter, so that installed nix packages are not auto-included inside the shell.
+			//    This lets us maintain a veneer of pureness.
+			if strings.HasPrefix(path, profileDir) && strings.HasPrefix("/Users", profileDir) {
 				keep = false
 				break
 			}
 		}
+
 		if keep {
 			cleaned = append(cleaned, path)
 		}
 	}
+
 	return strings.Join(cleaned, string(filepath.ListSeparator))
 }

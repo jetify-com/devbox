@@ -29,17 +29,14 @@ func runShellCmd(cmd *cobra.Command, args []string) error {
 	path, cmds := parseShellArgs(cmd, args)
 
 	// Check the directory exists.
-	box, err := devbox.Open(path)
+	box, err := devbox.Open(path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	inDevboxShell := os.Getenv("DEVBOX_SHELL_ENABLED")
-	if inDevboxShell != "" && inDevboxShell != "0" && inDevboxShell != "false" {
+	if devbox.IsDevboxShellEnabled() {
 		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
 	}
-
-	fmt.Println("Installing nix packages. This may take a while...")
 
 	if len(cmds) > 0 {
 		err = box.Exec(cmds...)

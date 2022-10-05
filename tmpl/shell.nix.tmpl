@@ -44,9 +44,4 @@ mkShell {
       echo "PATH=$PATH"
       {{- end }}
     '';
-  packages = [
-  {{- range .DevPackages}}
-    {{.}}
-  {{end -}}
-  ];
 }
