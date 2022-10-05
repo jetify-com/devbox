@@ -42,7 +42,7 @@ zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
 
 # Begin Devbox Post-init Hook
 
-PATH=./.devbox/profile/bin:$PATH
+PATH="./.devbox/profile/bin:$PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"

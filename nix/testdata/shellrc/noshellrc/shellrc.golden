@@ -1,6 +1,6 @@
 # Begin Devbox Post-init Hook
 
-PATH=./.devbox/profile/bin:$PATH
+PATH="./.devbox/profile/bin:$PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"

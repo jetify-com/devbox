@@ -28,7 +28,7 @@ content readable.
 
 # Begin Devbox Post-init Hook
 
-PATH={{ .ProfileBinDir }}:$PATH
+PATH="{{ .ProfileBinDir }}:$PATH"
 
 {{- if .HistoryFile }}
 HISTFILE={{.HistoryFile}}
