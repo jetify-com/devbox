@@ -218,6 +218,15 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds)
 }
 
+func (d *Devbox) SetupDirenv(path string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Printf("export PATH=%s:$PATH", absPath)
+	return nil
+}
+
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.srcDir, configFilename)
