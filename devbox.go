@@ -236,7 +236,9 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	return generate(d.srcDir, d.ShellPlan(), shellFiles)
+	err := generate(d.srcDir, d.ShellPlan(), shellFiles)
+	fmt.Println("Done generating!")
+	return err
 }
 
 func (d *Devbox) generateBuildFiles() error {
