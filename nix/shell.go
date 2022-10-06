@@ -370,7 +370,8 @@ func splitNixList(s string) []string {
 //
 //  1. Applies filepath.Clean.
 //  2. Removes the path if it's relative (must begin with '/' and not be '.').
-//  3. Removes the path if it's a descendant of a Nix profile directory.
+//  3. Removes the path if it's a descendant of a user Nix profile directory
+//     (the default Nix profile is kept).
 func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
 	split := filepath.SplitList(pathEnv)
 	if len(split) == 0 {
@@ -387,11 +388,14 @@ func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
 
 		keep := true
 		for _, profileDir := range nixProfileDirs {
-			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or /Users/<username>/.nix-profile
-			// We want to keep the former, so that nix tools are available inside the shell.
-			// We want to filter out the latter, so that installed nix packages are not auto-included inside the shell.
-			//    This lets us maintain a veneer of pureness.
-			if strings.HasPrefix(path, profileDir) && strings.HasPrefix("/Users", profileDir) {
+			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or
+			// $HOME/.nix-profile. The former contains Nix itself (nix-store, nix-env,
+			// etc.), which we want to keep so it's available in the shell. The latter
+			// contains programs that the user installed with Nix, which we want to filter
+			// out so that only devbox-managed Nix packages are available.
+			isProfileDir := strings.HasPrefix(path, profileDir)
+			isSystemProfile := strings.HasPrefix(profileDir, "/nix")
+			if isProfileDir && !isSystemProfile {
 				keep = false
 				break
 			}
