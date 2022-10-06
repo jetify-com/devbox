@@ -1,0 +1,9 @@
+{
+  "packages": [
+    "python310",
+    "pipenv"
+  ],
+  "shell": {
+    "init_hook": null
+  }
+}
