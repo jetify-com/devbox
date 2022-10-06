@@ -37,10 +37,6 @@ func setupDirenvFunc() runFunc {
 			return errors.WithStack(err)
 		}
 
-		if devbox.IsDevboxShellEnabled() {
-			return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox setup-direnv again.")
-		}
-
 		if !plansdk.FileExists(filepath.Join(path, profileDir)) {
 			return errors.New("Could not locate the binaries for your devbox project. Run 'devbox shell' and 'exit' to make sure dependencies are installed.")
 		}
