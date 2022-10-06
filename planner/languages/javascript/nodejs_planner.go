@@ -115,17 +115,17 @@ func (p *Planner) packages(pkgManager string, project *nodeProject) []string {
 
 func (p *Planner) inputFiles(srcDir string) []string {
 	inputFiles := []string{
-		filepath.Join(srcDir, "package.json"),
+		"package.json",
 	}
 
-	npmPkgLockPath := filepath.Join(srcDir, "package-lock.json")
-	if plansdk.FileExists(npmPkgLockPath) {
-		inputFiles = append(inputFiles, npmPkgLockPath)
+	npmPkgLockFile := "package-lock.json"
+	if plansdk.FileExists(filepath.Join(srcDir, npmPkgLockFile)) {
+		inputFiles = append(inputFiles, npmPkgLockFile)
 	}
 
-	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
-	if plansdk.FileExists(yarnPkgLockPath) {
-		inputFiles = append(inputFiles, yarnPkgLockPath)
+	yarnPkgLockFile := "yarn.lock"
+	if plansdk.FileExists(filepath.Join(srcDir, yarnPkgLockFile)) {
+		inputFiles = append(inputFiles, yarnPkgLockFile)
 	}
 
 	return inputFiles
