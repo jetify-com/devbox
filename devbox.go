@@ -331,7 +331,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	fmt.Printf("%s nix packages. This may take a while...", installingVerb)
+	fmt.Printf("%s nix packages. This may take a while...\n", installingVerb)
 
 	// We need to re-install the packages
 	if err := d.applyDevNixDerivation(); err != nil {
