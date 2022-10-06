@@ -137,8 +137,8 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
-	return d.convertToPlan(), nil
+func (d *Devbox) ShellPlan() *plansdk.Plan {
+	return d.convertToPlan()
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
@@ -167,14 +167,8 @@ func (d *Devbox) Generate() error {
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {
-
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
-	}
-
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return errors.WithStack(err)
 	}
 
 	profileDir, err := d.profileDir()
@@ -184,7 +178,6 @@ func (d *Devbox) Shell() error {
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	sh, err := nix.DetectShell(
-		nix.WithPlanInitHook(plan.ShellInitHook),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
@@ -240,14 +233,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	shellPlan, err := d.ShellPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if shellPlan.Invalid() {
-		return shellPlan.Error()
-	}
-	return generate(d.srcDir, shellPlan, shellFiles)
+	return generate(d.srcDir, d.ShellPlan(), shellFiles)
 }
 
 func (d *Devbox) generateBuildFiles() error {
