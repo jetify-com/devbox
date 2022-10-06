@@ -31,7 +31,8 @@ const (
 
 	// profileDir contains the contents of the profile generated via `nix-env --profile profileDir <command>`
 	// Instead of using directory, prefer using the devbox.profileDir() function that ensures the directory exists.
-	profileDir = ".devbox/nix-profile/profile"
+	// TODO savil. Rename to profilePath. This is the symlink of the profile, and not a directory.
+	profileDir = ".devbox/nix/profile/default"
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
