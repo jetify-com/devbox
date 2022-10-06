@@ -70,7 +70,7 @@ jobs:
           echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Install Nix packages
-        run: nix-build '<nixpkgs>' -A nix -A stdenv -A bash -A hello
+        run: nix-build '<nixpkgs>' -A mkShell -A hello
       - name: Run tests
         run: |
           if [ "$RUNNER_DEBUG" = "1" ]; then
