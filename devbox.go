@@ -371,9 +371,11 @@ func (d *Devbox) applyDevNixDerivation() error {
 		"--install",
 		"-f", filepath.Join(d.srcDir, ".devbox/gen/development.nix"),
 	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
 
 	debug.Log("Running command: %s\n", cmd.Args)
-	_, err = cmd.Output()
+	err = cmd.Run()
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
