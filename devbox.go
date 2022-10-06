@@ -323,6 +323,7 @@ const (
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if err := d.generateShellFiles(); err != nil {
+		fmt.Println("ERROR:", err)
 		return err
 	}
 
