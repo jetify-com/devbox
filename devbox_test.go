@@ -48,15 +48,18 @@ func testExample(t *testing.T, testPath string) {
 		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
 		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
 
-		plan, err := box.ShellPlan()
+		plan, err := box.BuildPlan()
+		buildErrorExpectedFile := filepath.Join(baseDir, "build_error_expected")
+		hasBuildErrorExpectedFile := fileExists(buildErrorExpectedFile)
+		if hasBuildErrorExpectedFile {
+			assert.NotNil(err)
+			// Since build error is expected, skip the rest of the test
+			return
+		}
 		assert.NoError(err, "devbox plan should not fail")
 
-		generateErrorFile := filepath.Join(baseDir, "has_generate_error")
-		hasGenerateErrorFile := fileExists(generateErrorFile)
 		err = box.Generate()
-		if !hasGenerateErrorFile {
-			assert.NoError(err, "devbox generate should not fail")
-		}
+		assert.NoError(err, "devbox generate should not fail")
 
 		if !hasGoldenFile {
 			assert.NotEmpty(plan.DevPackages, "the plan should have dev packages")

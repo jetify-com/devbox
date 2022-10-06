@@ -31,7 +31,7 @@ func runPlanCmd(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	plan, err := box.ShellPlan()
+	plan, err := box.BuildPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}

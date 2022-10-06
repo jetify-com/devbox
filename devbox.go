@@ -30,7 +30,9 @@ const (
 	configFilename = "devbox.json"
 
 	// profileDir contains the contents of the profile generated via `nix-env --profile profileDir <command>`
-	profileDir = ".devbox/profile"
+	// Instead of using directory, prefer using the devbox.profileDir() function that ensures the directory exists.
+	// TODO savil. Rename to profilePath. This is the symlink of the profile, and not a directory.
+	profileDir = ".devbox/nix/profile/default"
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
@@ -135,13 +137,9 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
-	userPlan := d.convertToPlan()
-	shellPlan, err := planner.GetShellPlan(d.srcDir)
-	if err != nil {
-		return nil, err
-	}
-	return plansdk.MergeUserPlan(userPlan, shellPlan)
+func (d *Devbox) ShellPlan() *plansdk.Plan {
+	// TODO: Move shell plan to a separate struct from build plan.
+	return d.convertToPlan()
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
@@ -170,19 +168,18 @@ func (d *Devbox) Generate() error {
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {
-
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
 
-	plan, err := d.ShellPlan()
+	profileDir, err := d.profileDir()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
+
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	sh, err := nix.DetectShell(
-		nix.WithPlanInitHook(plan.ShellInitHook),
-		nix.WithProfile(d.profileDir()),
+		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
 	if err != nil {
@@ -198,7 +195,12 @@ func (d *Devbox) Exec(cmds ...string) error {
 		return err
 	}
 
-	pathWithProfileBin := fmt.Sprintf("PATH=%s:$PATH", d.profileBinDir())
+	profileBinDir, err := d.profileBinDir()
+	if err != nil {
+		return err
+	}
+
+	pathWithProfileBin := fmt.Sprintf("PATH=%s:$PATH", profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
 	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
@@ -232,14 +234,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	shellPlan, err := d.ShellPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if shellPlan.Invalid() {
-		return shellPlan.Error()
-	}
-	return generate(d.srcDir, shellPlan, shellFiles)
+	return generate(d.srcDir, d.ShellPlan(), shellFiles)
 }
 
 func (d *Devbox) generateBuildFiles() error {
@@ -256,12 +251,21 @@ func (d *Devbox) generateBuildFiles() error {
 	return generate(d.srcDir, buildPlan, buildFiles)
 }
 
-func (d *Devbox) profileDir() string {
-	return filepath.Join(d.srcDir, profileDir)
+func (d *Devbox) profileDir() (string, error) {
+	absPath := filepath.Join(d.srcDir, profileDir)
+	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return absPath, nil
 }
 
-func (d *Devbox) profileBinDir() string {
-	return filepath.Join(d.profileDir(), "bin")
+func (d *Devbox) profileBinDir() (string, error) {
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(profileDir, "bin"), nil
 }
 
 func missingDevboxJSONError(dir string) error {
@@ -325,9 +329,9 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	fmt.Fprintf(d.writer, "%s nix packages. This may take a while...", installingVerb)
 
 	// We need to re-install the packages
-	if err := d.ApplyDevNixDerivation(); err != nil {
+	if err := d.applyDevNixDerivation(); err != nil {
 		fmt.Println()
-		return err
+		return errors.Wrap(err, "apply Nix derivation")
 	}
 	fmt.Println("done.")
 
@@ -354,22 +358,32 @@ func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) erro
 	return nil
 }
 
-// ApplyDevNixDerivation ensures the local profile has exactly the packages in the development.nix file
-//
-// Will move to a store interface/package
-func (d *Devbox) ApplyDevNixDerivation() error {
+// applyDevNixDerivation installs or uninstalls packages to or from this
+// devbox's Nix profile so that it matches what's in development.nix.
+func (d *Devbox) applyDevNixDerivation() error {
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return err
+	}
 
-	cmdStr := fmt.Sprintf(
-		"--profile %s --install -f %s/.devbox/gen/development.nix",
-		filepath.Join(d.srcDir, profileDir),
-		d.srcDir,
+	cmd := exec.Command("nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.srcDir, ".devbox/gen/development.nix"),
 	)
-	cmdParts := strings.Split(cmdStr, " ")
-	execCmd := exec.Command("nix-env", cmdParts...)
 
-	debug.Log("running command: %s\n", execCmd.Args)
-	err := execCmd.Run()
-	return errors.WithStack(err)
+	debug.Log("Running command: %s\n", cmd.Args)
+	_, err = cmd.Output()
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return errors.Errorf("running command %s: exit status %d with command output: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+	}
+	if err != nil {
+		return errors.Errorf("running command %s: %v", cmd, err)
+	}
+	return nil
 }
 
 // Move to a utility package?
