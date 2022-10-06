@@ -218,12 +218,14 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds)
 }
 
-func (d *Devbox) SetupDirenv(path string) error {
-	absPath, err := filepath.Abs(path)
+func (d *Devbox) SetupDirenv() error {
+	profileBinDir, err := d.profileBinDir()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	fmt.Printf("export PATH=%s:$PATH", absPath)
+	// TODO: For now we just updated the PATH but this may need to evolve
+	// to essentially a parsed shellrc.tmpl
+	fmt.Printf("export PATH=%s:$PATH", profileBinDir)
 	return nil
 }
 
