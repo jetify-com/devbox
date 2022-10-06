@@ -29,6 +29,7 @@ func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range files {
+		fmt.Println("Writing template:", file)
 		err := writeFromTemplate(outPath, plan, file)
 		if err != nil {
 			return errors.WithStack(err)
@@ -72,6 +73,9 @@ func writeFromTemplate(path string, plan *plansdk.Plan, tmplName string) error {
 		return errors.WithStack(err)
 	}
 	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
+	fmt.Println("Writing template:", tmplName+".tmpl")
+	fmt.Printf("Template data: %+v\n", plan)
+
 	return errors.WithStack(t.Execute(f, plan))
 }
 
