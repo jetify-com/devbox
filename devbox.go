@@ -147,8 +147,24 @@ func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) BuildPlan() (*plansdk.Plan, error) {
+
+	var relativeSrcDir = d.srcDir
+	// Only make the d.srcDir be relative, if it is an absolute path
+	// Ugly hack to make tests work.
+	if abs, err := filepath.Abs(d.srcDir); err != nil || abs == d.srcDir {
+
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		relativeSrcDir, err = filepath.Rel(wd, d.srcDir)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	userPlan := d.convertToPlan()
-	buildPlan, err := planner.GetBuildPlan(d.srcDir)
+	buildPlan, err := planner.GetBuildPlan(relativeSrcDir)
 	if err != nil {
 		return nil, err
 	}
