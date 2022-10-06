@@ -20,8 +20,8 @@ import (
 //go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
-var shellFiles = []string{".gitignore", "development.nix", "shell.nix"}
-var buildFiles = []string{".gitignore", "development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
+var shellFiles = []string{"development.nix", "shell.nix"}
+var buildFiles = []string{"development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
 func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
@@ -31,6 +31,14 @@ func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
+	}
+
+	// Gitignore file is added to the .devbox directory
+	// TODO savil. Remove this hardcode from here, so this function can be generically defined again
+	//    by accepting the files list parameter.
+	err := writeFromTemplate(filepath.Join(rootPath, ".devbox"), plan, ".gitignore")
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	for name, content := range plan.GeneratedFiles {
