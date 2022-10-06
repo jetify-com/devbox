@@ -7,6 +7,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,7 @@ var shellFiles = []string{"development.nix", "shell.nix"}
 var buildFiles = []string{"development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
 func generate(rootPath string, plan *plansdk.Plan, files []string) error {
+	log.Println("Generating shell files...")
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range files {

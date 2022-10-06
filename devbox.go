@@ -224,13 +224,15 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 			}
 		}
 	}
-	return &plansdk.Plan{
+	p := &plansdk.Plan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		InstallStage:    planStages[0],
 		BuildStage:      planStages[1],
 		StartStage:      planStages[2],
 	}
+	fmt.Printf("PLAN IS: %+v\n", p)
+	return p
 }
 
 func (d *Devbox) generateShellFiles() error {
