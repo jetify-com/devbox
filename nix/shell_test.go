@@ -89,3 +89,45 @@ If the new shellrc is correct, you can update the golden file with:
 		})
 	}
 }
+
+func TestCleanEnvPath(t *testing.T) {
+	tests := []struct {
+		name        string
+		nixProfiles []string
+		inPath      string
+		outPath     string
+	}{
+		{
+			name:        "RemoveUserNixProfileDarwin",
+			nixProfiles: []string{"/nix/var/nix/profiles/default", "/Users/test/.nix-profile"},
+			inPath:      "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/test/.nix-profile/bin:/nix/var/nix/profiles/default/bin",
+			outPath:     "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/nix/var/nix/profiles/default/bin",
+		},
+		{
+			name:        "RemoveUserNixProfileLinux",
+			nixProfiles: []string{"/nix/var/nix/profiles/default", "/home/test/.nix-profile"},
+			inPath:      "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/test/.nix-profile/bin:/nix/var/nix/profiles/default/bin",
+			outPath:     "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/nix/var/nix/profiles/default/bin",
+		},
+		{
+			name:        "NoNixProfiles",
+			nixProfiles: []string{},
+			inPath:      "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/test/.nix-profile/bin:/nix/var/nix/profiles/default/bin",
+			outPath:     "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/test/.nix-profile/bin:/nix/var/nix/profiles/default/bin",
+		},
+		{
+			name:        "NoRelativePaths",
+			nixProfiles: []string{},
+			inPath:      "/usr/local/bin:/usr/bin:../test:/bin:/usr/sbin:/sbin:.:..",
+			outPath:     "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := cleanEnvPath(test.inPath, test.nixProfiles)
+			if got != test.outPath {
+				t.Errorf("Got incorrect cleaned PATH.\ngot:  %s\nwant: %s", got, test.outPath)
+			}
+		})
+	}
+}
