@@ -49,9 +49,11 @@ func testExample(t *testing.T, testPath string) {
 		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
 
 		plan, err := box.BuildPlan()
-		buildPlanErrorFile := filepath.Join(baseDir, "has_build_error")
-		hasBuildErrorFile := fileExists(buildPlanErrorFile)
-		if hasBuildErrorFile {
+		buildErrorExpectedFile := filepath.Join(baseDir, "build_error_expected")
+		hasBuildErrorExpectedFile := fileExists(buildErrorExpectedFile)
+		if hasBuildErrorExpectedFile {
+			assert.NotNil(err)
+			// Since build error is expected, skip the rest of the test
 			return
 		}
 		assert.NoError(err, "devbox plan should not fail")

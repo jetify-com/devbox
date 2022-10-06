@@ -138,6 +138,7 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) ShellPlan() *plansdk.Plan {
+	// TODO: Move shell plan to a separate struct from build plan.
 	return d.convertToPlan()
 }
 
