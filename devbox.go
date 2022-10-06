@@ -347,9 +347,9 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	fmt.Fprintf(d.writer, "%s nix packages. This may take a while...", installingVerb)
 
 	// We need to re-install the packages
-	if err := d.ApplyDevNixDerivation(); err != nil {
+	if err := d.applyDevNixDerivation(); err != nil {
 		fmt.Println()
-		return err
+		return errors.Wrap(err, "apply Nix derivation")
 	}
 	fmt.Println("done.")
 
@@ -376,26 +376,32 @@ func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) erro
 	return nil
 }
 
-// ApplyDevNixDerivation ensures the local profile has exactly the packages in the development.nix file
-//
-// Will move to a store interface/package
-func (d *Devbox) ApplyDevNixDerivation() error {
+// applyDevNixDerivation installs or uninstalls packages to or from this
+// devbox's Nix profile so that it matches what's in development.nix.
+func (d *Devbox) applyDevNixDerivation() error {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
 	}
 
-	cmdStr := fmt.Sprintf(
-		"--profile %s --install -f %s/.devbox/gen/development.nix",
-		profileDir,
-		d.srcDir,
+	cmd := exec.Command("nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.srcDir, ".devbox/gen/development.nix"),
 	)
-	cmdParts := strings.Split(cmdStr, " ")
-	execCmd := exec.Command("nix-env", cmdParts...)
 
-	debug.Log("running command: %s\n", execCmd.Args)
-	err = execCmd.Run()
-	return errors.WithStack(err)
+	debug.Log("Running command: %s\n", cmd.Args)
+	_, err = cmd.Output()
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return errors.Errorf("running command %s: exit status %d with command output: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+	}
+	if err != nil {
+		return errors.Errorf("running command %s: %v", cmd, err)
+	}
+	return nil
 }
 
 // Move to a utility package?
