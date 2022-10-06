@@ -24,6 +24,11 @@ func testShellHello(t *testing.T, name string) {
 	sh := newShell(t, name)
 	sh.parentIO.write(t, "devbox init")
 	sh.parentIO.write(t, "devbox add hello")
+	go func() {
+		for {
+			sh.parentIO.read(t)
+		}
+	}()
 	sh.startDevboxShell(t)
 
 	sh.devboxIO.write(t, `echo "My name is: $0"`)
