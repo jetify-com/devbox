@@ -52,7 +52,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 				userShellrcPath: test.shellrcPath,
 				UserInitHook:    test.hook,
 				planInitHook:    `echo "Welcome to the devbox!"`,
-				profileDir:      "./devbox/profile",
+				profileDir:      "./.devbox/profile",
 			}
 			gotPath, err := s.writeDevboxShellrc()
 			if err != nil {

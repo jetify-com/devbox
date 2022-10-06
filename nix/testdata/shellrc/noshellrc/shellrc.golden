@@ -1,40 +1,6 @@
 # Begin Devbox Post-init Hook
 
-# TODO: this can likely be simplified, because we no longer expect any NIX_STORE paths.
-# These are replaced by having the NixProfilePath. However, refactoring
-# this is a bit risky due to the diff behavior of various shells, so not doing just yet.
-#
-# We need to do some processing on the PATH to ensure that any NIX_STORE paths
-# stay at the front.
-#
-# Use IFS to split the PATH by ':' and then loop over each directory. Do the
-# splitting in a subshell so that the change to IFS is temporary.
-#
-# The first case pattern matches a path that has the Nix store as a prefix, in
-# which case we append it to nix_path. The second case pattern matches
-# everything else and appends to non_nix_path. At the end, we join them with
-# nix_path at the front.
-#
-# Some notes:
-# 	- We do `for ... in $(echo $PATH)` instead of `for ... in $PATH` because
-# 	  zsh doesn't do word splitting on unquoted variables.
-# 	- The syntax `${nix_path:+$nix_path:}` means, "if nix_path is already
-# 	  set, write `$nix_path:` (with the colon) instead." This ensures we
-# 	  don't start with a colon on the first append.
-# 	- You can't have comments in a subshell, hence this one long comment at
-# 	  the top.
-# 	- Keep this as POSIX as possible to maximize compatibility with
-# 	  different shells.
-PATH="$(
-	IFS=:
-	for path_dir in $(echo "$PATH"); do
-		case "$path_dir" in
-			$NIX_STORE/*) nix_path="${nix_path:+$nix_path:}${path_dir}" ;;
-			*) non_nix_path="${non_nix_path:+$non_nix_path:}${path_dir}" ;;
-		esac
-	done
-	echo "./devbox/profile/bin:${non_nix_path}"
-)"
+PATH="./.devbox/profile/bin:$PATH"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
