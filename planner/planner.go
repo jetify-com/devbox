@@ -68,28 +68,22 @@ var PLANNERS = []plansdk.Planner{
 	&zig.Planner{},
 }
 
-func GetShellPlan(srcDir string) (*plansdk.Plan, error) {
-	result := &plansdk.Plan{
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-	}
-	var err error
+// Return a merged shell plan from all planners.
+func GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	result := &plansdk.ShellPlan{}
 	for _, p := range getRelevantPlanners(srcDir) {
-		result, err = plansdk.MergePlans(result, p.GetPlan(srcDir))
-		if err != nil {
-			return nil, err
-		}
-
+		// if merge fails, we return no errors for now.
+		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
 	}
-	return result, nil
+	return result
 }
 
 // Return one buildable plan from all planners.
-func GetBuildPlan(srcDir string) (*plansdk.Plan, error) {
-	buildables := []*plansdk.Plan{}
-	unbuildables := []*plansdk.Plan{}
+func GetBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
+	buildables := []*plansdk.BuildPlan{}
+	unbuildables := []*plansdk.BuildPlan{}
 	for _, p := range getRelevantPlanners(srcDir) {
-		if plan := p.GetPlan(srcDir); plan.Buildable() {
+		if plan := p.GetBuildPlan(srcDir); plan.Buildable() {
 			buildables = append(buildables, plan)
 		} else {
 			unbuildables = append(unbuildables, plan)

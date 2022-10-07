@@ -23,10 +23,10 @@ var tmplFS embed.FS
 var shellFiles = []string{"development.nix", "shell.nix"}
 var buildFiles = []string{"development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
-func generate(rootPath string, plan *plansdk.Plan, files []string) error {
+func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
-	for _, file := range files {
+	for _, file := range shellFiles {
 		err := writeFromTemplate(outPath, plan, file)
 		if err != nil {
 			return errors.WithStack(err)
@@ -51,7 +51,20 @@ func generate(rootPath string, plan *plansdk.Plan, files []string) error {
 	return nil
 }
 
-func writeFromTemplate(path string, plan *plansdk.Plan, tmplName string) error {
+func generateForBuild(rootPath string, plan *plansdk.BuildPlan) error {
+	outPath := filepath.Join(rootPath, ".devbox/gen")
+
+	for _, file := range buildFiles {
+		err := writeFromTemplate(outPath, plan, file)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}
+
+func writeFromTemplate(path string, plan interface{}, tmplName string) error {
 	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?

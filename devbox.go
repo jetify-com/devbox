@@ -152,24 +152,22 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
-	userPlan := d.convertToPlan()
-	shellPlan, err := planner.GetShellPlan(d.srcDir)
-	if err != nil {
-		return nil, err
-	}
-	return plansdk.MergeUserPlan(userPlan, shellPlan)
+func (d *Devbox) ShellPlan() *plansdk.ShellPlan {
+	shellPlan := planner.GetShellPlan(d.srcDir)
+	shellPlan.DevPackages = d.cfg.Packages
+
+	return shellPlan
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) BuildPlan() (*plansdk.Plan, error) {
-	userPlan := d.convertToPlan()
+func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
+	userPlan := d.convertToBuildPlan()
 	buildPlan, err := planner.GetBuildPlan(d.srcDir)
 	if err != nil {
 		return nil, err
 	}
-	return plansdk.MergeUserPlan(userPlan, buildPlan)
+	return plansdk.MergeUserBuildPlan(userPlan, buildPlan)
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
@@ -190,12 +188,7 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
+	plan := d.ShellPlan()
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -203,7 +196,7 @@ func (d *Devbox) Shell() error {
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	sh, err := nix.DetectShell(
-		nix.WithPlanInitHook(plan.ShellInitHook),
+		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
@@ -249,7 +242,7 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) convertToPlan() *plansdk.Plan {
+func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
 	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
 	planStages := []*plansdk.Stage{{}, {}, {}}
 
@@ -260,7 +253,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 			}
 		}
 	}
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		InstallStage:    planStages[0],
@@ -270,14 +263,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	shellPlan, err := d.ShellPlan()
-	if err != nil {
-		return err
-	}
-	if shellPlan.Invalid() {
-		return shellPlan.Error()
-	}
-	return generate(d.srcDir, shellPlan, shellFiles)
+	return generateForShell(d.srcDir, d.ShellPlan())
 }
 
 func (d *Devbox) generateBuildFiles() error {
@@ -291,7 +277,7 @@ func (d *Devbox) generateBuildFiles() error {
 	if buildPlan.Warning() != nil {
 		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
 	}
-	return generate(d.srcDir, buildPlan, buildFiles)
+	return generateForBuild(d.srcDir, buildPlan)
 }
 
 func (d *Devbox) profileDir() (string, error) {

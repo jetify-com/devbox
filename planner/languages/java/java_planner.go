@@ -56,9 +56,13 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(pomXMLPath) || plansdk.FileExists(buildGradlePath)
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	// Creating an empty plan so that we can communicate an error to the user
-	plan := &plansdk.Plan{
+	plan := &plansdk.BuildPlan{
 		DevPackages: []string{},
 	}
 
@@ -81,7 +85,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	installCommand := p.installCommand(builderTool)
 	buildCommand := p.buildCommand()
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages:     devPackages,
 		RuntimePackages: runtimePackages,
 		InstallStage: &plansdk.Stage{

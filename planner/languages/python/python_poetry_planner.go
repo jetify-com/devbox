@@ -30,10 +30,14 @@ func (p *PoetryPlanner) IsRelevant(srcDir string) bool {
 		plansdk.FileExists(filepath.Join(srcDir, "pyproject.toml"))
 }
 
-func (p *PoetryPlanner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *PoetryPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{}
+}
+
+func (p *PoetryPlanner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	version := p.PythonVersion(srcDir)
 	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
-	plan := &plansdk.Plan{
+	plan := &plansdk.BuildPlan{
 		DevPackages: []string{
 			pythonPkg,
 			"poetry",

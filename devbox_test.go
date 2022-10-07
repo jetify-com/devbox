@@ -69,15 +69,15 @@ func testExample(t *testing.T, testPath string) {
 		data, err := os.ReadFile(goldenFile)
 		assert.NoError(err, "plan.json should be readable")
 
-		expected := &plansdk.Plan{}
+		expected := &plansdk.BuildPlan{}
 		err = json.Unmarshal(data, &expected)
 		assert.NoError(err, "plan.json should parse correctly")
 
-		assertPlansMatch(t, expected, plan)
+		assertBuildPlansMatch(t, expected, plan)
 	})
 }
 
-func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan) {
+func assertBuildPlansMatch(t *testing.T, expected *plansdk.BuildPlan, actual *plansdk.BuildPlan) {
 	assert := assert.New(t)
 
 	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
@@ -105,10 +105,6 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	)
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-	assert.Equal(expected.ShellInitHook, actual.ShellInitHook, "ShellInitHook should match")
-	if expected.GeneratedFiles != nil {
-		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
-	}
 }
 
 func fileExists(path string) bool {
