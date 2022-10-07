@@ -72,6 +72,8 @@ jobs:
       - name: Install Nix packages
         run: nix-build '<nixpkgs>' -A mkShell -A hello
       - name: Run tests
+        env:
+          DEVBOX_DEBUG: 1
         run: |
           if [ "$RUNNER_DEBUG" = "1" ]; then
             ls /nix/store
