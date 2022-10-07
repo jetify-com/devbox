@@ -11,21 +11,28 @@ import (
 	"go.jetpack.io/devbox"
 )
 
+type addCmdFlags struct {
+	config configFlags
+}
+
 func AddCmd() *cobra.Command {
+	flags := &addCmdFlags{}
+
 	command := &cobra.Command{
 		Use:               "add <pkg>...",
 		Short:             "Add a new package to your devbox",
 		Args:              cobra.MinimumNArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
-		RunE:              addCmdFunc(),
+		RunE:              addCmdFunc(flags),
 	}
 
+	registerConfigFlags(command, &flags.config)
 	return command
 }
 
-func addCmdFunc() runFunc {
+func addCmdFunc(flags *addCmdFlags) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		box, err := devbox.Open(".", os.Stdout)
+		box, err := devbox.Open(flags.config.path, os.Stdout)
 		if err != nil {
 			return errors.WithStack(err)
 		}

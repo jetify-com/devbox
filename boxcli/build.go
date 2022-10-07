@@ -12,8 +12,13 @@ import (
 	"go.jetpack.io/devbox/docker"
 )
 
+type buildCmdFlags struct {
+	config configFlags
+	docker *docker.BuildFlags
+}
+
 func BuildCmd() *cobra.Command {
-	flags := &docker.BuildFlags{}
+	flags := newBuildFlags()
 
 	command := &cobra.Command{
 		Use:   "build [<dir>]",
@@ -23,21 +28,28 @@ func BuildCmd() *cobra.Command {
 		RunE:  buildCmdFunc(flags),
 	}
 
+	registerConfigFlags(command, &flags.config)
 	command.Flags().StringVar(
-		&flags.Name, "name", "devbox", "name for the container")
+		&flags.docker.Name, "name", "devbox", "name for the container")
 	command.Flags().BoolVar(
-		&flags.NoCache, "no-cache", false, "Do not use a cache")
+		&flags.docker.NoCache, "no-cache", false, "Do not use a cache")
 	command.Flags().StringVar(
-		&flags.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
+		&flags.docker.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
 	command.Flags().StringSliceVar(
-		&flags.Tags, "tags", []string{}, "tags for the container")
+		&flags.docker.Tags, "tags", []string{}, "tags for the container")
 
 	return command
 }
 
-func buildCmdFunc(flags *docker.BuildFlags) runFunc {
+func newBuildFlags() *buildCmdFlags {
+	return &buildCmdFlags{
+		docker: &docker.BuildFlags{},
+	}
+}
+
+func buildCmdFunc(flags *buildCmdFlags) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		path := pathArg(args)
+		path := pathArg(args, &flags.config)
 
 		// Check the directory exists.
 		box, err := devbox.Open(path, os.Stdout)
@@ -45,6 +57,6 @@ func buildCmdFunc(flags *docker.BuildFlags) runFunc {
 			return errors.WithStack(err)
 		}
 
-		return box.Build(flags)
+		return box.Build(flags.docker)
 	}
 }

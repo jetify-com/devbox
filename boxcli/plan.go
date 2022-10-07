@@ -12,18 +12,28 @@ import (
 	"go.jetpack.io/devbox"
 )
 
+type planCmdFlags struct {
+	config configFlags
+}
+
 func PlanCmd() *cobra.Command {
+	flags := &planCmdFlags{}
+
 	command := &cobra.Command{
 		Use:   "plan [<dir>]",
 		Short: "Preview the plan used to build your environment",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  runPlanCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runPlanCmd(cmd, args, flags)
+		},
 	}
+
+	registerConfigFlags(command, &flags.config)
 	return command
 }
 
-func runPlanCmd(cmd *cobra.Command, args []string) error {
-	path := pathArg(args)
+func runPlanCmd(cmd *cobra.Command, args []string, flags *planCmdFlags) error {
+	path := pathArg(args, &flags.config)
 
 	// Check the directory exists.
 	box, err := devbox.Open(path, os.Stdout)
