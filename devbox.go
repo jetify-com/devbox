@@ -372,6 +372,7 @@ func (d *Devbox) applyDevNixDerivation() error {
 	}
 
 	cmd := exec.Command("nix-env",
+		"--verbose",
 		"--profile", profileDir,
 		"--install",
 		"-f", filepath.Join(d.srcDir, ".devbox/gen/development.nix"),
@@ -381,6 +382,7 @@ func (d *Devbox) applyDevNixDerivation() error {
 
 	debug.Log("Running command: %s\n", cmd.Args)
 	err = cmd.Run()
+	debug.Log("Done running command: %s\n", cmd.Args)
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
