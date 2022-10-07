@@ -20,16 +20,16 @@ Note: If you already have a devbox project you may skip to step 3.
     ```bash
     use_devbox() {
         watch_file devbox.json
-        eval $(devbox setup-direnv)
+        eval $(devbox shell --print-env)
     }
     use devbox
     ```
 4. Run `direnv allow` to give permission to `direnv` to setup your environment variables.
-5. At this point your project directory is setup so that everytime you `cd` into it, the binaries from your devbox shell will be used. To test this, you can compare running `which python3` from your project directory and outside.
+5. At this point, your project directory is setup so that every time you `cd` into it, the binaries from your devbox shell will be used. To test this, you can compare running `which python3` from your project directory and outside.
 
 ### Global settings for direnv
 
-Note that everytime changes are made to devbox.json via `devbox add ...`, `debox rm ...` or direct editing of the file, `direnv allow` will be required to run so that `direnv` can setup the new changes. 
+Note that every time changes are made to `devbox.json` via `devbox add ...`, `devbox rm ...` or directly editing the file, requires `direnv allow` to run so that `direnv` can setup the new changes.
 
 Alternatively, a project directory can be whitelisted so that changes will be automatically picked up by `direnv`. This is done by adding following snippet to direnv config file typically at `~/.config/direnv/direnv.toml`. You can create the file and directory if it doesn't exist.
 
