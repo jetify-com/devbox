@@ -43,9 +43,8 @@ func runShellCmd(flags *shellFlags) runFunc {
 		}
 
 		if flags.PrintEnv {
-			box.PrintShellEnv()
 			// return here to prevent opening a devbox shell
-			return nil
+			return box.PrintShellEnv()
 		}
 
 		if devbox.IsDevboxShellEnabled() {
