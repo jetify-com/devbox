@@ -13,56 +13,59 @@ import (
 	"go.jetpack.io/devbox"
 )
 
-type shellFlags struct {
+type shellCmdFlags struct {
+	config   configFlags
 	PrintEnv bool
 }
 
 func ShellCmd() *cobra.Command {
-	flags := &shellFlags{}
+	flags := &shellCmdFlags{}
 	command := &cobra.Command{
 		Use:               "shell [<dir>] -- [<cmd>]",
 		Short:             "Start a new shell or run a command with access to your packages",
 		Long:              "Start a new shell or run a command with access to your packages. \nIf invoked without `cmd`, this will start an interactive shell based on the devbox.json in your current directory, or the directory provided with `dir`. \nIf invoked with a `cmd`, this will start a shell based on the devbox.json provided in `dir`, run the command, and then exit.",
 		Args:              validateShellArgs,
 		PersistentPreRunE: nixShellPersistentPreRunE,
-		RunE:              runShellCmd(flags),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runShellCmd(cmd, args, flags)
+		},
 	}
+
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
+	registerConfigFlags(command, &flags.config)
 	return command
 }
 
-func runShellCmd(flags *shellFlags) runFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		path, cmds := parseShellArgs(cmd, args)
+func runShellCmd(cmd *cobra.Command, args []string, flags *shellCmdFlags) error {
+	path, cmds := parseShellArgs(cmd, args, flags)
 
-		// Check the directory exists.
-		box, err := devbox.Open(path, os.Stdout)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		if flags.PrintEnv {
-			// return here to prevent opening a devbox shell
-			return box.PrintShellEnv()
-		}
-
-		if devbox.IsDevboxShellEnabled() {
-			return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
-		}
-
-		if len(cmds) > 0 {
-			err = box.Exec(cmds...)
-		} else {
-			err = box.Shell()
-		}
-
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return nil
-		}
-		return err
+	// Check the directory exists.
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return errors.WithStack(err)
 	}
+
+	if flags.PrintEnv {
+		// return here to prevent opening a devbox shell
+		return box.PrintShellEnv()
+	}
+
+	if devbox.IsDevboxShellEnabled() {
+		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
+	}
+
+	if len(cmds) > 0 {
+		err = box.Exec(cmds...)
+	} else {
+		err = box.Shell()
+	}
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return nil
+	}
+	return err
 }
 
 func nixShellPersistentPreRunE(cmd *cobra.Command, args []string) error {
@@ -81,13 +84,13 @@ func validateShellArgs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseShellArgs(cmd *cobra.Command, args []string) (string, []string) {
+func parseShellArgs(cmd *cobra.Command, args []string, flags *shellCmdFlags) (string, []string) {
 	index := cmd.ArgsLenAtDash()
 	if index < 0 {
-		return pathArg(args), []string{}
+		return pathArg(args, &flags.config), []string{}
 	}
 
-	path := pathArg(args[:index])
+	path := pathArg(args[:index], &flags.config)
 	cmds := args[index:]
 
 	return path, cmds

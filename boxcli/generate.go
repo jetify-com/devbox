@@ -11,18 +11,29 @@ import (
 	"go.jetpack.io/devbox"
 )
 
+type generateCmdFlags struct {
+	config configFlags
+}
+
 func GenerateCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+
 	command := &cobra.Command{
 		Use:    "generate [<dir>]",
 		Args:   cobra.MaximumNArgs(1),
 		Hidden: true, // For debugging only
-		RunE:   runGenerateCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runGenerateCmd(cmd, args, flags)
+		},
 	}
+
+	registerConfigFlags(command, &flags.config)
+
 	return command
 }
 
-func runGenerateCmd(cmd *cobra.Command, args []string) error {
-	path := pathArg(args)
+func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) error {
+	path := pathArg(args, &flags.config)
 
 	// Check the directory exists.
 	box, err := devbox.Open(path, os.Stdout)
