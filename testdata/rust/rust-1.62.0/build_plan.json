@@ -3,11 +3,10 @@
     "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
   ],
   "dev_packages": [
-    "rust-bin.stable.latest.default",
+    "rust-bin.stable.\"1.62.0\".default",
     "gcc"
   ],
   "runtime_packages": [
-    "rust-bin.stable.latest.default",
     "glibc"
   ],
   "install_stage": {

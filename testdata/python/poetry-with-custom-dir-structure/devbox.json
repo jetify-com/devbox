@@ -1,3 +1,6 @@
 {
-  "packages": []
+  "packages": [
+    "python310",
+    "poetry"
+  ]
 }

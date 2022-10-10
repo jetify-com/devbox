@@ -1,5 +1,7 @@
 {
-  "packages": [],
+  "packages": [
+    "zig"
+  ],
   "shell": {
     "init_hook": null
   }

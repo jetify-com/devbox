@@ -130,7 +130,7 @@ func TestMergeUserBuildPlans(t *testing.T) {
 			},
 			out: &BuildPlan{
 				DevPackages:     []string{"yarn", "nodejs"},
-				RuntimePackages: []string{"yarn", "nodejs"},
+				RuntimePackages: []string{"nodejs"},
 				InstallStage: &Stage{
 					InputFiles: []string{"package.json"},
 					Command:    "yarn install",

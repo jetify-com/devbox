@@ -1,4 +1,4 @@
 {
-  "packages": [],
+  "packages": ["dotnet-sdk_3"],
   "shell": {}
 }

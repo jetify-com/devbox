@@ -1,0 +1,7 @@
+{
+  "dev_packages": [
+    "gradle",
+    "jdk17_headless",
+    "binutils"
+  ]
+}

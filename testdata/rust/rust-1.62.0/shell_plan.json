@@ -1,0 +1,10 @@
+{
+  "dev_packages": [
+    "rust-bin.stable.\"1.62.0\".default",
+    "gcc"
+  ],
+  "nix_overlays": [
+    "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
+  ]
+}
+

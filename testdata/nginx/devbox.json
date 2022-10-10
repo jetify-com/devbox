@@ -1,4 +1,7 @@
 {
-  "packages": [],
+  "packages": [
+    "shell-nginx",
+    "nginx"
+  ],
   "shell": {}
 }

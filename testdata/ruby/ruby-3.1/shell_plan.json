@@ -1,0 +1,11 @@
+{
+  "dev_packages": [
+    "ruby_3_1",
+    "gcc",
+    "gnumake"
+  ],
+  "shell_init_hook": [
+    "echo \"It looks like you are developing a Ruby project.\nTo keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n > bundler config set --local deployment 'true'\n > bundler install\nAnd then run your ruby app with bundler. For example:\n > bundler exec ruby app.rb\";"
+  ]
+}
+

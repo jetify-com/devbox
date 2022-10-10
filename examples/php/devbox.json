@@ -1,3 +1,6 @@
 {
-  "packages": []
+  "packages": [
+    "php81",
+    "php81Packages.composer"
+  ]
 }

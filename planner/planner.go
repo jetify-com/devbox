@@ -5,6 +5,7 @@ package planner
 
 import (
 	"go.jetpack.io/devbox/boxcli/usererr"
+	"go.jetpack.io/devbox/pkgslice"
 	"go.jetpack.io/devbox/planner/languages/c"
 	"go.jetpack.io/devbox/planner/languages/clojure"
 	"go.jetpack.io/devbox/planner/languages/cplusplus"
@@ -69,24 +70,30 @@ var PLANNERS = []plansdk.Planner{
 }
 
 // Return a merged shell plan from all planners.
-func GetShellPlan(srcDir string) *plansdk.ShellPlan {
+func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 	result := &plansdk.ShellPlan{}
-	for _, p := range getRelevantPlanners(srcDir) {
-		// if merge fails, we return no errors for now.
-		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
+	planners := getRelevantPlanners(srcDir)
+	for _, p := range planners {
+		if pkgslice.Contains(userPkgs, p.GetShellPlan(srcDir).DevPackages) {
+			// if merge fails, we return no errors for now.
+			result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
+		}
 	}
 	return result
 }
 
 // Return one buildable plan from all planners.
-func GetBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
+func GetBuildPlan(srcDir string, userPkgs []string) (*plansdk.BuildPlan, error) {
 	buildables := []*plansdk.BuildPlan{}
 	unbuildables := []*plansdk.BuildPlan{}
 	for _, p := range getRelevantPlanners(srcDir) {
-		if plan := p.GetBuildPlan(srcDir); plan.Buildable() {
-			buildables = append(buildables, plan)
-		} else {
-			unbuildables = append(unbuildables, plan)
+		plan := p.GetBuildPlan(srcDir)
+		if pkgslice.Contains(userPkgs, plan.DevPackages) {
+			if plan.Buildable() {
+				buildables = append(buildables, plan)
+			} else {
+				unbuildables = append(unbuildables, plan)
+			}
 		}
 	}
 	// If we could not find any buildable plans, and at least one unbuildable plan,

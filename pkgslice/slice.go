@@ -30,3 +30,17 @@ func Exclude(s []string, elems []string) []string {
 	}
 	return filtered
 }
+
+// returns true when s includes all elements from elems.
+func Contains(s []string, elems []string) bool {
+	sMap := make(map[string]bool, len(s))
+	for _, str := range s {
+		sMap[str] = true
+	}
+	for _, e := range elems {
+		if _, ok := sMap[e]; !ok {
+			return false
+		}
+	}
+	return true
+}

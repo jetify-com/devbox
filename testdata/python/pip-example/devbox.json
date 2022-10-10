@@ -1,5 +1,7 @@
 {
-  "packages": [],
+  "packages": [
+    "python3"
+  ],
   "shell": {
     "init_hook": null
   }
