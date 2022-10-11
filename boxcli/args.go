@@ -9,37 +9,42 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/usererr"
 )
 
 // Functions that help parse arguments
 
 // If args empty, defaults to the current directory
 // Otherwise grabs the path from the first argument
-func pathArg(args []string, flags *configFlags) string {
+func configPathFromUser(args []string, flags *configFlags) (string, error) {
 
-	if flags.path != currentDir {
-		if len(args) > 0 {
-			// Choose the --config flag because config argument is being deprecated
-			fmt.Printf(
-				"%s You are specifying the config path as an argument and using the --config flag. "+
-					"Choosing to ignore the argument and use the flag.\n",
-				color.HiYellowString("Warning:"),
-			)
-		}
-		return flags.path
+	if flags.path != "" && len(args) > 0 {
+		return "", usererr.New(
+			"Cannot specify devbox.json's path via both --config and the command arguments. " +
+				"Please use --config only.",
+		)
+	}
+
+	if flags.path != "" {
+		return flags.path, nil
 	}
 
 	if len(args) > 0 {
 		fmt.Printf(
-			"%s please use the --config or -c flag to specify the path to the devbox.json config. "+
-				"We are deprecating the previous way of specifying this path as an argument to the command.\n",
+			"%s devbox <command> <path> is deprecated, use devbox <command> --config <path> instead\n",
 			color.HiYellowString("Warning:"),
 		)
+	}
+	return pathArg(args), nil
+}
+
+func pathArg(args []string) string {
+	if len(args) > 0 {
 		p, err := filepath.Abs(args[0])
 		if err != nil {
 			panic(errors.WithStack(err)) // What even triggers this?
 		}
 		return p
 	}
-	return "."
+	return ""
 }

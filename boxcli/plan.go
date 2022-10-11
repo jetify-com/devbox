@@ -20,7 +20,7 @@ func PlanCmd() *cobra.Command {
 	flags := &planCmdFlags{}
 
 	command := &cobra.Command{
-		Use:   "plan [<dir>]",
+		Use:   "plan",
 		Short: "Preview the plan used to build your environment",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,8 +32,11 @@ func PlanCmd() *cobra.Command {
 	return command
 }
 
-func runPlanCmd(cmd *cobra.Command, args []string, flags *planCmdFlags) error {
-	path := pathArg(args, &flags.config)
+func runPlanCmd(_ *cobra.Command, args []string, flags *planCmdFlags) error {
+	path, err := configPathFromUser(args, &flags.config)
+	if err != nil {
+		return err
+	}
 
 	// Check the directory exists.
 	box, err := devbox.Open(path, os.Stdout)

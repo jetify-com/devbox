@@ -296,7 +296,7 @@ func (d *Devbox) profileBinDir() (string, error) {
 	return filepath.Join(profileDir, "bin"), nil
 }
 
-func missingDevboxJSONError(dir string) error {
+func missingDevboxJSONError(dir string, didCheckParents bool) error {
 
 	// We try to prettify the `dir` before printing
 	if dir == "." || dir == "" {
@@ -313,17 +313,50 @@ func missingDevboxJSONError(dir string) error {
 			}
 		}
 	}
-	return usererr.New("No devbox.json found in %s, or any parent directories. Did you run `devbox init` yet?", dir)
+
+	parentDirCheckAddendum := ""
+	if didCheckParents {
+		parentDirCheckAddendum = ", or any parent directories"
+	}
+
+	return usererr.New("No devbox.json found in %s%s. Did you run `devbox init` yet?", dir, parentDirCheckAddendum)
 }
 
+// findConfigDir
 func findConfigDir(dir string) (string, error) {
 
 	// Sanitize the directory and use the absolute path as canonical form
-	cur, err := filepath.Abs(dir)
+	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 
+	// If the directory (`dir`) is specified, then we check just that directory.
+	// Otherwise, we search the parent directories.
+	if dir != "" {
+		fi, err := os.Stat(dir)
+		if err != nil {
+			return "", err
+		}
+		switch mode := fi.Mode(); {
+		case mode.IsDir():
+			if !plansdk.FileExists(filepath.Join(absDir, configFilename)) {
+				return "", missingDevboxJSONError(dir, false /*didCheckParents*/)
+			}
+			return absDir, nil
+		case mode.IsRegular(): // regular means 'file'
+			if !plansdk.FileExists(filepath.Clean(absDir)) {
+				return "", missingDevboxJSONError(dir, false /*didCheckParents*/)
+			}
+			// we return a directory from this function
+			return filepath.Dir(absDir), nil
+		default:
+			return "", errors.Errorf("unhandled mode %v", mode)
+		}
+	}
+
+	cur := absDir
+	// Search parent directories for a devbox.json
 	for cur != "/" {
 		debug.Log("finding %s in dir: %s\n", configFilename, cur)
 		if plansdk.FileExists(filepath.Join(cur, configFilename)) {
@@ -334,7 +367,7 @@ func findConfigDir(dir string) (string, error) {
 	if plansdk.FileExists(filepath.Join(cur, configFilename)) {
 		return cur, nil
 	}
-	return "", missingDevboxJSONError(dir)
+	return "", missingDevboxJSONError(dir, true /*didCheckParents*/)
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
