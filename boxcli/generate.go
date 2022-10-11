@@ -19,7 +19,7 @@ func GenerateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
 	command := &cobra.Command{
-		Use:    "generate [<dir>]",
+		Use:    "generate",
 		Args:   cobra.MaximumNArgs(1),
 		Hidden: true, // For debugging only
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,8 +32,11 @@ func GenerateCmd() *cobra.Command {
 	return command
 }
 
-func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) error {
-	path := pathArg(args, &flags.config)
+func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
+	path, err := configPathFromUser(args, &flags.config)
+	if err != nil {
+		return err
+	}
 
 	// Check the directory exists.
 	box, err := devbox.Open(path, os.Stdout)
