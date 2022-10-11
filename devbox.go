@@ -207,6 +207,17 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds)
 }
 
+func (d *Devbox) PrintShellEnv() error {
+	profileBinDir, err := d.profileBinDir()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// TODO: For now we just updated the PATH but this may need to evolve
+	// to essentially a parsed shellrc.tmpl
+	fmt.Fprintf(d.writer, "export PATH=\"%s:$PATH\"", profileBinDir)
+	return nil
+}
+
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.srcDir, configFilename)

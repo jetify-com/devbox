@@ -15,6 +15,7 @@ devbox shell [<dir>] -- [<cmd>] [flags]
 ## Options
 
 ```text
+  --print-env  Print a script to setup a devbox shell environment
   -h, --help   help for shell
 ```
 

@@ -13,42 +13,56 @@ import (
 	"go.jetpack.io/devbox"
 )
 
+type shellFlags struct {
+	PrintEnv bool
+}
+
 func ShellCmd() *cobra.Command {
+	flags := &shellFlags{}
 	command := &cobra.Command{
 		Use:               "shell [<dir>] -- [<cmd>]",
 		Short:             "Start a new shell or run a command with access to your packages",
 		Long:              "Start a new shell or run a command with access to your packages. \nIf invoked without `cmd`, this will start an interactive shell based on the devbox.json in your current directory, or the directory provided with `dir`. \nIf invoked with a `cmd`, this will start a shell based on the devbox.json provided in `dir`, run the command, and then exit.",
 		Args:              validateShellArgs,
 		PersistentPreRunE: nixShellPersistentPreRunE,
-		RunE:              runShellCmd,
+		RunE:              runShellCmd(flags),
 	}
+	command.Flags().BoolVar(
+		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
 	return command
 }
 
-func runShellCmd(cmd *cobra.Command, args []string) error {
-	path, cmds := parseShellArgs(cmd, args)
+func runShellCmd(flags *shellFlags) runFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		path, cmds := parseShellArgs(cmd, args)
 
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+		// Check the directory exists.
+		box, err := devbox.Open(path, os.Stdout)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 
-	if devbox.IsDevboxShellEnabled() {
-		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
-	}
+		if flags.PrintEnv {
+			// return here to prevent opening a devbox shell
+			return box.PrintShellEnv()
+		}
 
-	if len(cmds) > 0 {
-		err = box.Exec(cmds...)
-	} else {
-		err = box.Shell()
-	}
+		if devbox.IsDevboxShellEnabled() {
+			return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
+		}
 
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return nil
+		if len(cmds) > 0 {
+			err = box.Exec(cmds...)
+		} else {
+			err = box.Shell()
+		}
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return nil
+		}
+		return err
 	}
-	return err
 }
 
 func nixShellPersistentPreRunE(cmd *cobra.Command, args []string) error {
