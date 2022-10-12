@@ -13,13 +13,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
-	"go.jetpack.io/devbox/pkgslice"
 	"go.jetpack.io/devbox/planner"
 	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/exp/slices"
@@ -108,8 +109,21 @@ func (d *Devbox) Add(pkgs ...string) error {
 // Remove removes Nix packages from the config so that it no longer exists in
 // the devbox environment.
 func (d *Devbox) Remove(pkgs ...string) error {
-	// Remove packages from config.
-	d.cfg.Packages = pkgslice.Exclude(d.cfg.Packages, pkgs)
+
+	// First, save which packages are being uninstalled. Do this before we modify d.cfg.Packages below.
+	uninstalledPackages := lo.Intersect(d.cfg.Packages, pkgs)
+
+	var missingPkgs []string
+	d.cfg.Packages, missingPkgs = lo.Difference(d.cfg.Packages, pkgs)
+
+	if len(missingPkgs) > 0 {
+		fmt.Fprintf(
+			d.writer,
+			"%s the following packages were not found in your devbox.json: %s\n",
+			color.HiYellowString("Warning:"),
+			strings.Join(missingPkgs, ", "),
+		)
+	}
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
@@ -117,7 +131,8 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	if err := d.ensurePackagesAreInstalled(uninstall); err != nil {
 		return err
 	}
-	return d.printPackageUpdateMessage(uninstall, pkgs)
+
+	return d.printPackageUpdateMessage(uninstall, uninstalledPackages)
 }
 
 // Build creates a Docker image containing a shell with the devbox environment.
@@ -367,21 +382,29 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 }
 
 func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) error {
-	// (Only when in devbox shell) Prompt the user to run `hash -r` to ensure their
-	// shell can access the most recently installed binaries, or ensure their
-	// recently uninstalled binaries are not accidentally still available.
-	if len(pkgs) > 0 && IsDevboxShellEnabled() {
-		installedVerb := "installed"
-		if mode == uninstall {
-			installedVerb = "removed"
-		}
+	installedVerb := "installed"
+	if mode == uninstall {
+		installedVerb = "removed"
+	}
+
+	if len(pkgs) > 0 {
 
 		successMsg := fmt.Sprintf("%s is now %s.", pkgs[0], installedVerb)
 		if len(pkgs) > 1 {
 			successMsg = fmt.Sprintf("%s are now %s.", strings.Join(pkgs, ", "), installedVerb)
 		}
 		fmt.Fprint(d.writer, successMsg)
-		fmt.Fprintln(d.writer, " Run `hash -r` to ensure your shell is updated.")
+
+		// (Only when in devbox shell) Prompt the user to run `hash -r` to ensure their
+		// shell can access the most recently installed binaries, or ensure their
+		// recently uninstalled binaries are not accidentally still available.
+		if !IsDevboxShellEnabled() {
+			fmt.Fprintln(d.writer)
+		} else {
+			fmt.Fprintln(d.writer, " Run `hash -r` to ensure your shell is updated.")
+		}
+	} else {
+		fmt.Fprintf(d.writer, "No packages %s.\n", installedVerb)
 	}
 	return nil
 }
