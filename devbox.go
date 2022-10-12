@@ -337,7 +337,6 @@ func missingDevboxJSONError(dir string, didCheckParents bool) error {
 	return usererr.New("No devbox.json found in %s%s. Did you run `devbox init` yet?", dir, parentDirCheckAddendum)
 }
 
-// findConfigDir
 func findConfigDir(dir string) (string, error) {
 
 	// Sanitize the directory and use the absolute path as canonical form
@@ -359,14 +358,12 @@ func findConfigDir(dir string) (string, error) {
 				return "", missingDevboxJSONError(dir, false /*didCheckParents*/)
 			}
 			return absDir, nil
-		case mode.IsRegular(): // regular means 'file'
+		default: // assumes 'file' i.e. mode.IsRegular()
 			if !plansdk.FileExists(filepath.Clean(absDir)) {
 				return "", missingDevboxJSONError(dir, false /*didCheckParents*/)
 			}
 			// we return a directory from this function
 			return filepath.Dir(absDir), nil
-		default:
-			return "", errors.Errorf("unhandled mode %v", mode)
 		}
 	}
 

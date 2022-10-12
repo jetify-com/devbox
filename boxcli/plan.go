@@ -17,7 +17,7 @@ type planCmdFlags struct {
 }
 
 func PlanCmd() *cobra.Command {
-	flags := &planCmdFlags{}
+	flags := planCmdFlags{}
 
 	command := &cobra.Command{
 		Use:   "plan",
@@ -28,11 +28,11 @@ func PlanCmd() *cobra.Command {
 		},
 	}
 
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 	return command
 }
 
-func runPlanCmd(_ *cobra.Command, args []string, flags *planCmdFlags) error {
+func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
 	path, err := configPathFromUser(args, &flags.config)
 	if err != nil {
 		return err

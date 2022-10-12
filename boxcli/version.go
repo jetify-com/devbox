@@ -11,13 +11,19 @@ import (
 	"go.jetpack.io/devbox/build"
 )
 
+type versionFlags struct {
+	verbose bool
+}
+
 func VersionCmd() *cobra.Command {
-	flags := &versionFlags{}
+	flags := versionFlags{}
 	command := &cobra.Command{
 		Use:   "version",
 		Short: "Print version information",
 		Args:  cobra.NoArgs,
-		RunE:  versionCmdFunc(flags),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return versionCmdFunc(cmd, args, flags)
+		},
 	}
 
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value
@@ -26,24 +32,18 @@ func VersionCmd() *cobra.Command {
 	return command
 }
 
-type versionFlags struct {
-	verbose bool
-}
-
-func versionCmdFunc(flags *versionFlags) runFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		v := getVersionInfo()
-		if flags.verbose {
-			fmt.Printf("Version:     %v\n", v.Version)
-			fmt.Printf("Platform:    %v\n", v.Platform)
-			fmt.Printf("Commit:      %v\n", v.Commit)
-			fmt.Printf("Commit Time: %v\n", v.CommitDate)
-			fmt.Printf("Go Version:  %v\n", v.GoVersion)
-		} else {
-			fmt.Printf("%v\n", v.Version)
-		}
-		return nil
+func versionCmdFunc(_ *cobra.Command, _ []string, flags versionFlags) error {
+	v := getVersionInfo()
+	if flags.verbose {
+		fmt.Printf("Version:     %v\n", v.Version)
+		fmt.Printf("Platform:    %v\n", v.Platform)
+		fmt.Printf("Commit:      %v\n", v.Commit)
+		fmt.Printf("Commit Time: %v\n", v.CommitDate)
+		fmt.Printf("Go Version:  %v\n", v.GoVersion)
+	} else {
+		fmt.Printf("%v\n", v.Version)
 	}
+	return nil
 }
 
 type versionInfo struct {

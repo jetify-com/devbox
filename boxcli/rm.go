@@ -16,7 +16,7 @@ type removeCmdFlags struct {
 }
 
 func RemoveCmd() *cobra.Command {
-	flags := &removeCmdFlags{}
+	flags := removeCmdFlags{}
 	command := &cobra.Command{
 		Use:   "rm <pkg>...",
 		Short: "Remove a package from your devbox",
@@ -26,11 +26,11 @@ func RemoveCmd() *cobra.Command {
 		},
 	}
 
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 	return command
 }
 
-func runRemoveCmd(_ *cobra.Command, args []string, flags *removeCmdFlags) error {
+func runRemoveCmd(_ *cobra.Command, args []string, flags removeCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)

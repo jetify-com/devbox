@@ -27,7 +27,7 @@ func GenerateCmd() *cobra.Command {
 		},
 	}
 
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 
 	return command
 }

@@ -9,7 +9,7 @@ type configFlags struct {
 	path string
 }
 
-func registerConfigFlags(cmd *cobra.Command, flags *configFlags) {
+func (flags *configFlags) register(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
 	)

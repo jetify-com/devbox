@@ -16,27 +16,27 @@ type addCmdFlags struct {
 }
 
 func AddCmd() *cobra.Command {
-	flags := &addCmdFlags{}
+	flags := addCmdFlags{}
 
 	command := &cobra.Command{
 		Use:               "add <pkg>...",
 		Short:             "Add a new package to your devbox",
 		Args:              cobra.MinimumNArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
-		RunE:              addCmdFunc(flags),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return addCmdFunc(cmd, args, flags)
+		},
 	}
 
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 	return command
 }
 
-func addCmdFunc(flags *addCmdFlags) runFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		box, err := devbox.Open(flags.config.path, os.Stdout)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		return box.Add(args...)
+func addCmdFunc(_ *cobra.Command, args []string, flags addCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, os.Stdout)
+	if err != nil {
+		return errors.WithStack(err)
 	}
+
+	return box.Add(args...)
 }

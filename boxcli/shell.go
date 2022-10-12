@@ -19,15 +19,15 @@ type shellCmdFlags struct {
 }
 
 func ShellCmd() *cobra.Command {
-	flags := &shellCmdFlags{}
+	flags := shellCmdFlags{}
 	command := &cobra.Command{
 		Use:   "shell -- [<cmd>]",
 		Short: "Start a new shell or run a command with access to your packages",
 		Long: "Start a new shell or run a command with access to your packages. \n" +
-			"If invoked without `cmd`, this will start an interactive shell.\n" +
-			"If invoked with a `cmd`, this will start a shell, run the command, and then exit.\n" +
-			"In both cases, the shell will be started using the devbox.json from the --config flag, " +
-			"or searching for a devbox.json in a parent directory.",
+			"If invoked without `cmd`, devbox will start an interactive shell.\n" +
+			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
+			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
+			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
 		Args:              validateShellArgs,
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -37,11 +37,11 @@ func ShellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 	return command
 }
 
-func runShellCmd(cmd *cobra.Command, args []string, flags *shellCmdFlags) error {
+func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	path, cmds, err := parseShellArgs(cmd, args, flags)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func validateShellArgs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseShellArgs(cmd *cobra.Command, args []string, flags *shellCmdFlags) (string, []string, error) {
+func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (string, []string, error) {
 	index := cmd.ArgsLenAtDash()
 	if index < 0 {
 		configPath, err := configPathFromUser(args, &flags.config)

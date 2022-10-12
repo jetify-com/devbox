@@ -14,21 +14,23 @@ import (
 
 type buildCmdFlags struct {
 	config configFlags
-	docker *docker.BuildFlags
+	docker docker.BuildFlags
 }
 
 func BuildCmd() *cobra.Command {
-	flags := newBuildFlags()
+	flags := buildCmdFlags{}
 
 	command := &cobra.Command{
 		Use:   "build",
 		Short: "Build an OCI image that can run as a container",
 		Long:  "Builds your current source directory and devbox configuration as a Docker container. Devbox will create a plan for your container based on your source code, and then apply the packages and stage overrides in your devbox.json. \n To learn more about how to configure your builds, see the [configuration reference](/docs/configuration_reference)",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  buildCmdFunc(flags),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return buildCmdFunc(cmd, args, flags)
+		},
 	}
 
-	registerConfigFlags(command, &flags.config)
+	flags.config.register(command)
 	command.Flags().StringVar(
 		&flags.docker.Name, "name", "devbox", "name for the container")
 	command.Flags().BoolVar(
@@ -41,25 +43,17 @@ func BuildCmd() *cobra.Command {
 	return command
 }
 
-func newBuildFlags() *buildCmdFlags {
-	return &buildCmdFlags{
-		docker: &docker.BuildFlags{},
+func buildCmdFunc(_ *cobra.Command, args []string, flags buildCmdFlags) error {
+	path, err := configPathFromUser(args, &flags.config)
+	if err != nil {
+		return err
 	}
-}
 
-func buildCmdFunc(flags *buildCmdFlags) runFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		path, err := configPathFromUser(args, &flags.config)
-		if err != nil {
-			return err
-		}
-
-		// Check the directory exists.
-		box, err := devbox.Open(path, os.Stdout)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		return box.Build(flags.docker)
+	// Check the directory exists.
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return errors.WithStack(err)
 	}
+
+	return box.Build(&flags.docker)
 }
