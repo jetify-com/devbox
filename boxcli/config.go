@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Keep this env-var name same as its usage in shell.nix.tmpl
+const shellConfigEnvVar = "DEVBOX_SHELL_CONFIG"
+
 // to be composed into xyzCmdFlags structs
 type configFlags struct {
 	path string

@@ -32,9 +32,9 @@ func AddCmd() *cobra.Command {
 
 func addCmdFunc(flags *addCmdFlags) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		dir := ""
-		if devbox.IsDevboxShellEnabled() {
-			if envdir := os.Getenv("DEVBOX_CONFIG_DIR"); envdir != "" {
+		dir := flags.config.path
+		if dir == "" && devbox.IsDevboxShellEnabled() {
+			if envdir := os.Getenv(shellConfigEnvVar); envdir != "" {
 				dir = envdir
 			}
 		}
