@@ -37,7 +37,11 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	goPkg := getGoPackage(srcDir)
+
+	return &plansdk.ShellPlan{
+		DevPackages: []string{goPkg},
+	}
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

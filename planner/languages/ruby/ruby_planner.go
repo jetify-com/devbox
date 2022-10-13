@@ -36,7 +36,19 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	gemfile := filepath.Join(srcDir, "Gemfile")
+	v := parseRubyVersion(gemfile)
+	pkg, ok := nixPackages[semver.MajorMinor(v)]
+	if !ok {
+		pkg = defaultPkg
+	}
+
 	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			pkg,
+			"gcc",     // for rails
+			"gnumake", // for rails
+		},
 		ShellInitHook: []string{plansdk.WelcomeMessage(
 			"It looks like you are developing a Ruby project.\n" +
 				"To keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n" +

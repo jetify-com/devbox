@@ -26,7 +26,13 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	pkgManager := p.packageManager(srcDir)
+	project := p.nodeProject(srcDir)
+	packages := p.packages(pkgManager, project)
+
+	return &plansdk.ShellPlan{
+		DevPackages: packages,
+	}
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

@@ -78,10 +78,9 @@ type Planner interface {
 	GetShellPlan(srcDir string) *ShellPlan
 }
 
-// MergePlans merges multiple Plans into one. The merged plan's packages, definitions,
+// MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
 // and overlays is the union of the packages, definitions, and overlays of the input plans,
-// respectively. The install/build/start stages of the merged plans are taken from the _first_
-// buildable plan (order matters!). If no plan is buildable, returns a non-buildable plan.
+// respectively.
 func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	shellPlan := &ShellPlan{}
 	for _, p := range plans {
@@ -91,6 +90,7 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 		}
 	}
 
+	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
 	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
 	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
 	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
@@ -159,8 +159,7 @@ func MergeUserBuildPlan(userPlan *BuildPlan, automatedPlan *BuildPlan) (*BuildPl
 	}
 	// Merging devPackages and runtimePackages fields.
 	packagesPlan := &BuildPlan{
-		DevPackages:     append([]string{}, userPlan.DevPackages...),
-		RuntimePackages: []string{},
+		DevPackages: append([]string{}, userPlan.DevPackages...),
 	}
 	err := mergo.Merge(packagesPlan, automatedPlan, mergo.WithAppendSlice)
 	if err != nil {

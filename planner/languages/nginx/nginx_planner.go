@@ -29,6 +29,10 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			"nginx",
+			"shell-nginx",
+		},
 		Definitions: []string{
 			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
 		},

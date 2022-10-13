@@ -45,7 +45,17 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	proj, err := project(srcDir)
+	if err != nil {
+		return &plansdk.ShellPlan{}
+	}
+	dotNetPkg, err := dotNetNixPackage(proj)
+	if err != nil {
+		return &plansdk.ShellPlan{}
+	}
+	return &plansdk.ShellPlan{
+		DevPackages: []string{dotNetPkg},
+	}
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

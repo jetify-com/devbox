@@ -31,7 +31,15 @@ func (p *PoetryPlanner) IsRelevant(srcDir string) bool {
 }
 
 func (p *PoetryPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	version := p.PythonVersion(srcDir)
+	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
+
+	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			pythonPkg,
+			"poetry",
+		},
+	}
 }
 
 func (p *PoetryPlanner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

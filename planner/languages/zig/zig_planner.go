@@ -31,7 +31,9 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	return &plansdk.ShellPlan{
+		DevPackages: []string{"zig"},
+	}
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

@@ -12,6 +12,7 @@ import (
 func TestMergeShellPlans(t *testing.T) {
 	plan1 := &ShellPlan{}
 	plan2 := &ShellPlan{
+		DevPackages:   []string{},
 		Definitions:   []string{"a"},
 		NixOverlays:   []string{"b"},
 		ShellInitHook: []string{"a", "b"},
@@ -36,6 +37,7 @@ func TestMergeShellPlans(t *testing.T) {
 		ShellInitHook: []string{"a", "b"},
 	}
 	expected = &ShellPlan{
+		DevPackages:   []string{},
 		Definitions:   []string{"a"},
 		NixOverlays:   []string{"b", "a"},
 		ShellInitHook: []string{"c", "a", "b"},
@@ -59,6 +61,7 @@ func TestMergeShellPlans(t *testing.T) {
 		},
 	}
 	expected = &ShellPlan{
+		DevPackages:   []string{},
 		Definitions:   []string{},
 		NixOverlays:   []string{},
 		ShellInitHook: []string{},

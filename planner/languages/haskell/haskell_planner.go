@@ -49,7 +49,9 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{}
+	return &plansdk.ShellPlan{
+		DevPackages: []string{"stack", "libiconv", "libffi", "binutils", "ghc"},
+	}
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

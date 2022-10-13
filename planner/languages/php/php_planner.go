@@ -44,6 +44,10 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	v := p.version(srcDir)
 	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
+			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
+		},
 		Definitions: p.definitions(srcDir, v),
 	}
 }

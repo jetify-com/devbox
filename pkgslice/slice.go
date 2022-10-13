@@ -30,17 +30,3 @@ func Exclude(s []string, elems []string) []string {
 	}
 	return filtered
 }
-
-// returns true when superset includes all elements from subset.
-func Contains(superset []string, subset []string) bool {
-	sMap := make(map[string]bool, len(superset))
-	for _, str := range superset {
-		sMap[str] = true
-	}
-	for _, e := range subset {
-		if _, ok := sMap[e]; !ok {
-			return false
-		}
-	}
-	return true
-}

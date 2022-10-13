@@ -32,6 +32,9 @@ func (p *PIPPlanner) IsRelevant(srcDir string) bool {
 
 func (p *PIPPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			"python3",
+		},
 		ShellInitHook: []string{p.shellInitHook(srcDir)},
 	}
 }

@@ -33,9 +33,22 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 }
 
 func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	return &plansdk.ShellPlan{
+	plan := &plansdk.ShellPlan{
 		NixOverlays: []string{RustOxalicaOverlay},
 	}
+	manifest, err := p.cargoManifest(srcDir)
+	if err != nil {
+		return plan
+	}
+	rustVersion, err := p.rustOxalicaVersion(manifest)
+	if err != nil {
+		return plan
+	}
+
+	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
+	plan.DevPackages = []string{rustPkgDev, "gcc"}
+
+	return plan
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {

@@ -153,8 +153,9 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) ShellPlan() *plansdk.ShellPlan {
-	shellPlan := planner.GetShellPlan(d.srcDir, d.cfg.Packages)
-	shellPlan.DevPackages = d.cfg.Packages
+	userDefinedPkgs := d.cfg.Packages
+	shellPlan := planner.GetShellPlan(d.srcDir, userDefinedPkgs)
+	shellPlan.DevPackages = userDefinedPkgs
 
 	return shellPlan
 }
@@ -195,17 +196,29 @@ func (d *Devbox) Shell() error {
 	}
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(
+	shell, err := nix.DetectShell(
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
 	if err != nil {
 		// Fall back to using a plain Nix shell.
-		sh = &nix.Shell{}
+		shell = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook.String()
-	return sh.Run(nixShellFilePath)
+
+	allPkgs := planner.GetShellPackageSuggestion(d.srcDir, d.cfg.Packages)
+	pkgsToSuggest, _ := lo.Difference(allPkgs, d.cfg.Packages)
+	if len(pkgsToSuggest) > 0 {
+		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
+		fmt.Fprintf(
+			d.writer,
+			"We detected extra packages you may need. To install them, run `%s`\n",
+			color.HiYellowString(s),
+		)
+	}
+
+	shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	return shell.Run(nixShellFilePath)
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
