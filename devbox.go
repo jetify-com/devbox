@@ -5,11 +5,13 @@
 package devbox
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -166,6 +168,36 @@ func (d *Devbox) Generate() error {
 	if err := d.generateBuildFiles(); err != nil {
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+// Search takes a keyword and searches the nix store for packages
+// that match or include given the keyword
+func (d *Devbox) Search(keyword string) error {
+	cmd := exec.Command("nix",
+		"search",
+		"nixpkgs",
+		keyword,
+		"--experimental-features",
+		"nix-command",
+		"--extra-experimental-features",
+		"flakes",
+		"--json",
+	)
+	fmt.Println("Searching nix store:")
+	output, err := cmd.Output()
+	if err != nil {
+		return errors.Errorf("searching nix store %s: %v", cmd, err)
+	}
+	parsedOutput, err := d.parseSearchOutput(output)
+	if err != nil {
+		return errors.Errorf("parsing search output %s: %v", cmd, err)
+	}
+	fmt.Println("Pkg Key | Pkg Name | Version")
+	for _, pkg := range parsedOutput {
+		fmt.Println(pkg)
+	}
+
 	return nil
 }
 
@@ -412,6 +444,25 @@ func (d *Devbox) applyDevNixDerivation() error {
 		return errors.Errorf("running command %s: %v", cmd, err)
 	}
 	return nil
+}
+
+func (d *Devbox) parseSearchOutput(output []byte) ([]string, error) {
+	var searchResults []string
+	type searchStruct struct {
+		Name    string `json:"pname"`
+		Version string `json:"version"`
+	}
+	var searchItems map[string]searchStruct
+	err := json.Unmarshal(output, &searchItems)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	for key, pkg := range searchItems {
+		pkgKey := strings.Split(key, ".")
+		searchResults = append(searchResults, fmt.Sprintf("%s | %s | %s", pkgKey[len(pkgKey)-1], pkg.Name, pkg.Version))
+	}
+	sort.Strings(searchResults)
+	return searchResults, nil
 }
 
 // Move to a utility package?
