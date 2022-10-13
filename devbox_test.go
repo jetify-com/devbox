@@ -2,6 +2,7 @@ package devbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,7 +36,8 @@ func testShell(t *testing.T, testPath string) {
 	require.New(t).NoError(err)
 
 	baseDir := filepath.Dir(testPath)
-	t.Run(baseDir, func(t *testing.T) {
+	testName := fmt.Sprintf("%s_shell_plan", baseDir)
+	t.Run(testName, func(t *testing.T) {
 		assert := assert.New(t)
 		shellPlanFile := filepath.Join(baseDir, "shell_plan.json")
 		hasShellPlanFile := fileExists(shellPlanFile)
@@ -76,7 +78,8 @@ func testBuild(t *testing.T, testPath string) {
 	require.New(t).NoError(err)
 
 	baseDir := filepath.Dir(testPath)
-	t.Run(baseDir, func(t *testing.T) {
+	testName := fmt.Sprintf("%s_build_plan", baseDir)
+	t.Run(testName, func(t *testing.T) {
 		assert := assert.New(t)
 		buildPlanFile := filepath.Join(baseDir, "build_plan.json")
 		hasBuildPlanFile := fileExists(buildPlanFile)
