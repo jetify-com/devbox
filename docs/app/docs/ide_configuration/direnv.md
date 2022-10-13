@@ -1,5 +1,5 @@
 ---
-title: direnv configuration
+title: direnv 
 ---
 
 
@@ -10,7 +10,7 @@ ___
 ### Prerequisites
 * Install direnv and hook it to your shell. Follow [this guide](https://direnv.net/#basic-installation) if you haven't done it. 
 
-### Setting up with Devbox Shell and direnv
+### Setting up Devbox Shell and direnv
 
 Note: If you already have a devbox project you may skip to step 3.
 

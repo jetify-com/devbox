@@ -1,5 +1,5 @@
 ---
-title: VSCode configuration
+title: Visual Studio Code 
 ---
 
 

@@ -65,6 +65,21 @@ const sidebars = {
         id: 'configuration'
     }, {
         type: 'category',
+        label: "IDE Configuration",
+        collapsed: false,
+        items: [{
+            type: 'doc',
+            id: 'ide_configuration/direnv',
+        }, {
+            type: 'doc',
+            id: 'ide_configuration/eclipse',
+        }, {
+            type: 'doc',
+            id: 'ide_configuration/vscode'
+        }]
+
+    }, {
+        type: 'category',
         label: 'Language Detection',
         collapsed: false,
         items: [{
@@ -95,7 +110,7 @@ const sidebars = {
             type: 'doc',
             id: 'language_support/ruby'
         }, {
-           type: 'doc',
+            type: 'doc',
             id: 'language_support/rust'
         }, {
             type: 'doc',
