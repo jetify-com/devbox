@@ -83,13 +83,14 @@ func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 }
 
 // Return one buildable plan from all planners.
+// If no buildable plan is found, return errors from the first unbuildable plan.
 func GetBuildPlan(srcDir string, userPkgs []string) (*plansdk.BuildPlan, error) {
 	buildables := []*plansdk.BuildPlan{}
 	unbuildables := []*plansdk.BuildPlan{}
 	for _, p := range getRelevantPlanners(srcDir) {
 		plan := p.GetBuildPlan(srcDir)
 		if pkgslice.Contains(userPkgs, plan.DevPackages) {
-			if plan.Buildable() {
+			if !plan.Invalid() {
 				buildables = append(buildables, plan)
 			} else {
 				unbuildables = append(unbuildables, plan)

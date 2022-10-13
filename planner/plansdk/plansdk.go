@@ -106,22 +106,9 @@ func (p *BuildPlan) String() string {
 	return string(b)
 }
 
-func (p *BuildPlan) Buildable() bool {
-	if p == nil {
-		return false
-	}
-	return p.InstallStage != nil || p.BuildStage != nil || p.StartStage != nil
-}
-
-// Invalid returns true if build plan is empty and has errors. If the plan is a partial
-// plan, then it is considered valid.
+// Invalid returns true if build plan has errors.
 func (p *BuildPlan) Invalid() bool {
-	return len(p.DevPackages) == 0 &&
-		len(p.RuntimePackages) == 0 &&
-		p.InstallStage == nil &&
-		p.BuildStage == nil &&
-		p.StartStage == nil &&
-		len(p.Errors) > 0
+	return len(p.Errors) > 0
 }
 
 // Error combines all errors into a single error. We use this instead of a

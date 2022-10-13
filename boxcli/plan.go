@@ -57,8 +57,5 @@ func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if buildPlan.Invalid() {
-		return buildPlan.Error()
-	}
 	return errors.WithStack(enc.Encode(buildPlan))
 }

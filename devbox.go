@@ -267,12 +267,10 @@ func (d *Devbox) generateShellFiles() error {
 }
 
 func (d *Devbox) generateBuildFiles() error {
+	// BuildPlan() will return error if plan is invalid.
 	buildPlan, err := d.BuildPlan()
 	if err != nil {
 		return errors.WithStack(err)
-	}
-	if buildPlan.Invalid() {
-		return buildPlan.Error()
 	}
 	if buildPlan.Warning() != nil {
 		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
