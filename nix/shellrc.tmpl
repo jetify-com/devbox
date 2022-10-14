@@ -39,11 +39,11 @@ export PS1="(devbox) $PS1"
 
 # End Devbox Post-init Hook
 
-{{- if .UserHook }}
+{{- if .UserInitHook }}
 
 # Begin Devbox User Hook
 
-{{ .UserHook }}
+{{ .UserInitHook }}
 
 # End Devbox User Hook
 
@@ -58,3 +58,27 @@ export PS1="(devbox) $PS1"
 {{- end }}
 
 # End Plan Init Hook
+
+# Begin Plan Exit Hook
+
+{{- if .PlanExitHook }}
+
+# TODO savil. Implement PlanExitHook
+
+{{- end }}
+
+# End Plan Exit Hook
+
+# Begin User Exit Hook
+
+{{- if .UserExitHook }}
+
+runUserExitHook() {
+  {{ .UserExitHook }}
+}
+trap runUserExitHook EXIT
+
+{{- end }}
+
+
+# End User Exit Hook

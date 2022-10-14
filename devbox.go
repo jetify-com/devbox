@@ -202,17 +202,19 @@ func (d *Devbox) Shell() error {
 	}
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(
+	shellInstance, err := nix.DetectShell(
 		nix.WithPlanInitHook(plan.ShellInitHook),
+		nix.WithPlanInitHook(plan.ShellExitHook),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
 	if err != nil {
 		// Fall back to using a plain Nix shell.
-		sh = &nix.Shell{}
+		shellInstance = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook.String()
-	return sh.Run(nixShellFilePath)
+	shellInstance.UserInitHook = d.cfg.Shell.InitHook.String()
+	shellInstance.UserExitHook = d.cfg.Shell.ExitHook.String()
+	return shellInstance.Run(nixShellFilePath)
 }
 
 func (d *Devbox) Exec(cmds ...string) error {

@@ -3,6 +3,7 @@
     "rust-bin.stable.latest.default"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": "export FOO=bar",
+    "exit_hook": "echo \"exiting rust shell hook: $FOO\""
   }
 }

@@ -28,6 +28,7 @@ type PlanError struct {
 // Plan tells devbox how to start shells and build projects.
 type Plan struct {
 	ShellInitHook string `json:"shell_init_hook,omitempty"`
+	ShellExitHook string `json:"shell_exit_hook,omitempty"`
 
 	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
 

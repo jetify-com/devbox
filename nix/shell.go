@@ -38,9 +38,11 @@ type Shell struct {
 	binPath         string
 	userShellrcPath string
 	planInitHook    string
+	planExitHook    string
 
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
+	UserExitHook string
 
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
@@ -266,15 +268,19 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		OriginalInit     string
 		OriginalInitPath string
-		UserHook         string
+		UserInitHook     string
+		UserExitHook     string
 		PlanInitHook     string
+		PlanExitHook     string
 		ProfileBinDir    string
 		HistoryFile      string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
-		UserHook:         strings.TrimSpace(s.UserInitHook),
+		UserInitHook:     strings.TrimSpace(s.UserInitHook),
+		UserExitHook:     strings.TrimSpace(s.UserExitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
+		PlanExitHook:     strings.TrimSpace(s.planExitHook),
 		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 	})

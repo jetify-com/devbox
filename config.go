@@ -37,6 +37,9 @@ type Config struct {
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
 		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
+
+		// ExitHook contains commands that will run at shell exit.
+		ExitHook ConfigShellCmds `json:"exit_hook,omitempty"`
 	} `json:"shell,omitempty"`
 }
 
