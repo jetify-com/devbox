@@ -56,5 +56,3 @@ func Main() {
 	code := Execute(context.Background(), os.Args[1:])
 	os.Exit(code)
 }
-
-type runFunc func(cmd *cobra.Command, args []string) error

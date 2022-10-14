@@ -6,11 +6,16 @@ package devbox
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"unicode"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
+	"go.jetpack.io/devbox/debug"
+	"go.jetpack.io/devbox/planner/plansdk"
 )
 
 // Config defines a devbox environment as JSON.
@@ -161,4 +166,90 @@ func (s *ConfigShellCmds) UnmarshalJSON(data []byte) error {
 // String formats the commands as a single string by joining them with newlines.
 func (s *ConfigShellCmds) String() string {
 	return strings.Join(s.Cmds, "\n")
+}
+
+// findConfigDir is a utility for using the path
+func findConfigDir(path string) (string, error) {
+	debug.Log("findConfigDir: path is %s\n", path)
+
+	// Sanitize the directory and use the absolute path as canonical form
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	// If the path  is specified, then we check directly for a config.
+	// Otherwise, we search the parent directories.
+	if path != "" {
+		return findConfigDirAtPath(absPath)
+	}
+	return findConfigDirFromParentDirSearch("/" /*root*/, absPath)
+}
+
+func findConfigDirAtPath(absPath string) (string, error) {
+	fi, err := os.Stat(absPath)
+	if err != nil {
+		return "", err
+	}
+
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
+		if !plansdk.FileExists(filepath.Join(absPath, configFilename)) {
+			return "", missingConfigError(absPath, false /*didCheckParents*/)
+		}
+		return absPath, nil
+	default: // assumes 'file' i.e. mode.IsRegular()
+		if !plansdk.FileExists(filepath.Clean(absPath)) {
+			return "", missingConfigError(absPath, false /*didCheckParents*/)
+		}
+		// we return a directory from this function
+		return filepath.Dir(absPath), nil
+	}
+}
+
+func findConfigDirFromParentDirSearch(root string, absPath string) (string, error) {
+
+	cur := absPath
+	// Search parent directories for a devbox.json
+	for cur != root {
+		debug.Log("finding %s in dir: %s\n", configFilename, cur)
+		if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+			return cur, nil
+		}
+		cur = filepath.Dir(cur)
+	}
+	if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+		return cur, nil
+	}
+	return "", missingConfigError(absPath, true /*didCheckParents*/)
+}
+
+func missingConfigError(path string, didCheckParents bool) error {
+
+	var workingDir string
+	wd, err := os.Getwd()
+	if err == nil {
+		workingDir = wd
+	}
+	// We try to prettify the `path` before printing
+	if path == "." || path == "" || workingDir == path {
+		path = "this directory"
+	} else {
+		// Instead of a long absolute directory, print the relative directory
+
+		// if an error occurs, then just use `path`
+		if workingDir != "" {
+			relDir, err := filepath.Rel(workingDir, path)
+			if err == nil {
+				path = relDir
+			}
+		}
+	}
+
+	parentDirCheckAddendum := ""
+	if didCheckParents {
+		parentDirCheckAddendum = ", or any parent directories"
+	}
+
+	return usererr.New("No devbox.json found in %s%s. Did you run `devbox init` yet?", path, parentDirCheckAddendum)
 }
