@@ -4,15 +4,40 @@
 package boxcli
 
 import (
+	"fmt"
 	"path/filepath"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/usererr"
 )
 
 // Functions that help parse arguments
 
 // If args empty, defaults to the current directory
 // Otherwise grabs the path from the first argument
+func configPathFromUser(args []string, flags *configFlags) (string, error) {
+
+	if flags.path != "" && len(args) > 0 {
+		return "", usererr.New(
+			"Cannot specify devbox.json's path via both --config and the command arguments. " +
+				"Please use --config only.",
+		)
+	}
+
+	if flags.path != "" {
+		return flags.path, nil
+	}
+
+	if len(args) > 0 {
+		fmt.Printf(
+			"%s devbox <command> <path> is deprecated, use devbox <command> --config <path> instead\n",
+			color.HiYellowString("Warning:"),
+		)
+	}
+	return pathArg(args), nil
+}
+
 func pathArg(args []string) string {
 	if len(args) > 0 {
 		p, err := filepath.Abs(args[0])
@@ -21,5 +46,5 @@ func pathArg(args []string) string {
 		}
 		return p
 	}
-	return "."
+	return ""
 }

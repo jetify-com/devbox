@@ -11,18 +11,27 @@ import (
 	"go.jetpack.io/devbox"
 )
 
+type removeCmdFlags struct {
+	config configFlags
+}
+
 func RemoveCmd() *cobra.Command {
+	flags := removeCmdFlags{}
 	command := &cobra.Command{
 		Use:   "rm <pkg>...",
 		Short: "Remove a package from your devbox",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  runRemoveCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runRemoveCmd(cmd, args, flags)
+		},
 	}
+
+	flags.config.register(command)
 	return command
 }
 
-func runRemoveCmd(cmd *cobra.Command, args []string) error {
-	box, err := devbox.Open(".", os.Stdout)
+func runRemoveCmd(_ *cobra.Command, args []string, flags removeCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
