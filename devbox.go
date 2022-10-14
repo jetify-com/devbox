@@ -11,9 +11,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/boxcli/usererr"
@@ -54,6 +54,13 @@ type Devbox struct {
 	// srcDir is the directory where the config file (devbox.json) resides
 	srcDir string
 	writer io.Writer
+}
+
+// Results of devbox search are stored in this struct
+type storeItem struct {
+	Key     string
+	Name    string
+	Version string
 }
 
 // Open opens a devbox by reading the config file in dir.
@@ -193,10 +200,7 @@ func (d *Devbox) Search(keyword string) error {
 	if err != nil {
 		return errors.Errorf("parsing search output %s: %v", cmd, err)
 	}
-	fmt.Println("Pkg Key | Pkg Name | Version")
-	for _, pkg := range parsedOutput {
-		fmt.Println(pkg)
-	}
+	d.prettyPrintSearchResults(parsedOutput)
 
 	return nil
 }
@@ -446,8 +450,9 @@ func (d *Devbox) applyDevNixDerivation() error {
 	return nil
 }
 
-func (d *Devbox) parseSearchOutput(output []byte) ([]string, error) {
-	var searchResults []string
+func (d *Devbox) parseSearchOutput(output []byte) ([]storeItem, error) {
+
+	var searchResults []storeItem
 	type searchStruct struct {
 		Name    string `json:"pname"`
 		Version string `json:"version"`
@@ -458,11 +463,31 @@ func (d *Devbox) parseSearchOutput(output []byte) ([]string, error) {
 		return nil, errors.WithStack(err)
 	}
 	for key, pkg := range searchItems {
-		pkgKey := strings.Split(key, ".")
-		searchResults = append(searchResults, fmt.Sprintf("%s | %s | %s", pkgKey[len(pkgKey)-1], pkg.Name, pkg.Version))
+		if strings.HasPrefix(key, "legacyPackages") {
+			pkgKey := strings.SplitN(key, ".", 3)
+			searchResults = append(searchResults, storeItem{
+				Key:     pkgKey[len(pkgKey)-1],
+				Name:    pkg.Name,
+				Version: pkg.Version,
+			})
+		} else {
+			searchResults = append(searchResults, storeItem{
+				Key: key,
+			})
+		}
 	}
-	sort.Strings(searchResults)
 	return searchResults, nil
+}
+
+func (d *Devbox) prettyPrintSearchResults(parsedOutput []storeItem) {
+	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
+	fmt.Fprintln(w, "Pkg Key\tVersion\t")
+	fmt.Fprintln(w, "_______\t_______\t")
+
+	for _, pkg := range parsedOutput {
+		fmt.Fprintln(w, pkg.Key+"\t"+pkg.Version+"\t")
+	}
+	w.Flush()
 }
 
 // Move to a utility package?
