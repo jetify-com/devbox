@@ -159,7 +159,8 @@ func MergeUserBuildPlan(userPlan *BuildPlan, automatedPlan *BuildPlan) (*BuildPl
 	}
 	// Merging devPackages and runtimePackages fields.
 	packagesPlan := &BuildPlan{
-		DevPackages: append([]string{}, userPlan.DevPackages...),
+		DevPackages:     append([]string{}, userPlan.DevPackages...),
+		RuntimePackages: append([]string{}, userPlan.DevPackages...),
 	}
 	err := mergo.Merge(packagesPlan, automatedPlan, mergo.WithAppendSlice)
 	if err != nil {
