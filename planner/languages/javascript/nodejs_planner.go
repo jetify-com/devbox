@@ -25,13 +25,23 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(packageJSONPath)
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	pkgManager := p.packageManager(srcDir)
+	project := p.nodeProject(srcDir)
+	packages := p.packages(pkgManager, project)
+
+	return &plansdk.ShellPlan{
+		DevPackages: packages,
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	pkgManager := p.packageManager(srcDir)
 	project := p.nodeProject(srcDir)
 	packages := p.packages(pkgManager, project)
 	inputFiles := p.inputFiles(srcDir)
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages: packages,
 		// TODO: Optimize runtime packages to remove npm or yarn if startStage command use Node directly.
 		RuntimePackages: packages,

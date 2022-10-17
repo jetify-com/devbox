@@ -6,8 +6,6 @@
     "python3"
   ],
   "runtime_packages": [
-    "python310",
-    "pipenv",
     "python3"
   ],
   "install_stage": {

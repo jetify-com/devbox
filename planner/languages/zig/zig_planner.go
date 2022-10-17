@@ -30,7 +30,13 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return a.HasAnyFile("build.zig")
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{
+		DevPackages: []string{"zig"},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 
 	var runtimePkgs []string
 	var startStage *plansdk.Stage
@@ -49,7 +55,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		}
 	}
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages:     []string{"zig"},
 		RuntimePackages: runtimePkgs,
 		BuildStage: &plansdk.Stage{

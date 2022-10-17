@@ -41,9 +41,20 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 		plansdk.FileExists(filepath.Join(srcDir, "composer.json"))
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	v := p.version(srcDir)
-	plan := &plansdk.Plan{
+	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
+			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
+		},
+		Definitions: p.definitions(srcDir, v),
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	v := p.version(srcDir)
+	plan := &plansdk.BuildPlan{
 		DevPackages: []string{
 			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
 			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),

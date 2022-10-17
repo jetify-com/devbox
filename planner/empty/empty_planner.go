@@ -21,6 +21,10 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return false
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{}
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	return &plansdk.BuildPlan{}
+}
+
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{}
 }

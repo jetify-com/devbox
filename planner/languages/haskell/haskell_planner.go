@@ -48,7 +48,13 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return isRelevant
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{
+		DevPackages: []string{"stack", "libiconv", "libffi", "binutils", "ghc"},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	plan, err := p.getPlan(srcDir)
 	if err != nil {
 		return nil
@@ -56,7 +62,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	return plan
 }
 
-func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+func (p *Planner) getPlan(srcDir string) (*plansdk.BuildPlan, error) {
 
 	project, err := getProject(srcDir)
 	if err != nil {
@@ -66,7 +72,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 	exeName := fmt.Sprintf("%s-exe", project.Name)
 	packages := []string{"stack", "libiconv", "libffi", "binutils", "ghc"}
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages:     packages,
 		RuntimePackages: packages,
 		InstallStage: &plansdk.Stage{

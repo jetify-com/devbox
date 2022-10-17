@@ -32,18 +32,37 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return p.cargoTomlPath(srcDir) != ""
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	plan, err := p.getPlan(srcDir)
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	plan := &plansdk.ShellPlan{
+		NixOverlays: []string{RustOxalicaOverlay},
+	}
+	manifest, err := p.cargoManifest(srcDir)
+	if err != nil {
+		return plan
+	}
+	rustVersion, err := p.rustOxalicaVersion(manifest)
+	if err != nil {
+		return plan
+	}
+
+	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
+	plan.DevPackages = []string{rustPkgDev, "gcc"}
+
+	return plan
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	plan, err := p.getBuildPlan(srcDir)
 	if err != nil {
 		if plan == nil {
-			plan = &plansdk.Plan{}
+			plan = &plansdk.BuildPlan{}
 		}
 		plan.WithError(err)
 	}
 	return plan
 }
 
-func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+func (p *Planner) getBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
 
 	manifest, err := p.cargoManifest(srcDir)
 	if err != nil {
@@ -56,7 +75,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 
 	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		NixOverlays: []string{RustOxalicaOverlay},
 		// 'gcc' added as a linker for libc (C toolchain)
 		// 1. https://softwareengineering.stackexchange.com/a/332254

@@ -1,5 +1,5 @@
 {
-  "packages": [],
+  "packages": ["dotnet-sdk"],
   "shell": {
     "init_hook": null
   }

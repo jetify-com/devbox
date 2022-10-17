@@ -1,0 +1,8 @@
+{
+  "dev_packages": [
+    "python3"
+  ],
+  "shell_init_hook": [
+    "echo \"Creating/Using virtual environment in /Users/lucille/repos/devbox/testdata/python/pip-example/.venv\";\npython -m venv \"/Users/lucille/repos/devbox/testdata/python/pip-example/.venv\";\nsource \"/Users/lucille/repos/devbox/testdata/python/pip-example/.venv/bin/activate\";"
+  ]
+}

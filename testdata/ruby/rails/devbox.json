@@ -1,5 +1,8 @@
 {
   "packages": [
+    "ruby_3_1",
+    "gcc",
+    "gnumake"
   ],
   "shell": {
     "init_hook": null

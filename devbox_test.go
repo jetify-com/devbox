@@ -2,6 +2,7 @@ package devbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -24,20 +25,22 @@ func TestDevbox(t *testing.T) {
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
 	for _, testPath := range testPaths {
-		testExample(t, testPath)
+		testShell(t, testPath)
+		testBuild(t, testPath)
 	}
 }
 
-func testExample(t *testing.T, testPath string) {
+func testShell(t *testing.T, testPath string) {
 
 	currentDir, err := os.Getwd()
 	require.New(t).NoError(err)
 
 	baseDir := filepath.Dir(testPath)
-	t.Run(baseDir, func(t *testing.T) {
+	testName := fmt.Sprintf("%s_shell_plan", baseDir)
+	t.Run(testName, func(t *testing.T) {
 		assert := assert.New(t)
-		goldenFile := filepath.Join(baseDir, "plan.json")
-		hasGoldenFile := fileExists(goldenFile)
+		shellPlanFile := filepath.Join(baseDir, "shell_plan.json")
+		hasShellPlanFile := fileExists(shellPlanFile)
 
 		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
@@ -48,7 +51,49 @@ func testExample(t *testing.T, testPath string) {
 		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
 		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
 
-		plan, err := box.BuildPlan()
+		shellPlan := box.ShellPlan()
+		assert.NoError(err, "devbox shell plan should not fail")
+
+		err = box.generateShellFiles()
+		assert.NoError(err, "devbox generate should not fail")
+
+		if !hasShellPlanFile {
+			assert.NotEmpty(shellPlan.DevPackages, "the plan should have dev packages")
+			return
+		}
+
+		data, err := os.ReadFile(shellPlanFile)
+		assert.NoError(err, "shell_plan.json should be readable")
+
+		expected := &plansdk.ShellPlan{}
+		err = json.Unmarshal(data, &expected)
+		assert.NoError(err, "plan.json should parse correctly")
+		assertShellPlansMatch(t, expected, shellPlan)
+	})
+}
+
+func testBuild(t *testing.T, testPath string) {
+
+	currentDir, err := os.Getwd()
+	require.New(t).NoError(err)
+
+	baseDir := filepath.Dir(testPath)
+	testName := fmt.Sprintf("%s_build_plan", baseDir)
+	t.Run(testName, func(t *testing.T) {
+		assert := assert.New(t)
+		buildPlanFile := filepath.Join(baseDir, "build_plan.json")
+		hasBuildPlanFile := fileExists(buildPlanFile)
+
+		box, err := Open(baseDir, os.Stdout)
+		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
+
+		// Just for tests, we make srcDir be a relative path so that the paths in plan.json
+		// of various test cases have relative paths. Absolute paths are a no-go because they'd
+		// be of the form `/Users/savil/...`, which are not generalized and cannot be checked in.
+		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
+		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
+
+		buildPlan, err := box.BuildPlan()
 		buildErrorExpectedFile := filepath.Join(baseDir, "build_error_expected")
 		hasBuildErrorExpectedFile := fileExists(buildErrorExpectedFile)
 		if hasBuildErrorExpectedFile {
@@ -58,26 +103,32 @@ func testExample(t *testing.T, testPath string) {
 		}
 		assert.NoError(err, "devbox plan should not fail")
 
-		err = box.Generate()
+		err = box.generateBuildFiles()
 		assert.NoError(err, "devbox generate should not fail")
 
-		if !hasGoldenFile {
-			assert.NotEmpty(plan.DevPackages, "the plan should have dev packages")
+		if !hasBuildPlanFile {
+			assert.NotEmpty(buildPlan.DevPackages, "the plan should have dev packages")
 			return
 		}
 
-		data, err := os.ReadFile(goldenFile)
+		data, err := os.ReadFile(buildPlanFile)
 		assert.NoError(err, "plan.json should be readable")
 
-		expected := &plansdk.Plan{}
+		expected := &plansdk.BuildPlan{}
 		err = json.Unmarshal(data, &expected)
 		assert.NoError(err, "plan.json should parse correctly")
-
-		assertPlansMatch(t, expected, plan)
+		assertBuildPlansMatch(t, expected, buildPlan)
 	})
 }
 
-func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan) {
+func assertShellPlansMatch(t *testing.T, expected *plansdk.ShellPlan, actual *plansdk.ShellPlan) {
+	assert := assert.New(t)
+
+	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
+	assert.ElementsMatch(expected.NixOverlays, actual.NixOverlays, "NixOverlays should match")
+}
+
+func assertBuildPlansMatch(t *testing.T, expected *plansdk.BuildPlan, actual *plansdk.BuildPlan) {
 	assert := assert.New(t)
 
 	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
@@ -105,10 +156,6 @@ func assertPlansMatch(t *testing.T, expected *plansdk.Plan, actual *plansdk.Plan
 	)
 
 	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-	assert.Equal(expected.ShellInitHook, actual.ShellInitHook, "ShellInitHook should match")
-	if expected.GeneratedFiles != nil {
-		assert.Equal(expected.GeneratedFiles, actual.GeneratedFiles, "GeneratedFiles should match")
-	}
 }
 
 func fileExists(path string) bool {

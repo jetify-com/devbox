@@ -25,12 +25,24 @@ type PlanError struct {
 // (1) can be solved by using a WithOption pattern, (e.g. NewPlan(..., WithWelcomeMessage(...)))
 // (2) can be solved by using a custom JSON marshaler.
 
-// Plan tells devbox how to start shells and build projects.
-type Plan struct {
-	ShellInitHook string `json:"shell_init_hook,omitempty"`
+// Plan tells devbox how to start shell projects.
+type ShellPlan struct {
+	// Set by devbox.json
+	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
+	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
+	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
+	// Nix overlays. Currently, Rust needs it for shell.
+	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
+	// Nix expressions. Currently, PHP needs it for shell.
+	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
+	// GeneratedFiles is a map of name => content for files that should be generated
+	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
+	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
+}
 
-	NixOverlays []string `cur:"[...string]" json:"nix_overlays,omitempty"`
-
+// Plan tells devbox how to start build projects.
+type BuildPlan struct {
+	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment. They are also available in shell.
 	DevPackages []string `cue:"[...string]" json:"dev_packages"`
@@ -57,19 +69,36 @@ type Plan struct {
 	// Errors from plan generation. This usually means
 	// the user application may not be buildable.
 	Errors []PlanError `json:"errors,omitempty"`
-
-	// GeneratedFiles is a map of name => content for files that should be generated
-	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
-	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 }
 
 type Planner interface {
 	Name() string
 	IsRelevant(srcDir string) bool
-	GetPlan(srcDir string) *Plan
+	GetBuildPlan(srcDir string) *BuildPlan
+	GetShellPlan(srcDir string) *ShellPlan
 }
 
-func (p *Plan) String() string {
+// MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
+// and overlays is the union of the packages, definitions, and overlays of the input plans,
+// respectively.
+func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
+	shellPlan := &ShellPlan{}
+	for _, p := range plans {
+		err := mergo.Merge(shellPlan, p, mergo.WithAppendSlice)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
+	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
+	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
+	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
+
+	return shellPlan, nil
+}
+
+func (p *BuildPlan) String() string {
 	b, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
 		panic(err)
@@ -77,28 +106,15 @@ func (p *Plan) String() string {
 	return string(b)
 }
 
-func (p *Plan) Buildable() bool {
-	if p == nil {
-		return false
-	}
-	return p.InstallStage != nil || p.BuildStage != nil || p.StartStage != nil
-}
-
-// Invalid returns true if plan is empty and has errors. If the plan is a partial
-// plan, then it is considered valid.
-func (p *Plan) Invalid() bool {
-	return len(p.DevPackages) == 0 &&
-		len(p.RuntimePackages) == 0 &&
-		p.InstallStage == nil &&
-		p.BuildStage == nil &&
-		p.StartStage == nil &&
-		len(p.Errors) > 0
+// Invalid returns true if build plan has errors.
+func (p *BuildPlan) Invalid() bool {
+	return len(p.Errors) > 0
 }
 
 // Error combines all errors into a single error. We use this instead of a
 // Error() string interface because some of the errors may be user errors, which
 // get formatted differently by some clients.
-func (p *Plan) Error() error {
+func (p *BuildPlan) Error() error {
 	if len(p.Errors) == 0 {
 		return nil
 	}
@@ -109,13 +125,13 @@ func (p *Plan) Error() error {
 	return combined
 }
 
-func (p *Plan) WithError(err error) *Plan {
+func (p *BuildPlan) WithError(err error) *BuildPlan {
 	p.Errors = append(p.Errors, PlanError{err})
 	return p
 }
 
 // Get warning as error format from all 3 stages
-func (p *Plan) Warning() error {
+func (p *BuildPlan) Warning() error {
 	stages := []*Stage{p.InstallStage, p.BuildStage, p.StartStage}
 	stageWarnings := []error{}
 	for _, stage := range stages {
@@ -133,49 +149,7 @@ func (p *Plan) Warning() error {
 	return combined
 }
 
-// MergePlans merges multiple Plans into one. The merged plan's packages, definitions,
-// and overlays is the union of the packages, definitions, and overlays of the input plans,
-// respectively. The install/build/start stages of the merged plans are taken from the _first_
-// buildable plan (order matters!). If no plan is buildable, returns a non-buildable plan.
-func MergePlans(plans ...*Plan) (*Plan, error) {
-	mergedPlan := &Plan{}
-	for _, p := range plans {
-		err := mergo.Merge(
-			mergedPlan,
-			&Plan{
-				NixOverlays:     p.NixOverlays,
-				DevPackages:     p.DevPackages,
-				RuntimePackages: p.RuntimePackages,
-				Definitions:     p.Definitions,
-			},
-			// Only WithAppendSlice overlays, definitions, dev, and runtime packages fields.
-			mergo.WithAppendSlice,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	plan := findBuildablePlan(plans...)
-	plan.NixOverlays = pkgslice.Unique(mergedPlan.NixOverlays)
-	plan.DevPackages = pkgslice.Unique(mergedPlan.DevPackages)
-	plan.RuntimePackages = pkgslice.Unique(mergedPlan.RuntimePackages)
-	plan.Definitions = mergedPlan.Definitions
-
-	return plan, nil
-}
-
-func findBuildablePlan(plans ...*Plan) *Plan {
-	for _, p := range plans {
-		// For now, pick the first buildable plan.
-		if p.Buildable() {
-			return p
-		}
-	}
-	return &Plan{}
-}
-
-func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
+func MergeUserBuildPlan(userPlan *BuildPlan, automatedPlan *BuildPlan) (*BuildPlan, error) {
 	automatedStages := []*Stage{automatedPlan.InstallStage, automatedPlan.BuildStage, automatedPlan.StartStage}
 	userStages := []*Stage{userPlan.InstallStage, userPlan.BuildStage, userPlan.StartStage}
 	planStages := []*Stage{{}, {}, {}}
@@ -184,16 +158,19 @@ func MergeUserPlan(userPlan *Plan, automatedPlan *Plan) (*Plan, error) {
 		planStages[i] = mergeUserStage(userStages[i], automatedStages[i])
 	}
 	// Merging devPackages and runtimePackages fields.
-	packagesPlan, err := MergePlans(userPlan, automatedPlan)
+	packagesPlan := &BuildPlan{
+		DevPackages: append([]string{}, userPlan.DevPackages...),
+	}
+	err := mergo.Merge(packagesPlan, automatedPlan, mergo.WithAppendSlice)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 	plan := automatedPlan
 	plan.InstallStage = planStages[0]
 	plan.BuildStage = planStages[1]
 	plan.StartStage = planStages[2]
-	plan.DevPackages = packagesPlan.DevPackages
-	plan.RuntimePackages = packagesPlan.RuntimePackages
+	plan.DevPackages = pkgslice.Unique(packagesPlan.DevPackages)
+	plan.RuntimePackages = pkgslice.Unique(packagesPlan.RuntimePackages)
 
 	return plan, nil
 }

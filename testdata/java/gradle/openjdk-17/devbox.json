@@ -1,5 +1,9 @@
 {
-  "packages": [],
+  "packages": [
+    "gradle",
+    "jdk17_headless",
+    "binutils"
+  ],
   "shell": {
     "init_hook": null
   }

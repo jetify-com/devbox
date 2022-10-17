@@ -35,7 +35,31 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(filepath.Join(srcDir, "Gemfile"))
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	gemfile := filepath.Join(srcDir, "Gemfile")
+	v := parseRubyVersion(gemfile)
+	pkg, ok := nixPackages[semver.MajorMinor(v)]
+	if !ok {
+		pkg = defaultPkg
+	}
+
+	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			pkg,
+			"gcc",     // for rails
+			"gnumake", // for rails
+		},
+		ShellInitHook: []string{plansdk.WelcomeMessage(
+			"It looks like you are developing a Ruby project.\n" +
+				"To keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n" +
+				" > bundler config set --local deployment 'true'\n" +
+				" > bundler install\n" +
+				"And then run your ruby app with bundler. For example:\n" +
+				" > bundler exec ruby app.rb")},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	gemfile := filepath.Join(srcDir, "Gemfile")
 	v := parseRubyVersion(gemfile)
 	pkg, ok := nixPackages[semver.MajorMinor(v)]
@@ -46,14 +70,7 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 	if hasRails(gemfile) {
 		cmd = "bin/rails server -b 0.0.0.0 -e production"
 	}
-	return &plansdk.Plan{
-		ShellInitHook: plansdk.WelcomeMessage(
-			"It looks like you are developing a Ruby project.\n" +
-				"To keep dependencies isolated, it is recommended that you install them in deployment mode, by running:\n" +
-				" > bundler config set --local deployment 'true'\n" +
-				" > bundler install\n" +
-				"And then run your ruby app with bundler. For example:\n" +
-				" > bundler exec ruby app.rb"),
+	return &plansdk.BuildPlan{
 		DevPackages: []string{
 			pkg,
 			"gcc",     // for rails

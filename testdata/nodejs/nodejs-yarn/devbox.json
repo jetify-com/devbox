@@ -1,3 +1,6 @@
 {
-  "packages": []
+  "packages": [
+    "nodejs",
+    "yarn"
+  ]
 }

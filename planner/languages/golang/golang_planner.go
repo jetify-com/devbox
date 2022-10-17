@@ -36,10 +36,18 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return fileExists(goModPath)
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	goPkg := getGoPackage(srcDir)
+
+	return &plansdk.ShellPlan{
+		DevPackages: []string{goPkg},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
 	goPkg := getGoPackage(srcDir)
 	buildCmd, buildErr := getGoBuildCommand(srcDir)
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages: []string{
 			goPkg,
 		},

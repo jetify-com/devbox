@@ -4,6 +4,7 @@
 package planner
 
 import (
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/planner/languages/c"
 	"go.jetpack.io/devbox/planner/languages/clojure"
@@ -68,31 +69,48 @@ var PLANNERS = []plansdk.Planner{
 	&zig.Planner{},
 }
 
-func GetShellPlan(srcDir string) (*plansdk.Plan, error) {
-	result := &plansdk.Plan{
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-	}
-	var err error
-	for _, p := range getRelevantPlanners(srcDir) {
-		result, err = plansdk.MergePlans(result, p.GetPlan(srcDir))
-		if err != nil {
-			return nil, err
+// Return a merged shell plan from shell planners if user defined packages
+// contain one or more dev packages from a shell planner.
+func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
+	result := &plansdk.ShellPlan{}
+	planners := getRelevantPlanners(srcDir)
+	for _, p := range planners {
+		pkgs := p.GetShellPlan(srcDir).DevPackages
+		mutualPkgs := lo.Intersect(userPkgs, pkgs)
+		// Only apply shell plan if user packages list all the packages from shell plan.
+		if len(mutualPkgs) == len(pkgs) {
+			// if merge fails, we return no errors for now.
+			result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
 		}
-
 	}
-	return result, nil
+	return result
+}
+
+// Return a merged shell plan from all planners.
+func GetShellPackageSuggestion(srcDir string, userPkgs []string) []string {
+	result := &plansdk.ShellPlan{}
+	planners := getRelevantPlanners(srcDir)
+	for _, p := range planners {
+		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
+	}
+
+	return result.DevPackages
 }
 
 // Return one buildable plan from all planners.
-func GetBuildPlan(srcDir string) (*plansdk.Plan, error) {
-	buildables := []*plansdk.Plan{}
-	unbuildables := []*plansdk.Plan{}
+// If no buildable plan is found, return errors from the first unbuildable plan.
+func GetBuildPlan(srcDir string, userPkgs []string) (*plansdk.BuildPlan, error) {
+	buildables := []*plansdk.BuildPlan{}
+	unbuildables := []*plansdk.BuildPlan{}
 	for _, p := range getRelevantPlanners(srcDir) {
-		if plan := p.GetPlan(srcDir); plan.Buildable() {
-			buildables = append(buildables, plan)
-		} else {
-			unbuildables = append(unbuildables, plan)
+		plan := p.GetBuildPlan(srcDir)
+		mutualPkgs := lo.Intersect(userPkgs, plan.DevPackages)
+		if len(mutualPkgs) > 0 {
+			if !plan.Invalid() {
+				buildables = append(buildables, plan)
+			} else {
+				unbuildables = append(unbuildables, plan)
+			}
 		}
 	}
 	// If we could not find any buildable plans, and at least one unbuildable plan,

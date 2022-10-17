@@ -1,5 +1,7 @@
 {
-  "packages": [],
+  "packages": [
+    "libiconv", "libffi", "binutils", "ghc", "stack"
+  ],
   "shell": {
     "init_hook": null
   }

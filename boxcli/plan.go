@@ -43,17 +43,19 @@ func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	plan, err := box.BuildPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if plan.Invalid() {
-		return plan.Error()
-	}
-
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
-	return errors.WithStack(enc.Encode(plan))
+
+	shellPlan := box.ShellPlan()
+	err = enc.Encode(shellPlan)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	buildPlan, err := box.BuildPlan()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return errors.WithStack(enc.Encode(buildPlan))
 }

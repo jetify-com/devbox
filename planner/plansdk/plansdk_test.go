@@ -9,76 +9,75 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMergePlans(t *testing.T) {
-	// Packages get appended
-	plan1 := &Plan{
-		DevPackages:     []string{"foo", "bar"},
-		RuntimePackages: []string{"a"},
+func TestMergeShellPlans(t *testing.T) {
+	plan1 := &ShellPlan{}
+	plan2 := &ShellPlan{
+		DevPackages:   []string{},
+		Definitions:   []string{"a"},
+		NixOverlays:   []string{"b"},
+		ShellInitHook: []string{"a", "b"},
+		GeneratedFiles: map[string]string{
+			"a": "b",
+		},
 	}
-	plan2 := &Plan{
-		DevPackages:     []string{"baz"},
-		RuntimePackages: []string{"b", "c"},
-	}
-	expected := &Plan{
-		NixOverlays:     []string{},
-		DevPackages:     []string{"foo", "bar", "baz"},
-		RuntimePackages: []string{"a", "b", "c"},
-	}
-	actual, err := MergePlans(plan1, plan2)
+	expected := plan2
+	actual, err := MergeShellPlans(plan1, plan2)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 
-	// Base plan (the first one) takes precedence:
-	plan1 = &Plan{
-		BuildStage: &Stage{
-			Command: "plan1",
-		},
+	// Test merge array
+	plan1 = &ShellPlan{
+		Definitions:   []string{"a"},
+		NixOverlays:   []string{"b"},
+		ShellInitHook: []string{"c"},
 	}
-	plan2 = &Plan{
-		BuildStage: &Stage{
-			Command: "plan2",
-		},
+	plan2 = &ShellPlan{
+		Definitions:   []string{"a"},
+		NixOverlays:   []string{"a"},
+		ShellInitHook: []string{"a", "b"},
 	}
-	expected = &Plan{
-		NixOverlays:     []string{},
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-		BuildStage: &Stage{
-			Command: "plan1",
-		},
+	expected = &ShellPlan{
+		DevPackages:   []string{},
+		Definitions:   []string{"a"},
+		NixOverlays:   []string{"b", "a"},
+		ShellInitHook: []string{"c", "a", "b"},
 	}
-	actual, err = MergePlans(plan1, plan2)
+	actual, err = MergeShellPlans(plan1, plan2)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 
-	// InputFiles can be overwritten:
-	plan1 = &Plan{
-		InstallStage: &Stage{
-			InputFiles: []string{"package.json"},
-		},
-		StartStage: &Stage{
-			InputFiles: []string{"input"},
+	// test merging generated files
+	plan1 = &ShellPlan{
+		GeneratedFiles: map[string]string{
+			"a": "b",
+			"b": "c",
 		},
 	}
-	plan2 = &Plan{}
-	expected = &Plan{
-		NixOverlays:     []string{},
-		DevPackages:     []string{},
-		RuntimePackages: []string{},
-		InstallStage: &Stage{
-			InputFiles: []string{"package.json"},
-		},
-		StartStage: &Stage{
-			InputFiles: []string{"input"},
+	plan2 = &ShellPlan{
+		GeneratedFiles: map[string]string{
+			"a": "b",
+			"b": "c",
+			"c": "d",
 		},
 	}
-	actual, err = MergePlans(plan1, plan2)
+	expected = &ShellPlan{
+		DevPackages:   []string{},
+		Definitions:   []string{},
+		NixOverlays:   []string{},
+		ShellInitHook: []string{},
+		GeneratedFiles: map[string]string{
+			"a": "b",
+			"b": "c",
+			"c": "d",
+		},
+	}
+	actual, err = MergeShellPlans(plan1, plan2)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
 
-func TestMergeUserPlans(t *testing.T) {
-	plannerPlan := &Plan{
+func TestMergeUserBuildPlans(t *testing.T) {
+	plannerPlan := &BuildPlan{
 		DevPackages:     []string{"nodejs"},
 		RuntimePackages: []string{"nodejs"},
 		InstallStage: &Stage{
@@ -95,13 +94,13 @@ func TestMergeUserPlans(t *testing.T) {
 	}
 	cases := []struct {
 		name string
-		in   *Plan
-		out  *Plan
+		in   *BuildPlan
+		out  *BuildPlan
 	}{
 		{
 			name: "empty base plan",
-			in:   &Plan{},
-			out: &Plan{
+			in:   &BuildPlan{},
+			out: &BuildPlan{
 				DevPackages:     []string{"nodejs"},
 				RuntimePackages: []string{"nodejs"},
 				InstallStage: &Stage{
@@ -115,12 +114,11 @@ func TestMergeUserPlans(t *testing.T) {
 					InputFiles: []string{"."},
 					Command:    "npm start",
 				},
-				NixOverlays: []string{},
 			},
 		},
 		{
 			name: "custom commands",
-			in: &Plan{
+			in: &BuildPlan{
 				DevPackages:     []string{"yarn"},
 				RuntimePackages: []string{"yarn"},
 				InstallStage: &Stage{
@@ -133,9 +131,9 @@ func TestMergeUserPlans(t *testing.T) {
 					Command: "yarn start",
 				},
 			},
-			out: &Plan{
+			out: &BuildPlan{
 				DevPackages:     []string{"yarn", "nodejs"},
-				RuntimePackages: []string{"yarn", "nodejs"},
+				RuntimePackages: []string{"nodejs"},
 				InstallStage: &Stage{
 					InputFiles: []string{"package.json"},
 					Command:    "yarn install",
@@ -148,7 +146,6 @@ func TestMergeUserPlans(t *testing.T) {
 					InputFiles: []string{"."},
 					Command:    "yarn start",
 				},
-				NixOverlays: []string{},
 			},
 		},
 	}
@@ -156,7 +153,7 @@ func TestMergeUserPlans(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert := assert.New(t)
-			got, err := MergeUserPlan(tc.in, plannerPlan)
+			got, err := MergeUserBuildPlan(tc.in, plannerPlan)
 
 			assert.NoError(err)
 			assert.Equal(tc.out, got, "plans should match")

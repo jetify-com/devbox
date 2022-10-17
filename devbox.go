@@ -152,24 +152,23 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) ShellPlan() (*plansdk.Plan, error) {
-	userPlan := d.convertToPlan()
-	shellPlan, err := planner.GetShellPlan(d.srcDir)
-	if err != nil {
-		return nil, err
-	}
-	return plansdk.MergeUserPlan(userPlan, shellPlan)
+func (d *Devbox) ShellPlan() *plansdk.ShellPlan {
+	userDefinedPkgs := d.cfg.Packages
+	shellPlan := planner.GetShellPlan(d.srcDir, userDefinedPkgs)
+	shellPlan.DevPackages = userDefinedPkgs
+
+	return shellPlan
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) BuildPlan() (*plansdk.Plan, error) {
-	userPlan := d.convertToPlan()
-	buildPlan, err := planner.GetBuildPlan(d.srcDir)
+func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
+	userPlan := d.convertToBuildPlan()
+	buildPlan, err := planner.GetBuildPlan(d.srcDir, d.cfg.Packages)
 	if err != nil {
 		return nil, err
 	}
-	return plansdk.MergeUserPlan(userPlan, buildPlan)
+	return plansdk.MergeUserBuildPlan(userPlan, buildPlan)
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
@@ -190,29 +189,36 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
+	plan := d.ShellPlan()
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
 	}
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	sh, err := nix.DetectShell(
-		nix.WithPlanInitHook(plan.ShellInitHook),
+	shell, err := nix.DetectShell(
+		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
 	)
 	if err != nil {
 		// Fall back to using a plain Nix shell.
-		sh = &nix.Shell{}
+		shell = &nix.Shell{}
 	}
-	sh.UserInitHook = d.cfg.Shell.InitHook.String()
-	return sh.Run(nixShellFilePath)
+
+	allPkgs := planner.GetShellPackageSuggestion(d.srcDir, d.cfg.Packages)
+	pkgsToSuggest, _ := lo.Difference(allPkgs, d.cfg.Packages)
+	if len(pkgsToSuggest) > 0 {
+		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
+		fmt.Fprintf(
+			d.writer,
+			"We detected extra packages you may need. To install them, run `%s`\n",
+			color.HiYellowString(s),
+		)
+	}
+
+	shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	return shell.Run(nixShellFilePath)
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
@@ -249,7 +255,7 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) convertToPlan() *plansdk.Plan {
+func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
 	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
 	planStages := []*plansdk.Stage{{}, {}, {}}
 
@@ -260,7 +266,7 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 			}
 		}
 	}
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages:     d.cfg.Packages,
 		RuntimePackages: d.cfg.Packages,
 		InstallStage:    planStages[0],
@@ -270,28 +276,19 @@ func (d *Devbox) convertToPlan() *plansdk.Plan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	shellPlan, err := d.ShellPlan()
-	if err != nil {
-		return err
-	}
-	if shellPlan.Invalid() {
-		return shellPlan.Error()
-	}
-	return generate(d.srcDir, shellPlan, shellFiles)
+	return generateForShell(d.srcDir, d.ShellPlan())
 }
 
 func (d *Devbox) generateBuildFiles() error {
+	// BuildPlan() will return error if plan is invalid.
 	buildPlan, err := d.BuildPlan()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if buildPlan.Invalid() {
-		return buildPlan.Error()
-	}
 	if buildPlan.Warning() != nil {
 		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
 	}
-	return generate(d.srcDir, buildPlan, buildFiles)
+	return generateForBuild(d.srcDir, buildPlan)
 }
 
 func (d *Devbox) profileDir() (string, error) {

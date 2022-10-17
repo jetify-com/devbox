@@ -1,0 +1,9 @@
+{
+  "dev_packages": [
+    "php81",
+    "php81Packages.composer"
+  ],
+  "definitions": [
+    "php81 = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [ imagick mbstring ]));"
+  ]
+}

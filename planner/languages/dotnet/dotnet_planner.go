@@ -44,16 +44,30 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return isRelevant
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	plan, err := p.getPlan(srcDir)
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	proj, err := project(srcDir)
 	if err != nil {
-		plan = &plansdk.Plan{}
+		return &plansdk.ShellPlan{}
+	}
+	dotNetPkg, err := dotNetNixPackage(proj)
+	if err != nil {
+		return &plansdk.ShellPlan{}
+	}
+	return &plansdk.ShellPlan{
+		DevPackages: []string{dotNetPkg},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	plan, err := p.getBuildPlan(srcDir)
+	if err != nil {
+		plan = &plansdk.BuildPlan{}
 		plan.WithError(err)
 	}
 	return plan
 }
 
-func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
+func (p *Planner) getBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
 
 	proj, err := project(srcDir)
 	if err != nil {
@@ -64,7 +78,7 @@ func (p *Planner) getPlan(srcDir string) (*plansdk.Plan, error) {
 		return nil, err
 	}
 
-	return &plansdk.Plan{
+	return &plansdk.BuildPlan{
 		DevPackages: []string{dotNetPkg},
 
 		// TODO replace dotNetPkg to reduce runtime image size

@@ -1,6 +1,7 @@
 {
   "packages": [
-    "rust-bin.stable.latest.default"
+    "rust-bin.stable.latest.default",
+    "gcc"
   ],
   "shell": {
     "init_hook": null

@@ -1,0 +1,31 @@
+{
+  "dev_packages": [
+    "libiconv",
+    "libffi",
+    "binutils",
+    "ghc",
+    "stack"
+  ],
+  "runtime_packages": [
+    "stack",
+    "libiconv",
+    "libffi",
+    "binutils",
+    "ghc"
+  ],
+  "install_stage": {
+    "command": "stack build --system-ghc --dependencies-only",
+    "input_files": [
+      "."
+    ]
+  },
+  "build_stage": {
+    "command": "stack build --system-ghc"
+  },
+  "start_stage": {
+    "command": "stack exec --system-ghc hello-world-exe",
+    "input_files": [
+      "."
+    ]
+  }
+}

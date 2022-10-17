@@ -29,15 +29,24 @@ func (p *PIPPlanner) Name() string {
 func (p *PIPPlanner) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(filepath.Join(srcDir, "requirements.txt"))
 }
-func (p *PIPPlanner) GetPlan(srcDir string) *plansdk.Plan {
-	plan := &plansdk.Plan{
+
+func (p *PIPPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			"python3",
+		},
+		ShellInitHook: []string{p.shellInitHook(srcDir)},
+	}
+}
+
+func (p *PIPPlanner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	plan := &plansdk.BuildPlan{
 		DevPackages: []string{
 			"python3",
 		},
 		RuntimePackages: []string{
 			`python3`,
 		},
-		ShellInitHook: p.shellInitHook(srcDir),
 	}
 	if err := p.isBuildable(srcDir); err != nil {
 		return plan.WithError(err)

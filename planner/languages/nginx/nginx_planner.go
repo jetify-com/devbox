@@ -27,11 +27,25 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 		plansdk.FileExists(filepath.Join(srcDir, "shell-nginx.conf"))
 }
 
-func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
-	return &plansdk.Plan{
-		ShellInitHook: plansdk.WelcomeMessage(
-			fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)),
-		),
+func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{
+		DevPackages: []string{
+			"nginx",
+			"shell-nginx",
+		},
+		Definitions: []string{
+			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
+		},
+		GeneratedFiles: map[string]string{
+			"shell-helper-nginx.conf": fmt.Sprintf(shellHelperNginxConfig, os.TempDir()),
+		},
+		ShellInitHook: []string{
+			plansdk.WelcomeMessage(fmt.Sprintf(welcomeMessage, p.shellConfig(srcDir)))},
+	}
+}
+
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	return &plansdk.BuildPlan{
 		DevPackages: []string{
 			"nginx",
 			"shell-nginx",
@@ -49,9 +63,6 @@ func (p *Planner) GetPlan(srcDir string) *plansdk.Plan {
 		},
 		Definitions: []string{
 			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
-		},
-		GeneratedFiles: map[string]string{
-			"shell-helper-nginx.conf": fmt.Sprintf(shellHelperNginxConfig, os.TempDir()),
 		},
 	}
 }
