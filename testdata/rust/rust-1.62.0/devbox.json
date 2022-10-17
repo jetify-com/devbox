@@ -1,6 +1,11 @@
 {
   "packages": [
-    "rust-bin.stable.\"1.62.0\".default",
+    "rustup",
     "gcc"
-  ]
+  ],
+  "shell": {
+    "init_hook": [
+      "source init-shell.sh"
+    ]
+  }
 }

@@ -1,31 +1,29 @@
 {
-  "nix_overlays": [
-    "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
-  ],
   "dev_packages": [
-    "rust-bin.stable.latest.default",
+    "rustup",
+    "libiconv",
     "gcc"
   ],
   "runtime_packages": [
-    "glibc"
+    "rustup",
+    "gcc"
   ],
   "install_stage": {
-    "command": "cargo fetch",
+    "command": "mkdir -p ./.devbox/rust/cargo && export CARGO_HOME=./.devbox/rust/cargo && export PATH=$PATH:$CARGO_HOME && mkdir -p ./.devbox/rust/rustup/ && export RUSTUP_HOME=./.devbox/rust/rustup/ && rustup default stable && cargo fetch",
     "input_files": [
       "."
     ]
   },
   "build_stage": {
-    "command": "cargo build --release --offline",
+    "command": "mkdir -p ./.devbox/rust/cargo && export CARGO_HOME=./.devbox/rust/cargo && export PATH=$PATH:$CARGO_HOME && mkdir -p ./.devbox/rust/rustup/ && export RUSTUP_HOME=./.devbox/rust/rustup/ && rustup default stable && cargo build --release --offline",
     "input_files": [
       "."
     ]
   },
   "start_stage": {
-    "command": "./hello-rust",
+    "command": "mkdir -p ./.devbox/rust/cargo && export CARGO_HOME=./.devbox/rust/cargo && export PATH=$PATH:$CARGO_HOME && mkdir -p ./.devbox/rust/rustup/ && export RUSTUP_HOME=./.devbox/rust/rustup/ && rustup default stable && cargo run --release --offline",
     "input_files": [
-      "target/release/hello-rust"
+      "."
     ]
-  },
-  "definitions": null
+  }
 }
