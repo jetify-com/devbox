@@ -13,9 +13,6 @@ import (
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
-// Source and reference: https://github.com/oxalica/rust-overlay
-const RustOxalicaOverlay = "https://github.com/oxalica/rust-overlay/archive/stable.tar.gz"
-
 // `cargo new` generates a file with uppercase Cargo.toml
 const cargoToml = "Cargo.toml"
 
@@ -32,23 +29,10 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return p.cargoTomlPath(srcDir) != ""
 }
 
-func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	plan := &plansdk.ShellPlan{
-		NixOverlays: []string{RustOxalicaOverlay},
+func (p *Planner) GetShellPlan(_srcDir string) *plansdk.ShellPlan {
+	return &plansdk.ShellPlan{
+		DevPackages: []string{"rustup"},
 	}
-	manifest, err := p.cargoManifest(srcDir)
-	if err != nil {
-		return plan
-	}
-	rustVersion, err := p.rustOxalicaVersion(manifest)
-	if err != nil {
-		return plan
-	}
-
-	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
-	plan.DevPackages = []string{rustPkgDev, "gcc"}
-
-	return plan
 }
 
 func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
@@ -68,43 +52,46 @@ func (p *Planner) getBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	rustVersion, err := p.rustOxalicaVersion(manifest)
+	rustupVersion, err := p.rustupVersion(manifest)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	rustPkgDev := fmt.Sprintf("rust-bin.stable.%s.default", rustVersion)
+	envSetup := p.envsetupCommands(rustupVersion)
 
 	return &plansdk.BuildPlan{
-		NixOverlays: []string{RustOxalicaOverlay},
 		// 'gcc' added as a linker for libc (C toolchain)
 		// 1. https://softwareengineering.stackexchange.com/a/332254
 		// 2. https://stackoverflow.com/a/56166959
-		DevPackages:     []string{rustPkgDev, "gcc"},
-		RuntimePackages: []string{"glibc"},
+		DevPackages:     []string{"rustup", "gcc"},
+		RuntimePackages: []string{"rustup", "gcc"},
+
 		InstallStage: &plansdk.Stage{
 			InputFiles: []string{"."},
-			Command:    "cargo fetch",
+			Command:    fmt.Sprintf("%s && cargo fetch", envSetup),
 		},
 		BuildStage: &plansdk.Stage{
 			InputFiles: []string{"."},
-			Command:    "cargo build --release --offline",
+			Command:    fmt.Sprintf("%s && cargo build --release --offline", envSetup),
 		},
 		StartStage: &plansdk.Stage{
-			InputFiles: []string{fmt.Sprintf("target/release/%s", manifest.PackageField.Name)},
-			Command:    fmt.Sprintf("./%s", manifest.PackageField.Name),
+			InputFiles: []string{"."},
+			Command:    fmt.Sprintf("%s && cargo run --release --offline", envSetup),
 		},
 	}, nil
 }
 
-// Follows the Oxalica convention where it needs to be either:
-// 1. latest
+// Follows the Rustup convention where it needs to be either:
+// 1. stable
 // 2. "<version>", including the quotation marks. Example: "1.62.0"
 //
-// This result is spliced into (for example) "rust-bin.stable.<result>.default"
-func (p *Planner) rustOxalicaVersion(manifest *cargoManifest) (string, error) {
+// TODO: add support for beta, nightly, and [stable|beta|nightly]-<archive-date>
+// <channel>       = stable|beta|nightly|<major.minor>|<major.minor.patch>
+// Channel names can be optionally appended with an archive date, as in nightly-2014-12-18
+// https://rust-lang.github.io/rustup/concepts/toolchains.html
+func (p *Planner) rustupVersion(manifest *cargoManifest) (string, error) {
 	if manifest.PackageField.RustVersion == "" {
-		return "latest", nil
+		return "stable", nil
 	}
 
 	rustVersion, err := plansdk.NewVersion(manifest.PackageField.RustVersion)
@@ -147,4 +134,27 @@ func (p *Planner) cargoTomlPath(srcDir string) string {
 		return lowerCargoTomlPath
 	}
 	return ""
+}
+
+// envsetupCommands are bash commands that ensure the rustup toolchain is setup so
+// it always works. We tradeoff robustness for performance in this implementation,
+// which is a polite way of saying that it is slow.
+func (p *Planner) envsetupCommands(rustupVersion string) string {
+
+	// RUSTUP_HOME sets the root rustup folder, which is used for storing installed toolchains
+	// and configuration options. CARGO_HOME contains cache files used by cargo.
+	//
+	// Note that you will need to ensure these environment variables are always set and
+	// that CARGO_HOME/bin is in the $PATH environment variable when using the toolchain.
+	// source: https://rust-lang.github.io/rustup/installation/index.html
+	cargoHome := "./.devbox/rust/cargo"
+	cargoSetup := fmt.Sprintf("mkdir -p %s && export CARGO_HOME=%s && export PATH=$PATH:$CARGO_HOME", cargoHome,
+		cargoHome)
+
+	rustupHome := "./.devbox/rust/rustup/"
+	rustupSetup := fmt.Sprintf("mkdir -p %s && export RUSTUP_HOME=%s && rustup default %s", rustupHome, rustupHome,
+		rustupVersion)
+	envSetup := fmt.Sprintf("%s && %s", cargoSetup, rustupSetup)
+
+	return envSetup
 }

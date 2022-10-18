@@ -1,9 +1,11 @@
 {
   "packages": [
-    "rust-bin.stable.latest.default",
-    "gcc"
+    "rustup",
+    "libiconv"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": [
+      "source init-shell.sh"
+    ]
   }
 }
