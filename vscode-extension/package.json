@@ -4,7 +4,8 @@
   "description": "devbox integration for VSCode",
   "version": "0.0.1",
   "icon": "assets/icon.png",
-  "author": "Jetpack Technologies Inc.",
+  "author": "jetpack-io",
+  "publisher": "jetpack-io",
   "preview": true,
   "engines": {
     "vscode": "^1.72.0"
