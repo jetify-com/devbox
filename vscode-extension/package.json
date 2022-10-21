@@ -6,7 +6,6 @@
   "icon": "assets/icon.png",
   "author": "jetpack-io",
   "publisher": "jetpack-io",
-  "preview": true,
   "engines": {
     "vscode": "^1.72.0"
   },
