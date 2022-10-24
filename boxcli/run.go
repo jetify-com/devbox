@@ -20,11 +20,11 @@ func RunCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:               "run -- [<target>]",
-		Short:             "Starts a new interactive shell running your target task. The shell will exit once your target task is completed or when it is terminated",
+		Short:             "Starts a new interactive shell running your target task. The shell will exit once your target task is completed or when it is terminated via CTRL-C",
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTargetCmd(cmd, args, flags)
+			return runTaskCmd(cmd, args, flags)
 		},
 	}
 
@@ -33,8 +33,8 @@ func RunCmd() *cobra.Command {
 	return command
 }
 
-func runTargetCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
-	path, task, err := parseTargetArgs(args, flags)
+func runTaskCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+	path, task, err := parseTaskArgs(args, flags)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func runTargetCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	return err
 }
 
-func parseTargetArgs(args []string, flags runCmdFlags) (string, string, error) {
+func parseTaskArgs(args []string, flags runCmdFlags) (string, string, error) {
 	path, err := configPathFromUser([]string{}, &flags.config)
 	if err != nil {
 		return "", "", err
