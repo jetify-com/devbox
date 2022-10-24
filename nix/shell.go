@@ -42,6 +42,10 @@ type Shell struct {
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
 
+	TaskName     string
+	TaskInitHook string
+	TaskCommand  string
+
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
 	historyFile string
@@ -110,6 +114,14 @@ func WithProfile(profileDir string) ShellOption {
 func WithHistoryFile(historyFile string) ShellOption {
 	return func(s *Shell) {
 		s.historyFile = historyFile
+	}
+}
+
+func WithUserTask(name string, initHook string, command string) ShellOption {
+	return func(s *Shell) {
+		s.TaskName = name
+		s.TaskInitHook = initHook
+		s.TaskCommand = command
 	}
 }
 
@@ -218,7 +230,12 @@ func (s *Shell) execCommand() string {
 	}
 	args = append(args, extraEnv...)
 	args = append(args, s.binPath)
+	if s.TaskCommand != "" {
+		args = append(args, "-ic")
+		args = append(args, "run_task")
+	}
 	args = append(args, extraArgs...)
+	fmt.Printf("%s \n", strings.Join(args, " "))
 	return strings.Join(args, " ")
 }
 
@@ -268,6 +285,8 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath string
 		UserHook         string
 		PlanInitHook     string
+		TaskInitHook     string
+		TaskCommand      string
 		ProfileBinDir    string
 		HistoryFile      string
 	}{
@@ -275,6 +294,8 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
+		TaskInitHook:     strings.TrimSpace(s.TaskInitHook),
+		TaskCommand:      strings.TrimSpace(s.TaskCommand),
 		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 	})

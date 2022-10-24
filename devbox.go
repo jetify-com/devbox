@@ -221,6 +221,47 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
+func (d *Devbox) RunTask(taskName string) error {
+	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		return err
+	}
+
+	plan := d.ShellPlan()
+
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return err
+	}
+
+	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	userTask := d.getMatchingTask(taskName)
+	if userTask == nil {
+		return errors.Errorf("Unable to find a task with name %s", taskName)
+	}
+
+	shell, err := nix.DetectShell(
+		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
+		nix.WithProfile(profileDir),
+		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
+		nix.WithUserTask(userTask.Name, userTask.InitHook.String(), userTask.Command.String()))
+
+	if err != nil {
+		shell = &nix.Shell{}
+	}
+
+	shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	return shell.Run(nixShellFilePath)
+}
+
+func (d *Devbox) getMatchingTask(selectedTask string) *Task {
+	for _, task := range d.cfg.Tasks {
+		if task.Name == selectedTask {
+			return &task
+		}
+	}
+	return nil
+}
+
 func (d *Devbox) Exec(cmds ...string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err

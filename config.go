@@ -38,6 +38,15 @@ type Config struct {
 		// InitHook contains commands that will run at shell startup.
 		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
 	} `json:"shell,omitempty"`
+
+	Tasks []Task `json:"tasks,omitempty"`
+}
+
+// This is the structure of a task
+type Task struct {
+	Name     string          `cue:"string" json:"name"`
+	InitHook ConfigShellCmds `json:"init_hook,omitempty"`
+	Command  ConfigShellCmds `json:"command"`
 }
 
 // This contains a subset of fields from plansdk.Stage
