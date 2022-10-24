@@ -243,7 +243,7 @@ func (d *Devbox) RunTask(taskName string) error {
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
-		nix.WithUserTask(userTask.Name, userTask.InitHook.String(), userTask.Command.String()))
+		nix.WithUserTask(taskName, userTask.TaskInit.String(), userTask.TaskCommand.String()))
 
 	if err != nil {
 		shell = &nix.Shell{}
@@ -254,12 +254,12 @@ func (d *Devbox) RunTask(taskName string) error {
 }
 
 func (d *Devbox) getMatchingTask(selectedTask string) *Task {
-	for _, task := range d.cfg.Tasks {
-		if task.Name == selectedTask {
-			return &task
-		}
+	task, found := d.cfg.Tasks[selectedTask]
+	if found {
+		return &task
+	} else {
+		return nil
 	}
-	return nil
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
