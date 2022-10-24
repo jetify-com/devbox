@@ -24,7 +24,7 @@ func RunCmd() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTaskCmd(cmd, args, flags)
+			return runTaskCmd(args, flags)
 		},
 	}
 
@@ -33,7 +33,7 @@ func RunCmd() *cobra.Command {
 	return command
 }
 
-func runTaskCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+func runTaskCmd(args []string, flags runCmdFlags) error {
 	path, task, err := parseTaskArgs(args, flags)
 	if err != nil {
 		return err
