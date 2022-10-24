@@ -259,8 +259,56 @@ func (d *Devbox) Shell() error {
 		)
 	}
 
-	shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	if d.cfg.Shell.InitHook != nil {
+		shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	}
 	return shell.Run(nixShellFilePath)
+}
+
+// TODO: consider unifying the implementations of RunScript and Shell.
+func (d *Devbox) RunScript(scriptName string) error {
+	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		return err
+	}
+
+	plan := d.ShellPlan()
+
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return err
+	}
+
+	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	script := d.cfg.Shell.Scripts[scriptName]
+	if script == nil {
+		return errors.Errorf("unable to find a script with name %s", scriptName)
+	}
+
+	shell, err := nix.DetectShell(
+		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
+		nix.WithProfile(profileDir),
+		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
+		nix.WithUserScript(scriptName, script.String()))
+
+	if err != nil {
+		fmt.Print(err)
+		shell = &nix.Shell{}
+	}
+
+	if d.cfg.Shell.InitHook != nil {
+		shell.UserInitHook = d.cfg.Shell.InitHook.String()
+	}
+	return shell.Run(nixShellFilePath)
+}
+
+func (d *Devbox) ListScripts() []string {
+	keys := make([]string, len(d.cfg.Shell.Scripts))
+	i := 0
+	for k := range d.cfg.Shell.Scripts {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
@@ -371,7 +419,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	fmt.Fprintf(d.writer, "%s nix packages. This may take a while...", installingVerb)
+	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while... ", installingVerb)
 
 	// We need to re-install the packages
 	if err := d.applyDevNixDerivation(); err != nil {

@@ -58,3 +58,23 @@ export PS1="(devbox) $PS1"
 {{- end }}
 
 # End Plan Init Hook
+
+# Begin Script Init Hook
+
+{{- if .ScriptInitHook }}
+
+{{ .ScriptInitHook }}
+
+{{- end }}
+
+# End Script Init Hook
+
+# Begin Script command
+
+{{- if .ScriptCommand }}
+
+function run_task {
+    {{  .ScriptCommand }}
+}
+
+{{- end }}

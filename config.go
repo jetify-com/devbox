@@ -37,7 +37,8 @@ type Config struct {
 	// Shell configures the devbox shell environment.
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
-		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
+		InitHook *ConfigShellCmds            `json:"init_hook,omitempty"`
+		Scripts  map[string]*ConfigShellCmds `json:"scripts,omitempty"`
 	} `json:"shell,omitempty"`
 
 	// Nixpkgs specifies the repository to pull packages from
@@ -59,7 +60,7 @@ func readConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return cfg, nil
+	return cfg, cfg.validate()
 }
 
 // ReadConfig reads a devbox config file, and validates it.
@@ -90,7 +91,20 @@ func upgradeConfig(cfg *Config, absFilePath string) error {
 
 // WriteConfig saves a devbox config file.
 func WriteConfig(path string, cfg *Config) error {
+	err := cfg.validate()
+	if err != nil {
+		return err
+	}
 	return cuecfg.WriteFile(path, cfg)
+}
+
+func (c *Config) validate() error {
+	for k := range c.Shell.Scripts {
+		if k == "" {
+			return errors.New("cannot have script with empty name in devbox.json")
+		}
+	}
+	return nil
 }
 
 // Formats for marshalling and unmarshalling a series of shell commands in a
