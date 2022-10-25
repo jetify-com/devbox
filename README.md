@@ -1,4 +1,8 @@
-# Devbox 📦
+
+![logo](docs/app/static/img/devbox_logo_dark.svg#gh-dark-mode-only)
+![logo](docs/app/static/img/devbox_logo_light.svg#gh-light-mode-only)
+
+# Devbox
 
 ### Instant, easy, and predictable shells and containers
 
@@ -13,10 +17,10 @@ In practice, Devbox works similar to a package manager like `yarn` – except th
 Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`.
 
 ## Demo
+
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
-
 
 ## Benefits
 
@@ -79,6 +83,7 @@ In this quickstart we’ll create a development shell with specific tools instal
    ```bash
    devbox add python310
    ```
+
 4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
    ```json
@@ -138,7 +143,9 @@ Devbox makes it easy to package your application into an OCI-compliant container
    ```bash
    docker tag devbox my-image:v0.1
    ```
-### Auto-detected languages/stacks:
+
+### Auto-detected languages/stacks
+
 Devbox currently detects the following languages/stacks:
 
 - Go
@@ -160,11 +167,12 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for t
 
 ## Join our Developer Community
 
-+ Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project. 
-+ File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
-+ Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
+- Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project.
+- File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
+- Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
 ## Contributing
+
 Devbox is an opensource project so contributions are always welcome. Please read [our contributing guide](CONTRIBUTING.md) before submitting pull requests.
 
 ## Related Work
@@ -173,7 +181,7 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## Translation
 
-+ [Chinese](./translation/README-zh-CN.md)
+- [Chinese](./translation/README-zh-CN.md)
 
 ## License
 
