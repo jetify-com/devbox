@@ -197,6 +197,7 @@ func (d *Devbox) Shell() error {
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
 	shell, err := nix.DetectShell(
+		nix.WithConfigDir(d.srcDir),
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),

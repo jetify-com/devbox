@@ -42,6 +42,9 @@ type Shell struct {
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
 
+	// configDir is the absolute path to the directory storing the devbox.json config
+	configDir string
+
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
 	historyFile string
@@ -110,6 +113,12 @@ func WithProfile(profileDir string) ShellOption {
 func WithHistoryFile(historyFile string) ShellOption {
 	return func(s *Shell) {
 		s.historyFile = historyFile
+	}
+}
+
+func WithConfigDir(dir string) ShellOption {
+	return func(s *Shell) {
+		s.configDir = dir
 	}
 }
 
@@ -264,6 +273,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	}()
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
+		ConfigDir        string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -271,6 +281,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		ProfileBinDir    string
 		HistoryFile      string
 	}{
+		ConfigDir:        filepath.Clean(s.configDir),
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
