@@ -1,4 +1,4 @@
-# Devbox 📦
+<img src=https://user-images.githubusercontent.com/750845/197831791-07887548-6462-4d5e-830f-d7364baa70fd.svg alt=Devbox width=200 />
 
 ### Instant, easy, and predictable shells and containers
 
