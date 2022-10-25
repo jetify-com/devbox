@@ -60,3 +60,9 @@ echo "Hello from a devbox shell hook!"
 echo "Welcome to the devbox!"
 
 # End Plan Init Hook
+
+# Begin Task Init Hook
+
+# End Task Init Hook
+
+# Begin Task command
