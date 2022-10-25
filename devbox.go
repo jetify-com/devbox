@@ -221,7 +221,7 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) RunTask(taskName string) error {
+func (d *Devbox) RunScript(taskName string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
@@ -243,9 +243,10 @@ func (d *Devbox) RunTask(taskName string) error {
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
-		nix.WithUserTask(taskName, userTask.TaskInit.String(), userTask.TaskCommand.String()))
+		nix.WithUserScript(taskName, userTask.ScriptInit.String(), userTask.ScriptCommand.String()))
 
 	if err != nil {
+		fmt.Print(err)
 		shell = &nix.Shell{}
 	}
 
@@ -253,9 +254,10 @@ func (d *Devbox) RunTask(taskName string) error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) getMatchingTask(selectedTask string) *Task {
-	task, found := d.cfg.Tasks[selectedTask]
+func (d *Devbox) getMatchingTask(selectedTask string) *Script {
+	task, found := d.cfg.Shell.Scripts[selectedTask]
 	if found {
+		// fmt.Print(task.ScriptCommand.String())
 		return &task
 	} else {
 		return nil

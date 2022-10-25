@@ -36,16 +36,15 @@ type Config struct {
 	// Shell configures the devbox shell environment.
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
-		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
+		InitHook ConfigShellCmds   `json:"init_hook,omitempty"`
+		Scripts  map[string]Script `json:"scripts,omitempty"`
 	} `json:"shell,omitempty"`
-
-	Tasks map[string]Task `json:"tasks,omitempty"`
 }
 
 // This is the structure of a task
-type Task struct {
-	TaskInit    ConfigShellCmds `json:"init,omitempty"`
-	TaskCommand ConfigShellCmds `json:"command"`
+type Script struct {
+	ScriptInit    ConfigShellCmds `json:"init,omitempty"`
+	ScriptCommand ConfigShellCmds `json:"command"`
 }
 
 // This contains a subset of fields from plansdk.Stage

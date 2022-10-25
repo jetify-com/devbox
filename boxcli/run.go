@@ -20,11 +20,12 @@ func RunCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:               "run -- [<target>]",
-		Short:             "Starts a new interactive shell running your target task. The shell will exit once your target task is completed or when it is terminated via CTRL-C",
+		Short:             "Starts a new devbox shell running the target script",
+		Long:              "Starts a new interactive shell running your target task. The shell will exit once your target task is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
 		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTaskCmd(args, flags)
+			return runScriptCmd(args, flags)
 		},
 	}
 
@@ -33,8 +34,8 @@ func RunCmd() *cobra.Command {
 	return command
 }
 
-func runTaskCmd(args []string, flags runCmdFlags) error {
-	path, task, err := parseTaskArgs(args, flags)
+func runScriptCmd(args []string, flags runCmdFlags) error {
+	path, script, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func runTaskCmd(args []string, flags runCmdFlags) error {
 	}
 
 	// For now -- pass this task exactly one target, and let it execute
-	err = box.RunTask(task)
+	err = box.RunScript(script)
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
@@ -59,7 +60,7 @@ func runTaskCmd(args []string, flags runCmdFlags) error {
 	return err
 }
 
-func parseTaskArgs(args []string, flags runCmdFlags) (string, string, error) {
+func parseScriptArgs(args []string, flags runCmdFlags) (string, string, error) {
 	path, err := configPathFromUser([]string{}, &flags.config)
 	if err != nil {
 		return "", "", err
