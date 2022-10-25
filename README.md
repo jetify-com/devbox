@@ -1,7 +1,8 @@
-# Devbox
 
 ![logo](docs/app/static/img/devbox_logo_dark.svg#gh-dark-mode-only)
 ![logo](docs/app/static/img/devbox_logo_light.svg#gh-light-mode-only)
+
+# Devbox
 
 ### Instant, easy, and predictable shells and containers
 
