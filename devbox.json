@@ -1,8 +1,12 @@
 {
-  "packages": [
-    "go_1_19"
-  ],
-  "shell": {
-    "init_hook": null
-  }
+    "packages": [
+        "go_1_19",
+        "golangci-lint"
+    ],
+    "shell": {
+        "init_hook": [
+            "alias golint='golangci-lint run  -E errorlint --timeout 600s'",
+            "export GOROOT=$(go env GOROOT)"
+        ]
+    }
 }

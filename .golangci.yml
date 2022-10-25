@@ -14,7 +14,7 @@ linters:
     - ineffassign
     - misspell
     - nilerr
-    - reassign
+    # - reassign
     - staticcheck
     - stylecheck
     - typecheck
