@@ -27,3 +27,908 @@ __pycache__/
 # Java
 *.class
 *.jar
+vscode-extension/.vscode-test/user-data/languagepacks.json
+vscode-extension/.vscode-test/user-data/machineid
+vscode-extension/.vscode-test/user-data/Network Persistent State
+vscode-extension/.vscode-test/user-data/Preferences
+vscode-extension/.vscode-test/user-data/TransportSecurity
+vscode-extension/.vscode-test/user-data/Cache/Cache_Data/a97c96d98c7c4739_0
+vscode-extension/.vscode-test/user-data/Cache/Cache_Data/d121e2a6335b7510_0
+vscode-extension/.vscode-test/user-data/Cache/Cache_Data/index
+vscode-extension/.vscode-test/user-data/Cache/Cache_Data/index-dir/the-real-index
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/9fc9d0d921a5c1f1_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/20e997be56f5ecb9_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/39c36c484bc0978c_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/322a9ed0a03f6cf4_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/4600ae3b2dbad68b_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/48053c861776745f_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/88257f15a1f37c0f_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/529318b278e1fb9c_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/4803949e6e4898ab_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/b134d1c12041f489_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/d430f63a1f13d40f_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/df8a92b76559be41_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/df80518281783291_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/ede03fac311ca161_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/fac2e091e38d7e66_0
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/index
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/js/index-dir/the-real-index
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/wasm/index
+vscode-extension/.vscode-test/user-data/CachedData/d045a5eda657f4d7b676dedbfa7aab8207f8a075/chrome/wasm/index-dir/the-real-index
+vscode-extension/.vscode-test/user-data/CachedExtensions/builtin
+vscode-extension/.vscode-test/user-data/CachedExtensions/user
+vscode-extension/.vscode-test/user-data/Code Cache/js/index
+vscode-extension/.vscode-test/user-data/Code Cache/js/index-dir/the-real-index
+vscode-extension/.vscode-test/user-data/Code Cache/wasm/index
+vscode-extension/.vscode-test/user-data/Code Cache/wasm/index-dir/the-real-index
+vscode-extension/.vscode-test/user-data/Crashpad/settings.dat
+vscode-extension/.vscode-test/user-data/GPUCache/data_0
+vscode-extension/.vscode-test/user-data/GPUCache/data_1
+vscode-extension/.vscode-test/user-data/GPUCache/data_2
+vscode-extension/.vscode-test/user-data/GPUCache/data_3
+vscode-extension/.vscode-test/user-data/GPUCache/index
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/000003.log
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/CURRENT
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/LOCK
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/LOG
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/LOG.old
+vscode-extension/.vscode-test/user-data/Local Storage/leveldb/MANIFEST-000001
+vscode-extension/.vscode-test/user-data/Session Storage/000003.log
+vscode-extension/.vscode-test/user-data/Session Storage/CURRENT
+vscode-extension/.vscode-test/user-data/Session Storage/LOCK
+vscode-extension/.vscode-test/user-data/Session Storage/LOG
+vscode-extension/.vscode-test/user-data/Session Storage/LOG.old
+vscode-extension/.vscode-test/user-data/Session Storage/MANIFEST-000001
+vscode-extension/.vscode-test/user-data/User/globalStorage/storage.json
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/editSessions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/extensionTelemetry.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/main.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/ptyhost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/renderer1.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/sharedprocess.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/userDataSync.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/exthost1/exthost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/exthost1/output_logging_20221025T185325/1-Git.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/exthost1/vscode.github-authentication/GitHub Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/exthost1/vscode.microsoft-authentication/Microsoft Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/output_1_20221025T185325/extensions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185324/output_1_20221025T185325/tasks.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/editSessions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/extensionTelemetry.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/main.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/ptyhost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/renderer1.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/sharedprocess.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/userDataSync.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/exthost1/exthost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/exthost1/output_logging_20221025T185400/1-Git.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/exthost1/vscode.github-authentication/GitHub Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/exthost1/vscode.microsoft-authentication/Microsoft Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/output_1_20221025T185359/extensions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T185359/output_1_20221025T185359/tasks.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/editSessions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/extensionTelemetry.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/main.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/ptyhost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/renderer1.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/sharedprocess.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/userDataSync.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/exthost1/exthost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/exthost1/output_logging_20221025T202422/1-Git.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/exthost1/vscode.github-authentication/GitHub Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/exthost1/vscode.microsoft-authentication/Microsoft Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/output_1_20221025T202421/extensions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T202421/output_1_20221025T202421/tasks.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/editSessions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/extensionTelemetry.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/main.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/ptyhost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/renderer1.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/sharedprocess.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/userDataSync.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/exthost1/exthost.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/exthost1/output_logging_20221025T204518/1-Git.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/exthost1/vscode.github-authentication/GitHub Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/exthost1/vscode.microsoft-authentication/Microsoft Authentication.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/output_1_20221025T204517/extensions.log
+vscode-extension/.vscode-test/user-data/logs/20221025T204517/output_1_20221025T204517/tasks.log
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/PkgInfo
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (GPU).app/Contents/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (GPU).app/Contents/PkgInfo
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (GPU).app/Contents/MacOS/Code Helper (GPU)
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (GPU).app/Contents/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/PkgInfo
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/MacOS/Code Helper (Plugin)
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/PkgInfo
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/PkgInfo
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/MacOS/Code Helper
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Electron Framework
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Helpers
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Libraries
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Resources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/Current
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libEGL.dylib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libffmpeg.dylib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libGLESv2.dylib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libvk_swiftshader.dylib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/vk_swiftshader_icd.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/chrome_100_percent.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/chrome_200_percent.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/icudtl.dat
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/resources.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/v8_context_snapshot.arm64.bin
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/MainMenu.nib/keyedobjects-101300.nib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/MainMenu.nib/keyedobjects.nib
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/af.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/am.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ar.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/bg.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/bn.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ca.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/cs.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/da.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/de.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/el.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/en.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/en_GB.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/es.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/es_419.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/et.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/fa.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/fi.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/fil.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/fr.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/gu.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/he.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/hi.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/hr.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/hu.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/id.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/it.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ja.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/kn.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ko.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/lt.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/lv.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ml.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/mr.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ms.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/nb.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/nl.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/pl.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/pt_BR.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/pt_PT.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ro.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ru.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/sk.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/sl.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/sr.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/sv.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/sw.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ta.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/te.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/th.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/tr.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/uk.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/ur.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/vi.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/zh_CN.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/zh_TW.lproj/locale.pak
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Mantle
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Resources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Versions/Current
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Versions/A/Mantle
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Versions/A/Resources/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Mantle.framework/Versions/A/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/ReactiveObjC
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/Resources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/Versions/Current
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/Versions/A/ReactiveObjC
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/Versions/A/Resources/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/ReactiveObjC.framework/Versions/A/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Resources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Squirrel
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Versions/Current
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Versions/A/Squirrel
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Versions/A/Resources/Info.plist
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Versions/A/Resources/ShipIt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Frameworks/Squirrel.framework/Versions/A/_CodeSignature/CodeResources
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/MacOS/Electron
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/bat.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Bower.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/c.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Code.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/config.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/cpp.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Credits.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/csharp.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/css.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/default.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/go.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/html.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Jade.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Java.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Javascript.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/JSON.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Less.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Markdown.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/PHP.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Powershell.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Python.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/React.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Ruby.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/SASS.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Shell.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/SQL.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/TypeScript.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/Vue.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/XML.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/YAML.icns
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/LICENSE.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/LICENSES.chromium.html
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/product.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/telemetry-core.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/telemetry-extensions.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/ThirdPartyNotices.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/bin/code
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/bat/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/bat/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/bat/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/bat/snippets/batchfile.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/bat/syntaxes/batchfile.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/clojure/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/clojure/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/clojure/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/clojure/syntaxes/clojure.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/coffeescript/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/coffeescript/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/coffeescript/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/coffeescript/snippets/coffeescript.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/coffeescript/syntaxes/coffeescript.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/schemas/attachContainer.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/schemas/devContainer.codespaces.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/schemas/devContainer.schema.generated.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/configuration-editing/schemas/devContainer.vscode.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/snippets/c.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/snippets/cpp.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/syntaxes/c.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/syntaxes/cpp.embedded.macro.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/syntaxes/cpp.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/syntaxes/cuda-cpp.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/cpp/syntaxes/platform.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/csharp/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/csharp/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/csharp/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/csharp/snippets/csharp.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/csharp/syntaxes/csharp.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css/syntaxes/css.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/icons/css.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/schemas/package.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/css-language-features/server/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/dart/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/dart/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/dart/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/dart/syntaxes/dart.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-auto-launch/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-auto-launch/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-auto-launch/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-server-ready/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-server-ready/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/debug-server-ready/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/diff/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/diff/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/diff/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/diff/syntaxes/diff.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/docker/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/docker/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/docker/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/docker/syntaxes/docker.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/emmet/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/emmet/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/emmet/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/emmet/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/extension-editing/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/extension-editing/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/extension-editing/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/fsharp/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/fsharp/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/fsharp/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/fsharp/snippets/fsharp.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/fsharp/syntaxes/fsharp.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/emojis.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/git.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-added.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-conflict.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-copied.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-deleted.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-ignored.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-modified.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-renamed.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/dark/status-untracked.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-added.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-conflict.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-copied.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-deleted.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-ignored.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-modified.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-renamed.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git/resources/icons/light/status-untracked.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/languages/git-commit.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/languages/git-rebase.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/languages/ignore.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/resources/icons/git.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/syntaxes/git-commit.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/syntaxes/git-rebase.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/git-base/syntaxes/ignore.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/markdown.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/some-markdown.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/x.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE/a.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE/b.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/PULL_REQUEST_TEMPLATE/x.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE/a.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE/b.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github/testWorkspace/docs/PULL_REQUEST_TEMPLATE/x.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/media/auth.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/media/favicon.ico
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/github-authentication/media/index.html
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/go/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/go/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/go/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/go/syntaxes/go.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/groovy/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/groovy/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/groovy/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/groovy/snippets/groovy.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/groovy/syntaxes/groovy.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/grunt/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/grunt/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/grunt/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/grunt/images/grunt.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/gulp/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/gulp/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/gulp/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/gulp/images/gulp.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/handlebars/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/handlebars/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/handlebars/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/handlebars/syntaxes/Handlebars.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/hlsl/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/hlsl/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/hlsl/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/hlsl/syntaxes/hlsl.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/snippets/html.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/syntaxes/html-derivative.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html/syntaxes/html.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/icons/html.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/schemas/package.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/server/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/html-language-features/server/lib/jquery.d.ts
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ini/ini.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ini/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ini/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ini/properties.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ini/syntaxes/ini.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ipynb/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ipynb/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ipynb/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ipynb/notebook-out/cellAttachmentRenderer.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/jake/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/jake/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/jake/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/jake/images/cowboy_hat.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/java/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/java/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/java/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/java/snippets/java.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/java/syntaxes/java.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/javascript-language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/tags-language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/snippets/javascript.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/syntaxes/JavaScript.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/syntaxes/JavaScriptReact.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/javascript/syntaxes/Regular Expressions (JavaScript).tmLanguage
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json/syntaxes/JSON.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json/syntaxes/JSONC.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json-language-features/icons/json.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/json-language-features/server/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/julia/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/julia/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/julia/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/julia/syntaxes/julia.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/cpp-bailout-license.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/latex-cpp-embedded-language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/latex-language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/markdown-latex-combined-language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/markdown-latex-combined-license.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/syntaxes/Bibtex.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/syntaxes/cpp-grammar-bailout.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/syntaxes/LaTeX.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/syntaxes/markdown-latex-combined.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/latex/syntaxes/TeX.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/less/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/less/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/less/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/less/syntaxes/less.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/log/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/log/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/log/syntaxes/log.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/lua/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/lua/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/lua/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/lua/syntaxes/lua.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/make/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/make/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/make/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/make/syntaxes/make.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-basics/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-basics/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-basics/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-basics/snippets/markdown.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-basics/syntaxes/markdown.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/highlight.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/index.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/markdown.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/pre.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/preview-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/media/preview-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/notebook-out/index.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/schemas/package.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/server/.npmignore
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/server/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/server/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-language-features/server/yarn.lock
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/katex.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/katex.min.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_AMS-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Caligraphic-Bold.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Caligraphic-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Fraktur-Bold.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Fraktur-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Main-Bold.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Main-BoldItalic.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Main-Italic.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Main-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Math-BoldItalic.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Math-Italic.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_SansSerif-Bold.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_SansSerif-Italic.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_SansSerif-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Script-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Size1-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Size2-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Size3-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Size4-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/notebook-out/fonts/KaTeX_Typewriter-Regular.woff2
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/preview-styles/index.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/syntaxes/md-math-block.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/syntaxes/md-math-inline.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/markdown-math/syntaxes/md-math.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/audioPreview.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/audioPreview.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/imagePreview.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/imagePreview.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/loading-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/loading-hc.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/loading.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/videoPreview.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/media-preview/media/videoPreview.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/merge-conflict/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/merge-conflict/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/merge-conflict/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/merge-conflict/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/media/auth.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/media/favicon.ico
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/microsoft-authentication/media/index.html
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/LICENSE.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/nls.bundle.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/nls.metadata.header.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/ThirdPartyNotices.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/logo.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/logo.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/configure.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/connect.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/disconnect.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/node.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/open-file.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/page.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/pause.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/restart.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/resume.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/service-worker.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/stop-profiling.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/stop.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/dark/worker.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/configure.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/connect.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/disconnect.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/node.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/open-file.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/page.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/pause.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/restart.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/resume.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/service-worker.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/stop.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/light/worker.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/auto-attach.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/flame-chart.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/instrumentation-breakpoints.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/instrumentation-breakpoints2.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/link-debugging.gif
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/logo-with-text.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/npm-code-lens.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/repl-improvements.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/returnvalue.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/top-level-await.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/web-worker.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/resources/readme/webview2.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/25b0f220a897d7433728f6f34169bdbf.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/binder.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/bootloader.bundle.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/bootloader.bundle.js.LICENSE.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/chromehash_bg.wasm
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/diagnosticTool.bundle.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/extension.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/extension.js.LICENSE.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/hash.bundle.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/mappings.wasm
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/terminateProcess.sh
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/watchdog.bundle.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/watchdog.bundle.js.LICENSE.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/customBreakpoints.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/debugAdapter.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/sources.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/stackTrace.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/threads.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/variableStore.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/breakpoints/userDefinedBreakpoint.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/console/queryObjectsMessage.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/console/textualMessage.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/profiling/basicCpuProfiler.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/profiling/basicHeapProfiler.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/adapter/profiling/heapDumpProfiler.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/dap/errors.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/targets/browser/browserAttacher.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/targets/node/nodeAttacher.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/targets/node/nodeBinaryProvider.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/autoAttach.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/companionBrowserLaunch.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/debugLinkUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/debugNpmScript.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/debugTerminalUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/diagnosticsUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/disableSourceMapUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/edgeDevToolOpener.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/linkedBreakpointLocationUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/longPredictionUI.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/processPicker.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/terminalLinkHandler.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/configuration/chromiumDebugConfigurationProvider.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/configuration/edgeDebugConfigurationProvider.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/configuration/nodeDebugConfigurationProvider.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/configuration/nodeDebugConfigurationResolver.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/profiling/breakpointTerminationCondition.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/profiling/durationTerminationCondition.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/profiling/manualTerminationCondition.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/profiling/uiProfileManager.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug/src/ui/profiling/uiProfileSession.nls.metadata.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/ci.yml
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/LICENSE.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/SECURITY.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/ThirdPartyNotices.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.js-debug-companion/resources/logo.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/ci.yml
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/ThirdPartyNotices.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/tsconfig.browser.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/webpack.cpu-client.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/webpack.extension.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/webpack.heap-client.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ms-vscode.vscode-js-profile-table/resources/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/notebook-renderers/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/notebook-renderers/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/notebook-renderers/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/notebook-renderers/renderer-out/index.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/npm/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/npm/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/npm/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/npm/images/code.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/npm/images/npm_icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/objective-c/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/objective-c/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/objective-c/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/objective-c/syntaxes/objective-c.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/objective-c/syntaxes/objective-c++.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/perl.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/perl6.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/syntaxes/perl.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/perl/syntaxes/perl6.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/snippets/php.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/syntaxes/html.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php/syntaxes/php.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/php-language-features/icons/logo.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/powershell/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/powershell/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/powershell/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/powershell/syntaxes/powershell.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/pug/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/pug/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/pug/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/pug/syntaxes/pug.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/python/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/python/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/python/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/python/syntaxes/MagicPython.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/python/syntaxes/MagicRegExp.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/r/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/r/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/r/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/r/syntaxes/r.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/razor/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/razor/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/razor/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/razor/syntaxes/cshtml.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/references-view/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/references-view/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/references-view/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/references-view/media/demo.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/references-view/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/restructuredtext/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/restructuredtext/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/restructuredtext/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/restructuredtext/syntaxes/rst.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ruby/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ruby/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ruby/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/ruby/syntaxes/ruby.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/rust/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/rust/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/rust/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/rust/syntaxes/rust.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/scss/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/scss/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/scss/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/scss/syntaxes/sassdoc.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/scss/syntaxes/scss.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/search-result/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/search-result/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/search-result/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/search-result/images/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/search-result/syntaxes/searchResult.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shaderlab/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shaderlab/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shaderlab/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shaderlab/syntaxes/shaderlab.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shellscript/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shellscript/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shellscript/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/shellscript/syntaxes/shell-unix-bash.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/codicon.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/codicon.ttf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/index.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/main.css
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/preview-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/simple-browser/media/preview-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/sql/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/sql/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/sql/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/sql/syntaxes/sql.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/LICENSE.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/snippets/swift.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/swift/syntaxes/swift.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-abyss/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-abyss/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-abyss/themes/abyss-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/vs_minimal-icon-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/document-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/document-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/folder-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/folder-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/folder-open-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/folder-open-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/root-folder-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/root-folder-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/root-folder-open-dark.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/fileicons/images/root-folder-open-light.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/dark_plus.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/dark_vs.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/hc_black.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/hc_light.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/light_plus.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-defaults/themes/light_vs.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-kimbie-dark/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-kimbie-dark/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-kimbie-dark/themes/kimbie-dark-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai/themes/monokai-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai-dimmed/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai-dimmed/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-monokai-dimmed/themes/dimmed-monokai-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-quietlight/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-quietlight/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-quietlight/themes/quietlight-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-red/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-red/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-red/themes/Red-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/ThirdPartyNotices.txt
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/icons/seti-circular-128x128.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/icons/seti.woff
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-seti/icons/vs-seti-icon-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-dark/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-dark/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-dark/themes/solarized-dark-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-light/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-light/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-solarized-light/themes/solarized-light-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-tomorrow-night-blue/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-tomorrow-night-blue/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/theme-tomorrow-night-blue/themes/tomorrow-night-blue-color-theme.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/snippets/typescript.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/syntaxes/jsdoc.js.injection.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/syntaxes/jsdoc.ts.injection.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-basics/syntaxes/TypeScriptReact.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/README.md
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/media/icon.png
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/resources/walkthroughs/create-a-js-file.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/resources/walkthroughs/debug-and-run.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/resources/walkthroughs/install-node-js.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/resources/walkthroughs/learn-more.svg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/schemas/jsconfig.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/schemas/package.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/typescript-language-features/schemas/tsconfig.schema.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/vb/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/vb/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/vb/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/vb/snippets/vb.code-snippets
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/vb/syntaxes/asp-vb-net.tmlanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/xml.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/xsl.language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/syntaxes/xml.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/xml/syntaxes/xsl.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/yaml/language-configuration.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/yaml/package.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/yaml/package.nls.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/extensions/yaml/syntaxes/yaml.tmLanguage.json
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-bul.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-chs.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-cht.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-deu.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-esp.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-fra.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-hun.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-ita.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-jpn.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-kor.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-ptb.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-rus.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/licenses/LICENSE-trk.rtf
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@parcel/watcher/build/Release/watcher.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/sqlite3/build/Release/vscode-sqlite3.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/keytar/build/Release/keytar.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/native-is-elevated/build/Release/iselevated.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/native-keymap/build/Release/keymapping.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/native-watchdog/build/Release/watchdog.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/node-pty/build/Release/pty.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/node-pty/lib/shared/conout.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/node-pty/lib/worker/conoutSocketWorker.js
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/spdlog/build/Release/spdlog.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/vscode-encrypt/build/Release/vscode-encrypt-native.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/vscode-oniguruma/release/onig.wasm
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/vscode-policy-watcher/build/Release/vscode-policy-watcher.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/vsda/build/Release/vsda.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/windows-foreground-love/build/Release/foreground_love.node
+vscode-extension/.vscode-test/vscode-darwin-arm64-1.72.2/Visual Studio Code.app/Contents/_CodeSignature/CodeResources
