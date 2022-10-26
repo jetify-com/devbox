@@ -587,18 +587,29 @@ func (d *Devbox) printPackageUpdateMessage(
 }
 
 // applyDevNixDerivation installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix.
+// devbox's Nix profile so that it matches what's in development.nix or flake.nix
 func (d *Devbox) applyDevNixDerivation() error {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command("nix-env",
-		"--profile", profileDir,
-		"--install",
-		"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
-	)
+	var cmd *exec.Cmd
+	if featureflag.Flakes.Enabled() {
+		cmd = exec.Command(
+			"nix", "profile", "install",
+			"--profile", profileDir,
+			"--extra-experimental-features", "nix-command flakes",
+			".devbox/gen/flake/", // installables
+		)
+	} else {
+		cmd = exec.Command(
+			"nix-env",
+			"--profile", profileDir,
+			"--install",
+			"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
+		)
+	}
 
 	debug.Log("Running command: %s\n", cmd.Args)
 	_, err = cmd.Output()
