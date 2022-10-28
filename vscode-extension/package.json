@@ -13,10 +13,18 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:./devbox.json"
+    "workspaceContains:./devbox.json",
+    "onCommand:devbox.setupDevContainer"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "devbox.setupDevContainer",
+        "title": "Setup DevContainer config files based on devbox.json"
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
     "compile": "tsc -p ./",
