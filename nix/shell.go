@@ -7,6 +7,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -202,6 +203,9 @@ func (s *Shell) execCommand() string {
 		return strings.Join(append(args, s.binPath), " ")
 	}
 
+	// Link or Copy other files that affect the shell settings and environments.
+	s.copyShellSettings(filepath.Dir(shellrc))
+
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set.
 	var (
@@ -284,6 +288,34 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 
 	debug.Log("Wrote devbox shellrc to: %s", path)
 	return path, nil
+}
+
+func (s *Shell) copyShellSettings(shellSettingsDir string) {
+
+	// For now, we only need to do this for zsh shell
+	if s.name == shZsh {
+		// support zsh4humans by copying these files over
+		// https://github.com/romkatv/zsh4humans/blob/master/tips.md#backup-and-restore
+
+		// TODO savil: make this a glob search `.p10k*.zsh`
+		filenames := []string{".zshenv", ".p10k.zsh"}
+		for _, filename := range filenames {
+			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
+			if _, err := os.Stat(fileOld); errors.Is(err, fs.ErrExist) {
+				// this file may not be relevant for the user's setup.
+				continue
+			}
+
+			fileNew := filepath.Join(shellSettingsDir, filename)
+
+			if err := os.Link(fileOld, fileNew); err == nil { // Not sure if linking is better than pure copy
+				debug.Log("Wrote original file to: %s", fileNew)
+			} else {
+				// This is a best-effort operation. If there's an error then log it for visibility but continue.
+				debug.Log("Error linking zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+			}
+		}
+	}
 }
 
 // envToKeep is the set of environment variables that we want to copy verbatim
