@@ -23,3 +23,9 @@ func TestEnabledFeatureEnv(t *testing.T) {
 		t.Errorf("got Get(%q).Enabled() = false, want true.", "TEST")
 	}
 }
+
+func TestNonExistentFeature(t *testing.T) {
+	if Get("TEST").Enabled() {
+		t.Errorf("got Get(%q).Enabled() = true, want false.", "TEST")
+	}
+}
