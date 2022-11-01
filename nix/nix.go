@@ -59,9 +59,6 @@ func parseInfo(pkg string, data []byte) *Info {
 	if err != nil {
 		panic(err)
 	}
-	if len(results) != 1 {
-		panic(fmt.Sprintf("unexpected number of results: %d", len(results)))
-	}
 	for _, result := range results {
 		pkgInfo := &Info{
 			NixName: pkg,
