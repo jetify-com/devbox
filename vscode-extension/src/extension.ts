@@ -16,7 +16,25 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const setupDevcontainer = vscode.commands.registerCommand('devbox.setupDevContainer', async () => {
-		return setupDevContainer();
+
+		let selectedOption: vscode.QuickPickItem;
+		const cpuArch = vscode.window.createQuickPick();
+		cpuArch.items = [
+			"bullseye",
+			"buster",
+		].map(label => ({ label }));
+		cpuArch.onDidAccept(() => {
+			setupDevContainerFiles(selectedOption.label);
+		});
+		cpuArch.onDidChangeSelection(selection => {
+			if (selection[0]) {
+				selectedOption = selection[0];
+			}
+		});
+		cpuArch.onDidHide(() => cpuArch.dispose());
+		cpuArch.show();
+
+
 	});
 
 	context.subscriptions.push(setupDevcontainer);
@@ -26,19 +44,15 @@ async function runDevboxShell() {
 	const exec = util.promisify(cp.exec);
 	const result = await vscode.workspace.findFiles('devbox.json');
 	if (result.length > 0) {
-		// const { stdout, stderr } = await exec('devbox shell');
-		// console.log('stdout:', stdout);
-		// console.log('stderr:', stderr);
 		let response = "test";
 		response = await vscode.commands.executeCommand('workbench.action.terminal.sendSequence', {
-			'text': 'devbox shell\r\nopen .\r\nexit\r\n'
+			'text': 'devbox shell\r\n'
 		});
-		setTimeout(() => { vscode.commands.executeCommand('workbench.action.closeWindow'); }, 10000);
 
 	}
 }
 
-async function setupDevContainer() {
+async function setupDevContainerFiles(selectedItem: String) {
 	try {
 		if (!vscode.workspace.workspaceFolders) {
 			return vscode.window.showInformationMessage('No folder or workspace opened');
@@ -55,7 +69,7 @@ async function setupDevContainer() {
 			Buffer.from(dockerfileContent, 'utf8')
 		);
 
-		const devContainerJSON = getDevcontainerJSON();
+		const devContainerJSON = getDevcontainerJSON(devboxJson, selectedItem);
 		await vscode.workspace.fs.writeFile(
 			vscode.Uri.joinPath(devcontainerUri, 'devcontainer.json'),
 			Buffer.from(devContainerJSON, 'utf8')
@@ -84,55 +98,71 @@ function getDockerfileContent(): String {
 	# [Choice] Debian version (use bullseye on local arm64/Apple Silicon): bullseye, buster
 	ARG VARIANT="buster"
 	FROM mcr.microsoft.com/vscode/devcontainers/base:0-\${VARIANT}
-	
+
 	# These dependencies are required by Nix.
 	RUN apt update -y
 	RUN apt -y install --no-install-recommends curl xz-utils
-	
+
 	USER vscode
-	
+
 	# Install nix
 	ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
 	RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
 	ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
-	
-	# install devbox
+
+	# Install devbox
 	RUN sudo mkdir /devbox && sudo chown vscode /devbox
 	RUN curl -fsSL https://get.jetpack.io/devbox | FORCE=1 bash
-	COPY --chown=vscode devbox.json /devbox/devbox.json
+
+	# Setup devbox environment
+	COPY --chown=vscode ../devbox.json /devbox/devbox.json
 	RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
 	ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
 	`;
 }
 
-function getDevcontainerJSON(): String {
-	return `
-	// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-	// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian
-	{
-		"name": "Debian",
+function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
+
+	let devcontainerObject: any = {};
+
+	devcontainerObject = {
+		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+		// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian
+		"name": "Devbox Remote Container",
 		"build": {
 			"dockerfile": "./Dockerfile",
-			// Update 'VARIANT' to pick an Debian version: bullseye, buster
+			// Update 'VARIANT' to pick a Debian version: bullseye, buster
 			// Use bullseye on local arm64/Apple Silicon.
 			"args": {
-				"VARIANT": "bullseye"
+				"VARIANT": cpuArch
 			}
 		},
 		"customizations": {
 			"vscode": {
 				"settings": {
-					"python.defaultInterpreterPath": "/devbox/.devbox/nix/profile/default/bin/python3"
+					// Add custom vscode settings for remote environment here
 				},
 				"extensions": [
-					"ms-python.python",
-					"golang.go"
+					// Add custom vscode extensions for remote environment here
 				]
 			}
 		},
 		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 		"remoteUser": "vscode"
-	}`;
+	};
+
+	devboxJson["packages"].forEach((pkg: String) => {
+		if (pkg.includes("python3")) {
+			devcontainerObject.customizations.vscode.settings["python.defaultInterpreterPath"] = "/devbox/.devbox/nix/profile/default/bin/python3";
+			devcontainerObject.customizations.vscode.extensions.push("ms-python.python");
+		}
+		if (pkg.includes("go_1_") || pkg === "go") {
+			devcontainerObject.customizations.vscode.extensions.push("golang.go");
+		}
+		//TODO: add support for other common languages
+	});
+
+	return JSON.stringify(devcontainerObject);
 }
 
 // This method is called when your extension is deactivated

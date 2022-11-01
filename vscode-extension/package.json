@@ -21,7 +21,7 @@
     "commands": [
       {
         "command": "devbox.setupDevContainer",
-        "title": "Setup DevContainer config files based on devbox.json"
+        "title": "Devbox: Setup DevContainer config files"
       }
     ]
   },
