@@ -19,7 +19,7 @@ type runCmdFlags struct {
 func RunCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
-		Use:               "run -- [<target>]",
+		Use:               "run [<target>]",
 		Short:             "Starts a new devbox shell running the target script",
 		Long:              "Starts a new interactive shell running your target task. The shell will exit once your target task is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
 		Args:              cobra.ExactArgs(1),
