@@ -2,6 +2,7 @@ package featureflag
 
 import (
 	"os"
+	"strconv"
 )
 
 type feature struct {
@@ -27,7 +28,7 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if os.Getenv("DEVBOX_FEATURE_"+f.name) == "1" {
+	if on, _ := strconv.ParseBool(os.Getenv("DEVBOX_FEATURE_" + f.name)); on {
 		return true
 	}
 	return f.enabled
