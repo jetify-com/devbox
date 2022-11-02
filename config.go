@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
@@ -21,7 +22,7 @@ import (
 // Config defines a devbox environment as JSON.
 type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
-	// its environment.
+	// its environment. Deliberately do not omitempty.
 	Packages []string `cue:"[...string]" json:"packages"`
 	// InstallStage defines the actions that should be taken when
 	// installing language-specific libraries.
@@ -38,6 +39,11 @@ type Config struct {
 		// InitHook contains commands that will run at shell startup.
 		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
 	} `json:"shell,omitempty"`
+
+	// Nixpkgs specifies the repository to pull packages from
+	Nixpkgs struct {
+		Version string `json:"version,omitempty"`
+	} `json:"nixpkgs,omitempty"`
 }
 
 // This contains a subset of fields from plansdk.Stage
@@ -53,6 +59,20 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, errors.WithStack(err)
 	}
 	return cfg, nil
+}
+
+func upgradeConfig(cfg *Config, absFilePath string) error {
+	if cfg.Nixpkgs.Version == "" && featureflag.Get(featureflag.NixpkgVersion).Enabled() {
+		// For now, we add the hardcoded value corresponding to the commit hash as of 2022-08-16 in:
+		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
+		// In the near future, this will be changed to the commit-hash of the unstable tag in nixpkgs github repository
+		const defaultCommitHash = "af9e00071d0971eb292fd5abef334e66eda3cb69"
+		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s", defaultCommitHash)
+
+		cfg.Nixpkgs.Version = defaultCommitHash
+		return WriteConfig(absFilePath, cfg)
+	}
+	return nil
 }
 
 // WriteConfig saves a devbox config file.
