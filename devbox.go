@@ -69,6 +69,10 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	if err = upgradeConfig(cfg, cfgPath); err != nil {
+		return nil, err
+	}
+
 	box := &Devbox{
 		cfg:    cfg,
 		srcDir: cfgDir,
