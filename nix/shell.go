@@ -7,6 +7,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -202,6 +203,9 @@ func (s *Shell) execCommand() string {
 		return strings.Join(append(args, s.binPath), " ")
 	}
 
+	// Link other files that affect the shell settings and environments.
+	s.linkShellStartupFiles(filepath.Dir(shellrc))
+
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set.
 	var (
@@ -284,6 +288,38 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 
 	debug.Log("Wrote devbox shellrc to: %s", path)
 	return path, nil
+}
+
+// linkShellStartupFiles will link files used by the shell for initialization.
+// We choose to link instead of copy so that changes made outside can be reflected
+// within the devbox shell.
+//
+// We do not link the .{shell}rc files, since devbox modifies them. See writeDevboxShellrc
+func (s *Shell) linkShellStartupFiles(shellSettingsDir string) {
+
+	// For now, we only need to do this for zsh shell
+	if s.name == shZsh {
+		// Useful explanation of zsh startup files: https://zsh.sourceforge.io/FAQ/zshfaq03.html#l20
+		filenames := []string{".zshenv", ".zprofile", ".zlogin"}
+		for _, filename := range filenames {
+			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
+			if _, err := os.Stat(fileOld); errors.Is(err, fs.ErrNotExist) {
+				// this file may not be relevant for the user's setup.
+				continue
+			} else if err != nil {
+				debug.Log("os.Stat error for %s is %v", fileOld, err)
+			}
+
+			fileNew := filepath.Join(shellSettingsDir, filename)
+
+			if err := os.Link(fileOld, fileNew); err == nil {
+				debug.Log("Linked shell startup file %s to %s", fileOld, fileNew)
+			} else {
+				// This is a best-effort operation. If there's an error then log it for visibility but continue.
+				debug.Log("Error linking zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+			}
+		}
+	}
 }
 
 // envToKeep is the set of environment variables that we want to copy verbatim
