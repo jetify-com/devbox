@@ -1,5 +1,11 @@
 {
   "packages": [
     "nodejs-18_x"
-  ]
+  ],
+  "shell": {
+    "init_hook": null
+  },
+  "nixpkgs": {
+    "version": "22.05"
+  }
 }

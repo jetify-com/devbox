@@ -7,9 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/featureflag"
+	"go.jetpack.io/devbox/boxcli/usererr"
+	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/pkgslice"
 )
 
@@ -27,6 +32,7 @@ type PlanError struct {
 
 // Plan tells devbox how to start shell projects.
 type ShellPlan struct {
+	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
 	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
@@ -42,6 +48,8 @@ type ShellPlan struct {
 
 // Plan tells devbox how to start build projects.
 type BuildPlan struct {
+	NixpkgsInfo *NixpkgsInfo
+
 	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment. They are also available in shell.
@@ -200,4 +208,74 @@ func FileExists(path string) bool {
 
 func WelcomeMessage(s string) string {
 	return fmt.Sprintf(`echo "%s";`, s)
+}
+
+// publicly visible so that json marshalling works
+type NixpkgsInfo struct {
+	Url string
+
+	Sha256 string
+}
+
+// version may be a commit-hash or a YY.MM version
+func GetNixpkgsInfo(version string) (*NixpkgsInfo, error) {
+
+	if !featureflag.Get(featureflag.NixpkgVersion).Enabled() {
+		// Commit hash as of 2022-08-16
+		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
+		//
+		// sha256 from:
+		// nix-prefetch-url --unpack  https://github.com/nixos/nixpkgs/archive/<commit-hash>.tar.gz
+		return &NixpkgsInfo{
+			Url:    "https://github.com/nixos/nixpkgs/archive/af9e00071d0971eb292fd5abef334e66eda3cb69.tar.gz",
+			Sha256: "1mdwy0419m5i9ss6s5frbhgzgyccbwycxm5nal40c8486bai0hwy",
+		}, nil
+	}
+
+	url := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", version)
+
+	sha256, err := prefetchNixpkgsAndGetSha256(url, version)
+	if err != nil {
+		return nil, err
+	}
+	_ = sha256 // skip dealing with this for now
+
+	return &NixpkgsInfo{
+		Url: url,
+	}, nil
+}
+
+// This function will prefetch the nixpkgs and get its sha256 hash
+func prefetchNixpkgsAndGetSha256(url string, version string) (string, error) {
+
+	cmd := exec.Command("nix", "--experimental-features", "nix-command flakes", "flake", "prefetch", "--json",
+		url)
+
+	debug.Log("Prefetching nixpkgs via cmd: %v", cmd.Args)
+	out, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			debug.Log("StdError: %v", string(ee.Stderr))
+			if strings.Contains(string(ee.Stderr), "HTTP error 404") {
+				return "", usererr.New(
+					"Did not find a nixpkgs channel for version %s specified in devbox.json. "+
+						"Please specify a version (YY.MM) that does exist. Refer to docs at https://nixos."+
+						"org/manual/nix/stable/command-ref/nix-channel.html",
+					version,
+				)
+			}
+		}
+		return "", errors.WithStack(err)
+	}
+	debug.Log("flakes prefetch output: %s", string(out))
+
+	type FlakePrefetch struct {
+		Hash string `json:"hash"`
+	}
+	prefetchData := &FlakePrefetch{}
+	if err := json.Unmarshal(out, &prefetchData); err != nil {
+		return "", errors.WithStack(err)
+	}
+	sha256 := strings.TrimPrefix(prefetchData.Hash, "sha256-")
+	return sha256, nil
 }
