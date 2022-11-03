@@ -42,7 +42,7 @@ type Config struct {
 
 	// Nixpkgs specifies the repository to pull packages from
 	Nixpkgs struct {
-		Version string `json:"version,omitempty"`
+		Commit string `json:"commit,omitempty"`
 	} `json:"nixpkgs,omitempty"`
 }
 
@@ -51,8 +51,7 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
-// ReadConfig reads a devbox config file.
-func ReadConfig(path string) (*Config, error) {
+func readConfig(path string) (*Config, error) {
 	cfg := &Config{}
 	err := cuecfg.ParseFile(path, cfg)
 	if err != nil {
@@ -61,15 +60,27 @@ func ReadConfig(path string) (*Config, error) {
 	return cfg, nil
 }
 
+// ReadConfig reads a devbox config file, and validates it.
+func ReadConfig(path string) (*Config, error) {
+	cfg, err := readConfig(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateConfig(cfg); err != nil {
+		return nil, err
+	}
+	return cfg, err
+}
+
 func upgradeConfig(cfg *Config, absFilePath string) error {
-	if cfg.Nixpkgs.Version == "" && featureflag.Get(featureflag.NixpkgVersion).Enabled() {
+	if cfg.Nixpkgs.Commit == "" && featureflag.Get(featureflag.NixpkgVersion).Enabled() {
 		// For now, we add the hardcoded value corresponding to the commit hash as of 2022-08-16 in:
 		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
 		// In the near future, this will be changed to the commit-hash of the unstable tag in nixpkgs github repository
 		const defaultCommitHash = "af9e00071d0971eb292fd5abef334e66eda3cb69"
 		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s", defaultCommitHash)
 
-		cfg.Nixpkgs.Version = defaultCommitHash
+		cfg.Nixpkgs.Commit = defaultCommitHash
 		return WriteConfig(absFilePath, cfg)
 	}
 	return nil
@@ -272,4 +283,31 @@ func missingConfigError(path string, didCheckParents bool) error {
 	}
 
 	return usererr.New("No devbox.json found in %s%s. Did you run `devbox init` yet?", path, parentDirCheckAddendum)
+}
+
+func validateConfig(cfg *Config) error {
+
+	fns := [](func(cfg *Config) error){validateNixpkg}
+	for _, fn := range fns {
+		if err := fn(cfg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateNixpkg(cfg *Config) error {
+	if cfg.Nixpkgs.Commit == "" {
+		return nil
+	}
+
+	const commitLength = 40
+	if len(cfg.Nixpkgs.Commit) != commitLength {
+		return usererr.New(
+			"Expected nixpkgs.commit to be of length %d but it has length %d",
+			commitLength,
+			len(cfg.Nixpkgs.Commit),
+		)
+	}
+	return nil
 }
