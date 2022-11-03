@@ -44,6 +44,7 @@ type Shell struct {
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
 
+	path string // This gets prepended PARENT_PATH if it is set.
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
 	historyFile string
@@ -123,6 +124,12 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 	}
 }
 
+func WithPath(path string) ShellOption {
+	return func(s *Shell) {
+		s.path = path
+	}
+}
+
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
 // user's home directory. It doesn't guarantee that the file exists.
 func rcfilePath(basename string) string {
@@ -142,6 +149,9 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
+	if s.path != "" {
+		parentPath = s.path + ":" + parentPath
+	}
 
 	env := append(s.env, os.Environ()...)
 	env = append(

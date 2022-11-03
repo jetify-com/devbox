@@ -1,0 +1,11 @@
+{
+  "name": "dummy config for go_1_19",
+  "version": "1.0.0",
+  "env": {
+    "FOO": "bar",
+    "DEVBOX_HELP": "true that"
+  },
+  "create_files": {
+    ".devbox/conf/go_1_19/bin/test-echo": "echo.sh"
+  }
+}

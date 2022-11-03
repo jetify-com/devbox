@@ -214,7 +214,11 @@ func (d *Devbox) Shell() error {
 		if err != nil {
 			return err
 		}
-		opts = append(opts, nix.WithEnvVariables(env))
+		opts = append(
+			opts,
+			nix.WithEnvVariables(env),
+			nix.WithPath(filepath.Join(d.srcDir, ".devbox/conf/bin")),
+		)
 	}
 
 	shell, err := nix.DetectShell(opts...)
