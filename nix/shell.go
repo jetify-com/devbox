@@ -37,6 +37,7 @@ const (
 type Shell struct {
 	name            name
 	binPath         string
+	env             []string
 	userShellrcPath string
 	planInitHook    string
 
@@ -114,6 +115,14 @@ func WithHistoryFile(historyFile string) ShellOption {
 	}
 }
 
+func WithEnvVariables(envVariables map[string]string) ShellOption {
+	return func(s *Shell) {
+		for k, v := range envVariables {
+			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+}
+
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
 // user's home directory. It doesn't guarantee that the file exists.
 func rcfilePath(basename string) string {
@@ -134,8 +143,9 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	// directories that are incompatible.
 	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
 
-	env := append(
-		os.Environ(),
+	env := append(s.env, os.Environ()...)
+	env = append(
+		env,
 		"PARENT_PATH="+parentPath,
 		"NIX_PROFILES="+strings.Join(nixProfileDirs, " "),
 
@@ -143,12 +153,13 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		// inside the devbox shell.
 		"__ETC_PROFILE_NIX_SOURCED=1",
 	)
+	debug.Log("Running nix-shell with environment: %v", env)
 
 	// Launch a fallback shell if we couldn't find the path to the user's
 	// default shell.
 	if s.binPath == "" {
 		cmd := exec.Command("nix-shell", "--pure")
-		cmd.Args = append(cmd.Args, toKeepArgs(env)...)
+		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
 		cmd.Args = append(cmd.Args, nixShellFilePath)
 		cmd.Env = env
 		cmd.Stdin = os.Stdin
@@ -160,7 +171,7 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	}
 
 	cmd := exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
-	cmd.Args = append(cmd.Args, toKeepArgs(env)...)
+	cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
 	cmd.Args = append(cmd.Args, nixShellFilePath)
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
@@ -374,16 +385,25 @@ var envToKeep = map[string]bool{
 	"SSL_CERT_FILE":             true, // The path to non-Nix SSL certificates (used by some Nix and non-Nix programs).
 }
 
+func buildAllowList(allowList []string) map[string]bool {
+	for _, kv := range allowList {
+		key, _, _ := strings.Cut(kv, "=")
+		envToKeep[key] = true
+	}
+	return envToKeep
+}
+
 // toKeepArgs takes a slice of environment variables in key=value format and
 // builds a slice of "--keep" arguments that tell nix-shell which ones to
 // keep.
 //
-// See envToKeep for the full set of kept environment variables.
-func toKeepArgs(env []string) []string {
-	args := make([]string, 0, len(envToKeep)*2)
+// See envToKeep for the full set of permanent kept environment variables.
+// We also --keep any variables set by package configuration.
+func toKeepArgs(env []string, allowList map[string]bool) []string {
+	args := make([]string, 0, len(allowList)*2)
 	for _, kv := range env {
 		key, _, _ := strings.Cut(kv, "=")
-		if envToKeep[key] {
+		if allowList[key] {
 			args = append(args, "--keep", key)
 		}
 	}

@@ -16,10 +16,12 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
+	"go.jetpack.io/devbox/pkgcfg"
 	"go.jetpack.io/devbox/planner"
 	"go.jetpack.io/devbox/planner/plansdk"
 	"golang.org/x/exp/slices"
@@ -200,11 +202,22 @@ func (d *Devbox) Shell() error {
 	}
 
 	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
-	shell, err := nix.DetectShell(
+
+	opts := []nix.ShellOption{
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
-	)
+	}
+
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		env, err := pkgcfg.Env(plan.DevPackages)
+		if err != nil {
+			return err
+		}
+		opts = append(opts, nix.WithEnvVariables(env))
+	}
+
+	shell, err := nix.DetectShell(opts...)
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		shell = &nix.Shell{}

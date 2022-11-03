@@ -3,6 +3,8 @@ package featureflag
 import (
 	"os"
 	"strconv"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 type feature struct {
@@ -29,6 +31,7 @@ func (f *feature) Enabled() bool {
 		return false
 	}
 	if on, _ := strconv.ParseBool(os.Getenv("DEVBOX_FEATURE_" + f.name)); on {
+		debug.Log("Feature %q enabled via environment variable.", f.name)
 		return true
 	}
 	return f.enabled
