@@ -28,13 +28,15 @@ func get(pkg string) (*config, error) {
 
 func getLocalConfig(configPath, pkg string) (*config, error) {
 	configPath = filepath.Join(configPath, pkg+".json")
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		// We don't need config for all packages and that's fine
+		return &config{}, nil
+	}
 	debug.Log("Reading local package config at %q", configPath)
 	content, err := os.ReadFile(configPath)
 	cfg := &config{}
-	if err == nil {
-		if err = json.Unmarshal(content, cfg); err != nil {
-			return nil, errors.WithStack(err)
-		}
+	if err = json.Unmarshal(content, cfg); err != nil {
+		return nil, errors.WithStack(err)
 	}
 	return cfg, nil
 }
