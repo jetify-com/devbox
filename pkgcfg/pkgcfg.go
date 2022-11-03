@@ -34,6 +34,9 @@ func getLocalConfig(configPath, pkg string) (*config, error) {
 	}
 	debug.Log("Reading local package config at %q", configPath)
 	content, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	cfg := &config{}
 	if err = json.Unmarshal(content, cfg); err != nil {
 		return nil, errors.WithStack(err)
