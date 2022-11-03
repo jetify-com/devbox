@@ -61,8 +61,4 @@ echo "Welcome to the devbox!"
 
 # End Plan Init Hook
 
-# Begin Script Init Hook
-
-# End Script Init Hook
-
 # Begin Script command

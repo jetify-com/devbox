@@ -251,7 +251,7 @@ func (s *Shell) execCommand() string {
 	args = append(args, s.binPath)
 	if s.ScriptCommand != "" {
 		args = append(args, "-ic")
-		args = append(args, "run_task")
+		args = append(args, "run_script")
 	}
 	args = append(args, extraArgs...)
 	return strings.Join(args, " ")
