@@ -259,9 +259,7 @@ func (d *Devbox) Shell() error {
 		)
 	}
 
-	if d.cfg.Shell.InitHook != nil {
-		shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	}
+	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.Run(nixShellFilePath)
 }
 
@@ -295,9 +293,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		shell = &nix.Shell{}
 	}
 
-	if d.cfg.Shell.InitHook != nil {
-		shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	}
+	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.Run(nixShellFilePath)
 }
 
