@@ -27,4 +27,3 @@ __pycache__/
 # Java
 *.class
 *.jar
-vscode-extension/.vscode-test/
