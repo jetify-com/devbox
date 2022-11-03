@@ -13,7 +13,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/debug"
+	"go.jetpack.io/devbox/pkgcfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
@@ -45,6 +47,14 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 		filePath := filepath.Join(outPath, name)
 		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			return errors.WithStack(err)
+		}
+	}
+
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		for _, pkg := range plan.DevPackages {
+			if err := pkgcfg.CreateFiles(pkg, rootPath); err != nil {
+				return err
+			}
 		}
 	}
 
