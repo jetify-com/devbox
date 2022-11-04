@@ -51,7 +51,7 @@ func testShell(t *testing.T, testPath string) {
 		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
 		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
 
-		shellPlan := box.ShellPlan()
+		shellPlan, err := box.ShellPlan()
 		assert.NoError(err, "devbox shell plan should not fail")
 
 		err = box.generateShellFiles()

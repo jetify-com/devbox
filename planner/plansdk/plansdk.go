@@ -10,6 +10,7 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/pkgslice"
 )
 
@@ -27,6 +28,7 @@ type PlanError struct {
 
 // Plan tells devbox how to start shell projects.
 type ShellPlan struct {
+	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
 	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
@@ -42,6 +44,8 @@ type ShellPlan struct {
 
 // Plan tells devbox how to start build projects.
 type BuildPlan struct {
+	NixpkgsInfo *NixpkgsInfo
+
 	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
 	// DevPackages is the slice of Nix packages that devbox makes available in
 	// its development environment. They are also available in shell.
@@ -200,4 +204,32 @@ func FileExists(path string) bool {
 
 func WelcomeMessage(s string) string {
 	return fmt.Sprintf(`echo "%s";`, s)
+}
+
+// publicly visible so that json marshalling works
+type NixpkgsInfo struct {
+	URL string
+
+	Sha256 string
+}
+
+func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
+
+	// If the featureflag is OFF, then we fallback to the hardcoded commit
+	// and ignore any value set in the devbox.json
+	if !featureflag.Get(featureflag.NixpkgVersion).Enabled() {
+		// Commit hash as of 2022-08-16
+		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
+		//
+		// sha256 from:
+		// nix-prefetch-url --unpack  https://github.com/nixos/nixpkgs/archive/<commit-hash>.tar.gz
+		return &NixpkgsInfo{
+			URL:    "https://github.com/nixos/nixpkgs/archive/af9e00071d0971eb292fd5abef334e66eda3cb69.tar.gz",
+			Sha256: "1mdwy0419m5i9ss6s5frbhgzgyccbwycxm5nal40c8486bai0hwy",
+		}, nil
+	}
+
+	return &NixpkgsInfo{
+		URL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
+	}, nil
 }

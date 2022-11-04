@@ -158,12 +158,18 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 
 // Plan creates a plan of the actions that devbox will take to generate its
 // shell environment.
-func (d *Devbox) ShellPlan() *plansdk.ShellPlan {
+func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.cfg.Packages
 	shellPlan := planner.GetShellPlan(d.srcDir, userDefinedPkgs)
 	shellPlan.DevPackages = userDefinedPkgs
 
-	return shellPlan
+	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
+		return nil, err
+	} else {
+		shellPlan.NixpkgsInfo = nixpkgsInfo
+	}
+
+	return shellPlan, nil
 }
 
 // Plan creates a plan of the actions that devbox will take to generate its
@@ -174,7 +180,17 @@ func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	return plansdk.MergeUserBuildPlan(userPlan, buildPlan)
+	plan, err := plansdk.MergeUserBuildPlan(userPlan, buildPlan)
+	if err != nil {
+		return nil, err
+	}
+
+	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
+		return nil, err
+	} else {
+		plan.NixpkgsInfo = nixpkgsInfo
+	}
+	return plan, nil
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
@@ -195,7 +211,10 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-	plan := d.ShellPlan()
+	plan, err := d.ShellPlan()
+	if err != nil {
+		return err
+	}
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -293,7 +312,11 @@ func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
 }
 
 func (d *Devbox) generateShellFiles() error {
-	return generateForShell(d.srcDir, d.ShellPlan())
+	plan, err := d.ShellPlan()
+	if err != nil {
+		return err
+	}
+	return generateForShell(d.srcDir, plan)
 }
 
 func (d *Devbox) generateBuildFiles() error {
