@@ -213,18 +213,19 @@ type NixpkgsInfo struct {
 	Sha256 string
 }
 
+// Commit hash as of 2022-08-16
+// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
+const DefaultNixpkgsCommit = "af9e00071d0971eb292fd5abef334e66eda3cb69"
+
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 
 	// If the featureflag is OFF, then we fallback to the hardcoded commit
 	// and ignore any value set in the devbox.json
 	if !featureflag.Get(featureflag.NixpkgVersion).Enabled() {
-		// Commit hash as of 2022-08-16
-		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
-		//
 		// sha256 from:
 		// nix-prefetch-url --unpack  https://github.com/nixos/nixpkgs/archive/<commit-hash>.tar.gz
 		return &NixpkgsInfo{
-			URL:    "https://github.com/nixos/nixpkgs/archive/af9e00071d0971eb292fd5abef334e66eda3cb69.tar.gz",
+			URL:    fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", DefaultNixpkgsCommit),
 			Sha256: "1mdwy0419m5i9ss6s5frbhgzgyccbwycxm5nal40c8486bai0hwy",
 		}, nil
 	}
