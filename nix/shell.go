@@ -124,6 +124,7 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 		for k, v := range envVariables {
 			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
 		}
+	}
 }
 
 func WithUserScript(name string, command string) ShellOption {
