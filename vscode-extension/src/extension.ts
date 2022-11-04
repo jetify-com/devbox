@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
-import * as vscode from 'vscode';
+import { workspace, window, commands, extensions, Uri, ExtensionContext } from 'vscode';
 import * as process from 'process';
 import * as cp from 'child_process';
 import * as util from 'util';
@@ -82,17 +81,17 @@ function updateSettings(workspacePath: String, devboxJson: any) {
 	// For now we only update Go, Python3, and Nodejs language extensions
 	devboxJson["packages"].forEach((pkg: String) => {
 		if (pkg.startsWith("python3")) {
-			if (vscode.extensions.getExtension("ms-python.python")?.isActive) {
+			if (extensions.getExtension("ms-python.python")?.isActive) {
 				workspace.getConfiguration("python").update("defaultInterpreterPath", workspacePath + "/.devbox/nix/profile/default/bin/python3");
 			}
 		}
 		if (pkg.startsWith("go_1_") || pkg === "go") {
-			if (vscode.extensions.getExtension("golang.go")?.isActive) {
+			if (extensions.getExtension("golang.go")?.isActive) {
 				workspace.getConfiguration("go").update("gopath", workspacePath + "/.devbox/nix/profile/default/bin/go");
 			}
 		}
 		if (pkg.startsWith("nodejs-") || pkg === "nodejs") {
-			if (vscode.extensions.getExtension("eslint")?.isActive) {
+			if (extensions.getExtension("eslint")?.isActive) {
 				workspace.getConfiguration("eslint").update("nodepath", workspacePath + "/.devbox/nix/profile/default/bin/node");
 			}
 		}
