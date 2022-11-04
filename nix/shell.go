@@ -37,6 +37,7 @@ const (
 type Shell struct {
 	name            name
 	binPath         string
+	pkgConfigDir    string
 	env             []string
 	userShellrcPath string
 	planInitHook    string
@@ -120,6 +121,12 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 		for k, v := range envVariables {
 			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
 		}
+	}
+}
+
+func WithPKGCOnfigDir(pkgConfigDir string) ShellOption {
+	return func(s *Shell) {
+		s.pkgConfigDir = pkgConfigDir
 	}
 }
 
@@ -278,19 +285,24 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		}
 	}()
 
+	pathPrepend := s.profileDir + "/bin"
+	if s.pkgConfigDir != "" {
+		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
+	}
+
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
 		PlanInitHook     string
-		ProfileBinDir    string
+		PathPrepend      string
 		HistoryFile      string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
-		ProfileBinDir:    s.profileDir + "/bin",
+		PathPrepend:      pathPrepend,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 	})
 	if err != nil {
