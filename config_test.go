@@ -396,9 +396,7 @@ func TestNixpkgsValidation(t *testing.T) {
 			assert := assert.New(t)
 
 			err := validateNixpkg(&Config{
-				Nixpkgs: struct {
-					Commit string `json:"commit,omitempty"`
-				}{
+				Nixpkgs: NixpkgsConfig{
 					Commit: testCase.commit,
 				},
 			})

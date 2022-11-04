@@ -44,7 +44,14 @@ const (
 // exist.
 func InitConfig(dir string) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
-	return cuecfg.InitFile(cfgPath, &Config{})
+
+	config := &Config{}
+	if featureflag.Get(featureflag.NixpkgVersion).Enabled() {
+		config.Nixpkgs = NixpkgsConfig{
+			Commit: plansdk.DefaultNixpkgsCommit,
+		}
+	}
+	return cuecfg.InitFile(cfgPath, config)
 }
 
 // Devbox provides an isolated development environment that contains a set of

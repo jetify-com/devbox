@@ -41,9 +41,11 @@ type Config struct {
 	} `json:"shell,omitempty"`
 
 	// Nixpkgs specifies the repository to pull packages from
-	Nixpkgs struct {
-		Commit string `json:"commit,omitempty"`
-	} `json:"nixpkgs,omitempty"`
+	Nixpkgs NixpkgsConfig `json:"nixpkgs,omitempty"`
+}
+
+type NixpkgsConfig struct {
+	Commit string `json:"commit,omitempty"`
 }
 
 // This contains a subset of fields from plansdk.Stage
