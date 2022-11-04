@@ -13,17 +13,31 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:./devbox.json",
-    "onCommand:devbox.setupDevContainer"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "devbox.setupDevContainer",
-        "title": "Devbox: Setup DevContainer config files"
+        "title": "Devbox: Generate Dev Containers config files"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "devbox",
+      "properties": {
+        "devbox.promptUpdateSettings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prompt to update workspace language settings to match devbox shell."
+        },
+        "devbox.autoShellOnTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run devbox shell when terminal is opened."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",

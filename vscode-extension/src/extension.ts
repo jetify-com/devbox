@@ -1,90 +1,147 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import * as vscode from 'vscode';
+import * as process from 'process';
 import * as cp from 'child_process';
 import * as util from 'util';
 import { posix } from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
+export function activate(context: ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
-	vscode.window.onDidOpenTerminal(async (event) => {
-		runDevboxShell();
+	initialCheckDevboxJSON();
+
+	// Check for devbox.json when a new folder is opened
+	workspace.onDidChangeWorkspaceFolders(async (e) => {
+		initialCheckDevboxJSON();
 	});
 
-	const setupDevcontainer = vscode.commands.registerCommand('devbox.setupDevContainer', async () => {
+	// run devbox shell when terminal is opened
+	window.onDidOpenTerminal(async (e) => {
+		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
+			runDevboxShell();
+		}
+	});
 
-		let selectedOption: vscode.QuickPickItem;
-		const cpuArch = vscode.window.createQuickPick();
-		cpuArch.items = [
-			"bullseye",
-			"buster",
-		].map(label => ({ label }));
-		cpuArch.onDidAccept(() => {
-			setupDevContainerFiles(selectedOption.label);
-		});
-		cpuArch.onDidChangeSelection(selection => {
-			if (selection[0]) {
-				selectedOption = selection[0];
-			}
-		});
-		cpuArch.onDidHide(() => cpuArch.dispose());
-		cpuArch.show();
-
+	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
+		const exec = util.promisify(cp.exec);
+		// determining cpu architecture
+		const { stdout, stderr } = await exec("uname -m");
+		let cpuArch = stdout;
+		if (stderr) {
+			console.log(stderr);
+			const response = await window.showErrorMessage(
+				"Could not determine the CPU architecture type. Is your architecture type Apple M1/arm64?",
+				"Yes",
+				"No",
+			);
+			cpuArch = response === "Yes" ? "arm64" : "something else";
+		}
+		setupDevContainerFiles(cpuArch);
 
 	});
 
 	context.subscriptions.push(setupDevcontainer);
 }
 
+async function initialCheckDevboxJSON() {
+	// check if there is a workspace folder open
+	if (workspace.workspaceFolders) {
+		const workspaceUri = workspace.workspaceFolders[0].uri;
+		try {
+			// check if the folder has devbox.json in it
+			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
+			if (workspace.getConfiguration("devbox").get("promptUpdateSettings")) {
+				const response = await window.showInformationMessage(
+					"A Devbox project is opened. Do you want to project settings with Devbox environment?",
+					"Update Settings",
+					"Don't show again"
+				);
+				if (response === "Update Settings") {
+					const devboxJson = await readDevboxJson(workspaceUri);
+
+					updateSettings(workspaceUri.path, devboxJson);
+				} else if (response === "Don't show again") {
+					workspace.getConfiguration("devbox").update("promptUpdateSettings", false);
+				}
+			}
+		} catch (err) {
+			console.log(err);
+			// devbox.json does not exist
+			console.log("devbox.json does not exist");
+		}
+	}
+}
+
+function updateSettings(workspacePath: String, devboxJson: any) {
+	// Updating process.env.PATH
+	process.env["PATH"] = process.env["PATH"] + ":" + workspacePath + "/.devbox/nix/profile/default/bin";
+	// Updating language extension settings
+	// For now we only update Go, Python3, and Nodejs language extensions
+	devboxJson["packages"].forEach((pkg: String) => {
+		if (pkg.startsWith("python3")) {
+			if (vscode.extensions.getExtension("ms-python.python")?.isActive) {
+				workspace.getConfiguration("python").update("defaultInterpreterPath", workspacePath + "/.devbox/nix/profile/default/bin/python3");
+			}
+		}
+		if (pkg.startsWith("go_1_") || pkg === "go") {
+			if (vscode.extensions.getExtension("golang.go")?.isActive) {
+				workspace.getConfiguration("go").update("gopath", workspacePath + "/.devbox/nix/profile/default/bin/go");
+			}
+		}
+		if (pkg.startsWith("nodejs-") || pkg === "nodejs") {
+			if (vscode.extensions.getExtension("eslint")?.isActive) {
+				workspace.getConfiguration("eslint").update("nodepath", workspacePath + "/.devbox/nix/profile/default/bin/node");
+			}
+		}
+		//TODO: add support for other common languages
+	});
+
+}
+
 async function runDevboxShell() {
-	const exec = util.promisify(cp.exec);
-	const result = await vscode.workspace.findFiles('devbox.json');
+	const result = await workspace.findFiles('devbox.json');
 	if (result.length > 0) {
-		let response = "test";
-		response = await vscode.commands.executeCommand('workbench.action.terminal.sendSequence', {
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
 			'text': 'devbox shell\r\n'
 		});
 
 	}
 }
 
-async function setupDevContainerFiles(selectedItem: String) {
+async function setupDevContainerFiles(cpuArch: String) {
 	try {
-		if (!vscode.workspace.workspaceFolders) {
-			return vscode.window.showInformationMessage('No folder or workspace opened');
+		if (!workspace.workspaceFolders) {
+			return window.showInformationMessage('No folder or workspace opened');
 		}
-		const workspaceUri = vscode.workspace.workspaceFolders[0].uri;
-		const devcontainerUri = vscode.Uri.joinPath(workspaceUri, '.devcontainer/');
+		const workspaceUri = workspace.workspaceFolders[0].uri;
+		const devcontainerUri = Uri.joinPath(workspaceUri, '.devcontainer/');
 		// Parsing devbox.json data
 		const devboxJson = await readDevboxJson(workspaceUri);
 		// creating .devcontainer directory and its files
-		await vscode.workspace.fs.createDirectory(devcontainerUri);
+		await workspace.fs.createDirectory(devcontainerUri);
 		const dockerfileContent = getDockerfileContent();
-		await vscode.workspace.fs.writeFile(
-			vscode.Uri.joinPath(devcontainerUri, 'Dockerfile'),
+		await workspace.fs.writeFile(
+			Uri.joinPath(devcontainerUri, 'Dockerfile'),
 			Buffer.from(dockerfileContent, 'utf8')
 		);
 
-		const devContainerJSON = getDevcontainerJSON(devboxJson, selectedItem);
-		await vscode.workspace.fs.writeFile(
-			vscode.Uri.joinPath(devcontainerUri, 'devcontainer.json'),
+		const devContainerJSON = getDevcontainerJSON(devboxJson, cpuArch);
+		await workspace.fs.writeFile(
+			Uri.joinPath(devcontainerUri, 'devcontainer.json'),
 			Buffer.from(devContainerJSON, 'utf8')
 		);
-
-		vscode.window.showInformationMessage(devboxJson["packages"].toString());
 	} catch (error) {
 		console.error('there was an error', error);
 	}
 	// Display a message box to the user
 }
 
-async function readDevboxJson(workspaceUri: vscode.Uri) {
+async function readDevboxJson(workspaceUri: Uri) {
 	const fileUri = workspaceUri.with({ path: posix.join(workspaceUri.path, 'devbox.json') });
-	const readData = await vscode.workspace.fs.readFile(fileUri);
+	const readData = await workspace.fs.readFile(fileUri);
 	const readStr = Buffer.from(readData).toString('utf8');
 	const devboxJsonData = JSON.parse(readStr);
 	return devboxJsonData;
@@ -112,19 +169,19 @@ function getDockerfileContent(): String {
 
 	# Install devbox
 	RUN sudo mkdir /devbox && sudo chown vscode /devbox
-	RUN curl -fsSL https://get.jetpack.io/devbox | FORCE=1 bash
+	RUN curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
 
 	# Setup devbox environment
-	COPY --chown=vscode ../devbox.json /devbox/devbox.json
+	COPY --chown=vscode ./devbox.json /devbox/devbox.json
 	RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
 	ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
+	ENTRYPOINT devbox shell
 	`;
 }
 
 function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
 
 	let devcontainerObject: any = {};
-
 	devcontainerObject = {
 		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 		// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian
@@ -134,7 +191,7 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
 			// Update 'VARIANT' to pick a Debian version: bullseye, buster
 			// Use bullseye on local arm64/Apple Silicon.
 			"args": {
-				"VARIANT": cpuArch
+				"VARIANT": cpuArch.trim() === "arm64" ? "bullseye" : "buster"
 			}
 		},
 		"customizations": {
@@ -162,7 +219,7 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
 		//TODO: add support for other common languages
 	});
 
-	return JSON.stringify(devcontainerObject);
+	return JSON.stringify(devcontainerObject, null, 4);
 }
 
 // This method is called when your extension is deactivated
