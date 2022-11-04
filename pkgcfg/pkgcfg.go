@@ -26,9 +26,6 @@ func CreateFiles(pkg, basePath string) error {
 	}
 	for name, contentPath := range cfg.CreateFiles {
 		filePath := filepath.Join(basePath, name)
-		// if _, err := os.Stat(filePath); err == nil {
-		// 	continue
-		// }
 		content, err := os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
 		if err != nil {
 			return errors.WithStack(err)
