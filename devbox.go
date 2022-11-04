@@ -236,7 +236,7 @@ func (d *Devbox) Shell() error {
 	}
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
-		env, err := pkgcfg.Env(plan.DevPackages)
+		env, err := pkgcfg.Env(plan.DevPackages, d.srcDir)
 		if err != nil {
 			return err
 		}

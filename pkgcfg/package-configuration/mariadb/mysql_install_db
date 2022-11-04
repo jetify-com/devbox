@@ -1,0 +1,1 @@
+{{ .DevboxProfileDefault }}/bin/mysql_install_db --auth-root-authentication-method=normal --datadir=$MYSQL_DATADIR --basedir=$MYSQL_BASEDIR --pid-file=$MYSQL_PID_FILE "$@"
