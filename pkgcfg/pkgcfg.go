@@ -94,7 +94,7 @@ func get(pkg, rootDir string) (*config, error) {
 	return getConfig(pkg, rootDir)
 }
 
-var baseConfigURL = "https://raw.githubusercontent.com/jetpack-io/devbox/main/pkgcfg/package-configuration/dummy-config"
+var baseConfigURL = "https://raw.githubusercontent.com/jetpack-io/devbox/main/pkgcfg/package-configuration"
 
 func getConfig(pkg, rootDir string) (*config, error) {
 	confURL, err := url.JoinPath(baseConfigURL, pkg+".json")
