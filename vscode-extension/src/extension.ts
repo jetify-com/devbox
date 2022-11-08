@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { workspace, window, commands, extensions, Uri, ExtensionContext } from 'vscode';
+import { workspace, window, commands, extensions, Uri, ExtensionContext, EventEmitter } from 'vscode';
 import * as process from 'process';
 import * as cp from 'child_process';
 import * as util from 'util';
@@ -18,11 +18,11 @@ export function activate(context: ExtensionContext) {
 	});
 
 	// run devbox shell when terminal is opened
-	window.onDidOpenTerminal(async (e) => {
-		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
-			runDevboxShell();
-		}
-	});
+	// window.onDidOpenTerminal(async (e) => {
+	// 	if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
+	// 		runDevboxShell();
+	// 	}
+	// });
 
 	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
 		const exec = util.promisify(cp.exec);
@@ -42,6 +42,38 @@ export function activate(context: ExtensionContext) {
 
 	});
 
+	const devboxAdd = commands.registerCommand('devbox.add', async () => {
+		//todo
+		const result = await window.showInputBox({
+			value: '',
+			placeHolder: 'Package to add to devbox. E.g., python39',
+		});
+
+		// ensure a terminal is open
+		// This check has to exist since there is no way for extension to run code in
+		// the terminal, unless a terminal session is already open.
+		if ((<any>window).terminals.length === 0) {
+			window.showErrorMessage('No active terminals. Re-run the command without closing the opened terminal.');
+			const terminal = window.createTerminal({ name: `DEVBOX` });
+			terminal.show();
+		}
+
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
+			'text': `devbox add ${result}\r\n`
+		});
+	});
+
+	const devboxShell = commands.registerCommand('devbox.shell', async () => {
+		//todo
+	});
+
+	const devboxInit = commands.registerCommand('devbox.init', async () => {
+		//todo
+	});
+
+	context.subscriptions.push(devboxAdd);
+	context.subscriptions.push(devboxInit);
+	context.subscriptions.push(devboxShell);
 	context.subscriptions.push(setupDevcontainer);
 }
 
@@ -52,6 +84,9 @@ async function initialCheckDevboxJSON() {
 		try {
 			// check if the folder has devbox.json in it
 			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
+			// devbox.json exists setcontext for devbox commands to be available
+			commands.executeCommand('setContext', 'devbox.configFileExists', true);
+
 			if (workspace.getConfiguration("devbox").get("promptUpdateSettings")) {
 				const response = await window.showInformationMessage(
 					"A Devbox project is opened. Do you want to project settings with Devbox environment?",
@@ -69,6 +104,7 @@ async function initialCheckDevboxJSON() {
 		} catch (err) {
 			console.log(err);
 			// devbox.json does not exist
+			commands.executeCommand('setContext', 'devbox.configFileExists', false);
 			console.log("devbox.json does not exist");
 		}
 	}
@@ -77,6 +113,7 @@ async function initialCheckDevboxJSON() {
 function updateSettings(workspacePath: String, devboxJson: any) {
 	// Updating process.env.PATH
 	process.env["PATH"] = process.env["PATH"] + ":" + workspacePath + "/.devbox/nix/profile/default/bin";
+	process.env["GOBIN"] = workspacePath + "/.devbox/go/bin";
 	// Updating language extension settings
 	// For now we only update Go, Python3, and Nodejs language extensions
 	devboxJson["packages"].forEach((pkg: String) => {

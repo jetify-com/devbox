@@ -21,8 +21,24 @@
       {
         "command": "devbox.setupDevContainer",
         "title": "Devbox: Generate Dev Containers config files"
+      },
+      {
+        "command": "devbox.add",
+        "title": "Devbox: Add - add packages to your devbox project"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "devbox.setupDevContainer",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.add",
+          "when": "devbox.configFileExists == true"
+        }
+      ]
+    },
     "configuration": {
       "title": "devbox",
       "properties": {
