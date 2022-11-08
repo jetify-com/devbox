@@ -30,13 +30,23 @@ func CreateFiles(pkg, rootDir string) error {
 	debug.Log("Creating files for package %q create files", pkg)
 	for name, contentPath := range cfg.CreateFiles {
 		filePath := filepath.Join(rootDir, name)
+
+		dirPath := filepath.Dir(filePath)
+		if contentPath == "" {
+			dirPath = filePath
+		}
+		if err = createDir(dirPath); err != nil {
+			return errors.WithStack(err)
+		}
+
+		if contentPath == "" {
+			continue
+		}
+
 		debug.Log("Creating file %q", filePath)
 		content, err := os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
 		if err != nil {
 			return errors.WithStack(err)
-		}
-		if err = createDir(filepath.Dir(filePath)); err != nil {
-			return err
 		}
 		t, err := template.New(name + "-template").Parse(string(content))
 		if err != nil {
