@@ -1,12 +1,15 @@
 package pkgcfg
 
 import (
+	"bytes"
 	"encoding/json"
+	"html/template"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
+	"go.jetpack.io/devbox/nix"
 )
 
 const localPkgConfigPath = "DEVBOX_LOCAL_PKG_CONFIG"
@@ -19,34 +22,57 @@ type config struct {
 	localConfigPath string            `json:"-"`
 }
 
-func CreateFiles(pkg, basePath string) error {
-	cfg, err := get(pkg)
+func CreateFiles(pkg, rootDir string) error {
+	cfg, err := get(pkg, rootDir)
 	if err != nil {
 		return err
 	}
+	debug.Log("Creating files for package %q create files", pkg)
 	for name, contentPath := range cfg.CreateFiles {
-		filePath := filepath.Join(basePath, name)
+		filePath := filepath.Join(rootDir, name)
+
+		dirPath := filepath.Dir(filePath)
+		if contentPath == "" {
+			dirPath = filePath
+		}
+		if err = createDir(dirPath); err != nil {
+			return errors.WithStack(err)
+		}
+
+		if contentPath == "" {
+			continue
+		}
+
+		debug.Log("Creating file %q", filePath)
 		content, err := os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		if err = createDir(filepath.Dir(filePath)); err != nil {
-			return err
-		}
-		if err := os.WriteFile(filePath, content, 0744); err != nil {
+		t, err := template.New(name + "-template").Parse(string(content))
+		if err != nil {
 			return errors.WithStack(err)
 		}
-		if err := createSymlink(basePath, filePath); err != nil {
+		var buf bytes.Buffer
+		if err = t.Execute(&buf, map[string]string{
+			"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
+			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
+		}); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := os.WriteFile(filePath, buf.Bytes(), 0744); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := createSymlink(rootDir, filePath); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func Env(pkgs []string) (map[string]string, error) {
+func Env(pkgs []string, rootDir string) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := get(pkg)
+		cfg, err := get(pkg, rootDir)
 		if err != nil {
 			return nil, err
 		}
@@ -57,15 +83,15 @@ func Env(pkgs []string) (map[string]string, error) {
 	return env, nil
 }
 
-func get(pkg string) (*config, error) {
+func get(pkg, rootDir string) (*config, error) {
 	if configPath := os.Getenv(localPkgConfigPath); configPath != "" {
 		debug.Log("Using local package config at %q", configPath)
-		return getLocalConfig(configPath, pkg)
+		return getLocalConfig(configPath, pkg, rootDir)
 	}
 	return &config{}, nil
 }
 
-func getLocalConfig(configPath, pkg string) (*config, error) {
+func getLocalConfig(configPath, pkg, rootDir string) (*config, error) {
 	pkgConfigPath := filepath.Join(configPath, pkg+".json")
 	if _, err := os.Stat(pkgConfigPath); errors.Is(err, os.ErrNotExist) {
 		// We don't need config for all packages and that's fine
@@ -77,11 +103,23 @@ func getLocalConfig(configPath, pkg string) (*config, error) {
 		return nil, errors.WithStack(err)
 	}
 	cfg := &config{localConfigPath: configPath}
-	if err = json.Unmarshal(content, cfg); err != nil {
+	t, err := template.New(pkg + "-template").Parse(string(content))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	var buf bytes.Buffer
+	if err = t.Execute(&buf, map[string]string{
+		"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
+		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
+	}); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if err = json.Unmarshal(buf.Bytes(), cfg); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return cfg, nil
 }
+
 func createDir(path string) error {
 	if path == "" {
 		return nil

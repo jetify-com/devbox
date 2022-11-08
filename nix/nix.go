@@ -14,6 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
+// Instead of using directory, prefer using the devbox.ProfilePath() function that ensures the directory exists.
+const ProfilePath = ".devbox/nix/profile/default"
+
 func PkgExists(pkg string) bool {
 	_, found := PkgInfo(pkg)
 	return found
