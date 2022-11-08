@@ -30,9 +30,13 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if on, _ := strconv.ParseBool(os.Getenv("DEVBOX_FEATURE_" + f.name)); on {
-		debug.Log("Feature %q enabled via environment variable.", f.name)
-		return true
+	if on, err := strconv.ParseBool(os.Getenv("DEVBOX_FEATURE_" + f.name)); err == nil {
+		status := "enabled"
+		if !on {
+			status = "disabled"
+		}
+		debug.Log("Feature %q %s via environment variable.", f.name, status)
+		return on
 	}
 	return f.enabled
 }
