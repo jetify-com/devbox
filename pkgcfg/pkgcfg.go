@@ -3,9 +3,12 @@ package pkgcfg
 import (
 	"bytes"
 	"encoding/json"
-	"html/template"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
@@ -44,7 +47,7 @@ func CreateFiles(pkg, rootDir string) error {
 		}
 
 		debug.Log("Creating file %q", filePath)
-		content, err := os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
+		content, err := getFile(cfg, contentPath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -88,7 +91,29 @@ func get(pkg, rootDir string) (*config, error) {
 		debug.Log("Using local package config at %q", configPath)
 		return getLocalConfig(configPath, pkg, rootDir)
 	}
-	return &config{}, nil
+	return getConfig(pkg, rootDir)
+}
+
+var baseConfigURL = "https://raw.githubusercontent.com/jetpack-io/devbox/main/pkgcfg/package-configuration"
+
+func getConfig(pkg, rootDir string) (*config, error) {
+	confURL, err := url.JoinPath(baseConfigURL, pkg+".json")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	resp, err := http.Get(confURL)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return &config{}, nil
+	}
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return buildConfig(&config{}, pkg, rootDir, string(content))
 }
 
 func getLocalConfig(configPath, pkg, rootDir string) (*config, error) {
@@ -103,7 +128,11 @@ func getLocalConfig(configPath, pkg, rootDir string) (*config, error) {
 		return nil, errors.WithStack(err)
 	}
 	cfg := &config{localConfigPath: configPath}
-	t, err := template.New(pkg + "-template").Parse(string(content))
+	return buildConfig(cfg, pkg, rootDir, string(content))
+}
+
+func buildConfig(cfg *config, pkg, rootDir, content string) (*config, error) {
+	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -149,4 +178,20 @@ func createSymlink(root, filePath string) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func getFile(cfg *config, contentPath string) ([]byte, error) {
+	if cfg.localConfigPath != "" {
+		return os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
+	}
+	confURL, err := url.JoinPath(baseConfigURL, contentPath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	resp, err := http.Get(confURL)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
 }
