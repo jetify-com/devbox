@@ -31,11 +31,6 @@ const (
 	// configFilename is name of the JSON file that defines a devbox environment.
 	configFilename = "devbox.json"
 
-	// profileDir contains the contents of the profile generated via `nix-env --profile profileDir <command>`
-	// Instead of using directory, prefer using the devbox.profileDir() function that ensures the directory exists.
-	// TODO savil. Rename to profilePath. This is the symlink of the profile, and not a directory.
-	profileDir = ".devbox/nix/profile/default"
-
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 )
@@ -343,7 +338,7 @@ func (d *Devbox) generateBuildFiles() error {
 }
 
 func (d *Devbox) profileDir() (string, error) {
-	absPath := filepath.Join(d.srcDir, profileDir)
+	absPath := filepath.Join(d.srcDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return "", errors.WithStack(err)
 	}

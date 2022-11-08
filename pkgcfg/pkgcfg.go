@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
+	"go.jetpack.io/devbox/nix"
 )
 
 const localPkgConfigPath = "DEVBOX_LOCAL_PKG_CONFIG"
@@ -44,7 +45,7 @@ func CreateFiles(pkg, rootDir string) error {
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
 			"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
-			"DevboxProfileDefault": filepath.Join(rootDir, ".devbox/nix/profile/default"),
+			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -99,7 +100,7 @@ func getLocalConfig(configPath, pkg, rootDir string) (*config, error) {
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
 		"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
-		"DevboxProfileDefault": filepath.Join(rootDir, ".devbox/nix/profile/default"),
+		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
