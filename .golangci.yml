@@ -35,7 +35,6 @@ linters-settings:
   varnamelen:
     max-distance: 10
     ignore-decls:
-      - T any
       - c echo.Context
       - const C
       - e error
@@ -45,12 +44,15 @@ linters-settings:
       - id string
       - m map[string]any
       - m map[string]int
+      - n int
       - ns string
       - r *http.Request
+      - r io.Reader
       - sh *Shell
       - sh *shell
       - sh *shell.Shell
       - sh shell
+      - T any
       - t testing.T
       - w http.ResponseWriter
       - w io.Writer
