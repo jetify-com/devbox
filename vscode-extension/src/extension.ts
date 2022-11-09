@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { workspace, window, commands, extensions, Uri, ExtensionContext, EventEmitter } from 'vscode';
+import { workspace, window, commands, extensions, Uri, ExtensionContext } from 'vscode';
 import * as process from 'process';
 import * as cp from 'child_process';
 import * as util from 'util';
@@ -11,6 +11,7 @@ import { posix } from 'path';
 export function activate(context: ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	initialCheckDevboxJSON();
+	// Creating file watchers to watch for events on devbox.json
 	const fswatcher = workspace.createFileSystemWatcher("**/devbox.json", false, false, false);
 	fswatcher.onDidDelete(e => {
 		commands.executeCommand('setContext', 'devbox.configFileExists', false);
@@ -21,21 +22,22 @@ export function activate(context: ExtensionContext) {
 	fswatcher.onDidChange(e => {
 		initialCheckDevboxJSON();
 	});
+
 	// Check for devbox.json when a new folder is opened
 	workspace.onDidChangeWorkspaceFolders(async (e) => {
 		initialCheckDevboxJSON();
 	});
 
 	// run devbox shell when terminal is opened
-	// window.onDidOpenTerminal(async (e) => {
-	// 	if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
-	// 		runDevboxShell();
-	// 	}
-	// });
+	window.onDidOpenTerminal(async (e) => {
+		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
+			runDevboxShell();
+		}
+	});
 
 	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
 		const exec = util.promisify(cp.exec);
-		// determining cpu architecture
+		// determining cpu architecture - needed for devcontainer dockerfile
 		const { stdout, stderr } = await exec("uname -m");
 		let cpuArch = stdout;
 		if (stderr) {
@@ -52,7 +54,6 @@ export function activate(context: ExtensionContext) {
 	});
 
 	const devboxAdd = commands.registerCommand('devbox.add', async () => {
-		//todo
 		const result = await window.showInputBox({
 			value: '',
 			placeHolder: 'Package to add to devbox. E.g., python39',
@@ -130,7 +131,6 @@ async function initialCheckDevboxJSON() {
 function updateSettings(workspacePath: String, devboxJson: any) {
 	// Updating process.env.PATH
 	process.env["PATH"] = process.env["PATH"] + ":" + workspacePath + "/.devbox/nix/profile/default/bin";
-	process.env["GOBIN"] = workspacePath + "/.devbox/go/bin";
 	// Updating language extension settings
 	// For now we only update Go, Python3, and Nodejs language extensions
 	devboxJson["packages"].forEach((pkg: String) => {
