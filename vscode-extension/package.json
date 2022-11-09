@@ -25,6 +25,18 @@
       {
         "command": "devbox.add",
         "title": "Devbox: Add - add packages to your devbox project"
+      },
+      {
+        "command": "devbox.shell",
+        "title": "Devbox: Shell - Go to devbox shell in the terminal"
+      },
+      {
+        "command": "devbox.install",
+        "title": "Devbox: Install - Install packages specified in devbox.json"
+      },
+      {
+        "command": "devbox.init",
+        "title": "Devbox: Init - Initiate a devbox project"
       }
     ],
     "menus": {
@@ -36,6 +48,18 @@
         {
           "command": "devbox.add",
           "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.shell",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.install",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.init",
+          "when": "devbox.configFileExists == false"
         }
       ]
     },

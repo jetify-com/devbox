@@ -11,7 +11,16 @@ import { posix } from 'path';
 export function activate(context: ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	initialCheckDevboxJSON();
-
+	const fswatcher = workspace.createFileSystemWatcher("**/devbox.json", false, false, false);
+	fswatcher.onDidDelete(e => {
+		commands.executeCommand('setContext', 'devbox.configFileExists', false);
+	});
+	fswatcher.onDidCreate(e => {
+		commands.executeCommand('setContext', 'devbox.configFileExists', true);
+	});
+	fswatcher.onDidChange(e => {
+		initialCheckDevboxJSON();
+	});
 	// Check for devbox.json when a new folder is opened
 	workspace.onDidChangeWorkspaceFolders(async (e) => {
 		initialCheckDevboxJSON();
@@ -48,32 +57,40 @@ export function activate(context: ExtensionContext) {
 			value: '',
 			placeHolder: 'Package to add to devbox. E.g., python39',
 		});
-
-		// ensure a terminal is open
-		// This check has to exist since there is no way for extension to run code in
-		// the terminal, unless a terminal session is already open.
-		if ((<any>window).terminals.length === 0) {
-			window.showErrorMessage('No active terminals. Re-run the command without closing the opened terminal.');
-			const terminal = window.createTerminal({ name: `DEVBOX` });
-			terminal.show();
-		}
-
+		ensureTerminalExists();
 		await commands.executeCommand('workbench.action.terminal.sendSequence', {
 			'text': `devbox add ${result}\r\n`
 		});
 	});
 
 	const devboxShell = commands.registerCommand('devbox.shell', async () => {
-		//todo
+		// todo: add support for --config path to devbox.json
+		ensureTerminalExists();
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
+			'text': 'devbox shell\r\n'
+		});
+	});
+
+	const devboxInstall = commands.registerCommand('devbox.install', async () => {
+		// todo: add support for --config path to devbox.json
+		ensureTerminalExists();
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
+			'text': 'devbox shell -- echo "installed packages!""\r\n'
+		});
 	});
 
 	const devboxInit = commands.registerCommand('devbox.init', async () => {
-		//todo
+		ensureTerminalExists();
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
+			'text': 'devbox init\r\n'
+		});
+		commands.executeCommand('setContext', 'devbox.configFileExists', true);
 	});
 
 	context.subscriptions.push(devboxAdd);
 	context.subscriptions.push(devboxInit);
 	context.subscriptions.push(devboxShell);
+	context.subscriptions.push(devboxInstall);
 	context.subscriptions.push(setupDevcontainer);
 }
 
@@ -182,6 +199,17 @@ async function readDevboxJson(workspaceUri: Uri) {
 	const devboxJsonData = JSON.parse(readStr);
 	return devboxJsonData;
 
+}
+
+function ensureTerminalExists(): void {
+	// ensure a terminal is open
+	// This check has to exist since there is no way for extension to run code in
+	// the terminal, unless a terminal session is already open.
+	if ((<any>window).terminals.length === 0) {
+		window.showErrorMessage('No active terminals. Re-run the command without closing the opened terminal.');
+		const terminal = window.createTerminal({ name: `Terminal` });
+		terminal.show();
+	}
 }
 
 function getDockerfileContent(): String {
