@@ -9,7 +9,11 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
 {
     "packages": [],
     "shell": {
-        "init_hook": "..."
+        "init_hook": "...",
+        "scripts": {}
+    },
+    "nixpkgs": {
+        "commit": "..."
     },
     "install_stage": {
         "command": "..."
@@ -31,7 +35,13 @@ You can add packages to your devbox.json using `devbox add <package_name>`, and 
 
 ### Shell
 
-You can configure `devbox shell` to run a custom commands at startup by setting an `init_hook`. This hook runs after any other `~/.*rc` scripts, allowing you to override environment variables or further customize the shell.
+The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: *init_hooks*, which run a set of commands every time you start a devbox shell, and *scripts*, which are commands that can be run using `devbox run`
+
+#### Init Hook
+
+The init hook is used to run shell commands before the shell finishes setting up. This hook runs after any other `~/.*rc` scripts, allowing you to override environment variables or further customize the shell. 
+
+The init hook will run every time a new shell is started using `devbox shell` or `devbox run`, and is best used for setting up environment variables, aliases, or other quick setup steps needed to configure your environment. For longer running tasks, you should consider using a Script. 
 
 This is an example `devbox.json` that customizes the prompt and prints a welcome message:
 
@@ -52,6 +62,38 @@ Starting a devbox shell...
 Welcome! See CONTRIBUTING.md for tips on contributing to devbox.
 📦 devbox>
 ```
+
+#### Scripts
+
+Scripts are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests). 
+
+Scripts can be defined by giving a name, and one or more commands. Single command scripts can be added by providing a name, and a string:
+
+```json
+"scripts": {
+    "print_once": "echo \"Hello Once!\""
+}
+```
+
+To run multiple commands in a single script, you can pass them as an array: 
+
+```json
+"scripts": {
+    "print_twice": [
+        "echo \"Hello Once!\"",
+        "echo \"Hello Twice!\""
+    ]
+}
+```
+
+### Nixpkgs
+
+The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use for installing packages. It currently takes a single field, _commit_, which takes a commit hash for the specific revision of Nixpkgs you want to use.
+
+If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages tp the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org
+
+To learn more, consult our guide on [setting the Nixpkg commit hash](guides/channel_selection.md). 
+
 
 ### Stages
 
@@ -81,14 +123,17 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
         "cargo",
         "libiconv",
     ],
-    "install_stage": {
-        "command": "cargo install --path ."
-    },
-    "build_stage":{
-        "command":"cargo build"
-    },
-    "start_stage": {
-        "command": "./target/build/hello_world"
+    "shell": {
+        "init_hook": [
+            "source conf/set-environmen.sh",
+            "rustup default stable",
+            "cargo fetch"
+        ],
+        "scripts": {
+            "test": "cargo test -- --show-output",
+            "start" : "cargo run",
+            "build-docs": "cargo doc"
+        }
     }
 }
 ```

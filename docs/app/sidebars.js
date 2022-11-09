@@ -28,6 +28,17 @@ const sidebars = {
         id: 'quickstart'
     }, {
         type: 'category',
+        label: 'Guides',
+        collapsed: true,
+        items: [{
+            type: 'doc',
+            id: 'guides/pinning_packages'
+        }, {
+            type: 'doc',
+            id: 'guides/scripts'
+        }]
+    }, {
+        type: 'category',
         label: 'CLI Reference',
         link: { type: 'doc', id: 'cli_reference/devbox' },
         collapsed: true,
