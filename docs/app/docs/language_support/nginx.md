@@ -29,11 +29,11 @@ These stages can be customized by adding them to your `devbox.json`. See the [Co
 
 ### Install Stage
 
-Skipped: _No install stage for nginx planner_
+Skipped: *No install stage for nginx planner*
 
 ### Build Stage
 
-Skipped: _No build stage for nginx planner_
+Skipped: *No build stage for nginx planner*
 
 ### Start Stage
 

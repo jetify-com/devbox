@@ -23,7 +23,7 @@ Start Stage Image:
 These stages can be customized by adding them to your `devbox.json`. See the [Configuration Guide](../configuration.md) for more details.
 #### Install Stage
 
-Skipped: _No install stage for zig planner_
+Skipped: *No install stage for zig planner*
 
 #### Build Stage
 

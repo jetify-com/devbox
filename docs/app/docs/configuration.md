@@ -88,7 +88,7 @@ To run multiple commands in a single script, you can pass them as an array:
 
 ### Nixpkgs
 
-The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use for installing packages. It currently takes a single field, _commit_, which takes a commit hash for the specific revision of Nixpkgs you want to use.
+The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use for installing packages. It currently takes a single field, `commit`, which takes a commit hash for the specific revision of Nixpkgs you want to use.
 
 If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages tp the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org
 
