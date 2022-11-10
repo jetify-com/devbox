@@ -63,4 +63,4 @@ jobs:
           curl https://get.jetpack.io -fsSL | bash -s -- -y
           jetpack up docs \
             --ttl 300 --debug \
-            -n jetpack-io-preview-$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-zA-Z]/-/g")
+            -n jetpack-io-preview-$(echo "${GITHUB_REF_NAME}-ref" | sed "s/[^0-9a-zA-Z]/-/g")

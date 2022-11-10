@@ -1,0 +1,1 @@
+{{ .DevboxProfileDefault }}/bin/mysqld --datadir=$MYSQL_DATADIR --pid-file=$MYSQL_PID_FILE --socket=$MYSQL_UNIX_PORT "$@"

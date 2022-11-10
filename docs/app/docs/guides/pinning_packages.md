@@ -35,4 +35,3 @@ However, there is an unofficial search tool at https://lazamar.co.uk/nix-version
 3. In the search results, find the version you want in the Version Column
 4. Copy the Commit hash in the Revision column
 5. Add the commit hash to your `devbox.json`
-
