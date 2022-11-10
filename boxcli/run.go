@@ -25,6 +25,7 @@ func RunCmd() *cobra.Command {
 		Hidden:            true,
 		Short:             "Starts a new devbox shell and runs the target script",
 		Long:              "Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
+		Args:              cobra.MaximumNArgs(1),
 		PersistentPreRunE: nixShellPersistentPreRunE,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runScriptCmd(args, flags)
@@ -77,8 +78,6 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, error) {
 	script := ""
 	if len(args) == 1 {
 		script = args[0]
-	} else if len(args) > 1 {
-		return "", "", errors.Errorf("too many arguments (expected 1, got %d)", len(args))
 	}
 
 	return path, script, nil
