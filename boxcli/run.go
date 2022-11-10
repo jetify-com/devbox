@@ -6,7 +6,7 @@ package boxcli
 import (
 	"os"
 	"os/exec"
-	"strings"
+	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -51,9 +51,10 @@ func runScriptCmd(args []string, flags runCmdFlags) error {
 
 	// Validate script exists.
 	scripts := box.ListScripts()
+	sort.Slice(scripts, func(i, j int) bool { return scripts[i] < scripts[j] })
 	if script == "" || !slices.Contains(scripts, script) {
-		return errors.Errorf("no script found with name \"%s\". Here's a list of the existing scripts in devbox.json: %s",
-			script, strings.Join(box.ListScripts(), ", "))
+		return errors.Errorf("no script found with name \"%s\"."+
+			"Here's a list of the existing scripts in devbox.json: %v", script, scripts)
 	}
 
 	if devbox.IsDevboxShellEnabled() {
