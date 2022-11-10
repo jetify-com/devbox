@@ -27,6 +27,14 @@
         "title": "Devbox: Add - add packages to your devbox project"
       },
       {
+        "command": "devbox.remove",
+        "title": "Devbox: Remove - remove packages from your devbox project"
+      },
+      {
+        "command": "devbox.run",
+        "title": "Devbox: Run - execute scripts specified in devbox.json"
+      },
+      {
         "command": "devbox.shell",
         "title": "Devbox: Shell - Go to devbox shell in the terminal"
       },
@@ -50,6 +58,14 @@
           "when": "devbox.configFileExists == true"
         },
         {
+          "command": "devbox.remove",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.run",
+          "when": "devbox.configFileExists == true"
+        },
+        {
           "command": "devbox.shell",
           "when": "devbox.configFileExists == true"
         },
@@ -66,11 +82,6 @@
     "configuration": {
       "title": "devbox",
       "properties": {
-        "devbox.promptUpdateSettings": {
-          "type": "boolean",
-          "default": true,
-          "description": "Prompt to update workspace language settings to match devbox shell."
-        },
         "devbox.autoShellOnTerminal": {
           "type": "boolean",
           "default": true,
