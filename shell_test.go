@@ -65,7 +65,7 @@ func TestPackageDirectDependencies(t *testing.T) {
 	}
 	gotPkgNames := make([]string, len(pkg.DirectDependencies))
 	for i, pkg := range pkg.DirectDependencies {
-		gotPkgNames[i] = pkg.Name
+		gotPkgNames[i] = pkg.StoreName
 	}
 	sort.Strings(gotPkgNames)
 

@@ -30,35 +30,35 @@ func LocalNixStore(path string) *PackageStore {
 	}
 }
 
-// Package retrieves a package from the store by its name. The name must be the
-// fully unique directory store name following the pattern <nixhash>-<name>. It
+// Package retrieves a package by its name within the store. The name must be
+// the fully unique directory name following the pattern <nixhash>-<name>. It
 // may optionally include the /nix/store/ prefix.
-func (p *PackageStore) Package(name string) (Package, error) {
-	if strings.TrimSpace(name) == "" {
-		return Package{}, fmt.Errorf("invalid package name %q: name is empty or whitespace", name)
+func (p *PackageStore) Package(storeName string) (Package, error) {
+	if strings.TrimSpace(storeName) == "" {
+		return Package{}, fmt.Errorf("invalid package name %q: name is empty or whitespace", storeName)
 	}
-	cleaned := filepath.Clean(name)
-	if relPath, err := filepath.Rel(p.path, name); err == nil {
+	cleaned := filepath.Clean(storeName)
+	if relPath, err := filepath.Rel(p.path, storeName); err == nil {
 		cleaned = relPath
 	}
 	if cleaned == "." {
-		return Package{}, fmt.Errorf("invalid package name %q: name resolves to the package store root", name)
+		return Package{}, fmt.Errorf("invalid package name %q: name resolves to the package store root", storeName)
 	}
 	if !packageNameRegex.MatchString(cleaned) {
-		return Package{}, fmt.Errorf("invalid package name %q: name doesn't match the regexp %#q", name, packageNameRegex)
+		return Package{}, fmt.Errorf("invalid package name %q: name doesn't match the regexp %#q", storeName, packageNameRegex)
 	}
 	pkgFS, err := fs.Sub(p, cleaned)
 	if err != nil {
-		return Package{}, fmt.Errorf("package store %q: unable to open package %q: %v", p.path, name, err)
+		return Package{}, fmt.Errorf("package store %q: unable to open package %q: %v", p.path, storeName, err)
 	}
 	pkg := Package{
-		FS:   pkgFS,
-		Name: cleaned,
+		FS:        pkgFS,
+		StoreName: cleaned,
 	}
 	pkg.DirectDependencies, err = p.directDependencies(pkg)
 	if err != nil {
 		return Package{}, fmt.Errorf("package store %q: unable to open package %q: cannot determine package dependencies: %v",
-			p.path, name, err)
+			p.path, storeName, err)
 	}
 	return pkg, nil
 }
@@ -98,7 +98,7 @@ func (p *PackageStore) directDependencies(pkg Package) ([]Package, error) {
 
 	deps := make([]Package, 0, 4)
 	for i, found := range scanner.found {
-		if found && installedPkgs[i].Name != pkg.Name {
+		if found && installedPkgs[i].StoreName != pkg.StoreName {
 			deps = append(deps, installedPkgs[i])
 		}
 	}
@@ -135,8 +135,8 @@ func (p *PackageStore) installedPackages() (pkgs []Package, hashes [][]byte, err
 			return nil, nil, err
 		}
 		pkgs = append(pkgs, Package{
-			FS:   pkgFS,
-			Name: name,
+			FS:        pkgFS,
+			StoreName: name,
 		})
 	}
 	return pkgs, hashes, nil
@@ -247,8 +247,8 @@ func (d *dependencyScanner) scan(r io.Reader, rsize int64) error {
 type Package struct {
 	fs.FS
 
-	// Name is the full name of the package that is unique to its store.
-	Name string
+	// StoreName is the full name of the package within its store.
+	StoreName string
 
 	// DirectDependencies are the other packages in the store that this
 	// package depends on. It does not contain transitive dependencies.
