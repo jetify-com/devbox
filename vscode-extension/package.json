@@ -13,10 +13,75 @@
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:./devbox.json"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "devbox.setupDevContainer",
+        "title": "Devbox: Generate Dev Containers config files"
+      },
+      {
+        "command": "devbox.add",
+        "title": "Devbox: Add - add packages to your devbox project"
+      },
+      {
+        "command": "devbox.remove",
+        "title": "Devbox: Remove - remove packages from your devbox project"
+      },
+      {
+        "command": "devbox.run",
+        "title": "Devbox: Run - execute scripts specified in devbox.json"
+      },
+      {
+        "command": "devbox.shell",
+        "title": "Devbox: Shell - Go to devbox shell in the terminal"
+      },
+      {
+        "command": "devbox.init",
+        "title": "Devbox: Init - Initiate a devbox project"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "devbox.setupDevContainer",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.add",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.remove",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.run",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.shell",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.init",
+          "when": "devbox.configFileExists == false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "devbox",
+      "properties": {
+        "devbox.autoShellOnTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run devbox shell when terminal is opened."
+        }
+      }
+    }
+  },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
     "compile": "tsc -p ./",
