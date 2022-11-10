@@ -29,6 +29,9 @@ To use the latest available packages in Nix, you can replace the commit in `devb
 
 In most cases, the packages available in Devbox's default commit should suffice for your use cases. However, if you need a specific minor version, or an older version of a package that is no longer included in Nixpkgs, you may need update the commit SHA. Unfortunately, Nix does not have an official way to find the Nixpkg commit SHA for a specific version of a package. 
 
-However, there is an unofficial search tool at https://lazamar.co.uk/nix-versions/ that can be used to list the Nixpkg commits for different versions of a specific package. 
-
-
+However, there is an unofficial search tool at https://lazamar.co.uk/nix-versions/ that can be used to list the Nixpkg commits for different versions of a specific package. To find the correct Nixpkg commit hash: 
+1. Select `nixpkgs-unstable` in the dropdown
+2. Enter the name of the package you want to search, and hit Search
+3. In the search results, find the version you want in the Version Column
+4. Copy the Commit hash in the Revision column
+5. Add the commit hash to your `devbox.json`

@@ -64,6 +64,10 @@ const sidebars = {
             label: 'devbox rm'
         }, {
             type: 'doc',
+            id: 'cli_reference/devbox_run',
+            label: 'devbox run'
+        }, {
+            type: 'doc',
             id: 'cli_reference/devbox_shell',
             label: 'devbox shell'
         }, {
