@@ -22,7 +22,6 @@ func RunCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:               "run <script>",
-		Hidden:            true,
 		Short:             "Starts a new devbox shell and runs the target script",
 		Long:              "Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
 		Args:              cobra.MaximumNArgs(1),
