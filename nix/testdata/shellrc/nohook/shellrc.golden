@@ -54,3 +54,7 @@ export PS1="(devbox) $PS1"
 echo "Welcome to the devbox!"
 
 # End Plan Init Hook
+
+# Begin Script command
+
+# End Script command

@@ -37,7 +37,8 @@ type Config struct {
 	// Shell configures the devbox shell environment.
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
-		InitHook ConfigShellCmds `json:"init_hook,omitempty"`
+		InitHook ConfigShellCmds             `json:"init_hook,omitempty"`
+		Scripts  map[string]*ConfigShellCmds `json:"scripts,omitempty"`
 	} `json:"shell,omitempty"`
 
 	// Nixpkgs specifies the repository to pull packages from
@@ -90,6 +91,10 @@ func upgradeConfig(cfg *Config, absFilePath string) error {
 
 // WriteConfig saves a devbox config file.
 func WriteConfig(path string, cfg *Config) error {
+	err := validateConfig(cfg)
+	if err != nil {
+		return err
+	}
 	return cuecfg.WriteFile(path, cfg)
 }
 
@@ -289,10 +294,25 @@ func missingConfigError(path string, didCheckParents bool) error {
 
 func validateConfig(cfg *Config) error {
 
-	fns := [](func(cfg *Config) error){validateNixpkg}
+	fns := [](func(cfg *Config) error){
+		validateNixpkg,
+		validateScripts,
+	}
+
 	for _, fn := range fns {
 		if err := fn(cfg); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+func validateScripts(cfg *Config) error {
+	for k := range cfg.Shell.Scripts {
+		if strings.TrimSpace(k) == "" {
+			return errors.New("cannot have script with empty name in devbox.json")
+		}
+		if strings.TrimSpace(cfg.Shell.Scripts[k].String()) == "" {
+			return errors.New("cannot have an empty script value in devbox.json")
 		}
 	}
 	return nil

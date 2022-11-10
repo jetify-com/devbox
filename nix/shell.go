@@ -45,6 +45,9 @@ type Shell struct {
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
 
+	ScriptName    string
+	ScriptCommand string
+
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
 	historyFile string
@@ -121,6 +124,13 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 		for k, v := range envVariables {
 			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
 		}
+	}
+}
+
+func WithUserScript(name string, command string) ShellOption {
+	return func(s *Shell) {
+		s.ScriptName = name
+		s.ScriptCommand = command
 	}
 }
 
@@ -240,6 +250,10 @@ func (s *Shell) execCommand() string {
 	}
 	args = append(args, extraEnv...)
 	args = append(args, s.binPath)
+	if s.ScriptCommand != "" {
+		args = append(args, "-ic")
+		args = append(args, "run_script")
+	}
 	args = append(args, extraArgs...)
 	return strings.Join(args, " ")
 }
@@ -296,6 +310,8 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		UserHook         string
 		PlanInitHook     string
 		PathPrepend      string
+		ScriptCommand    string
+		ProfileBinDir    string
 		HistoryFile      string
 	}{
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
@@ -303,6 +319,8 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PlanInitHook:     strings.TrimSpace(s.planInitHook),
 		PathPrepend:      pathPrepend,
+		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
+		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 	})
 	if err != nil {
