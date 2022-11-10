@@ -58,11 +58,6 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
-	const devboxInstall = commands.registerCommand('devbox.install', async () => {
-		// todo: add support for --config path to devbox.json
-		await runInTerminal('devbox shell -- echo "Packages installed""');
-	});
-
 	const devboxInit = commands.registerCommand('devbox.init', async () => {
 		await runInTerminal('devbox init');
 		commands.executeCommand('setContext', 'devbox.configFileExists', true);
