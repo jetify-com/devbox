@@ -158,7 +158,7 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 	return docker.Build(d.srcDir, opts...)
 }
 
-// Plan creates a plan of the actions that devbox will take to generate its
+// ShellPlan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.cfg.Packages
@@ -174,7 +174,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	return shellPlan, nil
 }
 
-// Plan creates a plan of the actions that devbox will take to generate its
+// BuildPlan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
 	userPlan := d.convertToBuildPlan()
@@ -269,8 +269,10 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return err
 	}
 
-	plan := d.ShellPlan()
-
+	plan, err := d.ShellPlan()
+	if err != nil {
+		return err
+	}
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
