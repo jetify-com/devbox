@@ -23,11 +23,11 @@ This hash ensures that Devbox will install the same packages whenever you start 
 
 ## Using the latest version of Nixpkgs
 
-To use the latest available packages in Nix, you can replace the commit in devbox.json with the latest `nixpkgs-unstable` hash from https://status.nixos.org. 
+To use the latest available packages in Nix, you can replace the commit in `devbox.json` with the latest `nixpkgs-unstable` hash from https://status.nixos.org. 
 
 ## Look up a commit hash for a specific package
 
-In most cases, the packages available in Devbox's default commit should suffice for your usecases. However, if you need a specific minor version, or an older version of a package that is no longer included in Nixpkgs, you may need update the commit SHA Unfortunately, Nix does not have an official way to find the Nixpkg commit SHA for a specific version of a package. 
+In most cases, the packages available in Devbox's default commit should suffice for your use cases. However, if you need a specific minor version, or an older version of a package that is no longer included in Nixpkgs, you may need update the commit SHA. Unfortunately, Nix does not have an official way to find the Nixpkg commit SHA for a specific version of a package. 
 
 However, there is an unofficial search tool at https://lazamar.co.uk/nix-versions/ that can be used to list the Nixpkg commits for different versions of a specific package. 
 

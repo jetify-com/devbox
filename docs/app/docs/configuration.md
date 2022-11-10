@@ -90,14 +90,14 @@ To run multiple commands in a single script, you can pass them as an array:
 
 The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use for installing packages. It currently takes a single field, `commit`, which takes a commit hash for the specific revision of Nixpkgs you want to use.
 
-If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages tp the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org
+If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages to the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org
 
-To learn more, consult our guide on [setting the Nixpkg commit hash](guides/channel_selection.md). 
+To learn more, consult our guide on [setting the Nixpkg commit hash](guides/pinning_packages.md). 
 
 
 ### Stages
 
-Stages are used to configure and run commands at different points of container creation. For languages that support autodetction, Devbox will automatically detect and configure the correct stage commands for your project based on your source code. You can override any of these stages by configuring them in your devbox.json
+Stages are used to configure and run commands at different points of container creation. For languages that support autodetection, Devbox will automatically detect and configure the correct stage commands for your project based on your source code. You can override any of these stages by configuring them in your devbox.json
 
 -   The **install stage** will run after your base container has been initialized and your Nix packages are installed. This stage should be used to download and build your application's dependencies
 -   The **build stage** runs after the install stage, and should be used to build or bundle your application.
@@ -125,7 +125,7 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
     ],
     "shell": {
         "init_hook": [
-            "source conf/set-environmen.sh",
+            "source conf/set-environment.sh",
             "rustup default stable",
             "cargo fetch"
         ],
