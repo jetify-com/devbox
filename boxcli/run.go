@@ -53,7 +53,7 @@ func runScriptCmd(args []string, flags runCmdFlags) error {
 	scripts := box.ListScripts()
 	sort.Slice(scripts, func(i, j int) bool { return scripts[i] < scripts[j] })
 	if script == "" || !slices.Contains(scripts, script) {
-		return errors.Errorf("no script found with name \"%s\"."+
+		return errors.Errorf("no script found with name \"%s\". "+
 			"Here's a list of the existing scripts in devbox.json: %v", script, scripts)
 	}
 

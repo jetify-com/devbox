@@ -60,7 +60,7 @@ func readConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return cfg, cfg.validate()
+	return cfg, nil
 }
 
 // ReadConfig reads a devbox config file, and validates it.
@@ -91,20 +91,11 @@ func upgradeConfig(cfg *Config, absFilePath string) error {
 
 // WriteConfig saves a devbox config file.
 func WriteConfig(path string, cfg *Config) error {
-	err := cfg.validate()
+	err := validateConfig(cfg)
 	if err != nil {
 		return err
 	}
 	return cuecfg.WriteFile(path, cfg)
-}
-
-func (c *Config) validate() error {
-	for k := range c.Shell.Scripts {
-		if k == "" {
-			return errors.New("cannot have script with empty name in devbox.json")
-		}
-	}
-	return nil
 }
 
 // Formats for marshalling and unmarshalling a series of shell commands in a
@@ -303,10 +294,25 @@ func missingConfigError(path string, didCheckParents bool) error {
 
 func validateConfig(cfg *Config) error {
 
-	fns := [](func(cfg *Config) error){validateNixpkg}
+	fns := [](func(cfg *Config) error){
+		validateNixpkg,
+		validateScripts,
+	}
+
 	for _, fn := range fns {
 		if err := fn(cfg); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+func validateScripts(cfg *Config) error {
+	for k := range cfg.Shell.Scripts {
+		if strings.TrimSpace(k) == "" {
+			return errors.New("cannot have script with empty name in devbox.json")
+		}
+		if strings.TrimSpace(cfg.Shell.Scripts[k].String()) == "" {
+			return errors.New("cannot have an empty script value in devbox.json")
 		}
 	}
 	return nil
