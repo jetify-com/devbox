@@ -213,10 +213,10 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-	plan := d.ShellPlan()
-	//if err != nil {
-	//	return err
-	//}
+	plan, err := d.ShellPlan()
+	if err != nil {
+		return err
+	}
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
