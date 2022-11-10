@@ -2,7 +2,7 @@
 title: Configuring and Running Scripts
 ---
 
-This doc describes how to configure and run scripts using `devbox run`. Scripts started with `devbox run` are launched in a non-interactive `devbox shell` that terminates once the script finishes, or is interrupted by Ctrl-C. 
+This doc describes how to configure and run scripts using `devbox run`. Scripts started with `devbox run` are launched in a interactive `devbox shell` that terminates once the script finishes, or is interrupted by CTRL-C. 
 
 Scripts will run after your packages finish installing, and after your `init_hook` completes. 
 
@@ -48,6 +48,6 @@ Your devbox shell will exit once the last line of your script has finished runni
 ## Tips on using Scripts
 
 1. Since `init_hook` runs everytime you start your shell, you should use primarily use it for setting environment variables and aliases. For longer running tasks like database setup, you can create and run a Devbox script
-2. You can use Devbox scripts to start and manage long running background processes and daemons. For example -- If you are working on a LAMP stack project, you can use scripts to start Mysql and Apache in separate shells and monitor their logs. Once you are done developing, you can use CTRL-C to exit the processes and shells
+2. You can use Devbox scripts to start and manage long running background processes and daemons. For example -- If you are working on a LAMP stack project, you can use scripts to start MySQL and Apache in separate shells and monitor their logs. Once you are done developing, you can use CTRL-C to exit the processes and shells
 3. If a script feels too long to put it directly in `devbox.json`, you can save it as a shell script in your project, and then invoke it in your `devbox scripts`.
-4. For more ideas, see the LAMP stack example in our Devbox examples repo. 
+4. For more ideas, see the LAMP stack example in our [Devbox examples repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lamp-stack). 
