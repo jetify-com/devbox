@@ -1,6 +1,8 @@
-
-![logo](docs/app/static/img/devbox_logo_dark.svg#gh-dark-mode-only)
-![logo](docs/app/static/img/devbox_logo_light.svg#gh-light-mode-only)
+<picture>
+	<source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
+	<source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
+	<img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
+</picture>
 
 # Devbox
 
