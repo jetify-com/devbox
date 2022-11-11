@@ -1,8 +1,12 @@
 {
   "packages": [
-    "go_1_19"
+    "go_1_19",
+    "golangci-lint"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": "export \"GOROOT=$(go env GOROOT)\""
+  },
+  "nixpkgs": {
+    "commit": "d01cb18be494e3d860fcfe6be4ad63614360333c"
   }
 }
