@@ -2,6 +2,8 @@ configVersion: 0.1.2
 projectId: proj_wDDVK8L05shx83Wt1UVG1l1x
 name: devbox
 cluster: jetpack-cloud
+envsec:
+  provider: jetpack
 services:
   devbox-web:
     type: web
