@@ -1,6 +1,11 @@
 {
-  "packages": ["dotnet-sdk"],
+  "packages": [
+    "dotnet-sdk"
+  ],
   "shell": {
     "init_hook": null
+  },
+  "nixpkgs": {
+    "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
   }
 }

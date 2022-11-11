@@ -9,6 +9,6 @@
     ]
   },
   "nixpkgs": {
-    "version": "22.05"
+    "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
   }
 }
