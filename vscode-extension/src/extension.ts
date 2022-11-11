@@ -108,9 +108,7 @@ async function initialCheckDevboxJSON() {
 }
 
 async function runInTerminal(cmd: string) {
-	// ensure a terminal is open
-	// This check has to exist since there is no way for extension to run code in
-	// the terminal, unless a terminal session is already open.
+	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
 		const terminal = window.createTerminal({ name: `Terminal` });
 		terminal.show();
