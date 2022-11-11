@@ -3,7 +3,10 @@
 
 package cuecfg
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+)
 
 // TODO: consider using cue's JSON marshaller instead of
 // "encoding/json" ... it might have extra functionality related
@@ -13,5 +16,7 @@ func marshalJSON(v interface{}) ([]byte, error) {
 }
 
 func unmarshalJSON(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	return dec.Decode(v)
 }

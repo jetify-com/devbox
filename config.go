@@ -58,7 +58,7 @@ func readConfig(path string) (*Config, error) {
 	cfg := &Config{}
 	err := cuecfg.ParseFile(path, cfg)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, usererr.WithUserMessage(err, "Failed to parse file at %s", path)
 	}
 	return cfg, nil
 }
