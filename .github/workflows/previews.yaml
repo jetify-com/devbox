@@ -67,9 +67,10 @@ jobs:
           #   * `sed "s/[^0-9a-zA-Z]/-/g"`: replace any invalid characters in
           #      the branch name with dashes.
           #   * `tr -s -`: squash repeated consecutive dashes into one.
-          #   * `cut -b -63`: truncate the name to 63 characters.
-          safe_github_ref="$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-zA-Z]/-/g" | tr -s -)"
-          namespace="$(echo "jetpack-io-preview-${safe_github_ref}-ref" | cut -b -63 | tr -s -)"
+          #   * `cut -b -39`: truncate the name to 39 characters, leaving 24 for
+          #     "devbox-docs-preview-" and "-ref" for a max of 63.
+          safe_github_ref="$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-zA-Z]/-/g" | cut -b -39)"
+          namespace="$(echo "devbox-docs-preview-${safe_github_ref}-ref" | tr -s -)"
           jetpack up docs \
             --ttl 300 --debug \
             -n "$namespace"
