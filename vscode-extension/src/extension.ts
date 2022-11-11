@@ -85,7 +85,6 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
 	context.subscriptions.push(devboxShell);
-	context.subscriptions.push(devboxInstall);
 	context.subscriptions.push(setupDevcontainer);
 }
 
