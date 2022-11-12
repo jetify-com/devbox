@@ -5,7 +5,7 @@ hide_title: true
 ---
 
 ## What is Devbox?
-Devbox is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
+Devbox is a command-line tool that lets you easily create isolated dev environments and shells. You start by defining the list of packages required for your project, and Devbox creates an isolated, reproducible environment with those packages installed
 
 In practice, Devbox works similar to a package manager like yarn – except the packages it manages are at the operating-system level (the sort of thing you would normally install with brew or apt-get).
 
@@ -32,8 +32,8 @@ Devbox can create isolated environments right on your laptop, without an extra-l
 ### Good-bye conflicting versions
 Are you working on multiple projects, all of which need different versions of the same binary? Instead of attempting to install conflicting versions of the same binary on your laptop, create an isolated environment for each project, and use whatever version you want for each.
 
-### Instantly turn your application into a container
-Devbox analyzes your source code and instantly turns it into an OCI-compliant image that can be deployed to any cloud. The image is optimized for speed, size, security and caching ... and without needing to write a Dockerfile. And unlike buildpacks, it does it quickly.
+### Export your shell environment into a container
+Devbox by default does not require Docker or a VM to run. However, if you need to run your environment in the cloud, or on another machine without Devbox installed, you can convert your project to a portable, OCI-compliant image. The image is optimized for speed, size, security and caching ... without needing to write a Dockerfile. 
 
 ### Stop declaring dependencies twice
 Your application often needs the same set of dependencies when you are developing on your laptop, and when you're packaging it as a container ready to deploy to the cloud. Devbox's dev environments are isomorphic: meaning that we can turn them into both a local shell environment or a cloud-ready container, all without having to repeat yourself twice.

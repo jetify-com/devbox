@@ -16,17 +16,17 @@ const FeatureList: FeatureItem[] = [
     // url: `/docs`,
     description: (
       <>
-        Start by defining the list of packages required by your project, and devbox will create an isolated dev environment on your local machine.
+        Start by defining the list of packages required by your project, and Devbox will create an isolated dev environment on your local machine, no Docker required. 
       </>
     ),
   },
   {
-    title: 'Build images without Dockerfiles',
-    Svg: require('@site/static/img/container-light.svg').default,
+    title: 'Over 80,000 packages, powered by Nix',
+    Svg: require('@site/static/img/nix_snowflake_light.svg').default,
     // url: 'http://github.com/jetpack-io/devbox',
     description: (
       <>
-        Devbox can automatically build an optimized image for your project based on your source code and package list, so you can run your app anywhere.
+        Devbox provides an approachable, intuitive interface for creating isolated shells with the Nix Package Manager. Create an environment for any project, on any machine. 
       </>
     ),
   },
@@ -36,7 +36,7 @@ const FeatureList: FeatureItem[] = [
     // url: 'https://discord.com/invite/agbskCJXk2',
     description: (
       <>
-        Devbox is an open source project built by <b><a href="https://jetpack.io"> Jetpack.io</a></b> with support from the community. Join thousands of developers who love Devbox.
+        Devbox is an open source project built by <b><a href="https://jetpack.io"> Jetpack.io</a></b> with support from the community. Join the core team and thousands of developers who love Devbox on <b><a href="http://discord.gg/jetpack-io">Discord</a></b>. 
       </>
     ),
   },

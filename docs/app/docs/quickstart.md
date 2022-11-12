@@ -59,9 +59,16 @@ In this quickstart we’ll create a development shell with specific tools instal
     exit
     ```
 
-## Package your application as a Docker Image
+## Export your shell as a Docker Image
 
-Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
+Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a Docker image.
+
+:::info
+
+To export your shell as a container, you will need to have [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/) installed. 
+
+Note that docker is only needed if you want to create containers – the shell functionality works without it.
+:::
 
 1. Initialize your project with `devbox init` if you haven't already.
 
@@ -78,15 +85,3 @@ Devbox makes it easy to package your application into an OCI-compliant container
     ```bash
     docker tag devbox my-image:v0.1
     ```
-
-### Auto-detected languages
-
-Devbox currently detects the following languages:
-
--   Go
--   Python (Poetry)
--   NodeJS
--   PHP
--   static nginx (Experimental)
-
-Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
