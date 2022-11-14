@@ -85,7 +85,6 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
 	context.subscriptions.push(devboxShell);
-	context.subscriptions.push(devboxInstall);
 	context.subscriptions.push(setupDevcontainer);
 }
 
@@ -109,18 +108,19 @@ async function initialCheckDevboxJSON() {
 }
 
 async function runInTerminal(cmd: string) {
-	// ensure a terminal is open
-	// This check has to exist since there is no way for extension to run code in
-	// the terminal, unless a terminal session is already open.
+	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
-		window.showErrorMessage('No active terminals. Re-run the command without closing the opened terminal.');
-		window.createTerminal({ name: `Terminal` }).show();
-	} else { // A terminal is open
+		const terminal = window.createTerminal({ name: `Terminal` });
+		terminal.show();
+		terminal.sendText(cmd, true);
+	} else {
+		// A terminal is open
 		// run the given cmd in terminal
 		await commands.executeCommand('workbench.action.terminal.sendSequence', {
 			'text': `${cmd}\r\n`
 		});
 	}
+
 }
 
 async function getDevboxScripts(): Promise<string[]> {
