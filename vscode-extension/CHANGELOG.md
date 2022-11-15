@@ -4,6 +4,12 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.2]
+
+- Added ability to run devbox commands from VSCode command palette
+- Added VSCode command to generate DevContainer files to run VSCode in local container or Github CodeSpaces.
+- Added customization in settings to turn on/off automatically running `devbox shell` when a terminal window is opened.
+
 ## [0.0.1]
 
 - Initial release
