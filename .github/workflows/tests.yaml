@@ -5,10 +5,12 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  pull_request_target:
   push:
     branches-ignore:
       - main
   workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
