@@ -1,0 +1,27 @@
+name: release-extension
+
+on: workflow_dispatch
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup NodeJS 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: |
+          npm install -g yarn
+          npm install -g vsce
+          yarn install
+        working-directory: vscode-extension
+      - name: publish
+        run: |
+          echo ${{ secrets.VS_MARKETPLACE_TOKEN }} | vsce login jetpack-io
+          vsce package --yarn
+          vsce publish --yarn
+        working-directory: vscode-extension
