@@ -1,32 +1,26 @@
 name: release-extension
 
-concurrency: deployment
-
-on:
-  # Build/Release on demand
-  workflow_dispatch:
-    inputs:
-      is_prerelease:
-        description: "Pre-release?"
-        required: false
-        default: false
-        type: boolean
-
-permissions:
-  contents: write
-  pull-requests: read
+on: workflow_dispatch
 
 jobs:
-  deploy:
+  build-publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup NodeJS 16
+        uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: yarn ci
-      - name: Publish to Visual Studio Marketplace
-        uses: HaaLeo/publish-vscode-extension@v1
-        with:
-          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-          registryUrl: https://marketplace.visualstudio.com
+      - name: Install dependencies
+        run: |
+          npm install -g yarn
+          npm install -g vsce
+          yarn install
+        working-directory: vscode-extension
+      - name: publish
+        run: |
+          echo ${{ secrets.VS_MARKETPLACE_TOKEN }} | vsce login jetpack-io
+          vsce package --yarn
+          vsce publish --yarn
+        working-directory: vscode-extension
