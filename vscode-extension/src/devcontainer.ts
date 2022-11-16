@@ -80,6 +80,7 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
         "name": "Devbox Remote Container",
         "build": {
             "dockerfile": "./Dockerfile",
+            "context": "..",
             // Update 'VARIANT' to pick a Debian version: bullseye, buster
             // Use bullseye on local arm64/Apple Silicon.
             "args": {

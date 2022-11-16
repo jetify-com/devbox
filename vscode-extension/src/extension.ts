@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 import * as util from 'util';
 import * as cp from 'child_process';
-import { workspace, window, commands, Uri, ExtensionContext, QuickPickItem } from 'vscode';
+import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import { setupDevContainerFiles, readDevboxJson } from './devcontainer';
 
 // This method is called when your extension is activated
@@ -20,8 +20,8 @@ export function activate(context: ExtensionContext) {
 
 	// run devbox shell when terminal is opened
 	window.onDidOpenTerminal(async (e) => {
-		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")) {
-			await runInTerminal('devbox shell');
+		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal") && e.name !== "DevboxTerminal") {
+			await runInTerminal('devbox shell', true);
 		}
 	});
 
@@ -30,14 +30,14 @@ export function activate(context: ExtensionContext) {
 			value: '',
 			placeHolder: 'Package to add to devbox. E.g., python39',
 		});
-		await runInTerminal(`devbox add ${result}`);
+		await runInTerminal(`devbox add ${result}`, false);
 	});
 
 	const devboxRun = commands.registerCommand('devbox.run', async () => {
 		const items = await getDevboxScripts();
 		if (items.length > 0) {
 			const result = await window.showQuickPick(items);
-			await runInTerminal(`devbox run ${result}`);
+			await runInTerminal(`devbox run ${result}`, true);
 		} else {
 			window.showInformationMessage("No scripts found in devbox.json");
 		}
@@ -45,21 +45,21 @@ export function activate(context: ExtensionContext) {
 
 	const devboxShell = commands.registerCommand('devbox.shell', async () => {
 		// todo: add support for --config path to devbox.json
-		await runInTerminal('devbox shell');
+		await runInTerminal('devbox shell', true);
 	});
 
 	const devboxRemove = commands.registerCommand('devbox.remove', async () => {
 		const items = await getDevboxPackages();
 		if (items.length > 0) {
 			const result = await window.showQuickPick(items);
-			await runInTerminal(`devbox rm ${result}`);
+			await runInTerminal(`devbox rm ${result}`, false);
 		} else {
 			window.showInformationMessage("No packages found in devbox.json");
 		}
 	});
 
 	const devboxInit = commands.registerCommand('devbox.init', async () => {
-		await runInTerminal('devbox init');
+		await runInTerminal('devbox init', false);
 		commands.executeCommand('setContext', 'devbox.configFileExists', true);
 	});
 
@@ -84,6 +84,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxAdd);
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
+	context.subscriptions.push(devboxRemove);
 	context.subscriptions.push(devboxShell);
 	context.subscriptions.push(setupDevcontainer);
 }
@@ -107,11 +108,14 @@ async function initialCheckDevboxJSON() {
 	}
 }
 
-async function runInTerminal(cmd: string) {
+async function runInTerminal(cmd: string, showTerminal: boolean) {
 	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
-		const terminal = window.createTerminal({ name: `Terminal` });
-		terminal.show();
+		const terminalName = 'DevboxTerminal';
+		const terminal = window.createTerminal({ name: terminalName });
+		if (showTerminal) {
+			terminal.show();
+		}
 		terminal.sendText(cmd, true);
 	} else {
 		// A terminal is open
