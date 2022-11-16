@@ -119,9 +119,9 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
 ```json
 {
     "packages": [
-        "rustc"
+        "rustc",
         "cargo",
-        "libiconv",
+        "libiconv"
     ],
     "shell": {
         "init_hook": [
