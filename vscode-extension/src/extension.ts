@@ -111,7 +111,8 @@ async function initialCheckDevboxJSON() {
 async function runInTerminal(cmd: string, showTerminal: boolean) {
 	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
-		const terminal = window.createTerminal({ name: 'DevboxTerminal' });
+		const terminalName = 'DevboxTerminal';
+		const terminal = window.createTerminal({ name: terminalName });
 		if (showTerminal) {
 			terminal.show();
 		}
