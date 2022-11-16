@@ -1,10 +1,11 @@
 name: docs-preview
 
 on:
-  workflow_dispatch:
+  pull_request_target:
   push:
     branches-ignore:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
