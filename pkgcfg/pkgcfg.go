@@ -16,6 +16,7 @@ import (
 )
 
 const localPkgConfigPath = "DEVBOX_LOCAL_PKG_CONFIG"
+const confPath = ".devbox/conf"
 
 type config struct {
 	Name            string            `json:"name"`
@@ -161,14 +162,14 @@ func createDir(path string) error {
 
 func createSymlink(root, filePath string) error {
 	name := filepath.Base(filePath)
-	newname := filepath.Join(root, ".devbox/conf/bin", name)
+	newname := filepath.Join(root, confPath, "bin", name)
 
 	// Create bin path just in case it doesn't exist
-	if err := os.MkdirAll(filepath.Join(root, ".devbox/conf/bin"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, confPath, "/bin"), 0755); err != nil {
 		return errors.WithStack(err)
 	}
 
-	if _, err := os.Stat(newname); err == nil {
+	if _, err := os.Lstat(newname); err == nil {
 		if err = os.Remove(newname); err != nil {
 			return errors.WithStack(err)
 		}
