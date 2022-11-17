@@ -3,9 +3,6 @@ package pkgcfg
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -95,43 +92,6 @@ func get(pkg, rootDir string) (*config, error) {
 	return getConfig(pkg, rootDir)
 }
 
-var baseConfigURL = "https://raw.githubusercontent.com/jetpack-io/devbox/main/pkgcfg/package-configuration"
-
-func getConfig(pkg, rootDir string) (*config, error) {
-	confURL, err := url.JoinPath(baseConfigURL, pkg+".json")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	resp, err := http.Get(confURL)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return &config{}, nil
-	}
-	content, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buildConfig(&config{}, pkg, rootDir, string(content))
-}
-
-func getLocalConfig(configPath, pkg, rootDir string) (*config, error) {
-	pkgConfigPath := filepath.Join(configPath, pkg+".json")
-	if _, err := os.Stat(pkgConfigPath); errors.Is(err, os.ErrNotExist) {
-		// We don't need config for all packages and that's fine
-		return &config{}, nil
-	}
-	debug.Log("Reading local package config at %q", pkgConfigPath)
-	content, err := os.ReadFile(pkgConfigPath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	cfg := &config{localConfigPath: configPath}
-	return buildConfig(cfg, pkg, rootDir, string(content))
-}
-
 func buildConfig(cfg *config, pkg, rootDir, content string) (*config, error) {
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
@@ -179,20 +139,4 @@ func createSymlink(root, filePath string) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func getFile(cfg *config, contentPath string) ([]byte, error) {
-	if cfg.localConfigPath != "" {
-		return os.ReadFile(filepath.Join(cfg.localConfigPath, contentPath))
-	}
-	confURL, err := url.JoinPath(baseConfigURL, contentPath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	resp, err := http.Get(confURL)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
 }
