@@ -20,10 +20,6 @@ jobs:
           yarn install
         working-directory: vscode-extension
       - name: publish
-        env:
-          VS_MARKETPLACE_TOKEN: ${{ secrets.VS_MARKETPLACE_TOKEN }}
         run: |
-          echo $VS_MARKETPLACE_TOKEN | vsce login jetpack-io
-          vsce package --yarn
-          vsce publish --yarn
+          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn
         working-directory: vscode-extension
