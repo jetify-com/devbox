@@ -55,6 +55,7 @@ func CreateFiles(pkg, rootDir string) error {
 		}
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
+			"UserRoot":             rootDir,
 			"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
 			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
 		}); err != nil {
