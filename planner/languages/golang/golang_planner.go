@@ -97,6 +97,9 @@ func parseGoVersion(gomodPath string) string {
 	if err != nil {
 		return ""
 	}
+	if parsed.Go == nil {
+		return ""
+	}
 	return parsed.Go.Version
 }
 
