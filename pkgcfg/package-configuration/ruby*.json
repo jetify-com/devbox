@@ -1,0 +1,9 @@
+{
+  "name": "ruby",
+  "version": "0.0.1",
+  "env": {
+    "RUBY_CONFDIR": "{{ .DevboxRoot }}/conf/ruby",
+    "GEMRC": "{{ .DevboxRoot }}/conf/ruby/.gemrc",
+    "GEM_HOME": "{{ .DevboxRoot }}/conf/ruby"
+  }
+}

@@ -40,7 +40,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.2.0
         with:
-          args: "--out-${NO_FUTURE}format colored-line-number"
+          args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
 
   test:
     strategy:

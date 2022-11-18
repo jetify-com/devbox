@@ -16,9 +16,6 @@ func TestWildcardMatch(t *testing.T) {
 	result = wildcardMatch("pkg*.json", "pkg12.json")
 	assert.True(t, result)
 
-	result = wildcardMatch("pkg*.json", "pkg.json")
-	assert.True(t, result)
-
 	result = wildcardMatch("pkg.json", "pkg.json")
 	assert.True(t, result)
 
