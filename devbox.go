@@ -240,7 +240,7 @@ func (d *Devbox) Shell() error {
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGCOnfigDir(filepath.Join(d.srcDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.srcDir, ".devbox/conf/bin")),
 		)
 	}
 
