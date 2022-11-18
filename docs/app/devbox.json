@@ -1,7 +1,7 @@
 {
   "packages": [
-    "nodejs-16_x",
-    "yarn"
+    "yarn",
+    "nodejs"
   ],
   "shell": {
     "init_hook": null
