@@ -135,7 +135,7 @@ func WithUserScript(name string, command string) ShellOption {
 	}
 }
 
-func WithPKGCOnfigDir(pkgConfigDir string) ShellOption {
+func WithPKGConfigDir(pkgConfigDir string) ShellOption {
 	return func(s *Shell) {
 		s.pkgConfigDir = pkgConfigDir
 	}
