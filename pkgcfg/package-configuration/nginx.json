@@ -1,0 +1,14 @@
+{
+  "name": "nginx",
+  "version": "0.0.1",
+  "readme": "To start nginx use command \"nginx\". nginx is configured to use .devbox/conf/nginx.conf. Use $NGINX_CONFDIR to change the configuration directory. Use $NGINX_LOGDIR to change the log directory. Use $NGINX_PIDDIR to change the pid directory. Use $NGINX_RUNDIR to change the run directory. Use $NGINX_SITESDIR to change the sites directory. Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user. Use $NGINX_GROUP to customize.",
+  "env": {
+    "NGINX_CONFDIR": "{{ .DevboxRoot }}/conf/nginx"
+  },
+  "create_files": {
+    ".devbox/conf/nginx/temp": "",
+    ".devbox/conf/nginx/nginx.conf": "nginx/nginx.conf",
+    ".devbox/conf/nginx/fastcgi.conf": "nginx/fastcgi.conf",
+    ".devbox/conf/nginx/bin/nginx": "nginx/nginx"
+  }
+}
