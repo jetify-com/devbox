@@ -45,11 +45,11 @@ func testShell(t *testing.T, testPath string) {
 		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 
-		// Just for tests, we make srcDir be a relative path so that the paths in plan.json
+		// Just for tests, we make configDir be a relative path so that the paths in plan.json
 		// of various test cases have relative paths. Absolute paths are a no-go because they'd
 		// be of the form `/Users/savil/...`, which are not generalized and cannot be checked in.
-		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
-		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
+		box.configDir, err = filepath.Rel(currentDir, box.configDir)
+		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.configDir, currentDir)
 
 		shellPlan, err := box.ShellPlan()
 		assert.NoError(err, "devbox shell plan should not fail")
@@ -87,11 +87,11 @@ func testBuild(t *testing.T, testPath string) {
 		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 
-		// Just for tests, we make srcDir be a relative path so that the paths in plan.json
+		// Just for tests, we make configDir be a relative path so that the paths in plan.json
 		// of various test cases have relative paths. Absolute paths are a no-go because they'd
 		// be of the form `/Users/savil/...`, which are not generalized and cannot be checked in.
-		box.srcDir, err = filepath.Rel(currentDir, box.srcDir)
-		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.srcDir, currentDir)
+		box.configDir, err = filepath.Rel(currentDir, box.configDir)
+		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.configDir, currentDir)
 
 		buildPlan, err := box.BuildPlan()
 		buildErrorExpectedFile := filepath.Join(baseDir, "build_error_expected")
