@@ -1,0 +1,3 @@
+echo "Starting nginx with command:"
+echo "{{ .DevboxProfileDefault }}/bin/nginx -p $NGINX_CONFDIR -c nginx.conf -e error.log -g \"pid nginx.pid;\""
+{{ .DevboxProfileDefault }}/bin/nginx -p $NGINX_CONFDIR -c nginx.conf -e error.log -g "pid nginx.pid;"
