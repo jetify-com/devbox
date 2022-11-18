@@ -37,6 +37,7 @@ const (
 type Shell struct {
 	name            name
 	binPath         string
+	configDir       string // path to where devbox.json config resides
 	pkgConfigDir    string
 	env             []string
 	userShellrcPath string
@@ -137,6 +138,12 @@ func WithUserScript(name string, command string) ShellOption {
 func WithPKGCOnfigDir(pkgConfigDir string) ShellOption {
 	return func(s *Shell) {
 		s.pkgConfigDir = pkgConfigDir
+	}
+}
+
+func WithConfigDir(configDir string) ShellOption {
+	return func(s *Shell) {
+		s.configDir = configDir
 	}
 }
 
@@ -305,6 +312,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	}
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
+		ConfigDir        string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -314,6 +322,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		ProfileBinDir    string
 		HistoryFile      string
 	}{
+		ConfigDir:        s.configDir,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
