@@ -6,7 +6,10 @@
   "shell": {
     "init_hook": [
       "source init-shell.sh"
-    ]
+    ],
+    "scripts": {
+      "cargo-run": "cargo run"
+    }
   },
   "nixpkgs": {
     "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"

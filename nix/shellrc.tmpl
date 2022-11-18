@@ -43,7 +43,13 @@ export PS1="(devbox) $PS1"
 
 # Begin Devbox User Hook
 
+# Switch to the directory where devbox.json config is
+workingDir=$(pwd)
+cd {{ .ConfigDir }}
+
 {{ .UserHook }}
+
+cd $workingDir
 
 # End Devbox User Hook
 
@@ -64,7 +70,12 @@ export PS1="(devbox) $PS1"
 {{- if .ScriptCommand }}
 
 function run_script {
+    workingDir=$(pwd)
+    cd {{ .ConfigDir }}
+
     {{  .ScriptCommand }}
+
+    cd $workingDir
 }
 
 {{- end }}

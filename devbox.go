@@ -54,6 +54,7 @@ func InitConfig(dir string) (created bool, err error) {
 type Devbox struct {
 	cfg *Config
 	// srcDir is the directory where the config file (devbox.json) resides
+	// TODO savil. Rename to configDir.
 	srcDir string
 	writer io.Writer
 }
@@ -228,6 +229,7 @@ func (d *Devbox) Shell() error {
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
+		nix.WithConfigDir(d.srcDir),
 	}
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
@@ -288,7 +290,9 @@ func (d *Devbox) RunScript(scriptName string) error {
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
-		nix.WithUserScript(scriptName, script.String()))
+		nix.WithUserScript(scriptName, script.String()),
+		nix.WithConfigDir(d.srcDir),
+	)
 
 	if err != nil {
 		fmt.Print(err)
