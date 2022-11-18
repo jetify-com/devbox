@@ -51,7 +51,13 @@ export PS1="(devbox) $PS1"
 
 # Begin Devbox User Hook
 
+# Switch to the directory where devbox.json config is
+workingDir=$(pwd)
+cd path/to/configDir
+
 echo "Hello from a devbox shell hook!"
+
+cd $workingDir
 
 # End Devbox User Hook
 
