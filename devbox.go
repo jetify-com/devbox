@@ -111,6 +111,13 @@ func (d *Devbox) Add(pkgs ...string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		for _, pkg := range pkgs {
+			if _, err := pkgcfg.PrintReadme(pkg, d.srcDir, d.writer); err != nil {
+				return err
+			}
+		}
+	}
 	return d.printPackageUpdateMessage(install, pkgs)
 }
 
@@ -335,6 +342,17 @@ func (d *Devbox) PrintShellEnv() error {
 	// to essentially a parsed shellrc.tmpl
 	fmt.Fprintf(d.writer, "export PATH=\"%s:$PATH\"", profileBinDir)
 	return nil
+}
+
+func (d *Devbox) Info(pkg string) error {
+	hasReadme, err := pkgcfg.PrintReadme(pkg, d.srcDir, d.writer)
+	if err != nil {
+		return err
+	}
+	if !hasReadme {
+		_, err = fmt.Fprintf(d.writer, "No info available for %s\n", pkg)
+	}
+	return errors.WithStack(err)
 }
 
 // saveCfg writes the config file to the devbox directory.

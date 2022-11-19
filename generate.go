@@ -52,7 +52,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
 		for _, pkg := range plan.DevPackages {
-			if err := pkgcfg.CreateFiles(pkg, rootPath); err != nil {
+			if err := pkgcfg.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
 				return err
 			}
 		}

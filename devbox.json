@@ -1,7 +1,10 @@
 {
   "packages": [
     "go_1_19",
-    "golangci-lint"
+    "golangci-lint",
+    "mariadb",
+    "nginx",
+    "postgresql"
   ],
   "shell": {
     "init_hook": "export \"GOROOT=$(go env GOROOT)\""

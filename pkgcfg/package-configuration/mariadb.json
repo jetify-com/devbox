@@ -1,6 +1,7 @@
 {
   "name": "mariadb",
   "version": "0.0.1",
+  "readme": "* This package creates shims and stores them in .devbox/conf/mariadb/bin\n* Use mysql_install_db to initialize data directory\n* Use mysqld to start the server",
   "env": {
     "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
     "MYSQL_HOME": "{{ .DevboxRoot }}/conf/mariadb/run",
