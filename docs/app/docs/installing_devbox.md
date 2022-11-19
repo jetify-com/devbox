@@ -5,10 +5,9 @@ sidebar_position: 2
 
 ## Prerequisities
 
-In addition to installing Devbox itself, you will need to install nix and docker since Devbox depends on them:
+Devbox requires `nix` to be installed.
 
-1. Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
-
+- Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
 
 ## Install Devbox
 

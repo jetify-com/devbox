@@ -52,13 +52,11 @@ Your application often needs the same set of dependencies when you are developin
 
 ## Installing Devbox
 
-In addition to installing Devbox itself, you will need to install `nix` and `docker` since Devbox depends on them:
+Devbox requires `nix` to be installed.
 
 1. Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
 
-2. Install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/). Note that docker is only needed if you want to create containers – the shell functionality works without it.
-
-3. Install Devbox:
+2. Install Devbox:
 
    ```sh
    curl -fsSL https://get.jetpack.io/devbox | bash
@@ -129,6 +127,8 @@ Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/qui
 ## Quickstart: Instant Docker Image
 
 Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
+
+For now, Devbox requires Docker. Support for alternatives like Podman is still experimental. If you don't yet have it, do install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/).
 
 1. Initialize your project with `devbox init` if you haven't already.
 
