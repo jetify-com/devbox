@@ -53,10 +53,9 @@ func InitConfig(dir string) (created bool, err error) {
 // Nix packages.
 type Devbox struct {
 	cfg *Config
-	// srcDir is the directory where the config file (devbox.json) resides
-	// TODO savil. Rename to configDir.
-	srcDir string
-	writer io.Writer
+	// configDir is the directory where the config file (devbox.json) resides
+	configDir string
+	writer    io.Writer
 }
 
 // Open opens a devbox by reading the config file in dir.
@@ -79,9 +78,9 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:    cfg,
-		srcDir: cfgDir,
-		writer: writer,
+		cfg:       cfg,
+		configDir: cfgDir,
+		writer:    writer,
 	}
 	return box, nil
 }
@@ -148,7 +147,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 func (d *Devbox) Build(flags *docker.BuildFlags) error {
 	defaultFlags := &docker.BuildFlags{
 		Name:           flags.Name,
-		DockerfilePath: filepath.Join(d.srcDir, ".devbox/gen", "Dockerfile"),
+		DockerfilePath: filepath.Join(d.configDir, ".devbox/gen", "Dockerfile"),
 	}
 	opts := append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, docker.WithFlags(flags))
 
@@ -156,14 +155,14 @@ func (d *Devbox) Build(flags *docker.BuildFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return docker.Build(d.srcDir, opts...)
+	return docker.Build(d.configDir, opts...)
 }
 
 // ShellPlan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.cfg.Packages
-	shellPlan := planner.GetShellPlan(d.srcDir, userDefinedPkgs)
+	shellPlan := planner.GetShellPlan(d.configDir, userDefinedPkgs)
 	shellPlan.DevPackages = userDefinedPkgs
 
 	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
@@ -179,7 +178,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 // shell environment.
 func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
 	userPlan := d.convertToBuildPlan()
-	buildPlan, err := planner.GetBuildPlan(d.srcDir, d.cfg.Packages)
+	buildPlan, err := planner.GetBuildPlan(d.configDir, d.cfg.Packages)
 	if err != nil {
 		return nil, err
 	}
@@ -223,24 +222,24 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
 
 	opts := []nix.ShellOption{
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
-		nix.WithConfigDir(d.srcDir),
+		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
+		nix.WithConfigDir(d.configDir),
 	}
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
-		env, err := pkgcfg.Env(plan.DevPackages, d.srcDir)
+		env, err := pkgcfg.Env(plan.DevPackages, d.configDir)
 		if err != nil {
 			return err
 		}
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.srcDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
 		)
 	}
 
@@ -250,7 +249,7 @@ func (d *Devbox) Shell() error {
 		shell = &nix.Shell{}
 	}
 
-	allPkgs := planner.GetShellPackageSuggestion(d.srcDir, d.cfg.Packages)
+	allPkgs := planner.GetShellPackageSuggestion(d.configDir, d.cfg.Packages)
 	pkgsToSuggest, _ := lo.Difference(allPkgs, d.cfg.Packages)
 	if len(pkgsToSuggest) > 0 {
 		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
@@ -280,7 +279,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
@@ -289,9 +288,9 @@ func (d *Devbox) RunScript(scriptName string) error {
 	shell, err := nix.DetectShell(
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.srcDir, shellHistoryFile)),
+		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
-		nix.WithConfigDir(d.srcDir),
+		nix.WithConfigDir(d.configDir),
 	)
 
 	if err != nil {
@@ -326,7 +325,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 	pathWithProfileBin := fmt.Sprintf("PATH=%s:$PATH", profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
-	nixDir := filepath.Join(d.srcDir, ".devbox/gen/shell.nix")
+	nixDir := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
 	return nix.Exec(nixDir, cmds)
 }
 
@@ -343,7 +342,7 @@ func (d *Devbox) PrintShellEnv() error {
 
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
-	cfgPath := filepath.Join(d.srcDir, configFilename)
+	cfgPath := filepath.Join(d.configDir, configFilename)
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
@@ -372,7 +371,7 @@ func (d *Devbox) generateShellFiles() error {
 	if err != nil {
 		return err
 	}
-	return generateForShell(d.srcDir, plan)
+	return generateForShell(d.configDir, plan)
 }
 
 func (d *Devbox) generateBuildFiles() error {
@@ -384,11 +383,11 @@ func (d *Devbox) generateBuildFiles() error {
 	if buildPlan.Warning() != nil {
 		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
 	}
-	return generateForBuild(d.srcDir, buildPlan)
+	return generateForBuild(d.configDir, buildPlan)
 }
 
 func (d *Devbox) profileDir() (string, error) {
-	absPath := filepath.Join(d.srcDir, nix.ProfilePath)
+	absPath := filepath.Join(d.configDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -472,7 +471,7 @@ func (d *Devbox) applyDevNixDerivation() error {
 	cmd := exec.Command("nix-env",
 		"--profile", profileDir,
 		"--install",
-		"-f", filepath.Join(d.srcDir, ".devbox/gen/development.nix"),
+		"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
 	)
 
 	debug.Log("Running command: %s\n", cmd.Args)
