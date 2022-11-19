@@ -17,7 +17,7 @@ type infoCmdFlags struct {
 }
 
 func InfoCmd() *cobra.Command {
-	flags := addCmdFlags{}
+	flags := infoCmdFlags{}
 
 	command := &cobra.Command{
 		Use:               "info <pkg>",
@@ -34,7 +34,7 @@ func InfoCmd() *cobra.Command {
 	return command
 }
 
-func infoCmdFunc(_ *cobra.Command, pkg string, flags addCmdFlags) error {
+func infoCmdFunc(_ *cobra.Command, pkg string, flags infoCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
