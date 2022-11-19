@@ -56,9 +56,7 @@ Devbox requires `nix` to be installed.
 
 1. Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
 
-2. Optionally, if you would like to build a container image, you will need Docker. Docker is not required for using the shell functionality. Install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/).
-
-3. Install Devbox:
+2. Install Devbox:
 
    ```sh
    curl -fsSL https://get.jetpack.io/devbox | bash
@@ -129,6 +127,8 @@ Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/qui
 ## Quickstart: Instant Docker Image
 
 Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
+
+For now, Devbox requires Docker. Support for alternatives like Podman is still experimental. If you don't yet have it, do install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/).
 
 1. Initialize your project with `devbox init` if you haven't already.
 
