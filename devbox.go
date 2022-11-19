@@ -113,7 +113,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
 		for _, pkg := range pkgs {
-			if _, err := pkgcfg.PrintReadme(pkg, d.srcDir, d.writer); err != nil {
+			if _, err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer); err != nil {
 				return err
 			}
 		}
@@ -348,7 +348,7 @@ func (d *Devbox) PrintShellEnv() error {
 }
 
 func (d *Devbox) Info(pkg string) error {
-	hasReadme, err := pkgcfg.PrintReadme(pkg, d.srcDir, d.writer)
+	hasReadme, err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer)
 	if err != nil {
 		return err
 	}
