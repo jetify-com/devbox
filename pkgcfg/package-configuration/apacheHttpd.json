@@ -1,0 +1,11 @@
+{
+  "name": "apache",
+  "version": "0.0.1",
+  "readme": "To start use \"apachectl start -f $HTTPD_CONFDIR/httpd.conf\".",
+  "env": {
+    "HTTPD_CONFDIR": "{{ .DevboxRoot }}/conf/apache"
+  },
+  "create_files": {
+    ".devbox/conf/apache/httpd.conf": "apache/httpd.conf"
+  }
+}
