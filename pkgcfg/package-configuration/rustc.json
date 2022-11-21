@@ -1,0 +1,5 @@
+{
+  "name": "rustc",
+  "version": "0.0.1",
+  "readme": "As an alternative to rustc you may add rustup to manage your rust versions.",
+}
