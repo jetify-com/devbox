@@ -1,0 +1,9 @@
+{
+  "name": "rustup",
+  "version": "0.0.1",
+  "readme": "If using this on macOS you may need to install `libiconv` as well",
+  "env": {
+    "RUSTUP_HOME": "{{ .DevboxRoot }}/conf/rust",
+    "LIBRARY_PATH": "{{ .DevboxRoot }}/nix/profile/default/lib"
+  }
+}
