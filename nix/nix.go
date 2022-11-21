@@ -30,6 +30,10 @@ type Info struct {
 	System  string
 }
 
+func (i *Info) String() string {
+	return fmt.Sprintf("%s-%s-%s", i.Name, i.Version, i.System)
+}
+
 func Exec(path string, command []string) error {
 	runCmd := strings.Join(command, " ")
 	cmd := exec.Command("nix-shell", path, "--run", runCmd)

@@ -3,6 +3,8 @@ package pkgcfg
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -20,10 +22,11 @@ type config struct {
 	Version         string            `json:"version"`
 	CreateFiles     map[string]string `json:"create_files"`
 	Env             map[string]string `json:"env"`
+	Readme          string            `json:"readme"`
 	localConfigPath string            `json:"-"`
 }
 
-func CreateFiles(pkg, rootDir string) error {
+func CreateFilesAndShowReadme(pkg, rootDir string) error {
 	cfg, err := get(pkg, rootDir)
 	if err != nil {
 		return err
@@ -140,4 +143,22 @@ func createSymlink(root, filePath string) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func PrintReadme(pkg, rootDir string, w io.Writer) error {
+	cfg, err := get(pkg, rootDir)
+	if err != nil {
+		return err
+	}
+	if cfg.Readme == "" {
+		return nil
+	}
+	_, err = fmt.Fprintf(
+		w,
+		"\n%s NOTES:\n\n%s\n\nto show these notes use `devbox info %s`\n\n",
+		cfg.Name,
+		cfg.Readme,
+		cfg.Name,
+	)
+	return errors.WithStack(err)
 }
