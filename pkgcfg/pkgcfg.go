@@ -145,13 +145,13 @@ func createSymlink(root, filePath string) error {
 	return nil
 }
 
-func PrintReadme(pkg, rootDir string, w io.Writer) (bool, error) {
+func PrintReadme(pkg, rootDir string, w io.Writer) error {
 	cfg, err := get(pkg, rootDir)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if cfg.Readme == "" {
-		return false, nil
+		return nil
 	}
 	_, err = fmt.Fprintf(
 		w,
@@ -160,5 +160,5 @@ func PrintReadme(pkg, rootDir string, w io.Writer) (bool, error) {
 		cfg.Readme,
 		cfg.Name,
 	)
-	return true, errors.WithStack(err)
+	return errors.WithStack(err)
 }
