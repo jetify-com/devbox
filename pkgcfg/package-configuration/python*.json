@@ -1,0 +1,5 @@
+{
+  "name": "python",
+  "version": "0.0.1",
+  "readme": "python on devbox works best when used with a virtual environment (vent, virtualenv, etc). For example with python3:\n\n> python -m venv .venv\n> source .venv/bin/activate\n\nPackage managers like poetry (https://python-poetry.org/) automatically create virtual environments for you."
+}
