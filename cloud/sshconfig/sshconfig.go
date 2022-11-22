@@ -1,3 +1,6 @@
+// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package sshconfig
 
 import (
@@ -105,7 +108,7 @@ func writeIncludeInGlobalConfig(home string, devboxSshConfigFilePath string) err
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	configContents := string(buf.Bytes())
+	configContents := buf.String()
 
 	// if the Include directive is present, then our work is done
 	if containsDevboxIncludeDirective(configContents) {

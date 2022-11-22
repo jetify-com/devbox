@@ -17,7 +17,10 @@ type Stepper struct {
 
 func Start(format string, a ...any) *Stepper {
 	spinner := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-	spinner.Color("magenta")
+	err := spinner.Color("magenta")
+	if err != nil {
+		panic(err)
+	}
 	spinner.Suffix = " " + fmt.Sprintf(format, a...)
 	spinner.Start()
 	return &Stepper{

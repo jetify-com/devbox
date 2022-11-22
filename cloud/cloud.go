@@ -63,7 +63,10 @@ func promptUsername() string {
 		Message: "What is your github username?",
 		Default: os.Getenv("USER"),
 	}
-	survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
+	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
+	if err != nil {
+		log.Fatal(err)
+	}
 	return username
 }
 
@@ -82,7 +85,10 @@ func getVirtualMachine(username string) string {
 		log.Fatal(err)
 	}
 	resp := &authResponse{}
-	json.Unmarshal(bytes, resp)
+	err = json.Unmarshal(bytes, resp)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return resp.VMHostname
 }

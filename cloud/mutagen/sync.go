@@ -1,3 +1,6 @@
+// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package mutagen
 
 import (
@@ -29,8 +32,9 @@ func Sync(spec *SessionSpec) (*Session, error) {
 		return nil, err
 	}
 	for _, session := range sessions {
-		Reset(session.Identifier)
-		Resume(session.Identifier)
+		// TODO: should we handle errors for Reset and Resume differently?
+		_ = Reset(session.Identifier)
+		_ = Resume(session.Identifier)
 	}
 	if len(sessions) > 0 {
 		return &sessions[0], nil
