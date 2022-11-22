@@ -27,6 +27,7 @@ func RootCmd() *cobra.Command {
 	}
 	command.AddCommand(AddCmd())
 	command.AddCommand(BuildCmd())
+	command.AddCommand(CloudCmd())
 	command.AddCommand(GenerateCmd())
 	command.AddCommand(InfoCmd())
 	command.AddCommand(InitCmd())
