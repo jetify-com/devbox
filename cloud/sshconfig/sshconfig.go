@@ -82,7 +82,7 @@ func writeConfigFile(dir string) (string, error) {
 	return filePath, errors.WithStack(err)
 }
 
-func writeIncludeInGlobalConfig(home string, devboxSshConfigFilePath string) error {
+func writeIncludeInGlobalConfig(home string, devboxSSHConfigFilePath string) error {
 
 	configFilePath := filepath.Join(home, ".ssh/config")
 
@@ -116,7 +116,7 @@ func writeIncludeInGlobalConfig(home string, devboxSshConfigFilePath string) err
 	}
 
 	// Set the Include directive
-	configContents = fmt.Sprintf("Include %s\n\n%s", devboxSshConfigFilePath, configContents)
+	configContents = fmt.Sprintf("Include %s\n\n%s", devboxSSHConfigFilePath, configContents)
 	err = os.WriteFile(configFilePath, []byte(configContents), 0644)
 	if err != nil {
 		return errors.WithStack(err)
