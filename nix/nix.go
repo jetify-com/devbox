@@ -4,12 +4,10 @@
 package nix
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -29,11 +27,10 @@ type Info struct {
 	NixName string
 	Name    string
 	Version string
-	System  string
 }
 
 func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s-%s", i.Name, i.Version, i.System)
+	return fmt.Sprintf("%s-%s", i.Name, i.Version)
 }
 
 func Exec(path string, command []string) error {
@@ -46,19 +43,22 @@ func Exec(path string, command []string) error {
 }
 
 func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
-	buf := new(bytes.Buffer)
 	exactPackage := fmt.Sprintf("nixpkgs/%s#%s", nixpkgsCommit, pkg)
-	cmd := exec.Command("nix", "search", "--json", exactPackage)
-	cmd.Args = appendExperimentalFeatures(cmd.Args, "nix-command", "flakes")
-	cmd.Stdout = buf
-	debug.Log("running command: %s\n", cmd.String())
-	err := cmd.Run()
+	if nixpkgsCommit == "" {
+		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
+	}
+
+	cmd := exec.Command("nix", "search",
+		"--extra-experimental-features", "nix-command flakes",
+		"--json", exactPackage)
+	cmd.Stderr = os.Stderr
+	debug.Log("running command: %s\n", cmd)
+	out, err := cmd.Output()
 	if err != nil {
-		// nix-env returns an error if the package name is invalid, for now assume
-		// all errors are invalid packages.
+		// for now, assume all errors are invalid packages.
 		return nil, false /* not found */
 	}
-	pkgInfo := parseInfo(pkg, buf.Bytes())
+	pkgInfo := parseInfo(pkg, out)
 	if pkgInfo == nil {
 		return nil, false /* not found */
 	}
@@ -71,35 +71,14 @@ func parseInfo(pkg string, data []byte) *Info {
 	if err != nil {
 		panic(err)
 	}
-	for nixpkgs, result := range results {
+	for _, result := range results {
 		pkgInfo := &Info{
 			NixName: pkg,
 			Name:    result["pname"].(string),
 			Version: result["version"].(string),
 		}
 
-		reLegacyPackages := regexp.MustCompile(fmt.Sprintf("legacyPackages\\.(.*)\\.%s", pkg))
-		if reLegacyPackages.Match([]byte(nixpkgs)) {
-			matches := reLegacyPackages.FindStringSubmatch(nixpkgs)
-
-			// we set 2 matches because the first match is for the whole string,
-			// and the second match is for the capturing group
-			if len(matches) != 2 {
-				msg := fmt.Sprintf("expected 1 system match in regexp for %s but got %d matches: %v", nixpkgs,
-					len(matches), matches)
-				panic(msg) // TODO savil. bubble up the error
-			}
-			pkgInfo.System = matches[1]
-		}
-
 		return pkgInfo
 	}
 	return nil
-}
-
-func appendExperimentalFeatures(args []string, features ...string) []string {
-	for _, f := range features {
-		args = append(args, "--extra-experimental-features", f)
-	}
-	return args
 }
