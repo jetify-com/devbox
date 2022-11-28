@@ -91,7 +91,7 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 func (d *Devbox) Add(pkgs ...string) error {
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok := nix.PkgExists(pkg)
+		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
 		if !ok {
 			return errors.Errorf("package %s not found", pkg)
 		}
@@ -348,7 +348,7 @@ func (d *Devbox) PrintShellEnv() error {
 }
 
 func (d *Devbox) Info(pkg string) error {
-	info, hasInfo := nix.PkgInfo(pkg)
+	info, hasInfo := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
 	if !hasInfo {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
