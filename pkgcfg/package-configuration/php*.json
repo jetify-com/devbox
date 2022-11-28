@@ -1,5 +1,5 @@
 {
   "name": "php",
   "version": "0.0.1",
-  "readme": "PHP is compiled with default extensions. If you would like to use non-default extensions you can use the following (nix) syntax in place of `php` in devbox.json:\n\n(php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ext1 ext2 ])))\n\nFor example, adding memcached and ds to php81 looks like:\n\n(php81.withExtensions ({ enabled, all }: enabled ++ (with all; [ memcached ds ])))"
+  "readme": "PHP is compiled with default extensions. If you would like to use non-default extensions you can add them them with `devbox add php81Extensions.memcached`"
 }

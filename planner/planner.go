@@ -60,6 +60,7 @@ var PLANNERS = []plansdk.Planner{
 	&ocaml.Planner{},
 	&perl.Planner{},
 	&php.Planner{},
+	&php.V2Planner{},
 	&python.PoetryPlanner{},
 	&python.PIPPlanner{},
 	&ruby.Planner{},
@@ -73,7 +74,7 @@ var PLANNERS = []plansdk.Planner{
 // contain one or more dev packages from a shell planner.
 func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 	result := &plansdk.ShellPlan{}
-	planners := getRelevantPlanners(srcDir)
+	planners := getRelevantPlanners(srcDir, userPkgs)
 	for _, p := range planners {
 		pkgs := p.GetShellPlan(srcDir).DevPackages
 		mutualPkgs := lo.Intersect(userPkgs, pkgs)
@@ -89,7 +90,7 @@ func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 // Return a merged shell plan from all planners.
 func GetShellPackageSuggestion(srcDir string, userPkgs []string) []string {
 	result := &plansdk.ShellPlan{}
-	planners := getRelevantPlanners(srcDir)
+	planners := getRelevantPlanners(srcDir, userPkgs)
 	for _, p := range planners {
 		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
 	}
@@ -102,7 +103,7 @@ func GetShellPackageSuggestion(srcDir string, userPkgs []string) []string {
 func GetBuildPlan(srcDir string, userPkgs []string) (*plansdk.BuildPlan, error) {
 	buildables := []*plansdk.BuildPlan{}
 	unbuildables := []*plansdk.BuildPlan{}
-	for _, p := range getRelevantPlanners(srcDir) {
+	for _, p := range getRelevantPlanners(srcDir, userPkgs) {
 		plan := p.GetBuildPlan(srcDir)
 		mutualPkgs := lo.Intersect(userPkgs, plan.DevPackages)
 		if len(mutualPkgs) > 0 {
@@ -137,10 +138,13 @@ func GetBuildPlan(srcDir string, userPkgs []string) (*plansdk.BuildPlan, error) 
 	return buildables[0], nil
 }
 
-func getRelevantPlanners(srcDir string) []plansdk.Planner {
+func getRelevantPlanners(srcDir string, userPkgs []string) []plansdk.Planner {
 	result := []plansdk.Planner{}
 	for _, planner := range PLANNERS {
-		if planner.IsRelevant(srcDir) {
+		if p, ok := planner.(plansdk.PlannerForPackages); ok &&
+			p.IsRelevantForPackages(userPkgs) {
+			result = append(result, planner)
+		} else if planner.IsRelevant(srcDir) {
 			result = append(result, planner)
 		}
 	}
