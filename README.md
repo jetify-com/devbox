@@ -6,13 +6,13 @@
 
 # Devbox
 
-### Instant, easy, and predictable shells and containers
+### Instant, easy, and predictable development environments
 
 [![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases) [![tests](https://github.com/jetpack-io/devbox/actions/workflows/release.yml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/release.yml?branch=main)
 
 ## What is it?
 
-[Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells and containers. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
+[Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells for development. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`).
 
@@ -42,13 +42,15 @@ Devbox can create isolated environments right on your laptop, without an extra-l
 
 Are you working on multiple projects, all of which need different versions of the same binary? Instead of attempting to install conflicting versions of the same binary on your laptop, create an isolated environment for each project, and use whatever version you want for each.
 
-### Instantly turn your application into a container
+### Take your environment with you
 
-Devbox analyzes your source code and instantly turns it into an OCI-compliant image that can be deployed to any cloud. The image is optimized for speed, size, security and caching ... and without needing to write a `Dockerfile`. And unlike [buildpacks](https://buildpacks.io/), it does it quickly.
-
-### Stop declaring dependencies twice
-
-Your application often needs the same set of dependencies when you are developing on your laptop, and when you're packaging it as a container ready to deploy to the cloud. Devbox's dev environments are _isomorphic_: meaning that we can turn them into both a local shell environment or a cloud-ready container, all without having to repeat yourself twice.
+Devbox's dev environments are _portable_. We make it possible to declare your
+environment exactly once, and use that single definition in several different ways, including:
++ A local shell created through `devbox shell`
++ A devcontainer you can use with VSCode
++ A Dockerfile so you can build a production image with the exact same tools you
+  used for development.
++ A remote development environment in the cloud that mirrors your local environment.
 
 ## Installing Devbox
 
@@ -124,52 +126,15 @@ In this quickstart we’ll create a development shell with specific tools instal
 
 Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/).
 
-## Quickstart: Instant Docker Image
-
-Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a docker image.
-
-For now, Devbox requires Docker. Support for alternatives like Podman is still experimental. If you don't yet have it, do install [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/).
-
-1. Initialize your project with `devbox init` if you haven't already.
-
-2. Build the image:
-
-   ```bash
-   devbox build
-   ```
-
-   The resulting image is named `devbox`.
-
-3. Tag the image with a more descriptive name:
-
-   ```bash
-   docker tag devbox my-image:v0.1
-   ```
-
-### Auto-detected languages/stacks
-
-Devbox currently detects the following languages/stacks:
-
-- Go
-- Python ([See notes](planner/languages/python/))
-- NodeJS
-- PHP
-- static nginx (Experimental - [see notes](planner/languages/nginx))
-
-Want more languages? [Ask for a new Language](https://github.com/jetpack-io/devbox/issues) or contribute one via a Pull Request.
-Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/#package-your-application-as-a-docker-image).
-
 ## Additional commands
 
 `devbox help` - see all commands
-
-`devbox plan` - see the configuration and steps Devbox will use to generate a container
 
 See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for the full list of commands.
 
 ## Join our Developer Community
 
-- Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/agbskCJXk2) – we have a #devbox channel dedicated to this project.
+- Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/jetpack-io) – we have a #devbox channel dedicated to this project.
 - File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
 - Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
