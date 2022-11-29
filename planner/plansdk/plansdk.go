@@ -82,6 +82,11 @@ type Planner interface {
 	GetShellPlan(srcDir string) *ShellPlan
 }
 
+type PlannerForPackages interface {
+	Planner
+	IsRelevantForPackages(packages []string) bool
+}
+
 // MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
 // and overlays is the union of the packages, definitions, and overlays of the input plans,
 // respectively.

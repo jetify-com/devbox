@@ -1,0 +1,6 @@
+{
+  "name": "php",
+  "version": "0.0.1",
+  "match": "^php[0-9]*$",
+  "readme": "PHP is compiled with default extensions. If you would like to use non-default extensions you can add them with devbox add php81Extensions.{extension} . For example, for the memcache extension you can do `devbox add php81Extensions.memcached`"
+}
