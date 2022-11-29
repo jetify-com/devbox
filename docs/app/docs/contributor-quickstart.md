@@ -6,6 +6,8 @@ sidebar_position: 3
 
 Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start a dev environment for their project by running `devbox shell`. 
 
+To learn more about how Devbox works, you can read our [introduction](index.md)
+
 This quickstart shows you how to install Devbox, and use it to start a development environment for a project that is configured to use Devbox via `devbox.json`
 
 ## Prerequisities
