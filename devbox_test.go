@@ -82,16 +82,3 @@ func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
-
-func getFileNames(paths []string) []string {
-	names := []string{}
-	for _, path := range paths {
-		if path == "." {
-			names = append(names, path)
-		} else {
-			names = append(names, filepath.Base(path))
-		}
-	}
-
-	return names
-}

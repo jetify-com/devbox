@@ -4,8 +4,6 @@
 package haskell
 
 import (
-	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
@@ -50,26 +48,4 @@ func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	return &plansdk.ShellPlan{
 		DevPackages: []string{"stack", "libiconv", "libffi", "binutils", "ghc"},
 	}
-}
-
-func getProject(srcDir string) (*Project, error) {
-
-	a, err := plansdk.NewAnalyzer(srcDir)
-	if err != nil {
-		// We should log that an error has occurred.
-		return nil, err
-	}
-	paths := a.GlobFiles(packageYaml)
-	if len(paths) < 1 {
-		return nil, errors.Errorf(
-			"expected to find a %s file in directory %s",
-			packageYaml,
-			srcDir,
-		)
-	}
-	projectFilePath := paths[0]
-
-	project := &Project{}
-	err = cuecfg.ParseFile(projectFilePath, &project)
-	return project, err
 }
