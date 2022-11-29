@@ -18,7 +18,7 @@ var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
 func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
-		Short: "Instant, easy, predictable shells and containers",
+		Short: "Instant, easy, predictable development environments",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
