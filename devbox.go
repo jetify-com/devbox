@@ -91,7 +91,7 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 func (d *Devbox) Add(pkgs ...string) error {
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok := nix.PkgExists(pkg)
+		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
 		if !ok {
 			return errors.Errorf("package %s not found", pkg)
 		}
@@ -113,7 +113,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
 		for _, pkg := range pkgs {
-			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer); err != nil {
+			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer, IsDevboxShellEnabled()); err != nil {
 				return err
 			}
 		}
@@ -348,7 +348,7 @@ func (d *Devbox) PrintShellEnv() error {
 }
 
 func (d *Devbox) Info(pkg string) error {
-	info, hasInfo := nix.PkgInfo(pkg)
+	info, hasInfo := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
 	if !hasInfo {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
@@ -356,7 +356,7 @@ func (d *Devbox) Info(pkg string) error {
 	if _, err := fmt.Fprintf(d.writer, "%s\n", info); err != nil {
 		return errors.WithStack(err)
 	}
-	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer)
+	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer, false /*showSourceEnv*/)
 }
 
 // saveCfg writes the config file to the devbox directory.

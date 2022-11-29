@@ -21,11 +21,19 @@ const sidebars = {
         type: 'doc',
         id: 'index'
     }, {
-        type: 'doc',
-        id: 'installing_devbox'
-    }, {
-        type: 'doc',
-        id: 'quickstart'
+        type: 'category',
+        label: 'Getting Started',
+        collapsed: false,
+        items: [{
+            type: 'doc',
+            id: 'installing_devbox'
+        }, {
+            type: 'doc',
+            id: 'quickstart'
+        }, {
+            type: 'doc',
+            id: 'contributor-quickstart'
+        }]
     }, {
         type: 'category',
         label: 'Guides',
