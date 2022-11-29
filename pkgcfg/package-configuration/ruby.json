@@ -1,6 +1,7 @@
 {
   "name": "ruby",
   "version": "0.0.1",
+  "match": "^ruby([0-9_]*[0-9]+)?$",
   "env": {
     "RUBY_CONFDIR": "{{ .DevboxRoot }}/conf/ruby",
     "GEMRC": "{{ .DevboxRoot }}/conf/ruby/.gemrc",

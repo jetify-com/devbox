@@ -113,7 +113,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
 		for _, pkg := range pkgs {
-			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer); err != nil {
+			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer, IsDevboxShellEnabled()); err != nil {
 				return err
 			}
 		}
@@ -356,7 +356,7 @@ func (d *Devbox) Info(pkg string) error {
 	if _, err := fmt.Fprintf(d.writer, "%s\n", info); err != nil {
 		return errors.WithStack(err)
 	}
-	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer)
+	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer, false /*showSourceEnv*/)
 }
 
 // saveCfg writes the config file to the devbox directory.

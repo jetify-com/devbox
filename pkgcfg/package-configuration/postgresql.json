@@ -1,6 +1,7 @@
 {
   "name": "postgresql",
   "version": "0.0.1",
+  "match": "^postgresql(_[0-9]+)?$",
   "readme": "To initialize the database run `initdb`.\nTo start the database run `pg_ctl -l .devbox/conf/postgresql/logfile start`.\nTo stop use `pg_ctl stop`.",
   "env": {
     "PGDATA": "{{ .DevboxRoot }}/conf/postgresql/data"
