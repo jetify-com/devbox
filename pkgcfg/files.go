@@ -36,7 +36,10 @@ func getConfig(pkg, rootDir string) (*config, error) {
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			if cfg.Match != "" && !regexp.MustCompile(cfg.Match).MatchString(pkg) {
+			// if match regex is set we use it to check. Otherwise we assume it's a
+			// perfect match
+			if (cfg.Match != "" && !regexp.MustCompile(cfg.Match).MatchString(pkg)) ||
+				(cfg.Match == "" && strings.Split(file.Name(), ".")[0] != pkg) {
 				continue
 			}
 			return cfg, nil
