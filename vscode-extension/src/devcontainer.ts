@@ -57,6 +57,7 @@ function getDockerfileContent(): String {
 	# Install nix
 	ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
 	RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
+    RUN . ~/.nix-profile/etc/profile.d/nix.sh
 	ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
 
 	# Install devbox
@@ -93,6 +94,7 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
                     // Add custom vscode settings for remote environment here
                 },
                 "extensions": [
+                    "jetpack-io.devbox"
                     // Add custom vscode extensions for remote environment here
                 ]
             }
