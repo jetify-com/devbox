@@ -5,7 +5,6 @@ package java
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,49 +70,6 @@ func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	}
 }
 
-func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
-	// Creating an empty plan so that we can communicate an error to the user
-	plan := &plansdk.BuildPlan{
-		DevPackages: []string{},
-	}
-
-	builderTool, err := p.packageManager(srcDir)
-	if err != nil {
-		return plan.WithError(err)
-	}
-
-	devPackages, err := p.devPackages(srcDir, builderTool)
-	if err != nil {
-		return plan.WithError(err)
-	}
-
-	startCommand, err := p.startCommand(srcDir, builderTool)
-	if err != nil {
-		return plan.WithError(err)
-	}
-
-	runtimePackages := p.runtimePackages(builderTool)
-	installCommand := p.installCommand(builderTool)
-	buildCommand := p.buildCommand()
-
-	return &plansdk.BuildPlan{
-		DevPackages:     devPackages,
-		RuntimePackages: runtimePackages,
-		InstallStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			Command:    installCommand,
-		},
-		BuildStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			Command:    buildCommand,
-		},
-		StartStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			Command:    startCommand,
-		},
-	}
-}
-
 func (p *Planner) packageManager(srcDir string) (string, error) {
 	pomXMLPath := filepath.Join(srcDir, mavenFileName)
 	buildGradlePath := filepath.Join(srcDir, gradleFileName)
@@ -146,47 +102,6 @@ func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, erro
 	}
 
 	return devPackagesMap[builderTool], nil
-}
-
-func (p *Planner) runtimePackages(builderTool string) []string {
-	return []string{
-		binUtils,
-	}
-}
-
-// This method is added because we plan to differentiate Gradle and Maven.
-// Otherwise, we could just assign the value without calling this.
-func (p *Planner) installCommand(builderTool string) string {
-	installCommandMap := map[string]string{
-		MavenType:  "mvn clean install",
-		GradleType: "./gradlew build",
-	}
-	return installCommandMap[builderTool]
-}
-
-func (p *Planner) buildCommand() string {
-	return "jlink --verbose" +
-		" --add-modules ALL-MODULE-PATH" +
-		" --strip-debug" +
-		" --no-man-pages" +
-		" --no-header-files" +
-		" --compress=2" +
-		" --output ./customjre"
-}
-
-func (p *Planner) startCommand(srcDir string, builderTool string) (string, error) {
-	if builderTool == MavenType {
-		pomXMLPath := fmt.Sprintf("%s/%s", srcDir, mavenFileName)
-		var parsedPom mvnparser.MavenProject
-		err := cuecfg.ParseFile(pomXMLPath, &parsedPom)
-		if err != nil {
-			return "", errors.WithMessage(err, "error parsing the pom file")
-		}
-		return fmt.Sprintf("./customjre/bin/java -jar target/%s-%s.jar", parsedPom.ArtifactId, parsedPom.Version), nil
-	} else if builderTool == GradleType {
-		return "export JAVA_HOME=./customjre && ./gradlew run", nil
-	}
-	return "", nil
 }
 
 func getJavaPackage(srcDir string, builderTool string) (string, error) {

@@ -61,19 +61,6 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 	return nil
 }
 
-func generateForBuild(rootPath string, plan *plansdk.BuildPlan) error {
-	outPath := filepath.Join(rootPath, ".devbox/gen")
-
-	for _, file := range buildFiles {
-		err := writeFromTemplate(outPath, plan, file)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	return nil
-}
-
 func writeFromTemplate(path string, plan interface{}, tmplName string) error {
 	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 

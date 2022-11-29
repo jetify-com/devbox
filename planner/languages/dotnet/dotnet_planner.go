@@ -58,67 +58,6 @@ func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	}
 }
 
-func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
-	plan, err := p.getBuildPlan(srcDir)
-	if err != nil {
-		plan = &plansdk.BuildPlan{}
-		plan.WithError(err)
-	}
-	return plan
-}
-
-func (p *Planner) getBuildPlan(srcDir string) (*plansdk.BuildPlan, error) {
-
-	proj, err := project(srcDir)
-	if err != nil {
-		return nil, err
-	}
-	dotNetPkg, err := dotNetNixPackage(proj)
-	if err != nil {
-		return nil, err
-	}
-
-	return &plansdk.BuildPlan{
-		DevPackages: []string{dotNetPkg},
-
-		// TODO replace dotNetPkg to reduce runtime image size
-		//
-		// Including dotNetPkg results in the image size being large (~700MB for csharp_10-dotnet_6 testdata project)
-		// To reduce size, I tried compiling a I tried compiling a "self-contained executable" as explained in
-		// https://docs.microsoft.com/en-us/dotnet/core/deploying/ by doing `dotnet publish -r <RID>`.
-		// This resulted in some errors:
-		// Error #1. An error for missing `libstdc++`. Adding nix pkg `libstdcxx5` didn't help.
-		// Adding `gcc` resolved it (but results in image size being 300MB)
-		// Error #2. An error for missing `libicu`. Adding nix pkg `icu` didn't help. TODO need to resolve this issue.
-		RuntimePackages: []string{dotNetPkg},
-
-		InstallStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			// --packages stores the downloaded packages in a local directory called nuget-packages
-			// Otherwise, the default location is ~/.nuget/packages,
-			// which is hard to copy over into StartStage
-			Command: "dotnet restore --packages nuget-packages",
-		},
-
-		BuildStage: &plansdk.Stage{
-
-			// TODO modify this command to reduce image size
-			//
-			// Useful references for improving this publish command to reduce image size:
-			// dotnet publish -r linux-x64 -p:PublishSingleFile:true
-			// - for dotnet publish options: https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish
-			// - for -r options: https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
-			// - for publishing a single file: https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli
-			Command: "dotnet publish -c Publish --no-restore",
-		},
-		StartStage: &plansdk.Stage{
-			InputFiles: []string{"."},
-			// TODO to invoke single-executable: ./bin/Debug/net6.0/linux-64/publish/<projectName>
-			Command: "dotnet run -c Publish --no-build",
-		},
-	}, nil
-}
-
 func project(srcDir string) (*Project, error) {
 	a, err := plansdk.NewAnalyzer(srcDir)
 	if err != nil {

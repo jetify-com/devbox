@@ -4,11 +4,7 @@
 package boxcli
 
 import (
-	"os"
-
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/docker"
 )
 
@@ -42,19 +38,4 @@ func BuildCmd() *cobra.Command {
 		&flags.docker.Tags, "tags", []string{}, "tags for the container")
 
 	return command
-}
-
-func buildCmdFunc(_ *cobra.Command, args []string, flags buildCmdFlags) error {
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
-	}
-
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return box.Build(&flags.docker)
 }

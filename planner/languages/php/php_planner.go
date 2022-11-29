@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
@@ -50,34 +49,6 @@ func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 		},
 		Definitions: p.definitions(srcDir, v),
 	}
-}
-
-func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
-	v := p.version(srcDir)
-	plan := &plansdk.BuildPlan{
-		DevPackages: []string{
-			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
-			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
-		},
-		RuntimePackages: []string{
-			fmt.Sprintf("php%s", v.MajorMinorConcatenated()),
-			fmt.Sprintf("php%sPackages.composer", v.MajorMinorConcatenated()),
-		},
-		Definitions: p.definitions(srcDir, v),
-	}
-	if !plansdk.FileExists(filepath.Join(srcDir, "public/index.php")) {
-		return plan.WithError(usererr.New("Can't build. No public/index.php found."))
-	}
-
-	plan.InstallStage = &plansdk.Stage{
-		InputFiles: []string{"."},
-		Command:    "composer install --no-dev --no-ansi",
-	}
-	plan.StartStage = &plansdk.Stage{
-		InputFiles: []string{"."},
-		Command:    "php -S 0.0.0.0:8080 -t public",
-	}
-	return plan
 }
 
 type composerPackages struct {
