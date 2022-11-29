@@ -137,6 +137,7 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for t
 - Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/jetpack-io) – we have a #devbox channel dedicated to this project.
 - File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
 - Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
+- Add the [Built with Devbox](https://www.jetpack.io/devbox/docs/quickstart/#add-the-devbox-badge-to-your-repo) badge to your repo, to help developers learn about Devbox.
 
 ## Contributing
 
