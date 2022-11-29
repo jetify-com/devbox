@@ -15,7 +15,7 @@ type V2Planner struct {
 	userPackages []string
 }
 
-// PHPV2Planner implements interface Planner (compile-time check)
+// PHPV2Planner implements interface PlannerForPackages (compile-time check)
 var _ plansdk.PlannerForPackages = (*V2Planner)(nil)
 
 func (p *V2Planner) Name() string {
