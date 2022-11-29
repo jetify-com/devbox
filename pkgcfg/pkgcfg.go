@@ -17,13 +17,12 @@ import (
 const confPath = ".devbox/conf"
 
 type config struct {
-	Name            string            `json:"name"`
-	Version         string            `json:"version"`
-	Match           string            `json:"match"`
-	CreateFiles     map[string]string `json:"create_files"`
-	Env             map[string]string `json:"env"`
-	Readme          string            `json:"readme"`
-	localConfigPath string            `json:"-"`
+	Name        string            `json:"name"`
+	Version     string            `json:"version"`
+	Match       string            `json:"match"`
+	CreateFiles map[string]string `json:"create_files"`
+	Env         map[string]string `json:"env"`
+	Readme      string            `json:"readme"`
 }
 
 func CreateFilesAndShowReadme(pkg, rootDir string) error {
@@ -48,7 +47,7 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}
 
 		debug.Log("Creating file %q", filePath)
-		content, err := getFileContent(cfg, contentPath)
+		content, err := getFileContent(contentPath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -177,7 +176,7 @@ func PrintReadme(pkg, rootDir string, w io.Writer, showSourceEnv bool) error {
 		cfg.Name,
 	)
 	if err != nil {
-		errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 	if showSourceEnv {
 		err = displaySourceEnvMessage(pkg, rootDir, w)

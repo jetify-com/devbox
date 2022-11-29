@@ -48,6 +48,6 @@ func getConfig(pkg, rootDir string) (*config, error) {
 	return &config{}, nil
 }
 
-func getFileContent(cfg *config, contentPath string) ([]byte, error) {
+func getFileContent(contentPath string) ([]byte, error) {
 	return packageConfiguration.ReadFile(filepath.Join(pkgCfgDir, contentPath))
 }
