@@ -165,6 +165,15 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	return shellPlan, nil
 }
 
+// Generate creates the directory of Nix files and the Dockerfile that define
+// the devbox environment.
+func (d *Devbox) Generate() error {
+	if err := d.generateShellFiles(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // Shell generates the devbox environment and launches nix-shell as a child
 // process.
 func (d *Devbox) Shell() error {

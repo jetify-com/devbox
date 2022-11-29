@@ -4,12 +4,7 @@
 package boxcli
 
 import (
-	"encoding/json"
-	"os"
-
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox"
 )
 
 type planCmdFlags struct {
@@ -20,46 +15,15 @@ func PlanCmd() *cobra.Command {
 	flags := planCmdFlags{}
 
 	command := &cobra.Command{
-		Use:   "plan",
-		Short: "Preview the plan used to build your environment",
-		Args:  cobra.MaximumNArgs(1),
+		Use:        "plan",
+		Short:      "Preview the plan used to build your environment",
+		Deprecated: "Please follow devbox documentation on how to build a container image around your devbox project.",
+		Args:       cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runPlanCmd(cmd, args, flags)
+			return nil
 		},
 	}
 
 	flags.config.register(command)
 	return command
-}
-
-func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
-	}
-
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	enc.SetEscapeHTML(false)
-
-	shellPlan, err := box.ShellPlan()
-	if err != nil {
-		return err
-	}
-
-	err = enc.Encode(shellPlan)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	buildPlan, err := box.BuildPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return errors.WithStack(enc.Encode(buildPlan))
 }
