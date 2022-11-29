@@ -1,5 +1,5 @@
 ---
-title: "Quickstart: Starting your Dev Environment with Devbox"
+title: "Starting a Dev Environment with Devbox"
 sidebar_position: 3
 ---
 ## Background
@@ -73,8 +73,8 @@ curl -fsSL https://get.jetpack.io/devbox | bash
 * **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
 
 ### Use Devbox with your IDE
-  * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-  * **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
 * **[Join our Discord Community](https://discord.gg/jetpack-io):** Chat with the development team and our growing community of Devbox users.
