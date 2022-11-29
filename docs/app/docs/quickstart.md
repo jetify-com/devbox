@@ -92,7 +92,7 @@ Once you publish your Devbox project to Github, you can help other developers ge
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
     <img
         src="https://jetpack.io/devbox/img/shield_galaxy.svg" 
-        alt="Built with Devbox 
+        alt="Built with Devbox"
     />
 </a>
 ```
@@ -102,7 +102,7 @@ Once you publish your Devbox project to Github, you can help other developers ge
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
     <img 
         src="https://jetpack.io/devbox/img/shield_moon.svg" 
-        alt="Built with Devbox 
+        alt="Built with Devbox" 
     />
 </a>
 ```
