@@ -1,11 +1,31 @@
 ---
-title: Quickstart
+title: "Quickstart: Adding Devbox to your Project"
 sidebar_position: 3
 ---
 
-## Create an isolated development shell
+## Background
 
-In this quickstart we’ll create a development shell with specific tools installed. These tools will only be available when using this Devbox shell, ensuring we don’t pollute your machine.
+Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start their dev environment by running `devbox shell` within your project. 
+
+This Quickstart shows you how to install Devbox and use it to create a new Development Environment for your project.
+
+## Prerequisities
+
+Devbox requires `nix` to be installed.
+
+- Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
+
+## Install Devbox
+
+Use the following install script to get the latest version of Devbox:
+
+```bash
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+## Create a development environment
+
+We’ll create a new development environment with the packages we need. These packages will only be available when using this Devbox shell, ensuring we don’t pollute your machine.
 
 1. Open a terminal in a new empty folder.
 
@@ -37,6 +57,10 @@ In this quickstart we’ll create a development shell with specific tools instal
     devbox shell
     ```
 
+    :::info
+    The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster. 
+    :::
+
     You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
 
 6. Use your favorite tools.
@@ -58,30 +82,42 @@ In this quickstart we’ll create a development shell with specific tools instal
     ```bash
     exit
     ```
+## Add the Devbox Badge to your Repo
 
-## Export your shell as a Docker Image
+Once you publish your Devbox project to Github, you can help other developers get started by adding the Devbox Badge to your repo. Please copy the code snippets below and paste them into your README.md to add the badge
 
-Devbox makes it easy to package your application into an OCI-compliant container image. Devbox analyzes your code, automatically identifies the right toolchain needed by your project, and builds it into a Docker image.
+![Devbox Dark Badge](../static/img/shield_galaxy.svg)
 
-:::info
+```html
+<a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
+    <img
+        src="https://jetpack.io/devbox/img/shield_galaxy.svg" 
+        alt="Built with Devbox"
+    />
+</a>
+```
 
-To export your shell as a container, you will need to have [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/get-started/) installed. 
+![Devbox Light Badge](../static/img/shield_moon.svg)
+```html
+<a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
+    <img 
+        src="https://jetpack.io/devbox/img/shield_moon.svg" 
+        alt="Built with Devbox" 
+    />
+</a>
+```
 
-Note that docker is only needed if you want to create containers – the shell functionality works without it.
-:::
+## Next Steps
 
-1. Initialize your project with `devbox init` if you haven't already.
+### Learn more about Devbox
+* **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
+* **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
+* **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
 
-2. Build the image:
+### Use Devbox with your IDE
+  * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
+  * **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
-    ```bash
-    devbox build
-    ```
-
-    The resulting image is named `devbox`.
-
-3. Tag the image with a more descriptive name:
-
-    ```bash
-    docker tag devbox my-image:v0.1
-    ```
+### Get Involved
+* **[Join our Discord Community](https://discord.gg/jetpack-io):** Chat with the development team and our growing community of Devbox users.
+* **[Visit us on Github](https://github.com/jetpack-io/devbox):** File issues and provide feedback, or even open a PR to contribute to Devbox or our Docs.
