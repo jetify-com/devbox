@@ -14,20 +14,19 @@ import (
 	"go.jetpack.io/devbox/nix"
 )
 
-const localPkgConfigPath = "DEVBOX_LOCAL_PKG_CONFIG"
 const confPath = ".devbox/conf"
 
 type config struct {
-	Name            string            `json:"name"`
-	Version         string            `json:"version"`
-	CreateFiles     map[string]string `json:"create_files"`
-	Env             map[string]string `json:"env"`
-	Readme          string            `json:"readme"`
-	localConfigPath string            `json:"-"`
+	Name        string            `json:"name"`
+	Version     string            `json:"version"`
+	Match       string            `json:"match"`
+	CreateFiles map[string]string `json:"create_files"`
+	Env         map[string]string `json:"env"`
+	Readme      string            `json:"readme"`
 }
 
 func CreateFilesAndShowReadme(pkg, rootDir string) error {
-	cfg, err := get(pkg, rootDir)
+	cfg, err := getConfig(pkg, rootDir)
 	if err != nil {
 		return err
 	}
@@ -48,7 +47,7 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}
 
 		debug.Log("Creating file %q", filePath)
-		content, err := getFile(cfg, contentPath)
+		content, err := getFileContent(contentPath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -71,13 +70,14 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 			return err
 		}
 	}
-	return nil
+	return createEnvFile(pkg, rootDir)
+
 }
 
 func Env(pkgs []string, rootDir string) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := get(pkg, rootDir)
+		cfg, err := getConfig(pkg, rootDir)
 		if err != nil {
 			return nil, err
 		}
@@ -88,12 +88,27 @@ func Env(pkgs []string, rootDir string) (map[string]string, error) {
 	return env, nil
 }
 
-func get(pkg, rootDir string) (*config, error) {
-	if configPath := os.Getenv(localPkgConfigPath); configPath != "" {
-		debug.Log("Using local package config at %q", configPath)
-		return getLocalConfig(configPath, pkg, rootDir)
+func createEnvFile(pkg, rootDir string) error {
+	envVars, err := Env([]string{pkg}, rootDir)
+	if err != nil {
+		return err
 	}
-	return getConfig(pkg, rootDir)
+	env := ""
+	for k, v := range envVars {
+		escaped, err := json.Marshal(v)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		env += fmt.Sprintf("export %s=%s\n", k, escaped)
+	}
+	filePath := filepath.Join(rootDir, ".devbox/conf/", pkg, "/env")
+	if err = createDir(filepath.Dir(filePath)); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filePath, []byte(env), 0644); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func buildConfig(cfg *config, pkg, rootDir, content string) (*config, error) {
@@ -145,8 +160,8 @@ func createSymlink(root, filePath string) error {
 	return nil
 }
 
-func PrintReadme(pkg, rootDir string, w io.Writer) error {
-	cfg, err := get(pkg, rootDir)
+func PrintReadme(pkg, rootDir string, w io.Writer, showSourceEnv bool) error {
+	cfg, err := getConfig(pkg, rootDir)
 	if err != nil {
 		return err
 	}
@@ -160,5 +175,26 @@ func PrintReadme(pkg, rootDir string, w io.Writer) error {
 		cfg.Readme,
 		cfg.Name,
 	)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if showSourceEnv {
+		err = displaySourceEnvMessage(pkg, rootDir, w)
+	}
+	return err
+}
+
+func displaySourceEnvMessage(pkg, rootDir string, w io.Writer) error {
+	env, err := Env([]string{pkg}, rootDir)
+	if err != nil {
+		return err
+	}
+	if len(env) > 0 {
+		_, err = fmt.Fprintf(
+			w,
+			"\nTo ensure environment is set, run `source .devbox/conf/%s/env`\n\n",
+			pkg,
+		)
+	}
 	return errors.WithStack(err)
 }
