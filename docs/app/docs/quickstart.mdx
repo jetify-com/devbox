@@ -1,11 +1,16 @@
 ---
-title: "Quickstart: Adding Devbox to your Project"
+title: "Adding Devbox to your Project"
 sidebar_position: 3
 ---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem';
 
 ## Background
 
 Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start their dev environment by running `devbox shell` within your project. 
+
+To learn more about how Devbox works, you can read our [introduction](index.md)
 
 This Quickstart shows you how to install Devbox and use it to create a new Development Environment for your project.
 
@@ -88,6 +93,16 @@ Once you publish your Devbox project to Github, you can help other developers ge
 
 ![Devbox Dark Badge](../static/img/shield_galaxy.svg)
 
+<Tabs>
+<TabItem value='md' label='Markdown'>
+
+```md
+[![Built with Devbox](https://jetpack.io/devbox/img/shield_galaxy.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+```
+
+</TabItem>
+<TabItem value='html' label='HTML'>
+
 ```html
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
     <img
@@ -95,9 +110,23 @@ Once you publish your Devbox project to Github, you can help other developers ge
         alt="Built with Devbox"
     />
 </a>
-```
+````
+
+</TabItem>
+</Tabs>
 
 ![Devbox Light Badge](../static/img/shield_moon.svg)
+
+<Tabs>
+<TabItem value='md' label='Markdown'>
+
+```md
+[![Built with Devbox](https://jetpack.io/devbox/img/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+```
+
+</TabItem>
+<TabItem value='html' label='HTML'>
+
 ```html
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
     <img 
@@ -107,6 +136,9 @@ Once you publish your Devbox project to Github, you can help other developers ge
 </a>
 ```
 
+</TabItem>
+</Tabs>
+
 ## Next Steps
 
 ### Learn more about Devbox
@@ -115,8 +147,8 @@ Once you publish your Devbox project to Github, you can help other developers ge
 * **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
 
 ### Use Devbox with your IDE
-  * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-  * **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
 * **[Join our Discord Community](https://discord.gg/jetpack-io):** Chat with the development team and our growing community of Devbox users.
