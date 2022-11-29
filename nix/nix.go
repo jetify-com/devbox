@@ -4,7 +4,6 @@
 package nix
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,14 +11,15 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/debug"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
 // Instead of using directory, prefer using the devbox.ProfilePath() function that ensures the directory exists.
 const ProfilePath = ".devbox/nix/profile/default"
 
-func PkgExists(pkg string) bool {
-	_, found := PkgInfo(pkg)
+func PkgExists(nixpkgsCommit, pkg string) bool {
+	_, found := PkgInfo(nixpkgsCommit, pkg)
 	return found
 }
 
@@ -27,11 +27,10 @@ type Info struct {
 	NixName string
 	Name    string
 	Version string
-	System  string
 }
 
 func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s-%s", i.Name, i.Version, i.System)
+	return fmt.Sprintf("%s-%s", i.Name, i.Version)
 }
 
 func Exec(path string, command []string) error {
@@ -43,18 +42,23 @@ func Exec(path string, command []string) error {
 	return errors.WithStack(cmd.Run())
 }
 
-func PkgInfo(pkg string) (*Info, bool) {
-	buf := new(bytes.Buffer)
-	attr := fmt.Sprintf("nixpkgs.%s", pkg)
-	cmd := exec.Command("nix-env", "--json", "-qa", "-A", attr)
-	cmd.Stdout = buf
-	err := cmd.Run()
+func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
+	exactPackage := fmt.Sprintf("nixpkgs/%s#%s", nixpkgsCommit, pkg)
+	if nixpkgsCommit == "" {
+		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
+	}
+
+	cmd := exec.Command("nix", "search",
+		"--extra-experimental-features", "nix-command flakes",
+		"--json", exactPackage)
+	cmd.Stderr = os.Stderr
+	debug.Log("running command: %s\n", cmd)
+	out, err := cmd.Output()
 	if err != nil {
-		// nix-env returns an error if the package name is invalid, for now assume
-		// all errors are invalid packages.
+		// for now, assume all errors are invalid packages.
 		return nil, false /* not found */
 	}
-	pkgInfo := parseInfo(pkg, buf.Bytes())
+	pkgInfo := parseInfo(pkg, out)
 	if pkgInfo == nil {
 		return nil, false /* not found */
 	}
@@ -72,8 +76,8 @@ func parseInfo(pkg string, data []byte) *Info {
 			NixName: pkg,
 			Name:    result["pname"].(string),
 			Version: result["version"].(string),
-			System:  result["system"].(string),
 		}
+
 		return pkgInfo
 	}
 	return nil
