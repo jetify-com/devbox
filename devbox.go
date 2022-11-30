@@ -144,7 +144,9 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
-		pkgcfg.Remove(d.configDir, uninstalledPackages)
+		if err := pkgcfg.Remove(d.configDir, uninstalledPackages); err != nil {
+			return err
+		}
 	}
 
 	if err := d.ensurePackagesAreInstalled(uninstall); err != nil {
@@ -453,7 +455,9 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	fmt.Println("done.")
 
 	if featureflag.Get(featureflag.PKGConfig).Enabled() {
-		pkgcfg.RemoveInvalidSymlinks(d.configDir)
+		if err := pkgcfg.RemoveInvalidSymlinks(d.configDir); err != nil {
+			return err
+		}
 	}
 
 	return nil
