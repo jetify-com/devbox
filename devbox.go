@@ -85,6 +85,10 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 	return box, nil
 }
 
+func (d *Devbox) ConfigDir() string {
+	return d.configDir
+}
+
 // Add adds a Nix package to the config so that it's available in the devbox
 // environment. It validates that the Nix package exists, but doesn't install
 // it. Adding a duplicate package is a no-op.
