@@ -1,4 +1,5 @@
-name: docs-preview
+name: docs-deploy-preview
+# Deploys a preview of the docs website using launchpad.
 
 on:
   push:
@@ -30,7 +31,7 @@ jobs:
           files: docs/app/docs
           config_file: docs/.markdownlint.yaml
 
-  deploy-to-preview:
+  docs-deploy-preview:
     runs-on: ubuntu-latest
     needs: markdown-lint
     steps:

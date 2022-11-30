@@ -1,4 +1,7 @@
-name: release-extension
+name: vscode-ext-release
+# Releases the Devbox VSCode extension to the marketplace
+
+concurrency: vscode-ext-release
 
 on: workflow_dispatch
 
