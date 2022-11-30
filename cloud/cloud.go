@@ -78,8 +78,7 @@ type authResponse struct {
 func getVirtualMachine(username string) string {
 	client := sshclient.Client{
 		Username: username,
-		// TODO: change gateway to prod by default before relesing.
-		Hostname: "gateway.dev.devbox.sh",
+		Hostname: "gateway.devbox.sh",
 	}
 	bytes, err := client.Exec("auth")
 	if err != nil {
