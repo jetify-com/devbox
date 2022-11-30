@@ -57,10 +57,10 @@ func runScriptCmd(args []string, flags runCmdFlags) error {
 	}
 
 	if devbox.IsDevboxShellEnabled() {
-		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox run again. Shell inception is not supported yet.")
+		err = box.RunScriptInShell(script)
+	} else {
+		err = box.RunScript(script)
 	}
-
-	err = box.RunScript(script)
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
