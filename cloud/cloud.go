@@ -95,7 +95,7 @@ func getVirtualMachine(username string) string {
 }
 
 func syncFiles(username string, hostname string, box *devbox.Devbox) error {
-	dirName := projectDirName(box.GetConfigDir())
+	dirName := projectDirName(box.ConfigDir())
 	debug.Log("Will sync files to directory: %s", dirName)
 
 	// TODO: instead of id, have the server return the machine's name and use that
@@ -105,7 +105,7 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
 		Name:        fmt.Sprintf("devbox-%s", id),
-		AlphaPath:   box.GetConfigDir(),
+		AlphaPath:   box.ConfigDir(),
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
 		// the projects files. If we pick a pre-existing directories with other files, those
@@ -132,7 +132,7 @@ func shell(username string, hostname string) error {
 
 const defaultProjectDirName = "DevboxProject"
 
-// Ideally, we'd pass in devbox.Devbox struct and call GetConfigDir but it
+// Ideally, we'd pass in devbox.Devbox struct and call ConfigDir but it
 // makes it hard to wrap this in a test
 func projectDirName(configDir string) string {
 	name := filepath.Base(configDir)

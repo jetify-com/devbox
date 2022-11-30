@@ -85,7 +85,7 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 	return box, nil
 }
 
-func (d *Devbox) GetConfigDir() string {
+func (d *Devbox) ConfigDir() string {
 	return d.configDir
 }
 
