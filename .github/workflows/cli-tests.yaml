@@ -1,4 +1,5 @@
-name: tests
+name: cli-tests
+# Runs the Devbox CLI tests
 
 concurrency:
   group: ${{ github.ref }}

@@ -1,6 +1,7 @@
-name: release
+name: cli-release
+# Releases the Devbox CLI
 
-concurrency: deployment
+concurrency: cli-release
 
 on:
   # Build/Release on demand
@@ -23,7 +24,7 @@ permissions:
 
 jobs:
   tests:
-    uses: ./.github/workflows/tests.yaml
+    uses: ./.github/workflows/cli-tests.yaml
 
   prerelease:
     runs-on: ubuntu-latest

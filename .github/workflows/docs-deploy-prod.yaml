@@ -1,6 +1,7 @@
-name: docs-deployment
+name: docs-deploy-prod
+# Deploys the prod version of the docs website.
 
-concurrency: deployment
+concurrency: docs-deployment
 
 on:
   workflow_dispatch:
