@@ -143,6 +143,10 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		pkgcfg.Remove(d.configDir, uninstalledPackages)
+	}
+
 	if err := d.ensurePackagesAreInstalled(uninstall); err != nil {
 		return err
 	}
@@ -423,11 +427,11 @@ func (d *Devbox) profileBinDir() (string, error) {
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
-type installMode string
+type installMode int
 
 const (
-	install   installMode = "install"
-	uninstall installMode = "uninstall"
+	install   installMode = iota
+	uninstall installMode = iota
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
@@ -447,6 +451,10 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		return errors.Wrap(err, "apply Nix derivation")
 	}
 	fmt.Println("done.")
+
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		pkgcfg.RemoveInvalidSymlinks(d.configDir)
+	}
 
 	return nil
 }
