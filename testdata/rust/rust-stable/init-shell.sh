@@ -1,8 +1,6 @@
+#!/usr/bin/env bash
 
-# TODO this only works when devbox shell is started in this directory. Using
-# the --config flag to start the shell will break this.
-# We could inject $JETPACK_CONFIG env-var into the shell environment to replace this.
-projectDir=$(dirname $(readlink -f "$0"))
+projectDir=$(dirname $(readlink -f "${BASH_SOURCE:-$0}"))
 echo "project dir is $projectDir"
 
 rustupHomeDir="$projectDir"/.rustup
