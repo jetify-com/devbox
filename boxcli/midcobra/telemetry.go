@@ -15,6 +15,7 @@ import (
 	"github.com/denisbrodbeck/machineid"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox"
 )
 
 // We collect some light telemetry to be able to improve devbox over time.
@@ -85,6 +86,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		DeviceID:    deviceID(),
 		Duration:    time.Since(m.startTime),
 		Failed:      runErr != nil,
+		Packages:    getPackages(cmd),
 	})
 }
 
@@ -103,6 +105,26 @@ func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, suba
 	return subcmd, subargs, err
 }
 
+func getPackages(c *cobra.Command) []string {
+	configFlag := c.Flag("config")
+	// for shell, run, and add command, path can be set via --config
+	// if --config is not set, default to current directory which is ""
+	// the only exception is the init command, for the path can be set with args
+	// since after running init there will be no packages set in devbox.json
+	// we can safely ignore this case.
+	var path string
+	if configFlag != nil {
+		path = configFlag.Value.String()
+	}
+
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return []string{}
+	}
+
+	return box.Config().Packages
+}
+
 type event struct {
 	AppName     string
 	AppVersion  string
@@ -111,6 +133,7 @@ type event struct {
 	DeviceID    string
 	Duration    time.Duration
 	Failed      bool
+	Packages    []string
 }
 
 func trackEvent(client segment.Client, evt *event) {
@@ -133,6 +156,7 @@ func trackEvent(client segment.Client, evt *event) {
 			Set("command", evt.Command).
 			Set("command_args", evt.CommandArgs).
 			Set("failed", evt.Failed).
-			Set("duration", evt.Duration.Milliseconds()),
+			Set("duration", evt.Duration.Milliseconds()).
+			Set("packages", evt.Packages),
 	})
 }
