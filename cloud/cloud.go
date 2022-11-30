@@ -95,8 +95,8 @@ func getVirtualMachine(username string) string {
 }
 
 func syncFiles(username string, hostname string, box *devbox.Devbox) error {
-	dirName := projectDirName(box.ConfigDir())
-	debug.Log("Will sync files to directory: ~/%s", dirName)
+	projectName := projectDirName(box.ConfigDir())
+	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
@@ -111,7 +111,7 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath:  "~/Code/", // Use ~/{dirName}, where dirName is the variable above
+		BetaPath:  "~/Code/", // TODO Use ~/code/{projectName}
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
 	})
