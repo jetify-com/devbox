@@ -14,15 +14,19 @@ type feature struct {
 
 var features = map[string]*feature{}
 
-func disabled(name string) {
-	features[name] = &feature{name: name}
+func disabled(name string) *feature {
+	if features[name] == nil {
+		features[name] = &feature{name: name}
+	}
+	features[name].enabled = false
+	return features[name]
 }
 
-func enabled(name string) {
-	features[name] = &feature{name: name, enabled: true}
-}
-
-func Get(name string) *feature {
+func enabled(name string) *feature {
+	if features[name] == nil {
+		features[name] = &feature{name: name}
+	}
+	features[name].enabled = true
 	return features[name]
 }
 
