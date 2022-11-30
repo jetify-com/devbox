@@ -147,6 +147,12 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		if err := pkgcfg.Remove(d.configDir, uninstalledPackages); err != nil {
+			return err
+		}
+	}
+
 	if err := d.ensurePackagesAreInstalled(uninstall); err != nil {
 		return err
 	}
@@ -451,6 +457,12 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		return errors.Wrap(err, "apply Nix derivation")
 	}
 	fmt.Println("done.")
+
+	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+		if err := pkgcfg.RemoveInvalidSymlinks(d.configDir); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

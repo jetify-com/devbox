@@ -101,7 +101,7 @@ func createEnvFile(pkg, rootDir string) error {
 		}
 		env += fmt.Sprintf("export %s=%s\n", k, escaped)
 	}
-	filePath := filepath.Join(rootDir, ".devbox/conf/", pkg, "/env")
+	filePath := filepath.Join(rootDir, confPath, pkg, "/env")
 	if err = createDir(filepath.Dir(filePath)); err != nil {
 		return err
 	}
@@ -192,7 +192,8 @@ func displaySourceEnvMessage(pkg, rootDir string, w io.Writer) error {
 	if len(env) > 0 {
 		_, err = fmt.Fprintf(
 			w,
-			"\nTo ensure environment is set, run `source .devbox/conf/%s/env`\n\n",
+			"\nTo ensure environment is set, run `source %s/%s/env`\n\n",
+			confPath,
 			pkg,
 		)
 	}
