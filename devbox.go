@@ -429,11 +429,11 @@ func (d *Devbox) profileBinDir() (string, error) {
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
-type installMode int
+type installMode string
 
 const (
-	install   installMode = iota
-	uninstall installMode = iota
+	install   installMode = "install"
+	uninstall installMode = "uninstall"
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
