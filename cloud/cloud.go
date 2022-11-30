@@ -49,7 +49,7 @@ func Shell(box *devbox.Devbox) error {
 
 	fmt.Print("\n")
 
-	return shell(username, vmHostname)
+	return shell(username, vmHostname, box)
 }
 
 func setupSSHConfig() {
@@ -116,7 +116,7 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath:  "~/Code/", // TODO Use ~/code/{projectName}
+		BetaPath:  fmt.Sprintf("~/code/%s", projectName),
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
 	})
@@ -127,15 +127,16 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 	return nil
 }
 
-func shell(username string, hostname string) error {
+func shell(username string, hostname string, box *devbox.Devbox) error {
 	client := &sshclient.Client{
-		Username: username,
-		Hostname: hostname,
+		Username:       username,
+		Hostname:       hostname,
+		ProjectDirName: projectDirName(box.ConfigDir()),
 	}
 	return client.Shell()
 }
 
-const defaultProjectDirName = "DevboxProject"
+const defaultProjectDirName = "devbox_project"
 
 // Ideally, we'd pass in devbox.Devbox struct and call ConfigDir but it
 // makes it hard to wrap this in a test

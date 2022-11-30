@@ -2,15 +2,17 @@ package sshclient
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 )
 
 type Client struct {
-	Username string
-	Hostname string
-	Port     int
+	Username       string
+	Hostname       string
+	Port           int
+	ProjectDirName string
 }
 
 func (c *Client) Shell() error {
@@ -38,7 +40,9 @@ func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 }
 
 func (c *Client) cmd() *exec.Cmd {
-	cmd := exec.Command("ssh", destination(c.Username, c.Hostname))
+
+	remoteCmd := fmt.Sprintf("bash -l -c \"start_devbox_shell.sh %s\"", c.ProjectDirName)
+	cmd := exec.Command("ssh", "-t", destination(c.Username, c.Hostname), remoteCmd)
 
 	// Add any necessary flags:
 	if c.Port != 0 {
