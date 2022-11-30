@@ -76,9 +76,15 @@ type authResponse struct {
 }
 
 func getVirtualMachine(username string) string {
+	// When developing we can use this env variable to point
+	// to a different gateway
+	hostname := os.Getenv("DEVBOX_GATEWAY")
+	if hostname == "" {
+		hostname = "gateway.devbox.sh"
+	}
 	client := sshclient.Client{
 		Username: username,
-		Hostname: "gateway.devbox.sh",
+		Hostname: hostname,
 	}
 	bytes, err := client.Exec("auth")
 	if err != nil {
