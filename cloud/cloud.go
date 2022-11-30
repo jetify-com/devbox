@@ -34,6 +34,7 @@ func Shell(box *devbox.Devbox) error {
 	s1 := stepper.Start("Creating a virtual machine on the cloud...")
 	vmHostname := getVirtualMachine(username)
 	s1.Success("Created virtual machine")
+	debug.Log("vmHostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
 	err := syncFiles(username, vmHostname, box)
@@ -90,6 +91,7 @@ func getVirtualMachine(username string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
+	debug.Log("gateway.devbox.sh auth response: %s", string(bytes))
 	resp := &authResponse{}
 	err = json.Unmarshal(bytes, resp)
 	if err != nil {

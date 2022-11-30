@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 type Client struct {
@@ -17,6 +19,7 @@ type Client struct {
 
 func (c *Client) Shell() error {
 	cmd := c.cmd()
+	debug.Log("running command: %s", cmd)
 
 	// Setup stdin, stdout, stderr
 	cmd.Stdin = os.Stdin
