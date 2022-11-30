@@ -40,11 +40,10 @@ const (
 func InitConfig(dir string) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
-	config := &Config{}
-	if featureflag.Get(featureflag.NixpkgVersion).Enabled() {
-		config.Nixpkgs = NixpkgsConfig{
+	config := &Config{
+		Nixpkgs: NixpkgsConfig{
 			Commit: plansdk.DefaultNixpkgsCommit,
-		}
+		},
 	}
 	return cuecfg.InitFile(cfgPath, config)
 }
@@ -115,7 +114,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+	if featureflag.PKGConfig.Enabled() {
 		for _, pkg := range pkgs {
 			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer, IsDevboxShellEnabled()); err != nil {
 				return err
@@ -147,7 +146,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+	if featureflag.PKGConfig.Enabled() {
 		if err := pkgcfg.Remove(d.configDir, uninstalledPackages); err != nil {
 			return err
 		}
@@ -248,7 +247,7 @@ func (d *Devbox) Shell() error {
 		nix.WithConfigDir(d.configDir),
 	}
 
-	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+	if featureflag.PKGConfig.Enabled() {
 		env, err := pkgcfg.Env(plan.DevPackages, d.configDir)
 		if err != nil {
 			return err
@@ -458,7 +457,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	}
 	fmt.Println("done.")
 
-	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+	if featureflag.PKGConfig.Enabled() {
 		if err := pkgcfg.RemoveInvalidSymlinks(d.configDir); err != nil {
 			return err
 		}

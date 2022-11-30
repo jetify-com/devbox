@@ -50,7 +50,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 		}
 	}
 
-	if featureflag.Get(featureflag.PKGConfig).Enabled() {
+	if featureflag.PKGConfig.Enabled() {
 		for _, pkg := range plan.DevPackages {
 			if err := pkgcfg.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
 				return err

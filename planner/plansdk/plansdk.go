@@ -10,7 +10,6 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/pkgslice"
 )
 
@@ -223,18 +222,6 @@ type NixpkgsInfo struct {
 const DefaultNixpkgsCommit = "af9e00071d0971eb292fd5abef334e66eda3cb69"
 
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
-
-	// If the featureflag is OFF, then we fallback to the hardcoded commit
-	// and ignore any value set in the devbox.json
-	if !featureflag.Get(featureflag.NixpkgVersion).Enabled() {
-		// sha256 from:
-		// nix-prefetch-url --unpack  https://github.com/nixos/nixpkgs/archive/<commit-hash>.tar.gz
-		return &NixpkgsInfo{
-			URL:    fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", DefaultNixpkgsCommit),
-			Sha256: "1mdwy0419m5i9ss6s5frbhgzgyccbwycxm5nal40c8486bai0hwy",
-		}, nil
-	}
-
 	return &NixpkgsInfo{
 		URL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
 	}, nil
