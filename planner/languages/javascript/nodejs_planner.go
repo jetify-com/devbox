@@ -83,6 +83,59 @@ var versionMap = map[string]string{
 }
 var defaultNodeJSPkg = "nodejs"
 
+func (p *Planner) nodePackage(project *nodeProject) string {
+	v := p.nodeVersion(project)
+	if v != nil {
+		pkg, ok := versionMap[v.Major()]
+		if ok {
+			return pkg
+		}
+	}
+
+	return defaultNodeJSPkg
+}
+
+func (p *Planner) nodeVersion(project *nodeProject) *plansdk.Version {
+	if p != nil {
+		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
+			return v
+		}
+	}
+
+	return nil
+}
+
+func (p *Planner) packageManager(srcDir string) string {
+	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
+	if plansdk.FileExists(yarnPkgLockPath) {
+		return "yarn"
+	}
+	return "npm"
+}
+
+func (p *Planner) packages(pkgManager string, project *nodeProject) []string {
+	nodeJSPkg := p.nodePackage(project)
+	pkgs := []string{nodeJSPkg}
+
+	if pkgManager == "yarn" {
+		return append(pkgs, "yarn")
+	}
+	return pkgs
+}
+
+func (p *Planner) nodeProject(srcDir string) *nodeProject {
+	packageJSONPath := filepath.Join(srcDir, "package.json")
+	project := &nodeProject{}
+	_ = cuecfg.ParseFile(packageJSONPath, project)
+
+	return project
+}
+
+func (p *Planner) hasTypescriptConfig(srcDir string) bool {
+	tsPath := filepath.Join(srcDir, "tsconfig.json")
+	return plansdk.FileExists(tsPath)
+}
+
 func (p *Planner) inputFiles(srcDir string) []string {
 	inputFiles := []string{
 		"package.json",
@@ -135,57 +188,4 @@ func (p *Planner) startCommand(pkgManager string, project *nodeProject) string {
 	}
 
 	return fmt.Sprintf("%s start", pkgManager)
-}
-
-func (p *Planner) nodePackage(project *nodeProject) string {
-	v := p.nodeVersion(project)
-	if v != nil {
-		pkg, ok := versionMap[v.Major()]
-		if ok {
-			return pkg
-		}
-	}
-
-	return defaultNodeJSPkg
-}
-
-func (p *Planner) nodeVersion(project *nodeProject) *plansdk.Version {
-	if p != nil {
-		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
-			return v
-		}
-	}
-
-	return nil
-}
-
-func (p *Planner) packageManager(srcDir string) string {
-	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
-	if plansdk.FileExists(yarnPkgLockPath) {
-		return "yarn"
-	}
-	return "npm"
-}
-
-func (p *Planner) packages(pkgManager string, project *nodeProject) []string {
-	nodeJSPkg := p.nodePackage(project)
-	pkgs := []string{nodeJSPkg}
-
-	if pkgManager == "yarn" {
-		return append(pkgs, "yarn")
-	}
-	return pkgs
-}
-
-func (p *Planner) nodeProject(srcDir string) *nodeProject {
-	packageJSONPath := filepath.Join(srcDir, "package.json")
-	project := &nodeProject{}
-	_ = cuecfg.ParseFile(packageJSONPath, project)
-
-	return project
-}
-
-func (p *Planner) hasTypescriptConfig(srcDir string) bool {
-	tsPath := filepath.Join(srcDir, "tsconfig.json")
-	return plansdk.FileExists(tsPath)
 }

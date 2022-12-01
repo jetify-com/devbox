@@ -86,6 +86,45 @@ type PlannerForPackages interface {
 	IsRelevantForPackages(packages []string) bool
 }
 
+// MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
+// and overlays is the union of the packages, definitions, and overlays of the input plans,
+// respectively.
+func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
+	shellPlan := &ShellPlan{}
+	for _, p := range plans {
+		err := mergo.Merge(shellPlan, p, mergo.WithAppendSlice)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
+	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
+	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
+	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
+
+	return shellPlan, nil
+}
+
+// Error combines all errors into a single error. We use this instead of a
+// Error() string interface because some of the errors may be user errors, which
+// get formatted differently by some clients.
+func (p *BuildPlan) Error() error {
+	if len(p.Errors) == 0 {
+		return nil
+	}
+	combined := p.Errors[0].error
+	for _, err := range p.Errors[1:] {
+		combined = errors.Wrap(combined, err.Error())
+	}
+	return combined
+}
+
+func (p *BuildPlan) WithError(err error) *BuildPlan {
+	p.Errors = append(p.Errors, PlanError{err})
+	return p
+}
+
 func MergeUserBuildPlan(userPlan *BuildPlan, automatedPlan *BuildPlan) (*BuildPlan, error) {
 	automatedStages := []*Stage{automatedPlan.InstallStage, automatedPlan.BuildStage, automatedPlan.StartStage}
 	userStages := []*Stage{userPlan.InstallStage, userPlan.BuildStage, userPlan.StartStage}
@@ -124,45 +163,6 @@ func mergeUserStage(userStage *Stage, automatedStage *Stage) *Stage {
 		stage.Warning = nil
 	}
 	return stage
-}
-
-// MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
-// and overlays is the union of the packages, definitions, and overlays of the input plans,
-// respectively.
-func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
-	shellPlan := &ShellPlan{}
-	for _, p := range plans {
-		err := mergo.Merge(shellPlan, p, mergo.WithAppendSlice)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
-	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
-	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
-	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
-
-	return shellPlan, nil
-}
-
-// Error combines all errors into a single error. We use this instead of a
-// Error() string interface because some of the errors may be user errors, which
-// get formatted differently by some clients.
-func (p *BuildPlan) Error() error {
-	if len(p.Errors) == 0 {
-		return nil
-	}
-	combined := p.Errors[0].error
-	for _, err := range p.Errors[1:] {
-		combined = errors.Wrap(combined, err.Error())
-	}
-	return combined
-}
-
-func (p *BuildPlan) WithError(err error) *BuildPlan {
-	p.Errors = append(p.Errors, PlanError{err})
-	return p
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {
