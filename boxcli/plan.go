@@ -52,14 +52,5 @@ func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
 		return err
 	}
 
-	err = enc.Encode(shellPlan)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	buildPlan, err := box.BuildPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return errors.WithStack(enc.Encode(buildPlan))
+	return errors.WithStack(enc.Encode(shellPlan))
 }

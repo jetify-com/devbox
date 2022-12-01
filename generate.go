@@ -23,7 +23,6 @@ import (
 var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
-var buildFiles = []string{"development.nix", "runtime.nix", "Dockerfile", "Dockerfile.dockerignore"}
 
 func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
@@ -55,19 +54,6 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 			if err := pkgcfg.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
 				return err
 			}
-		}
-	}
-
-	return nil
-}
-
-func generateForBuild(rootPath string, plan *plansdk.BuildPlan) error {
-	outPath := filepath.Join(rootPath, ".devbox/gen")
-
-	for _, file := range buildFiles {
-		err := writeFromTemplate(outPath, plan, file)
-		if err != nil {
-			return errors.WithStack(err)
 		}
 	}
 
