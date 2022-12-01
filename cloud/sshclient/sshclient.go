@@ -2,19 +2,26 @@ package sshclient
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 type Client struct {
-	Username string
-	Hostname string
-	Port     int
+	Username       string
+	Hostname       string
+	Port           int
+	ProjectDirName string
 }
 
 func (c *Client) Shell() error {
-	cmd := c.cmd()
+	cmd := c.cmd("-t")
+	remoteCmd := fmt.Sprintf(`bash -l -c "start_devbox_shell.sh \"%s\""`, c.ProjectDirName)
+	cmd.Args = append(cmd.Args, remoteCmd)
+	debug.Log("running command: %s", cmd)
 
 	// Setup stdin, stdout, stderr
 	cmd.Stdin = os.Stdin
@@ -37,8 +44,10 @@ func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 	return bytes, err
 }
 
-func (c *Client) cmd() *exec.Cmd {
-	cmd := exec.Command("ssh", destination(c.Username, c.Hostname))
+func (c *Client) cmd(sshArgs ...string) *exec.Cmd {
+
+	cmd := exec.Command("ssh", sshArgs...)
+	cmd.Args = append(cmd.Args, destination(c.Username, c.Hostname))
 
 	// Add any necessary flags:
 	if c.Port != 0 {

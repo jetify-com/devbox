@@ -14,7 +14,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/cloud/mutagen"
 	"go.jetpack.io/devbox/cloud/sshclient"
 	"go.jetpack.io/devbox/cloud/sshconfig"
@@ -22,7 +21,7 @@ import (
 	"go.jetpack.io/devbox/debug"
 )
 
-func Shell(box *devbox.Devbox) error {
+func Shell(configDir string) error {
 	setupSSHConfig()
 
 	c := color.New(color.FgMagenta).Add(color.Bold)
@@ -30,13 +29,21 @@ func Shell(box *devbox.Devbox) error {
 	fmt.Println("Blazingly fast remote development that feels local")
 	fmt.Print("\n")
 
-	username := promptUsername()
-	s1 := stepper.Start("Creating a virtual machine on the cloud...")
-	vmHostname := getVirtualMachine(username)
-	s1.Success("Created virtual machine")
+	username, vmHostname := parseVMEnvVar()
+	if username == "" {
+		username = promptUsername()
+	}
+	debug.Log("username: %s", username)
+
+	if vmHostname == "" {
+		s1 := stepper.Start("Creating a virtual machine on the cloud...")
+		vmHostname = getVirtualMachine(username)
+		s1.Success("Created virtual machine")
+	}
+	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
-	err := syncFiles(username, vmHostname, box)
+	err := syncFiles(username, vmHostname, configDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
 		log.Fatal(err)
@@ -46,10 +53,9 @@ func Shell(box *devbox.Devbox) error {
 	s3 := stepper.Start("Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
 	s3.Stop("Connecting to virtual machine")
-
 	fmt.Print("\n")
 
-	return shell(username, vmHostname)
+	return shell(username, vmHostname, configDir)
 }
 
 func setupSSHConfig() {
@@ -90,6 +96,7 @@ func getVirtualMachine(username string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
+	debug.Log("gateway.devbox.sh auth response: %s", string(bytes))
 	resp := &authResponse{}
 	err = json.Unmarshal(bytes, resp)
 	if err != nil {
@@ -99,8 +106,8 @@ func getVirtualMachine(username string) string {
 	return resp.VMHostname
 }
 
-func syncFiles(username string, hostname string, box *devbox.Devbox) error {
-	projectName := projectDirName(box.ConfigDir())
+func syncFiles(username, hostname, configDir string) error {
+	projectName := projectDirName(configDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
 	// TODO: instead of id, have the server return the machine's name and use that
@@ -110,13 +117,13 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
 		Name:        fmt.Sprintf("devbox-%s", id),
-		AlphaPath:   box.ConfigDir(),
+		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath:  "~/Code/", // TODO Use ~/code/{projectName}
+		BetaPath:  fmt.Sprintf("~/code/%s", projectName),
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
 	})
@@ -127,15 +134,16 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 	return nil
 }
 
-func shell(username string, hostname string) error {
+func shell(username, hostname, configDir string) error {
 	client := &sshclient.Client{
-		Username: username,
-		Hostname: hostname,
+		Username:       username,
+		Hostname:       hostname,
+		ProjectDirName: projectDirName(configDir),
 	}
 	return client.Shell()
 }
 
-const defaultProjectDirName = "DevboxProject"
+const defaultProjectDirName = "devbox_project"
 
 // Ideally, we'd pass in devbox.Devbox struct and call ConfigDir but it
 // makes it hard to wrap this in a test
@@ -145,4 +153,23 @@ func projectDirName(configDir string) string {
 		return defaultProjectDirName
 	}
 	return name
+}
+
+func parseVMEnvVar() (username string, vmHostname string) {
+	vmEnvVar := os.Getenv("DEVBOX_VM")
+	if vmEnvVar == "" {
+		return "", ""
+	}
+	parts := strings.Split(vmEnvVar, "@")
+
+	// DEVBOX_VM = <hostname>
+	if len(parts) == 1 {
+		vmHostname = parts[0]
+		return
+	}
+
+	// DEVBOX_VM = <username>@<hostname>
+	username = parts[0]
+	vmHostname = parts[1]
+	return
 }

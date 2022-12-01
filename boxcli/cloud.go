@@ -49,5 +49,5 @@ func runCloudShellCmd(flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(box)
+	return cloud.Shell(box.ConfigDir())
 }
