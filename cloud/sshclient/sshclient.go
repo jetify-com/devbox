@@ -19,6 +19,9 @@ type Client struct {
 
 func (c *Client) Shell() error {
 	cmd := c.cmd()
+	remoteCmd := fmt.Sprintf("bash -l -c \"start_devbox_shell.sh %s 300\"",
+		c.ProjectDirName)
+	cmd.Args = append(cmd.Args, remoteCmd)
 	debug.Log("running command: %s", cmd)
 
 	// Setup stdin, stdout, stderr
@@ -44,8 +47,7 @@ func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 
 func (c *Client) cmd() *exec.Cmd {
 
-	remoteCmd := fmt.Sprintf("bash -l -c \"start_devbox_shell.sh %s\"", c.ProjectDirName)
-	cmd := exec.Command("ssh", "-t", destination(c.Username, c.Hostname), remoteCmd)
+	cmd := exec.Command("ssh", "-t", destination(c.Username, c.Hostname))
 
 	// Add any necessary flags:
 	if c.Port != 0 {

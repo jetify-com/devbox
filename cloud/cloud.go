@@ -31,10 +31,14 @@ func Shell(box *devbox.Devbox) error {
 	fmt.Print("\n")
 
 	username := promptUsername()
-	s1 := stepper.Start("Creating a virtual machine on the cloud...")
-	vmHostname := getVirtualMachine(username)
-	s1.Success("Created virtual machine")
-	debug.Log("vmHostname: %s", vmHostname)
+
+	vmHostname := os.Getenv("DEVBOX_VM")
+	if vmHostname == "" {
+		s1 := stepper.Start("Creating a virtual machine on the cloud...")
+		vmHostname = getVirtualMachine(username)
+		s1.Success("Created virtual machine")
+	}
+	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
 	err := syncFiles(username, vmHostname, box)
@@ -47,7 +51,6 @@ func Shell(box *devbox.Devbox) error {
 	s3 := stepper.Start("Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
 	s3.Stop("Connecting to virtual machine")
-
 	fmt.Print("\n")
 
 	return shell(username, vmHostname, box)
