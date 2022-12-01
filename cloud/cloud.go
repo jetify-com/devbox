@@ -29,7 +29,7 @@ func Shell(configDir string) error {
 	fmt.Println("Blazingly fast remote development that feels local")
 	fmt.Print("\n")
 
-	username, vmHostname := parseVmEnvVar()
+	username, vmHostname := parseVMEnvVar()
 	if username == "" {
 		username = promptUsername()
 	}
@@ -155,7 +155,7 @@ func projectDirName(configDir string) string {
 	return name
 }
 
-func parseVmEnvVar() (username string, vmHostname string) {
+func parseVMEnvVar() (username string, vmHostname string) {
 	vmEnvVar := os.Getenv("DEVBOX_VM")
 	if vmEnvVar == "" {
 		return "", ""
