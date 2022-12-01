@@ -1,0 +1,1 @@
+{{ .DevboxProfileDefault }}/bin/php-fpm -y {{ .DevboxRoot }}/conf/php/php-fpm.conf -p $PWD
