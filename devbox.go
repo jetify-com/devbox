@@ -304,7 +304,6 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 		shell = &nix.Shell{}
 	}
 
-	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.RunInShell()
 }
 

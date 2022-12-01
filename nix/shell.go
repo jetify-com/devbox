@@ -272,13 +272,13 @@ func (s *Shell) RunInShell() error {
 		// inside the devbox shell.
 		"__ETC_PROFILE_NIX_SOURCED=1",
 	)
-	debug.Log("Running nix-shell with environment: %v", env)
+	debug.Log("Running inside devbox shell with environment: %v", env)
 	cmd := exec.Command(s.execCommandInShell())
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	debug.Log("Executing command form inside devbox shell: %v", cmd.Args)
+	debug.Log("Executing command from inside devbox shell: %v", cmd.Args)
 	return errors.WithStack(cmd.Run())
 }
 
