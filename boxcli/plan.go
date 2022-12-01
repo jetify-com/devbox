@@ -20,9 +20,10 @@ func PlanCmd() *cobra.Command {
 	flags := planCmdFlags{}
 
 	command := &cobra.Command{
-		Use:   "plan",
-		Short: "Preview the plan used to build your environment",
-		Args:  cobra.MaximumNArgs(1),
+		Use:    "plan",
+		Hidden: true,
+		Short:  "Preview the plan used to build your environment",
+		Args:   cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPlanCmd(cmd, args, flags)
 		},
