@@ -4,10 +4,8 @@
 package boxcli
 
 import (
-	"fmt"
 	"path/filepath"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/boxcli/usererr"
 )
@@ -30,12 +28,13 @@ func configPathFromUser(args []string, flags *configFlags) (string, error) {
 	}
 
 	if len(args) > 0 {
-		fmt.Printf(
-			"%s devbox <command> <path> is deprecated, use devbox <command> --config <path> instead\n",
-			color.HiYellowString("Warning:"),
+		return "", usererr.New(
+			"devbox <command> <path> is deprecated, use devbox <command> --config <path> instead.",
 		)
 	}
-	return pathArg(args), nil
+
+	// current directory is ""
+	return "", nil
 }
 
 func pathArg(args []string) string {

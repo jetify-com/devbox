@@ -88,6 +88,10 @@ func (d *Devbox) ConfigDir() string {
 	return d.configDir
 }
 
+func (d *Devbox) Config() *Config {
+	return d.cfg
+}
+
 // Add adds a Nix package to the config so that it's available in the devbox
 // environment. It validates that the Nix package exists, but doesn't install
 // it. Adding a duplicate package is a no-op.
