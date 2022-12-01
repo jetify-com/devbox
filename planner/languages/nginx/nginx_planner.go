@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.jetpack.io/devbox/planner/plansdk"
 )
@@ -43,11 +44,41 @@ func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	}
 }
 
+func (p *Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
+	return &plansdk.BuildPlan{
+		DevPackages: []string{
+			"nginx",
+			"shell-nginx",
+		},
+		RuntimePackages: []string{
+			"nginx",
+		},
+		InstallStage: &plansdk.Stage{
+			InputFiles: plansdk.AllFiles(),
+		},
+		StartStage: &plansdk.Stage{
+			// Create user/group and directories
+			Command:    fmt.Sprintf(startCommand, p.buildConfig(srcDir)),
+			InputFiles: plansdk.AllFiles(),
+		},
+		Definitions: []string{
+			fmt.Sprintf(nginxShellStartScript, srcDir, p.shellConfig(srcDir)),
+		},
+	}
+}
+
 func (p *Planner) shellConfig(srcDir string) string {
 	if plansdk.FileExists(filepath.Join(srcDir, "shell-nginx.conf")) {
 		return "shell-nginx.conf"
 	}
 	return "nginx.conf"
+}
+
+func (p *Planner) buildConfig(srcDir string) string {
+	if plansdk.FileExists(filepath.Join(srcDir, "nginx.conf")) {
+		return "nginx.conf"
+	}
+	return "shell-nginx.conf"
 }
 
 const welcomeMessage = `
@@ -61,6 +92,17 @@ to your %s file to ensure the server can start in the nix shell.
 
 Use \"shell-nginx\" to start the server
 `
+
+var startCommand = strings.TrimSpace(`
+	addgroup --system --gid 101 nginx && \
+	adduser --system --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx && \
+	mkdir -p /var/cache/nginx/client_body && \
+	mkdir -p /var/log/nginx/ && \
+	PKG_PATH=$(readlink -f $(which nginx) | sed -r "s/\/bin\/nginx//g") && \
+	ln -s /app/%[1]s $PKG_PATH/conf/devbox-%[1]s && \
+	echo Starting nginx with command \"nginx -c conf/devbox-%[1]s -g 'daemon off;'\" && \
+	nginx -c conf/devbox-%[1]s -g 'daemon off;'
+`)
 
 const nginxShellStartScript = `
 shell-nginx = pkgs.writeShellScriptBin "shell-nginx" ''
