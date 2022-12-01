@@ -14,7 +14,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/cloud/mutagen"
 	"go.jetpack.io/devbox/cloud/sshclient"
 	"go.jetpack.io/devbox/cloud/sshconfig"
@@ -22,7 +21,7 @@ import (
 	"go.jetpack.io/devbox/debug"
 )
 
-func Shell(box *devbox.Devbox) error {
+func Shell(configDir string) error {
 	setupSSHConfig()
 
 	c := color.New(color.FgMagenta).Add(color.Bold)
@@ -41,7 +40,7 @@ func Shell(box *devbox.Devbox) error {
 	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
-	err := syncFiles(username, vmHostname, box)
+	err := syncFiles(username, vmHostname, configDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
 		log.Fatal(err)
@@ -53,7 +52,7 @@ func Shell(box *devbox.Devbox) error {
 	s3.Stop("Connecting to virtual machine")
 	fmt.Print("\n")
 
-	return shell(username, vmHostname, box)
+	return shell(username, vmHostname, configDir)
 }
 
 func setupSSHConfig() {
@@ -104,8 +103,8 @@ func getVirtualMachine(username string) string {
 	return resp.VMHostname
 }
 
-func syncFiles(username string, hostname string, box *devbox.Devbox) error {
-	projectName := projectDirName(box.ConfigDir())
+func syncFiles(username, hostname, configDir string) error {
+	projectName := projectDirName(configDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
 	// TODO: instead of id, have the server return the machine's name and use that
@@ -115,7 +114,7 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
 		Name:        fmt.Sprintf("devbox-%s", id),
-		AlphaPath:   box.ConfigDir(),
+		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
 		// the projects files. If we pick a pre-existing directories with other files, those
@@ -132,11 +131,11 @@ func syncFiles(username string, hostname string, box *devbox.Devbox) error {
 	return nil
 }
 
-func shell(username string, hostname string, box *devbox.Devbox) error {
+func shell(username, hostname, configDir string) error {
 	client := &sshclient.Client{
 		Username:       username,
 		Hostname:       hostname,
-		ProjectDirName: projectDirName(box.ConfigDir()),
+		ProjectDirName: projectDirName(configDir),
 	}
 	return client.Shell()
 }
