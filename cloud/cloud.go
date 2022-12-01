@@ -29,9 +29,12 @@ func Shell(configDir string) error {
 	fmt.Println("Blazingly fast remote development that feels local")
 	fmt.Print("\n")
 
-	username := promptUsername()
+	username, vmHostname := parseVmEnvVar()
+	if username == "" {
+		username = promptUsername()
+	}
+	debug.Log("username: %s", username)
 
-	vmHostname := os.Getenv("DEVBOX_VM")
 	if vmHostname == "" {
 		s1 := stepper.Start("Creating a virtual machine on the cloud...")
 		vmHostname = getVirtualMachine(username)
@@ -150,4 +153,23 @@ func projectDirName(configDir string) string {
 		return defaultProjectDirName
 	}
 	return name
+}
+
+func parseVmEnvVar() (username string, vmHostname string) {
+	vmEnvVar := os.Getenv("DEVBOX_VM")
+	if vmEnvVar == "" {
+		return "", ""
+	}
+	parts := strings.Split(vmEnvVar, "@")
+
+	// DEVBOX_VM = <hostname>
+	if len(parts) == 1 {
+		vmHostname = parts[0]
+		return
+	}
+
+	// DEVBOX_VM = <username>@<hostname>
+	username = parts[0]
+	vmHostname = parts[1]
+	return
 }
