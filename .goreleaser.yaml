@@ -11,6 +11,7 @@ builds:
       - -s -w -X go.jetpack.io/devbox/build.Commit={{.Commit}}
       - -s -w -X go.jetpack.io/devbox/build.CommitDate={{.CommitDate}}
       - -s -w -X go.jetpack.io/devbox/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
+      - -s -w -X go.jetpack.io/devbox/build.DataSourceName={{ .Env.DATA_SOURCE_NAME }}
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

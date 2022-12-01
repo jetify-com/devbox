@@ -6,5 +6,6 @@ var (
 	Commit     = "none"
 	CommitDate = "unknown"
 
-	TelemetryKey = "" // Disabled by default
+	DataSourceName = "" // Disabled by default
+	TelemetryKey   = "" // Disabled by default
 )
