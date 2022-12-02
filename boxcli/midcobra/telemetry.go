@@ -103,9 +103,14 @@ func initSentry(opts TelemetryOpts) {
 	sentrySyncTransport := sentry.NewHTTPSyncTransport()
 	sentrySyncTransport.Timeout = time.Second * 2
 	release := opts.AppName + "@" + opts.AppVersion
+	environment := "production"
+	if opts.AppVersion == "0.0.0-dev" {
+		environment = "development"
+	}
 
 	_ = sentry.Init(sentry.ClientOptions{
 		Dsn:              opts.SentryDSN,
+		Environment:      environment,
 		Release:          release,
 		Transport:        sentrySyncTransport,
 		TracesSampleRate: 1,
