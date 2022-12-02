@@ -33,15 +33,15 @@ func Telemetry(opts *TelemetryOpts) Middleware {
 
 	return &telemetryMiddleware{
 		opts:     *opts,
-		disabled: doNotTrack || opts.TelemetryKey == "" || opts.DataSourceName == "",
+		disabled: doNotTrack || opts.TelemetryKey == "" || opts.SentryDSN == "",
 	}
 }
 
 type TelemetryOpts struct {
-	AppName        string
-	AppVersion     string
-	DataSourceName string // used by error reporting
-	TelemetryKey   string
+	AppName      string
+	AppVersion   string
+	SentryDSN    string // used by error reporting
+	TelemetryKey string
 }
 type telemetryMiddleware struct {
 	// Setup:
@@ -105,7 +105,7 @@ func initSentry(opts TelemetryOpts) {
 	release := opts.AppName + "@" + opts.AppVersion
 
 	_ = sentry.Init(sentry.ClientOptions{
-		Dsn:              opts.DataSourceName,
+		Dsn:              opts.SentryDSN,
 		Release:          release,
 		Transport:        sentrySyncTransport,
 		TracesSampleRate: 1,

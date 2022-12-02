@@ -47,10 +47,10 @@ func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
 	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
-		AppName:        "devbox",
-		AppVersion:     build.Version,
-		DataSourceName: build.DataSourceName,
-		TelemetryKey:   build.TelemetryKey,
+		AppName:      "devbox",
+		AppVersion:   build.Version,
+		SentryDSN:    build.SentryDSN,
+		TelemetryKey: build.TelemetryKey,
 	}))
 	exe.AddMiddleware(debugMiddleware)
 	return exe.Execute(ctx, args)
