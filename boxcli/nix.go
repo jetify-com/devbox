@@ -9,7 +9,6 @@ import (
 )
 
 func NixCmd() *cobra.Command {
-	flags := removeCmdFlags{}
 	nixCommand := &cobra.Command{
 		Use:    "nix",
 		Short:  "Commands that interface with Nix",
@@ -20,7 +19,7 @@ func NixCmd() *cobra.Command {
 		Use:   "install",
 		Short: "Installs Nix",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInstallNixCmd(cmd, args, flags)
+			return runInstallNixCmd()
 		},
 	}
 
@@ -28,6 +27,6 @@ func NixCmd() *cobra.Command {
 	return nixCommand
 }
 
-func runInstallNixCmd(_ *cobra.Command, args []string, flags removeCmdFlags) error {
+func runInstallNixCmd() error {
 	return nix.Install()
 }
