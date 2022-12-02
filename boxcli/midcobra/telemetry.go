@@ -17,7 +17,6 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/boxcli/redactederr"
 )
 
 // We collect some light telemetry to be able to improve devbox over time.
@@ -84,8 +83,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	var sentryEventID string
 	if runErr != nil {
 		defer sentry.Flush(2 * time.Second)
-		sentryErr := redactederr.New(runErr)
-		sentryEventID = string(*sentry.CaptureException(sentryErr))
+		sentryEventID = string(*sentry.CaptureException(runErr))
 	}
 
 	trackEvent(segmentClient, &event{
@@ -111,6 +109,13 @@ func initSentry(opts TelemetryOpts) {
 		Release:          release,
 		Transport:        sentrySyncTransport,
 		TracesSampleRate: 1,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			for i := range event.Exception {
+				// edit in place and remove error message from tracking
+				event.Exception[i].Value = ""
+			}
+			return event
+		},
 	})
 }
 
