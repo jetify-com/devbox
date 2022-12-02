@@ -26,7 +26,6 @@ func TestDevbox(t *testing.T) {
 
 	for _, testPath := range testPaths {
 		testShell(t, testPath)
-		testBuild(t, testPath)
 	}
 }
 
@@ -72,55 +71,6 @@ func testShell(t *testing.T, testPath string) {
 	})
 }
 
-func testBuild(t *testing.T, testPath string) {
-
-	currentDir, err := os.Getwd()
-	require.New(t).NoError(err)
-
-	baseDir := filepath.Dir(testPath)
-	testName := fmt.Sprintf("%s_build_plan", baseDir)
-	t.Run(testName, func(t *testing.T) {
-		assert := assert.New(t)
-		buildPlanFile := filepath.Join(baseDir, "build_plan.json")
-		hasBuildPlanFile := fileExists(buildPlanFile)
-
-		box, err := Open(baseDir, os.Stdout)
-		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
-
-		// Just for tests, we make configDir be a relative path so that the paths in plan.json
-		// of various test cases have relative paths. Absolute paths are a no-go because they'd
-		// be of the form `/Users/savil/...`, which are not generalized and cannot be checked in.
-		box.configDir, err = filepath.Rel(currentDir, box.configDir)
-		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.configDir, currentDir)
-
-		buildPlan, err := box.BuildPlan()
-		buildErrorExpectedFile := filepath.Join(baseDir, "build_error_expected")
-		hasBuildErrorExpectedFile := fileExists(buildErrorExpectedFile)
-		if hasBuildErrorExpectedFile {
-			assert.NotNil(err)
-			// Since build error is expected, skip the rest of the test
-			return
-		}
-		assert.NoError(err, "devbox plan should not fail")
-
-		err = box.generateBuildFiles()
-		assert.NoError(err, "devbox generate should not fail")
-
-		if !hasBuildPlanFile {
-			assert.NotEmpty(buildPlan.DevPackages, "the plan should have dev packages")
-			return
-		}
-
-		data, err := os.ReadFile(buildPlanFile)
-		assert.NoError(err, "plan.json should be readable")
-
-		expected := &plansdk.BuildPlan{}
-		err = json.Unmarshal(data, &expected)
-		assert.NoError(err, "plan.json should parse correctly")
-		assertBuildPlansMatch(t, expected, buildPlan)
-	})
-}
-
 func assertShellPlansMatch(t *testing.T, expected *plansdk.ShellPlan, actual *plansdk.ShellPlan) {
 	assert := assert.New(t)
 
@@ -128,50 +78,7 @@ func assertShellPlansMatch(t *testing.T, expected *plansdk.ShellPlan, actual *pl
 	assert.ElementsMatch(expected.NixOverlays, actual.NixOverlays, "NixOverlays should match")
 }
 
-func assertBuildPlansMatch(t *testing.T, expected *plansdk.BuildPlan, actual *plansdk.BuildPlan) {
-	assert := assert.New(t)
-
-	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
-	assert.ElementsMatch(expected.RuntimePackages, actual.RuntimePackages, "RuntimePackages should match")
-	assert.Equal(expected.InstallStage.GetCommand(), actual.InstallStage.GetCommand(), "Install stage should match")
-	assert.Equal(expected.BuildStage.GetCommand(), actual.BuildStage.GetCommand(), "Build stage should match")
-	assert.Equal(expected.StartStage.GetCommand(), actual.StartStage.GetCommand(), "Start stage should match")
-	// Check that input files are the same for all stages.
-	// Depending on where the test command is invoked, the input file paths can be different.
-	// We will compare the file name only.
-	assert.ElementsMatch(
-		expected.InstallStage.GetInputFiles(),
-		getFileNames(actual.InstallStage.GetInputFiles()),
-		"InstallStage.InputFiles should match",
-	)
-	assert.ElementsMatch(
-		expected.BuildStage.GetInputFiles(),
-		getFileNames(actual.BuildStage.GetInputFiles()),
-		"BuildStage.InputFiles should match",
-	)
-	assert.ElementsMatch(
-		expected.StartStage.GetInputFiles(),
-		actual.StartStage.GetInputFiles(),
-		"StartStage.InputFiles should match",
-	)
-
-	assert.ElementsMatch(expected.Definitions, actual.Definitions, "Definitions should match")
-}
-
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
-}
-
-func getFileNames(paths []string) []string {
-	names := []string{}
-	for _, path := range paths {
-		if path == "." {
-			names = append(names, path)
-		} else {
-			names = append(names, filepath.Base(path))
-		}
-	}
-
-	return names
 }

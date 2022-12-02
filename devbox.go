@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
-	"go.jetpack.io/devbox/docker"
 	"go.jetpack.io/devbox/nix"
 	"go.jetpack.io/devbox/pkgcfg"
 	"go.jetpack.io/devbox/planner"
@@ -163,21 +162,6 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	return d.printPackageUpdateMessage(uninstall, uninstalledPackages)
 }
 
-// Build creates a Docker image containing a shell with the devbox environment.
-func (d *Devbox) Build(flags *docker.BuildFlags) error {
-	defaultFlags := &docker.BuildFlags{
-		Name:           flags.Name,
-		DockerfilePath: filepath.Join(d.configDir, ".devbox/gen", "Dockerfile"),
-	}
-	opts := append([]docker.BuildOptions{docker.WithFlags(defaultFlags)}, docker.WithFlags(flags))
-
-	err := d.generateBuildFiles()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return docker.Build(d.configDir, opts...)
-}
-
 // ShellPlan creates a plan of the actions that devbox will take to generate its
 // shell environment.
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
@@ -219,9 +203,6 @@ func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
 // the devbox environment.
 func (d *Devbox) Generate() error {
 	if err := d.generateShellFiles(); err != nil {
-		return errors.WithStack(err)
-	}
-	if err := d.generateBuildFiles(); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -404,18 +385,6 @@ func (d *Devbox) generateShellFiles() error {
 		return err
 	}
 	return generateForShell(d.configDir, plan)
-}
-
-func (d *Devbox) generateBuildFiles() error {
-	// BuildPlan() will return error if plan is invalid.
-	buildPlan, err := d.BuildPlan()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if buildPlan.Warning() != nil {
-		fmt.Printf("[WARNING]: %s\n", buildPlan.Warning().Error())
-	}
-	return generateForBuild(d.configDir, buildPlan)
 }
 
 func (d *Devbox) profileDir() (string, error) {
