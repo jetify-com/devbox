@@ -6,5 +6,6 @@ var (
 	Commit     = "none"
 	CommitDate = "unknown"
 
+	SentryDSN    = "" // Disabled by default
 	TelemetryKey = "" // Disabled by default
 )
