@@ -1,8 +1,11 @@
-package sshclient
+// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package openssh
 
 import (
-	"errors"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"strconv"
@@ -13,7 +16,6 @@ import (
 type Client struct {
 	Username       string
 	Hostname       string
-	Port           int
 	ProjectDirName string
 }
 
@@ -33,28 +35,34 @@ func (c *Client) Shell() error {
 
 func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 	sshCmd := c.cmd()
-
 	sshCmd.Args = append(sshCmd.Args, remoteCmd)
-	bytes, err := sshCmd.Output()
-	var exerr *exec.ExitError
-	if errors.As(err, &exerr) {
-		// Ignore exit code errors and just return the output
-		return bytes, nil
-	}
-	return bytes, err
+	debug.Log("cmd/exec: %s", sshCmd)
+	return sshCmd.Output()
 }
 
 func (c *Client) cmd(sshArgs ...string) *exec.Cmd {
-
+	host, port := c.hostPort()
 	cmd := exec.Command("ssh", sshArgs...)
-	cmd.Args = append(cmd.Args, destination(c.Username, c.Hostname))
+	cmd.Args = append(cmd.Args, destination(c.Username, host))
 
 	// Add any necessary flags:
-	if c.Port != 0 {
-		cmd.Args = append(cmd.Args, "-p", strconv.Itoa(c.Port))
+	if port != 0 && port != 22 {
+		cmd.Args = append(cmd.Args, "-p", strconv.Itoa(port))
 	}
 
 	return cmd
+}
+
+func (c *Client) hostPort() (host string, port int) {
+	host, portStr, err := net.SplitHostPort(c.Hostname)
+	if err != nil {
+		return c.Hostname, 22
+	}
+	port, err = net.LookupPort("tcp", portStr)
+	if err != nil {
+		return host, 22
+	}
+	return host, port
 }
 
 func destination(username, hostname string) string {
