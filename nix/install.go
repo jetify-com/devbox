@@ -22,6 +22,9 @@ func Install() error {
 	defer w.Close()
 
 	cmd := exec.Command("sudo", "sh", "-c", installScript)
+	// Attach stdout but no stdin. This makes the command run in non-TTY mode
+	// which skips the interactive prompts.
+	// We could attach stderr? but the stdout prompt is pretty useful.
 	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = nil
@@ -31,6 +34,12 @@ func Install() error {
 		return errors.WithStack(err)
 	}
 
-	go io.Copy(os.Stdout, r)
+	go func() {
+		_, err := io.Copy(os.Stdout, r)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	return errors.WithStack(cmd.Wait())
 }
