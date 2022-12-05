@@ -8,23 +8,23 @@ import (
 	"go.jetpack.io/devbox/nix"
 )
 
-func NixCmd() *cobra.Command {
-	nixCommand := &cobra.Command{
-		Use:    "nix",
-		Short:  "Commands that interface with Nix",
+func SetupCmd() *cobra.Command {
+	setupCommand := &cobra.Command{
+		Use:    "setup",
+		Short:  "Setup devbox dependencies",
 		Hidden: true,
 	}
 
-	installCommand := &cobra.Command{
-		Use:   "install",
+	installNixCommand := &cobra.Command{
+		Use:   "nix",
 		Short: "Installs Nix",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInstallNixCmd()
 		},
 	}
 
-	nixCommand.AddCommand(installCommand)
-	return nixCommand
+	setupCommand.AddCommand(installNixCommand)
+	return setupCommand
 }
 
 func runInstallNixCmd() error {
