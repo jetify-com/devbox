@@ -5,9 +5,11 @@ package cloud
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,14 +17,15 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"go.jetpack.io/devbox/cloud/mutagen"
-	"go.jetpack.io/devbox/cloud/sshclient"
-	"go.jetpack.io/devbox/cloud/sshconfig"
+	"go.jetpack.io/devbox/cloud/openssh"
 	"go.jetpack.io/devbox/cloud/stepper"
 	"go.jetpack.io/devbox/debug"
 )
 
 func Shell(configDir string) error {
-	setupSSHConfig()
+	if err := openssh.SetupDevbox(); err != nil {
+		return err
+	}
 
 	c := color.New(color.FgMagenta).Add(color.Bold)
 	c.Println("Devbox Cloud")
@@ -58,12 +61,6 @@ func Shell(configDir string) error {
 	return shell(username, vmHostname, configDir)
 }
 
-func setupSSHConfig() {
-	if err := sshconfig.Setup(); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func promptUsername() string {
 	username := ""
 	prompt := &survey.Input{
@@ -77,33 +74,49 @@ func promptUsername() string {
 	return username
 }
 
-type authResponse struct {
-	VMHostname string `json:"vm_host"`
+type vm struct {
+	JumpHost     string `json:"jump_host"`
+	JumpHostPort int    `json:"jump_host_port"`
+	VMHost       string `json:"vm_host"`
+	VMHostPort   int    `json:"vm_host_port"`
+	VMRegion     string `json:"vm_region"`
+	VMPublicKey  string `json:"vm_public_key"`
+	VMPrivateKey string `json:"vm_private_key"`
 }
 
 func getVirtualMachine(username string) string {
+	client := openssh.Client{
+		Username: username,
+		Hostname: "gateway.devbox.sh",
+	}
+
 	// When developing we can use this env variable to point
 	// to a different gateway
-	hostname := os.Getenv("DEVBOX_GATEWAY")
-	if hostname == "" {
-		hostname = "gateway.devbox.sh"
-	}
-	client := sshclient.Client{
-		Username: username,
-		Hostname: hostname,
+	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
+		client.Hostname = envGateway
 	}
 	bytes, err := client.Exec("auth")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			log.Printf("ssh %s stderr:\n%s", client.Hostname, string(exitErr.Stderr))
+		}
+		os.Exit(1)
 	}
-	debug.Log("gateway.devbox.sh auth response: %s", string(bytes))
-	resp := &authResponse{}
+	debug.Log("ssh %s stdout:\n%s", client.Hostname, string(bytes))
+	resp := &vm{}
 	err = json.Unmarshal(bytes, resp)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return resp.VMHostname
+	if resp.VMPrivateKey != "" {
+		err := openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return resp.VMHost
 }
 
 func syncFiles(username, hostname, configDir string) error {
@@ -135,7 +148,7 @@ func syncFiles(username, hostname, configDir string) error {
 }
 
 func shell(username, hostname, configDir string) error {
-	client := &sshclient.Client{
+	client := &openssh.Client{
 		Username:       username,
 		Hostname:       hostname,
 		ProjectDirName: projectDirName(configDir),

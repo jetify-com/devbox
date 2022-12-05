@@ -1,0 +1,7 @@
+{
+	".config": "0755",
+	".config/devbox": "0755",
+	".config/devbox/ssh": "0700",
+	".config/devbox/ssh/keys": "0700",
+	".config/devbox/ssh/keys/test.vm.devbox-vms.internal": "0600"
+}
