@@ -100,11 +100,11 @@ func getVirtualMachine(username string) string {
 		log.Println(err)
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			log.Println("ssh gateway.devbox.sh stderr:\n", string(exitErr.Stderr))
+			log.Printf("ssh %s stderr: %s\n", client.Hostname, string(exitErr.Stderr))
 		}
 		os.Exit(1)
 	}
-	debug.Log("gateway.devbox.sh auth response: %s", string(bytes))
+	debug.Log("ssh %s stdout: %s\n", client.Hostname, string(bytes))
 	resp := &vm{}
 	err = json.Unmarshal(bytes, resp)
 	if err != nil {
