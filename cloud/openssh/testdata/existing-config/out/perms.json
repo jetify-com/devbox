@@ -1,0 +1,8 @@
+{
+	".config": "0755",
+	".config/devbox": "0755",
+	".config/devbox/ssh": "0700",
+	".config/devbox/ssh/config": "0644",
+	".ssh": "0700",
+	".ssh/config": "0644"
+}

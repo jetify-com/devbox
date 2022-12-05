@@ -1,12 +1,15 @@
 package openssh
 
 import (
+	"encoding/json"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 )
 
 func TestDevboxIncludeRegex(t *testing.T) {
@@ -112,6 +115,11 @@ func duplicateDir(t *testing.T, dir string) string {
 	dstDir := t.TempDir()
 	err := fs.WalkDir(srcFS, ".", func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
+			// Just return an empty temp dir if the directory
+			// doesn't exist.
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			return err
 		}
 		if path == "." {
@@ -138,28 +146,48 @@ func duplicateDir(t *testing.T, dir string) string {
 }
 
 func dirsEqual(t *testing.T, gotDir, wantDir string) {
+	var perms map[string]fs.FileMode
+	if b, err := os.ReadFile(filepath.Join(wantDir, "perms.json")); err == nil {
+		v := make(map[string]string)
+		if err := json.Unmarshal(b, &v); err == nil {
+			perms = make(map[string]fs.FileMode, len(v))
+			for path, modeStr := range v {
+				mode, err := strconv.ParseUint(modeStr, 8, 32)
+				if err != nil {
+					t.Fatalf("path %q has invalid permissions %q", path, modeStr)
+				}
+				perms[path] = fs.FileMode(mode)
+			}
+		}
+	}
 	wantFS := os.DirFS(wantDir)
 	gotFS := os.DirFS(gotDir)
-	err := fs.WalkDir(wantFS, ".", func(path string, _ fs.DirEntry, err error) error {
+	err := fs.WalkDir(wantFS, ".", func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
+			// If the wantDir is missing then there's nothing to
+			// check.
+			if errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
 			t.Error("got WalkDir error:", err)
 		}
-		if path == "." {
+
+		// perms.json is a special-case where we put expected file
+		// permissions.
+		if path == "." || path == "perms.json" {
 			return nil
 		}
 
-		gotInfo, err := fs.Stat(gotFS, path)
-		if err != nil {
-			t.Fatalf("Stat(got, %q): %v", path, err)
+		if wantPerm, ok := perms[path]; ok {
+			gotInfo, err := fs.Stat(gotFS, path)
+			if err != nil {
+				t.Fatalf("Stat(got, %q): %v", path, err)
+			}
+			if got, want := gotInfo.Mode().Perm(), wantPerm; got != want {
+				t.Errorf("wrong permissions at %q: got %q, want %q", path, got, want)
+			}
 		}
-		wantInfo, err := fs.Stat(wantFS, path)
-		if err != nil {
-			t.Fatalf("Stat(want, %q): %v", path, err)
-		}
-		if got, want := gotInfo.Mode().Perm(), wantInfo.Mode().Perm(); got != want {
-			t.Errorf("wrong permissions at %q: got %q, want %q", path, got, want)
-		}
-		if wantInfo.IsDir() {
+		if entry.IsDir() {
 			return nil
 		}
 
