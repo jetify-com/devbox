@@ -265,6 +265,32 @@ func (s *Shell) execCommand() string {
 	return strings.Join(args, " ")
 }
 
+func (s *Shell) RunInShell() error {
+	env := append(
+		os.Environ(),
+		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
+		// inside the devbox shell.
+		"__ETC_PROFILE_NIX_SOURCED=1",
+	)
+	debug.Log("Running inside devbox shell with environment: %v", env)
+	cmd := exec.Command(s.execCommandInShell())
+	cmd.Env = env
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	debug.Log("Executing command from inside devbox shell: %v", cmd.Args)
+	return errors.WithStack(cmd.Run())
+}
+
+func (s *Shell) execCommandInShell() (string, string, string) {
+	args := []string{}
+
+	if s.ScriptCommand != "" {
+		args = append(args, "-ic")
+	}
+	return s.binPath, strings.Join(args, " "), s.ScriptCommand
+}
+
 func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	if s.userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells

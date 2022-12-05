@@ -265,6 +265,32 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
+func (d *Devbox) RunScriptInShell(scriptName string) error {
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return err
+	}
+
+	script := d.cfg.Shell.Scripts[scriptName]
+	if script == nil {
+		return errors.Errorf("unable to find a script with name %s", scriptName)
+	}
+
+	shell, err := nix.DetectShell(
+		nix.WithProfile(profileDir),
+		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
+		nix.WithUserScript(scriptName, script.String()),
+		nix.WithConfigDir(d.configDir),
+	)
+
+	if err != nil {
+		fmt.Print(err)
+		shell = &nix.Shell{}
+	}
+
+	return shell.RunInShell()
+}
+
 // TODO: consider unifying the implementations of RunScript and Shell.
 func (d *Devbox) RunScript(scriptName string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
