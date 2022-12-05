@@ -48,6 +48,7 @@ linters-settings:
       - ns string
       - r *http.Request
       - r io.Reader
+      - r *os.File
       - sh *Shell
       - sh *shell
       - sh *shell.Shell
@@ -56,6 +57,7 @@ linters-settings:
       - t testing.T
       - w http.ResponseWriter
       - w io.Writer
+      - w *os.File
   wrapcheck:
     ignorePackageGlobs:
       - go.jetpack.io/devbox/*
