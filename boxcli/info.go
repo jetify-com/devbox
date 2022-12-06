@@ -14,7 +14,8 @@ import (
 )
 
 type infoCmdFlags struct {
-	config configFlags
+	config   configFlags
+	markdown bool
 }
 
 func InfoCmd() *cobra.Command {
@@ -31,6 +32,7 @@ func InfoCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().BoolVar(&flags.markdown, "markdown", false, "Output in markdown format")
 	return command
 }
 
@@ -40,5 +42,5 @@ func infoCmdFunc(_ *cobra.Command, pkg string, flags infoCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Info(pkg)
+	return box.Info(pkg, flags.markdown)
 }
