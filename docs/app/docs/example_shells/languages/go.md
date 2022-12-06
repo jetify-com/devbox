@@ -16,7 +16,9 @@ Go projects can be run in Devbox by adding the Go SDK to your project. If your p
   ]
 ```
 
-This will install go 1.18. Other versions available to install include: 
+This will install go 1.18. 
+
+Other versions available to install include: 
 
   * `go_1_19` (version 1.19)
   * `go_1_17` (version 1.17)

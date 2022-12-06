@@ -17,7 +17,8 @@ Elixir can be configured to install Hex and Rebar dependencies in a local direct
     ],
 ```
 
-This will install Elixir 1.13, you can install other versions of Elixir using:
+This will install Elixir 1.13. 
+Other versions available include: 
 
 * elixir_1_10 (version 1.10)
 * elixir_1_11 (version 1.11)

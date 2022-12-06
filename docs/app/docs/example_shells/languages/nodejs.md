@@ -15,7 +15,9 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
   ],
 ```
 
-This will install NodeJS 18, and comes bundled with `npm`. To install other versions of NodeJS, you can add: 
+This will install NodeJS 18, and comes bundled with `npm`. 
+
+Other versions available include: 
 
 * `nodejs-16_x` (NodeJS 16.18)
 * `nodejs-19_x` (NodeJS 19.2)

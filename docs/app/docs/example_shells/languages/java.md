@@ -20,7 +20,7 @@ In both cases, you'll want to first activate `devbox shell` before generating yo
 
 ```
 
-This will install the OpenJDK version 19. To install other versions, you can add:
+This will install the OpenJDK version 19. Other versions available include: 
 
 * jdk8 (OpenJDK 8)
 * jdk11 (OpenJDK 11)

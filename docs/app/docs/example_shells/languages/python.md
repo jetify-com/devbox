@@ -17,7 +17,9 @@ Python by default will attempt to install your packages globally, or in the Nix 
   ],
 ```
 
-This will install Python 3.10 in your shell. You choose a different version of Python by adding the following: 
+This will install Python 3.10 in your shell.
+
+Other versions available include: 
 
 * python37 (Python 3.7)
 * python38 (Python 3.8)
