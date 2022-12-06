@@ -4,29 +4,28 @@ title: Devbox Examples
 
 ## Languages
 * [C#/.NET](languages/csharp.md)
-* [Elixir]
-* [FSharp]
-* [Go]
-* [Haskell]
-* [Java]
-* [NodeJS]
-* [PHP]
-* [Python]
-* [Rust]
-* [Zig]
+* [Elixir](languages/elixir.md)
+* [Go](languages/go.md)
+* [Haskell](languages/haskell.md)
+* [Java](languages/java.md)
+* [NodeJS](languages/nodejs.md)
+* [PHP](languages/php.md)
+* [Python](languages/python.md)
+* [Rust](languages/rust.md)
+* [Ruby](languages/ruby.md)
 
 ## Databases
-* [MariaDB]
-* [Postgres]
-* [Redis]
-* [sqlite3]
+* [MariaDB](databases/mariadb.md)
+* [Postgres](databases/postgres.md)
+* [Redis](databases/redis.md)
+* [sqlite3](databases/sqlite.md)
 
 ## Servers
-* [Apache]
-* [NGINX]
+* [Apache](servers/apache.md)
+* [NGINX](servers/nginx.md)
 
-## Full Stacks
-* [Drupal]
-* [LAMP (Linux, Apache, MariaDB, PHP)]
-* [LEMP (Linux, NGINX, MariaDB, PHP)]
-* [Ruby on Rails]
+## Stacks
+* [Drupal](stacks/drupal.md)
+* [LAMP (Linux, Apache, MariaDB, PHP)](stacks/lamp.md)
+* [LEMP (Linux, NGINX, MariaDB, PHP)](stacks/lemp.md)
+* [Ruby on Rails](stacks/rails.md)
