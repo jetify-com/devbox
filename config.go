@@ -76,13 +76,10 @@ func ReadConfig(path string) (*Config, error) {
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
 	if cfg.Nixpkgs.Commit == "" {
-		// For now, we add the hardcoded value corresponding to the commit hash as of 2022-08-16 in:
-		// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
-		// In the near future, this will be changed to the commit-hash of the unstable tag in nixpkgs github repository
-		const defaultCommitHash = "af9e00071d0971eb292fd5abef334e66eda3cb69"
-		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s", defaultCommitHash)
+		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s",
+			plansdk.DefaultNixpkgsCommit)
 
-		cfg.Nixpkgs.Commit = defaultCommitHash
+		cfg.Nixpkgs.Commit = plansdk.DefaultNixpkgsCommit
 		return WriteConfig(absFilePath, cfg)
 	}
 	return nil

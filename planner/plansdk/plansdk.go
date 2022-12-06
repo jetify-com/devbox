@@ -217,9 +217,8 @@ type NixpkgsInfo struct {
 	Sha256 string
 }
 
-// Commit hash as of 2022-08-16
-// `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
-const DefaultNixpkgsCommit = "af9e00071d0971eb292fd5abef334e66eda3cb69"
+// The commit hash for nixos-22.11 on 2022-12-06 from status.nixos.org
+const DefaultNixpkgsCommit = "52e3e80afff4b16ccb7c52e9f0f5220552f03d04"
 
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 	return &NixpkgsInfo{
