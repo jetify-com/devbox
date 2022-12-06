@@ -15,7 +15,6 @@ devbox [flags]
 ## SEE ALSO
 
 * [devbox add](./devbox_add.md)	 - Add a new package to your devbox
-* [devbox build](./devbox_build.md)	 - Build an OCI image that can run as a container
 * [devbox init](./devbox_init.md)	 - Initialize a directory as a devbox project
 * [devbox plan](./devbox_plan.md)	 - Preview the plan used to build your environment
 * [devbox rm](./devbox_rm.md)	 - Remove a package from your devbox

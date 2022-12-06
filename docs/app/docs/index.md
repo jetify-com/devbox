@@ -33,8 +33,7 @@ Devbox can create isolated environments right on your laptop, without an extra-l
 Are you working on multiple projects, all of which need different versions of the same binary? Instead of attempting to install conflicting versions of the same binary on your laptop, create an isolated environment for each project, and use whatever version you want for each.
 
 ### Take your environment with you
-Devbox's dev environments are _portable_. We make it possible to declare your
-environment exactly once, and use that single definition in several different ways, including:
+Devbox's dev environments are _portable_. We make it possible to declare your environment exactly once, and use that single definition in several different ways, including:
 + A local shell created through `devbox shell`
 + A devcontainer you can use with VSCode
 + A Dockerfile so you can build a production image with the exact same tools you
