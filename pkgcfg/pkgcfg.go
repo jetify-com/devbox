@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -158,44 +157,4 @@ func createSymlink(root, filePath string) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func PrintReadme(pkg, rootDir string, w io.Writer, showSourceEnv bool) error {
-	cfg, err := getConfig(pkg, rootDir)
-	if err != nil {
-		return err
-	}
-	if cfg.Readme == "" {
-		return nil
-	}
-	_, err = fmt.Fprintf(
-		w,
-		"\n%s NOTES:\n\n%s\n\nto show these notes use `devbox info %s`\n\n",
-		cfg.Name,
-		cfg.Readme,
-		cfg.Name,
-	)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if showSourceEnv {
-		err = displaySourceEnvMessage(pkg, rootDir, w)
-	}
-	return err
-}
-
-func displaySourceEnvMessage(pkg, rootDir string, w io.Writer) error {
-	env, err := Env([]string{pkg}, rootDir)
-	if err != nil {
-		return err
-	}
-	if len(env) > 0 {
-		_, err = fmt.Fprintf(
-			w,
-			"\nTo ensure environment is set, run `source %s/%s/env`\n\n",
-			confPath,
-			pkg,
-		)
-	}
-	return errors.WithStack(err)
 }

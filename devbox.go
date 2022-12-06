@@ -119,7 +119,13 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 	if featureflag.PKGConfig.Enabled() {
 		for _, pkg := range pkgs {
-			if err := pkgcfg.PrintReadme(pkg, d.configDir, d.writer, IsDevboxShellEnabled()); err != nil {
+			if err := pkgcfg.PrintReadme(
+				pkg,
+				d.configDir,
+				d.writer,
+				IsDevboxShellEnabled(),
+				false, /*markdown*/
+			); err != nil {
 				return err
 			}
 		}
@@ -367,16 +373,27 @@ func (d *Devbox) PrintShellEnv() error {
 	return nil
 }
 
-func (d *Devbox) Info(pkg string) error {
+func (d *Devbox) Info(pkg string, markdown bool) error {
 	info, hasInfo := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
 	if !hasInfo {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
 	}
-	if _, err := fmt.Fprintf(d.writer, "%s\n", info); err != nil {
+	if _, err := fmt.Fprintf(
+		d.writer,
+		"%s%s\n",
+		lo.Ternary(markdown, "## ", ""),
+		info,
+	); err != nil {
 		return errors.WithStack(err)
 	}
-	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer, false /*showSourceEnv*/)
+	return pkgcfg.PrintReadme(
+		pkg,
+		d.configDir,
+		d.writer,
+		false, /*showSourceEnv*/
+		markdown,
+	)
 }
 
 // saveCfg writes the config file to the devbox directory.
