@@ -57,7 +57,7 @@ func EnsureInstalled(cmd *cobra.Command, args []string) error {
 
 	if featureflag.NixInstaller.Enabled() {
 		color.Yellow("\nNix is not installed. Devbox will attempt to install it. \n\nPress enter to continue.\n")
-		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+		fmt.Scanln()
 		if err = Install(); err != nil {
 			return err
 		}
