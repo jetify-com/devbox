@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/nix"
 )
 
 type shellCmdFlags struct {
@@ -29,7 +30,7 @@ func ShellCmd() *cobra.Command {
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
 			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
 		Args:              validateShellArgs,
-		PersistentPreRunE: nixShellPersistentPreRunE,
+		PersistentPreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShellCmd(cmd, args, flags)
 		},
@@ -73,14 +74,6 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 		return nil
 	}
 	return err
-}
-
-func nixShellPersistentPreRunE(cmd *cobra.Command, args []string) error {
-	_, err := exec.LookPath("nix-shell")
-	if err != nil {
-		return errors.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
-	}
-	return nil
 }
 
 func validateShellArgs(cmd *cobra.Command, args []string) error {

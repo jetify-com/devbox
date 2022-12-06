@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/nix"
 )
 
 type addCmdFlags struct {
@@ -22,7 +23,7 @@ func AddCmd() *cobra.Command {
 		Use:               "add <pkg>...",
 		Short:             "Add a new package to your devbox",
 		Args:              cobra.MinimumNArgs(1),
-		PersistentPreRunE: nixShellPersistentPreRunE,
+		PersistentPreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return addCmdFunc(cmd, args, flags)
 		},

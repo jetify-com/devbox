@@ -6,14 +6,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+type level int
+
+const (
+	levelError level = iota
+	levelWarning
+)
+
 type combined struct {
 	source      error
 	userMessage string
+	level       level
 }
 
 func New(msg string, args ...any) error {
 	return errors.WithStack(&combined{
 		userMessage: fmt.Sprintf(msg, args...),
+	})
+}
+
+func NewWarning(msg string, args ...any) error {
+	return errors.WithStack(&combined{
+		userMessage: fmt.Sprintf(msg, args...),
+		level:       levelWarning,
 	})
 }
 
@@ -30,6 +45,14 @@ func WithUserMessage(source error, msg string, args ...any) error {
 func HasUserMessage(err error) bool {
 	c := &combined{}
 	return errors.As(err, &c) // note double pointer
+}
+
+func IsWarning(err error) bool {
+	c := &combined{}
+	if errors.As(err, &c) {
+		return c.level == levelWarning
+	}
+	return false
 }
 
 func (c *combined) Error() string {
