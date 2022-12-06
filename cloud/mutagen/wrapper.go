@@ -110,6 +110,7 @@ func Terminate(names ...string) error {
 func execMutagen(args []string) error {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, args...)
+	//cmd.Env = os.Environ()
 
 	out, err := cmd.CombinedOutput()
 
