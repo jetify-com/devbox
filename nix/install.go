@@ -1,7 +1,6 @@
 package nix
 
 import (
-	"bufio"
 	_ "embed"
 	"fmt"
 	"io"
@@ -50,18 +49,48 @@ func Install() error {
 }
 
 func EnsureInstalled(cmd *cobra.Command, args []string) error {
-	_, err := exec.LookPath("nix-shell")
-	if err == nil {
+	if nixBinaryInstalled() {
 		return nil
+	}
+	if nixDirExists() {
+		// TODO: We may be able to patch the rc files to add nix to the path.
+		return usererr.New(
+			"We found a /nix directory but nix binary is not in your PATH. " +
+				"Try restarting your terminal and running devbox again. If after " +
+				"restarting you still get this message it's possible nix setup is " +
+				"missing from your shell rc file. See " +
+				"https://github.com/NixOS/nix/issues/3616#issuecomment-903869569 for " +
+				"more details.",
+		)
 	}
 
 	if featureflag.NixInstaller.Enabled() {
-		color.Yellow("\nNix is not installed. Devbox will attempt to install it. \n\nPress enter to continue.\n")
+		color.Yellow(
+			"\nNix is not installed. Devbox will attempt to install it. " +
+				"\n\nPress enter to continue or ctrl-c to exit.\n",
+		)
 		fmt.Scanln()
-		if err = Install(); err != nil {
+		if err := Install(); err != nil {
 			return err
 		}
-		return usererr.NewWarning("Nix requires reopening terminal to function correctly. Please open new terminal and try again.")
+		return usererr.NewWarning(
+			"Nix requires reopening terminal to function correctly. Please open new" +
+				" terminal and try again.",
+		)
 	}
-	return usererr.New("could not find nix in your PATH\nInstall nix by following the instructions at https://nixos.org/download.html and make sure you've set up your PATH correctly")
+	return usererr.New(
+		"could not find nix in your PATH\nInstall nix by following the " +
+			"instructions at https://nixos.org/download.html and make sure you've " +
+			"set up your PATH correctly",
+	)
+}
+
+func nixBinaryInstalled() bool {
+	_, err := exec.LookPath("nix-shell")
+	return err == nil
+}
+
+func nixDirExists() bool {
+	_, err := os.Stat("/nix")
+	return err == nil
 }
