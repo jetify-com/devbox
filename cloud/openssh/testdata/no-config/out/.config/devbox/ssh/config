@@ -13,3 +13,4 @@ Host *.devbox-vms.internal
 	StrictHostKeyChecking no
 	UserKnownHostsFile "$HOME/.config/devbox/ssh/known_hosts"
 	ServerAliveInterval 50
+	ServerAliveCountMax 3
