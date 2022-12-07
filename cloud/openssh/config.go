@@ -84,7 +84,7 @@ func updateUserSSHConfig(devboxIncludePath string) (err error) {
 		return errors.WithStack(err)
 	}
 	dotSSH := filepath.Join(home, ".ssh")
-	if err := ensureDirExists(dotSSH, 0700, true); err != nil {
+	if err := EnsureDirExists(dotSSH, 0700, true); err != nil {
 		return err
 	}
 
@@ -145,7 +145,8 @@ func containsDevboxInclude(r io.Reader) bool {
 	return false
 }
 
-func ensureDirExists(path string, perm fs.FileMode, chmod bool) error {
+// move to a file utility
+func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
 	if err := os.Mkdir(path, perm); err != nil && !errors.Is(err, os.ErrExist) {
 		return errors.WithStack(err)
 	}
@@ -165,19 +166,19 @@ func devboxSSHDir() (string, error) {
 
 	// Ensure ~/.config exists but don't touch existing permissions.
 	dotConfig := filepath.Join(home, ".config")
-	if err := ensureDirExists(dotConfig, 0755, false); err != nil {
+	if err := EnsureDirExists(dotConfig, 0755, false); err != nil {
 		return "", err
 	}
 
 	// Ensure ~/.config/devbox exists and force permissions to 0755.
 	devboxConfigDir := filepath.Join(dotConfig, "devbox")
-	if err := ensureDirExists(devboxConfigDir, 0755, true); err != nil {
+	if err := EnsureDirExists(devboxConfigDir, 0755, true); err != nil {
 		return "", err
 	}
 
 	// Ensure ~/.config/devbox/ssh exists and force permissions to 0700.
 	devboxSSHDir := filepath.Join(devboxConfigDir, "ssh")
-	if err := ensureDirExists(devboxSSHDir, 0700, true); err != nil {
+	if err := EnsureDirExists(devboxSSHDir, 0700, true); err != nil {
 		return "", err
 	}
 	return devboxSSHDir, nil
@@ -189,7 +190,7 @@ func devboxKeysDir() (string, error) {
 		return "", err
 	}
 	keysDir := filepath.Join(sshDir, "keys")
-	if err := ensureDirExists(keysDir, 0700, true); err != nil {
+	if err := EnsureDirExists(keysDir, 0700, true); err != nil {
 		return "", err
 	}
 	return keysDir, nil

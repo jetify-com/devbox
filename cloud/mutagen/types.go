@@ -12,6 +12,7 @@ type SessionSpec struct {
 	Paused       bool
 	SyncMode     string
 	IgnoreVCS    bool
+	EnvVars      map[string]string
 }
 
 func (s *SessionSpec) Validate() error {

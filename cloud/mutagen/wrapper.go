@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -46,7 +47,7 @@ func Create(spec *SessionSpec) error {
 		args = append(args, "--ignore-vcs")
 	}
 
-	return execMutagen(args)
+	return execMutagen(args, spec.EnvVars)
 }
 
 func List(names ...string) ([]Session, error) {
@@ -80,36 +81,37 @@ func List(names ...string) ([]Session, error) {
 func Pause(names ...string) error {
 	args := []string{"sync", "pause"}
 	args = append(args, names...)
-	return execMutagen(args)
+	return execMutagen(args, nil /*envVars*/)
 }
 
 func Resume(names ...string) error {
 	args := []string{"sync", "resume"}
 	args = append(args, names...)
-	return execMutagen(args)
+	return execMutagen(args, nil /*envVars*/)
 }
 
 func Flush(names ...string) error {
 	args := []string{"sync", "flush"}
 	args = append(args, names...)
-	return execMutagen(args)
+	return execMutagen(args, nil /*envVars*/)
 }
 
 func Reset(names ...string) error {
 	args := []string{"sync", "reset"}
 	args = append(args, names...)
-	return execMutagen(args)
+	return execMutagen(args, nil /*envVars*/)
 }
 
 func Terminate(names ...string) error {
 	args := []string{"sync", "terminate"}
 	args = append(args, names...)
-	return execMutagen(args)
+	return execMutagen(args, nil /*envVars*/)
 }
 
-func execMutagen(args []string) error {
+func execMutagen(args []string, envVars map[string]string) error {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, args...)
+	cmd.Env = env(envVars)
 
 	out, err := cmd.CombinedOutput()
 
@@ -121,6 +123,14 @@ func execMutagen(args []string) error {
 	}
 
 	return nil
+}
+
+func env(envVars map[string]string) []string {
+	customEnv := []string{}
+	for k, v := range envVars {
+		customEnv = append(customEnv, fmt.Sprintf("%s=%s", k, v))
+	}
+	return append(os.Environ(), customEnv...)
 }
 
 func ensureMutagen() string {
