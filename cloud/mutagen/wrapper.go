@@ -62,6 +62,7 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
+		debug.Log("List error: %s", err)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			errMsg := strings.TrimSpace(string(out))
 			// Special handle the case where no sessions are found:
@@ -121,6 +122,7 @@ func execMutagen(args []string, envVars map[string]string) error {
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
+		debug.Log("execMutagen error: %s", err)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			return errors.New(strings.TrimSpace(string(out)))
 		}

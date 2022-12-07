@@ -6,10 +6,12 @@ package boxcli
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/boxcli/midcobra"
 	"go.jetpack.io/devbox/build"
+	"go.jetpack.io/devbox/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/debug"
 )
 
@@ -58,7 +60,22 @@ func Execute(ctx context.Context, args []string) int {
 	return exe.Execute(ctx, args)
 }
 
+func executeSSH(sshArgs []string) int {
+	sshshim.EnableDebug() // Always enable for now.
+	//debug.Log("os.Args: %v", os.Args)
+	if err := sshshim.InvokeSSHCommand(sshArgs); err != nil {
+		debug.Log("ERROR: %v", err)
+		//fmt.Fprintf(os.Stderr, "%v", err)
+		return 1
+	}
+	return 0
+}
+
 func Main() {
+	if !strings.HasSuffix(os.Args[0], "devbox") {
+		code := executeSSH(os.Args[1:])
+		os.Exit(code)
+	}
 	code := Execute(context.Background(), os.Args[1:])
 	os.Exit(code)
 }

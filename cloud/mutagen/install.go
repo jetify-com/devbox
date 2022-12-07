@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/cavaliergopher/grab/v3"
+	"go.jetpack.io/devbox/debug"
 )
 
 func InstallMutagenOnce(binPath string) error {
@@ -25,6 +26,7 @@ func InstallMutagenOnce(binPath string) error {
 }
 
 func Install(url string, installDir string) error {
+	debug.Log("installing mutagen from %s to %s", url, installDir)
 	err := os.MkdirAll(installDir, 0755)
 	if err != nil {
 		return err
@@ -51,7 +53,7 @@ func Install(url string, installDir string) error {
 func mutagenURL() string {
 	repo := "mutagen-io/mutagen"
 	pkg := "mutagen"
-	version := "v0.16.1" // Hard-coded for now, but change to always get the latest?
+	version := "v0.16.2" // Hard-coded for now, but change to always get the latest?
 	platform := detectPlatform()
 
 	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s_%s_%s.tar.gz", repo, version, pkg, platform, version)

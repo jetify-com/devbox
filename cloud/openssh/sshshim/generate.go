@@ -28,17 +28,12 @@ func Setup() error {
 		return err
 	}
 
-	// TODO use in the next PR instead of sshExecutablePath
-	//devboxExecutablePath, err := os.Executable()
-	//if err != nil {
-	//	return errors.WithStack(err)
-	//}
-	sshExecutablePath, err := exec.LookPath("ssh")
+	devboxExecutablePath, err := os.Executable()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err := os.Symlink(sshExecutablePath, filepath.Join(shimDir, "ssh")); err != nil {
+	if err := os.Symlink(devboxExecutablePath, filepath.Join(shimDir, "ssh")); err != nil {
 		if !os.IsExist(err) {
 			return errors.WithStack(err)
 		}
