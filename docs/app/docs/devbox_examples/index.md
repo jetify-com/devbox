@@ -1,8 +1,7 @@
 ---
 title: Devbox Examples
 ---
-
-The examples below show how to configure Devbox for a wide range of development environments and project types. 
+Devbox strives to provide a balance between the immutability of Nix's global store, and the mutability of local project configuration. The examples below show how to configure Devbox for a wide range of development environments and project types. 
 
 You can view the full list of examples in our [Example Repo](https://github.com/jetpack-io/devbox-examples/)
 
