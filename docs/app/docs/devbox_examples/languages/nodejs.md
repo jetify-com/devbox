@@ -19,8 +19,8 @@ This will install NodeJS 18, and comes bundled with `npm`.
 
 Other versions available include: 
 
-* `nodejs-16_x` (NodeJS 16.18)
-* `nodejs-19_x` (NodeJS 19.2)
+* `nodejs-16_x` (NodeJS 16)
+* `nodejs-19_x` (NodeJS 19)
 
 ## Adding Yarn as your Package Manager
 
