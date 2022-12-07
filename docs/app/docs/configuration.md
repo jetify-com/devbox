@@ -14,15 +14,6 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
     },
     "nixpkgs": {
         "commit": "..."
-    },
-    "install_stage": {
-        "command": "..."
-    },
-    "build_stage": {
-        "command": "..."
-    },
-    "start_stage": {
-        "command": "..."
     }
 }
 ```
@@ -65,24 +56,32 @@ Welcome! See CONTRIBUTING.md for tips on contributing to devbox.
 
 #### Scripts
 
-Scripts are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests). 
+Scripts are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests).
 
 Scripts can be defined by giving a name, and one or more commands. Single command scripts can be added by providing a name, and a string:
 
 ```json
-"scripts": {
-    "print_once": "echo \"Hello Once!\""
+{
+    "shell": {
+        "scripts": {
+            "print_once": "echo \"Hello Once!\""
+        }
+    }
 }
 ```
 
 To run multiple commands in a single script, you can pass them as an array: 
 
 ```json
-"scripts": {
-    "print_twice": [
-        "echo \"Hello Once!\"",
-        "echo \"Hello Twice!\""
-    ]
+{
+    "shell": {
+        "scripts": {
+            "print_twice": [
+                "echo \"Hello Once!\"",
+                "echo \"Hello Twice!\""
+            ]
+        }
+    }
 }
 ```
 
@@ -94,23 +93,6 @@ If a Nixpkg commit is not set, Devbox will automatically add a default commit ha
 
 To learn more, consult our guide on [setting the Nixpkg commit hash](guides/pinning_packages.md). 
 
-
-### Stages
-
-Stages are used to configure and run commands at different points of container creation. For languages that support autodetection, Devbox will automatically detect and configure the correct stage commands for your project based on your source code. You can override any of these stages by configuring them in your devbox.json
-
--   The **install stage** will run after your base container has been initialized and your Nix packages are installed. This stage should be used to download and build your application's dependencies
--   The **build stage** runs after the install stage, and should be used to build or bundle your application.
--   The **start stage** will run when your container is started. This stage should include any commands needed to start and run your application.
-
-Each stage takes a single command that will be run when the stage is reached in your container build.
-
-```json
-//Install stage command for a Node Project
-"install_stage": {
-    "command": "yarn install"
-}
-```
 
 ### Example: A Rust Devbox
 

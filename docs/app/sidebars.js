@@ -56,10 +56,6 @@ const sidebars = {
             label: 'devbox add'
         }, {
             type: 'doc',
-            id: 'cli_reference/devbox_build',
-            label: 'devbox build'
-        }, {
-            type: 'doc',
             id: 'cli_reference/devbox_init',
             label: 'devbox init'
         }, {
@@ -100,47 +96,78 @@ const sidebars = {
             type: 'doc',
             id: 'ide_configuration/vscode'
         }]
-
     }, {
         type: 'category',
-        label: 'Language Detection',
-        collapsed: false,
+        label: "Examples",
+        link: { type: 'doc', id: 'devbox_examples/index' },
         items: [{
-            type: 'doc',
-            id: 'language_support/csharp'
+            type: 'category',
+            label: 'Languages',
+            collapsed: true,
+            items: [{
+                    type: 'doc',
+                    id: 'devbox_examples/languages/csharp'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/elixir'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/go'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/java'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/nodejs'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/php'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/python'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/ruby'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/rust'
+                },
+            ]
         }, {
-            type: 'doc',
-            id: 'language_support/go'
+            type: 'category',
+            label: 'Databases',
+            collapsed: true,
+            items: [{
+                    type: 'doc',
+                    id: 'devbox_examples/databases/mariadb'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/databases/postgres'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/databases/redis'
+                },
+            ]
         }, {
-            type: 'doc',
-            id: 'language_support/haskell'
-        }, {
-            type: 'doc',
-            id: 'language_support/java'
-        }, {
-            type: 'doc',
-            id: 'language_support/nginx'
-        }, {
-            type: 'doc',
-            id: 'language_support/nodejs'
-        }, {
-            type: 'doc',
-            id: 'language_support/php'
-        }, {
-            type: 'doc',
-            id: 'language_support/python'
-        }, {
-            type: 'doc',
-            id: 'language_support/ruby'
-        }, {
-            type: 'doc',
-            id: 'language_support/rust'
-        }, {
-            type: 'doc',
-            id: 'language_support/zig'
+            type: 'category',
+            label: 'Servers',
+            collapsed: true,
+            items: [
+                { type: 'doc', id: 'devbox_examples/servers/apache' },
+                { type: 'doc', id: 'devbox_examples/servers/nginx' }
+            ]
         }]
     }],
-
 };
 
 module.exports = sidebars;
