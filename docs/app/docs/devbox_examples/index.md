@@ -21,7 +21,6 @@ You can view the full list of examples in our [Example Repo](https://github.com/
 * [MariaDB](databases/mariadb.md)
 * [Postgres](databases/postgres.md)
 * [Redis](databases/redis.md)
-* [sqlite3](databases/sqlite.md)
 
 ## Servers
 * [Apache](servers/apache.md)
