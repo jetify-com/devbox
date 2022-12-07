@@ -4,16 +4,13 @@
 package boxcli
 
 import (
-	"fmt"
-	"io"
 	"os"
-	"os/exec"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/cloud"
+	"go.jetpack.io/devbox/cloud/vmssh"
 )
 
 type cloudShellCmdFlags struct {
@@ -30,7 +27,7 @@ func CloudCmd() *cobra.Command {
 		},
 	}
 	command.AddCommand(cloudShellCmd())
-	command.AddCommand(cloudSshCmd())
+	command.AddCommand(cloudSSHCmd())
 	return command
 }
 
@@ -41,7 +38,11 @@ func cloudShellCmd() *cobra.Command {
 		Use:   "shell",
 		Short: "Shell into a cloud environment that matches your local devbox environment",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCloudShellCmd(&flags)
+			box, err := devbox.Open(flags.config.path, os.Stdout)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return cloud.Shell(box.ConfigDir())
 		},
 	}
 
@@ -49,64 +50,20 @@ func cloudShellCmd() *cobra.Command {
 	return command
 }
 
-func runCloudShellCmd(flags *cloudShellCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return cloud.Shell(box.ConfigDir())
-}
-
-func cloudSshCmd() *cobra.Command {
+func cloudSSHCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "ssh",
 		Short: "shim for ssh",
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
+			// This command acts as an ssh shim. We need to set this value
+			// because we do not explicitly declare to cobra all the flags that
+			// the ssh command supports.
 			UnknownFlags: true,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logFile, err := logFile()
-			if err != nil {
-				return err
-			}
-			return runCloudSshCmd(logFile)
+			return vmssh.SSHIfVMExists(os.Args[3:])
 		},
 	}
 
 	return command
-}
-
-func runCloudSshCmd(w io.Writer) error {
-	sshArgs := os.Args[3:]
-	cmd := exec.Command("ssh", sshArgs...)
-	fmt.Fprintf(w, "executing command: %s\n", cmd)
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	//return nil
-	err := cmd.Run()
-	return errors.WithStack(err)
-}
-
-func logFile() (io.Writer, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	dirPath := filepath.Join(home, ".config/devbox/log")
-	if err = os.MkdirAll(dirPath, 0700); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	file, err := os.OpenFile(
-		filepath.Join(dirPath, "devbox_cloud_ssh.log"),
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
-		0700,
-	)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return file, nil
 }

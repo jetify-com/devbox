@@ -101,8 +101,17 @@ func Reset(names ...string) error {
 	return execMutagen(args)
 }
 
-func Terminate(names ...string) error {
+func Terminate(labels map[string]string, names ...string) error {
 	args := []string{"sync", "terminate"}
+
+	if len(labels) > 0 {
+		var labelSelector string
+		for k, v := range labels {
+			labelSelector = fmt.Sprintf("%s,%s", labelSelector, fmt.Sprintf("%s=%s", k, v))
+		}
+		args = append(args, "--label-selector", labelSelector)
+	}
+
 	args = append(args, names...)
 	return execMutagen(args)
 }
@@ -110,7 +119,6 @@ func Terminate(names ...string) error {
 func execMutagen(args []string) error {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, args...)
-	//cmd.Env = os.Environ()
 
 	out, err := cmd.CombinedOutput()
 

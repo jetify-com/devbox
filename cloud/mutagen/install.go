@@ -51,7 +51,7 @@ func Install(url string, installDir string) error {
 func mutagenURL() string {
 	repo := "mutagen-io/mutagen"
 	pkg := "mutagen"
-	version := "v0.16.1" // Hard-coded for now, but change to always get the latest?
+	version := "v0.16.2" // Hard-coded for now, but change to always get the latest?
 	platform := detectPlatform()
 
 	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s_%s_%s.tar.gz", repo, version, pkg, platform, version)
