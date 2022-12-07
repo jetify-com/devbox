@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"go.jetpack.io/devbox/debug"
 )
 
 func Create(spec *SessionSpec) error {
@@ -50,11 +52,13 @@ func Create(spec *SessionSpec) error {
 	return execMutagen(args, spec.EnvVars)
 }
 
-func List(names ...string) ([]Session, error) {
+func List(envVars map[string]string, names ...string) ([]Session, error) {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, "sync", "list", "--template", "{{json .}}")
 	cmd.Args = append(cmd.Args, names...)
+	cmd.Env = env(envVars)
 
+	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -84,10 +88,10 @@ func Pause(names ...string) error {
 	return execMutagen(args, nil /*envVars*/)
 }
 
-func Resume(names ...string) error {
+func Resume(envVars map[string]string, names ...string) error {
 	args := []string{"sync", "resume"}
 	args = append(args, names...)
-	return execMutagen(args, nil /*envVars*/)
+	return execMutagen(args, envVars)
 }
 
 func Flush(names ...string) error {
@@ -96,10 +100,10 @@ func Flush(names ...string) error {
 	return execMutagen(args, nil /*envVars*/)
 }
 
-func Reset(names ...string) error {
+func Reset(envVars map[string]string, names ...string) error {
 	args := []string{"sync", "reset"}
 	args = append(args, names...)
-	return execMutagen(args, nil /*envVars*/)
+	return execMutagen(args, envVars)
 }
 
 func Terminate(names ...string) error {
@@ -113,6 +117,7 @@ func execMutagen(args []string, envVars map[string]string) error {
 	cmd := exec.Command(binPath, args...)
 	cmd.Env = env(envVars)
 
+	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -125,12 +130,22 @@ func execMutagen(args []string, envVars map[string]string) error {
 	return nil
 }
 
-func env(envVars map[string]string) []string {
-	customEnv := []string{}
-	for k, v := range envVars {
-		customEnv = append(customEnv, fmt.Sprintf("%s=%s", k, v))
+func debugPrintExecCmd(cmd *exec.Cmd) {
+	envPrint := "NOOOO MUTAGEN_SSH_PATH"
+	for _, cmdEnv := range cmd.Env {
+		if strings.HasPrefix(cmdEnv, "MUTAGEN_SSH") {
+			envPrint = fmt.Sprintf("%s\n", cmdEnv)
+		}
 	}
-	return append(os.Environ(), customEnv...)
+	debug.Log("running mutagen cmd %s with env: %s", cmd, envPrint)
+}
+
+func env(envVars map[string]string) []string {
+	newEnv := os.Environ()
+	for k, v := range envVars {
+		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
+	}
+	return newEnv
 }
 
 func ensureMutagen() string {

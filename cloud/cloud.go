@@ -19,7 +19,7 @@ import (
 	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cloud/mutagen"
 	"go.jetpack.io/devbox/cloud/openssh"
-	"go.jetpack.io/devbox/cloud/sshshim"
+	"go.jetpack.io/devbox/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/cloud/stepper"
 	"go.jetpack.io/devbox/debug"
 )
