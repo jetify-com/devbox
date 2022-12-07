@@ -1,0 +1,160 @@
+package container
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/debug"
+)
+
+type devcontainerObject struct {
+	Name           string          `json:"name"`
+	Build          *build          `json:"build"`
+	Customizations *customizations `json:"customizations"`
+	RemoteUser     string          `json:"remoteUser"`
+}
+
+type build struct {
+	Dockerfile string     `json:"dockerfile"`
+	Context    string     `json:"context"`
+	Args       *buildArgs `json:"args"`
+}
+
+type buildArgs struct {
+	Variant string `json:"VARIANT"`
+}
+
+type customizations struct {
+	Vscode *vscode `json:"vscode"`
+}
+
+type vscode struct {
+	Settings   any      `json:"settings"`
+	Extensions []string `json:"extensions"`
+}
+
+// Creates a Dockerfile in path and writes getDockerfileContent's output into it
+func CreateDockerfile(path string) error {
+	// create dockerfile
+	file, err := os.Create(filepath.Join(path, "Dockerfile"))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// get dockerfile content
+	dockerfileContent := getDockerfileContent()
+	// write content into file
+	_, err = file.WriteString(dockerfileContent)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// Creates a devcontainer.json in path and writes getDevcontainerContent's output into it
+func CreateDevcontainer(path string, pkgs []string) error {
+
+	// create devcontainer.json file
+	file, err := os.Create(filepath.Join(path, "devcontainer.json"))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// get devcontainer.json's content
+	devcontainerContent := getDevcontainerContent(pkgs)
+	devcontainerFileBytes, err := json.MarshalIndent(devcontainerContent, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// writing devcontainer's content into json file
+	_, err = file.Write(devcontainerFileBytes)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func getDockerfileContent() string {
+
+	return `
+	# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian/.devcontainer/base.Dockerfile
+
+	# [Choice] Debian version (use bullseye on local arm64/Apple Silicon): bullseye, buster
+	ARG VARIANT="buster"
+	FROM mcr.microsoft.com/vscode/devcontainers/base:0-\${VARIANT}
+
+	# These dependencies are required by Nix.
+	RUN apt update -y
+	RUN apt -y install --no-install-recommends curl xz-utils
+
+	USER vscode
+
+	# Install nix
+	ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
+	RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
+    RUN . ~/.nix-profile/etc/profile.d/nix.sh
+	ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
+
+	# Install devbox
+	RUN sudo mkdir /devbox && sudo chown vscode /devbox
+	RUN curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
+
+	# Setup devbox environment
+	COPY --chown=vscode ./devbox.json /devbox/devbox.json
+	RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
+	ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
+	ENTRYPOINT devbox shell
+	`
+}
+
+func getDevcontainerContent(pkgs []string) *devcontainerObject {
+	// getting the correct container image variant based on whether it is running on Apple arm64 chip.
+	variant := "buster"
+	if getCPUArch() == "arm64" {
+		variant = "bullseye"
+	}
+
+	// object that gets written in devcontainer.json
+	return &devcontainerObject{
+		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+		// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian
+		Name: "Devbox Remote Container",
+		Build: &build{
+			Dockerfile: "./Dockerfile",
+			Context:    "..",
+			// Update 'VARIANT' to pick a Debian version: bullseye, buster
+			// Use bullseye on local arm64/Apple Silicon.
+			Args: &buildArgs{
+				Variant: variant,
+			},
+		},
+		Customizations: &customizations{
+			Vscode: &vscode{
+				Settings: map[string]any{
+					// Add custom vscode settings for remote environment here
+				},
+				Extensions: []string{
+					"jetpack-io.devbox",
+					// Add custom vscode extensions for remote environment here
+				},
+			},
+		},
+		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+		RemoteUser: "vscode",
+	}
+}
+
+// runs uname -m to check if running on Apple M-series (arm64) chip
+func getCPUArch() string {
+	cmd := exec.Command("uname", "-m")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		debug.Log("Could not determine cpu architecture. Assuming x86_64.\n %v", err)
+		return "x86_64"
+	}
+	return out.String()
+}

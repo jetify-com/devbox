@@ -16,6 +16,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/boxcli/container"
 	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
@@ -377,6 +378,32 @@ func (d *Devbox) Info(pkg string) error {
 		return errors.WithStack(err)
 	}
 	return pkgcfg.PrintReadme(pkg, d.configDir, d.writer, false /*showSourceEnv*/)
+}
+
+// generates devcontainer.json and Dockerfile for vscode run-in-container
+// and Github Codespaces
+func (d *Devbox) ContainerExport(path string) error {
+	// construct path to devcontainer directory
+	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
+
+	// create directory if it doesn't exits
+	err := os.MkdirAll(devContainerPath, os.ModePerm)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// generate dockerfile
+	err = container.CreateDockerfile(devContainerPath)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// generate devcontainer.json
+	err = container.CreateDevcontainer(devContainerPath, d.cfg.Packages)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 // saveCfg writes the config file to the devbox directory.
