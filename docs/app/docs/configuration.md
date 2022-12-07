@@ -56,24 +56,32 @@ Welcome! See CONTRIBUTING.md for tips on contributing to devbox.
 
 #### Scripts
 
-Scripts are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests). 
+Scripts are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests).
 
 Scripts can be defined by giving a name, and one or more commands. Single command scripts can be added by providing a name, and a string:
 
 ```json
-"scripts": {
-    "print_once": "echo \"Hello Once!\""
+{
+    "shell": {
+        "scripts": {
+            "print_once": "echo \"Hello Once!\""
+        }
+    }
 }
 ```
 
 To run multiple commands in a single script, you can pass them as an array: 
 
 ```json
-"scripts": {
-    "print_twice": [
-        "echo \"Hello Once!\"",
-        "echo \"Hello Twice!\""
-    ]
+{
+    "shell": {
+        "scripts": {
+            "print_twice": [
+                "echo \"Hello Once!\"",
+                "echo \"Hello Twice!\""
+            ]
+        }
+    }
 }
 ```
 
