@@ -12,3 +12,5 @@ Host *.devbox-vms.internal
 	PreferredAuthentications publickey
 	StrictHostKeyChecking no
 	UserKnownHostsFile "{{ .ConfigDir }}/known_hosts"
+	ServerAliveInterval 50
+	ServerAliveCountMax 3
