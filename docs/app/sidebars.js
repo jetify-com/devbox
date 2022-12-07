@@ -96,6 +96,77 @@ const sidebars = {
             type: 'doc',
             id: 'ide_configuration/vscode'
         }]
+    }, {
+        type: 'category',
+        label: "Examples",
+        link: { type: 'doc', id: 'devbox_examples/index' },
+        items: [{
+            type: 'category',
+            label: 'Languages',
+            collapsed: true,
+            items: [{
+                    type: 'doc',
+                    id: 'devbox_examples/languages/csharp'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/elixir'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/go'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/java'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/nodejs'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/php'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/python'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/ruby'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/rust'
+                },
+            ]
+        }, {
+            type: 'category',
+            label: 'Databases',
+            collapsed: true,
+            items: [{
+                    type: 'doc',
+                    id: 'devbox_examples/databases/mariadb'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/databases/postgres'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/databases/redis'
+                },
+            ]
+        }, {
+            type: 'category',
+            label: 'Servers',
+            collapsed: true,
+            items: [
+                { type: 'doc', id: 'devbox_examples/servers/apache' },
+                { type: 'doc', id: 'devbox_examples/servers/nginx' }
+            ]
+        }]
     }],
 };
 
