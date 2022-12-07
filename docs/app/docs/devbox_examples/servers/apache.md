@@ -6,7 +6,7 @@ Apache, when installed with Devbox and Nix, will by default attempt to store it'
 
 To use Apache with your project, you'll need to configure Apache to use a local conf file and temporary directory
 
-(**Example Repo**)[https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache]
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache)
 
 ### Adding Apache to your Shell
 
@@ -93,4 +93,4 @@ To stop it, we'll also need to use a similar command:
 apachectl stop -f $HTTPD_CONFDIR/httpd.conf
 ```
 
-The (example repo)[https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache] shows how you can use the `init_hook` to start apache automatically when you launch your shell, and stop it when the shell exits.
+The [example repo](https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache) shows how you can use the `init_hook` to start apache automatically when you launch your shell, and stop it when the shell exits.

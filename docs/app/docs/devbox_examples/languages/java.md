@@ -53,7 +53,7 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
 6. Add `build/` to `.gitignore`.
 
 
-**Devbox.json**
+An example `devbox.json` would look like the following:
 ```json
 {
   "packages": [
@@ -80,7 +80,7 @@ Maven is an all-in-one CI-CD tool for building testing and deploying Java projec
 5. `java -cp target/devbox-maven-app-1.0-SNAPSHOT.jar com.devbox.mavenapp.App` should print "Hello World!".
 6. Add `target/` to `.gitignore`.
 
-**Devbox.json**
+An example `devbox.json` would look like the following:
 ```json
 {
   "packages": [

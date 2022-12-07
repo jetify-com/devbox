@@ -6,7 +6,7 @@ Nginx, when installed with Devbox and Nix, will by default attempt to store it's
 
 To use Nginx with your project, you'll need to configure Nginx to use a local conf file and temporary directory
 
-(**Example Repo**)[https://github.com/jetpack-io/devbox-examples/tree/main/servers/nginx]
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/nginx)
 
 ### Adding NGINX to your Shell
 
@@ -69,4 +69,4 @@ To stop it, we'll also need to use a similar command:
 nginx -p $NGINX_CONFDIR -c nginx.conf -e error.log -g "pid nginx.pid;" -s stop
 ```
 
-The (example repo)[https://github.com/jetpack-io/devbox-examples/tree/main/servers/nginx] shows how you can use the `init_hook` to start NGINX automatically when you launch your shell, and stop it when the shell exits.
+The [example repo](https://github.com/jetpack-io/devbox-examples/tree/main/servers/nginx) shows how you can use the `init_hook` to start NGINX automatically when you launch your shell, and stop it when the shell exits.
