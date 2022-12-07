@@ -393,7 +393,7 @@ func (d *Devbox) ContainerExport(path string) error {
 	}
 
 	// generate dockerfile
-	err = container.CreateDockerfile(devContainerPath)
+	err = container.CreateDockerfile(tmplFS, devContainerPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}

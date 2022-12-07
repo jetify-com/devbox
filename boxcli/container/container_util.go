@@ -2,7 +2,9 @@ package container
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
+	"html/template"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,17 +40,18 @@ type vscode struct {
 	Extensions []string `json:"extensions"`
 }
 
-// Creates a Dockerfile in path and writes getDockerfileContent's output into it
-func CreateDockerfile(path string) error {
+// Creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
+func CreateDockerfile(tmplFS embed.FS, path string) error {
 	// create dockerfile
 	file, err := os.Create(filepath.Join(path, "Dockerfile"))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	// get dockerfile content
-	dockerfileContent := getDockerfileContent()
+	tmplName := "devcontainerDockerfile.tmpl"
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	_, err = file.WriteString(dockerfileContent)
+	err = t.Execute(file, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -75,39 +78,6 @@ func CreateDevcontainer(path string, pkgs []string) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func getDockerfileContent() string {
-
-	return `
-	# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian/.devcontainer/base.Dockerfile
-
-	# [Choice] Debian version (use bullseye on local arm64/Apple Silicon): bullseye, buster
-	ARG VARIANT="buster"
-	FROM mcr.microsoft.com/vscode/devcontainers/base:0-\${VARIANT}
-
-	# These dependencies are required by Nix.
-	RUN apt update -y
-	RUN apt -y install --no-install-recommends curl xz-utils
-
-	USER vscode
-
-	# Install nix
-	ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
-	RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
-    RUN . ~/.nix-profile/etc/profile.d/nix.sh
-	ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
-
-	# Install devbox
-	RUN sudo mkdir /devbox && sudo chown vscode /devbox
-	RUN curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
-
-	# Setup devbox environment
-	COPY --chown=vscode ./devbox.json /devbox/devbox.json
-	RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
-	ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
-	ENTRYPOINT devbox shell
-	`
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
