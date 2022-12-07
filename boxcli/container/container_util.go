@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/debug"
@@ -117,7 +118,7 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	}
 
 	// object that gets written in devcontainer.json
-	return &devcontainerObject{
+	devcontainerContent := &devcontainerObject{
 		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 		// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian
 		Name: "Devbox Remote Container",
@@ -144,6 +145,22 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 		RemoteUser: "vscode",
 	}
+
+	for _, pkg := range pkgs {
+		if strings.Contains(pkg, "python3") {
+			devcontainerContent.Customizations.Vscode.Settings = map[string]any{
+				"python.defaultInterpreterPath": "/devbox/.devbox/nix/profile/default/bin/python3",
+			}
+			devcontainerContent.Customizations.Vscode.Extensions =
+				append(devcontainerContent.Customizations.Vscode.Extensions, "ms-python.python")
+		}
+		if strings.Contains(pkg, "go_1_") || pkg == "go" {
+			devcontainerContent.Customizations.Vscode.Extensions =
+				append(devcontainerContent.Customizations.Vscode.Extensions, "golang.go")
+		}
+		// TODO: add support for other common languages
+	}
+	return devcontainerContent
 }
 
 // runs uname -m to check if running on Apple M-series (arm64) chip
