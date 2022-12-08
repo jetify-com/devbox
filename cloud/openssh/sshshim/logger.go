@@ -27,8 +27,10 @@ func EnableDebug() {
 	debug.Log("started sshshim\n")
 }
 
-// logFile captures output when there is a failure
-// NOTE: we should limit the size of this log file.
+// logFile captures output for logging and when there is a failure
+// NOTE: Ideally, we should limit the size of this log file, but it is always truncated
+// because only the last ssh invocation (which may have failed) has its output saved.
+// So size should hopefully not be crazy big.
 func logFile() (io.Writer, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
