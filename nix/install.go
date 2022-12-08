@@ -25,13 +25,13 @@ func Install() error {
 	defer r.Close()
 	defer w.Close()
 
-	cmd := exec.Command("sudo", "sh", "-c", installScript)
+	cmd := exec.Command("sh", "-c", installScript, "--", "--daemon")
 	// Attach stdout but no stdin. This makes the command run in non-TTY mode
 	// which skips the interactive prompts.
 	// We could attach stderr? but the stdout prompt is pretty useful.
 	cmd.Stdin = nil
 	cmd.Stdout = w
-	cmd.Stderr = nil
+	cmd.Stderr = w
 
 	fmt.Println("Installing Nix. This will require sudo access.")
 	if err = cmd.Start(); err != nil {
