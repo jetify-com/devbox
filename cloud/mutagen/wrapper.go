@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -56,13 +55,13 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, "sync", "list", "--template", "{{json .}}")
 	cmd.Args = append(cmd.Args, names...)
-	cmd.Env = env(envVars)
+	cmd.Env = envAsKeyValueStrings(envVars)
 
 	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		debug.Log("List error: %s", err)
+		debug.Log("List error: %s, and out: %s", err, out)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			errMsg := strings.TrimSpace(string(out))
 			// Special handle the case where no sessions are found:
@@ -107,43 +106,53 @@ func Reset(envVars map[string]string, names ...string) error {
 	return execMutagen(args, envVars)
 }
 
-func Terminate(names ...string) error {
+func Terminate(env map[string]string, labels map[string]string, names ...string) error {
 	args := []string{"sync", "terminate"}
+
+	if len(labels) > 0 {
+		for k, v := range labels {
+			args = append(args, "--label-selector", fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
 	args = append(args, names...)
-	return execMutagen(args, nil /*envVars*/)
+	return execMutagen(args, env)
 }
 
 func execMutagen(args []string, envVars map[string]string) error {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, args...)
-	cmd.Env = env(envVars)
+	cmd.Env = envAsKeyValueStrings(envVars)
 
 	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		debug.Log("execMutagen error: %s", err)
+		debug.Log("execMutagen error: %s, out: %s", err, out)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			return errors.New(strings.TrimSpace(string(out)))
 		}
 		return err
 	}
 
+	debug.Log("execMutagen worked for cmd: %s", cmd)
 	return nil
 }
 
+// debugPrintExecCmd prints the command to be run, along with MUTAGEN env-vars
 func debugPrintExecCmd(cmd *exec.Cmd) {
-	envPrint := "NOOOO MUTAGEN_SSH_PATH"
+	envPrint := "No MUTAGEN env vars"
 	for _, cmdEnv := range cmd.Env {
-		if strings.HasPrefix(cmdEnv, "MUTAGEN_SSH") {
+		if strings.HasPrefix(cmdEnv, "MUTAGEN") {
 			envPrint = fmt.Sprintf("%s\n", cmdEnv)
 		}
 	}
-	debug.Log("running mutagen cmd %s with env: %s", cmd, envPrint)
+	debug.Log("running mutagen cmd %s with MUTAGEN env: %s", cmd.String(), envPrint)
 }
 
-func env(envVars map[string]string) []string {
-	newEnv := os.Environ()
+// envAsKeyValueStrings prepares the env-vars in key=value format to add to the command to be run
+func envAsKeyValueStrings(envVars map[string]string) []string {
+	newEnv := []string{}
 	for k, v := range envVars {
 		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
 	}

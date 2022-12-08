@@ -61,11 +61,21 @@ func Execute(ctx context.Context, args []string) int {
 	return exe.Execute(ctx, args)
 }
 
+// TODO savil. Add Sentry and other monitoring.
 func executeSSH() int {
 	sshshim.EnableDebug() // Always enable for now.
 	debug.Log("os.Args: %v", os.Args)
+
+	if alive, err := sshshim.EnsureLiveVMOrTerminateMutagenSessions(os.Args[1:]); err != nil {
+		debug.Log("EnsureLiveVMOrTerminateMutagenSessions error: %v", err)
+		fmt.Fprintf(os.Stderr, "%v", err)
+		return 1
+	} else if !alive {
+		return 0
+	}
+
 	if err := sshshim.InvokeSSHOrSCPCommand(os.Args); err != nil {
-		debug.Log("ERROR: %v", err)
+		debug.Log("InvokeSSHorSCPCommand error: %v", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return 1
 	}

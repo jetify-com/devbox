@@ -18,6 +18,7 @@ import (
 	"github.com/fatih/color"
 	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cloud/mutagen"
+	"go.jetpack.io/devbox/cloud/mutagenbox"
 	"go.jetpack.io/devbox/cloud/openssh"
 	"go.jetpack.io/devbox/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/cloud/stepper"
@@ -136,11 +137,11 @@ func syncFiles(username, hostname, configDir string) error {
 
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
-	id, _, _ := strings.Cut(hostname, ".")
+	machineID, _, _ := strings.Cut(hostname, ".")
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
-		Name:        fmt.Sprintf("devbox-%s", id),
+		Name:        fmt.Sprintf("devbox-%s", machineID),
 		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
@@ -151,6 +152,7 @@ func syncFiles(username, hostname, configDir string) error {
 		EnvVars:   envVars,
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
+		Labels:    mutagenbox.MutagenSyncLabels(machineID),
 	})
 	if err != nil {
 		return err

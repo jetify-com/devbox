@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	logFileName = "ssh.log"
+	logFileName = "logs.txt"
 )
 
 func EnableDebug() {
