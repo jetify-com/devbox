@@ -382,7 +382,7 @@ func (d *Devbox) Info(pkg string) error {
 
 // generates devcontainer.json and Dockerfile for vscode run-in-container
 // and Github Codespaces
-func (d *Devbox) GenerateDevcontainer(path string) error {
+func (d *Devbox) GenerateDevcontainer() error {
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
 
@@ -403,6 +403,17 @@ func (d *Devbox) GenerateDevcontainer(path string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+// generates a Dockerfile that replicates the devbox shell
+func (d *Devbox) GenerateDockerfile() error {
+	// generate dockerfile
+	err := generate.CreateDockerfile(tmplFS, d.configDir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
 

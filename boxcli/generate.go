@@ -26,7 +26,8 @@ func GenerateCmd() *cobra.Command {
 			return runGenerateCmd(cmd, args, flags)
 		},
 	}
-	command.AddCommand(exportCmd())
+	command.AddCommand(devcontainerCmd())
+	command.AddCommand(dockerfileCmd())
 	flags.config.register(command)
 
 	return command
@@ -47,7 +48,7 @@ func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) er
 	return box.Generate()
 }
 
-func exportCmd() *cobra.Command {
+func devcontainerCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 	command := &cobra.Command{
 		Use:   "devcontainer",
@@ -56,6 +57,21 @@ func exportCmd() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDevcontainerCmd(cmd, args, flags)
+		},
+	}
+	flags.config.register(command)
+	return command
+}
+
+func dockerfileCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+	command := &cobra.Command{
+		Use:   "dockerfile",
+		Short: "Generate a Dockerfile that replicates devbox shell",
+		Long:  "Generate a Dockerfile that replicates devbox shell. Can be used to run devbox shell environment in an OCI container.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runDockerfileCmd(cmd, args, flags)
 		},
 	}
 	flags.config.register(command)
@@ -72,5 +88,18 @@ func runDevcontainerCmd(_ *cobra.Command, args []string, flags *generateCmdFlags
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.GenerateDevcontainer(path)
+	return box.GenerateDevcontainer()
+}
+
+func runDockerfileCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
+	path, err := configPathFromUser(args, &flags.config)
+	if err != nil {
+		return err
+	}
+	// Check the directory exists.
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return box.GenerateDockerfile()
 }
