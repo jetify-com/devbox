@@ -16,8 +16,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/boxcli/container"
 	"go.jetpack.io/devbox/boxcli/featureflag"
+	"go.jetpack.io/devbox/boxcli/generate"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/nix"
@@ -382,7 +382,7 @@ func (d *Devbox) Info(pkg string) error {
 
 // generates devcontainer.json and Dockerfile for vscode run-in-container
 // and Github Codespaces
-func (d *Devbox) ContainerExport(path string) error {
+func (d *Devbox) GenerateDevcontainer(path string) error {
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
 
@@ -393,13 +393,13 @@ func (d *Devbox) ContainerExport(path string) error {
 	}
 
 	// generate dockerfile
-	err = container.CreateDockerfile(tmplFS, devContainerPath)
+	err = generate.CreateDockerfile(tmplFS, devContainerPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	// generate devcontainer.json
-	err = container.CreateDevcontainer(devContainerPath, d.cfg.Packages)
+	err = generate.CreateDevcontainer(devContainerPath, d.cfg.Packages)
 	if err != nil {
 		return errors.WithStack(err)
 	}
