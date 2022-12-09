@@ -1,10 +1,7 @@
 {
   "packages": [
     "go_1_19",
-    "golangci-lint",
-    "apacheHttpd",
-    "nginx",
-    "php"
+    "golangci-lint"
   ],
   "shell": {
     "init_hook": "export \"GOROOT=$(go env GOROOT)\""
