@@ -13,6 +13,7 @@ import (
 
 type generateCmdFlags struct {
 	config configFlags
+	force  bool
 }
 
 func GenerateCmd() *cobra.Command {
@@ -59,7 +60,8 @@ func devcontainerCmd() *cobra.Command {
 			return runDevcontainerCmd(cmd, args, flags)
 		},
 	}
-	flags.config.register(command)
+	command.Flags().BoolVarP(
+		&flags.force, "force", "f", false, "force overwrite on existing files")
 	return command
 }
 
@@ -74,6 +76,8 @@ func dockerfileCmd() *cobra.Command {
 			return runDockerfileCmd(cmd, args, flags)
 		},
 	}
+	command.Flags().BoolVarP(
+		&flags.force, "force", "f", false, "force overwrite on existing files")
 	flags.config.register(command)
 	return command
 }
@@ -88,7 +92,7 @@ func runDevcontainerCmd(_ *cobra.Command, args []string, flags *generateCmdFlags
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.GenerateDevcontainer()
+	return box.GenerateDevcontainer(flags.force)
 }
 
 func runDockerfileCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
@@ -101,5 +105,5 @@ func runDockerfileCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) 
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.GenerateDockerfile()
+	return box.GenerateDockerfile(flags.force)
 }

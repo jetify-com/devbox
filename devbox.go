@@ -18,6 +18,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/boxcli/generate"
+	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/cuecfg"
 	"go.jetpack.io/devbox/debug"
 	"go.jetpack.io/devbox/nix"
@@ -382,36 +383,66 @@ func (d *Devbox) Info(pkg string) error {
 
 // generates devcontainer.json and Dockerfile for vscode run-in-container
 // and Github Codespaces
-func (d *Devbox) GenerateDevcontainer() error {
+func (d *Devbox) GenerateDevcontainer(force bool) error {
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
+	devContainerJsonPath := filepath.Join(devContainerPath, "devcontainer.json")
+	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
-	// create directory if it doesn't exits
-	err := os.MkdirAll(devContainerPath, os.ModePerm)
-	if err != nil {
-		return errors.WithStack(err)
+	filesExist := false
+	// check if devcontainer.json doesn't exits
+	if plansdk.FileExists(devContainerJsonPath) {
+		filesExist = true
+	}
+	// check if Dockerfile doesn't exits
+	if plansdk.FileExists(dockerfilePath) {
+		filesExist = true
 	}
 
-	// generate dockerfile
-	err = generate.CreateDockerfile(tmplFS, devContainerPath)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// generate devcontainer.json
-	err = generate.CreateDevcontainer(devContainerPath, d.cfg.Packages)
-	if err != nil {
-		return errors.WithStack(err)
+	if force || !filesExist {
+		// create directory
+		err := os.MkdirAll(devContainerPath, os.ModePerm)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// generate dockerfile
+		err = generate.CreateDockerfile(tmplFS, devContainerPath)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// generate devcontainer.json
+		err = generate.CreateDevcontainer(devContainerPath, d.cfg.Packages)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		return usererr.New(
+			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
+				"Remove the files or use --force to overwrite them.",
+		)
 	}
 	return nil
 }
 
 // generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile() error {
-	// generate dockerfile
-	err := generate.CreateDockerfile(tmplFS, d.configDir)
-	if err != nil {
-		return errors.WithStack(err)
+func (d *Devbox) GenerateDockerfile(force bool) error {
+	dockerfilePath := filepath.Join(d.configDir, "Dockerfile")
+	filesExist := false
+	// check if Dockerfile doesn't exits
+	if plansdk.FileExists(dockerfilePath) {
+		filesExist = true
+	}
+	if force || !filesExist {
+		// generate dockerfile
+		err := generate.CreateDockerfile(tmplFS, d.configDir)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		return usererr.New(
+			"Dockerfile is already present in the current directory. " +
+				"Remove it or use --force to overwrite it.",
+		)
 	}
 
 	return nil
