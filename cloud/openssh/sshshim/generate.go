@@ -2,7 +2,6 @@ package sshshim
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -28,23 +27,20 @@ func Setup() error {
 		return err
 	}
 
-	// create ssh symlink
 	devboxExecutablePath, err := os.Executable()
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	// create ssh symlink
 	sshSymlink := filepath.Join(shimDir, "ssh")
 	if err := makeSymlink(sshSymlink, devboxExecutablePath); err != nil {
 		return errors.WithStack(err)
 	}
 
 	// create scp symlink
-	scpExecutablePath, err := exec.LookPath("scp")
-	if err != nil {
-		return errors.WithStack(err)
-	}
 	scpSymlink := filepath.Join(shimDir, "scp")
-	if err := makeSymlink(scpSymlink, scpExecutablePath); err != nil {
+	if err := makeSymlink(scpSymlink, devboxExecutablePath); err != nil {
 		return errors.WithStack(err)
 	}
 
