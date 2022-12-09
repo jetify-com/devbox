@@ -16,7 +16,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cloud/mutagen"
 	"go.jetpack.io/devbox/cloud/mutagenbox"
 	"go.jetpack.io/devbox/cloud/openssh"
@@ -127,10 +126,11 @@ func getVirtualMachine(username string) string {
 }
 
 func syncFiles(username, hostname, configDir string) error {
+
 	projectName := projectDirName(configDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
-	envVars, err := syncEnvVars()
+	env, err := mutagenbox.DefaultEnv()
 	if err != nil {
 		return err
 	}
@@ -149,10 +149,10 @@ func syncFiles(username, hostname, configDir string) error {
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
 		BetaPath:  fmt.Sprintf("~/code/%s", projectName),
-		EnvVars:   envVars,
+		EnvVars:   env,
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
-		Labels:    mutagenbox.MutagenSyncLabels(machineID),
+		Labels:    mutagenbox.DefaultSyncLabels(machineID),
 	})
 	if err != nil {
 		return err
@@ -199,21 +199,4 @@ func parseVMEnvVar() (username string, vmHostname string) {
 	username = parts[0]
 	vmHostname = parts[1]
 	return
-}
-
-func syncEnvVars() (map[string]string, error) {
-	if featureflag.SSHShim.Disabled() {
-		return map[string]string{}, nil
-	}
-
-	shimDir, err := sshshim.Dir()
-	if err != nil {
-		return nil, err
-	}
-
-	envVars := map[string]string{
-		"MUTAGEN_SSH_PATH": shimDir,
-	}
-
-	return envVars, nil
 }

@@ -140,10 +140,10 @@ func execMutagen(args []string, envVars map[string]string) error {
 
 // debugPrintExecCmd prints the command to be run, along with MUTAGEN env-vars
 func debugPrintExecCmd(cmd *exec.Cmd) {
-	envPrint := "No MUTAGEN env vars"
+	envPrint := ""
 	for _, cmdEnv := range cmd.Env {
 		if strings.HasPrefix(cmdEnv, "MUTAGEN") {
-			envPrint = fmt.Sprintf("%s\n", cmdEnv)
+			envPrint = fmt.Sprintf("%s, %s", envPrint, cmdEnv)
 		}
 	}
 	debug.Log("running mutagen cmd %s with MUTAGEN env: %s", cmd.String(), envPrint)

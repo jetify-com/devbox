@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/cloud/mutagenbox"
 	"go.jetpack.io/devbox/debug"
 )
 
@@ -32,11 +33,10 @@ func EnableDebug() {
 // because only the last ssh invocation (which may have failed) has its output saved.
 // So size should hopefully not be crazy big.
 func logFile() (io.Writer, error) {
-	home, err := os.UserHomeDir()
+	dirPath, err := mutagenbox.ShimDir()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	dirPath := filepath.Join(home, configShimDir)
 
 	file, err := os.OpenFile(
 		filepath.Join(dirPath, logFileName),
