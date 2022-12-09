@@ -53,7 +53,7 @@ func devcontainerCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 	command := &cobra.Command{
 		Use:   "devcontainer",
-		Short: "Generate Dockerfile and devcontainer.json files",
+		Short: "Generate Dockerfile and devcontainer.json files under .devcontainer/ directory",
 		Long:  "Generate Dockerfile and devcontainer.json files necessary to run VSCode in remote container environments.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

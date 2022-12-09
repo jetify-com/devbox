@@ -1,17 +1,14 @@
 package generate
 
 import (
-	"bytes"
 	"embed"
 	"encoding/json"
 	"html/template"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/debug"
 )
 
 type devcontainerObject struct {
@@ -81,12 +78,6 @@ func CreateDevcontainer(path string, pkgs []string) error {
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
-	// getting the correct container image variant based on whether it is running on Apple arm64 chip.
-	variant := "buster"
-	if getCPUArch() == "arm64" {
-		variant = "bullseye"
-	}
-
 	// object that gets written in devcontainer.json
 	devcontainerContent := &devcontainerObject{
 		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
@@ -95,11 +86,6 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		Build: &build{
 			Dockerfile: "./Dockerfile",
 			Context:    "..",
-			// Update 'VARIANT' to pick a Debian version: bullseye, buster
-			// Use bullseye on local arm64/Apple Silicon.
-			Args: &buildArgs{
-				Variant: variant,
-			},
 		},
 		Customizations: &customizations{
 			Vscode: &vscode{
@@ -131,17 +117,4 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		// TODO: add support for other common languages
 	}
 	return devcontainerContent
-}
-
-// runs uname -m to check if running on Apple M-series (arm64) chip
-func getCPUArch() string {
-	cmd := exec.Command("uname", "-m")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		debug.Log("Could not determine cpu architecture. Assuming x86_64.\n %v", err)
-		return "x86_64"
-	}
-	return out.String()
 }

@@ -389,15 +389,8 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 	devContainerJSONPath := filepath.Join(devContainerPath, "devcontainer.json")
 	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
-	filesExist := false
-	// check if devcontainer.json doesn't exits
-	if plansdk.FileExists(devContainerJSONPath) {
-		filesExist = true
-	}
-	// check if Dockerfile doesn't exits
-	if plansdk.FileExists(dockerfilePath) {
-		filesExist = true
-	}
+	// check if devcontainer.json or Dockerfile exist
+	filesExist := plansdk.FileExists(devContainerJSONPath) || plansdk.FileExists(dockerfilePath)
 
 	if force || !filesExist {
 		// create directory
@@ -427,11 +420,8 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 // generates a Dockerfile that replicates the devbox shell
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.configDir, "Dockerfile")
-	filesExist := false
 	// check if Dockerfile doesn't exits
-	if plansdk.FileExists(dockerfilePath) {
-		filesExist = true
-	}
+	filesExist := plansdk.FileExists(dockerfilePath)
 	if force || !filesExist {
 		// generate dockerfile
 		err := generate.CreateDockerfile(tmplFS, d.configDir)
