@@ -113,7 +113,7 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 			},
 		},
 		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-		RemoteUser: "vscode",
+		RemoteUser: "devbox",
 	}
 
 	for _, pkg := range pkgs {

@@ -1,7 +1,7 @@
 FROM alpine:3
 
 # Setting up devbox user
-ENV DEVBOX_USER=vscode
+ENV DEVBOX_USER=devbox
 RUN adduser -h /home/$DEVBOX_USER -D -s /bin/bash $DEVBOX_USER
 RUN addgroup sudo
 RUN addgroup $DEVBOX_USER sudo
