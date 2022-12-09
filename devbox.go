@@ -386,12 +386,12 @@ func (d *Devbox) Info(pkg string) error {
 func (d *Devbox) GenerateDevcontainer(force bool) error {
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
-	devContainerJsonPath := filepath.Join(devContainerPath, "devcontainer.json")
+	devContainerJSONPath := filepath.Join(devContainerPath, "devcontainer.json")
 	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
 	filesExist := false
 	// check if devcontainer.json doesn't exits
-	if plansdk.FileExists(devContainerJsonPath) {
+	if plansdk.FileExists(devContainerJSONPath) {
 		filesExist = true
 	}
 	// check if Dockerfile doesn't exits
