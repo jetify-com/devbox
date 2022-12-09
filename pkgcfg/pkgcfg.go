@@ -22,6 +22,7 @@ type config struct {
 	CreateFiles map[string]string `json:"create_files"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
+	Services    Services          `json:"services"`
 }
 
 func CreateFilesAndShowReadme(pkg, rootDir string) error {
