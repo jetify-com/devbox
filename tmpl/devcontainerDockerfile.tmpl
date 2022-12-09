@@ -1,27 +1,30 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian/.devcontainer/base.Dockerfile
+FROM alpine:3
 
-# [Choice] Debian version (use bullseye on local arm64/Apple Silicon): bullseye, buster
-ARG VARIANT="buster"
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-\${VARIANT}
+# Setting up devbox user
+ENV DEVBOX_USER=vscode
+RUN adduser -h /home/$DEVBOX_USER -D -s /bin/bash $DEVBOX_USER
+RUN addgroup sudo
+RUN addgroup $DEVBOX_USER sudo
+RUN echo " $DEVBOX_USER      ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-# These dependencies are required by Nix.
-RUN apt update -y
-RUN apt -y install --no-install-recommends curl xz-utils
+# installing dependencies
+RUN apk add --no-cache bash binutils git libstdc++ xz sudo
 
-USER vscode
+USER $DEVBOX_USER
 
-# Install nix
-ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
-RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
+# installing devbox
+RUN wget --quiet --output-document=/dev/stdout https://get.jetpack.io/devbox | bash -s -- -f
+RUN chown -R "${DEVBOX_USER}:${DEVBOX_USER}" /usr/local/bin/devbox
+
+# nix installer script
+RUN wget --quiet --output-document=/dev/stdout https://nixos.org/nix/install | sh -s -- --no-daemon
 RUN . ~/.nix-profile/etc/profile.d/nix.sh
-ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
+# updating PATH
+ENV PATH="/home/${DEVBOX_USER}/.nix-profile/bin:/home/${DEVBOX_USER}/.devbox/nix/profile/default/bin:${PATH}"
 
-# Install devbox
-RUN sudo mkdir /devbox && sudo chown vscode /devbox
-RUN curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
+WORKDIR /code
+COPY devbox.json devbox.json
+RUN devbox shell -- echo "Installing packages"
+ENTRYPOINT ["devbox"]
+CMD ['shell']
 
-# Setup devbox environment
-COPY --chown=vscode ./devbox.json /devbox/devbox.json
-RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
-ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
-ENTRYPOINT devbox shell
