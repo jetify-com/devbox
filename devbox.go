@@ -481,6 +481,18 @@ func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
 	}
 }
 
+func (d *Devbox) Services() (pkgcfg.Services, error) {
+	return pkgcfg.GetServices(d.cfg.Packages, d.configDir)
+}
+
+func (d *Devbox) StartService(serviceName string) error {
+	return pkgcfg.StartService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+}
+
+func (d *Devbox) StopService(serviceName string) error {
+	return pkgcfg.StopService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+}
+
 func (d *Devbox) generateShellFiles() error {
 	plan, err := d.ShellPlan()
 	if err != nil {

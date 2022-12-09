@@ -25,6 +25,10 @@ func PrintReadme(
 		return err
 	}
 
+	if err = printServices(cfg, w, markdown); err != nil {
+		return err
+	}
+
 	if err = printCreateFiles(cfg, w, markdown); err != nil {
 		return err
 	}
@@ -57,6 +61,24 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
+func printServices(cfg *config, w io.Writer, markdown bool) error {
+	if len(cfg.Services) == 0 {
+		return nil
+	}
+	services := ""
+	for _, service := range cfg.Services {
+		services += fmt.Sprintf("* %[1]s\n", service.Name)
+	}
+
+	_, err := fmt.Fprintf(
+		w,
+		"%sServices:\n%s\nUse `devbox services start|stop [service]` to interact with services\n\n",
+		lo.Ternary(markdown, "### ", ""),
+		services,
+	)
+	return errors.WithStack(err)
+}
+
 func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
 	if len(cfg.CreateFiles) == 0 {
 		return nil
@@ -71,7 +93,7 @@ func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
 
 	_, err := fmt.Fprintf(
 		w,
-		"%sThis configuration creates the following helper shims:\n%s\n",
+		"%sThis configuration creates the following helper files:\n%s\n",
 		lo.Ternary(markdown, "### ", ""),
 		shims,
 	)
