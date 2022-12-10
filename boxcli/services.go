@@ -37,10 +37,6 @@ func ServicesCmd() *cobra.Command {
 		Use:   "start [service]",
 		Short: "Starts service",
 		Args:  cobra.ExactArgs(1),
-		PersistentPreRunE: validateInShell(
-			"You must be in devbox shell to start services. Please run " +
-				"`devbox shell` first.",
-		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return startService(args[0], flags)
 		},
@@ -50,10 +46,6 @@ func ServicesCmd() *cobra.Command {
 		Use:   "stop [service]",
 		Short: "Stops service",
 		Args:  cobra.ExactArgs(1),
-		PersistentPreRunE: validateInShell(
-			"You must be in devbox shell to stop services. Please run " +
-				"`devbox shell` first.",
-		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return stopService(args[0], flags)
 		},

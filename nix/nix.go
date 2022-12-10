@@ -33,12 +33,13 @@ func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.Name, i.Version)
 }
 
-func Exec(path string, command []string) error {
+func Exec(path string, command []string, env []string) error {
 	runCmd := strings.Join(command, " ")
 	cmd := exec.Command("nix-shell", path, "--run", runCmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(), env...)
 	return errors.WithStack(cmd.Run())
 }
 
