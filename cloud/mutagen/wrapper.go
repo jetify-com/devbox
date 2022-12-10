@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -152,7 +153,7 @@ func debugPrintExecCmd(cmd *exec.Cmd) {
 
 // envAsKeyValueStrings prepares the env-vars in key=value format to add to the command to be run
 func envAsKeyValueStrings(envVars map[string]string) []string {
-	newEnv := []string{}
+	newEnv := os.Environ()
 	for k, v := range envVars {
 		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
 	}
