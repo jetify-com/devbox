@@ -152,12 +152,41 @@ func debugPrintExecCmd(cmd *exec.Cmd) {
 }
 
 // envAsKeyValueStrings prepares the env-vars in key=value format to add to the command to be run
-func envAsKeyValueStrings(envVars map[string]string) []string {
-	newEnv := os.Environ()
-	for k, v := range envVars {
-		newEnv = append(newEnv, fmt.Sprintf("%s=%s", k, v))
+//
+// panics if os.Environ() returns an array with any element not in key=value format
+func envAsKeyValueStrings(userEnv map[string]string) []string {
+	if userEnv == nil {
+		userEnv = map[string]string{}
 	}
-	return newEnv
+
+	// Convert env to map, and strip out MUTAGEN_PROMPTER env-var
+	envMap := map[string]string{}
+	for _, envVar := range os.Environ() {
+		k, v, found := strings.Cut(envVar, "=")
+		if !found {
+			panic(fmt.Sprintf("did not find an = in env-var: %s", envVar))
+		}
+		// Mutagen sets this variable for ssh/scp scenarios, which then expect interactivity?
+		// https://github.com/mutagen-io/mutagen/blob/b97ff3764a6a6cb91b48ad27def078f6d6a76e24/cmd/mutagen/main.go#L89-L94
+		//
+		// We do not include MUTAGEN_PROMPTER, otherwise mutagen-CLI rejects the command we are about to invoke,
+		// by treating it instead as a prompter-command.
+		if k != "MUTAGEN_PROMPTER" {
+			envMap[k] = v
+		}
+	}
+
+	// userEnv overrides the default env
+	for k, v := range userEnv {
+		envMap[k] = v
+	}
+
+	// Convert the envMap to an envList
+	envList := []string{}
+	for k, v := range envMap {
+		envList = append(envList, fmt.Sprintf("%s=%s", k, v))
+	}
+	return envList
 }
 
 func ensureMutagen() string {

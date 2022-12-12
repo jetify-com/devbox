@@ -5,9 +5,9 @@ import (
 )
 
 // TerminateForMachine is a devbox-specific API that calls the generic mutagen terminate API.
-func TerminateForMachine(machineID string, envVars map[string]string) error {
+func TerminateForMachine(machineID string, env map[string]string) error {
 	labels := MutagenSyncLabels(machineID)
-	return mutagen.Terminate(envVars, labels)
+	return mutagen.Terminate(env, labels)
 }
 
 // Ideally, this should be in the cloud package but it leads to a compile cycle.

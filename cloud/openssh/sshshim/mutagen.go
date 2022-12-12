@@ -45,14 +45,7 @@ func terminateMutagenSessions(vmAddr string) error {
 				"For completeness, VmAddr is %s", hostname, vmAddr)
 	}
 
-	envVars := map[string]string{
-		// Mutagen sets this variable for ssh/scp scenarios, which then expect interactivity?
-		// https://github.com/mutagen-io/mutagen/blob/b97ff3764a6a6cb91b48ad27def078f6d6a76e24/cmd/mutagen/main.go#L89-L94
-		//
-		// We turn it off, otherwise it rejects the mutagen command we are about to invoke.
-		"MUTAGEN_PROMPTER": "",
-	}
-	return mutagenbox.TerminateForMachine(machineID, envVars)
+	return mutagenbox.TerminateForMachine(machineID, nil /*env*/)
 }
 
 func checkActiveVM(vmAddr string) (bool, error) {
