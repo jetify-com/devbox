@@ -4,8 +4,10 @@ import (
 	"go.jetpack.io/devbox/cloud/mutagen"
 )
 
-// TerminateForMachine is a devbox-specific API that calls the generic mutagen terminate API.
-func TerminateForMachine(machineID string, env map[string]string) error {
+// TerminateSessionsForMachine is a devbox-specific API that calls the generic mutagen terminate API.
+// It relies on the mutagen-sync-session's labels to identify which sessions to terminate for
+// a particular machine (fly VM).
+func TerminateSessionsForMachine(machineID string, env map[string]string) error {
 	labels := MutagenSyncLabels(machineID)
 	return mutagen.Terminate(env, labels)
 }

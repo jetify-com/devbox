@@ -45,7 +45,7 @@ func terminateMutagenSessions(vmAddr string) error {
 				"For completeness, VmAddr is %s", hostname, vmAddr)
 	}
 
-	return mutagenbox.TerminateForMachine(machineID, nil /*env*/)
+	return mutagenbox.TerminateSessionsForMachine(machineID, nil /*env*/)
 }
 
 func checkActiveVM(vmAddr string) (bool, error) {
