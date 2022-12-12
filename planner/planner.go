@@ -59,7 +59,6 @@ var PLANNERS = []plansdk.Planner{
 	&objectivec.Planner{},
 	&ocaml.Planner{},
 	&perl.Planner{},
-	&php.Planner{},
 	&php.V2Planner{},
 	&python.PoetryPlanner{},
 	&python.PIPPlanner{},
