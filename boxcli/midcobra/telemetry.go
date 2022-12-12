@@ -50,6 +50,8 @@ type telemetryMiddleware struct {
 
 	// Used during execution:
 	startTime time.Time
+
+	executionID string
 }
 
 // telemetryMiddleware implements interface Middleware (compile-time check)
@@ -63,7 +65,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	if m.disabled {
 		return
 	}
-	initSentry(m.opts)
+	initSentry(m.opts, m.executionID)
 	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
 		// Discard logs:
@@ -83,7 +85,10 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	var sentryEventID string
 	if runErr != nil {
 		defer sentry.Flush(2 * time.Second)
-		sentryEventID = string(*sentry.CaptureException(runErr))
+		_ /*eventIDPointer*/ = sentry.CaptureException(runErr)
+		sentryEventID = m.executionID
+		// verified with manual testing that the sentryID returned by CaptureException
+		// is the same as m.executionID, since we set EventID = m.executionID in initSentry()
 	}
 
 	trackEvent(segmentClient, &event{
@@ -99,7 +104,12 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	})
 }
 
-func initSentry(opts TelemetryOpts) {
+func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
+	m.executionID = execID
+	return m
+}
+
+func initSentry(opts TelemetryOpts, executionID string) {
 	sentrySyncTransport := sentry.NewHTTPSyncTransport()
 	sentrySyncTransport.Timeout = time.Second * 2
 	release := opts.AppName + "@" + opts.AppVersion
@@ -119,6 +129,7 @@ func initSentry(opts TelemetryOpts) {
 				// edit in place and remove error message from tracking
 				event.Exception[i].Value = ""
 			}
+			event.EventID = sentry.EventID(executionID)
 			return event
 		},
 	})
