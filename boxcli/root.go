@@ -64,7 +64,7 @@ func Execute(ctx context.Context, args []string) int {
 func executeSSH() int {
 	sshshim.EnableDebug() // Always enable for now.
 	debug.Log("os.Args: %v", os.Args)
-	if err := sshshim.InvokeSSHCommand(); err != nil {
+	if err := sshshim.InvokeSSHOrSCPCommand(os.Args); err != nil {
 		debug.Log("ERROR: %v", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return 1
@@ -73,7 +73,8 @@ func executeSSH() int {
 }
 
 func Main() {
-	if strings.HasSuffix(os.Args[0], "ssh") {
+	if strings.HasSuffix(os.Args[0], "ssh") ||
+		strings.HasSuffix(os.Args[0], "scp") {
 		code := executeSSH()
 		os.Exit(code)
 	}
