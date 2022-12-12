@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/nix"
 )
 
@@ -102,13 +101,4 @@ func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (str
 	cmds := args[index:]
 
 	return path, cmds, nil
-}
-
-func validateInShell(msg string) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if devbox.IsDevboxShellEnabled() {
-			return nil
-		}
-		return usererr.New(msg)
-	}
 }

@@ -320,13 +320,27 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
 	}
 
-	shell, err := nix.DetectShell(
+	opts := []nix.ShellOption{
 		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
 		nix.WithConfigDir(d.configDir),
-	)
+	}
+
+	if featureflag.PKGConfig.Enabled() {
+		env, err := pkgcfg.Env(plan.DevPackages, d.configDir)
+		if err != nil {
+			return err
+		}
+		opts = append(
+			opts,
+			nix.WithEnvVariables(env),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
+		)
+	}
+
+	shell, err := nix.DetectShell(opts...)
 
 	if err != nil {
 		fmt.Print(err)
@@ -357,11 +371,23 @@ func (d *Devbox) Exec(cmds ...string) error {
 		return err
 	}
 
-	pathWithProfileBin := fmt.Sprintf("PATH=%s:$PATH", profileBinDir)
+	env := []string{}
+	confBinPath := ""
+	if featureflag.PKGConfig.Enabled() {
+		envMap, err := pkgcfg.Env(d.cfg.Packages, d.configDir)
+		if err != nil {
+			return err
+		}
+		for k, v := range envMap {
+			env = append(env, fmt.Sprintf("%s=%s", k, v))
+		}
+		confBinPath = filepath.Join(d.configDir, ".devbox/conf/bin") + ":"
+	}
+	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", confBinPath, profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
 	nixDir := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
-	return nix.Exec(nixDir, cmds)
+	return nix.Exec(nixDir, cmds, env)
 }
 
 func (d *Devbox) PrintShellEnv() error {
@@ -486,10 +512,16 @@ func (d *Devbox) Services() (pkgcfg.Services, error) {
 }
 
 func (d *Devbox) StartService(serviceName string) error {
+	if !IsDevboxShellEnabled() {
+		return d.Exec("devbox", "services", "start", serviceName)
+	}
 	return pkgcfg.StartService(d.cfg.Packages, serviceName, d.configDir, d.writer)
 }
 
 func (d *Devbox) StopService(serviceName string) error {
+	if !IsDevboxShellEnabled() {
+		return d.Exec("devbox", "services", "stop", serviceName)
+	}
 	return pkgcfg.StopService(d.cfg.Packages, serviceName, d.configDir, d.writer)
 }
 
