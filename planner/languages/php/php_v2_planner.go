@@ -11,6 +11,8 @@ import (
 	"go.jetpack.io/devbox/planner/plansdk"
 )
 
+var composerPackageRegex = regexp.MustCompile(`^php\d\dPackages.composer$`)
+
 type V2Planner struct {
 	userPackages []string
 }
@@ -33,16 +35,23 @@ func (p *V2Planner) IsRelevantForPackages(packages []string) bool {
 
 func (p *V2Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	phpPackage := p.getPHPPackage()
-	return &plansdk.ShellPlan{
-		Definitions: []string{
-			fmt.Sprintf(
-				"%s = pkgs.%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
-				phpPackage,
-				phpPackage,
-				strings.Join(p.getExtensions(), " "),
-			),
-		},
+	definitions := []string{
+		fmt.Sprintf(
+			"%s = pkgs.%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
+			phpPackage,
+			phpPackage,
+			strings.Join(p.getExtensions(), " "),
+		),
 	}
+
+	if composerPackage := p.getComposerPackage(); composerPackage != "" {
+		definitions = append(
+			definitions,
+			fmt.Sprintf("%s = %s.packages.composer;", composerPackage, phpPackage),
+		)
+	}
+
+	return &plansdk.ShellPlan{Definitions: definitions}
 }
 
 func (p *V2Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
@@ -58,6 +67,16 @@ func (p *V2Planner) getPHPPackage() string {
 	}
 	return ""
 }
+
+func (p *V2Planner) getComposerPackage() string {
+	for _, pkg := range p.userPackages {
+		if composerPackageRegex.Match([]byte(pkg)) {
+			return pkg
+		}
+	}
+	return ""
+}
+
 func (p *V2Planner) getExtensions() []string {
 	regexp := regexp.MustCompile(`^php[0-9]*Extensions\..+$`)
 	var extensions []string
