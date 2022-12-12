@@ -2,6 +2,7 @@ package debug
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -22,6 +23,10 @@ func Enable() {
 	log.SetPrefix("[DEBUG] ")
 	log.SetFlags(log.Llongfile | log.Ldate | log.Ltime)
 	_ = log.Output(2, "Debug mode enabled.")
+}
+
+func SetOutput(w io.Writer) {
+	log.SetOutput(w)
 }
 
 func Log(format string, v ...any) {

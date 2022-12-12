@@ -28,32 +28,40 @@ func Setup() error {
 		return err
 	}
 
-	// TODO use in the next PR instead of sshExecutablePath
-	//devboxExecutablePath, err := os.Executable()
-	//if err != nil {
-	//	return errors.WithStack(err)
-	//}
-	sshExecutablePath, err := exec.LookPath("ssh")
+	// create ssh symlink
+	devboxExecutablePath, err := os.Executable()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if err := os.Symlink(sshExecutablePath, filepath.Join(shimDir, "ssh")); err != nil {
-		if !os.IsExist(err) {
-			return errors.WithStack(err)
-		}
+	sshSymlink := filepath.Join(shimDir, "ssh")
+	if err := makeSymlink(sshSymlink, devboxExecutablePath); err != nil {
+		return errors.WithStack(err)
 	}
 
+	// create scp symlink
 	scpExecutablePath, err := exec.LookPath("scp")
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := os.Symlink(scpExecutablePath, filepath.Join(shimDir, "scp")); err != nil {
+	scpSymlink := filepath.Join(shimDir, "scp")
+	if err := makeSymlink(scpSymlink, scpExecutablePath); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func makeSymlink(from string, target string) error {
+
+	if err := os.Remove(from); err != nil && !os.IsNotExist(err) {
+		return errors.WithStack(err)
+	}
+
+	if err := os.Symlink(target, from); err != nil {
 		if !os.IsExist(err) {
 			return errors.WithStack(err)
 		}
 	}
-
 	return nil
 }
 
