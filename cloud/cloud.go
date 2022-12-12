@@ -16,14 +16,20 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"go.jetpack.io/devbox/boxcli/featureflag"
 	"go.jetpack.io/devbox/cloud/mutagen"
 	"go.jetpack.io/devbox/cloud/openssh"
+	"go.jetpack.io/devbox/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/cloud/stepper"
 	"go.jetpack.io/devbox/debug"
 )
 
 func Shell(configDir string) error {
 	if err := openssh.SetupDevbox(); err != nil {
+		return err
+	}
+
+	if err := sshshim.Setup(); err != nil {
 		return err
 	}
 
@@ -123,10 +129,15 @@ func syncFiles(username, hostname, configDir string) error {
 	projectName := projectDirName(configDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
+	envVars, err := syncEnvVars()
+	if err != nil {
+		return err
+	}
+
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
 	id, _, _ := strings.Cut(hostname, ".")
-	_, err := mutagen.Sync(&mutagen.SessionSpec{
+	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
 		Name:        fmt.Sprintf("devbox-%s", id),
@@ -137,6 +148,7 @@ func syncFiles(username, hostname, configDir string) error {
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
 		BetaPath:  fmt.Sprintf("~/code/%s", projectName),
+		EnvVars:   envVars,
 		IgnoreVCS: true,
 		SyncMode:  "two-way-resolved",
 	})
@@ -185,4 +197,21 @@ func parseVMEnvVar() (username string, vmHostname string) {
 	username = parts[0]
 	vmHostname = parts[1]
 	return
+}
+
+func syncEnvVars() (map[string]string, error) {
+	if featureflag.SSHShim.Disabled() {
+		return map[string]string{}, nil
+	}
+
+	shimDir, err := sshshim.Dir()
+	if err != nil {
+		return nil, err
+	}
+
+	envVars := map[string]string{
+		"MUTAGEN_SSH_PATH": shimDir,
+	}
+
+	return envVars, nil
 }

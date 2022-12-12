@@ -13,7 +13,7 @@ func Sync(spec *SessionSpec) (*Session, error) {
 	}
 
 	// Check if there's an existing sessions or not
-	sessions, err := List(spec.Name)
+	sessions, err := List(spec.EnvVars, spec.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -27,14 +27,14 @@ func Sync(spec *SessionSpec) (*Session, error) {
 	}
 	// Whether new or pre-existing, find the sessions object, ensure
 	// that it's not paused, and return it.
-	sessions, err = List(spec.Name)
+	sessions, err = List(spec.EnvVars, spec.Name)
 	if err != nil {
 		return nil, err
 	}
 	for _, session := range sessions {
 		// TODO: should we handle errors for Reset and Resume differently?
-		_ = Reset(session.Identifier)
-		_ = Resume(session.Identifier)
+		_ = Reset(spec.EnvVars, session.Identifier)
+		_ = Resume(spec.EnvVars, session.Identifier)
 	}
 	if len(sessions) > 0 {
 		return &sessions[0], nil
