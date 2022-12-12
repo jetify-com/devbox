@@ -64,21 +64,7 @@ export function activate(context: ExtensionContext) {
 	});
 
 	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
-		const exec = util.promisify(cp.exec);
-		// determining cpu architecture - needed for devcontainer dockerfile
-		const { stdout, stderr } = await exec("uname -m");
-		let cpuArch = stdout;
-		if (stderr) {
-			console.log(stderr);
-			const response = await window.showErrorMessage(
-				"Could not determine the CPU architecture type. Is your architecture type Apple M1/arm64?",
-				"Yes",
-				"No",
-			);
-			cpuArch = response === "Yes" ? "arm64" : "undefined";
-		}
-		await setupDevContainerFiles(cpuArch);
-
+		await setupDevContainerFiles();
 	});
 
 	context.subscriptions.push(devboxAdd);

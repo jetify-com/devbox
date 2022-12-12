@@ -1,7 +1,7 @@
 import { workspace, window, Uri } from 'vscode';
 import { posix } from 'path';
 
-export async function setupDevContainerFiles(cpuArch: String) {
+export async function setupDevContainerFiles() {
     try {
         if (!workspace.workspaceFolders) {
             return window.showInformationMessage('No folder or workspace opened');
@@ -18,7 +18,7 @@ export async function setupDevContainerFiles(cpuArch: String) {
             Buffer.from(dockerfileContent, 'utf8')
         );
 
-        const devContainerJSON = getDevcontainerJSON(devboxJson, cpuArch);
+        const devContainerJSON = getDevcontainerJSON(devboxJson);
         await workspace.fs.writeFile(
             Uri.joinPath(devcontainerUri, 'devcontainer.json'),
             Buffer.from(devContainerJSON, 'utf8')
@@ -42,37 +42,39 @@ export async function readDevboxJson(workspaceUri: Uri) {
 
 function getDockerfileContent(): String {
     return `
-	# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/debian/.devcontainer/base.Dockerfile
+    FROM alpine:3
 
-	# [Choice] Debian version (use bullseye on local arm64/Apple Silicon): bullseye, buster
-	ARG VARIANT="buster"
-	FROM mcr.microsoft.com/vscode/devcontainers/base:0-\${VARIANT}
-
-	# These dependencies are required by Nix.
-	RUN apt update -y
-	RUN apt -y install --no-install-recommends curl xz-utils
-
-	USER vscode
-
-	# Install nix
-	ARG NIX_INSTALL_SCRIPT=https://nixos.org/nix/install
-	RUN curl -fsSL \${NIX_INSTALL_SCRIPT} | sh -s -- --no-daemon
+    # Setting up devbox user
+    ENV DEVBOX_USER=devbox
+    RUN adduser -h /home/$DEVBOX_USER -D -s /bin/bash $DEVBOX_USER
+    RUN addgroup sudo
+    RUN addgroup $DEVBOX_USER sudo
+    RUN echo " $DEVBOX_USER      ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+    
+    # installing dependencies
+    RUN apk add --no-cache bash binutils git libstdc++ xz sudo
+    
+    USER $DEVBOX_USER
+    
+    # installing devbox
+    RUN wget --quiet --output-document=/dev/stdout https://get.jetpack.io/devbox | bash -s -- -f
+    RUN chown -R "\${DEVBOX_USER}:\${DEVBOX_USER}" /usr/local/bin/devbox
+    
+    # nix installer script
+    RUN wget --quiet --output-document=/dev/stdout https://nixos.org/nix/install | sh -s -- --no-daemon
     RUN . ~/.nix-profile/etc/profile.d/nix.sh
-	ENV PATH /home/vscode/.nix-profile/bin:\${PATH}
-
-	# Install devbox
-	RUN sudo mkdir /devbox && sudo chown vscode /devbox
-	RUN curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
-
-	# Setup devbox environment
-	COPY --chown=vscode ./devbox.json /devbox/devbox.json
-	RUN devbox shell --config /devbox/devbox.json -- echo "Nix Store Populated"
-	ENV PATH /devbox/.devbox/nix/profile/default/bin:\${PATH}
-	ENTRYPOINT devbox shell
+    # updating PATH
+    ENV PATH="/home/\${DEVBOX_USER}/.nix-profile/bin:/home/\${DEVBOX_USER}/.devbox/nix/profile/default/bin:\${PATH}"
+    
+    WORKDIR /code
+    COPY devbox.json devbox.json
+    RUN devbox shell -- echo "Installing packages"
+    ENTRYPOINT ["devbox"]
+    CMD ['shell']    
 	`;
 }
 
-function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
+function getDevcontainerJSON(devboxJson: any): String {
 
     let devcontainerObject: any = {};
     devcontainerObject = {
@@ -82,11 +84,6 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
         "build": {
             "dockerfile": "./Dockerfile",
             "context": "..",
-            // Update 'VARIANT' to pick a Debian version: bullseye, buster
-            // Use bullseye on local arm64/Apple Silicon.
-            "args": {
-                "VARIANT": cpuArch.trim() === "arm64" ? "bullseye" : "buster"
-            }
         },
         "customizations": {
             "vscode": {
@@ -100,7 +97,7 @@ function getDevcontainerJSON(devboxJson: any, cpuArch: String): String {
             }
         },
         // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-        "remoteUser": "vscode"
+        "remoteUser": "devbox"
     };
 
     devboxJson["packages"].forEach((pkg: String) => {
