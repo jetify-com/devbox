@@ -21,7 +21,7 @@ func GenerateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:  "generate",
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(0),
 	}
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
@@ -36,7 +36,7 @@ func debugCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:    "debug",
 		Hidden: true,
-		Args:   cobra.MaximumNArgs(1),
+		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGenerateCmd(cmd, args, flags)
 		},
@@ -50,7 +50,7 @@ func devcontainerCmd() *cobra.Command {
 		Use:   "devcontainer",
 		Short: "Generate Dockerfile and devcontainer.json files under .devcontainer/ directory",
 		Long:  "Generate Dockerfile and devcontainer.json files necessary to run VSCode in remote container environments.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDevcontainerCmd(cmd, args, flags)
 		},
@@ -66,7 +66,7 @@ func dockerfileCmd() *cobra.Command {
 		Use:   "dockerfile",
 		Short: "Generate a Dockerfile that replicates devbox shell",
 		Long:  "Generate a Dockerfile that replicates devbox shell. Can be used to run devbox shell environment in an OCI container.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDockerfileCmd(cmd, args, flags)
 		},
