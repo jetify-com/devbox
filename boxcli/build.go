@@ -5,12 +5,10 @@ package boxcli
 
 import (
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/docker"
 )
 
 type buildCmdFlags struct {
 	config configFlags
-	docker docker.BuildFlags
 }
 
 func BuildCmd() *cobra.Command {
@@ -28,14 +26,6 @@ func BuildCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
-	command.Flags().StringVar(
-		&flags.docker.Name, "name", "devbox", "name for the container")
-	command.Flags().BoolVar(
-		&flags.docker.NoCache, "no-cache", false, "Do not use a cache")
-	command.Flags().StringVar(
-		&flags.docker.Engine, "engine", "docker", "Engine used to build the container: 'docker', 'podman'")
-	command.Flags().StringSliceVar(
-		&flags.docker.Tags, "tags", []string{}, "tags for the container")
 
 	return command
 }

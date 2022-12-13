@@ -186,27 +186,6 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	return shellPlan, nil
 }
 
-// BuildPlan creates a plan of the actions that devbox will take to generate its
-// shell environment.
-func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
-	userPlan := d.convertToBuildPlan()
-	buildPlan, err := planner.GetBuildPlan(d.configDir, d.cfg.Packages)
-	if err != nil {
-		return nil, err
-	}
-	plan, err := plansdk.MergeUserBuildPlan(userPlan, buildPlan)
-	if err != nil {
-		return nil, err
-	}
-
-	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
-		return nil, err
-	} else {
-		plan.NixpkgsInfo = nixpkgsInfo
-	}
-	return plan, nil
-}
-
 // Generate creates the directory of Nix files and the Dockerfile that define
 // the devbox environment.
 func (d *Devbox) Generate() error {
