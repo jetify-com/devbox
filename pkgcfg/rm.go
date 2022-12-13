@@ -17,7 +17,11 @@ func Remove(rootDir string, pkgs []string) error {
 }
 
 func RemoveInvalidSymlinks(rootDir string) error {
-	dirEntry, err := os.ReadDir(filepath.Join(rootDir, confPath, "bin"))
+	binPath := filepath.Join(rootDir, ConfBinPath)
+	if _, err := os.Stat(binPath); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	dirEntry, err := os.ReadDir(binPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}

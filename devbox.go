@@ -248,7 +248,7 @@ func (d *Devbox) Shell() error {
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.ConfBinPath)),
 		)
 	}
 
@@ -336,7 +336,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.ConfBinPath)),
 		)
 	}
 
@@ -381,7 +381,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 		for k, v := range envMap {
 			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
-		confBinPath = filepath.Join(d.configDir, ".devbox/conf/bin") + ":"
+		confBinPath = filepath.Join(d.configDir, pkgcfg.ConfBinPath) + ":"
 	}
 	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", confBinPath, profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)

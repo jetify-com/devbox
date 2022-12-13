@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -13,7 +15,10 @@ import (
 	"go.jetpack.io/devbox/nix"
 )
 
-const confPath = ".devbox/conf"
+const (
+	ConfBinPath = ".devbox/conf/bin"
+	confPath    = ".devbox/conf"
+)
 
 type config struct {
 	Name        string            `json:"name"`
@@ -33,6 +38,10 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 	debug.Log("Creating files for package %q create files", pkg)
 	for name, contentPath := range cfg.CreateFiles {
 		filePath := filepath.Join(rootDir, name)
+
+		if fileAlreadyExistsAndNotReplaceable(filePath) {
+			continue
+		}
 
 		dirPath := filepath.Dir(filePath)
 		if contentPath == "" {
@@ -63,11 +72,18 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}); err != nil {
 			return errors.WithStack(err)
 		}
-		if err := os.WriteFile(filePath, buf.Bytes(), 0744); err != nil {
+		var fileMode fs.FileMode = 0644
+		if strings.Contains(name, "bin/") {
+			fileMode = 0755
+		}
+
+		if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
 			return errors.WithStack(err)
 		}
-		if err := createSymlink(rootDir, filePath); err != nil {
-			return err
+		if fileMode == 0755 {
+			if err := createSymlink(rootDir, filePath); err != nil {
+				return err
+			}
 		}
 	}
 	return createEnvFile(pkg, rootDir)
@@ -118,6 +134,7 @@ func buildConfig(cfg *config, pkg, rootDir, content string) (*config, error) {
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
+		"UserRoot":             rootDir,
 		"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
 		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
 	}); err != nil {
@@ -158,4 +175,14 @@ func createSymlink(root, filePath string) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func fileAlreadyExistsAndNotReplaceable(filePath string) bool {
+	// Hidden .devbox files are always replaceable
+	if strings.HasPrefix(filePath, ".devbox") {
+		return false
+	}
+	_, err := os.Stat(filePath)
+	// File doesn't exist, so we should create it
+	return err == nil
 }
