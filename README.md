@@ -148,7 +148,7 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## Translation
 
-- [Chinese](./translation/README-zh-CN.md)
+- [Chinese](./docs/translation/README-zh-CN.md)
 
 ## License
 
