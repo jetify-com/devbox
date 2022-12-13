@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package devbox
+package impl
 
 import (
 	"embed"
@@ -19,7 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-//go:embed internal/tmpl/* internal/tmpl/.*
+//go:embed tmpl/* tmpl/.*
 var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
@@ -61,7 +61,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 }
 
 func writeFromTemplate(path string, plan interface{}, tmplName string) error {
-	embeddedPath := fmt.Sprintf("internal/tmpl/%s.tmpl", tmplName)
+	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?
 	outPath := filepath.Join(path, tmplName)
