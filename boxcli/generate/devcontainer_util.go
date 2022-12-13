@@ -19,13 +19,8 @@ type devcontainerObject struct {
 }
 
 type build struct {
-	Dockerfile string     `json:"dockerfile"`
-	Context    string     `json:"context"`
-	Args       *buildArgs `json:"args"`
-}
-
-type buildArgs struct {
-	Variant string `json:"VARIANT"`
+	Dockerfile string `json:"dockerfile"`
+	Context    string `json:"context"`
 }
 
 type customizations struct {
