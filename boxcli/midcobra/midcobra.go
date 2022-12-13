@@ -5,7 +5,7 @@ package midcobra
 
 import (
 	"context"
-	"strings"
+	"encoding/hex"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -85,5 +85,6 @@ func executionID() string {
 	// An EventID must be 32 characters long, lowercase and not have any dashes.
 	//
 	// so we pre-process to match sentry's requirements:
-	return strings.ToLower(strings.ReplaceAll(uuid.New().String(), "-", ""))
+	id := uuid.New()
+	return hex.EncodeToString(id[:])
 }

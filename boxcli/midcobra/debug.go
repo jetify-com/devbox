@@ -63,7 +63,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	}
 
 	st := debug.EarliestStackTrace(runErr)
-	debug.Log("Error: %v\nexecutionID:%s\n%+v\n", runErr, d.executionID, st)
+	debug.Log("Error: %v\nExecutionID:%s\n%+v\n", runErr, d.executionID, st)
 }
 
 func (d *DebugMiddleware) withExecutionID(execID string) Middleware {
