@@ -12,10 +12,10 @@ import (
 	"unicode"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/boxcli/usererr"
-	"go.jetpack.io/devbox/cuecfg"
-	"go.jetpack.io/devbox/debug"
-	"go.jetpack.io/devbox/planner/plansdk"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // Config defines a devbox environment as JSON.

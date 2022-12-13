@@ -13,13 +13,13 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/boxcli/featureflag"
-	"go.jetpack.io/devbox/debug"
-	"go.jetpack.io/devbox/pkgcfg"
-	"go.jetpack.io/devbox/planner/plansdk"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/pkgcfg"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-//go:embed tmpl/* tmpl/.*
+//go:embed internal/tmpl/* internal/tmpl/.*
 var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
@@ -61,7 +61,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 }
 
 func writeFromTemplate(path string, plan interface{}, tmplName string) error {
-	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
+	embeddedPath := fmt.Sprintf("internal/tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?
 	outPath := filepath.Join(path, tmplName)

@@ -1,8 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
-import * as util from 'util';
-import * as cp from 'child_process';
 import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
-import { setupDevContainerFiles, readDevboxJson } from './devcontainer';
+import { posix } from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -64,21 +62,10 @@ export function activate(context: ExtensionContext) {
 	});
 
 	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
-		const exec = util.promisify(cp.exec);
-		// determining cpu architecture - needed for devcontainer dockerfile
-		const { stdout, stderr } = await exec("uname -m");
-		let cpuArch = stdout;
-		if (stderr) {
-			console.log(stderr);
-			const response = await window.showErrorMessage(
-				"Could not determine the CPU architecture type. Is your architecture type Apple M1/arm64?",
-				"Yes",
-				"No",
-			);
-			cpuArch = response === "Yes" ? "arm64" : "undefined";
-		}
-		await setupDevContainerFiles(cpuArch);
-
+		await runInTerminal('devbox generate devcontainer', true);
+	});
+	const generateDockerfile = commands.registerCommand('devbox.generateDockerfile', async () => {
+		await runInTerminal('devbox generate dockerfile', true);
 	});
 
 	context.subscriptions.push(devboxAdd);
@@ -87,6 +74,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxRemove);
 	context.subscriptions.push(devboxShell);
 	context.subscriptions.push(setupDevcontainer);
+	context.subscriptions.push(generateDockerfile);
 }
 
 async function initialCheckDevboxJSON() {
@@ -155,6 +143,15 @@ async function getDevboxPackages(): Promise<string[]> {
 		console.error('Error processing devbox.json - ', error);
 		return [];
 	}
+}
+
+async function readDevboxJson(workspaceUri: Uri) {
+	const fileUri = workspaceUri.with({ path: posix.join(workspaceUri.path, 'devbox.json') });
+	const readData = await workspace.fs.readFile(fileUri);
+	const readStr = Buffer.from(readData).toString('utf8');
+	const devboxJsonData = JSON.parse(readStr);
+	return devboxJsonData;
+
 }
 
 // This method is called when your extension is deactivated

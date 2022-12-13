@@ -16,15 +16,15 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/boxcli/featureflag"
-	"go.jetpack.io/devbox/boxcli/generate"
-	"go.jetpack.io/devbox/boxcli/usererr"
-	"go.jetpack.io/devbox/cuecfg"
-	"go.jetpack.io/devbox/debug"
-	"go.jetpack.io/devbox/nix"
-	"go.jetpack.io/devbox/pkgcfg"
-	"go.jetpack.io/devbox/planner"
-	"go.jetpack.io/devbox/planner/plansdk"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/boxcli/generate"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/pkgcfg"
+	"go.jetpack.io/devbox/internal/planner"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"golang.org/x/exp/slices"
 )
 
@@ -184,27 +184,6 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	}
 
 	return shellPlan, nil
-}
-
-// BuildPlan creates a plan of the actions that devbox will take to generate its
-// shell environment.
-func (d *Devbox) BuildPlan() (*plansdk.BuildPlan, error) {
-	userPlan := d.convertToBuildPlan()
-	buildPlan, err := planner.GetBuildPlan(d.configDir, d.cfg.Packages)
-	if err != nil {
-		return nil, err
-	}
-	plan, err := plansdk.MergeUserBuildPlan(userPlan, buildPlan)
-	if err != nil {
-		return nil, err
-	}
-
-	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
-		return nil, err
-	} else {
-		plan.NixpkgsInfo = nixpkgsInfo
-	}
-	return plan, nil
 }
 
 // Generate creates the directory of Nix files and the Dockerfile that define
@@ -485,26 +464,6 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.configDir, configFilename)
 	return cuecfg.WriteFile(cfgPath, d.cfg)
-}
-
-func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
-	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
-	planStages := []*plansdk.Stage{{}, {}, {}}
-
-	for i, stage := range configStages {
-		if stage != nil {
-			planStages[i] = &plansdk.Stage{
-				Command: stage.Command,
-			}
-		}
-	}
-	return &plansdk.BuildPlan{
-		DevPackages:     d.cfg.Packages,
-		RuntimePackages: d.cfg.Packages,
-		InstallStage:    planStages[0],
-		BuildStage:      planStages[1],
-		StartStage:      planStages[2],
-	}
 }
 
 func (d *Devbox) Services() (pkgcfg.Services, error) {

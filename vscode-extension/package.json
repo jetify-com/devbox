@@ -28,6 +28,10 @@
         "title": "Devbox: Generate Dev Containers config files"
       },
       {
+        "command": "devbox.generateDockerfile",
+        "title": "Devbox: Generate a Dockerfile from devbox.json"
+      },
+      {
         "command": "devbox.add",
         "title": "Devbox: Add - add packages to your devbox project"
       },

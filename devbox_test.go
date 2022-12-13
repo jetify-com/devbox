@@ -10,7 +10,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/planner/plansdk"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 func TestDevbox(t *testing.T) {
