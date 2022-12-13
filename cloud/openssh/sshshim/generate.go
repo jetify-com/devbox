@@ -6,11 +6,8 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/boxcli/featureflag"
+	"go.jetpack.io/devbox/cloud/mutagenbox"
 	"go.jetpack.io/devbox/cloud/openssh"
-)
-
-const (
-	configShimDir = ".config/devbox/ssh/shims"
 )
 
 // Setup creates the ssh and scp symlinks
@@ -18,7 +15,7 @@ func Setup() error {
 	if featureflag.SSHShim.Disabled() {
 		return nil
 	}
-	shimDir, err := Dir()
+	shimDir, err := mutagenbox.ShimDir()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -59,13 +56,4 @@ func makeSymlink(from string, target string) error {
 		}
 	}
 	return nil
-}
-
-func Dir() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	shimDir := filepath.Join(home, configShimDir)
-	return shimDir, nil
 }
