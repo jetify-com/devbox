@@ -2,8 +2,10 @@ package sshshim
 
 import (
 	"bytes"
+	"context"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/cloud/mutagenbox"
@@ -50,7 +52,9 @@ func terminateMutagenSessions(vmAddr string) error {
 
 func checkActiveVM(vmAddr string) (bool, error) {
 
-	cmd := exec.Command("ssh", vmAddr, "echo 'alive'")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ssh", vmAddr, "echo 'alive'")
 
 	var bufErr, bufOut bytes.Buffer
 	cmd.Stderr = &bufErr
@@ -58,7 +62,8 @@ func checkActiveVM(vmAddr string) (bool, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		if err.Error() == "exit status 255" {
+		if e := (&exec.ExitError{}); errors.As(err, &e) && e.ExitCode() == 255 {
+			debug.Log("checkActiveVM: No active VM. returning false for exit status 255")
 			return false, nil
 		}
 		// For now, any error is deemed to indicate a VM that is no longer running.
