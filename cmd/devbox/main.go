@@ -4,7 +4,7 @@
 package main
 
 import (
-	"go.jetpack.io/devbox/boxcli"
+	"go.jetpack.io/devbox/internal/boxcli"
 )
 
 func main() {
