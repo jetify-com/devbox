@@ -466,26 +466,6 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) convertToBuildPlan() *plansdk.BuildPlan {
-	configStages := []*Stage{d.cfg.InstallStage, d.cfg.BuildStage, d.cfg.StartStage}
-	planStages := []*plansdk.Stage{{}, {}, {}}
-
-	for i, stage := range configStages {
-		if stage != nil {
-			planStages[i] = &plansdk.Stage{
-				Command: stage.Command,
-			}
-		}
-	}
-	return &plansdk.BuildPlan{
-		DevPackages:     d.cfg.Packages,
-		RuntimePackages: d.cfg.Packages,
-		InstallStage:    planStages[0],
-		BuildStage:      planStages[1],
-		StartStage:      planStages[2],
-	}
-}
-
 func (d *Devbox) Services() (pkgcfg.Services, error) {
 	return pkgcfg.GetServices(d.cfg.Packages, d.configDir)
 }
