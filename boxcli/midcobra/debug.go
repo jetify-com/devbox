@@ -16,7 +16,8 @@ import (
 )
 
 type DebugMiddleware struct {
-	flag *pflag.Flag
+	executionID string // uuid
+	flag        *pflag.Flag
 }
 
 var _ Middleware = (*DebugMiddleware)(nil)
@@ -62,5 +63,10 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	}
 
 	st := debug.EarliestStackTrace(runErr)
-	debug.Log("Error: %v\n%+v", runErr, st)
+	debug.Log("Error: %v\nExecutionID:%s\n%+v\n", runErr, d.executionID, st)
+}
+
+func (d *DebugMiddleware) withExecutionID(execID string) Middleware {
+	d.executionID = execID
+	return d
 }

@@ -5,7 +5,9 @@ package midcobra
 
 import (
 	"context"
+	"encoding/hex"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -17,23 +19,32 @@ type Executable interface {
 type Middleware interface {
 	preRun(cmd *cobra.Command, args []string)
 	postRun(cmd *cobra.Command, args []string, runErr error)
+	withExecutionID(execID string) Middleware
 }
 
 func New(cmd *cobra.Command) Executable {
 	return &midcobraExecutable{
 		cmd:         cmd,
+		executionID: executionID(),
 		middlewares: []Middleware{},
 	}
 }
 
 type midcobraExecutable struct {
-	cmd         *cobra.Command
+	cmd *cobra.Command
+
+	// executionID identifies a unique execution of the devbox CLI
+	executionID string // uuid
+
 	middlewares []Middleware
 }
 
 var _ Executable = (*midcobraExecutable)(nil)
 
 func (ex *midcobraExecutable) AddMiddleware(mids ...Middleware) {
+	for index, m := range mids {
+		mids[index] = m.withExecutionID(ex.executionID)
+	}
 	ex.middlewares = append(ex.middlewares, mids...)
 }
 
@@ -62,4 +73,18 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	} else {
 		return 0
 	}
+}
+
+func executionID() string {
+	// google/uuid package's String() returns a value of the form:
+	// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	//
+	// but sentry's EventID specifies:
+	//
+	// > EventID is a hexadecimal string representing a unique uuid4 for an Event.
+	// An EventID must be 32 characters long, lowercase and not have any dashes.
+	//
+	// so we pre-process to match sentry's requirements:
+	id := uuid.New()
+	return hex.EncodeToString(id[:])
 }
