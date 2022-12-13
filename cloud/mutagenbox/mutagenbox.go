@@ -67,8 +67,7 @@ func createAndGetDataDir() (string, error) {
 	}
 
 	path := filepath.Join(home, dataDirPath)
-	// TODO savil. tighten the permissions.
-	if err := os.MkdirAll(path, 0777); err != nil {
+	if err := os.MkdirAll(path, 0700); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return path, nil
