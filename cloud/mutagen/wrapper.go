@@ -62,7 +62,7 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		debug.Log("List error: %s, and out: %s", err, out)
+		debug.Log("List error: %s, and out: %s", err, string(out))
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			errMsg := strings.TrimSpace(string(out))
 			// Special handle the case where no sessions are found:
@@ -110,10 +110,8 @@ func Reset(envVars map[string]string, names ...string) error {
 func Terminate(env map[string]string, labels map[string]string, names ...string) error {
 	args := []string{"sync", "terminate"}
 
-	if len(labels) > 0 {
-		for k, v := range labels {
-			args = append(args, "--label-selector", fmt.Sprintf("%s=%s", k, v))
-		}
+	for k, v := range labels {
+		args = append(args, "--label-selector", fmt.Sprintf("%s=%s", k, v))
 	}
 
 	args = append(args, names...)
@@ -129,7 +127,7 @@ func execMutagen(args []string, envVars map[string]string) error {
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		debug.Log("execMutagen error: %s, out: %s", err, out)
+		debug.Log("execMutagen error: %s, out: %s", err, string(out))
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			return errors.New(strings.TrimSpace(string(out)))
 		}
@@ -182,7 +180,7 @@ func envAsKeyValueStrings(userEnv map[string]string) []string {
 	}
 
 	// Convert the envMap to an envList
-	envList := []string{}
+	envList := make([]string, 0, len(envMap))
 	for k, v := range envMap {
 		envList = append(envList, fmt.Sprintf("%s=%s", k, v))
 	}

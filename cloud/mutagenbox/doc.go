@@ -4,5 +4,5 @@ package mutagenbox
 // we need to manage mutagen for the devbox cloud.
 //
 // Also, resolves some compile cycles:
-// cloud depends on [mutagenbox, sshshim, mutagen]
-// sshhim depends on [mutagenbox, mutagen]
+//   - [cloud] depends on [mutagenbox], [sshshim], and [mutagen].
+//   - [sshshim] depends on [mutagenbox] and [mutagen].
