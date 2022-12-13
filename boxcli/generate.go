@@ -72,7 +72,7 @@ func dockerfileCmd() *cobra.Command {
 		},
 	}
 	command.Flags().BoolVarP(
-		&flags.force, "force", "f", false, "force overwrite on existing files")
+		&flags.force, "force", "f", false, "force overwrite existing files")
 	flags.config.register(command)
 	return command
 }
