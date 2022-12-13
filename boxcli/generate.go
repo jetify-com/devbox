@@ -20,12 +20,8 @@ func GenerateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
 	command := &cobra.Command{
-		Use:    "generate",
-		Args:   cobra.MaximumNArgs(1),
-		Hidden: true, // For debugging only
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
-		},
+		Use:  "generate",
+		Args: cobra.MaximumNArgs(1),
 	}
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
