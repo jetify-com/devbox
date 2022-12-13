@@ -29,24 +29,23 @@ func GenerateCmd() *cobra.Command {
 	}
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
+	command.AddCommand(debugCmd())
 	flags.config.register(command)
 
 	return command
 }
 
-func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
+func debugCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+	command := &cobra.Command{
+		Use:    "debug",
+		Hidden: true,
+		Args:   cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runGenerateCmd(cmd, args, flags)
+		},
 	}
-
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return box.Generate()
+	return command
 }
 
 func devcontainerCmd() *cobra.Command {
@@ -93,6 +92,21 @@ func runDevcontainerCmd(_ *cobra.Command, args []string, flags *generateCmdFlags
 		return errors.WithStack(err)
 	}
 	return box.GenerateDevcontainer(flags.force)
+}
+
+func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
+	path, err := configPathFromUser(args, &flags.config)
+	if err != nil {
+		return err
+	}
+
+	// Check the directory exists.
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.Generate()
 }
 
 func runDockerfileCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
