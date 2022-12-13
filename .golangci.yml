@@ -60,4 +60,4 @@ linters-settings:
       - w *os.File
   wrapcheck:
     ignorePackageGlobs:
-      - go.jetpack.io/devbox/internal/*
+      - go.jetpack.io/devbox/*
