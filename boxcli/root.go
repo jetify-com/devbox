@@ -51,17 +51,21 @@ func RootCmd() *cobra.Command {
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
-	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
-		AppName:      "devbox",
+	appName := "devbox"
+	exe.AddMiddleware(midcobra.Sentry(&midcobra.SentryOpts{
+		AppName:    appName,
+		AppVersion: build.Version,
+		SentryDSN:  build.SentryDSN,
+	}))
+	exe.AddMiddleware(midcobra.Segment(&midcobra.SegmentOpts{
+		AppName:      appName,
 		AppVersion:   build.Version,
-		SentryDSN:    build.SentryDSN,
 		TelemetryKey: build.TelemetryKey,
 	}))
 	exe.AddMiddleware(debugMiddleware)
 	return exe.Execute(ctx, args)
 }
 
-// TODO savil. Add Sentry and other monitoring.
 func executeSSH() int {
 	sshshim.EnableDebug() // Always enable for now.
 	debug.Log("os.Args: %v", os.Args)

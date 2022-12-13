@@ -25,27 +25,30 @@ import (
 // 1. We only collect anonymized data – nothing that is personally identifiable
 // 2. Data is only stored in SOC 2 compliant systems, and we are SOC 2 compliant ourselves.
 // 3. Users should always have the ability to opt-out.
-func Telemetry(opts *TelemetryOpts) Middleware {
-	doNotTrack, err := strconv.ParseBool(os.Getenv("DO_NOT_TRACK")) // https://consoledonottrack.com/
-	if err != nil {
-		doNotTrack = false
-	}
-
-	return &telemetryMiddleware{
+func Segment(opts *SegmentOpts) Middleware {
+	return &segmentMiddleware{
 		opts:     *opts,
-		disabled: doNotTrack || opts.TelemetryKey == "" || opts.SentryDSN == "",
+		disabled: doNotTrack() || opts.TelemetryKey == "",
 	}
 }
 
-type TelemetryOpts struct {
+func doNotTrack() bool {
+	// https://consoledonottrack.com/
+	doNotTrack_, err := strconv.ParseBool(os.Getenv("DO_NOT_TRACK"))
+	if err != nil {
+		doNotTrack_ = false
+	}
+	return doNotTrack_
+}
+
+type SegmentOpts struct {
 	AppName      string
 	AppVersion   string
-	SentryDSN    string // used by error reporting
 	TelemetryKey string
 }
-type telemetryMiddleware struct {
+type segmentMiddleware struct {
 	// Setup:
-	opts     TelemetryOpts
+	opts     SegmentOpts
 	disabled bool
 
 	// Used during execution:
@@ -54,18 +57,17 @@ type telemetryMiddleware struct {
 	executionID string
 }
 
-// telemetryMiddleware implements interface Middleware (compile-time check)
-var _ Middleware = (*telemetryMiddleware)(nil)
+// segmentMiddleware implements interface Middleware (compile-time check)
+var _ Middleware = (*segmentMiddleware)(nil)
 
-func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (m *segmentMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = time.Now()
 }
 
-func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (m *segmentMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
 	if m.disabled {
 		return
 	}
-	initSentry(m.opts, m.executionID)
 	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
 		// Discard logs:
@@ -104,35 +106,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	})
 }
 
-func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
+func (m *segmentMiddleware) withExecutionID(execID string) Middleware {
 	m.executionID = execID
 	return m
-}
-
-func initSentry(opts TelemetryOpts, executionID string) {
-	sentrySyncTransport := sentry.NewHTTPSyncTransport()
-	sentrySyncTransport.Timeout = time.Second * 2
-	release := opts.AppName + "@" + opts.AppVersion
-	environment := "production"
-	if opts.AppVersion == "0.0.0-dev" {
-		environment = "development"
-	}
-
-	_ = sentry.Init(sentry.ClientOptions{
-		Dsn:              opts.SentryDSN,
-		Environment:      environment,
-		Release:          release,
-		Transport:        sentrySyncTransport,
-		TracesSampleRate: 1,
-		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			for i := range event.Exception {
-				// edit in place and remove error message from tracking
-				event.Exception[i].Value = ""
-			}
-			event.EventID = sentry.EventID(executionID)
-			return event
-		},
-	})
 }
 
 func deviceID() string {
