@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.jetpack.io/devbox/boxcli/usererr"
 	"go.jetpack.io/devbox/debug"
@@ -32,7 +31,7 @@ func (d *DebugMiddleware) AttachToFlag(flags *pflag.FlagSet, flagName string) {
 	d.flag.Hidden = true
 }
 
-func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (d *DebugMiddleware) preRun(cmd Command, args []string) {
 	if d == nil {
 		return
 	}
@@ -48,7 +47,7 @@ func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (d *DebugMiddleware) postRun(cmd Command, args []string, runErr error) {
 	if runErr == nil {
 		return
 	}

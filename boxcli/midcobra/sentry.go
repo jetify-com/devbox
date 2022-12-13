@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/spf13/cobra"
 )
 
 func Sentry(opts *SentryOpts) Middleware {
@@ -31,11 +30,11 @@ type sentryMiddleware struct {
 // sentryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*sentryMiddleware)(nil)
 
-func (m *sentryMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (m *sentryMiddleware) preRun(cmd Command, args []string) {
 
 }
 
-func (m *sentryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (m *sentryMiddleware) postRun(cmd Command, args []string, runErr error) {
 	if m.disabled {
 		return
 	}

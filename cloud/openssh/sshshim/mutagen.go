@@ -14,7 +14,7 @@ import (
 
 // returns true if a liveVM is found, OR sshArgs were connecting to a server that is not a devbox-VM.
 // returns false iff the sshArgs were connecting to a devbox VM AND a deadVM is found.
-func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
+func ensureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
 	vmAddr := vmAddressIfAny(sshArgs)
 
 	debug.Log("Found vmAddr: %s", vmAddr)

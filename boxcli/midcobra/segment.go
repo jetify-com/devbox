@@ -60,11 +60,11 @@ type segmentMiddleware struct {
 // segmentMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*segmentMiddleware)(nil)
 
-func (m *segmentMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (m *segmentMiddleware) preRun(cmd Command, args []string) {
 	m.startTime = time.Now()
 }
 
-func (m *segmentMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (m *segmentMiddleware) postRun(cmd Command, args []string, runErr error) {
 	if m.disabled {
 		return
 	}
@@ -117,8 +117,8 @@ func deviceID() string {
 	return hashedID
 }
 
-func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
-	if c.TraverseChildren {
+func getSubcommand(c Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
+	if c.ShouldTraverseChildren() {
 		subcmd, subargs, err = c.Traverse(args)
 	} else {
 		subcmd, subargs, err = c.Find(args)
@@ -126,7 +126,7 @@ func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, suba
 	return subcmd, subargs, err
 }
 
-func getPackages(c *cobra.Command) []string {
+func getPackages(c Command) []string {
 	configFlag := c.Flag("config")
 	// for shell, run, and add command, path can be set via --config
 	// if --config is not set, default to current directory which is ""

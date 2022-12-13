@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -15,6 +14,8 @@ import (
 	"go.jetpack.io/devbox/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/debug"
 )
+
+const appName = "devbox"
 
 var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
 
@@ -50,8 +51,7 @@ func RootCmd() *cobra.Command {
 
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
-	exe := midcobra.New(RootCmd())
-	appName := "devbox"
+	exe := midcobra.New(&midcobra.CobraLikeCommand{Command: *RootCmd()})
 	exe.AddMiddleware(midcobra.Sentry(&midcobra.SentryOpts{
 		AppName:    appName,
 		AppVersion: build.Version,
@@ -66,32 +66,15 @@ func Execute(ctx context.Context, args []string) int {
 	return exe.Execute(ctx, args)
 }
 
-func executeSSH() int {
-	sshshim.EnableDebug() // Always enable for now.
-	debug.Log("os.Args: %v", os.Args)
-
-	if alive, err := sshshim.EnsureLiveVMOrTerminateMutagenSessions(os.Args[1:]); err != nil {
-		debug.Log("EnsureLiveVMOrTerminateMutagenSessions error: %v", err)
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return 1
-	} else if !alive {
-		return 0
-	}
-
-	if err := sshshim.InvokeSSHOrSCPCommand(os.Args); err != nil {
-		debug.Log("InvokeSSHorSCPCommand error: %v", err)
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return 1
-	}
-	return 0
-}
-
 func Main() {
+	// To enable code syncing in Devbox Cloud, we use mutagen.
+	// devbox also acts as an ssh-shim that mutagen invokes.
+	// This lets us clean up mutagen sessions when the Devbox Cloud session has ended.
 	if strings.HasSuffix(os.Args[0], "ssh") ||
 		strings.HasSuffix(os.Args[0], "scp") {
-		code := executeSSH()
+		code := sshshim.Execute(context.Background(), os.Args)
 		os.Exit(code)
 	}
-	code := Execute(context.Background(), os.Args[1:])
+	code := Execute(context.Background(), os.Args)
 	os.Exit(code)
 }

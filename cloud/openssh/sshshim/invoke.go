@@ -10,7 +10,7 @@ import (
 	"go.jetpack.io/devbox/debug"
 )
 
-func InvokeSSHOrSCPCommand(args []string) error {
+func invokeSSHOrSCPCommand(args []string) error {
 	if !strings.HasSuffix(args[0], "ssh") && !strings.HasSuffix(args[0], "scp") {
 		return errors.Errorf("received %s for args[0], but expected ssh or scp", args[0])
 	}

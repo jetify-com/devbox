@@ -9,20 +9,46 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 )
 
 type Executable interface {
 	AddMiddleware(mids ...Middleware)
-	Execute(ctx context.Context, args []string) int
+	// osArgs is from os.Args, where osArgs[0] is the executable's name when invoked
+	Execute(ctx context.Context, osArgs []string) int
 }
 
 type Middleware interface {
-	preRun(cmd *cobra.Command, args []string)
-	postRun(cmd *cobra.Command, args []string, runErr error)
+	preRun(cmd Command, args []string)
+	postRun(cmd Command, args []string, runErr error)
 	withExecutionID(execID string) Middleware
 }
 
-func New(cmd *cobra.Command) Executable {
+type Command interface {
+	SetArgs(args []string)
+
+	ShouldTraverseChildren() bool
+	Traverse(args []string) (*cobra.Command, []string, error)
+	Find(args []string) (*cobra.Command, []string, error)
+	Flag(name string) *flag.Flag
+
+	ExecuteContext(ctx context.Context) error
+}
+
+// CobraLikeCommand implements interface Command
+var _ Command = (*CobraLikeCommand)(nil)
+
+// CobraLikeCommand is a struct that is **almost** identical to cobra.Command
+// It has a minor difference to make it compatible with the Command interface.
+type CobraLikeCommand struct {
+	cobra.Command
+}
+
+func (cmd *CobraLikeCommand) ShouldTraverseChildren() bool {
+	return cmd.TraverseChildren
+}
+
+func New(cmd Command) Executable {
 	return &midcobraExecutable{
 		cmd:         cmd,
 		executionID: executionID(),
@@ -31,7 +57,7 @@ func New(cmd *cobra.Command) Executable {
 }
 
 type midcobraExecutable struct {
-	cmd *cobra.Command
+	cmd Command
 
 	// executionID identifies a unique execution of the devbox CLI
 	executionID string // uuid
@@ -48,7 +74,9 @@ func (ex *midcobraExecutable) AddMiddleware(mids ...Middleware) {
 	ex.middlewares = append(ex.middlewares, mids...)
 }
 
-func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
+func (ex *midcobraExecutable) Execute(ctx context.Context, osArgs []string) int {
+	args := osArgs[1:]
+
 	// Ensure cobra uses the same arguments
 	ex.cmd.SetArgs(args)
 
