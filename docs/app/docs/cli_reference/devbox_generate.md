@@ -20,7 +20,7 @@ Generate a Dockerfile that replicates devbox shell environment in a container
 
 ```text
   -h, --help   help for add
-  -f, --force  overwrite on existing files
+  -f, --force  overwrite existing files
 ```
 
 ## SEE ALSO
