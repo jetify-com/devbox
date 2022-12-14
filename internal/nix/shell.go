@@ -90,6 +90,7 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 		}
 	default:
 		sh.name = shUnknown
+		sh.userShellrcPath = rcfilePath(".profile")
 	}
 
 	for _, opt := range opts {
