@@ -25,7 +25,7 @@ type Middleware interface {
 func New(cmd *cobra.Command) Executable {
 	return &midcobraExecutable{
 		cmd:         cmd,
-		executionID: executionID(),
+		executionID: ExecutionID(),
 		middlewares: []Middleware{},
 	}
 }
@@ -75,7 +75,7 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	}
 }
 
-func executionID() string {
+func ExecutionID() string {
 	// google/uuid package's String() returns a value of the form:
 	// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 	//

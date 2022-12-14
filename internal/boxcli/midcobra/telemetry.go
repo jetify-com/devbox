@@ -9,14 +9,13 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/getsentry/sentry-go"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/telemetry"
 )
 
 // We collect some light telemetry to be able to improve devbox over time.
@@ -26,14 +25,10 @@ import (
 // 2. Data is only stored in SOC 2 compliant systems, and we are SOC 2 compliant ourselves.
 // 3. Users should always have the ability to opt-out.
 func Telemetry(opts *TelemetryOpts) Middleware {
-	doNotTrack, err := strconv.ParseBool(os.Getenv("DO_NOT_TRACK")) // https://consoledonottrack.com/
-	if err != nil {
-		doNotTrack = false
-	}
 
 	return &telemetryMiddleware{
 		opts:     *opts,
-		disabled: doNotTrack || opts.TelemetryKey == "" || opts.SentryDSN == "",
+		disabled: telemetry.DoNotTrack() || opts.TelemetryKey == "" || opts.SentryDSN == "",
 	}
 }
 
@@ -43,6 +38,7 @@ type TelemetryOpts struct {
 	SentryDSN    string // used by error reporting
 	TelemetryKey string
 }
+
 type telemetryMiddleware struct {
 	// Setup:
 	opts     TelemetryOpts
@@ -65,7 +61,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	if m.disabled {
 		return
 	}
-	initSentry(m.opts, m.executionID)
+
+	sentry := telemetry.NewSentry(m.opts.SentryDSN)
+	sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
 	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
 		// Discard logs:
@@ -82,13 +80,12 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return // Ignore invalid commands
 	}
 
+	// verified with manual testing that the sentryID returned by CaptureException
+	// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
+	sentry.CaptureException(runErr)
 	var sentryEventID string
 	if runErr != nil {
-		defer sentry.Flush(2 * time.Second)
-		_ /*eventIDPointer*/ = sentry.CaptureException(runErr)
 		sentryEventID = m.executionID
-		// verified with manual testing that the sentryID returned by CaptureException
-		// is the same as m.executionID, since we set EventID = m.executionID in initSentry()
 	}
 
 	trackEvent(segmentClient, &event{
@@ -107,32 +104,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
 	m.executionID = execID
 	return m
-}
-
-func initSentry(opts TelemetryOpts, executionID string) {
-	sentrySyncTransport := sentry.NewHTTPSyncTransport()
-	sentrySyncTransport.Timeout = time.Second * 2
-	release := opts.AppName + "@" + opts.AppVersion
-	environment := "production"
-	if opts.AppVersion == "0.0.0-dev" {
-		environment = "development"
-	}
-
-	_ = sentry.Init(sentry.ClientOptions{
-		Dsn:              opts.SentryDSN,
-		Environment:      environment,
-		Release:          release,
-		Transport:        sentrySyncTransport,
-		TracesSampleRate: 1,
-		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			for i := range event.Exception {
-				// edit in place and remove error message from tracking
-				event.Exception[i].Value = ""
-			}
-			event.EventID = sentry.EventID(executionID)
-			return event
-		},
-	})
 }
 
 func deviceID() string {
