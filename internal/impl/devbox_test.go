@@ -1,4 +1,4 @@
-package devbox
+package impl
 
 import (
 	"encoding/json"
@@ -15,13 +15,9 @@ import (
 
 func TestDevbox(t *testing.T) {
 	t.Setenv("TMPDIR", "/tmp")
-	testPaths, err := doublestar.FilepathGlob("./testdata/**/devbox.json")
+	testPaths, err := doublestar.FilepathGlob("../../examples/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
-	examplePaths, err := doublestar.FilepathGlob("./examples/**/devbox.json")
-	assert.NoError(t, err, "Reading examples/ should not fail")
-
-	testPaths = append(testPaths, examplePaths...)
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
 	for _, testPath := range testPaths {
@@ -35,7 +31,7 @@ func testShell(t *testing.T, testPath string) {
 	require.New(t).NoError(err)
 
 	baseDir := filepath.Dir(testPath)
-	testName := fmt.Sprintf("%s_shell_plan", baseDir)
+	testName := fmt.Sprintf("%s_shell_plan", filepath.Base(baseDir))
 	t.Run(testName, func(t *testing.T) {
 		assert := assert.New(t)
 		shellPlanFile := filepath.Join(baseDir, "shell_plan.json")
