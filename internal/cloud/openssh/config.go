@@ -21,6 +21,9 @@ import (
 var sshConfigText string
 var sshConfigTmpl = template.Must(template.New("sshconfig").Parse(sshConfigText))
 
+//go:embed known_hosts
+var sshKnownHosts []byte
+
 // SetupDevbox updates the user's OpenSSH configuration so that they can connect
 // to Devbox Cloud hosts. It does nothing if Devbox Cloud is already
 // configured.
@@ -29,6 +32,20 @@ func SetupDevbox() error {
 	if err != nil {
 		return err
 	}
+
+	devboxKnownHostsPath := filepath.Join(devboxSSHDir, "known_hosts")
+	devboxKnownHosts, err := editFile(devboxKnownHostsPath, 0644)
+	if err != nil {
+		return err
+	}
+	defer devboxKnownHosts.Close()
+	if _, err := devboxKnownHosts.Write(sshKnownHosts); err != nil {
+		return err
+	}
+	if err := devboxKnownHosts.Commit(); err != nil {
+		return err
+	}
+
 	devboxIncludePath := filepath.Join(devboxSSHDir, "config")
 	devboxSSHConfig, err := editFile(devboxIncludePath, 0644)
 	if err != nil {

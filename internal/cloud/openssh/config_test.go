@@ -1,12 +1,12 @@
 package openssh
 
 import (
-	"encoding/json"
+	_ "embed"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
+	"testing/fstest"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
@@ -69,143 +69,267 @@ func TestHostOrMatchRegex(t *testing.T) {
 	}
 }
 
-func TestSetupDevbox(t *testing.T) {
-	testdirs := []string{
-		"testdata/no-config",
-		"testdata/existing-config",
-		"testdata/already-setup",
-	}
-	for _, testdata := range testdirs {
-		t.Run(testdata, func(t *testing.T) {
-			workdir := duplicateDir(t, filepath.Join(testdata, "in"))
-			t.Setenv("HOME", workdir)
+//go:embed testdata/devbox-ssh-config.golden
+var goldenDevboxSSHConfig []byte
 
-			if err := SetupDevbox(); err != nil {
-				t.Error("got SetupDevbox() error:", err)
-			}
-			dirsEqual(t, workdir, filepath.Join(testdata, "out"))
-		})
+func TestSetupDevbox(t *testing.T) {
+	want := fstest.MapFS{
+		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config/devbox/ssh/config": &fstest.MapFile{
+			Data: goldenDevboxSSHConfig,
+			Mode: 0644,
+		},
+		".config/devbox/ssh/known_hosts": &fstest.MapFile{
+			Data: sshKnownHosts,
+			Mode: 0644,
+		},
+
+		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".ssh/config": &fstest.MapFile{
+			Data: []byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
+			Mode: 0644,
+		},
 	}
+
+	t.Run("NoConfigs", func(t *testing.T) {
+		in := fstest.MapFS{}
+		workdir := fsToDir(t, in)
+		t.Setenv("HOME", workdir)
+		if err := SetupDevbox(); err != nil {
+			t.Error("got SetupDevbox() error:", err)
+		}
+		got := os.DirFS(workdir)
+		fsEqual(t, got, want)
+	})
+	t.Run("ExistingSSHConfig", func(t *testing.T) {
+		existingSSHConfig := []byte("Host example.com\n\tUser example\n\tPort 1234\n")
+		input := fstest.MapFS{
+			".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+			".ssh/config": &fstest.MapFile{
+				Data: existingSSHConfig,
+				Mode: 0644,
+			},
+		}
+		// Temporarily change the desired ~/.ssh/config so it contains
+		// the initial contents of the input ~/.ssh/config.
+		originalWantConfig := want[".ssh/config"]
+		defer func() { want[".ssh/config"] = originalWantConfig }()
+		want[".ssh/config"] = &fstest.MapFile{
+			Data: append(
+				// fsEqual will expand $HOME so this becomes an absolute path.
+				[]byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
+				existingSSHConfig...,
+			),
+			Mode: 0644,
+		}
+
+		workdir := fsToDir(t, input)
+		t.Setenv("HOME", workdir)
+		if err := SetupDevbox(); err != nil {
+			t.Error("got SetupDevbox() error:", err)
+		}
+		got := os.DirFS(workdir)
+		fsEqual(t, got, want)
+	})
+	t.Run("AlreadySetup", func(t *testing.T) {
+		in := want
+		workdir := fsToDir(t, in)
+		t.Setenv("HOME", workdir)
+		if err := SetupDevbox(); err != nil {
+			t.Error("got SetupDevbox() error:", err)
+		}
+		got := os.DirFS(workdir)
+		fsEqual(t, got, want)
+	})
 }
+
+//go:embed testdata/test.vm.devbox-vms.internal.golden
+var goldenVMKey []byte
 
 func TestAddVMKey(t *testing.T) {
-	workdir := duplicateDir(t, "testdata/add-key/in")
-	t.Setenv("HOME", workdir)
-
-	// Must match the filename and content of
-	// testdata/add-key/out/.config/devbox/ssh/keys/test.vm.devbox-vms.internal
 	host := "test.vm.devbox-vms.internal"
-	key := `-----BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACAFBvrkKm1Zrwbpp7DAmTWj7i+S+cjGhAwm++fELg1OpwAAAKjD4XIZw+Fy
-GQAAAAtzc2gtZWQyNTUxOQAAACAFBvrkKm1Zrwbpp7DAmTWj7i+S+cjGhAwm++fELg1Opw
-AAAEAcvFwROtvcGVsdSg73Y+znyO9F6LFRxhWa7UJdGcjGzwUG+uQqbVmvBumnsMCZNaPu
-L5L5yMaEDCb758QuDU6nAAAAH2djdXJ0aXNAR3JlZ3MtTWFjQm9vay1Qcm8ubG9jYWwBAg
-MEBQY=
------END OPENSSH PRIVATE KEY-----
-`
-	if err := AddVMKey(host, key); err != nil {
+	input := fstest.MapFS{}
+	want := fstest.MapFS{
+		".config":                 &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox":          &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox/ssh":      &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config/devbox/ssh/keys": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+
+		".config/devbox/ssh/keys/" + host: &fstest.MapFile{
+			Data: goldenVMKey,
+			Mode: 0600,
+		},
+	}
+
+	workdir := fsToDir(t, input)
+	t.Setenv("HOME", workdir)
+	if err := AddVMKey(host, string(goldenVMKey)); err != nil {
 		t.Error("got AddKey(host, key) error:", err)
 	}
-	dirsEqual(t, workdir, "testdata/add-key/out")
+	got := os.DirFS(workdir)
+	fsEqual(t, got, want)
 }
 
-func duplicateDir(t *testing.T, dir string) string {
-	srcFS := os.DirFS(dir)
-	dstDir := t.TempDir()
-	err := fs.WalkDir(srcFS, ".", func(path string, _ fs.DirEntry, err error) error {
+// fsEqual checks if the contents of two file systems are the same. Two file
+// systems are equal if their path hierarchies are the same and the file at
+// each path passes fsPathsEqual. It ignores the mode of the root directory of
+// each file system.
+//
+// fsEqual will report as many equality errors as possible by continuing to walk
+// the tree after a file comparison fails.
+func fsEqual(t *testing.T, got, want fs.FS) {
+	t.Helper()
+
+	checked := map[string]bool{}
+	err := fs.WalkDir(got, ".", func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
-			// Just return an empty temp dir if the directory
-			// doesn't exist.
-			if errors.Is(err, fs.ErrNotExist) {
-				return nil
-			}
 			return err
 		}
 		if path == "." {
 			return nil
 		}
-
-		info, err := fs.Stat(srcFS, path)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return os.Mkdir(filepath.Join(dstDir, path), info.Mode().Perm())
-		}
-		data, err := fs.ReadFile(srcFS, path)
-		if err != nil {
-			return err
-		}
-		return os.WriteFile(filepath.Join(dstDir, path), data, info.Mode().Perm())
+		checked[path] = true
+		fsPathsEqual(t, got, want, path)
+		return nil
 	})
 	if err != nil {
-		t.Fatal("got error duplicating testdata dir:", err)
+		t.Fatal("got error checking if file systems are equal:", err)
 	}
-	return dstDir
+
+	err = fs.WalkDir(want, ".", func(path string, _ fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if path == "." || checked[path] {
+			return nil
+		}
+		fsPathsEqual(t, got, want, path)
+		return nil
+	})
+	if err != nil {
+		t.Fatal("got error checking if file systems are equal:", err)
+	}
 }
 
-func dirsEqual(t *testing.T, gotDir, wantDir string) {
-	var perms map[string]fs.FileMode
-	if b, err := os.ReadFile(filepath.Join(wantDir, "perms.json")); err == nil {
-		v := make(map[string]string)
-		if err := json.Unmarshal(b, &v); err == nil {
-			perms = make(map[string]fs.FileMode, len(v))
-			for path, modeStr := range v {
-				mode, err := strconv.ParseUint(modeStr, 8, 32)
-				if err != nil {
-					t.Fatalf("path %q has invalid permissions %q", path, modeStr)
-				}
-				perms[path] = fs.FileMode(mode)
-			}
-		}
+// fsPathsEqual checks if the file at a path in two file systems is the same.
+// Two file paths are equal if:
+//
+//   - their file contents are the same after calling os.ExpandEnv on each one.
+//   - their file mode dir bits are the same.
+//   - their file permission mode bits are the same.
+//
+// It does not consider any other file info such as ModTime or other file mode
+// bits.
+//
+// Expanding environment variables in files makes it easier for tests to define
+// golden files with dynamic content. For example, a test can create an
+// fstest.MapFile with the data {"name": "$USER"} and compare it to some test
+// results to make sure there's a JSON file containing the current username.
+func fsPathsEqual(t *testing.T, gotFS fs.FS, wantFS fs.FS, path string) {
+	t.Helper()
+
+	gotInfo, err := fs.Stat(gotFS, path)
+	if errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("got a missing file at %q", path)
+		return
 	}
-	wantFS := os.DirFS(wantDir)
-	gotFS := os.DirFS(gotDir)
-	err := fs.WalkDir(wantFS, ".", func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			// If the wantDir is missing then there's nothing to
-			// check.
-			if errors.Is(err, fs.ErrNotExist) {
+	if err != nil {
+		t.Errorf("got fs.Stat(gotFS, %q) error: %v", path, err)
+	}
+	wantInfo, err := fs.Stat(wantFS, path)
+	if errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("got an extra file at %q", path)
+		return
+	}
+	if err != nil {
+		t.Errorf("got fs.Stat(wantFS, %q) error: %v", path, err)
+	}
+
+	// Bail early to avoid nil pointer panics.
+	if gotInfo == nil || wantInfo == nil {
+		return
+	}
+	if got, want := gotInfo.Mode().Perm(), wantInfo.Mode().Perm(); got != want {
+		t.Errorf("got %q permissions %s, want %s", path, got, want)
+	}
+	if gotInfo.IsDir() != wantInfo.IsDir() {
+		gotType, wantType := "file", "file"
+		if gotInfo.IsDir() {
+			gotType = "directory"
+		}
+		if wantInfo.IsDir() {
+			wantType = "directory"
+		}
+		t.Errorf("got a %s at path %q, want a %s", gotType, path, wantType)
+	}
+
+	// No need to compare file contents if either path is a directory.
+	if gotInfo.IsDir() || wantInfo.IsDir() {
+		return
+	}
+
+	gotBytes, err := fs.ReadFile(gotFS, path)
+	if err != nil {
+		t.Errorf("got fs.ReadFile(gotFS, %q) error: %v", path, err)
+	}
+	wantBytes, err := fs.ReadFile(wantFS, path)
+	if err != nil {
+		t.Errorf("got fs.ReadFile(wantFS, %q) error: %v", path, err)
+	}
+	diff := cmp.Diff(os.ExpandEnv(string(wantBytes)), os.ExpandEnv(string(gotBytes)))
+	if diff != "" {
+		t.Errorf("got wrong file contents at %q (-want +got):\n%s", path, diff)
+	}
+}
+
+// fsToDir writes a file system to a local temp directory. It replicates each
+// file's contents and permissions, but ignores any other file info. If the
+// root of the file system returns [fs.ErrNotExist], then fsToDir returns an
+// empty temp directory.
+func fsToDir(t *testing.T, fsys fs.FS) (dir string) {
+	t.Helper()
+
+	dir = t.TempDir()
+	err := fs.WalkDir(fsys, ".", func(path string, entry fs.DirEntry, err error) error {
+		if path == "." {
+			// Just return an empty directory if the input is also
+			// empty.
+			if err == nil || errors.Is(err, fs.ErrNotExist) {
 				return nil
 			}
-			t.Error("got WalkDir error:", err)
+			return err
 		}
 
-		// perms.json is a special-case where we put expected file
-		// permissions.
-		if path == "." || path == "perms.json" {
+		info, err := fs.Stat(fsys, path)
+		if err != nil {
+			t.Error("got error writing fs to dir:", err)
 			return nil
 		}
-
-		if wantPerm, ok := perms[path]; ok {
-			gotInfo, err := fs.Stat(gotFS, path)
-			if err != nil {
-				t.Fatalf("Stat(got, %q): %v", path, err)
-			}
-			if got, want := gotInfo.Mode().Perm(), wantPerm; got != want {
-				t.Errorf("wrong permissions at %q: got %q, want %q", path, got, want)
-			}
+		if info.Mode().Perm() == 0 {
+			// It's impossible to create a file that you can't write
+			// to.
+			t.Fatalf("got error writing fs to dir: path %q has empty permissions", path)
 		}
 		if entry.IsDir() {
+			if err := os.Mkdir(filepath.Join(dir, path), info.Mode().Perm()); err != nil {
+				t.Error("got error writing fs to dir:", err)
+			}
 			return nil
 		}
-
-		gotBytes, err := fs.ReadFile(gotFS, path)
+		data, err := fs.ReadFile(fsys, path)
 		if err != nil {
-			t.Errorf("ReadFile(got, %q): %v", path, err)
+			t.Error("got error writing fs to dir:", err)
+			return nil
 		}
-		wantBytes, err := fs.ReadFile(wantFS, path)
-		if err != nil {
-			t.Errorf("ReadFile(want, %q): %v", path, err)
-		}
-
-		if diff := cmp.Diff(os.ExpandEnv(string(wantBytes)), os.ExpandEnv(string(gotBytes))); diff != "" {
-			t.Errorf("wrong file contents at %q (-want +got):\n%s", path, diff)
+		if err := os.WriteFile(filepath.Join(dir, path), data, info.Mode().Perm()); err != nil {
+			t.Error("got error writing fs to dir:", err)
 		}
 		return nil
 	})
 	if err != nil {
-		t.Fatal("got error checking if dirs are equal:", err)
+		t.Fatal("got error writing fs to dir:", err)
 	}
+	return dir
 }
