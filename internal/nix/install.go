@@ -25,7 +25,7 @@ func Install() error {
 	defer r.Close()
 	defer w.Close()
 
-	cmd := exec.Command("sh", "-c", installScript, "--", "--daemon")
+	cmd := exec.Command("sh", "-c", installScript)
 	// Attach stdout but no stdin. This makes the command run in non-TTY mode
 	// which skips the interactive prompts.
 	// We could attach stderr? but the stdout prompt is pretty useful.
