@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
+	"github.com/getsentry/sentry-go"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -55,6 +56,10 @@ var _ Middleware = (*telemetryMiddleware)(nil)
 
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = time.Now()
+	if !m.disabled {
+		sentry := telemetry.NewSentry(m.opts.SentryDSN)
+		sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
+	}
 }
 
 func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
@@ -62,8 +67,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	sentry := telemetry.NewSentry(m.opts.SentryDSN)
-	sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
 	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
 		// Discard logs:
