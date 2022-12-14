@@ -24,7 +24,7 @@ var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
 
-func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
+func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *pkgcfg.Manager) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range shellFiles {
@@ -51,7 +51,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan) error {
 
 	if featureflag.PKGConfig.Enabled() {
 		for _, pkg := range plan.DevPackages {
-			if err := pkgcfg.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
+			if err := pluginManager.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
 				return err
 			}
 		}
