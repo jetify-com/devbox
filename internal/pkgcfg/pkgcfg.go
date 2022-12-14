@@ -16,8 +16,10 @@ import (
 )
 
 const (
-	VirtenvBinPath = ".devbox/virtenv/bin"
-	VirtenvPath    = ".devbox/virtenv"
+	devboxDirName       = "devbox.d"
+	devboxHiddenDirName = ".devbox"
+	VirtenvBinPath      = ".devbox/virtenv/bin"
+	VirtenvPath         = ".devbox/virtenv"
 )
 
 type config struct {
@@ -30,7 +32,7 @@ type config struct {
 	Services    Services          `json:"services"`
 }
 
-func CreateFilesAndShowReadme(pkg, rootDir string) error {
+func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 	cfg, err := getConfig(pkg, rootDir)
 	if err != nil {
 		return err
@@ -38,7 +40,7 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
 
-		if fileAlreadyExistsAndNotReplaceable(filePath) {
+		if !m.shouldCreateFile(filePath) {
 			continue
 		}
 
@@ -65,10 +67,10 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
-			"DevboxDir":            filepath.Join(rootDir, "devbox.d", pkg),
-			"DevboxDirRoot":        filepath.Join(rootDir, "devbox.d"),
+			"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
+			"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(rootDir, ".devbox", "virtenv", pkg),
+			"Virtenv":              filepath.Join(rootDir, devboxHiddenDirName, "virtenv", pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -135,10 +137,10 @@ func buildConfig(pkg, rootDir, content string) (*config, error) {
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
-		"DevboxDir":            filepath.Join(rootDir, "devbox.d", pkg),
-		"DevboxDirRoot":        filepath.Join(rootDir, "devbox.d"),
+		"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
+		"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(rootDir, ".devbox", "virtenv", pkg),
+		"Virtenv":              filepath.Join(rootDir, devboxHiddenDirName, "virtenv", pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -179,12 +181,17 @@ func createSymlink(root, filePath string) error {
 	return nil
 }
 
-func fileAlreadyExistsAndNotReplaceable(filePath string) bool {
-	// Hidden .devbox files are always replaceable
-	if strings.HasPrefix(filePath, ".devbox") {
+func (m *Manager) shouldCreateFile(filePath string) bool {
+	// Only create devboxDir files in add mode.
+	if strings.Contains(filePath, devboxDirName) && !m.addMode {
 		return false
 	}
+
+	// Hidden .devbox files are always replaceable, so ok to recreate
+	if strings.Contains(filePath, devboxHiddenDirName) {
+		return true
+	}
 	_, err := os.Stat(filePath)
-	// File doesn't exist, so we should create it
-	return err == nil
+	// File doesn't exist, so we should create it.
+	return os.IsNotExist(err)
 }

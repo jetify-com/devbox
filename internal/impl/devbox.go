@@ -50,8 +50,9 @@ func InitConfig(dir string) (created bool, err error) {
 type Devbox struct {
 	cfg *Config
 	// configDir is the directory where the config file (devbox.json) resides
-	configDir string
-	writer    io.Writer
+	configDir     string
+	pluginManager *pkgcfg.Manager
+	writer        io.Writer
 }
 
 // TODO savil. dir is technically path since it could be a dir or file
@@ -73,9 +74,10 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:       cfg,
-		configDir: cfgDir,
-		writer:    writer,
+		cfg:           cfg,
+		configDir:     cfgDir,
+		pluginManager: pkgcfg.NewManager(),
+		writer:        writer,
 	}
 	return box, nil
 }
@@ -108,6 +110,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 		return err
 	}
 
+	d.pluginManager.ApplyOptions(pkgcfg.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
@@ -473,7 +476,7 @@ func (d *Devbox) generateShellFiles() error {
 	if err != nil {
 		return err
 	}
-	return generateForShell(d.configDir, plan)
+	return generateForShell(d.configDir, plan, d.pluginManager)
 }
 
 func (d *Devbox) profileDir() (string, error) {
