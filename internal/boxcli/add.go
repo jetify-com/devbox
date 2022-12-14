@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
@@ -22,9 +23,16 @@ func AddCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:               "add <pkg>...",
 		Short:             "Add a new package to your devbox",
-		Args:              cobra.MinimumNArgs(1),
 		PersistentPreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				fmt.Fprintf(
+					cmd.OutOrStdout(),
+					"Usage: %s\n\nTo search for packages use https://search.nixos.org/packages\n",
+					cmd.UseLine(),
+				)
+				return nil
+			}
 			return addCmdFunc(cmd, args, flags)
 		},
 	}

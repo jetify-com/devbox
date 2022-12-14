@@ -530,13 +530,14 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 
 func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) error {
 	installedVerb := "installed"
+	info, _ := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkgs[0])
 	if mode == uninstall {
 		installedVerb = "removed"
 	}
 
 	if len(pkgs) > 0 {
 
-		successMsg := fmt.Sprintf("%s is now %s.", pkgs[0], installedVerb)
+		successMsg := fmt.Sprintf("%s (%s) is now %s.", pkgs[0], info, installedVerb)
 		if len(pkgs) > 1 {
 			successMsg = fmt.Sprintf("%s are now %s.", strings.Join(pkgs, ", "), installedVerb)
 		}
