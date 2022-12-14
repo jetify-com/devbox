@@ -4,7 +4,10 @@
     "golangci-lint"
   ],
   "shell": {
-    "init_hook": "export \"GOROOT=$(go env GOROOT)\""
+    "init_hook": "export \"GOROOT=$(go env GOROOT)\"",
+    "scripts": {
+      "build": "go build -o dist/devbox cmd/devbox/main.go"
+    }
   },
   "nixpkgs": {
     "commit": "d01cb18be494e3d860fcfe6be4ad63614360333c"

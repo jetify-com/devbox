@@ -93,7 +93,7 @@ func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
 
 	_, err := fmt.Fprintf(
 		w,
-		"%sThis configuration creates the following helper files:\n%s\n",
+		"%sThis plugin creates the following helper files:\n%s\n",
 		lo.Ternary(markdown, "### ", ""),
 		shims,
 	)
@@ -112,7 +112,7 @@ func printEnv(cfg *config, w io.Writer, markdown bool) error {
 
 	_, err := fmt.Fprintf(
 		w,
-		"%sThis configuration sets the following environment variables:\n%s\n",
+		"%sThis plugin sets the following environment variables:\n%s\n",
 		lo.Ternary(markdown, "### ", ""),
 		envVars,
 	)
@@ -137,7 +137,7 @@ func printSourceEnvMessage(pkg, rootDir string, w io.Writer) error {
 		_, err = fmt.Fprintf(
 			w,
 			"To ensure environment is set, run `source %s/%s/env`\n\n",
-			confPath,
+			VirtenvPath,
 			pkg,
 		)
 	}

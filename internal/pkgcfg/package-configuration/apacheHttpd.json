@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "readme": "If you with to edit the config file, please copy it out of the .devbox directory.",
   "env": {
-    "HTTPD_CONFDIR": "{{ .DevboxRoot }}/conf/apache",
+    "HTTPD_CONFDIR": "{{ .DevboxDir }}",
     "HTTPD_PORT": "8080"
   },
   "create_files": {
-    ".devbox/conf/apache/httpd.conf": "apache/httpd.conf"
+    "{{ .DevboxDir }}/httpd.conf": "apache/httpd.conf",
+    "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
   },
   "services": {
     "apache": {

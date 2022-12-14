@@ -211,7 +211,7 @@ func (d *Devbox) Shell() error {
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.VirtenvBinPath)),
 		)
 	}
 
@@ -299,7 +299,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, ".devbox/conf/bin")),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.VirtenvBinPath)),
 		)
 	}
 
@@ -335,7 +335,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 	}
 
 	env := []string{}
-	confBinPath := ""
+	virtenvBinPath := ""
 	if featureflag.PKGConfig.Enabled() {
 		envMap, err := pkgcfg.Env(d.cfg.Packages, d.configDir)
 		if err != nil {
@@ -344,9 +344,9 @@ func (d *Devbox) Exec(cmds ...string) error {
 		for k, v := range envMap {
 			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
-		confBinPath = filepath.Join(d.configDir, ".devbox/conf/bin") + ":"
+		virtenvBinPath = filepath.Join(d.configDir, pkgcfg.VirtenvBinPath) + ":"
 	}
-	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", confBinPath, profileBinDir)
+	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
 	nixDir := filepath.Join(d.configDir, ".devbox/gen/shell.nix")

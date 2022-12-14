@@ -1,18 +1,21 @@
 {
   "name": "nginx",
   "version": "0.0.1",
-  "readme": "nginx is configured to use .devbox/conf/nginx.conf\n\nTo customize:\n* Use $NGINX_CONFDIR to change the configuration directory\n* Use $NGINX_LOGDIR to change the log directory\n* Use $NGINX_PIDDIR to change the pid directory\n* Use $NGINX_RUNDIR to change the run directory\n* Use $NGINX_SITESDIR to change the sites directory\n* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user\n* Use $NGINX_GROUP to customize.",
+  "readme": "nginx can be configured with env variables\n\nTo customize:\n* Use $NGINX_CONFDIR to change the configuration directory\n* Use $NGINX_LOGDIR to change the log directory\n* Use $NGINX_PIDDIR to change the pid directory\n* Use $NGINX_RUNDIR to change the run directory\n* Use $NGINX_SITESDIR to change the sites directory\n* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user\n* Use $NGINX_GROUP to customize.",
   "env": {
-    "NGINX_CONFDIR": "{{ .DevboxRoot }}/conf/nginx"
+    "NGINX_CONFDIR": "{{ .DevboxDir }}/nginx.conf",
+    "NGINX_PATH_PREFIX": "{{ .Virtenv }}",
+    "NGINX_TMPDIR": "{{ .Virtenv }}/temp"
   },
   "create_files": {
-    ".devbox/conf/nginx/temp": "",
-    ".devbox/conf/nginx/nginx.conf": "nginx/nginx.conf",
-    ".devbox/conf/nginx/fastcgi.conf": "nginx/fastcgi.conf"
+    "{{ .Virtenv }}/temp": "",
+    "{{ .DevboxDir }}/nginx.conf": "nginx/nginx.conf",
+    "{{ .DevboxDir }}/fastcgi.conf": "nginx/fastcgi.conf",
+    "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
   },
   "services": {
     "nginx": {
-      "start": "nginx -p $NGINX_CONFDIR -c nginx.conf -e error.log -g \"pid nginx.pid;\"",
+      "start": "nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR -e error.log -g \"pid nginx.pid;\"",
       "stop": "pkill nginx"
     }
   }

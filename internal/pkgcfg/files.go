@@ -31,7 +31,7 @@ func getConfig(pkg, rootDir string) (*config, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		cfg, err := buildConfig(&config{}, pkg, rootDir, string(content))
+		cfg, err := buildConfig(pkg, rootDir, string(content))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

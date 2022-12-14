@@ -1,20 +1,21 @@
 {
   "name": "mariadb",
   "version": "0.0.1",
-  "readme": "* This package creates shims and stores them in .devbox/conf/mariadb/bin\n* Use mysql_install_db to initialize data directory\n* Use mysqld to start the server",
+  "match": "disabled",
+  "readme": "* This package creates shims and stores them in .devbox/virtenv/mariadb/bin\n* Use mysql_install_db to initialize data directory\n* Use mysqld to start the server",
   "env": {
     "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
-    "MYSQL_HOME": "{{ .DevboxRoot }}/conf/mariadb/run",
-    "MYSQL_DATADIR": "{{ .DevboxRoot }}/conf/mariadb/data",
-    "MYSQL_UNIX_PORT": "{{ .DevboxRoot }}/conf/mariadb/run/mysql.sock",
-    "MYSQL_PID_FILE": "{{ .DevboxRoot }}/conf/mariadb/run/mysql.pid"
+    "MYSQL_HOME": "{{ .Virtenv }}/run",
+    "MYSQL_DATADIR": "{{ .Virtenv }}/data",
+    "MYSQL_UNIX_PORT": "{{ .Virtenv }}/run/mysql.sock",
+    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid"
   },
   "create_files": {
-    ".devbox/conf/mariadb/data": "",
-    ".devbox/conf/mariadb/run": "",
-    ".devbox/conf/mariadb/bin/mysql": "mariadb/mysql",
-    ".devbox/conf/mariadb/bin/mysql_install_db": "mariadb/mysql_install_db",
-    ".devbox/conf/mariadb/bin/mysqladmin": "mariadb/mysqladmin",
-    ".devbox/conf/mariadb/bin/mysqld": "mariadb/mysqld"
+    "{{ .Virtenv }}/data": "",
+    "{{ .Virtenv }}/run": "",
+    "{{ .Virtenv }}/bin/mysql": "mariadb/mysql",
+    "{{ .Virtenv }}/bin/mysql_install_db": "mariadb/mysql_install_db",
+    "{{ .Virtenv }}/bin/mysqladmin": "mariadb/mysqladmin",
+    "{{ .Virtenv }}/bin/mysqld": "mariadb/mysqld"
   }
 }

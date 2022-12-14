@@ -59,7 +59,7 @@ func (c *combined) Error() string {
 	if c.source == nil {
 		return c.userMessage
 	}
-	return c.userMessage + ": " + c.source.Error()
+	return c.userMessage + "\nsource: " + c.source.Error()
 }
 
 // Is uses the source error for comparisons

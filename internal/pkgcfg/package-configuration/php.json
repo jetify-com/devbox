@@ -7,11 +7,11 @@
     "PHPFPM_PORT": "8082"
   },
   "create_files": {
-    ".devbox/conf/php/php-fpm.conf": "php/php-fpm.conf"
+    "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf"
   },
   "services": {
     "php-fpm": {
-      "start": "php-fpm -y {{ .DevboxRoot }}/conf/php/php-fpm.conf -p $PWD",
+      "start": "php-fpm -y {{ .DevboxDir }}/php-fpm.conf",
       "stop": "pkill php-fpm"
     }
   }
