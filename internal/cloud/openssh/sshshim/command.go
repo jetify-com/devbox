@@ -13,10 +13,11 @@ import (
 
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
+	sentry := initSentry()
 
 	err := execute(args)
 
-	logSentry(err)
+	sentry.CaptureException(err)
 
 	if err != nil {
 		return 1
@@ -44,9 +45,10 @@ func execute(args []string) error {
 	return nil
 }
 
-func logSentry(runErr error) {
+func initSentry() *telemetry.Sentry {
 	const appName = "devbox-sshshim"
 	s := telemetry.NewSentry(build.SentryDSN)
 	s.Init(appName, build.Version, midcobra.ExecutionID())
-	s.CaptureException(runErr)
+
+	return s
 }
