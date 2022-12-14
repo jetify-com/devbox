@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	ConfBinPath = ".devbox/conf/bin"
-	confPath    = ".devbox/conf"
+	VirtenvBinPath = ".devbox/virtenv/bin"
+	VirtenvPath    = ".devbox/virtenv"
 )
 
 type config struct {
@@ -36,8 +36,7 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		return err
 	}
 	debug.Log("Creating files for package %q create files", pkg)
-	for name, contentPath := range cfg.CreateFiles {
-		filePath := filepath.Join(rootDir, name)
+	for filePath, contentPath := range cfg.CreateFiles {
 
 		if fileAlreadyExistsAndNotReplaceable(filePath) {
 			continue
@@ -60,20 +59,21 @@ func CreateFilesAndShowReadme(pkg, rootDir string) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		t, err := template.New(name + "-template").Parse(string(content))
+		t, err := template.New(filePath + "-template").Parse(string(content))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
-			"UserRoot":             rootDir,
-			"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
+			"DevboxDir":            filepath.Join(rootDir, "devbox.d", pkg),
+			"DevboxDirRoot":        filepath.Join(rootDir, "devbox.d"),
 			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
+			"Virtenv":              filepath.Join(rootDir, ".devbox", "virtenv", pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
 		var fileMode fs.FileMode = 0644
-		if strings.Contains(name, "bin/") {
+		if strings.Contains(filePath, "bin/") {
 			fileMode = 0755
 		}
 
@@ -117,7 +117,7 @@ func createEnvFile(pkg, rootDir string) error {
 		}
 		env += fmt.Sprintf("export %s=%s\n", k, escaped)
 	}
-	filePath := filepath.Join(rootDir, confPath, pkg, "/env")
+	filePath := filepath.Join(rootDir, VirtenvPath, pkg, "/env")
 	if err = createDir(filepath.Dir(filePath)); err != nil {
 		return err
 	}
@@ -127,16 +127,18 @@ func createEnvFile(pkg, rootDir string) error {
 	return nil
 }
 
-func buildConfig(cfg *config, pkg, rootDir, content string) (*config, error) {
+func buildConfig(pkg, rootDir, content string) (*config, error) {
+	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
-		"UserRoot":             rootDir,
-		"DevboxRoot":           filepath.Join(rootDir, ".devbox"),
+		"DevboxDir":            filepath.Join(rootDir, "devbox.d", pkg),
+		"DevboxDirRoot":        filepath.Join(rootDir, "devbox.d"),
 		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
+		"Virtenv":              filepath.Join(rootDir, ".devbox", "virtenv", pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -158,10 +160,10 @@ func createDir(path string) error {
 
 func createSymlink(root, filePath string) error {
 	name := filepath.Base(filePath)
-	newname := filepath.Join(root, confPath, "bin", name)
+	newname := filepath.Join(root, VirtenvPath, "bin", name)
 
 	// Create bin path just in case it doesn't exist
-	if err := os.MkdirAll(filepath.Join(root, confPath, "/bin"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, VirtenvPath, "/bin"), 0755); err != nil {
 		return errors.WithStack(err)
 	}
 

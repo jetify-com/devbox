@@ -4,14 +4,14 @@
   "match": "^postgresql(_[0-9]+)?$",
   "readme": "To initialize the database run `initdb`.",
   "env": {
-    "PGDATA": "{{ .DevboxRoot }}/conf/postgresql/data"
+    "PGDATA": "{{ .Virtenv }}/data"
   },
   "create_files": {
-    ".devbox/conf/postgresql/data": ""
+    "{{ .Virtenv }}/data": ""
   },
   "services": {
     "postgresql": {
-      "start": "pg_ctl -l .devbox/conf/postgresql/logfile start",
+      "start": "pg_ctl -l {{ .Virtenv }}/logfile start",
       "stop": "pg_ctl stop"
     }
   }
