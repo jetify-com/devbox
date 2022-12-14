@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 )
 
@@ -42,6 +43,7 @@ func Recover() {
 		return
 	}
 
+	sentry.CurrentHub().Recover(r)
 	if enabled {
 		log.Println("Allowing panic because debug mode is enabled.")
 		panic(r)
