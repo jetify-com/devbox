@@ -33,6 +33,7 @@ func (s *Sentry) Init(appName, appVersion, executionID string) {
 	}
 
 	_ = sentry.Init(sentry.ClientOptions{
+		AttachStacktrace: true,
 		Dsn:              s.dsn,
 		Environment:      environment,
 		Release:          release,
