@@ -37,6 +37,10 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 	if err != nil {
 		return err
 	}
+	if cfg == nil {
+		return nil
+	}
+
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
 
@@ -98,6 +102,9 @@ func Env(pkgs []string, rootDir string) (map[string]string, error) {
 		cfg, err := getConfig(pkg, rootDir)
 		if err != nil {
 			return nil, err
+		}
+		if cfg == nil {
+			continue
 		}
 		for k, v := range cfg.Env {
 			env[k] = v

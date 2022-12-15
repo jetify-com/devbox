@@ -19,6 +19,10 @@ func PrintReadme(
 		return err
 	}
 
+	if cfg == nil {
+		return nil
+	}
+
 	_, _ = fmt.Fprintln(w, "")
 
 	if err = printReadme(cfg, w, markdown); err != nil {

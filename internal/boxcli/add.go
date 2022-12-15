@@ -10,8 +10,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 )
+
+const toSearchForPackages = "To search for packages use https://search.nixos.org/packages"
 
 type addCmdFlags struct {
 	config configFlags
@@ -28,12 +31,17 @@ func AddCmd() *cobra.Command {
 			if len(args) == 0 {
 				fmt.Fprintf(
 					cmd.OutOrStdout(),
-					"Usage: %s\n\nTo search for packages use https://search.nixos.org/packages\n",
+					"Usage: %s\n\n%s\n",
 					cmd.UseLine(),
+					toSearchForPackages,
 				)
 				return nil
 			}
-			return addCmdFunc(cmd, args, flags)
+			err := addCmdFunc(cmd, args, flags)
+			if errors.Is(err, nix.ErrPackageNotFound) {
+				return usererr.New("%s\n\n%s", err, toSearchForPackages)
+			}
+			return err
 		},
 	}
 

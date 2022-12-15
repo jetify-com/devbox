@@ -43,7 +43,7 @@ func getConfig(pkg, rootDir string) (*config, error) {
 		}
 		return cfg, nil
 	}
-	return &config{}, nil
+	return nil, nil
 }
 
 func getFileContent(contentPath string) ([]byte, error) {

@@ -24,6 +24,9 @@ func GetServices(pkgs []string, rootDir string) (Services, error) {
 		if err != nil {
 			return nil, err
 		}
+		if c == nil {
+			continue
+		}
 		for name, svc := range c.Services {
 			svc.Name = name
 			services[name] = svc
