@@ -18,6 +18,8 @@ import (
 // Instead of using directory, prefer using the devbox.ProfilePath() function that ensures the directory exists.
 const ProfilePath = ".devbox/nix/profile/default"
 
+var ErrPackageNotFound = errors.New("package not found")
+
 func PkgExists(nixpkgsCommit, pkg string) bool {
 	_, found := PkgInfo(nixpkgsCommit, pkg)
 	return found

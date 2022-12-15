@@ -20,9 +20,12 @@ type service struct {
 func GetServices(pkgs []string, rootDir string) (Services, error) {
 	services := map[string]service{}
 	for _, pkg := range pkgs {
-		c, err := getConfig(pkg, rootDir)
+		c, err := getConfigIfAny(pkg, rootDir)
 		if err != nil {
 			return nil, err
+		}
+		if c == nil {
+			continue
 		}
 		for name, svc := range c.Services {
 			svc.Name = name

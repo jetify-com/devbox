@@ -14,7 +14,7 @@ const pkgCfgDir = "package-configuration"
 //go:embed package-configuration/*
 var packageConfiguration embed.FS
 
-func getConfig(pkg, rootDir string) (*config, error) {
+func getConfigIfAny(pkg, rootDir string) (*config, error) {
 	configFiles, err := packageConfiguration.ReadDir(pkgCfgDir)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -43,7 +43,7 @@ func getConfig(pkg, rootDir string) (*config, error) {
 		}
 		return cfg, nil
 	}
-	return &config{}, nil
+	return nil, nil
 }
 
 func getFileContent(contentPath string) ([]byte, error) {

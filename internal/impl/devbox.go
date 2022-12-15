@@ -95,7 +95,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
 		if !ok {
-			return errors.Errorf("package %s not found", pkg)
+			return errors.WithMessage(nix.ErrPackageNotFound, pkg)
 		}
 	}
 
