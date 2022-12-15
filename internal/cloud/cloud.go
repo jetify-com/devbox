@@ -141,7 +141,7 @@ func syncFiles(username, hostname, configDir string) error {
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
-		Name:        fmt.Sprintf("devbox-%s", machineID),
+		Name:        mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", projectName, machineID)),
 		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
