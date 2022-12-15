@@ -1,3 +1,3 @@
 package featureflag
 
-var SSHShim = disabled("SSH_SHIM")
+var SSHShim = enabled("SSH_SHIM")
