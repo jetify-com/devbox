@@ -13,7 +13,7 @@ func PrintReadme(
 	w io.Writer,
 	showSourceEnv, markdown bool,
 ) error {
-	cfg, err := getConfig(pkg, rootDir)
+	cfg, err := getConfigIfAny(pkg, rootDir)
 
 	if err != nil {
 		return err

@@ -33,7 +33,7 @@ type config struct {
 }
 
 func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
-	cfg, err := getConfig(pkg, rootDir)
+	cfg, err := getConfigIfAny(pkg, rootDir)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 func Env(pkgs []string, rootDir string) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := getConfig(pkg, rootDir)
+		cfg, err := getConfigIfAny(pkg, rootDir)
 		if err != nil {
 			return nil, err
 		}
