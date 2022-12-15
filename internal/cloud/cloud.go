@@ -5,11 +5,9 @@ package cloud
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -90,6 +88,11 @@ type vm struct {
 	VMPrivateKey string `json:"vm_private_key"`
 }
 
+func (vm vm) redact() *vm {
+	vm.VMPrivateKey = "***"
+	return &vm
+}
+
 func getVirtualMachine(username string) string {
 	client := openssh.Client{
 		Username: username,
@@ -101,26 +104,24 @@ func getVirtualMachine(username string) string {
 	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
 		client.Hostname = envGateway
 	}
-	bytes, err := client.Exec("auth")
+	sshOut, err := client.Exec("auth")
 	if err != nil {
-		log.Println(err)
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			log.Printf("ssh %s stderr:\n%s", client.Hostname, string(exitErr.Stderr))
-		}
-		os.Exit(1)
+		log.Fatalln("error requesting VM:", err)
 	}
-	debug.Log("ssh %s stdout:\n%s", client.Hostname, string(bytes))
 	resp := &vm{}
-	err = json.Unmarshal(bytes, resp)
-	if err != nil {
-		log.Fatal(err)
+	if err := json.Unmarshal(sshOut, resp); err != nil {
+		log.Fatalf("error unmarshaling gateway response %q: %v", sshOut, err)
 	}
-	if resp.VMPrivateKey != "" {
-		err := openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
+		debug.Log("got gateway response:\n\t%s", redacted)
+	}
+	if resp.VMPrivateKey == "" {
+		return resp.VMHost
+	}
+
+	err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
+	if err != nil {
+		log.Fatalf("error adding new VM key: %v", err)
 	}
 	return resp.VMHost
 }
