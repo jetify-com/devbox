@@ -16,7 +16,7 @@ import (
 
 type Client struct {
 	Username       string
-	Hostname       string
+	Addr           string
 	ProjectDirName string
 }
 
@@ -50,7 +50,7 @@ func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 }
 
 func (c *Client) cmd(sshArgs ...string) *exec.Cmd {
-	host, port := c.hostPort()
+	host, port := splitHostPort(c.Addr)
 	cmd := exec.Command("ssh", sshArgs...)
 	cmd.Args = append(cmd.Args, destination(c.Username, host))
 
@@ -62,10 +62,12 @@ func (c *Client) cmd(sshArgs ...string) *exec.Cmd {
 	return cmd
 }
 
-func (c *Client) hostPort() (host string, port int) {
-	host, portStr, err := net.SplitHostPort(c.Hostname)
+// splitHostPort is like net.SplitHostPort except it defaults to port 22 if the
+// port in the address is missing or invalid.
+func splitHostPort(addr string) (host string, port int) {
+	host, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
-		return c.Hostname, 22
+		return addr, 22
 	}
 	port, err = net.LookupPort("tcp", portStr)
 	if err != nil {

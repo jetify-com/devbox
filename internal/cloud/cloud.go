@@ -23,10 +23,27 @@ import (
 )
 
 func Shell(configDir string) error {
-	if err := openssh.SetupDevbox(); err != nil {
+	username, vmHostname := parseVMEnvVar()
+	if username == "" {
+		username = promptUsername()
+	}
+	debug.Log("username: %s", username)
+	sshClient := openssh.Client{
+		Username: username,
+		Addr:     "gateway.devbox.sh",
+	}
+	// When developing we can use this env variable to point
+	// to a different gateway
+	var err error
+	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
+		sshClient.Addr = envGateway
+		err = openssh.SetupInsecureDebug(envGateway)
+	} else {
+		err = openssh.SetupDevbox()
+	}
+	if err != nil {
 		return err
 	}
-
 	if err := sshshim.Setup(); err != nil {
 		return err
 	}
@@ -36,21 +53,15 @@ func Shell(configDir string) error {
 	fmt.Println("Blazingly fast remote development that feels local")
 	fmt.Print("\n")
 
-	username, vmHostname := parseVMEnvVar()
-	if username == "" {
-		username = promptUsername()
-	}
-	debug.Log("username: %s", username)
-
 	if vmHostname == "" {
 		s1 := stepper.Start("Creating a virtual machine on the cloud...")
-		vmHostname = getVirtualMachine(username)
+		vmHostname = getVirtualMachine(sshClient)
 		s1.Success("Created virtual machine")
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
-	err := syncFiles(username, vmHostname, configDir)
+	err = syncFiles(username, vmHostname, configDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
 		log.Fatal(err)
@@ -93,17 +104,7 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(username string) string {
-	client := openssh.Client{
-		Username: username,
-		Hostname: "gateway.devbox.sh",
-	}
-
-	// When developing we can use this env variable to point
-	// to a different gateway
-	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
-		client.Hostname = envGateway
-	}
+func getVirtualMachine(client openssh.Client) string {
 	sshOut, err := client.Exec("auth")
 	if err != nil {
 		log.Fatalln("error requesting VM:", err)
@@ -165,7 +166,7 @@ func syncFiles(username, hostname, configDir string) error {
 func shell(username, hostname, configDir string) error {
 	client := &openssh.Client{
 		Username:       username,
-		Hostname:       hostname,
+		Addr:           hostname,
 		ProjectDirName: projectDirName(configDir),
 	}
 	return client.Shell()
