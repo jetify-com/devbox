@@ -50,6 +50,9 @@ func (s *Sentry) Init(appName, appVersion, executionID string) {
 	})
 	sentry.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetUser(sentry.User{ID: DeviceID()})
+		scope.SetContext("os", map[string]interface{}{
+			"name": OS(),
+		})
 	})
 }
 

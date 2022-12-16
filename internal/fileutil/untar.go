@@ -1,4 +1,4 @@
-package mutagen
+package fileutil
 
 // TODO: publish as it's own shared package that other binaries
 // can use.
@@ -15,7 +15,7 @@ import (
 )
 
 func Untar(archive io.Reader, destPath string) error {
-	err := ExistsOrErr(destPath)
+	err := TryExists(destPath)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -174,7 +173,7 @@ func trackEvent(client segment.Client, evt *event) {
 				Version: evt.AppVersion,
 			},
 			OS: segment.OSInfo{
-				Name: runtime.GOOS,
+				Name: telemetry.OS(),
 			},
 		},
 		Properties: segment.NewProperties().
