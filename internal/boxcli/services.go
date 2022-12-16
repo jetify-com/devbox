@@ -34,20 +34,18 @@ func ServicesCmd() *cobra.Command {
 	}
 
 	startCommand := &cobra.Command{
-		Use:   "start [service]",
-		Short: "Starts service",
-		Args:  cobra.ExactArgs(1),
+		Use:   "start [service]...",
+		Short: "Starts service. If no service is specified, starts all services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startService(args[0], flags)
+			return startServices(cmd, args, flags)
 		},
 	}
 
 	stopCommand := &cobra.Command{
-		Use:   "stop [service]",
-		Short: "Stops service",
-		Args:  cobra.ExactArgs(1),
+		Use:   "stop [service]...",
+		Short: "Stops service. If no service is specified, stops all services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return stopService(args[0], flags)
+			return stopServices(cmd, args, flags)
 		},
 	}
 
@@ -73,18 +71,50 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	return nil
 }
 
-func startService(service string, flags servicesCmdFlags) error {
+func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StartService(service)
+	if len(services) == 0 {
+		services, err = serviceNames(box)
+		if err != nil {
+			return err
+		}
+		if len(services) == 0 {
+			cmd.Println("No services to start")
+			return nil
+		}
+	}
+	return box.StartServices(services...)
 }
 
-func stopService(service string, flags servicesCmdFlags) error {
+func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StopService(service)
+	if len(services) == 0 {
+		services, err = serviceNames(box)
+		if err != nil {
+			return err
+		}
+		if len(services) == 0 {
+			cmd.Println("No services to stop")
+			return nil
+		}
+	}
+	return box.StopServices(services...)
+}
+
+func serviceNames(box devbox.Devbox) ([]string, error) {
+	services, err := box.Services()
+	if err != nil {
+		return nil, err
+	}
+	names := []string{}
+	for _, service := range services {
+		names = append(names, service.Name)
+	}
+	return names, nil
 }

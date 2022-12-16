@@ -457,18 +457,18 @@ func (d *Devbox) Services() (plugin.Services, error) {
 	return plugin.GetServices(d.cfg.Packages, d.configDir)
 }
 
-func (d *Devbox) StartService(serviceName string) error {
+func (d *Devbox) StartServices(services ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec("devbox", "services", "start", serviceName)
+		return d.Exec(append([]string{"devbox", "services", "start"}, services...)...)
 	}
-	return plugin.StartService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+	return plugin.StartServices(d.cfg.Packages, services, d.configDir, d.writer)
 }
 
-func (d *Devbox) StopService(serviceName string) error {
+func (d *Devbox) StopServices(services ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec("devbox", "services", "stop", serviceName)
+		return d.Exec(append([]string{"devbox", "services", "stop"}, services...)...)
 	}
-	return plugin.StopService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+	return plugin.StopServices(d.cfg.Packages, services, d.configDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
