@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -39,18 +38,6 @@ func (p *PIPPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	}
 }
 
-func (p *PIPPlanner) isBuildable(srcDir string) error {
-	if plansdk.FileExists(filepath.Join(srcDir, "setup.py")) {
-		return nil
-	}
-
-	return usererr.New(
-		"setup.py not found. Please create a setup.py file to build your project." +
-			" The distribution name must be a case-insensitive match of the package" +
-			" (dir) name. Dashes are converted to underscores.",
-	)
-}
-
 func (p *PIPPlanner) shellInitHook(srcDir string) string {
 	venvPath := filepath.Join(srcDir, ".venv")
 	venvActivatePath := filepath.Join(srcDir, ".venv", "bin", "activate")
@@ -60,11 +47,3 @@ python -m venv "%[1]s";
 source "%[2]s";`)
 	return fmt.Sprintf(script, venvPath, venvActivatePath)
 }
-
-var pipBuildCommand = strings.TrimSpace(`
-source .venv/bin/activate && \
-pip install pex && \
-PACKAGE_NAME=$(python setup.py --name |  tr '[:upper:]-' '[:lower:]_') && \
-pex . -o app.pex -m $PACKAGE_NAME -r requirements.txt
-`,
-)
