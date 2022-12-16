@@ -5,11 +5,9 @@ package cloud
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -25,10 +23,27 @@ import (
 )
 
 func Shell(configDir string) error {
-	if err := openssh.SetupDevbox(); err != nil {
+	username, vmHostname := parseVMEnvVar()
+	if username == "" {
+		username = promptUsername()
+	}
+	debug.Log("username: %s", username)
+	sshClient := openssh.Client{
+		Username: username,
+		Addr:     "gateway.devbox.sh",
+	}
+	// When developing we can use this env variable to point
+	// to a different gateway
+	var err error
+	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
+		sshClient.Addr = envGateway
+		err = openssh.SetupInsecureDebug(envGateway)
+	} else {
+		err = openssh.SetupDevbox()
+	}
+	if err != nil {
 		return err
 	}
-
 	if err := sshshim.Setup(); err != nil {
 		return err
 	}
@@ -38,21 +53,15 @@ func Shell(configDir string) error {
 	fmt.Println("Blazingly fast remote development that feels local")
 	fmt.Print("\n")
 
-	username, vmHostname := parseVMEnvVar()
-	if username == "" {
-		username = promptUsername()
-	}
-	debug.Log("username: %s", username)
-
 	if vmHostname == "" {
 		s1 := stepper.Start("Creating a virtual machine on the cloud...")
-		vmHostname = getVirtualMachine(username)
+		vmHostname = getVirtualMachine(sshClient)
 		s1.Success("Created virtual machine")
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
-	err := syncFiles(username, vmHostname, configDir)
+	err = syncFiles(username, vmHostname, configDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
 		log.Fatal(err)
@@ -90,37 +99,30 @@ type vm struct {
 	VMPrivateKey string `json:"vm_private_key"`
 }
 
-func getVirtualMachine(username string) string {
-	client := openssh.Client{
-		Username: username,
-		Hostname: "gateway.devbox.sh",
+func (vm vm) redact() *vm {
+	vm.VMPrivateKey = "***"
+	return &vm
+}
+
+func getVirtualMachine(client openssh.Client) string {
+	sshOut, err := client.Exec("auth")
+	if err != nil {
+		log.Fatalln("error requesting VM:", err)
+	}
+	resp := &vm{}
+	if err := json.Unmarshal(sshOut, resp); err != nil {
+		log.Fatalf("error unmarshaling gateway response %q: %v", sshOut, err)
+	}
+	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
+		debug.Log("got gateway response:\n\t%s", redacted)
+	}
+	if resp.VMPrivateKey == "" {
+		return resp.VMHost
 	}
 
-	// When developing we can use this env variable to point
-	// to a different gateway
-	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
-		client.Hostname = envGateway
-	}
-	bytes, err := client.Exec("auth")
+	err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
 	if err != nil {
-		log.Println(err)
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			log.Printf("ssh %s stderr:\n%s", client.Hostname, string(exitErr.Stderr))
-		}
-		os.Exit(1)
-	}
-	debug.Log("ssh %s stdout:\n%s", client.Hostname, string(bytes))
-	resp := &vm{}
-	err = json.Unmarshal(bytes, resp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.VMPrivateKey != "" {
-		err := openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
-		if err != nil {
-			log.Fatal(err)
-		}
+		log.Fatalf("error adding new VM key: %v", err)
 	}
 	return resp.VMHost
 }
@@ -141,7 +143,7 @@ func syncFiles(username, hostname, configDir string) error {
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
-		Name:        fmt.Sprintf("devbox-%s", machineID),
+		Name:        mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", projectName, machineID)),
 		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
@@ -164,7 +166,7 @@ func syncFiles(username, hostname, configDir string) error {
 func shell(username, hostname, configDir string) error {
 	client := &openssh.Client{
 		Username:       username,
-		Hostname:       hostname,
+		Addr:           hostname,
 		ProjectDirName: projectDirName(configDir),
 	}
 	return client.Shell()

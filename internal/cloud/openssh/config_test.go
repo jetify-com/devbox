@@ -1,6 +1,7 @@
 package openssh
 
 import (
+	"bytes"
 	_ "embed"
 	"io/fs"
 	"os"
@@ -139,6 +140,72 @@ func TestSetupDevbox(t *testing.T) {
 		t.Setenv("HOME", workdir)
 		if err := SetupDevbox(); err != nil {
 			t.Error("got SetupDevbox() error:", err)
+		}
+		got := os.DirFS(workdir)
+		fsEqual(t, got, want)
+	})
+}
+
+//go:embed testdata/devbox-ssh-debug-config.golden
+var goldenDevboxSSHDebugConfig []byte
+
+func TestSetupInsecureDebug(t *testing.T) {
+	wantAddr := "127.0.0.1:2222"
+	want := fstest.MapFS{
+		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0755},
+		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config/devbox/ssh/config": &fstest.MapFile{
+			Data: goldenDevboxSSHDebugConfig,
+			Mode: 0644,
+		},
+		".config/devbox/ssh/known_hosts": &fstest.MapFile{
+			Data: sshKnownHosts,
+			Mode: 0644,
+		},
+		".config/devbox/ssh/known_hosts_debug": &fstest.MapFile{Mode: 0644},
+
+		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".ssh/config": &fstest.MapFile{
+			Data: []byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
+			Mode: 0644,
+		},
+	}
+
+	t.Run("NoConfigs", func(t *testing.T) {
+		in := fstest.MapFS{}
+		workdir := fsToDir(t, in)
+		t.Setenv("HOME", workdir)
+		if err := SetupInsecureDebug(wantAddr); err != nil {
+			t.Errorf("got SetupInsecureDebug(%q) error: %v", wantAddr, err)
+		}
+		got := os.DirFS(workdir)
+		fsEqual(t, got, want)
+	})
+	t.Run("ChangeHost", func(t *testing.T) {
+		input := fstest.MapFS{}
+		for k, v := range want {
+			input[k] = v
+		}
+
+		// Set the initial config to have a debug host = 127.0.0.2 so we
+		// can check that it gets changed back to 127.0.0.1.
+		input[".config/devbox/ssh/config"] = &fstest.MapFile{
+			Data: bytes.ReplaceAll(goldenDevboxSSHDebugConfig, []byte("127.0.0.1"), []byte("127.0.0.2")),
+			Mode: 0644,
+		}
+
+		// Put something in known_hosts_debug so we can check that it
+		// gets cleared out.
+		input[".config/devbox/ssh/known_hosts_debug"] = &fstest.MapFile{
+			Data: []byte("[127.0.0.1]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAPY1ms2jt+QPvhq89J8KF7rfTCFUi6X6Ik4O9EIAT/c\n"),
+			Mode: 0644,
+		}
+
+		workdir := fsToDir(t, input)
+		t.Setenv("HOME", workdir)
+		if err := SetupInsecureDebug(wantAddr); err != nil {
+			t.Errorf("got SetupInsecureDebug(%q) error: %v", wantAddr, err)
 		}
 		got := os.DirFS(workdir)
 		fsEqual(t, got, want)

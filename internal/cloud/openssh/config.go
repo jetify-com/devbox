@@ -17,6 +17,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// These must match what's in sshConfigTmpl. We should eventually make the hosts
+// a template variable.
+const (
+	gatewayProdHost = "gateway.devbox.sh"
+	gatewayDevHost  = "gateway.dev.devbox.sh"
+)
+
 //go:embed sshconfig.tmpl
 var sshConfigText string
 var sshConfigTmpl = template.Must(template.New("sshconfig").Parse(sshConfigText))
@@ -28,10 +35,30 @@ var sshKnownHosts []byte
 // to Devbox Cloud hosts. It does nothing if Devbox Cloud is already
 // configured.
 func SetupDevbox() error {
+	return setupDevbox("", 0)
+}
+
+// SetupInsecureDebug is like SetupDevbox, but also configures an additional
+// gateway with host key checking disabled. If gatewayAddr is a
+// well-known *.devbox.sh gateway, then SetupInsecureDebug doesn't add any
+// extra hosts and acts identically to SetupDevbox.
+func SetupInsecureDebug(gatewayAddr string) error {
+	host, port := splitHostPort(gatewayAddr)
+	if host != gatewayProdHost && host != gatewayDevHost {
+		return setupDevbox(host, port)
+	}
+	return setupDevbox("", 0)
+}
+
+func setupDevbox(debugHost string, debugPort int) error {
 	devboxSSHDir, err := devboxSSHDir()
 	if err != nil {
 		return err
 	}
+
+	// Try to remove any old debug host keys. It's okay if this fails.
+	devboxKnownHostsDebug := filepath.Join(devboxSSHDir, "known_hosts_debug")
+	_ = os.Remove(devboxKnownHostsDebug)
 
 	devboxKnownHostsPath := filepath.Join(devboxSSHDir, "known_hosts")
 	devboxKnownHosts, err := editFile(devboxKnownHostsPath, 0644)
@@ -53,13 +80,20 @@ func SetupDevbox() error {
 	}
 	defer devboxSSHConfig.Close()
 
-	err = errors.WithStack(sshConfigTmpl.Execute(devboxSSHConfig, struct {
+	tmplData := struct {
 		ConfigVersion string
 		ConfigDir     string
+		DebugGateway  struct {
+			Host string
+			Port int
+		}
 	}{
 		ConfigVersion: "0.0.1",
 		ConfigDir:     devboxSSHDir,
-	}))
+	}
+	tmplData.DebugGateway.Host = debugHost
+	tmplData.DebugGateway.Port = debugPort
+	err = errors.WithStack(sshConfigTmpl.Execute(devboxSSHConfig, tmplData))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -68,6 +102,16 @@ func SetupDevbox() error {
 	}
 	if err := updateUserSSHConfig(devboxIncludePath); err != nil {
 		return err
+	}
+
+	// Create the known_hosts_debug file with the correct permissions if a
+	// debug gateway is configured. It's okay if this fails because it's
+	// only used for debugging.
+	if debugHost != "" {
+		f, err := os.OpenFile(devboxKnownHostsDebug, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		if err == nil {
+			f.Close()
+		}
 	}
 	return nil
 }

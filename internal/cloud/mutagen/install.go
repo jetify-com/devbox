@@ -8,10 +8,11 @@ import (
 
 	"github.com/cavaliergopher/grab/v3"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 func InstallMutagenOnce(binPath string) error {
-	if IsFile(binPath) {
+	if fileutil.IsFile(binPath) {
 		// Already installed, do nothing
 		// TODO: ideally we would check that the right version
 		//   is installed, and maybe we should also validate
@@ -43,7 +44,7 @@ func Install(url string, installDir string) error {
 	if err != nil {
 		return err
 	}
-	err = Untar(tarReader, installDir)
+	err = fileutil.Untar(tarReader, installDir)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,9 @@
 package mutagen
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type SessionSpec struct {
 	AlphaAddress string
@@ -23,6 +26,12 @@ func (s *SessionSpec) Validate() error {
 		return errors.New("beta path is required")
 	}
 	return nil
+}
+
+// TODO savil. Refactor SessionSpec so that this is always applied.
+// We can make it a struct that uses a constructor, and make Sync a method on the struct.
+func SanitizeSessionName(input string) string {
+	return strings.ReplaceAll(input, ".", "-")
 }
 
 // Based on the structs available at: https://github.com/mutagen-io/mutagen/blob/master/pkg/api/models/synchronization/session.go

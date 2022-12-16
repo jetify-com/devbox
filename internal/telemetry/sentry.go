@@ -48,6 +48,12 @@ func (s *Sentry) Init(appName, appVersion, executionID string) {
 			return event
 		},
 	})
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetUser(sentry.User{ID: DeviceID()})
+		scope.SetContext("os", map[string]interface{}{
+			"name": OS(),
+		})
+	})
 }
 
 // CaptureException

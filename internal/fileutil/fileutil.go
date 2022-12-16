@@ -1,4 +1,4 @@
-package mutagen
+package fileutil
 
 import (
 	"os"
@@ -54,7 +54,12 @@ func IsSymlink(path string) bool {
 	return (info.Mode().Type() & os.ModeSymlink) == os.ModeSymlink
 }
 
-func ExistsOrErr(path string) error {
+func Exists(path string) bool {
+	err := TryExists(path)
+	return err == nil
+}
+
+func TryExists(path string) error {
 	_, err := os.Stat(path)
 	return err
 }

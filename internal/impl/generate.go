@@ -15,8 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/pkgcfg"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/plugin"
 )
 
 //go:embed tmpl/* tmpl/.*
@@ -24,7 +24,7 @@ var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
 
-func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *pkgcfg.Manager) error {
+func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *plugin.Manager) error {
 	outPath := filepath.Join(rootPath, ".devbox/gen")
 
 	for _, file := range shellFiles {
