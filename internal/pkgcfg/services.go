@@ -48,40 +48,52 @@ func (s *Services) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func StartService(pkgs []string, name, rootDir string, out io.Writer) error {
-	services, err := GetServices(pkgs, rootDir)
+func StartServices(pkgs, serviceNames []string, root string, w io.Writer) error {
+	services, err := GetServices(pkgs, root)
 	if err != nil {
 		return err
 	}
-	service, found := services[name]
-	if !found {
-		return usererr.New("Service not found")
+	for _, name := range serviceNames {
+		service, found := services[name]
+		if !found {
+			return usererr.New("Service not found")
+		}
+		cmd := exec.Command("sh", "-c", service.Start)
+		cmd.Stdout = w
+		cmd.Stderr = w
+		if err = cmd.Run(); err != nil {
+			if len(serviceNames) == 1 {
+				return usererr.WithUserMessage(err, "Service %q failed to start", name)
+			}
+			fmt.Fprintf(w, "Service %q failed to start. Error = %s\n", name, err)
+		} else {
+			fmt.Fprintf(w, "Service %q started\n", name)
+		}
 	}
-	cmd := exec.Command("sh", "-c", service.Start)
-	cmd.Stdout = out
-	cmd.Stderr = out
-	err = cmd.Run()
-	if err == nil {
-		fmt.Fprintf(out, "Service %q started", name)
-	}
-	return usererr.WithUserMessage(err, "Service %q failed to start", name)
+	return nil
 }
 
-func StopService(pkgs []string, name, rootDir string, out io.Writer) error {
-	services, err := GetServices(pkgs, rootDir)
+func StopServices(pkgs, serviceNames []string, root string, w io.Writer) error {
+	services, err := GetServices(pkgs, root)
 	if err != nil {
 		return err
 	}
-	service, found := services[name]
-	if !found {
-		return usererr.New("Service not found")
+	for _, name := range serviceNames {
+		service, found := services[name]
+		if !found {
+			return usererr.New("Service not found")
+		}
+		cmd := exec.Command("sh", "-c", service.Stop)
+		cmd.Stdout = w
+		cmd.Stderr = w
+		if err = cmd.Run(); err != nil {
+			if len(serviceNames) == 1 {
+				return usererr.WithUserMessage(err, "Service %q failed to stop", name)
+			}
+			fmt.Fprintf(w, "Service %q failed to stop. Error = %s\n", name, err)
+		} else {
+			fmt.Fprintf(w, "Service %q stopped\n", name)
+		}
 	}
-	cmd := exec.Command("sh", "-c", service.Stop)
-	cmd.Stdout = out
-	cmd.Stderr = out
-	err = cmd.Run()
-	if err == nil {
-		fmt.Fprintf(out, "Service %q stopped", name)
-	}
-	return usererr.WithUserMessage(err, "Service %q failed to stop", name)
+	return nil
 }

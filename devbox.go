@@ -41,8 +41,8 @@ type Devbox interface {
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
 	ShellPlan() (*plansdk.ShellPlan, error)
-	StartService(serviceName string) error
-	StopService(serviceName string) error
+	StartServices(services ...string) error
+	StopServices(services ...string) error
 }
 
 // Open opens a devbox by reading the config file in dir.
