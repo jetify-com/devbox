@@ -1,36 +1,29 @@
-package pkgcfg
+package plugin
 
 import (
-	"embed"
-	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/plugins"
 )
 
-const pkgCfgDir = "package-configuration"
-
-//go:embed package-configuration/*
-var packageConfiguration embed.FS
-
 func getConfigIfAny(pkg, rootDir string) (*config, error) {
-	configFiles, err := packageConfiguration.ReadDir(pkgCfgDir)
+	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	// Try to find perfect match first
 	for _, file := range configFiles {
-		if file.IsDir() {
+		if file.IsDir() || strings.HasSuffix(file.Name(), ".go") {
 			continue
 		}
-		content, err := packageConfiguration.ReadFile(
-			filepath.Join(pkgCfgDir, file.Name()),
-		)
+		content, err := plugins.BuiltIn.ReadFile(file.Name())
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
 		cfg, err := buildConfig(pkg, rootDir, string(content))
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -47,5 +40,5 @@ func getConfigIfAny(pkg, rootDir string) (*config, error) {
 }
 
 func getFileContent(contentPath string) ([]byte, error) {
-	return packageConfiguration.ReadFile(filepath.Join(pkgCfgDir, contentPath))
+	return plugins.BuiltIn.ReadFile(contentPath)
 }
