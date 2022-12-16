@@ -1,10 +1,11 @@
 {
-  "name": "ruby",
-  "version": "0.0.1",
-  "match": "^ruby([0-9_]*[0-9]+)?$",
-  "env": {
-    "RUBY_CONFDIR": "{{ .Virtenv }}",
-    "GEMRC": "{{ .Virtenv }}/.gemrc",
-    "GEM_HOME": "{{ .Virtenv }}"
-  }
+    "name": "ruby",
+    "version": "0.0.1",
+    "match": "^ruby([0-9_]*[0-9]+)?$",
+    "env": {
+        "RUBY_CONFDIR": "{{ .Virtenv }}",
+        "GEMRC": "{{ .Virtenv }}/.gemrc",
+        "GEM_HOME": "{{ .Virtenv }}",
+        "PATH": "$GEM_HOME/bin:$PATH"
+    }
 }
