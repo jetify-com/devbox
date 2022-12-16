@@ -54,10 +54,6 @@ func (p *V2Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	return &plansdk.ShellPlan{Definitions: definitions}
 }
 
-func (p *V2Planner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
-	return nil
-}
-
 func (p *V2Planner) getPHPPackage() string {
 	regexp := regexp.MustCompile(`^php[0-9]*$`)
 	for _, pkg := range p.userPackages {

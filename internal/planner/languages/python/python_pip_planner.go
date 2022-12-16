@@ -39,30 +39,6 @@ func (p *PIPPlanner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	}
 }
 
-func (p *PIPPlanner) GetBuildPlan(srcDir string) *plansdk.BuildPlan {
-	plan := &plansdk.BuildPlan{
-		DevPackages: []string{
-			"python3",
-		},
-		RuntimePackages: []string{
-			`python3`,
-		},
-	}
-	if err := p.isBuildable(srcDir); err != nil {
-		return plan.WithError(err)
-	}
-	plan.InstallStage = &plansdk.Stage{
-		Command:    "python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
-		InputFiles: plansdk.AllFiles(),
-	}
-	plan.BuildStage = &plansdk.Stage{Command: pipBuildCommand}
-	plan.StartStage = &plansdk.Stage{
-		Command:    "python ./app.pex",
-		InputFiles: []string{"app.pex"},
-	}
-	return plan
-}
-
 func (p *PIPPlanner) isBuildable(srcDir string) error {
 	if plansdk.FileExists(filepath.Join(srcDir, "setup.py")) {
 		return nil
