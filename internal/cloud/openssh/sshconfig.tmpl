@@ -19,3 +19,13 @@ Host *.devbox-vms.internal
 	UserKnownHostsFile "{{ .ConfigDir }}/known_hosts"
 	ServerAliveInterval 50
 	ServerAliveCountMax 3
+
+{{- if .DebugGateway.Host }}
+
+Host gateway.devbox-debug {{ .DebugGateway.Host }}
+	Hostname {{ .DebugGateway.Host }}
+	Port {{ .DebugGateway.Port }}
+	StrictHostKeyChecking no
+	UserKnownHostsFile "{{ .ConfigDir }}/known_hosts_debug"
+
+{{- end }}
