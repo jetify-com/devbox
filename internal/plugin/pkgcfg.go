@@ -71,6 +71,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
+			"DevboxConfigDir":      rootDir,
 			"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
 			"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
@@ -144,6 +145,7 @@ func buildConfig(pkg, rootDir, content string) (*config, error) {
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
+		"DevboxConfigDir":      rootDir,
 		"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
 		"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),

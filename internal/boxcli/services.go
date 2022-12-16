@@ -49,8 +49,17 @@ func ServicesCmd() *cobra.Command {
 		},
 	}
 
+	restartCommand := &cobra.Command{
+		Use:   "restart [service]...",
+		Short: "Restarts service. If no service is specified, restarts all services",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return restartServices(cmd, args, flags)
+		},
+	}
+
 	flags.config.register(servicesCommand)
 	servicesCommand.AddCommand(lsCommand)
+	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
 	return servicesCommand
@@ -117,4 +126,13 @@ func serviceNames(box devbox.Devbox) ([]string, error) {
 		names = append(names, service.Name)
 	}
 	return names, nil
+}
+
+func restartServices(
+	cmd *cobra.Command,
+	services []string,
+	flags servicesCmdFlags,
+) error {
+	_ = stopServices(cmd, services, flags)
+	return startServices(cmd, services, flags)
 }

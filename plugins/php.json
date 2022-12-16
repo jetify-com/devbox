@@ -4,7 +4,8 @@
   "match": "^php[0-9]*$",
   "readme": "PHP is compiled with default extensions. If you would like to use non-default extensions you can add them with devbox add php81Extensions.{extension} . For example, for the memcache extension you can do `devbox add php81Extensions.memcached`.",
   "env": {
-    "PHPFPM_PORT": "8082"
+    "PHPFPM_PORT": "8082",
+    "PHP_VIRTENV": "{{ .Virtenv }}"
   },
   "create_files": {
     "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf"
