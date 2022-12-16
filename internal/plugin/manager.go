@@ -1,4 +1,4 @@
-package pkgcfg
+package plugin
 
 type Manager struct {
 	addMode bool
