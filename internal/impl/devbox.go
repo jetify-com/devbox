@@ -22,9 +22,9 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/pkgcfg"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/plugin"
 	"golang.org/x/exp/slices"
 )
 
@@ -51,7 +51,7 @@ type Devbox struct {
 	cfg *Config
 	// configDir is the directory where the config file (devbox.json) resides
 	configDir     string
-	pluginManager *pkgcfg.Manager
+	pluginManager *plugin.Manager
 	writer        io.Writer
 }
 
@@ -76,7 +76,7 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 	box := &Devbox{
 		cfg:           cfg,
 		configDir:     cfgDir,
-		pluginManager: pkgcfg.NewManager(),
+		pluginManager: plugin.NewManager(),
 		writer:        writer,
 	}
 	return box, nil
@@ -110,13 +110,13 @@ func (d *Devbox) Add(pkgs ...string) error {
 		return err
 	}
 
-	d.pluginManager.ApplyOptions(pkgcfg.WithAddMode())
+	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
 	if featureflag.PKGConfig.Enabled() {
 		for _, pkg := range pkgs {
-			if err := pkgcfg.PrintReadme(
+			if err := plugin.PrintReadme(
 				pkg,
 				d.configDir,
 				d.writer,
@@ -151,7 +151,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		if err := pkgcfg.Remove(d.configDir, uninstalledPackages); err != nil {
+		if err := plugin.Remove(d.configDir, uninstalledPackages); err != nil {
 			return err
 		}
 	}
@@ -207,14 +207,14 @@ func (d *Devbox) Shell() error {
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		env, err := pkgcfg.Env(plan.DevPackages, d.configDir)
+		env, err := plugin.Env(plan.DevPackages, d.configDir)
 		if err != nil {
 			return err
 		}
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.VirtenvBinPath)),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, plugin.VirtenvBinPath)),
 		)
 	}
 
@@ -295,14 +295,14 @@ func (d *Devbox) RunScript(scriptName string) error {
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		env, err := pkgcfg.Env(plan.DevPackages, d.configDir)
+		env, err := plugin.Env(plan.DevPackages, d.configDir)
 		if err != nil {
 			return err
 		}
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, pkgcfg.VirtenvBinPath)),
+			nix.WithPKGConfigDir(filepath.Join(d.configDir, plugin.VirtenvBinPath)),
 		)
 	}
 
@@ -340,14 +340,14 @@ func (d *Devbox) Exec(cmds ...string) error {
 	env := []string{}
 	virtenvBinPath := ""
 	if featureflag.PKGConfig.Enabled() {
-		envMap, err := pkgcfg.Env(d.cfg.Packages, d.configDir)
+		envMap, err := plugin.Env(d.cfg.Packages, d.configDir)
 		if err != nil {
 			return err
 		}
 		for k, v := range envMap {
 			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
-		virtenvBinPath = filepath.Join(d.configDir, pkgcfg.VirtenvBinPath) + ":"
+		virtenvBinPath = filepath.Join(d.configDir, plugin.VirtenvBinPath) + ":"
 	}
 	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
@@ -381,7 +381,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 	); err != nil {
 		return errors.WithStack(err)
 	}
-	return pkgcfg.PrintReadme(
+	return plugin.PrintReadme(
 		pkg,
 		d.configDir,
 		d.writer,
@@ -453,22 +453,22 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) Services() (pkgcfg.Services, error) {
-	return pkgcfg.GetServices(d.cfg.Packages, d.configDir)
+func (d *Devbox) Services() (plugin.Services, error) {
+	return plugin.GetServices(d.cfg.Packages, d.configDir)
 }
 
 func (d *Devbox) StartService(serviceName string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec("devbox", "services", "start", serviceName)
 	}
-	return pkgcfg.StartService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+	return plugin.StartService(d.cfg.Packages, serviceName, d.configDir, d.writer)
 }
 
 func (d *Devbox) StopService(serviceName string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec("devbox", "services", "stop", serviceName)
 	}
-	return pkgcfg.StopService(d.cfg.Packages, serviceName, d.configDir, d.writer)
+	return plugin.StopService(d.cfg.Packages, serviceName, d.configDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
@@ -523,7 +523,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	fmt.Println("done.")
 
 	if featureflag.PKGConfig.Enabled() {
-		if err := pkgcfg.RemoveInvalidSymlinks(d.configDir); err != nil {
+		if err := plugin.RemoveInvalidSymlinks(d.configDir); err != nil {
 			return err
 		}
 	}
