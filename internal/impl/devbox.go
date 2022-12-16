@@ -210,7 +210,7 @@ func (d *Devbox) Shell() error {
 		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
 		nix.WithConfigDir(d.configDir),
 	}
-
+	// TODO: separate package suggestions from shell planners
 	if featureflag.PKGConfig.Enabled() {
 		env, err := plugin.Env(plan.DevPackages, d.configDir)
 		if err != nil {
