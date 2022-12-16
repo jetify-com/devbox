@@ -8,10 +8,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
 	"time"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/getsentry/sentry-go"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
@@ -83,6 +81,16 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return // Ignore invalid commands
 	}
 
+	pkgs := getPackages(cmd)
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("command", subcmd.CommandPath())
+		scope.SetContext("command", map[string]interface{}{
+			"subcommand": subcmd.CommandPath(),
+			"args":       subargs,
+			"packages":   pkgs,
+		})
+	})
 	// verified with manual testing that the sentryID returned by CaptureException
 	// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
 	sentry.CaptureException(runErr)
@@ -96,23 +104,18 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		AppVersion:    m.opts.AppVersion,
 		Command:       subcmd.CommandPath(),
 		CommandArgs:   subargs,
-		DeviceID:      deviceID(),
+		DeviceID:      telemetry.DeviceID(),
 		Duration:      time.Since(m.startTime),
 		Failed:        runErr != nil,
-		Packages:      getPackages(cmd),
+		Packages:      pkgs,
 		SentryEventID: sentryEventID,
+		Shell:         os.Getenv("SHELL"),
 	})
 }
 
 func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
 	m.executionID = execID
 	return m
-}
-
-func deviceID() string {
-	salt := "64ee464f-9450-4b14-8d9c-014c0012ac1a"
-	hashedID, _ := machineid.ProtectedID(salt) // Ensure machine id is hashed and non-identifiable
-	return hashedID
 }
 
 func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
@@ -154,6 +157,7 @@ type event struct {
 	Failed        bool
 	Packages      []string
 	SentryEventID string
+	Shell         string
 }
 
 func trackEvent(client segment.Client, evt *event) {
@@ -169,7 +173,7 @@ func trackEvent(client segment.Client, evt *event) {
 				Version: evt.AppVersion,
 			},
 			OS: segment.OSInfo{
-				Name: runtime.GOOS,
+				Name: telemetry.OS(),
 			},
 		},
 		Properties: segment.NewProperties().
@@ -178,6 +182,7 @@ func trackEvent(client segment.Client, evt *event) {
 			Set("failed", evt.Failed).
 			Set("duration", evt.Duration.Milliseconds()).
 			Set("packages", evt.Packages).
-			Set("sentry_event_id", evt.SentryEventID),
+			Set("sentry_event_id", evt.SentryEventID).
+			Set("shell", evt.Shell),
 	})
 }
