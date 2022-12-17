@@ -14,6 +14,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
@@ -137,6 +138,11 @@ func syncFiles(username, hostname, configDir string) error {
 		return err
 	}
 
+	ignorePaths, err := gitIgnorePaths(configDir)
+	if err != nil {
+		return err
+	}
+
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
 	machineID, _, _ := strings.Cut(hostname, ".")
@@ -150,11 +156,14 @@ func syncFiles(username, hostname, configDir string) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath:  fmt.Sprintf("~/code/%s", projectName),
-		EnvVars:   env,
-		IgnoreVCS: true,
-		SyncMode:  "two-way-resolved",
-		Labels:    mutagenbox.DefaultSyncLabels(machineID),
+		BetaPath: fmt.Sprintf("~/code/%s", projectName),
+		EnvVars:  env,
+		Ignore: mutagen.SessionIgnore{
+			VCS:   true,
+			Paths: ignorePaths,
+		},
+		SyncMode: "two-way-resolved",
+		Labels:   mutagenbox.DefaultSyncLabels(machineID),
 	})
 	if err != nil {
 		return err
@@ -201,4 +210,30 @@ func parseVMEnvVar() (username string, vmHostname string) {
 	username = parts[0]
 	vmHostname = parts[1]
 	return
+}
+
+// Proof of concept: look for a gitignore file in the current directory.
+// To harden this, we must:
+//  1. Look for .gitignore file in each ancestor directory of configDir, and include
+//     any rules that apply to configDir contents.
+//  2. Look for .gitignore file in each child directory of configDir and transform the
+//     rules to be relative to configDir.
+func gitIgnorePaths(configDir string) ([]string, error) {
+
+	fpath := filepath.Join(configDir, ".gitignore")
+	if _, err := os.Stat(fpath); err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		} else {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	contents, err := os.ReadFile(fpath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	result := strings.Split(string(contents), "\n")
+	return result, nil
 }

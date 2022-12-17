@@ -45,8 +45,14 @@ func Create(spec *SessionSpec) error {
 		args = append(args, "--sync-mode", spec.SyncMode)
 	}
 
-	if spec.IgnoreVCS {
+	if spec.Ignore.VCS {
 		args = append(args, "--ignore-vcs")
+	}
+
+	if len(spec.Ignore.Paths) > 0 {
+		for _, p := range spec.Ignore.Paths {
+			args = append(args, "--ignore", p)
+		}
 	}
 
 	return execMutagen(args, spec.EnvVars)
