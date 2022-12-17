@@ -6,6 +6,6 @@
         "RUBY_CONFDIR": "{{ .Virtenv }}",
         "GEMRC": "{{ .Virtenv }}/.gemrc",
         "GEM_HOME": "{{ .Virtenv }}",
-        "PATH": "$GEM_HOME/bin:$PATH"
+        "PATH": "{{.Virtenv}}/bin:$PATH"
     }
 }
