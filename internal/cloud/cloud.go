@@ -78,12 +78,20 @@ func Shell(configDir string) error {
 }
 
 func promptUsername() string {
+	defaultUsername, err := queryGithubUsername()
+	if err != nil || defaultUsername == "" {
+		// The query for Github username is best effort, and if it fails we fallback
+		// to the local computer user.
+		defaultUsername = os.Getenv("USER")
+		debug.Log("Failed to get username from Github. Falling back to $USER: %s", defaultUsername)
+	}
+
 	username := ""
 	prompt := &survey.Input{
 		Message: "What is your github username?",
-		Default: os.Getenv("USER"),
+		Default: defaultUsername,
 	}
-	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
+	err = survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
 		log.Fatal(err)
 	}
