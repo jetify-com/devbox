@@ -30,6 +30,7 @@ const (
 	shZsh     name = "zsh"
 	shKsh     name = "ksh"
 	shPosix   name = "posix"
+	shFish    name = "fish"
 )
 
 // Shell configures a user's shell to run in Devbox. Its zero value is a
@@ -88,6 +89,13 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 		if sh.userShellrcPath == "" {
 			sh.userShellrcPath = ".shinit"
 		}
+	case "fish":
+		sh.name = shFish
+		// We're going to use bash, and exec fish after we finish sourcing the environment
+		sh.binPath = "bash"
+		// We'll use a made up shell file location, since we can't really import the fish shell
+		sh.userShellrcPath = ".shinit"
+
 	default:
 		sh.name = shUnknown
 	}
@@ -254,6 +262,12 @@ func (s *Shell) execCommand() string {
 		extraEnv = []string{fmt.Sprintf(`"ZDOTDIR=%s"`, filepath.Dir(shellrc))}
 	case shKsh, shPosix:
 		extraEnv = []string{fmt.Sprintf(`"ENV=%s"`, shellrc)}
+	case shFish:
+		extraArgs = []string{`--rcfile`, fmt.Sprintf(`"%s"`, shellrc)}
+		// Exec fish only if we're not running a script
+		if s.ScriptCommand == "" {
+			extraArgs = append(extraArgs, `-ic "exec fish"`)
+		}
 	}
 	args = append(args, extraEnv...)
 	args = append(args, s.binPath)
