@@ -14,7 +14,6 @@ import (
 	"go.jetpack.io/devbox/internal/planner/languages/php"
 	"go.jetpack.io/devbox/internal/planner/languages/python"
 	"go.jetpack.io/devbox/internal/planner/languages/ruby"
-	"go.jetpack.io/devbox/internal/planner/languages/rust"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -29,7 +28,6 @@ var PLANNERS = []plansdk.Planner{
 	&python.PoetryPlanner{},
 	&python.PIPPlanner{},
 	&ruby.Planner{},
-	&rust.Planner{},
 }
 
 // Return a merged shell plan from shell planners if user defined packages
