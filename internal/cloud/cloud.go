@@ -220,10 +220,16 @@ func parseVMEnvVar() (username string, vmHostname string) {
 //     rules to be relative to configDir.
 func gitIgnorePaths(configDir string) ([]string, error) {
 
+	// We must always ignore .devbox folder. It can contain information that
+	// is platform-specific, and so we should not sync it to the cloud-shell.
+	// Platform-specific info includes nix profile links to the nix store,
+	// and in the future, versions of specific packages in the flakes.lock file.
+	result := []string{".devbox"}
+
 	fpath := filepath.Join(configDir, ".gitignore")
 	if _, err := os.Stat(fpath); err != nil {
 		if os.IsNotExist(err) {
-			return nil, nil
+			return result, nil
 		} else {
 			return nil, errors.WithStack(err)
 		}
@@ -234,6 +240,6 @@ func gitIgnorePaths(configDir string) ([]string, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	result := strings.Split(string(contents), "\n")
+	result = append(result, strings.Split(string(contents), "\n")...)
 	return result, nil
 }
