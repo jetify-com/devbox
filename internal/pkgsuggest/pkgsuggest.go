@@ -3,10 +3,12 @@ package pkgsuggest
 import (
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/javascript"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/zig"
 )
 
 var SUGGESTORS = []suggestors.Suggestor{
 	&javascript.Suggestor{},
+	&zig.Suggestor{},
 }
 
 func GetSuggestors(srcDir string) ([]string, error) {
