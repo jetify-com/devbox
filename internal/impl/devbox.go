@@ -22,6 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/pkgsuggest"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -43,6 +44,19 @@ func InitConfig(dir string) (created bool, err error) {
 		Nixpkgs: NixpkgsConfig{
 			Commit: plansdk.DefaultNixpkgsCommit,
 		},
+	}
+
+	pkgsToSuggest, err := pkgsuggest.GetSuggestors(dir)
+	fmt.Println(pkgsToSuggest)
+	if err != nil {
+		return true, err
+	}
+	if len(pkgsToSuggest) > 0 {
+		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
+		fmt.Printf(
+			"We detected extra packages you may need. To install them, run `%s`\n",
+			color.HiYellowString(s),
+		)
 	}
 	return cuecfg.InitFile(cfgPath, config)
 }
@@ -188,10 +202,7 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return err
-	}
+
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -199,7 +210,7 @@ func (d *Devbox) Shell() error {
 
 	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
 
-	pluginHooks, err := plugin.InitHooks(plan.DevPackages, d.configDir)
+	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.configDir)
 	if err != nil {
 		return err
 	}
@@ -212,7 +223,7 @@ func (d *Devbox) Shell() error {
 	}
 	// TODO: separate package suggestions from shell planners
 	if featureflag.PKGConfig.Enabled() {
-		env, err := plugin.Env(plan.DevPackages, d.configDir)
+		env, err := plugin.Env(d.cfg.Packages, d.configDir)
 		if err != nil {
 			return err
 		}
@@ -227,17 +238,6 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		// Fall back to using a plain Nix shell.
 		shell = &nix.Shell{}
-	}
-
-	allPkgs := planner.GetShellPackageSuggestion(d.configDir, d.cfg.Packages)
-	pkgsToSuggest, _ := lo.Difference(allPkgs, d.cfg.Packages)
-	if len(pkgsToSuggest) > 0 {
-		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
-		fmt.Fprintf(
-			d.writer,
-			"We detected extra packages you may need. To install them, run `%s`\n",
-			color.HiYellowString(s),
-		)
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
@@ -276,10 +276,6 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return err
 	}
 
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return err
-	}
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -291,7 +287,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
 	}
 
-	pluginHooks, err := plugin.InitHooks(plan.DevPackages, d.configDir)
+	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.configDir)
 	if err != nil {
 		return err
 	}
@@ -305,7 +301,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		env, err := plugin.Env(plan.DevPackages, d.configDir)
+		env, err := plugin.Env(d.cfg.Packages, d.configDir)
 		if err != nil {
 			return err
 		}
