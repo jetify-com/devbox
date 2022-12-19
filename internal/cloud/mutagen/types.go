@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+type SessionIgnore struct {
+	VCS   bool
+	Paths []string
+}
+
 type SessionSpec struct {
 	AlphaAddress string
 	AlphaPath    string
@@ -14,7 +19,7 @@ type SessionSpec struct {
 	Labels       map[string]string
 	Paused       bool
 	SyncMode     string
-	IgnoreVCS    bool
+	Ignore       SessionIgnore
 	EnvVars      map[string]string
 }
 
