@@ -7,7 +7,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/planner/languages/dotnet"
 	"go.jetpack.io/devbox/internal/planner/languages/golang"
-	"go.jetpack.io/devbox/internal/planner/languages/haskell"
 	"go.jetpack.io/devbox/internal/planner/languages/java"
 	"go.jetpack.io/devbox/internal/planner/languages/javascript"
 	"go.jetpack.io/devbox/internal/planner/languages/nginx"
@@ -20,7 +19,6 @@ import (
 var PLANNERS = []plansdk.Planner{
 	&dotnet.Planner{},
 	&golang.Planner{},
-	&haskell.Planner{},
 	&java.Planner{},
 	&javascript.Planner{},
 	&nginx.Planner{},

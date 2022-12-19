@@ -2,12 +2,14 @@ package pkgsuggest
 
 import (
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/haskell"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/javascript"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/rust"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/zig"
 )
 
 var SUGGESTORS = []suggestors.Suggestor{
+	&haskell.Suggestor{},
 	&javascript.Suggestor{},
 	&rust.Suggestor{},
 	&zig.Suggestor{},
