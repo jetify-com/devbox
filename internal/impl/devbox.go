@@ -199,8 +199,13 @@ func (d *Devbox) Shell() error {
 
 	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
 
+	pluginHooks, err := plugin.InitHooks(plan.DevPackages, d.configDir)
+	if err != nil {
+		return err
+	}
+
 	opts := []nix.ShellOption{
-		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
+		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
 		nix.WithConfigDir(d.configDir),
@@ -286,8 +291,13 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
 	}
 
+	pluginHooks, err := plugin.InitHooks(plan.DevPackages, d.configDir)
+	if err != nil {
+		return err
+	}
+
 	opts := []nix.ShellOption{
-		nix.WithPlanInitHook(strings.Join(plan.ShellInitHook, "\n")),
+		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),

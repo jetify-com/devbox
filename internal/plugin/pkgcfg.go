@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -30,6 +31,11 @@ type config struct {
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
 	Services    Services          `json:"services"`
+
+	Shell struct {
+		// InitHook contains commands that will run at shell startup.
+		InitHook shellcmd.Commands `json:"init_hook,omitempty"`
+	} `json:"shell,omitempty"`
 }
 
 func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {

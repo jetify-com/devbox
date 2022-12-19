@@ -102,7 +102,9 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 	return sh, nil
 }
 
-func WithPlanInitHook(hook string) ShellOption {
+// If/once we end up making plugins the same as devbox.json we probably want
+// to merge all init hooks into single field
+func WithPluginInitHook(hook string) ShellOption {
 	return func(s *Shell) {
 		s.planInitHook = hook
 	}
