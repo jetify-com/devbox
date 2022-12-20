@@ -25,7 +25,7 @@ Devbox will automatically create the following configuration when you run `devbo
 
 You can use `devbox services start|stop postgresql` to start or stop the Postgres server in the background.
 
-### Environment Variables:
+### Environment Variables
 
 `PGDATA=./.devbox/virtenv/postgresql/data`
 
