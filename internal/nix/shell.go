@@ -41,7 +41,7 @@ type Shell struct {
 	pkgConfigDir    string
 	env             []string
 	userShellrcPath string
-	planInitHook    string
+	pluginInitHook  string
 
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
@@ -106,7 +106,7 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 // to merge all init hooks into single field
 func WithPluginInitHook(hook string) ShellOption {
 	return func(s *Shell) {
-		s.planInitHook = hook
+		s.pluginInitHook = hook
 	}
 }
 
@@ -344,7 +344,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
-		PlanInitHook     string
+		PluginInitHook   string
 		PathPrepend      string
 		ScriptCommand    string
 		ProfileBinDir    string
@@ -354,7 +354,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
-		PlanInitHook:     strings.TrimSpace(s.planInitHook),
+		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
 		PathPrepend:      pathPrepend,
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ProfileBinDir:    s.profileDir + "/bin",
