@@ -4,6 +4,11 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.4]
+
+- Added `Generate a Dockerfile from devbox.json` to the command palette
+- Changed `Generate Dev Containers config files` command's logic to use devbox CLI.
+
 ## [0.0.3]
 
 - Small fix for DevContainers and Github CodeSpaces compatibility.
