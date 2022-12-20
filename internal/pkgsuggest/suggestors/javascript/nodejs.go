@@ -17,7 +17,7 @@ func (s *Suggestor) IsRelevant(srcDir string) bool {
 	return plansdk.FileExists(packageJSONPath)
 }
 
-func (s *Suggestor) Packages() []string {
+func (s *Suggestor) Packages(_ string) []string {
 
 	return []string{
 		"nodejs-18_x",

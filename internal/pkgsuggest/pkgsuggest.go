@@ -2,6 +2,7 @@ package pkgsuggest
 
 import (
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/dotnet"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/haskell"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/javascript"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/rust"
@@ -9,6 +10,7 @@ import (
 )
 
 var SUGGESTORS = []suggestors.Suggestor{
+	&dotnet.Suggestor{},
 	&haskell.Suggestor{},
 	&javascript.Suggestor{},
 	&rust.Suggestor{},

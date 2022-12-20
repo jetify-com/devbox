@@ -1,6 +1,3 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
-// Use of this source code is governed by the license in the LICENSE file.
-
 package dotnet
 
 import (
@@ -9,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -21,17 +19,12 @@ type Project struct {
 const CSharpExtension = "csproj"
 const FSharpExtension = "fsproj"
 
-// The .Net Planner supports C# and F# languages.
-type Planner struct{}
+type Suggestor struct{}
 
-// Implements interface Planner (compile-time check)
-var _ plansdk.Planner = (*Planner)(nil)
+// implements interface Suggestor (compile-time check)
+var _ suggestors.Suggestor = (*Suggestor)(nil)
 
-func (p *Planner) Name() string {
-	return "dotnet.Planner"
-}
-
-func (p *Planner) IsRelevant(srcDir string) bool {
+func (s *Suggestor) IsRelevant(srcDir string) bool {
 	a, err := plansdk.NewAnalyzer(srcDir)
 	if err != nil {
 		// We should log that an error has occurred.
@@ -44,18 +37,16 @@ func (p *Planner) IsRelevant(srcDir string) bool {
 	return isRelevant
 }
 
-func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+func (s *Suggestor) Packages(srcDir string) []string {
 	proj, err := project(srcDir)
 	if err != nil {
-		return &plansdk.ShellPlan{}
+		return nil
 	}
 	dotNetPkg, err := dotNetNixPackage(proj)
 	if err != nil {
-		return &plansdk.ShellPlan{}
+		return nil
 	}
-	return &plansdk.ShellPlan{
-		DevPackages: []string{dotNetPkg},
-	}
+	return []string{dotNetPkg}
 }
 
 func project(srcDir string) (*Project, error) {

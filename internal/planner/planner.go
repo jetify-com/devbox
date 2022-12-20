@@ -5,7 +5,6 @@ package planner
 
 import (
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/planner/languages/dotnet"
 	"go.jetpack.io/devbox/internal/planner/languages/golang"
 	"go.jetpack.io/devbox/internal/planner/languages/java"
 	"go.jetpack.io/devbox/internal/planner/languages/javascript"
@@ -17,7 +16,6 @@ import (
 )
 
 var PLANNERS = []plansdk.Planner{
-	&dotnet.Planner{},
 	&golang.Planner{},
 	&java.Planner{},
 	&javascript.Planner{},

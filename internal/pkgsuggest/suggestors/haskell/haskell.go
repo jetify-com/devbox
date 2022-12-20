@@ -32,6 +32,6 @@ func (p *Suggestor) IsRelevant(srcDir string) bool {
 	return isRelevant
 }
 
-func (p *Suggestor) Packages() []string {
+func (p *Suggestor) Packages(_ string) []string {
 	return []string{"stack", "libiconv", "libffi", "binutils", "ghc"}
 }

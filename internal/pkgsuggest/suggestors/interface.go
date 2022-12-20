@@ -2,5 +2,5 @@ package suggestors
 
 type Suggestor interface {
 	IsRelevant(srcDir string) bool
-	Packages() []string
+	Packages(srcDir string) []string
 }

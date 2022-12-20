@@ -20,7 +20,7 @@ func (s *Suggestor) IsRelevant(srcDir string) bool {
 	return a.HasAnyFile("build.zig")
 }
 
-func (s *Suggestor) Packages() []string {
+func (s *Suggestor) Packages(_ string) []string {
 	return []string{
 		"zig",
 	}
