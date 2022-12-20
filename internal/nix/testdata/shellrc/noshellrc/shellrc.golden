@@ -2,6 +2,9 @@
 
 PATH="./.devbox/profile/bin:$PATH"
 
+# Export env-vars which nix may remove by default, but are needed for shell UX
+
+
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
 
