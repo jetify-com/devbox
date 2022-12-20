@@ -18,16 +18,7 @@ When VScode Terminal is opened on a devbox project, this extension detects `devb
 - **Shell:** Opens a terminal and runs devbox shell
 - **Run:** Runs a script from devbox.json if specified
 - **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or Github Codespaces.
-
-## Release Notes
-
-### 0.0.2
-
-Added devbox commands to command palette
-
-### 0.0.1
-
-Initial release of devbox VSCode extension
+- **Generate a Dockerfile from devbox.json:** Generates a Dockerfile a project's root directory. This allows for running the devbox project in a container.
 
 ---
 
