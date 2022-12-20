@@ -9,7 +9,7 @@
   },
   "shell": {
     "init_hook": [
-      "export PATH={{ .Virtenv }}/bin:$PATH"
+      "export PATH=\"{{ .Virtenv }}/bin:$PATH\""
     ]
   }
 }
