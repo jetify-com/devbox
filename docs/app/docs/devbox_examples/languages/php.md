@@ -35,48 +35,25 @@ For example -- to add the `ds` extension, run `devbox add php81Extensions.ds`, o
     ]
 ```
 
-## Configuring PHP-FPM
+## PHP Plugin Details
 
-PHP-FPM is a FastCGI Process Manager for PHP. It is automatically installed when you add `php` to your `devbox.json`, but requires some additional configuration to work with your local project:
+The PHP Plugin will provide the following configuration when you install a PHP runtime with `devbox add`
 
-1. First, you'll need to create a local `php-fpm.conf` file. 
-2. Next, you will need to create an alias for `php-fpm` that points to the local conf file
+### Services
+* php-fpm
 
-### Create a local `php-fpm.conf`
-Save the following conf somewhere in your project directory
+Use `devbox services start|stop php-fpm` to start PHP-FPM in the background.
 
-```conf
-[global]
-pid = "${PHP_CONFDIR}"/php-fpm.pid
-error_log = "${PHP_CONFDIR}/php-fpm.log"
-daemonize = no
+### Helper Files
 
-[www]
-; user = www-data
-; group = www-data
-listen = "localhost:8081"
-; listen.owner = www-data
-; listen.group = www-data
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-chdir = /
-```
+* {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
 
-### Point php-fpm to your local configuration
+You can modify this file to configure your PHP-FPM server
 
-In your `init_hook`, set an environment variable to point to your local config.
-
-```json
-"init_hook": [
-    "export PHP_CONF=<path_to_conf>",
-    "export PHP_PORT=8080",
-]
-```
-you can then run php-fpm using the local config using:
+### Environment Variables
 
 ```bash
-php-fpm -y $PHP_CONF -p $PWD
+PHPFPM_PORT=8082
+PHPFPM_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/php81/php-fpm.log
+PHPFPM_PID_FILE={PROJECT_DIR}/.devbox/virtenv/php81/php-fpm.log
 ```
