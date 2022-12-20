@@ -240,6 +240,12 @@ func gitIgnorePaths(configDir string) ([]string, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	result = append(result, strings.Split(string(contents), "\n")...)
+	for _, line := range strings.Split(string(contents), "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "#") && line != "" {
+			result = append(result, line)
+		}
+	}
+
 	return result, nil
 }
