@@ -10,11 +10,6 @@ To learn more about how Devbox works, you can read our [introduction](index.md)
 
 This quickstart shows you how to install Devbox, and use it to start a development environment for a project that is configured to use Devbox via `devbox.json`
 
-## Prerequisities
-
-Devbox requires `nix` to be installed.
-
-- Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
 
 ## Install Devbox
 
@@ -23,6 +18,8 @@ Use the following install script to get the latest version of Devbox:
 ```bash
 curl -fsSL https://get.jetpack.io/devbox | bash
 ```
+
+Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If Nix is not detected on your machine when running a command, Devbox will automatically install it for you with the default settings for your OS. Don't worry: You can use Devbox without needing to learn the Nix Language.
 
 ## Start your development shell
 
