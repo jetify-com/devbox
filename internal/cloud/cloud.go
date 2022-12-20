@@ -24,9 +24,24 @@ import (
 )
 
 func Shell(configDir string) error {
+	c := color.New(color.FgMagenta).Add(color.Bold)
+	c.Println("Devbox Cloud")
+	fmt.Println("Blazingly fast remote development that feels local")
+	fmt.Print("\n")
+
 	username, vmHostname := parseVMEnvVar()
 	if username == "" {
-		username = promptUsername()
+		stepGithubUsername := stepper.Start("Detecting your Github username...")
+		var err error
+		username, err = queryGithubUsername()
+		if err == nil && username != "" {
+			stepGithubUsername.Success("Username: %s", username)
+		} else {
+			stepGithubUsername.Fail("Unable to resolve username")
+			// The query for Github username is best effort, and if it fails to resolve
+			// we fallback to prompting the user, and suggesting the local computer username.
+			username = promptUsername()
+		}
 	}
 	debug.Log("username: %s", username)
 	sshClient := openssh.Client{
@@ -48,11 +63,6 @@ func Shell(configDir string) error {
 	if err := sshshim.Setup(); err != nil {
 		return err
 	}
-
-	c := color.New(color.FgMagenta).Add(color.Bold)
-	c.Println("Devbox Cloud")
-	fmt.Println("Blazingly fast remote development that feels local")
-	fmt.Print("\n")
 
 	if vmHostname == "" {
 		s1 := stepper.Start("Creating a virtual machine on the cloud...")
@@ -83,6 +93,7 @@ func promptUsername() string {
 		Message: "What is your github username?",
 		Default: os.Getenv("USER"),
 	}
+	debug.Log("Failed to get username from Github. Falling back to suggesting $USER: %s", prompt.Default)
 	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
 		log.Fatal(err)
