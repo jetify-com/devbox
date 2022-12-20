@@ -54,15 +54,11 @@ environment exactly once, and use that single definition in several different wa
 
 ## Installing Devbox
 
-Devbox requires `nix` to be installed.
+Use the following install script to get the latest version of Devbox:
 
-1. Install [Nix Package Manager](https://nixos.org/download.html). (Don't worry, you don't need to learn Nix.)
-
-2. Install Devbox:
-
-   ```sh
-   curl -fsSL https://get.jetpack.io/devbox | bash
-   ```
+```sh
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
 
 Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
 
