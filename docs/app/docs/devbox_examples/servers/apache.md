@@ -2,9 +2,7 @@
 title: Apache
 ---
 
-Apache, when installed with Devbox and Nix, will by default attempt to store it's configuration (`apache.conf`), Pidfile, and logs in the Nix Store. This will cause issues when trying to configure your project, since the Nix Store is immutable and can't be modified after installation
-
-To use Apache with your project, you'll need to configure Apache to use a local conf file and temporary directory
+Apache can be automatically configured by Devbox via the built-in Apache Plugin. This plugin will activate automatically when you install Apache using `devbox add apacheHttpd`
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache)
 
@@ -18,79 +16,31 @@ Run `devbox add apacheHttpd`, or add the following to your `devbox.json`
   ]
 ```
 
+## Apache Plugin Details
+
+The Apache plugin will automatically create the following configuration when you install Apache with `devbox add`
+
+### Services
+* apache
+
+Use `devbox services start|stop apache` to start and stop httpd in the background
+
+### Helper Files
+The following helper files will be created in your project directory:
+
+* {PROJECT_DIR}/devbox.d/apacheHttpd/httpd.conf
+* {PROJECT_DIR}/devbox.d/web/index.html
+
+Note that by default, Apache is configured with `./devbox.d/web` as the DocumentRoot. To change this, you should copy and modify the default `./devbox.d/Apache/Apache.conf`
+
 ### Environment Variables
-
-To make it easy to setup Apache, we can define a few Environment variables that will point to our local configuration and temp directories. Add the following to the `init_hook` in your `devbox.json`.
-
-```json
-"init_hook": [
-    "export HTTPD_CONFDIR=$PWD/conf/httpd",
-    "export HTTPD_PORT=80"
-]
-```
-
-### Adding a local `apache.conf`
-
-To configure your server, you'll need to add a local `apache.conf` file to your project. Here is a simple one that can get you started, using the env variables in our init_hook
-
-```conf
-ServerAdmin             "root@localhost"
-ServerName              "devbox-apache"
-Listen                  "${HTTPD_PORT}"
-PidFile                 "${HTTPD_CONFDIR}/apache.pid"
-UseCanonicalName        Off
-
-LoadModule mpm_event_module modules/mod_mpm_event.so
-LoadModule authz_host_module modules/mod_authz_host.so
-LoadModule authz_core_module modules/mod_authz_core.so
-LoadModule unixd_module modules/mod_unixd.so
-LoadModule dir_module modules/mod_dir.so
-
-<IfModule unixd_module>
-    User daemon
-    Group daemon
-</IfModule>
-
-<Directory />
-    AllowOverride none
-    Require all denied
-</Directory>
-
-<Files ".ht*">
-    Require all denied
-</Files>
-
-ErrorLog "${HTTPD_CONFDIR}/error.log"
-
-<VirtualHost "*:${HTTPD_PORT}">
-
-    DocumentRoot "${PWD}/web"
-
-    <Directory "${PWD}/web">
-        Options All
-        AllowOverride All
-        <IfModule mod_authz_host.c>
-            Require all granted
-        </IfModule>
-    </Directory>
-
-    DirectoryIndex index.html 
-
-</VirtualHost>
-```
-
-### Using the configuration
-
-When starting httpd, we'll need to point it to our local configuration. If we're using apachectl, we can do it with the following command: 
-
 ```bash
-apachectl start -f $HTTPD_CONFDIR/httpd.conf"
+HTTPD_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apacheHttpd/error.log
+HTTPD_PORT=8080
+HTTPD_DEVBOX_CONFIG_DIR={PROJECT_DIR}
+HTTPD_CONFDIR={PROJECT_DIR}/devbox.d/apacheHttpd
 ```
 
-To stop it, we'll also need to use a similar command: 
+### Notes
 
-```bash
-apachectl stop -f $HTTPD_CONFDIR/httpd.conf
-```
-
-The [example repo](https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache) shows how you can use the `init_hook` to start apache automatically when you launch your shell, and stop it when the shell exits.
+We recommend copying your `httpd.conf` file to a new directory and updating HTTPD_CONFDIR if you decide to modify it.

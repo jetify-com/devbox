@@ -1,7 +1,7 @@
 ---
-title: Postgres
+title: PostgreSQL
 ---
-To use a local Postgres DB instance for Development with Devbox and Nix, you'll need to configure a local Data directory for Postgres to install your DB. This can be done by setting a PGDATA environment variable in the `init_hook` of your `devbox.json`
+PostgreSQL can be automatically configured by Devbox via the built-in Postgres PLugin. This plugin will activate automatically when you install Postgres using `devbox add postgresql`
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/postgres)
 
@@ -16,26 +16,22 @@ To use a local Postgres DB instance for Development with Devbox and Nix, you'll 
     ]
 ```
 
-## Environment Variables
+## PostgreSQL Plugin Support
 
-These environment variable should be sourced in the `init_hook` of your `devbox.json`. 
+Devbox will automatically create the following configuration when you run `devbox add postgresql`:
 
-```json
-"init_hook": [
-    "export PG_CONFDIR=$PWD/conf/postgresql"
-    "export PGDATA=$PG_CONFDIR/data"
-]
-```
+### Services
+* postgresql
 
-## Installing the Database
+You can use `devbox services start|stop postgresql` to start or stop the Postgres server in the background.
 
-If your PGDATA directory does not exist, we can create and install your DB there with the following script:
+### Environment Variables
 
-```bash
-if [ ! -d $PGDATA ]; then
-    pg_ctl init
-fi
-```
+`PGDATA=./.devbox/virtenv/postgresql/data`
 
-You can add this to your `init_hook`, or in a script in your `devbox.json`
+This variable tells PostgreSQL which directory to use for creating and storing databases. 
+
+### Notes
+
+To initialize PostgreSQL run `initdb`. You also need to create a database using `createdb <db-name>`
 

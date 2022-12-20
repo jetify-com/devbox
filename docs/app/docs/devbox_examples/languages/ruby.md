@@ -2,7 +2,7 @@
 title: Ruby
 ---
 
-Ruby projects can be managed by installing gems locally using Bundler. If you want to install global gems to use from the CLI (like `rails`), this can be done by configuring bundler/gems to install them in a local directory, and then adding this directory to your path.
+Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. This plugin will activate automatically when you install Ruby 2.7 using `devbox add ruby`. 
 
 ## Adding Ruby to your shell
 
@@ -22,18 +22,19 @@ Other versions available include:
 * `ruby` (Ruby 2.7)
 * `ruby_3_0` (Ruby 3.0)
 
-## Using Global Gems
+## Ruby Plugin Support
 
-To install gems that you want to use from the command line (like `rails`), you will need to configure `gem` within your shell to install to a local folder in your project. 
+Devbox will automatically create the following configuration when you install Ruby with `devbox add`.
 
-Adding the following to the `init_hook` in your `devbox.json` will ensure those gems are installed locally
+### Environment Variables
 
-```json
-"init_hook": [
-    "export GEMRC=$PWD/conf/ruby/.gemrc",
-    "export GEM_HOME=$PWD/conf/ruby/gems",
-    "export PATH=$GEM_HOME/bin:$PATH"
-]
+```bash
+RUBY_CONFDIR={PROJECT_DIR}/.devbox/virtenv/ruby
+GEMRC={PROJECT_DIR}/.devbox/virtenv/ruby/.gemrc
+GEM_HOME={PROJECT_DIR}/.devbox/virtenv/ruby
 ```
 
-You can now install rails as normal using `gem install rails`
+### Init Hook
+```bash
+
+```

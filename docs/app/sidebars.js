@@ -44,6 +44,12 @@ const sidebars = {
         }, {
             type: 'doc',
             id: 'guides/scripts'
+        }, {
+            type: 'doc',
+            id: 'guides/plugins'
+        }, {
+            type: 'doc',
+            id: 'guides/services'
         }]
     }, {
         type: 'category',
@@ -54,6 +60,22 @@ const sidebars = {
             type: 'doc',
             id: 'cli_reference/devbox_add',
             label: 'devbox add'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_generate',
+            label: 'devbox generate'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_generate_devcontainer',
+            label: 'devbox generate devcontainer'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_generate_dockerfile',
+            label: 'devbox generate dockerfile'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_info',
+            label: 'devbox info'
         }, {
             type: 'doc',
             id: 'cli_reference/devbox_init',
@@ -70,6 +92,26 @@ const sidebars = {
             type: 'doc',
             id: 'cli_reference/devbox_run',
             label: 'devbox run'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_services',
+            label: 'devbox services'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_services_ls',
+            label: 'devbox services ls'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_services_restart',
+            label: 'devbox services restart'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_services_start',
+            label: 'devbox services start'
+        }, {
+            type: 'doc',
+            id: 'cli_reference/devbox_services_stop',
+            label: 'devbox services stop'
         }, {
             type: 'doc',
             id: 'cli_reference/devbox_shell',
