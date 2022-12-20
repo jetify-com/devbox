@@ -1,6 +1,3 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
-// Use of this source code is governed by the license in the LICENSE file.
-
 package java
 
 import (
@@ -12,23 +9,8 @@ import (
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
-)
-
-type Planner struct{}
-
-// jdk nix packages
-var jVersionMap = map[string]string{
-	"8":  "jdk8",
-	"11": "jdk11",
-	"17": "jdk17_headless",
-}
-
-// default nix packages
-const (
-	defaultJava   = "jdk" // "jdk" points to openJDK version 17. OpenJDK v18 is not yet available in nix packages
-	defaultMaven  = "maven"
-	defaultGradle = "gradle"
 )
 
 // misc. nix packages
@@ -42,35 +24,46 @@ const (
 	gradleFileName = "build.gradle"
 )
 
-// Implements interface Planner (compile-time check)
-var _ plansdk.Planner = (*Planner)(nil)
-
-func (p *Planner) Name() string {
-	return "java.Planner"
+// jdk nix packages
+var jVersionMap = map[string]string{
+	"8":  "jdk8",
+	"11": "jdk11",
+	"17": "jdk17_headless",
+	"18": "jdk18_headless",
 }
 
-func (p *Planner) IsRelevant(srcDir string) bool {
+// default nix packages
+const (
+	defaultJava   = "jdk" // "jdk" points to openJDK version 17
+	defaultMaven  = "maven"
+	defaultGradle = "gradle"
+)
+
+type Suggestor struct{}
+
+// implements interface Suggestor (compile-time check)
+var _ suggestors.Suggestor = (*Suggestor)(nil)
+
+func (s *Suggestor) IsRelevant(srcDir string) bool {
 	pomXMLPath := filepath.Join(srcDir, mavenFileName)
 	buildGradlePath := filepath.Join(srcDir, gradleFileName)
 	return plansdk.FileExists(pomXMLPath) || plansdk.FileExists(buildGradlePath)
 }
 
-func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
-	builderTool, err := p.packageManager(srcDir)
+func (s *Suggestor) Packages(srcDir string) []string {
+	builderTool, err := s.packageManager(srcDir)
 	if err != nil {
-		return &plansdk.ShellPlan{}
+		return nil
 	}
-	devPackages, err := p.devPackages(srcDir, builderTool)
+	devPackages, err := s.devPackages(srcDir, builderTool)
 	if err != nil {
-		return &plansdk.ShellPlan{}
+		return nil
 	}
 
-	return &plansdk.ShellPlan{
-		DevPackages: devPackages,
-	}
+	return devPackages
 }
 
-func (p *Planner) packageManager(srcDir string) (string, error) {
+func (s *Suggestor) packageManager(srcDir string) (string, error) {
 	pomXMLPath := filepath.Join(srcDir, mavenFileName)
 	buildGradlePath := filepath.Join(srcDir, gradleFileName)
 	if plansdk.FileExists(pomXMLPath) {
@@ -82,7 +75,7 @@ func (p *Planner) packageManager(srcDir string) (string, error) {
 	}
 }
 
-func (p *Planner) devPackages(srcDir string, builderTool string) ([]string, error) {
+func (s *Suggestor) devPackages(srcDir string, builderTool string) ([]string, error) {
 	javaPkg, err := getJavaPackage(srcDir, builderTool)
 	if err != nil {
 		return nil, errors.WithStack(err)

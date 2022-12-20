@@ -1,17 +1,12 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
-// Use of this source code is governed by the license in the LICENSE file.
-
 package golang
 
 import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
 	"golang.org/x/mod/modfile"
 )
-
-type Planner struct{}
 
 var versionMap = map[string]string{
 	// Map go versions to the corresponding nixpkgs:
@@ -22,24 +17,20 @@ var versionMap = map[string]string{
 
 const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't determine a version.
 
-// GoPlanner implements interface Planner (compile-time check)
-var _ plansdk.Planner = (*Planner)(nil)
+type Suggestor struct{}
 
-func (p *Planner) Name() string {
-	return "golang.Planner"
-}
+// implements interface Suggestor (compile-time check)
+var _ suggestors.Suggestor = (*Suggestor)(nil)
 
-func (p *Planner) IsRelevant(srcDir string) bool {
+func (p *Suggestor) IsRelevant(srcDir string) bool {
 	goModPath := filepath.Join(srcDir, "go.mod")
 	return fileExists(goModPath)
 }
 
-func (p *Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
+func (p *Suggestor) Packages(srcDir string) []string {
 	goPkg := getGoPackage(srcDir)
 
-	return &plansdk.ShellPlan{
-		DevPackages: []string{goPkg},
-	}
+	return []string{goPkg}
 }
 
 func getGoPackage(srcDir string) string {

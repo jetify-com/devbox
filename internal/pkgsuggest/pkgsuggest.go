@@ -21,7 +21,7 @@ func GetSuggestors(srcDir string) ([]string, error) {
 	result := []string{}
 	for _, sg := range SUGGESTORS {
 		if sg.IsRelevant(srcDir) {
-			result = append(result, sg.Packages()...)
+			result = append(result, sg.Packages(srcDir)...)
 		}
 	}
 
