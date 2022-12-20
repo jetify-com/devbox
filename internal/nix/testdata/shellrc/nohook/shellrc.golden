@@ -49,11 +49,11 @@ export PS1="(devbox) $PS1"
 
 # End Devbox Post-init Hook
 
-# Begin Plan Init Hook
+# Begin Plugin Init Hook
 
 echo "Welcome to the devbox!"
 
-# End Plan Init Hook
+# End Plugin Init Hook
 
 # Begin Script command
 

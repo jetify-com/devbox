@@ -55,15 +55,15 @@ cd $workingDir
 
 {{- end }}
 
-# Begin Plan Init Hook
+# Begin Plugin Init Hook
 
-{{- if .PlanInitHook }}
+{{- if .PluginInitHook }}
 
-{{ .PlanInitHook }}
+{{ .PluginInitHook }}
 
 {{- end }}
 
-# End Plan Init Hook
+# End Plugin Init Hook
 
 # Begin Script command
 
