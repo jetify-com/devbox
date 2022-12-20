@@ -5,7 +5,6 @@ package planner
 
 import (
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/planner/languages/javascript"
 	"go.jetpack.io/devbox/internal/planner/languages/nginx"
 	"go.jetpack.io/devbox/internal/planner/languages/php"
 	"go.jetpack.io/devbox/internal/planner/languages/python"
@@ -14,7 +13,6 @@ import (
 )
 
 var PLANNERS = []plansdk.Planner{
-	&javascript.Planner{},
 	&nginx.Planner{},
 	&php.V2Planner{},
 	&python.PoetryPlanner{},
