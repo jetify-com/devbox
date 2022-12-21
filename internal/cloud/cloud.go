@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -144,6 +145,11 @@ func syncFiles(username, hostname, configDir string) error {
 	projectName := projectDirName(configDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
+	err := copyConfigFileToVM(hostname, username, configDir, projectName)
+	if err != nil {
+		return err
+	}
+
 	env, err := mutagenbox.DefaultEnv()
 	if err != nil {
 		return err
@@ -167,7 +173,7 @@ func syncFiles(username, hostname, configDir string) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath: fmt.Sprintf("~/code/%s", projectName),
+		BetaPath: projectPathInVM(projectName),
 		EnvVars:  env,
 		Ignore: mutagen.SessionIgnore{
 			VCS:   true,
@@ -181,6 +187,30 @@ func syncFiles(username, hostname, configDir string) error {
 	}
 	time.Sleep(1 * time.Second)
 	return nil
+}
+
+func copyConfigFileToVM(hostname, username, configDir, projectName string) error {
+
+	// Ensure the devbox-project's directory exists in the VM
+	destServer := fmt.Sprintf("%s@%s", username, hostname)
+	cmd := exec.Command("ssh", destServer, "--", "mkdir", "-p", projectPathInVM(projectName))
+	err := cmd.Run()
+	debug.Log("ssh mkdir command: %s with error: %s", cmd, err)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Copy the config file to the devbox-project directory in the VM
+	configFilePath := filepath.Join(configDir, "devbox.json")
+	destPath := fmt.Sprintf("%s:%s", destServer, projectPathInVM(projectName))
+	cmd = exec.Command("scp", configFilePath, destPath)
+	err = cmd.Run()
+	debug.Log("scp devbox.json command: %s with error: %s", cmd, err)
+	return errors.WithStack(err)
+}
+
+func projectPathInVM(projectName string) string {
+	return fmt.Sprintf("~/code/%s/", projectName)
 }
 
 func shell(username, hostname, configDir string) error {
