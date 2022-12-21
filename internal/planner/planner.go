@@ -6,14 +6,11 @@ package planner
 import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/planner/languages/php"
-	"go.jetpack.io/devbox/internal/planner/languages/python"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 var PLANNERS = []plansdk.Planner{
 	&php.V2Planner{},
-	&python.PoetryPlanner{},
-	&python.PIPPlanner{},
 }
 
 // Return a merged shell plan from shell planners if user defined packages

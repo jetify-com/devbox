@@ -8,6 +8,7 @@ import (
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/java"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/javascript"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/nginx"
+	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/python"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/ruby"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/rust"
 	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors/zig"
@@ -20,6 +21,8 @@ var SUGGESTORS = []suggestors.Suggestor{
 	&java.Suggestor{},
 	&javascript.Suggestor{},
 	&nginx.Suggestor{},
+	&python.SuggestorPip{},
+	&python.SuggestorPoetry{},
 	&ruby.Suggestor{},
 	&rust.Suggestor{},
 	&zig.Suggestor{},
