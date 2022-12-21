@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -19,7 +20,7 @@ func SetupCmd() *cobra.Command {
 		Use:   "nix",
 		Short: "Installs Nix",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInstallNixCmd()
+			return runInstallNixCmd(cmd)
 		},
 	}
 
@@ -27,6 +28,14 @@ func SetupCmd() *cobra.Command {
 	return setupCommand
 }
 
-func runInstallNixCmd() error {
+func runInstallNixCmd(cmd *cobra.Command) error {
+	if nix.NixBinaryInstalled() {
+		color.New(color.FgYellow).Fprint(
+			cmd.OutOrStdout(),
+			"Nix is already installed. If this is incorrect please remove the "+
+				"nix-shell binary from your path.\n",
+		)
+		return nil
+	}
 	return nix.Install()
 }
