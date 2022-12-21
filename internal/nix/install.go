@@ -49,7 +49,7 @@ func Install() error {
 }
 
 func EnsureInstalled(cmd *cobra.Command, args []string) error {
-	if nixBinaryInstalled() {
+	if NixBinaryInstalled() {
 		return nil
 	}
 	if nixDirExists() {
@@ -85,7 +85,7 @@ func EnsureInstalled(cmd *cobra.Command, args []string) error {
 	)
 }
 
-func nixBinaryInstalled() bool {
+func NixBinaryInstalled() bool {
 	_, err := exec.LookPath("nix-shell")
 	return err == nil
 }
