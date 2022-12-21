@@ -47,7 +47,6 @@ func InitConfig(dir string) (created bool, err error) {
 	}
 
 	pkgsToSuggest, err := pkgsuggest.GetSuggestors(dir)
-	fmt.Println(pkgsToSuggest)
 	if err != nil {
 		return true, err
 	}
