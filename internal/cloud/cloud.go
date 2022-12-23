@@ -163,10 +163,11 @@ func syncFiles(username, hostname, configDir string) error {
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
 	machineID, _, _ := strings.Cut(hostname, ".")
+	mutagenSessionName := mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", projectName, machineID))
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
-		Name:        mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", projectName, machineID)),
+		Name:        mutagenSessionName,
 		AlphaPath:   configDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
@@ -186,7 +187,81 @@ func syncFiles(username, hostname, configDir string) error {
 		return err
 	}
 	time.Sleep(1 * time.Second)
+
+	// In a background routine, update the sync status in the cloud VM
+	go updateSyncStatus(mutagenSessionName, username, hostname, projectName)
 	return nil
+}
+
+// updateSyncStatus updates the starship prompt.
+//
+// wait for the mutagen session's status to change to "watching", and update the remote VM
+// when the initial project sync completes and then exit.
+func updateSyncStatus(mutagenSessionName, username, hostname, projectName string) {
+	status := "disconnected"
+
+	// Ensure the destination directory exists
+	destServer := fmt.Sprintf("%s@%s", username, hostname)
+	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, projectName)
+	remoteCmd := fmt.Sprintf("mkdir -p %s", destDir)
+	cmd := exec.Command("ssh", destServer, remoteCmd)
+	err := cmd.Run()
+	debug.Log("mkdir starship mutagen_status command: %s with error: %s", cmd, err)
+
+	// Set an initial status
+	displayableStatus := "initial sync"
+	remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
+	cmd = exec.Command("ssh", destServer, remoteCmd)
+	err = cmd.Run()
+	debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
+	time.Sleep(5 * time.Second)
+
+	debug.Log("Starting check for file sync status")
+	for status != "watching" {
+		var err error
+		status, err = getSyncStatus(mutagenSessionName)
+		if err != nil {
+			debug.Log("ERROR: getSyncStatus error is %s", err)
+			return
+		}
+		debug.Log("checking file sync status: %s", status)
+
+		// Proof of concept, we can flesh this out more...
+		if status == "watching" {
+			// Show a transition status message.
+			displayableStatus = "\"initial sync 👍🏻. watching for changes...\""
+		}
+
+		remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
+		cmd = exec.Command("ssh", destServer, remoteCmd)
+		err = cmd.Run()
+		debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
+		time.Sleep(5 * time.Second)
+	}
+
+	// Update the transition message to the final status.
+	time.Sleep(10 * time.Second)
+	displayableStatus = "\"watching for changes\""
+	remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
+	cmd = exec.Command("ssh", destServer, remoteCmd)
+	err = cmd.Run()
+	debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
+	time.Sleep(5 * time.Second)
+}
+
+func getSyncStatus(mutagenSessionName string) (string, error) {
+	env, err := mutagenbox.DefaultEnv()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	sessions, err := mutagen.List(env, mutagenSessionName)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	if len(sessions) == 0 {
+		return "", errors.WithStack(err)
+	}
+	return sessions[0].Status, nil
 }
 
 func copyConfigFileToVM(hostname, username, configDir, projectName string) error {

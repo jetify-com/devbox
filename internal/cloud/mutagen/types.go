@@ -52,6 +52,7 @@ type Session struct {
 	Name            string            `json:"name,omitempty"`
 	Labels          map[string]string `json:"labels,omitempty"`
 	Paused          bool              `json:"paused"`
+	Status          string            `json:"status"`
 }
 
 type Endpoint struct {
