@@ -3,6 +3,7 @@
 package initrec
 
 import (
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/initrec/recommenders/dotnet"
 	"go.jetpack.io/devbox/internal/initrec/recommenders/golang"
@@ -34,13 +35,15 @@ func getRecommenders(srcDir string) []recommenders.Recommender {
 }
 
 func Get(srcDir string) ([]string, error) {
-
-	result := []string{}
+	// Using a map of string-bool instead of array of strings to prevent duplication
+	result := map[string]bool{}
 	for _, sg := range getRecommenders(srcDir) {
 		if sg.IsRelevant() {
-			result = append(result, sg.Packages()...)
+			for _, pkg := range sg.Packages() {
+				result[pkg] = true
+			}
 		}
 	}
-
-	return result, nil
+	// TODO: check for already installed packages
+	return lo.Keys(result), nil
 }
