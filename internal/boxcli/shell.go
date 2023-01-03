@@ -17,6 +17,7 @@ import (
 type shellCmdFlags struct {
 	config   configFlags
 	PrintEnv bool
+	quiet    bool
 }
 
 func ShellCmd() *cobra.Command {
@@ -38,7 +39,6 @@ func ShellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
-
 	flags.config.register(command)
 	return command
 }
