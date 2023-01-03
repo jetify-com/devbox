@@ -1,0 +1,21 @@
+{
+    "name": "caddy",
+    "version": "0.0.1",
+    "readme": "",
+    "env": {
+        "CADDYFILE": "{{ .DevboxDir }}/Caddyfile",
+        "CADDY_CONFIG_DIR": "{{ .DevboxDir }}",
+        "CADDY_LOG_DIR": "{{ .Virtenv }}/log",
+        "CADDY_ROOT_DIR": "{{ .DevboxDirRoot }}/web"
+    },
+    "create_files": {
+        "{{ .DevboxDir }}/Caddyfile": "caddy/Caddyfile",
+        "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
+    },
+    "services": {
+        "caddy": {
+            "start": "caddy start --config $CADDYFILE",
+            "stop": "caddy stop --config $CADDYFILE"
+        }
+    }
+}
