@@ -37,7 +37,7 @@ const (
 	shellHistoryFile = ".devbox/shell_history"
 )
 
-func InitConfig(dir string) (created bool, err error) {
+func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
 	config := &Config{
@@ -52,7 +52,8 @@ func InitConfig(dir string) (created bool, err error) {
 	}
 	if len(pkgsToSuggest) > 0 {
 		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
-		fmt.Printf(
+		fmt.Fprintf(
+			writer,
 			"We detected extra packages you may need. To install them, run `%s`\n",
 			color.HiYellowString(s),
 		)

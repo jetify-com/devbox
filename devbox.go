@@ -52,8 +52,8 @@ func Open(dir string, writer io.Writer) (Devbox, error) {
 
 // InitConfig creates a default devbox config file if one doesn't already
 // exist.
-func InitConfig(dir string) (bool, error) {
-	return impl.InitConfig(dir)
+func InitConfig(dir string, writer io.Writer) (bool, error) {
+	return impl.InitConfig(dir, writer)
 }
 
 func IsDevboxShellEnabled() bool {
