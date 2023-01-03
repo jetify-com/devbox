@@ -526,7 +526,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		fmt.Println()
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Println("done.")
+	fmt.Fprintln(d.writer, "done.")
 
 	if featureflag.PKGConfig.Enabled() {
 		if err := plugin.RemoveInvalidSymlinks(d.configDir); err != nil {

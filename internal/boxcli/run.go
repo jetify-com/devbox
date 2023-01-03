@@ -4,19 +4,20 @@
 package boxcli
 
 import (
-	"os"
 	"os/exec"
 	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	writer "go.jetpack.io/devbox/internal/boxcli/writer"
 	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/exp/slices"
 )
 
 type runCmdFlags struct {
 	config configFlags
+	quiet  bool
 }
 
 func RunCmd() *cobra.Command {
@@ -28,23 +29,26 @@ func RunCmd() *cobra.Command {
 		Args:              cobra.MaximumNArgs(1),
 		PersistentPreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runScriptCmd(args, flags)
+			return runScriptCmd(cmd, args, flags)
 		},
 	}
-
+	command.Flags().BoolVarP(
+		&flags.quiet, "quiet", "q", false, "Quiet mode: Suppresses logs.")
 	flags.config.register(command)
 
 	return command
 }
 
-func runScriptCmd(args []string, flags runCmdFlags) error {
+func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+
+	w := &writer.DevboxIOWriter{W: cmd.OutOrStderr(), Quiet: flags.quiet}
 	path, script, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return err
 	}
 
 	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
+	box, err := devbox.Open(path, w)
 	if err != nil {
 		return errors.WithStack(err)
 	}
