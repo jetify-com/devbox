@@ -6,15 +6,17 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"golang.org/x/mod/semver"
 )
 
-type Suggestor struct{}
+type Recommender struct {
+	SrcDir string
+}
 
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*Recommender)(nil)
 
 var nixPackages = map[string]string{
 	"3.1": "ruby_3_1",
@@ -26,12 +28,12 @@ const defaultPkg = "ruby_3_1"
 
 var rubyVersionRegex = regexp.MustCompile(`ruby\s+"(<|>|<=|>=|~>|=|)\s*([\d|\\.]+)"`)
 
-func (s *Suggestor) IsRelevant(srcDir string) bool {
-	return plansdk.FileExists(filepath.Join(srcDir, "Gemfile"))
+func (r *Recommender) IsRelevant() bool {
+	return plansdk.FileExists(filepath.Join(r.SrcDir, "Gemfile"))
 }
 
-func (s *Suggestor) Packages(srcDir string) []string {
-	gemfile := filepath.Join(srcDir, "Gemfile")
+func (r *Recommender) Packages() []string {
+	gemfile := filepath.Join(r.SrcDir, "Gemfile")
 	v := parseRubyVersion(gemfile)
 	pkg, ok := nixPackages[semver.MajorMinor(v)]
 	if !ok {

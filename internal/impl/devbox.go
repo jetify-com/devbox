@@ -21,8 +21,8 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/pkgsuggest"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -46,7 +46,7 @@ func InitConfig(dir string) (created bool, err error) {
 		},
 	}
 
-	pkgsToSuggest, err := pkgsuggest.GetSuggestors(dir)
+	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
 		return true, err
 	}

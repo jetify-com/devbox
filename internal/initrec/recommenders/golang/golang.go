@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"golang.org/x/mod/modfile"
 )
 
@@ -17,18 +17,20 @@ var versionMap = map[string]string{
 
 const defaultPkg = "go_1_19" // Default to "latest" for cases where we can't determine a version.
 
-type Suggestor struct{}
+type Recommender struct {
+	SrcDir string
+}
 
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*Recommender)(nil)
 
-func (p *Suggestor) IsRelevant(srcDir string) bool {
-	goModPath := filepath.Join(srcDir, "go.mod")
+func (r *Recommender) IsRelevant() bool {
+	goModPath := filepath.Join(r.SrcDir, "go.mod")
 	return fileExists(goModPath)
 }
 
-func (p *Suggestor) Packages(srcDir string) []string {
-	goPkg := getGoPackage(srcDir)
+func (r *Recommender) Packages() []string {
+	goPkg := getGoPackage(r.SrcDir)
 
 	return []string{goPkg}
 }

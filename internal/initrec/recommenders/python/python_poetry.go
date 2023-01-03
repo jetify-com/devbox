@@ -6,21 +6,23 @@ import (
 	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-type SuggestorPoetry struct{}
-
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*SuggestorPoetry)(nil)
-
-func (s *SuggestorPoetry) IsRelevant(srcDir string) bool {
-	return plansdk.FileExists(filepath.Join(srcDir, "poetry.lock")) ||
-		plansdk.FileExists(filepath.Join(srcDir, "pyproject.toml"))
+type RecommenderPoetry struct {
+	SrcDir string
 }
-func (s *SuggestorPoetry) Packages(srcDir string) []string {
-	version := s.PythonVersion(srcDir)
+
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*RecommenderPoetry)(nil)
+
+func (r *RecommenderPoetry) IsRelevant() bool {
+	return plansdk.FileExists(filepath.Join(r.SrcDir, "poetry.lock")) ||
+		plansdk.FileExists(filepath.Join(r.SrcDir, "pyproject.toml"))
+}
+func (r *RecommenderPoetry) Packages() []string {
+	version := r.PythonVersion()
 	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())
 
 	return []string{
@@ -30,9 +32,9 @@ func (s *SuggestorPoetry) Packages(srcDir string) []string {
 }
 
 // TODO: This can be generalized to all python planners
-func (s *SuggestorPoetry) PythonVersion(srcDir string) *plansdk.Version {
+func (r *RecommenderPoetry) PythonVersion() *plansdk.Version {
 	defaultVersion, _ := plansdk.NewVersion("3.10.6")
-	project := s.PyProject(srcDir)
+	project := r.PyProject()
 
 	if project == nil {
 		return defaultVersion
@@ -60,8 +62,8 @@ type pyProject struct {
 	} `toml:"tool"`
 }
 
-func (s *SuggestorPoetry) PyProject(srcDir string) *pyProject {
-	pyProjectPath := filepath.Join(srcDir, "pyproject.toml")
+func (r *RecommenderPoetry) PyProject() *pyProject {
+	pyProjectPath := filepath.Join(r.SrcDir, "pyproject.toml")
 	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {
 		return nil

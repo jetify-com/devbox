@@ -4,23 +4,25 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // `cargo new` generates a file with uppercase Cargo.toml
 const cargoToml = "Cargo.toml"
 
-type Suggestor struct{}
-
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
-
-func (s *Suggestor) IsRelevant(srcDir string) bool {
-	return cargoTomlPath(srcDir) != ""
+type Recommender struct {
+	SrcDir string
 }
 
-func (s *Suggestor) Packages(_ string) []string {
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*Recommender)(nil)
+
+func (r *Recommender) IsRelevant() bool {
+	return cargoTomlPath(r.SrcDir) != ""
+}
+
+func (r *Recommender) Packages() []string {
 	return []string{"rustup"}
 }
 

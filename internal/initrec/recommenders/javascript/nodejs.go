@@ -4,24 +4,26 @@ import (
 	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-type Suggestor struct{}
+type Recommender struct {
+	SrcDir string
+}
 
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*Recommender)(nil)
 
-func (s *Suggestor) IsRelevant(srcDir string) bool {
-	packageJSONPath := filepath.Join(srcDir, "package.json")
+func (r *Recommender) IsRelevant() bool {
+	packageJSONPath := filepath.Join(r.SrcDir, "package.json")
 	return plansdk.FileExists(packageJSONPath)
 }
 
-func (s *Suggestor) Packages(srcDir string) []string {
-	pkgManager := s.packageManager(srcDir)
-	project := s.nodeProject(srcDir)
-	packages := s.packages(pkgManager, project)
+func (r *Recommender) Packages() []string {
+	pkgManager := r.packageManager()
+	project := r.nodeProject()
+	packages := r.packages(pkgManager, project)
 
 	return packages
 }
@@ -45,7 +47,7 @@ var versionMap = map[string]string{
 }
 var defaultNodeJSPkg = "nodejs"
 
-func (s *Suggestor) nodePackage(project *nodeProject) string {
+func (s *Recommender) nodePackage(project *nodeProject) string {
 	v := s.nodeVersion(project)
 	if v != nil {
 		pkg, ok := versionMap[v.Major()]
@@ -57,7 +59,7 @@ func (s *Suggestor) nodePackage(project *nodeProject) string {
 	return defaultNodeJSPkg
 }
 
-func (s *Suggestor) nodeVersion(project *nodeProject) *plansdk.Version {
+func (s *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
 	if s != nil {
 		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
 			return v
@@ -67,16 +69,16 @@ func (s *Suggestor) nodeVersion(project *nodeProject) *plansdk.Version {
 	return nil
 }
 
-func (s *Suggestor) packageManager(srcDir string) string {
-	yarnPkgLockPath := filepath.Join(srcDir, "yarn.lock")
+func (r *Recommender) packageManager() string {
+	yarnPkgLockPath := filepath.Join(r.SrcDir, "yarn.lock")
 	if plansdk.FileExists(yarnPkgLockPath) {
 		return "yarn"
 	}
 	return "npm"
 }
 
-func (s *Suggestor) packages(pkgManager string, project *nodeProject) []string {
-	nodeJSPkg := s.nodePackage(project)
+func (r *Recommender) packages(pkgManager string, project *nodeProject) []string {
+	nodeJSPkg := r.nodePackage(project)
 	pkgs := []string{nodeJSPkg}
 
 	if pkgManager == "yarn" {
@@ -85,8 +87,8 @@ func (s *Suggestor) packages(pkgManager string, project *nodeProject) []string {
 	return pkgs
 }
 
-func (s *Suggestor) nodeProject(srcDir string) *nodeProject {
-	packageJSONPath := filepath.Join(srcDir, "package.json")
+func (r *Recommender) nodeProject() *nodeProject {
+	packageJSONPath := filepath.Join(r.SrcDir, "package.json")
 	project := &nodeProject{}
 	_ = cuecfg.ParseFile(packageJSONPath, project)
 

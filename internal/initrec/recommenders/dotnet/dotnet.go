@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -19,13 +19,15 @@ type Project struct {
 const CSharpExtension = "csproj"
 const FSharpExtension = "fsproj"
 
-type Suggestor struct{}
+type Recommender struct {
+	SrcDir string
+}
 
 // implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
+var _ recommenders.Recommender = (*Recommender)(nil)
 
-func (s *Suggestor) IsRelevant(srcDir string) bool {
-	a, err := plansdk.NewAnalyzer(srcDir)
+func (r *Recommender) IsRelevant() bool {
+	a, err := plansdk.NewAnalyzer(r.SrcDir)
 	if err != nil {
 		// We should log that an error has occurred.
 		return false
@@ -37,8 +39,8 @@ func (s *Suggestor) IsRelevant(srcDir string) bool {
 	return isRelevant
 }
 
-func (s *Suggestor) Packages(srcDir string) []string {
-	proj, err := project(srcDir)
+func (r *Recommender) Packages() []string {
+	proj, err := project(r.SrcDir)
 	if err != nil {
 		return nil
 	}

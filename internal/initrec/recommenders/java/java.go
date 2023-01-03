@@ -9,7 +9,7 @@ import (
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/pkgsuggest/suggestors"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -39,23 +39,25 @@ const (
 	defaultGradle = "gradle"
 )
 
-type Suggestor struct{}
+type Recommender struct {
+	SrcDir string
+}
 
-// implements interface Suggestor (compile-time check)
-var _ suggestors.Suggestor = (*Suggestor)(nil)
+// implements interface Recommender (compile-time check)
+var _ recommenders.Recommender = (*Recommender)(nil)
 
-func (s *Suggestor) IsRelevant(srcDir string) bool {
-	pomXMLPath := filepath.Join(srcDir, mavenFileName)
-	buildGradlePath := filepath.Join(srcDir, gradleFileName)
+func (r *Recommender) IsRelevant() bool {
+	pomXMLPath := filepath.Join(r.SrcDir, mavenFileName)
+	buildGradlePath := filepath.Join(r.SrcDir, gradleFileName)
 	return plansdk.FileExists(pomXMLPath) || plansdk.FileExists(buildGradlePath)
 }
 
-func (s *Suggestor) Packages(srcDir string) []string {
-	builderTool, err := s.packageManager(srcDir)
+func (r *Recommender) Packages() []string {
+	builderTool, err := r.packageManager()
 	if err != nil {
 		return nil
 	}
-	devPackages, err := s.devPackages(srcDir, builderTool)
+	devPackages, err := r.devPackages(builderTool)
 	if err != nil {
 		return nil
 	}
@@ -63,9 +65,9 @@ func (s *Suggestor) Packages(srcDir string) []string {
 	return devPackages
 }
 
-func (s *Suggestor) packageManager(srcDir string) (string, error) {
-	pomXMLPath := filepath.Join(srcDir, mavenFileName)
-	buildGradlePath := filepath.Join(srcDir, gradleFileName)
+func (r *Recommender) packageManager() (string, error) {
+	pomXMLPath := filepath.Join(r.SrcDir, mavenFileName)
+	buildGradlePath := filepath.Join(r.SrcDir, gradleFileName)
 	if plansdk.FileExists(pomXMLPath) {
 		return MavenType, nil
 	} else if plansdk.FileExists(buildGradlePath) {
@@ -75,8 +77,8 @@ func (s *Suggestor) packageManager(srcDir string) (string, error) {
 	}
 }
 
-func (s *Suggestor) devPackages(srcDir string, builderTool string) ([]string, error) {
-	javaPkg, err := getJavaPackage(srcDir, builderTool)
+func (r *Recommender) devPackages(builderTool string) ([]string, error) {
+	javaPkg, err := getJavaPackage(r.SrcDir, builderTool)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
