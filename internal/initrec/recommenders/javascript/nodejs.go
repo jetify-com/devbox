@@ -49,8 +49,8 @@ var versionMap = map[string]string{
 }
 var defaultNodeJSPkg = "nodejs"
 
-func (s *Recommender) nodePackage(project *nodeProject) string {
-	v := s.nodeVersion(project)
+func (r *Recommender) nodePackage(project *nodeProject) string {
+	v := r.nodeVersion(project)
 	if v != nil {
 		pkg, ok := versionMap[v.Major()]
 		if ok {
@@ -61,8 +61,8 @@ func (s *Recommender) nodePackage(project *nodeProject) string {
 	return defaultNodeJSPkg
 }
 
-func (s *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
-	if s != nil {
+func (r *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
+	if r != nil {
 		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
 			return v
 		}
