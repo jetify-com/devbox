@@ -202,6 +202,7 @@ func (d *Devbox) Shell() error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
+	fmt.Fprintln(d.writer, "Starting a devbox shell...")
 
 	profileDir, err := d.profileDir()
 	if err != nil {
@@ -275,6 +276,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
+	fmt.Fprintln(d.writer, "Starting a devbox shell...")
 
 	profileDir, err := d.profileDir()
 	if err != nil {
