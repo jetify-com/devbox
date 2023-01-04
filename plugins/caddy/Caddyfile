@@ -1,0 +1,9 @@
+# See https://caddyserver.com/docs/caddyfile for more details
+
+localhost:2020 {
+        root * {$CADDY_ROOT_DIR}
+        log {
+            output file {$CADDY_LOG_DIR}/caddy.log
+        }
+        file_server
+}
