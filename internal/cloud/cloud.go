@@ -68,7 +68,7 @@ func Shell(configDir string) error {
 	}
 
 	if vmHostname == "" {
-		s1 := stepper.Start("Creating a virtual machine on the cloud...")
+		stepVM := stepper.Start("Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
 		var err error
 		vmHostname, err = vmHostnameFromSSHControlPath()
@@ -77,10 +77,10 @@ func Shell(configDir string) error {
 		}
 		if vmHostname != "" {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
-			s1.Success("Detected existing virtual machine")
+			stepVM.Success("Detected existing virtual machine")
 		} else {
 			vmHostname = getVirtualMachine(sshClient)
-			s1.Success("Created virtual machine")
+			stepVM.Success("Created virtual machine")
 		}
 	}
 	debug.Log("vm_hostname: %s", vmHostname)

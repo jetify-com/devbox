@@ -20,7 +20,7 @@ Host *.devbox-vms.internal
 	ServerAliveInterval 50
 	ServerAliveCountMax 3
 	ControlMaster yes
-	ControlPath ~/.config/devbox/ssh/%h
+	ControlPath "{{ .ConfigDir }}/%h"
 	ControlPersist 300
 
 {{- if .DebugGateway.Host }}
