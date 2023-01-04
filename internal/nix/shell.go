@@ -460,6 +460,17 @@ func buildAllowList(allowList []string) map[string]bool {
 	return envToKeep
 }
 
+func filterVars(env []string, allowList map[string]bool) []string {
+	vars := make([]string, 0, len(allowList))
+	for _, kv := range env {
+		key, _, _ := strings.Cut(kv, "=")
+		if allowList[key] {
+			vars = append(vars, kv)
+		}
+	}
+	return vars
+}
+
 // toKeepArgs takes a slice of environment variables in key=value format and
 // builds a slice of "--keep" arguments that tell nix-shell which ones to
 // keep.
@@ -468,11 +479,9 @@ func buildAllowList(allowList []string) map[string]bool {
 // We also --keep any variables set by package configuration.
 func toKeepArgs(env []string, allowList map[string]bool) []string {
 	args := make([]string, 0, len(allowList)*2)
-	for _, kv := range env {
+	for _, kv := range filterVars(env, allowList) {
 		key, _, _ := strings.Cut(kv, "=")
-		if allowList[key] {
-			args = append(args, "--keep", key)
-		}
+		args = append(args, "--keep", key)
 	}
 	return args
 }
