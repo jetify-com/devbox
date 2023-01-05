@@ -17,7 +17,6 @@ import (
 type shellCmdFlags struct {
 	config   configFlags
 	PrintEnv bool
-	quiet    bool
 }
 
 func ShellCmd() *cobra.Command {
@@ -39,8 +38,7 @@ func ShellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
-	command.Flags().BoolVarP(
-		&flags.quiet, "quiet", "q", false, "Quiet mode: Suppresses logs.")
+
 	flags.config.register(command)
 	return command
 }
@@ -50,7 +48,7 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	if err != nil {
 		return err
 	}
-	w := &writer.DevboxIOWriter{W: cmd.OutOrStderr(), Quiet: flags.quiet}
+	w := writer.New(cmd)
 	// Check the directory exists.
 	box, err := devbox.Open(path, w)
 	if err != nil {

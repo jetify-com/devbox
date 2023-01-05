@@ -2,16 +2,20 @@
 // Use of this source code is governed by the license in the LICENSE file.
 package writer
 
-import "io"
+import (
+	"io"
 
-type DevboxIOWriter struct {
-	W     io.Writer
-	Quiet bool
+	"github.com/spf13/cobra"
+)
+
+type devboxIOWriter struct {
+	w     io.Writer
+	quiet bool
 }
 
-func (d DevboxIOWriter) Write(p []byte) (int, error) {
-	if !d.Quiet {
-		n, err := d.W.Write(p)
+func (d devboxIOWriter) Write(p []byte) (int, error) {
+	if !d.quiet {
+		n, err := d.w.Write(p)
 		if err != nil {
 			return n, err
 		}
@@ -20,4 +24,13 @@ func (d DevboxIOWriter) Write(p []byte) (int, error) {
 		}
 	}
 	return len(p), nil
+}
+
+func New(cmd *cobra.Command) *devboxIOWriter {
+	quiet, err := cmd.Flags().GetBool("quiet")
+	if err != nil {
+		// default value for quiet/q flag
+		quiet = false
+	}
+	return &devboxIOWriter{w: cmd.ErrOrStderr(), quiet: quiet}
 }
