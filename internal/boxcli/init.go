@@ -23,10 +23,10 @@ func InitCmd() *cobra.Command {
 	return command
 }
 
-func runInitCmd(_ *cobra.Command, args []string) error {
+func runInitCmd(cmd *cobra.Command, args []string) error {
 	path := pathArg(args)
 
-	_, err := devbox.InitConfig(path)
+	_, err := devbox.InitConfig(path, cmd.OutOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
