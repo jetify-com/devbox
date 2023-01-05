@@ -6,7 +6,6 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -70,11 +69,7 @@ func Shell(configDir string) error {
 	if vmHostname == "" {
 		stepVM := stepper.Start("Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
-		var err error
-		vmHostname, err = vmHostnameFromSSHControlPath()
-		if err != nil {
-			debug.Log("Error from vmHostnameFromSSHControlPath: %v", err)
-		}
+		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
 			stepVM.Success("Detected existing virtual machine")
@@ -368,23 +363,12 @@ func gitIgnorePaths(configDir string) ([]string, error) {
 	return result, nil
 }
 
-func vmHostnameFromSSHControlPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	entries, err := os.ReadDir(filepath.Join(home, ".config/devbox/ssh"))
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	for _, entry := range entries {
-		if entry.Type() == fs.ModeSocket && strings.HasSuffix(entry.Name(), "vm.devbox-vms.internal") {
-			return entry.Name(), nil
+func vmHostnameFromSSHControlPath() string {
+	for _, socket := range openssh.DevboxControlSockets() {
+		if strings.HasSuffix(socket.Host, "vm.devbox-vms.internal") {
+			return socket.Host
 		}
 	}
-
-	// empty string means that no socket for the VM Host is currently active.
-	return "", nil
+	// empty string means that aren't any active VM connections
+	return ""
 }

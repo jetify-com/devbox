@@ -86,6 +86,7 @@ func TestSetupDevbox(t *testing.T) {
 			Data: sshKnownHosts,
 			Mode: 0644,
 		},
+		".config/devbox/ssh/sockets": &fstest.MapFile{Mode: fs.ModeDir | 0700},
 
 		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
 		".ssh/config": &fstest.MapFile{
@@ -164,6 +165,7 @@ func TestSetupInsecureDebug(t *testing.T) {
 			Mode: 0644,
 		},
 		".config/devbox/ssh/known_hosts_debug": &fstest.MapFile{Mode: 0644},
+		".config/devbox/ssh/sockets":           &fstest.MapFile{Mode: fs.ModeDir | 0700},
 
 		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
 		".ssh/config": &fstest.MapFile{

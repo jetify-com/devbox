@@ -6,9 +6,11 @@ package openssh
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -121,4 +123,34 @@ func logCmdOutput(cmd *exec.Cmd, stdstream string, out []byte) {
 	}
 	debug.Log("openssh: process %d with command %q: exit status %d: %s text:\n\t%s",
 		cmd.Process.Pid, cmd, cmd.ProcessState.ExitCode(), stdstream, out)
+}
+
+type ControlSocket struct {
+	Path string
+	Host string
+}
+
+func DevboxControlSockets() []ControlSocket {
+	socketsDir, err := devboxSocketsDir()
+	if err != nil {
+		return nil
+	}
+
+	// Look through whatever entries we got, even if there was an error.
+	entries, _ := os.ReadDir(socketsDir)
+	sockets := make([]ControlSocket, 0, len(entries))
+	for _, entry := range entries {
+		isSocket := (entry.Type() & fs.ModeSocket) == fs.ModeSocket
+		if isSocket {
+			sockets = append(sockets, ControlSocket{
+				Path: filepath.Join(socketsDir, entry.Name()),
+
+				// Right now the host is just the name, but this
+				// will need to be updated if ControlPath in
+				// sshconfig.tmpl ever changes.
+				Host: entry.Name(),
+			})
+		}
+	}
+	return sockets
 }

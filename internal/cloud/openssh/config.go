@@ -56,6 +56,11 @@ func setupDevbox(debugHost string, debugPort int) error {
 		return err
 	}
 
+	// Ensure ~/.config/devbox/ssh/sockets exists.
+	if _, err := devboxSocketsDir(); err != nil {
+		return err
+	}
+
 	// Try to remove any old debug host keys. It's okay if this fails.
 	devboxKnownHostsDebug := filepath.Join(devboxSSHDir, "known_hosts_debug")
 	_ = os.Remove(devboxKnownHostsDebug)
@@ -255,6 +260,18 @@ func devboxKeysDir() (string, error) {
 		return "", err
 	}
 	return keysDir, nil
+}
+
+func devboxSocketsDir() (string, error) {
+	sshDir, err := devboxSSHDir()
+	if err != nil {
+		return "", err
+	}
+	sockets := filepath.Join(sshDir, "sockets")
+	if err := EnsureDirExists(sockets, 0700, true); err != nil {
+		return "", err
+	}
+	return sockets, nil
 }
 
 // atomicEdit reads from a source file and writes changes to a separate
