@@ -17,7 +17,6 @@ import (
 
 type runCmdFlags struct {
 	config configFlags
-	quiet  bool
 }
 
 func RunCmd() *cobra.Command {
@@ -32,8 +31,7 @@ func RunCmd() *cobra.Command {
 			return runScriptCmd(cmd, args, flags)
 		},
 	}
-	command.Flags().BoolVarP(
-		&flags.quiet, "quiet", "q", false, "Quiet mode: Suppresses logs.")
+
 	flags.config.register(command)
 
 	return command
