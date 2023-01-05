@@ -17,7 +17,6 @@ import (
 type shellCmdFlags struct {
 	config   configFlags
 	PrintEnv bool
-	quiet    bool
 }
 
 func ShellCmd() *cobra.Command {
