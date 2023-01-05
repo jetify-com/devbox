@@ -239,10 +239,8 @@ func updateSyncStatus(mutagenSessionName, username, hostname, projectName string
 		}
 		debug.Log("checking file sync status: %s", status)
 
-		// Proof of concept, we can flesh this out more...
 		if status == "watching" {
-			// Show a transition status message.
-			displayableStatus = "\"initial sync 👍🏻. watching for changes...\""
+			displayableStatus = "\"watching for changes\""
 		}
 
 		remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
@@ -251,15 +249,6 @@ func updateSyncStatus(mutagenSessionName, username, hostname, projectName string
 		debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
 		time.Sleep(5 * time.Second)
 	}
-
-	// Update the transition message to the final status.
-	time.Sleep(10 * time.Second)
-	displayableStatus = "\"watching for changes\""
-	remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
-	cmd = exec.Command("ssh", destServer, remoteCmd)
-	err = cmd.Run()
-	debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
-	time.Sleep(5 * time.Second)
 }
 
 func getSyncStatus(mutagenSessionName string) (string, error) {
