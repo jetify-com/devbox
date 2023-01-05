@@ -48,7 +48,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
-		return true, err
+		return false, err
 	}
 	if len(pkgsToSuggest) > 0 {
 		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
