@@ -22,8 +22,6 @@ in with pkgs;
 mkShell {
   shellHook =
     ''
-      echo "Starting a devbox shell..."
-
       # We're technically no longer in a Nix shell after this hook because we
       # exec a devbox shell.
       export IN_NIX_SHELL=0

@@ -17,7 +17,12 @@ import (
 
 var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
 
+type rootCmdFlags struct {
+	quiet bool
+}
+
 func RootCmd() *cobra.Command {
+	flags := rootCmdFlags{}
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
@@ -42,6 +47,8 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(VersionCmd())
 	command.AddCommand(genDocsCmd())
 
+	command.PersistentFlags().BoolVarP(
+		&flags.quiet, "quiet", "q", false, "Quiet mode: Suppresses logs.")
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
 
 	return command
