@@ -19,8 +19,8 @@ Host *.devbox-vms.internal
 	UserKnownHostsFile "{{ .ConfigDir }}/known_hosts"
 	ServerAliveInterval 50
 	ServerAliveCountMax 3
-	ControlMaster yes
-	ControlPath "{{ .ConfigDir }}/%h"
+	ControlMaster auto
+	ControlPath "{{ .ConfigDir }}/sockets/%h"
 	ControlPersist 300
 
 {{- if .DebugGateway.Host }}
