@@ -276,7 +276,7 @@ func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs [
 	// look at the name to know which env vars or args to set when launching the shell.
 	switch s.name {
 	case shBash:
-		extraArgs = []string{"--rcfile", fmt.Sprintf(`%s`, shellrc)}
+		extraArgs = []string{"--rcfile", shellrc}
 	case shZsh:
 		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, filepath.Dir(shellrc))}
 	case shKsh, shPosix:
