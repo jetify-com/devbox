@@ -5,7 +5,7 @@ title: direnv
 
 ## direnv
 ___
-[direnv](https://direnv.net) is an open source environment management tool that allows setting unique environment variables per directory in your file system. This guide covers how to configure direnv to seemlessly work with a devbox project.
+[direnv](https://direnv.net) is an open source environment management tool that allows setting unique environment variables per directory in your file system. This guide covers how to configure direnv to seamlessly work with a devbox project.
 
 ### Prerequisites
 * Install direnv and hook it to your shell. Follow [this guide](https://direnv.net/#basic-installation) if you haven't done it. 
