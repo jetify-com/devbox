@@ -1,0 +1,14 @@
+{
+  "packages": [
+    "vscode"
+  ],
+  "shell": {
+    "init_hook": null,
+    "scripts": {
+      "code-version": "code --version"
+    }
+  },
+  "nixpkgs": {
+    "commit": "52e3e80afff4b16ccb7c52e9f0f5220552f03d04"
+  }
+}
