@@ -53,14 +53,16 @@ func EnsureInstalled(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	if nixDirExists() {
-		// TODO: We may be able to patch the rc files to add nix to the path.
+		if err := sourceNixEnv(); err != nil || NixBinaryInstalled() {
+			return err
+		}
+
 		return usererr.New(
-			"We found a /nix directory but nix binary is not in your PATH. " +
-				"Try restarting your terminal and running devbox again. If after " +
-				"restarting you still get this message it's possible nix setup is " +
-				"missing from your shell rc file. See " +
-				"https://github.com/NixOS/nix/issues/3616#issuecomment-903869569 for " +
-				"more details.",
+			"We found a /nix directory but nix binary is not in your PATH and we " +
+				"were not able to find it in the usual locations. Your nix installation " +
+				"might be broken. If restarting your terminal or reinstalling nix " +
+				"doesn't work, please create an issue at " +
+				"https://github.com/jetpack-io/devbox/issues",
 		)
 	}
 
