@@ -16,6 +16,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cloud/fly"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
@@ -27,7 +28,7 @@ import (
 func Shell(configDir string) error {
 	c := color.New(color.FgMagenta).Add(color.Bold)
 	c.Println("Devbox Cloud")
-	fmt.Println("Blazingly fast remote development that feels local")
+	fmt.Println("Remote development environments powered by Nix")
 	fmt.Print("\n")
 
 	username, vmHostname := parseVMEnvVar()
@@ -74,8 +75,9 @@ func Shell(configDir string) error {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
 			stepVM.Success("Detected existing virtual machine")
 		} else {
-			vmHostname = getVirtualMachine(sshClient)
-			stepVM.Success("Created virtual machine")
+			var region string
+			vmHostname, region = getVirtualMachine(sshClient)
+			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
 		}
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
@@ -125,7 +127,7 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(client openssh.Client) string {
+func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
 	sshOut, err := client.Exec("auth")
 	if err != nil {
 		log.Fatalln("error requesting VM:", err)
@@ -137,15 +139,15 @@ func getVirtualMachine(client openssh.Client) string {
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
 		debug.Log("got gateway response:\n\t%s", redacted)
 	}
-	if resp.VMPrivateKey == "" {
-		return resp.VMHost
+	if resp.VMPrivateKey != "" {
+		err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
+		if err != nil {
+			log.Fatalf("error adding new VM key: %v", err)
+		}
 	}
-
-	err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
-	if err != nil {
-		log.Fatalf("error adding new VM key: %v", err)
-	}
-	return resp.VMHost
+	vmHost = resp.VMHost
+	region = resp.VMRegion
+	return
 }
 
 func syncFiles(username, hostname, configDir string) error {
