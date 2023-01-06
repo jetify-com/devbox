@@ -17,7 +17,7 @@ import (
 //go:embed install.sh
 var installScript string
 
-func Install() error {
+func Install(writer io.Writer) error {
 	r, w, err := os.Pipe()
 	if err != nil {
 		return errors.WithStack(err)
@@ -33,7 +33,7 @@ func Install() error {
 	cmd.Stdout = w
 	cmd.Stderr = w
 
-	fmt.Println("Installing Nix. This will require sudo access.")
+	fmt.Fprintln(writer, "Installing Nix. This will require sudo access.")
 	if err = cmd.Start(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -41,7 +41,7 @@ func Install() error {
 	go func() {
 		_, err := io.Copy(os.Stdout, r)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(writer, err)
 		}
 	}()
 
@@ -70,7 +70,7 @@ func EnsureInstalled(cmd *cobra.Command, args []string) error {
 				"\n\nPress enter to continue or ctrl-c to exit.\n",
 		)
 		fmt.Scanln()
-		if err := Install(); err != nil {
+		if err := Install(cmd.ErrOrStderr()); err != nil {
 			return err
 		}
 		return usererr.NewWarning(

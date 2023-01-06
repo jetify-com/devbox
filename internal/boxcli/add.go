@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -49,8 +48,8 @@ func AddCmd() *cobra.Command {
 	return command
 }
 
-func addCmdFunc(_ *cobra.Command, args []string, flags addCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
