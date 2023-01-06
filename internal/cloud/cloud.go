@@ -17,9 +17,9 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/auth"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud/fly"
-	"go.jetpack.io/devbox/internal/auth"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
@@ -123,6 +123,8 @@ func enactGithubUsernameStep() string {
 			// we fallback to prompting the user, and suggesting the local computer username.
 			username = promptUsername()
 		}
+	} else {
+		stepGithubUsername.Success("Username: %s", username)
 	}
 	return username
 }

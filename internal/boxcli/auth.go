@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/auth"
-	"go.jetpack.io/devbox/internal/boxcli/writer"
 )
 
 func AuthCmd() *cobra.Command {
@@ -40,7 +39,7 @@ func whoamiCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			w := writer.New(cmd)
+			w := cmd.OutOrStdout()
 			if source == auth.NoneSource {
 				fmt.Fprintf(w, "Not logged in\n")
 			} else {
