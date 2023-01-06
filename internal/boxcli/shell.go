@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/writer"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -29,8 +28,8 @@ func ShellCmd() *cobra.Command {
 			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
 			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
-		Args:              validateShellArgs,
-		PersistentPreRunE: nix.EnsureInstalled,
+		Args:    validateShellArgs,
+		PreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShellCmd(cmd, args, flags)
 		},
@@ -38,7 +37,6 @@ func ShellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
-
 	flags.config.register(command)
 	return command
 }
@@ -48,9 +46,8 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	if err != nil {
 		return err
 	}
-	w := writer.New(cmd)
 	// Check the directory exists.
-	box, err := devbox.Open(path, w)
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}

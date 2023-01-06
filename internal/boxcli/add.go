@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -24,9 +23,9 @@ func AddCmd() *cobra.Command {
 	flags := addCmdFlags{}
 
 	command := &cobra.Command{
-		Use:               "add <pkg>...",
-		Short:             "Add a new package to your devbox",
-		PersistentPreRunE: nix.EnsureInstalled,
+		Use:     "add <pkg>...",
+		Short:   "Add a new package to your devbox",
+		PreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				fmt.Fprintf(
@@ -49,8 +48,8 @@ func AddCmd() *cobra.Command {
 	return command
 }
 
-func addCmdFunc(_ *cobra.Command, args []string, flags addCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}

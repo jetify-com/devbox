@@ -31,11 +31,11 @@ func SetupCmd() *cobra.Command {
 func runInstallNixCmd(cmd *cobra.Command) error {
 	if nix.NixBinaryInstalled() {
 		color.New(color.FgYellow).Fprint(
-			cmd.OutOrStdout(),
+			cmd.ErrOrStderr(),
 			"Nix is already installed. If this is incorrect please remove the "+
 				"nix-shell binary from your path.\n",
 		)
 		return nil
 	}
-	return nix.Install()
+	return nix.Install(cmd.ErrOrStderr())
 }

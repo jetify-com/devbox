@@ -264,7 +264,7 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 	)
 
 	if err != nil {
-		fmt.Print(err)
+		fmt.Fprint(d.writer, err)
 		shell = &nix.Shell{}
 	}
 
@@ -317,7 +317,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 	shell, err := nix.DetectShell(opts...)
 
 	if err != nil {
-		fmt.Print(err)
+		fmt.Fprint(d.writer, err)
 		shell = &nix.Shell{}
 	}
 
@@ -525,7 +525,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 
 	// We need to re-install the packages
 	if err := d.applyDevNixDerivation(); err != nil {
-		fmt.Println()
+		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
 	fmt.Fprintln(d.writer, "done.")
