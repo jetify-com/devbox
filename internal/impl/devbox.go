@@ -46,13 +46,6 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 		},
 	}
 
-	// Should this be best-effort and continue forward if envrc file creation
-	// fails?
-	err = GenerateEnvrc(dir)
-	if err != nil {
-		return false, err
-	}
-
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
 		return false, err
@@ -462,6 +455,26 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return nil
 }
 
+// generates a .envrc file that makes direnv integration convenient
+func (d *Devbox) GenerateEnvrc(force bool) error {
+	envrcfilePath := filepath.Join(d.configDir, ".envrc")
+	filesExist := plansdk.FileExists(envrcfilePath)
+	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
+	if !filesExist {
+		err := generate.CreateEnvrc(tmplFS, d.configDir)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		return usererr.New(
+			"A .envrc is already present in the current directory. " +
+				"Remove it or use --force to overwrite it.",
+		)
+	}
+
+	return nil
+}
+
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
 	cfgPath := filepath.Join(d.configDir, configFilename)
@@ -618,21 +631,6 @@ func (d *Devbox) applyDevNixDerivation() error {
 	if err != nil {
 		return errors.Errorf("running command %s: %v", cmd, err)
 	}
-	return nil
-}
-
-// generates a .envrc file that makes direnv integration convenient
-func GenerateEnvrc(dir string) error {
-	dockerfilePath := filepath.Join(dir, ".envrc")
-	filesExist := plansdk.FileExists(dockerfilePath)
-	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if !filesExist {
-		err := generate.CreateEnvrc(tmplFS, dir)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
 	return nil
 }
 

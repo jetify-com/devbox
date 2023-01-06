@@ -73,12 +73,12 @@ func CreateDevcontainer(path string, pkgs []string) error {
 }
 
 func CreateEnvrc(tmplFS embed.FS, path string) error {
-	// create dockerfile
+	// create .envrc file
 	file, err := os.Create(filepath.Join(path, ".envrc"))
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// get dockerfile content
+	// get .envrc content
 	tmplName := "envrc.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
