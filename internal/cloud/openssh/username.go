@@ -8,20 +8,20 @@ import (
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
-func GithubUsernameFromLocalFile() (bool, string, error) {
+func GithubUsernameFromLocalFile() (string, error) {
 	filePath, err := usernameFilePath()
 	if err != nil {
-		return false, "", err
+		return "", err
 	}
 	if !fileutil.Exists(filePath) {
-		return false, "", nil
+		return "", nil
 	}
 
 	username, err := os.ReadFile(filePath)
 	if err != nil {
-		return false, "", errors.WithStack(err)
+		return "", errors.WithStack(err)
 	}
-	return true, string(username), nil
+	return string(username), nil
 }
 
 func SaveGithubUsernameToLocalFile(username string) error {

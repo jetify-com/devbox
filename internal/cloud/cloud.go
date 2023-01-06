@@ -114,8 +114,8 @@ func PortForward(local, remote string) error {
 
 func getGithubUsername() string {
 
-	exists, username, err := openssh.GithubUsernameFromLocalFile()
-	if err != nil || !exists {
+	username, err := openssh.GithubUsernameFromLocalFile()
+	if err != nil || username == "" {
 		if err != nil {
 			debug.Log("failed to get auth.Username. Error: %v", err)
 		}
