@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -38,6 +39,11 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 	// TODO savil. Remove this hardcode from here, so this function can be generically defined again
 	//    by accepting the files list parameter.
 	err := writeFromTemplate(filepath.Join(rootPath, ".devbox"), plan, ".gitignore")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	err = makeFlakeFile(outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -91,4 +97,41 @@ var templateFuncs = template.FuncMap{
 	"json":     toJSON,
 	"contains": strings.Contains,
 	"debug":    debug.IsEnabled,
+}
+
+func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
+
+	if featureflag.Flakes.Disabled() {
+		return nil
+	}
+
+	flakeDir := filepath.Join(outPath, "flake")
+	err := writeFromTemplate(flakeDir, plan, "flake.nix")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// make an empty git repo
+	// Alternatively consider: git add intent-to-add path/to/flake.nix, and
+	// git update-index --assume-unchanged path/to/flake.nix
+	// https://nixos.wiki/wiki/Flakes#How_to_add_a_file_locally_in_git_but_not_include_it_in_commits
+	cmd := exec.Command("git", "-C", flakeDir, "init")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// add the flake.nix file to git
+	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
