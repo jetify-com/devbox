@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -36,8 +34,8 @@ func InfoCmd() *cobra.Command {
 	return command
 }
 
-func infoCmdFunc(_ *cobra.Command, pkg string, flags infoCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -36,7 +34,7 @@ func cloudShellCmd() *cobra.Command {
 		Use:   "shell",
 		Short: "Shell into a cloud environment that matches your local devbox environment",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCloudShellCmd(&flags)
+			return runCloudShellCmd(cmd, &flags)
 		},
 	}
 
@@ -44,10 +42,10 @@ func cloudShellCmd() *cobra.Command {
 	return command
 }
 
-func runCloudShellCmd(flags *cloudShellCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(box.ConfigDir())
+	return cloud.Shell(box.ConfigDir(), cmd.ErrOrStderr())
 }
