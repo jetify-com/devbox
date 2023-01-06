@@ -57,6 +57,8 @@
 
               # We do not need to install these because we do `nix profile install`
               # using the defaultPackages above.
+              # BUT leaving this comment in place to revisit once I understand the environment implications more.
+              # TODO savil. Revisit.
               buildInputs = [
                   {{- range .DevPackages}}
                     # pkgs.{{.}}
