@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud/fly"
+	"go.jetpack.io/devbox/internal/auth"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
@@ -35,17 +36,7 @@ func Shell(projectDir string, w io.Writer) error {
 
 	username, vmHostname := parseVMEnvVar()
 	if username == "" {
-		stepGithubUsername := stepper.Start("Detecting your Github username...")
-		var err error
-		username, err = queryGithubUsername()
-		if err == nil && username != "" {
-			stepGithubUsername.Success("Username: %s", username)
-		} else {
-			stepGithubUsername.Fail("Unable to resolve username")
-			// The query for Github username is best effort, and if it fails to resolve
-			// we fallback to prompting the user, and suggesting the local computer username.
-			username = promptUsername()
-		}
+		username = enactGithubUsernameStep()
 	}
 	debug.Log("username: %s", username)
 
@@ -80,6 +71,11 @@ func Shell(projectDir string, w io.Writer) error {
 			var region string
 			vmHostname, region = getVirtualMachine(sshClient)
 			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
+
+			err = auth.SaveUsername(auth.GithubSource, username)
+			if err != nil {
+				debug.Log("Failed to save username: %v", err)
+			}
 		}
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
@@ -107,6 +103,28 @@ func PortForward(local, remote string) error {
 	}
 	portMap := fmt.Sprintf("%s:%s:%s", local, vmHostname, remote)
 	return exec.Command("ssh", "-N", vmHostname, "-L", portMap).Run()
+}
+
+func enactGithubUsernameStep() string {
+	stepGithubUsername := stepper.Start("Detecting your Github username...")
+
+	usernameSource, username, err := auth.Username()
+	if err != nil || usernameSource != auth.GithubSource {
+		if err != nil {
+			debug.Log("failed to get auth.Username. Error: %v", err)
+		}
+
+		username, err = queryGithubUsername()
+		if err == nil && username != "" {
+			stepGithubUsername.Success("Username: %s", username)
+		} else {
+			stepGithubUsername.Fail("Unable to resolve username")
+			// The query for Github username is best effort, and if it fails to resolve
+			// we fallback to prompting the user, and suggesting the local computer username.
+			username = promptUsername()
+		}
+	}
+	return username
 }
 
 func promptUsername() string {
