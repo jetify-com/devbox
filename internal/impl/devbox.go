@@ -616,13 +616,11 @@ func (d *Devbox) installNixProfile() (err error) {
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
-		err = errors.Errorf("running command %s: exit status %d with command stderr: %s",
+		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
 			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
-		return
 	}
 	if err != nil {
-		err = errors.Errorf("running command %s: %v", cmd, err)
-		return
+		return errors.Errorf("running command %s: %v", cmd, err)
 	}
 
 	return
