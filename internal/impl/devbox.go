@@ -524,7 +524,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while... ", installingVerb)
 
 	// We need to re-install the packages
-	if err := d.applyDevNixDerivation(); err != nil {
+	if err := d.installNixProfile(); err != nil {
 		fmt.Println()
 		return errors.Wrap(err, "apply Nix derivation")
 	}
@@ -586,32 +586,44 @@ func (d *Devbox) printPackageUpdateMessage(
 	return nil
 }
 
-// applyDevNixDerivation installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix.
-func (d *Devbox) applyDevNixDerivation() error {
+// installNixProfile installs or uninstalls packages to or from this
+// devbox's Nix profile so that it matches what's in development.nix or flake.nix
+func (d *Devbox) installNixProfile() (err error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command("nix-env",
-		"--profile", profileDir,
-		"--install",
-		"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
-	)
+	var cmd *exec.Cmd
+	if featureflag.Flakes.Enabled() {
+		cmd = d.installNixProfileFlakeCommand(profileDir)
+		defer func() {
+			if err == nil {
+				_ = d.copyFlakeLockToDevboxLock()
+			}
+		}()
+	} else {
+		cmd = exec.Command(
+			"nix-env",
+			"--profile", profileDir,
+			"--install",
+			"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
+		)
+	}
 
 	debug.Log("Running command: %s\n", cmd.Args)
 	_, err = cmd.Output()
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
-		return errors.Errorf("running command %s: exit status %d with command output: %s",
+		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
 			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
 	}
 	if err != nil {
 		return errors.Errorf("running command %s: %v", cmd, err)
 	}
-	return nil
+
+	return
 }
 
 // Move to a utility package?

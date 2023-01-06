@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -179,7 +180,35 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		// inside the devbox shell.
 		"__ETC_PROFILE_NIX_SOURCED=1",
 	)
-	debug.Log("Running nix-shell with environment: %v", env)
+
+	if featureflag.Flakes.Enabled() {
+		if s.binPath == "" {
+			return errors.New("Unsupported for flakes: shell having no binPath")
+		}
+		cmd := exec.Command("nix", "develop", ".devbox/gen/flake",
+			"--extra-experimental-features", "nix-command flakes",
+			"--verbose",
+			"--ignore-environment",
+			"--command", "/bin/bash", "-c", s.execCommand(),
+			"--keep", "PARENT_PATH", // TODO savil. Why does it not show up inside devbox shell?
+		)
+
+		for _, keyVal := range env {
+			if strings.HasPrefix(keyVal, "PARENT_PATH") {
+				debug.Log("PARENT_PATH in env is %s\n", keyVal)
+			}
+		}
+
+		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
+		cmd.Env = env
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		debug.Log("Executing nix develop command: %v", cmd.Args)
+		debug.Log("Executing nix develop command with env: %v", cmd.Environ())
+		return errors.WithStack(cmd.Run())
+	}
 
 	// Launch a fallback shell if we couldn't find the path to the user's
 	// default shell.
@@ -215,6 +244,7 @@ func (s *Shell) execCommand() string {
 	// additional environment variables before any of the shell's init
 	// scripts run.
 	args := []string{
+
 		"exec",
 		"env",
 
@@ -339,8 +369,19 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
 	}
 
+	envToKeepFlakes := map[string]string{}
+	if featureflag.Flakes.Enabled() {
+		// `nix develop` has a list of ignoreVars, which we may want to not-ignore.
+		// For now, including just TERM since it affects shell cursor movement UX.
+		// https://github.com/NixOS/nix/blob/master/src/nix/develop.cc#L241-L259
+		envToKeepFlakes = map[string]string{
+			"TERM": os.Getenv("TERM"),
+		}
+	}
+
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		ConfigDir        string
+		EnvToKeep        map[string]string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -351,6 +392,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		HistoryFile      string
 	}{
 		ConfigDir:        s.configDir,
+		EnvToKeep:        envToKeepFlakes,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
