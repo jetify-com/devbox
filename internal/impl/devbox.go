@@ -460,7 +460,7 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 	envrcfilePath := filepath.Join(d.configDir, ".envrc")
 	filesExist := plansdk.FileExists(envrcfilePath)
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if !filesExist {
+	if force || !filesExist {
 		err := generate.CreateEnvrc(tmplFS, d.configDir)
 		if err != nil {
 			return errors.WithStack(err)
