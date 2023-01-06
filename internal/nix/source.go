@@ -27,7 +27,7 @@ func SourceNixEnv() error {
 	}
 
 	cmd := exec.Command(
-		"bash",
+		"/bin/sh",
 		"-c",
 		fmt.Sprintf("source %s ; echo '<<<ENVIRONMENT>>>' ; env", srcFile),
 	)

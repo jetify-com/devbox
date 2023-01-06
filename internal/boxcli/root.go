@@ -49,7 +49,6 @@ func RootCmd() *cobra.Command {
 
 	command.PersistentFlags().BoolVarP(
 		&flags.quiet, "quiet", "q", false, "Quiet mode: Suppresses logs.")
-	command.PersistentFlags().BoolP(globalYesFlag, "y", false, "Skip confirmation prompts.")
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
 
 	return command

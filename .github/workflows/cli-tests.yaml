@@ -48,7 +48,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-12]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3

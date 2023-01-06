@@ -5,8 +5,10 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
@@ -63,7 +65,7 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 
 	color.Yellow("\nNix is not installed. Devbox will attempt to install it.\n\n")
 
-	if skipPrompts, _ := cmd.Flags().GetBool(globalYesFlag); !skipPrompts {
+	if isatty.IsTerminal(os.Stdout.Fd()) {
 		color.Yellow("Press enter to continue or ctrl-c to exit.\n")
 		fmt.Scanln()
 	}
