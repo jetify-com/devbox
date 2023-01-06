@@ -101,6 +101,10 @@ var templateFuncs = template.FuncMap{
 
 func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
 
+	if featureflag.Flakes.Disabled() {
+		return nil
+	}
+
 	flakeDir := filepath.Join(outPath, "flake")
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {
