@@ -59,7 +59,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 			color.Red("\nError: " + runErr.Error() + "\n\n")
 		}
 	} else {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Error: %v\n", runErr)
+		fmt.Printf("Error: %v\n", runErr)
 	}
 
 	st := debug.EarliestStackTrace(runErr)

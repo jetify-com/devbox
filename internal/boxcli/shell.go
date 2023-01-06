@@ -28,8 +28,8 @@ func ShellCmd() *cobra.Command {
 			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
 			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
-		Args:              validateShellArgs,
-		PersistentPreRunE: nix.EnsureInstalled,
+		Args:    validateShellArgs,
+		PreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShellCmd(cmd, args, flags)
 		},

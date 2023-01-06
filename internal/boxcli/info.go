@@ -19,11 +19,11 @@ type infoCmdFlags struct {
 func InfoCmd() *cobra.Command {
 	flags := infoCmdFlags{}
 	command := &cobra.Command{
-		Use:               "info <pkg>",
-		Hidden:            !featureflag.PKGConfig.Enabled(),
-		Short:             "Display package info",
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: nix.EnsureInstalled,
+		Use:     "info <pkg>",
+		Hidden:  !featureflag.PKGConfig.Enabled(),
+		Short:   "Display package info",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: nix.EnsureInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return infoCmdFunc(cmd, args[0], flags)
 		},
