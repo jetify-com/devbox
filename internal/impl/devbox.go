@@ -45,7 +45,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			Commit: plansdk.DefaultNixpkgsCommit,
 		},
 	}
-
+	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
 		return false, err
@@ -58,6 +58,16 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			color.HiYellowString(s),
 		)
 	}
+	// .envrc file creation
+	envrcfilePath := filepath.Join(dir, ".envrc")
+	filesExist := plansdk.FileExists(envrcfilePath)
+	if !filesExist { // don't overwrite an existing .envrc
+		err := generate.CreateEnvrc(tmplFS, dir)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+	}
+
 	return cuecfg.InitFile(cfgPath, config)
 }
 
