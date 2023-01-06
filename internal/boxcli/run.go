@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/writer"
-	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/exp/slices"
 )
 
@@ -26,7 +25,7 @@ func RunCmd() *cobra.Command {
 		Short:             "Starts a new devbox shell and runs the target script",
 		Long:              "Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
 		Args:              cobra.MaximumNArgs(1),
-		PersistentPreRunE: nix.EnsureInstalled,
+		PersistentPreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runScriptCmd(cmd, args, flags)
 		},

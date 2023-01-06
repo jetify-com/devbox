@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/writer"
-	"go.jetpack.io/devbox/internal/nix"
 )
 
 type shellCmdFlags struct {
@@ -30,7 +29,7 @@ func ShellCmd() *cobra.Command {
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
 			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
 		Args:              validateShellArgs,
-		PersistentPreRunE: nix.EnsureInstalled,
+		PersistentPreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShellCmd(cmd, args, flags)
 		},

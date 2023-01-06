@@ -26,7 +26,7 @@ func AddCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:               "add <pkg>...",
 		Short:             "Add a new package to your devbox",
-		PersistentPreRunE: nix.EnsureInstalled,
+		PersistentPreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				fmt.Fprintf(
