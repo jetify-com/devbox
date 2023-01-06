@@ -33,7 +33,7 @@ func VersionCmd() *cobra.Command {
 }
 
 func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
-	w := cmd.ErrOrStderr()
+	w := cmd.OutOrStdout()
 	v := getVersionInfo()
 	if flags.verbose {
 		fmt.Fprintf(w, "Version:     %v\n", v.Version)

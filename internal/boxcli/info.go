@@ -35,7 +35,7 @@ func InfoCmd() *cobra.Command {
 }
 
 func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.OutOrStdout())
 	if err != nil {
 		return errors.WithStack(err)
 	}
