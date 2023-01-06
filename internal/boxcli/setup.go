@@ -36,13 +36,13 @@ func SetupCmd() *cobra.Command {
 func runInstallNixCmd(cmd *cobra.Command) error {
 	if nix.BinaryInstalled() {
 		color.New(color.FgYellow).Fprint(
-			cmd.OutOrStdout(),
+			cmd.ErrOrStderr(),
 			"Nix is already installed. If this is incorrect please remove the "+
 				"nix-shell binary from your path.\n",
 		)
 		return nil
 	}
-	return nix.Install()
+	return nix.Install(cmd.ErrOrStderr())
 }
 
 func ensureNixInstalled(cmd *cobra.Command, args []string) error {
@@ -70,7 +70,7 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 		fmt.Scanln()
 	}
 
-	if err := nix.Install(); err != nil {
+	if err := nix.Install(cmd.ErrOrStderr()); err != nil {
 		return err
 	}
 	cmd.PrintErrln("Nix installed successfully. Devbox is ready to use!.")

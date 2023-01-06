@@ -32,16 +32,17 @@ func VersionCmd() *cobra.Command {
 	return command
 }
 
-func versionCmdFunc(_ *cobra.Command, _ []string, flags versionFlags) error {
+func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
+	w := cmd.OutOrStdout()
 	v := getVersionInfo()
 	if flags.verbose {
-		fmt.Printf("Version:     %v\n", v.Version)
-		fmt.Printf("Platform:    %v\n", v.Platform)
-		fmt.Printf("Commit:      %v\n", v.Commit)
-		fmt.Printf("Commit Time: %v\n", v.CommitDate)
-		fmt.Printf("Go Version:  %v\n", v.GoVersion)
+		fmt.Fprintf(w, "Version:     %v\n", v.Version)
+		fmt.Fprintf(w, "Platform:    %v\n", v.Platform)
+		fmt.Fprintf(w, "Commit:      %v\n", v.Commit)
+		fmt.Fprintf(w, "Commit Time: %v\n", v.CommitDate)
+		fmt.Fprintf(w, "Go Version:  %v\n", v.GoVersion)
 	} else {
-		fmt.Printf("%v\n", v.Version)
+		fmt.Fprintf(w, "%v\n", v.Version)
 	}
 	return nil
 }

@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -20,11 +18,11 @@ type infoCmdFlags struct {
 func InfoCmd() *cobra.Command {
 	flags := infoCmdFlags{}
 	command := &cobra.Command{
-		Use:               "info <pkg>",
-		Hidden:            !featureflag.PKGConfig.Enabled(),
-		Short:             "Display package info",
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: ensureNixInstalled,
+		Use:     "info <pkg>",
+		Hidden:  !featureflag.PKGConfig.Enabled(),
+		Short:   "Display package info",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return infoCmdFunc(cmd, args[0], flags)
 		},
@@ -35,8 +33,8 @@ func InfoCmd() *cobra.Command {
 	return command
 }
 
-func infoCmdFunc(_ *cobra.Command, pkg string, flags infoCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.OutOrStdout())
 	if err != nil {
 		return errors.WithStack(err)
 	}

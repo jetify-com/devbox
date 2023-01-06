@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -33,18 +32,18 @@ func PlanCmd() *cobra.Command {
 	return command
 }
 
-func runPlanCmd(_ *cobra.Command, args []string, flags planCmdFlags) error {
+func runPlanCmd(cmd *cobra.Command, args []string, flags planCmdFlags) error {
 	path, err := configPathFromUser(args, &flags.config)
 	if err != nil {
 		return err
 	}
 
 	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	enc := json.NewEncoder(os.Stdout)
+	enc := json.NewEncoder(cmd.ErrOrStderr())
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
 
