@@ -20,12 +20,10 @@ func sourceNixEnv() error {
 	// if global (multi-user) daemon file is missing, try getting the single user
 	// file.
 	if _, err := os.Stat(srcFile); os.IsNotExist(err) {
-		fmt.Println("no daemon!")
 		srcFile = filepath.Join(
 			os.Getenv("HOME"),
 			"/.nix-profile/etc/profile.d/nix.sh",
 		)
-		fmt.Printf("srcFile: %s\n", srcFile)
 	}
 
 	cmd := exec.Command(
