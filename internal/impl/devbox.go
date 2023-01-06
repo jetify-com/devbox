@@ -659,21 +659,6 @@ func (d *Devbox) installNixProfile() (err error) {
 	return
 }
 
-// generates a .envrc file that makes direnv integration convenient
-func GenerateEnvrc(dir string) error {
-	dockerfilePath := filepath.Join(dir, ".envrc")
-	filesExist := plansdk.FileExists(dockerfilePath)
-	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if !filesExist {
-		err := generate.CreateEnvrc(tmplFS, dir)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	return nil
-}
-
 // Move to a utility package?
 func IsDevboxShellEnabled() bool {
 	inDevboxShell, err := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
