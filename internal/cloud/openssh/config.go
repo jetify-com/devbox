@@ -224,6 +224,7 @@ func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
 	return nil
 }
 
+// returns path to ~/.config/devbox/ssh
 func devboxSSHDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
