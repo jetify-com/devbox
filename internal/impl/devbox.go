@@ -46,6 +46,13 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 		},
 	}
 
+	// Should this be best-effort and continue forward if envrc file creation
+	// fails?
+	err = GenerateEnvrc(dir)
+	if err != nil {
+		return false, err
+	}
+
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
 		return false, err
@@ -437,7 +444,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 // generates a Dockerfile that replicates the devbox shell
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.configDir, "Dockerfile")
-	// check if Dockerfile doesn't exits
+	// check if Dockerfile doesn't exist
 	filesExist := plansdk.FileExists(dockerfilePath)
 	if force || !filesExist {
 		// generate dockerfile
@@ -611,6 +618,21 @@ func (d *Devbox) applyDevNixDerivation() error {
 	if err != nil {
 		return errors.Errorf("running command %s: %v", cmd, err)
 	}
+	return nil
+}
+
+// generates a .envrc file that makes direnv integration convenient
+func GenerateEnvrc(dir string) error {
+	dockerfilePath := filepath.Join(dir, ".envrc")
+	filesExist := plansdk.FileExists(dockerfilePath)
+	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
+	if !filesExist {
+		err := generate.CreateEnvrc(tmplFS, dir)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	return nil
 }
 
