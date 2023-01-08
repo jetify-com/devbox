@@ -6,6 +6,8 @@ package midcobra
 import (
 	"context"
 	"encoding/hex"
+	"errors"
+	"os/exec"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -69,6 +71,11 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	}
 
 	if err != nil {
+		// If the error is from the exec call, return the exit code of the exec call.
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return exitErr.ExitCode()
+		}
 		return 1 // Error exit code
 	} else {
 		return 0

@@ -4,7 +4,6 @@
 package boxcli
 
 import (
-	"os/exec"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -60,11 +59,6 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		err = box.RunScriptInShell(script)
 	} else {
 		err = box.RunScript(script)
-	}
-
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return nil
 	}
 	return err
 }
