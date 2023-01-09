@@ -21,6 +21,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner"
@@ -437,7 +438,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 // generates a Dockerfile that replicates the devbox shell
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.configDir, "Dockerfile")
-	// check if Dockerfile doesn't exits
+	// check if Dockerfile doesn't exist
 	filesExist := plansdk.FileExists(dockerfilePath)
 	if force || !filesExist {
 		// generate dockerfile
@@ -448,6 +449,26 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	} else {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
+				"Remove it or use --force to overwrite it.",
+		)
+	}
+
+	return nil
+}
+
+// generates a .envrc file that makes direnv integration convenient
+func (d *Devbox) GenerateEnvrc(force bool) error {
+	envrcfilePath := filepath.Join(d.configDir, ".envrc")
+	filesExist := fileutil.Exists(envrcfilePath)
+	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
+	if force || !filesExist {
+		err := generate.CreateEnvrc(tmplFS, d.configDir)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		return usererr.New(
+			"A .envrc is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
 	}
