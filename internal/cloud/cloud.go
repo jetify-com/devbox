@@ -6,6 +6,7 @@ package cloud
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -25,11 +26,11 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func Shell(configDir string) error {
+func Shell(configDir string, w io.Writer) error {
 	c := color.New(color.FgMagenta).Add(color.Bold)
-	c.Println("Devbox Cloud")
-	fmt.Println("Remote development environments powered by Nix")
-	fmt.Print("\n")
+	c.Fprintln(w, "Devbox Cloud")
+	fmt.Fprintln(w, "Remote development environments powered by Nix")
+	fmt.Fprint(w, "\n")
 
 	username, vmHostname := parseVMEnvVar()
 	if username == "" {
@@ -93,7 +94,7 @@ func Shell(configDir string) error {
 	s3 := stepper.Start("Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
 	s3.Stop("Connecting to virtual machine")
-	fmt.Print("\n")
+	fmt.Fprint(w, "\n")
 
 	return shell(username, vmHostname, configDir)
 }

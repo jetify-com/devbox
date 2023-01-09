@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/writer"
 )
 
 func InitCmd() *cobra.Command {
@@ -27,8 +26,7 @@ func InitCmd() *cobra.Command {
 func runInitCmd(cmd *cobra.Command, args []string) error {
 	path := pathArg(args)
 
-	w := writer.New(cmd)
-	_, err := devbox.InitConfig(path, w)
+	_, err := devbox.InitConfig(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}

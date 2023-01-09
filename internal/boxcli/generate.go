@@ -26,6 +26,7 @@ func GenerateCmd() *cobra.Command {
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
 	command.AddCommand(debugCmd())
+	command.AddCommand(direnvCmd())
 	flags.config.register(command)
 
 	return command
@@ -52,7 +53,7 @@ func devcontainerCmd() *cobra.Command {
 		Long:  "Generate Dockerfile and devcontainer.json files necessary to run VSCode in remote container environments.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDevcontainerCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, args, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -68,7 +69,7 @@ func dockerfileCmd() *cobra.Command {
 		Long:  "Generate a Dockerfile that replicates devbox shell. Can be used to run devbox shell environment in an OCI container.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDockerfileCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, args, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -77,20 +78,24 @@ func dockerfileCmd() *cobra.Command {
 	return command
 }
 
-func runDevcontainerCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
+func direnvCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+	command := &cobra.Command{
+		Use:   "direnv",
+		Short: "Generate a .envrc file that integrates direnv with this devbox project",
+		Long:  "Generate a .envrc file that integrates direnv with this devbox project. Requires direnv to be installed.",
+		Args:  cobra.MaximumNArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runGenerateCmd(cmd, args, flags)
+		},
 	}
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return box.GenerateDevcontainer(flags.force)
+	command.Flags().BoolVarP(
+		&flags.force, "force", "f", false, "force overwrite existing files")
+	flags.config.register(command)
+	return command
 }
 
-func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
+func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) error {
 	path, err := configPathFromUser(args, &flags.config)
 	if err != nil {
 		return err
@@ -101,19 +106,15 @@ func runGenerateCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) er
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	return box.Generate()
-}
-
-func runDockerfileCmd(_ *cobra.Command, args []string, flags *generateCmdFlags) error {
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
+	switch cmd.Use {
+	case "debug":
+		return box.Generate()
+	case "devcontainer":
+		return box.GenerateDevcontainer(flags.force)
+	case "dockerfile":
+		return box.GenerateDockerfile(flags.force)
+	case "direnv":
+		return box.GenerateEnvrc(flags.force)
 	}
-	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return box.GenerateDockerfile(flags.force)
+	return nil
 }

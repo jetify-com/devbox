@@ -72,6 +72,23 @@ func CreateDevcontainer(path string, pkgs []string) error {
 	return nil
 }
 
+func CreateEnvrc(tmplFS embed.FS, path string) error {
+	// create .envrc file
+	file, err := os.Create(filepath.Join(path, ".envrc"))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// get .envrc content
+	tmplName := "envrc.tmpl"
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	// write content into file
+	err = t.Execute(file, nil)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	// object that gets written in devcontainer.json
 	devcontainerContent := &devcontainerObject{

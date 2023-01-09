@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"context"
+	"io"
 	"os"
 	"strings"
 
@@ -26,6 +27,11 @@ func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if flags.quiet {
+				cmd.SetErr(io.Discard)
+			}
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -30,8 +28,8 @@ func RemoveCmd() *cobra.Command {
 	return command
 }
 
-func runRemoveCmd(_ *cobra.Command, args []string, flags removeCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+func runRemoveCmd(cmd *cobra.Command, args []string, flags removeCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
