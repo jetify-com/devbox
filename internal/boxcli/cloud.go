@@ -48,9 +48,10 @@ func cloudShellCmd() *cobra.Command {
 
 func cloudPortForwardCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "port-forward <local-port>:<remote-port>",
-		Short: "Port forwards a local port to a remote devbox cloud port",
-		Args:  cobra.ExactArgs(1),
+		Use:    "port-forward <local-port>:<remote-port>",
+		Short:  "Port forwards a local port to a remote devbox cloud port",
+		Hidden: true,
+		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ports := strings.Split(args[0], ":")
 			if len(ports) != 2 {
