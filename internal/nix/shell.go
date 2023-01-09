@@ -179,6 +179,8 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
 		// inside the devbox shell.
 		"__ETC_PROFILE_NIX_SOURCED=1",
+		// Always allow unfree packages.
+		"NIXPKGS_ALLOW_UNFREE=1",
 	)
 
 	if featureflag.Flakes.Enabled() {
@@ -303,6 +305,7 @@ func (s *Shell) RunInShell() error {
 		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
 		// inside the devbox shell.
 		"__ETC_PROFILE_NIX_SOURCED=1",
+		"NIXPKGS_ALLOW_UNFREE=1",
 	)
 	debug.Log("Running inside devbox shell with environment: %v", env)
 	cmd := exec.Command(s.execCommandInShell())
@@ -492,6 +495,7 @@ var envToKeep = map[string]bool{
 	"__ETC_PROFILE_NIX_SOURCED": true, // Prevents Nix from being sourced again inside a devbox shell.
 	"NIX_SSL_CERT_FILE":         true, // The path to Nix-installed SSL certificates (used by some Nix programs).
 	"SSL_CERT_FILE":             true, // The path to non-Nix SSL certificates (used by some Nix and non-Nix programs).
+	"NIXPKGS_ALLOW_UNFREE":      true, // Whether to allow the use of unfree packages.
 }
 
 func buildAllowList(allowList []string) map[string]bool {

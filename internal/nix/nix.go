@@ -41,7 +41,7 @@ func Exec(path string, command []string, env []string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(os.Environ(), env...)
+	cmd.Env = append(DefaultEnv(), env...)
 	return errors.WithStack(cmd.Run())
 }
 
@@ -54,6 +54,7 @@ func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 	cmd := exec.Command("nix", "search",
 		"--extra-experimental-features", "nix-command flakes",
 		"--json", exactPackage)
+	cmd.Env = DefaultEnv()
 	cmd.Stderr = os.Stderr
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
@@ -84,4 +85,8 @@ func parseInfo(pkg string, data []byte) *Info {
 		return pkgInfo
 	}
 	return nil
+}
+
+func DefaultEnv() []string {
+	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
 }

@@ -632,6 +632,8 @@ func (d *Devbox) installNixProfile() (err error) {
 		)
 	}
 
+	cmd.Env = nix.DefaultEnv()
+
 	debug.Log("Running command: %s\n", cmd.Args)
 	_, err = cmd.Output()
 
