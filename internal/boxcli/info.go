@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/nix"
 )
 
 type infoCmdFlags struct {
@@ -23,7 +22,7 @@ func InfoCmd() *cobra.Command {
 		Hidden:  !featureflag.PKGConfig.Enabled(),
 		Short:   "Display package info",
 		Args:    cobra.ExactArgs(1),
-		PreRunE: nix.EnsureInstalled,
+		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return infoCmdFunc(cmd, args[0], flags)
 		},
