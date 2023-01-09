@@ -21,6 +21,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner"
@@ -458,7 +459,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 // generates a .envrc file that makes direnv integration convenient
 func (d *Devbox) GenerateEnvrc(force bool) error {
 	envrcfilePath := filepath.Join(d.configDir, ".envrc")
-	filesExist := plansdk.FileExists(envrcfilePath)
+	filesExist := fileutil.Exists(envrcfilePath)
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
 	if force || !filesExist {
 		err := generate.CreateEnvrc(tmplFS, d.configDir)
