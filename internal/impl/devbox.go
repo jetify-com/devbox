@@ -46,7 +46,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			Commit: plansdk.DefaultNixpkgsCommit,
 		},
 	}
-
+	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
 		return false, err
@@ -59,6 +59,16 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			color.HiYellowString(s),
 		)
 	}
+	// .envrc file creation
+	envrcfilePath := filepath.Join(dir, ".envrc")
+	filesExist := fileutil.Exists(envrcfilePath)
+	if !filesExist { // don't overwrite an existing .envrc
+		err := generate.CreateEnvrc(tmplFS, dir)
+		if err != nil { //move forward with devbox init flow and not interrupt
+			debug.Log("Failed to generate .envrc file. Reason: %s", err)
+		}
+	}
+
 	return cuecfg.InitFile(cfgPath, config)
 }
 
