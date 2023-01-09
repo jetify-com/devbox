@@ -61,11 +61,11 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	}
 	// .envrc file creation
 	envrcfilePath := filepath.Join(dir, ".envrc")
-	filesExist := plansdk.FileExists(envrcfilePath)
+	filesExist := fileutil.Exists(envrcfilePath)
 	if !filesExist { // don't overwrite an existing .envrc
 		err := generate.CreateEnvrc(tmplFS, dir)
-		if err != nil {
-			return false, errors.WithStack(err)
+		if err != nil { //move forward with devbox init flow and not interrupt
+			debug.Log("Failed to generate .envrc file. Reason: %s", err)
 		}
 	}
 
