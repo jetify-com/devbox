@@ -4,14 +4,15 @@
   "match": "^postgresql(_[0-9]+)?$",
   "readme": "To initialize the database run `initdb`.",
   "env": {
-    "PGDATA": "{{ .Virtenv }}/data"
+    "PGDATA": "{{ .Virtenv }}/data",
+    "PGHOST": "{{ .Virtenv }}"
   },
   "create_files": {
     "{{ .Virtenv }}/data": ""
   },
   "services": {
     "postgresql": {
-      "start": "pg_ctl -l {{ .Virtenv }}/logfile start",
+      "start": "pg_ctl start -l {{ .Virtenv }}/logfile -o \"-k {{ .Virtenv }}\"",
       "stop": "pg_ctl stop"
     }
   }
