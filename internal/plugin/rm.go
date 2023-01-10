@@ -7,17 +7,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Remove(rootDir string, pkgs []string) error {
+func Remove(projectDir string, pkgs []string) error {
 	for _, pkg := range pkgs {
-		if err := os.RemoveAll(filepath.Join(rootDir, VirtenvPath, pkg)); err != nil {
+		if err := os.RemoveAll(filepath.Join(projectDir, VirtenvPath, pkg)); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 	return nil
 }
 
-func RemoveInvalidSymlinks(rootDir string) error {
-	binPath := filepath.Join(rootDir, VirtenvBinPath)
+func RemoveInvalidSymlinks(projectDir string) error {
+	binPath := filepath.Join(projectDir, VirtenvBinPath)
 	if _, err := os.Stat(binPath); errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
@@ -26,9 +26,9 @@ func RemoveInvalidSymlinks(rootDir string) error {
 		return errors.WithStack(err)
 	}
 	for _, entry := range dirEntry {
-		_, err := os.Stat(filepath.Join(rootDir, VirtenvPath, "bin", entry.Name()))
+		_, err := os.Stat(filepath.Join(projectDir, VirtenvPath, "bin", entry.Name()))
 		if errors.Is(err, os.ErrNotExist) {
-			os.Remove(filepath.Join(rootDir, VirtenvPath, "bin", entry.Name()))
+			os.Remove(filepath.Join(projectDir, VirtenvPath, "bin", entry.Name()))
 		}
 	}
 	return nil

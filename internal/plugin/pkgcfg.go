@@ -38,8 +38,8 @@ type config struct {
 	} `json:"shell,omitempty"`
 }
 
-func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
-	cfg, err := getConfigIfAny(pkg, rootDir)
+func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
+	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err
 	}
@@ -77,11 +77,11 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 		}
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
-			"DevboxConfigDir":      rootDir,
-			"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
-			"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
-			"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(rootDir, devboxHiddenDirName, "virtenv", pkg),
+			"DevboxConfigDir":      projectDir,
+			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
+			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+			"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -94,19 +94,19 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, rootDir string) error {
 			return errors.WithStack(err)
 		}
 		if fileMode == 0755 {
-			if err := createSymlink(rootDir, filePath); err != nil {
+			if err := createSymlink(projectDir, filePath); err != nil {
 				return err
 			}
 		}
 	}
-	return createEnvFile(pkg, rootDir)
+	return createEnvFile(pkg, projectDir)
 
 }
 
-func Env(pkgs []string, rootDir string) (map[string]string, error) {
+func Env(pkgs []string, projectDir string) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := getConfigIfAny(pkg, rootDir)
+		cfg, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err
 		}
@@ -120,8 +120,8 @@ func Env(pkgs []string, rootDir string) (map[string]string, error) {
 	return env, nil
 }
 
-func createEnvFile(pkg, rootDir string) error {
-	envVars, err := Env([]string{pkg}, rootDir)
+func createEnvFile(pkg, projectDir string) error {
+	envVars, err := Env([]string{pkg}, projectDir)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func createEnvFile(pkg, rootDir string) error {
 		}
 		env += fmt.Sprintf("export %s=%s\n", k, escaped)
 	}
-	filePath := filepath.Join(rootDir, VirtenvPath, pkg, "/env")
+	filePath := filepath.Join(projectDir, VirtenvPath, pkg, "/env")
 	if err = createDir(filepath.Dir(filePath)); err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func createEnvFile(pkg, rootDir string) error {
 	return nil
 }
 
-func buildConfig(pkg, rootDir, content string) (*config, error) {
+func buildConfig(pkg, projectDir, content string) (*config, error) {
 	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
@@ -151,11 +151,11 @@ func buildConfig(pkg, rootDir, content string) (*config, error) {
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
-		"DevboxConfigDir":      rootDir,
-		"DevboxDir":            filepath.Join(rootDir, devboxDirName, pkg),
-		"DevboxDirRoot":        filepath.Join(rootDir, devboxDirName),
-		"DevboxProfileDefault": filepath.Join(rootDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(rootDir, devboxHiddenDirName, "virtenv", pkg),
+		"DevboxProjectDir":     projectDir,
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
+		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+		"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
