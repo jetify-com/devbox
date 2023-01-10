@@ -17,6 +17,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud/fly"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
@@ -97,6 +98,15 @@ func Shell(configDir string, w io.Writer) error {
 	fmt.Fprint(w, "\n")
 
 	return shell(username, vmHostname, configDir)
+}
+
+func PortForward(local, remote string) error {
+	vmHostname := vmHostnameFromSSHControlPath()
+	if vmHostname == "" {
+		return usererr.New("No VM found. Please run `devbox cloud shell` first.")
+	}
+	portMap := fmt.Sprintf("%s:%s:%s", local, vmHostname, remote)
+	return exec.Command("ssh", "-N", vmHostname, "-L", portMap).Run()
 }
 
 func promptUsername() string {

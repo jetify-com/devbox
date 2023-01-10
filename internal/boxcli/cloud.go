@@ -4,9 +4,12 @@
 package boxcli
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
 )
 
@@ -24,6 +27,7 @@ func CloudCmd() *cobra.Command {
 		},
 	}
 	command.AddCommand(cloudShellCmd())
+	command.AddCommand(cloudPortForwardCmd())
 	return command
 }
 
@@ -39,6 +43,29 @@ func cloudShellCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	return command
+}
+
+func cloudPortForwardCmd() *cobra.Command {
+	command := &cobra.Command{
+		Use:    "port-forward <local-port>:<remote-port>",
+		Short:  "Port forwards a local port to a remote devbox cloud port",
+		Hidden: true,
+		Args:   cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ports := strings.Split(args[0], ":")
+			if len(ports) != 2 {
+				return usererr.New("Invalid port format. Expected <local-port>:<remote-port>")
+			}
+			err := cloud.PortForward(ports[0], ports[1])
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			cmd.PrintErrf("Port forwarding %s:%s\n", ports[0], ports[1])
+			return nil
+		},
+	}
+
 	return command
 }
 
