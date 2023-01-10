@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -42,7 +43,7 @@ func Exec(path string, command []string, env []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = append(DefaultEnv(), env...)
-	return errors.WithStack(cmd.Run())
+	return errors.WithStack(usererr.NewExecError(cmd.Run()))
 }
 
 func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
