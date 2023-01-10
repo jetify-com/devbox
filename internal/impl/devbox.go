@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -61,10 +62,12 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	}
 	// .envrc file creation
 	if commandExists("direnv") {
-		var result string
 		// prompt for direnv allow
-		fmt.Println("Do you want to enable direnv integration for this devbox project?[y/N]")
-		fmt.Scanln(&result)
+		var result string
+		prompt := &survey.Input{
+			Message: "Do you want to enable direnv integration for this devbox project?[y/n]",
+		}
+		survey.AskOne(prompt, &result)
 		if strings.ToLower(result) == "y" {
 			envrcfilePath := filepath.Join(dir, ".envrc")
 			filesExist := fileutil.Exists(envrcfilePath)
