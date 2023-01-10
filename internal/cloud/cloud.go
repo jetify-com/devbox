@@ -163,14 +163,14 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
 
 func syncFiles(username, hostname, projectDir string) error {
 
-	projectPath, err := projectDirPath(projectDir)
+	relProjectPathInVM, err := relativeProjectPathInVM(projectDir)
 	if err != nil {
 		return err
 	}
-	pathInVM := projectPathInVM(username, projectPath)
-	debug.Log("pathInVM: %s", pathInVM)
+	absPathInVM := absoluteProjectPathInVM(username, relProjectPathInVM)
+	debug.Log("absPathInVM: %s", absPathInVM)
 
-	err = copyConfigFileToVM(hostname, username, projectDir, pathInVM)
+	err = copyConfigFileToVM(hostname, username, projectDir, absPathInVM)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func syncFiles(username, hostname, projectDir string) error {
 	// here to. It'll make things easier to debug.
 	machineID, _, _ := strings.Cut(hostname, ".")
 	mutagenSessionName := mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", machineID,
-		hyphenatePath(projectPath)))
+		hyphenatePath(relProjectPathInVM)))
 
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
@@ -201,7 +201,7 @@ func syncFiles(username, hostname, projectDir string) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath: pathInVM,
+		BetaPath: absPathInVM,
 		EnvVars:  env,
 		Ignore: mutagen.SessionIgnore{
 			VCS:   true,
@@ -216,7 +216,7 @@ func syncFiles(username, hostname, projectDir string) error {
 	time.Sleep(1 * time.Second)
 
 	// In a background routine, update the sync status in the cloud VM
-	go updateSyncStatus(mutagenSessionName, username, hostname, filepath.Base(projectPath))
+	go updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM)
 	return nil
 }
 
@@ -224,12 +224,13 @@ func syncFiles(username, hostname, projectDir string) error {
 //
 // wait for the mutagen session's status to change to "watching", and update the remote VM
 // when the initial project sync completes and then exit.
-func updateSyncStatus(mutagenSessionName, username, hostname, projectName string) {
+func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM string) {
+
 	status := "disconnected"
 
 	// Ensure the destination directory exists
 	destServer := fmt.Sprintf("%s@%s", username, hostname)
-	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, projectName)
+	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, hyphenatePath(filepath.Base(relProjectPathInVM)))
 	remoteCmd := fmt.Sprintf("mkdir -p %s", destDir)
 	cmd := exec.Command("ssh", destServer, remoteCmd)
 	err := cmd.Run()
@@ -300,18 +301,8 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 	return errors.WithStack(err)
 }
 
-const outsideHomedirDirectory = "outside-homedir-code"
-
-func projectPathInVM(sshUser, projectPath string) string {
-	vmHomeDir := fmt.Sprintf("/home/%s", sshUser)
-	if filepath.IsAbs(projectPath) {
-		return fmt.Sprintf("%s/%s", vmHomeDir, filepath.Join(outsideHomedirDirectory, projectPath))
-	}
-	return fmt.Sprintf("%s/%s/", vmHomeDir, projectPath)
-}
-
 func shell(username, hostname, projectDir string) error {
-	projectPath, err := projectDirPath(projectDir)
+	projectPath, err := relativeProjectPathInVM(projectDir)
 	if err != nil {
 		return err
 	}
@@ -319,14 +310,17 @@ func shell(username, hostname, projectDir string) error {
 	client := &openssh.Client{
 		Username: username,
 		Addr:     hostname,
-		PathInVM: projectPathInVM(username, projectPath),
+		PathInVM: absoluteProjectPathInVM(username, projectPath),
 	}
 	return client.Shell()
 }
 
+// relativeProjectPathInVM refers to the project path relative to the user's
+// home-directory within the VM.
+//
 // Ideally, we'd pass in devbox.Devbox struct and call ProjectDir but it
 // makes it hard to wrap this in a test
-func projectDirPath(projectDir string) (string, error) {
+func relativeProjectPathInVM(projectDir string) (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -344,7 +338,7 @@ func projectDirPath(projectDir string) (string, error) {
 		if err != nil {
 			return "", errors.WithStack(err)
 		}
-		return projectDir, nil
+		return filepath.Join(outsideHomedirDirectory, projectDir), nil
 	}
 
 	relativeProjectDir, err := filepath.Rel(home, projectDir)
@@ -352,6 +346,16 @@ func projectDirPath(projectDir string) (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return relativeProjectDir, nil
+}
+
+const outsideHomedirDirectory = "outside-homedir-code"
+
+func absoluteProjectPathInVM(sshUser, relativeProjectPath string) string {
+	vmHomeDir := fmt.Sprintf("/home/%s", sshUser)
+	if strings.HasPrefix(relativeProjectPath, outsideHomedirDirectory) {
+		return fmt.Sprintf("%s/%s", vmHomeDir, relativeProjectPath)
+	}
+	return fmt.Sprintf("%s/%s/", vmHomeDir, relativeProjectPath)
 }
 
 func parseVMEnvVar() (username string, vmHostname string) {

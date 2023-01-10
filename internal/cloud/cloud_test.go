@@ -30,17 +30,17 @@ func TestProjectDirName(t *testing.T) {
 		{filepath.Join(homeDir, "foo/bar"), "foo/bar"},
 
 		// non-home-dir
-		{"/", "/"},
-		{"/foo", "/foo"},
-		{"/foo/bar", "/foo/bar"},
-		{"/foo/bar/", "/foo/bar"},
-		{"/foo/bar///", "/foo/bar"},
+		{"/", filepath.Join(outsideHomedirDirectory, "/")},
+		{"/foo", filepath.Join(outsideHomedirDirectory, "/foo")},
+		{"/foo/bar", filepath.Join(outsideHomedirDirectory, "/foo/bar")},
+		{"/foo/bar/", filepath.Join(outsideHomedirDirectory, "/foo/bar")},
+		{"/foo/bar///", filepath.Join(outsideHomedirDirectory, "/foo/bar")},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.projectDir, func(t *testing.T) {
 			assert := assert.New(t)
-			path, err := projectDirPath(testCase.projectDir)
+			path, err := relativeProjectPathInVM(testCase.projectDir)
 			assert.NoError(err)
 			assert.Equal(testCase.dirPath, path)
 		})
