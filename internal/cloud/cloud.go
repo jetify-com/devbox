@@ -27,25 +27,20 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func Shell(projectDir string, w io.Writer) error {
+func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	c := color.New(color.FgMagenta).Add(color.Bold)
 	c.Fprintln(w, "Devbox Cloud")
 	fmt.Fprintln(w, "Remote development environments powered by Nix")
 	fmt.Fprint(w, "\n")
 
 	username, vmHostname := parseVMEnvVar()
+	// The flag for githubUsername overrides any env-var, since flags are a more
+	// explicit action compared to an env-var which could be latently present.
+	if githubUsername != "" {
+		username = githubUsername
+	}
 	if username == "" {
-		stepGithubUsername := stepper.Start("Detecting your Github username...")
-		var err error
-		username, err = queryGithubUsername()
-		if err == nil && username != "" {
-			stepGithubUsername.Success("Username: %s", username)
-		} else {
-			stepGithubUsername.Fail("Unable to resolve username")
-			// The query for Github username is best effort, and if it fails to resolve
-			// we fallback to prompting the user, and suggesting the local computer username.
-			username = promptUsername()
-		}
+		username = getGithubUsername()
 	}
 	debug.Log("username: %s", username)
 
@@ -80,6 +75,14 @@ func Shell(projectDir string, w io.Writer) error {
 			var region string
 			vmHostname, region = getVirtualMachine(sshClient)
 			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
+
+			// We save the username to local file only after we get a successful response
+			// from the gateway, because the gateway will verify that the user's SSH keys
+			// match their claimed username from github.
+			err = openssh.SaveGithubUsernameToLocalFile(username)
+			if err != nil {
+				debug.Log("Failed to save username: %v", err)
+			}
 		}
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
@@ -109,17 +112,39 @@ func PortForward(local, remote string) error {
 	return exec.Command("ssh", "-N", vmHostname, "-L", portMap).Run()
 }
 
+func getGithubUsername() string {
+
+	username, err := openssh.GithubUsernameFromLocalFile()
+	if err != nil || username == "" {
+		if err != nil {
+			debug.Log("failed to get auth.Username. Error: %v", err)
+		}
+
+		username, err = queryGithubUsername()
+		if err == nil && username != "" {
+			debug.Log("Username from ssh -T git@github.com: %s", username)
+		} else {
+			// The query for Github username is best effort, and if it fails to resolve
+			// we fallback to prompting the user, and suggesting the local computer username.
+			username = promptUsername()
+		}
+	} else {
+		debug.Log("Username from locally-cached file: %s", username)
+	}
+	return username
+}
+
 func promptUsername() string {
 	username := ""
 	prompt := &survey.Input{
 		Message: "What is your github username?",
 		Default: os.Getenv("USER"),
 	}
-	debug.Log("Failed to get username from Github. Falling back to suggesting $USER: %s", prompt.Default)
 	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
 		log.Fatal(err)
 	}
+	debug.Log("Username from prompting user: %s", username)
 	return username
 }
 
