@@ -309,7 +309,7 @@ func shell(username, hostname, configDir string) error {
 
 const defaultProjectDirName = "devbox_project"
 
-// Ideally, we'd pass in devbox.Devbox struct and call ConfigDir but it
+// Ideally, we'd pass in devbox.Devbox struct and call ProjectDir but it
 // makes it hard to wrap this in a test
 func projectDirName(configDir string) string {
 	name := filepath.Base(configDir)

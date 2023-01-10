@@ -8,32 +8,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFindConfigDirFromParentDirSearch(t *testing.T) {
+func TestFindProjectDirFromParentDirSearch(t *testing.T) {
 	testCases := []struct {
 		name        string
 		allDirs     string
-		configDir   string
+		projectDir  string
 		searchPath  string
 		expectError bool
 	}{
 		{
 			name:        "search_dir_same_as_config_dir",
 			allDirs:     "a/b/c",
-			configDir:   "a/b",
+			projectDir:  "a/b",
 			searchPath:  "a/b",
 			expectError: false,
 		},
 		{
 			name:        "search_dir_in_nested_folder",
 			allDirs:     "a/b/c",
-			configDir:   "a/b",
+			projectDir:  "a/b",
 			searchPath:  "a/b/c",
 			expectError: false,
 		},
 		{
 			name:        "search_dir_in_parent_folder",
 			allDirs:     "a/b/c",
-			configDir:   "a/b",
+			projectDir:  "a/b",
 			searchPath:  "a",
 			expectError: true,
 		},
@@ -49,58 +49,58 @@ func TestFindConfigDirFromParentDirSearch(t *testing.T) {
 			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0777)
 			assert.NoError(err)
 
-			absConfigPath, err := filepath.Abs(filepath.Join(root, testCase.configDir, configFilename))
+			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, configFilename))
 			assert.NoError(err)
-			err = os.WriteFile(absConfigPath, []byte("{}"), 0666)
+			err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
 			assert.NoError(err)
 
 			absSearchPath := filepath.Join(root, testCase.searchPath)
-			result, err := findConfigDirFromParentDirSearch(root, absSearchPath)
+			result, err := findProjectDirFromParentDirSearch(root, absSearchPath)
 
 			if testCase.expectError {
 				assert.Error(err)
 			} else {
 				assert.NoError(err)
-				assert.Equal(filepath.Dir(filepath.Join(absConfigPath)), result)
+				assert.Equal(filepath.Dir(filepath.Join(absProjectPath)), result)
 			}
 		})
 	}
 }
 
-func TestFindConfigDirAtPath(t *testing.T) {
+func TestFindParentDirAtPath(t *testing.T) {
 
 	testCases := []struct {
 		name        string
 		allDirs     string
-		configDir   string
+		projectDir  string
 		flagPath    string
 		expectError bool
 	}{
 		{
 			name:        "flag_path_is_dir_has_config",
 			allDirs:     "a/b/c",
-			configDir:   "a/b",
+			projectDir:  "a/b",
 			flagPath:    "a/b",
 			expectError: false,
 		},
 		{
 			name:        "flag_path_is_dir_missing_config",
 			allDirs:     "a/b/c",
-			configDir:   "", // missing config
+			projectDir:  "", // missing config
 			flagPath:    "a/b",
 			expectError: true,
 		},
 		{
 			name:        "flag_path_is_file_has_config",
 			allDirs:     "a/b/c",
-			configDir:   "a/b",
+			projectDir:  "a/b",
 			flagPath:    "a/b/" + configFilename,
 			expectError: false,
 		},
 		{
 			name:        "flag_path_is_file_missing_config",
 			allDirs:     "a/b/c",
-			configDir:   "", // missing config
+			projectDir:  "", // missing config
 			flagPath:    "a/b/" + configFilename,
 			expectError: true,
 		},
@@ -116,22 +116,22 @@ func TestFindConfigDirAtPath(t *testing.T) {
 			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0777)
 			assert.NoError(err)
 
-			var absConfigPath string
-			if testCase.configDir != "" {
-				absConfigPath, err = filepath.Abs(filepath.Join(root, testCase.configDir, configFilename))
+			var absProjectPath string
+			if testCase.projectDir != "" {
+				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, configFilename))
 				assert.NoError(err)
-				err = os.WriteFile(absConfigPath, []byte("{}"), 0666)
+				err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
 				assert.NoError(err)
 			}
 
 			absFlagPath := filepath.Join(root, testCase.flagPath)
-			result, err := findConfigDirAtPath(absFlagPath)
+			result, err := findProjectDirAtPath(absFlagPath)
 
 			if testCase.expectError {
 				assert.Error(err)
 			} else {
 				assert.NoError(err)
-				assert.Equal(filepath.Dir(filepath.Join(absConfigPath)), result)
+				assert.Equal(filepath.Dir(filepath.Join(absProjectPath)), result)
 			}
 		})
 	}

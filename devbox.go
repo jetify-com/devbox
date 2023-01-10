@@ -19,7 +19,7 @@ type Devbox interface {
 	// it. Adding a duplicate package is a no-op.
 	Add(pkgs ...string) error
 	Config() *impl.Config
-	ConfigDir() string
+	ProjectDir() string
 	Exec(cmds ...string) error
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.

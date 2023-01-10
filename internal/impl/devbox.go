@@ -74,20 +74,19 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 
 type Devbox struct {
 	cfg *Config
-	// configDir is the directory where the config file (devbox.json) resides
-	configDir     string
+	// projectDir is the directory where the config file (devbox.json) resides
+	projectDir    string
 	pluginManager *plugin.Manager
 	writer        io.Writer
 }
 
-// TODO savil. dir is technically path since it could be a dir or file
-func Open(dir string, writer io.Writer) (*Devbox, error) {
+func Open(path string, writer io.Writer) (*Devbox, error) {
 
-	cfgDir, err := findConfigDir(dir)
+	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
 	}
-	cfgPath := filepath.Join(cfgDir, configFilename)
+	cfgPath := filepath.Join(projectDir, configFilename)
 
 	cfg, err := ReadConfig(cfgPath)
 	if err != nil {
@@ -100,15 +99,15 @@ func Open(dir string, writer io.Writer) (*Devbox, error) {
 
 	box := &Devbox{
 		cfg:           cfg,
-		configDir:     cfgDir,
+		projectDir:    projectDir,
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
 	}
 	return box, nil
 }
 
-func (d *Devbox) ConfigDir() string {
-	return d.configDir
+func (d *Devbox) ProjectDir() string {
+	return d.projectDir
 }
 
 func (d *Devbox) Config() *Config {
@@ -143,7 +142,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 		for _, pkg := range pkgs {
 			if err := plugin.PrintReadme(
 				pkg,
-				d.configDir,
+				d.projectDir,
 				d.writer,
 				IsDevboxShellEnabled(),
 				false, /*markdown*/
@@ -176,7 +175,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		if err := plugin.Remove(d.configDir, uninstalledPackages); err != nil {
+		if err := plugin.Remove(d.projectDir, uninstalledPackages); err != nil {
 			return err
 		}
 	}
@@ -190,7 +189,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.cfg.Packages
-	shellPlan := planner.GetShellPlan(d.configDir, userDefinedPkgs)
+	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
 	shellPlan.DevPackages = userDefinedPkgs
 
 	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
@@ -220,9 +219,9 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
+	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 
-	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.configDir)
+	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -230,19 +229,19 @@ func (d *Devbox) Shell() error {
 	opts := []nix.ShellOption{
 		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
-		nix.WithConfigDir(d.configDir),
+		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
+		nix.WithConfigDir(d.projectDir),
 	}
 	// TODO: separate package suggestions from shell planners
 	if featureflag.PKGConfig.Enabled() {
-		env, err := plugin.Env(d.cfg.Packages, d.configDir)
+		env, err := plugin.Env(d.cfg.Packages, d.projectDir)
 		if err != nil {
 			return err
 		}
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, plugin.VirtenvBinPath)),
+			nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
 		)
 	}
 
@@ -269,9 +268,9 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 
 	shell, err := nix.DetectShell(
 		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
+		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
-		nix.WithConfigDir(d.configDir),
+		nix.WithConfigDir(d.projectDir),
 	)
 
 	if err != nil {
@@ -294,13 +293,13 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
+	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.configDir)
+	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -308,20 +307,20 @@ func (d *Devbox) RunScript(scriptName string) error {
 	opts := []nix.ShellOption{
 		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.configDir, shellHistoryFile)),
+		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
-		nix.WithConfigDir(d.configDir),
+		nix.WithConfigDir(d.projectDir),
 	}
 
 	if featureflag.PKGConfig.Enabled() {
-		env, err := plugin.Env(d.cfg.Packages, d.configDir)
+		env, err := plugin.Env(d.cfg.Packages, d.projectDir)
 		if err != nil {
 			return err
 		}
 		opts = append(
 			opts,
 			nix.WithEnvVariables(env),
-			nix.WithPKGConfigDir(filepath.Join(d.configDir, plugin.VirtenvBinPath)),
+			nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
 		)
 	}
 
@@ -359,19 +358,19 @@ func (d *Devbox) Exec(cmds ...string) error {
 	env := []string{}
 	virtenvBinPath := ""
 	if featureflag.PKGConfig.Enabled() {
-		envMap, err := plugin.Env(d.cfg.Packages, d.configDir)
+		envMap, err := plugin.Env(d.cfg.Packages, d.projectDir)
 		if err != nil {
 			return err
 		}
 		for k, v := range envMap {
 			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
-		virtenvBinPath = filepath.Join(d.configDir, plugin.VirtenvBinPath) + ":"
+		virtenvBinPath = filepath.Join(d.projectDir, plugin.VirtenvBinPath) + ":"
 	}
 	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinDir)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
-	nixDir := filepath.Join(d.configDir, ".devbox/gen/shell.nix")
+	nixDir := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	return nix.Exec(nixDir, cmds, env)
 }
 
@@ -402,7 +401,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 	}
 	return plugin.PrintReadme(
 		pkg,
-		d.configDir,
+		d.projectDir,
 		d.writer,
 		false, /*showSourceEnv*/
 		markdown,
@@ -413,7 +412,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 // and Github Codespaces
 func (d *Devbox) GenerateDevcontainer(force bool) error {
 	// construct path to devcontainer directory
-	devContainerPath := filepath.Join(d.configDir, ".devcontainer/")
+	devContainerPath := filepath.Join(d.projectDir, ".devcontainer/")
 	devContainerJSONPath := filepath.Join(devContainerPath, "devcontainer.json")
 	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
@@ -447,12 +446,12 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 
 // generates a Dockerfile that replicates the devbox shell
 func (d *Devbox) GenerateDockerfile(force bool) error {
-	dockerfilePath := filepath.Join(d.configDir, "Dockerfile")
+	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := plansdk.FileExists(dockerfilePath)
 	if force || !filesExist {
 		// generate dockerfile
-		err := generate.CreateDockerfile(tmplFS, d.configDir)
+		err := generate.CreateDockerfile(tmplFS, d.projectDir)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -468,11 +467,11 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 
 // generates a .envrc file that makes direnv integration convenient
 func (d *Devbox) GenerateEnvrc(force bool) error {
-	envrcfilePath := filepath.Join(d.configDir, ".envrc")
+	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
 	if force || !filesExist {
-		err := generate.CreateEnvrc(tmplFS, d.configDir)
+		err := generate.CreateEnvrc(tmplFS, d.projectDir)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -488,26 +487,26 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
-	cfgPath := filepath.Join(d.configDir, configFilename)
+	cfgPath := filepath.Join(d.projectDir, configFilename)
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
 func (d *Devbox) Services() (plugin.Services, error) {
-	return plugin.GetServices(d.cfg.Packages, d.configDir)
+	return plugin.GetServices(d.cfg.Packages, d.projectDir)
 }
 
 func (d *Devbox) StartServices(services ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "start"}, services...)...)
 	}
-	return plugin.StartServices(d.cfg.Packages, services, d.configDir, d.writer)
+	return plugin.StartServices(d.cfg.Packages, services, d.projectDir, d.writer)
 }
 
 func (d *Devbox) StopServices(services ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "stop"}, services...)...)
 	}
-	return plugin.StopServices(d.cfg.Packages, services, d.configDir, d.writer)
+	return plugin.StopServices(d.cfg.Packages, services, d.projectDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
@@ -515,11 +514,11 @@ func (d *Devbox) generateShellFiles() error {
 	if err != nil {
 		return err
 	}
-	return generateForShell(d.configDir, plan, d.pluginManager)
+	return generateForShell(d.projectDir, plan, d.pluginManager)
 }
 
 func (d *Devbox) profileDir() (string, error) {
-	absPath := filepath.Join(d.configDir, nix.ProfilePath)
+	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -562,7 +561,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	fmt.Fprintln(d.writer, "done.")
 
 	if featureflag.PKGConfig.Enabled() {
-		if err := plugin.RemoveInvalidSymlinks(d.configDir); err != nil {
+		if err := plugin.RemoveInvalidSymlinks(d.projectDir); err != nil {
 			return err
 		}
 	}
@@ -638,7 +637,7 @@ func (d *Devbox) installNixProfile() (err error) {
 			"nix-env",
 			"--profile", profileDir,
 			"--install",
-			"-f", filepath.Join(d.configDir, ".devbox/gen/development.nix"),
+			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
 		)
 	}
 

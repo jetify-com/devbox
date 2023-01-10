@@ -14,7 +14,7 @@ func (d *Devbox) installNixProfileFlakeCommand(profileDir string) *exec.Cmd {
 		"nix", "profile", "install",
 		"--profile", profileDir,
 		"--extra-experimental-features", "nix-command flakes",
-		filepath.Join(d.configDir, ".devbox/gen/flake/"), // installables
+		filepath.Join(d.projectDir, ".devbox/gen/flake/"), // installables
 	)
 	if d.hasDevboxLockFile() {
 		_ = d.copyDevboxLockToFlakeLock()
@@ -70,9 +70,9 @@ func (d *Devbox) hasDevboxLockFile() bool {
 }
 
 func (d *Devbox) devboxLockPath() string {
-	return filepath.Join(d.configDir, "devbox.lock")
+	return filepath.Join(d.projectDir, "devbox.lock")
 }
 
 func (d *Devbox) flakeLockPath() string {
-	return filepath.Join(d.configDir, ".devbox/gen/flake/flake.lock")
+	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.lock")
 }

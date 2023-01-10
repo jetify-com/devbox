@@ -74,5 +74,5 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(box.ConfigDir(), cmd.ErrOrStderr())
+	return cloud.Shell(box.ProjectDir(), cmd.ErrOrStderr())
 }

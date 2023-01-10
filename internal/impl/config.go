@@ -92,9 +92,12 @@ func WriteConfig(path string, cfg *Config) error {
 	return cuecfg.WriteFile(path, cfg)
 }
 
-// findConfigDir is a utility for using the path
-func findConfigDir(path string) (string, error) {
-	debug.Log("findConfigDir: path is %s\n", path)
+// findProjectDir walks up the directory tree looking for a devbox.json
+// and upon finding it, will return the directory-path.
+//
+// If it doesn't find any devbox.json, then an error is returned.
+func findProjectDir(path string) (string, error) {
+	debug.Log("findProjectDir: path is %s\n", path)
 
 	// Sanitize the directory and use the absolute path as canonical form
 	absPath, err := filepath.Abs(path)
@@ -105,12 +108,12 @@ func findConfigDir(path string) (string, error) {
 	// If the path  is specified, then we check directly for a config.
 	// Otherwise, we search the parent directories.
 	if path != "" {
-		return findConfigDirAtPath(absPath)
+		return findProjectDirAtPath(absPath)
 	}
-	return findConfigDirFromParentDirSearch("/" /*root*/, absPath)
+	return findProjectDirFromParentDirSearch("/" /*root*/, absPath)
 }
 
-func findConfigDirAtPath(absPath string) (string, error) {
+func findProjectDirAtPath(absPath string) (string, error) {
 	fi, err := os.Stat(absPath)
 	if err != nil {
 		return "", err
@@ -131,7 +134,7 @@ func findConfigDirAtPath(absPath string) (string, error) {
 	}
 }
 
-func findConfigDirFromParentDirSearch(root string, absPath string) (string, error) {
+func findProjectDirFromParentDirSearch(root string, absPath string) (string, error) {
 
 	cur := absPath
 	// Search parent directories for a devbox.json
