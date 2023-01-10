@@ -27,7 +27,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func Shell(configDir string, w io.Writer) error {
+func Shell(projectDir string, w io.Writer) error {
 	c := color.New(color.FgMagenta).Add(color.Bold)
 	c.Fprintln(w, "Devbox Cloud")
 	fmt.Fprintln(w, "Remote development environments powered by Nix")
@@ -85,7 +85,7 @@ func Shell(configDir string, w io.Writer) error {
 	debug.Log("vm_hostname: %s", vmHostname)
 
 	s2 := stepper.Start("Starting file syncing...")
-	err = syncFiles(username, vmHostname, configDir)
+	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
 		log.Fatal(err)
@@ -97,7 +97,7 @@ func Shell(configDir string, w io.Writer) error {
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
 
-	return shell(username, vmHostname, configDir)
+	return shell(username, vmHostname, projectDir)
 }
 
 func PortForward(local, remote string) error {
@@ -161,12 +161,12 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
 	return
 }
 
-func syncFiles(username, hostname, configDir string) error {
+func syncFiles(username, hostname, projectDir string) error {
 
-	projectName := projectDirName(configDir)
+	projectName := projectDirName(projectDir)
 	debug.Log("Will sync files to directory: ~/code/%s", projectName)
 
-	err := copyConfigFileToVM(hostname, username, configDir, projectName)
+	err := copyConfigFileToVM(hostname, username, projectDir, projectName)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func syncFiles(username, hostname, configDir string) error {
 		return err
 	}
 
-	ignorePaths, err := gitIgnorePaths(configDir)
+	ignorePaths, err := gitIgnorePaths(projectDir)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func syncFiles(username, hostname, configDir string) error {
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
 		Name:        mutagenSessionName,
-		AlphaPath:   configDir,
+		AlphaPath:   projectDir,
 		BetaAddress: fmt.Sprintf("%s@%s", username, hostname),
 		// It's important that the beta path is a "clean" directory that will contain *only*
 		// the projects files. If we pick a pre-existing directories with other files, those
@@ -274,7 +274,7 @@ func getSyncStatus(mutagenSessionName string) (string, error) {
 	return sessions[0].Status, nil
 }
 
-func copyConfigFileToVM(hostname, username, configDir, projectName string) error {
+func copyConfigFileToVM(hostname, username, projectDir, projectName string) error {
 
 	// Ensure the devbox-project's directory exists in the VM
 	destServer := fmt.Sprintf("%s@%s", username, hostname)
@@ -286,7 +286,7 @@ func copyConfigFileToVM(hostname, username, configDir, projectName string) error
 	}
 
 	// Copy the config file to the devbox-project directory in the VM
-	configFilePath := filepath.Join(configDir, "devbox.json")
+	configFilePath := filepath.Join(projectDir, "devbox.json")
 	destPath := fmt.Sprintf("%s:%s", destServer, projectPathInVM(projectName))
 	cmd = exec.Command("scp", configFilePath, destPath)
 	err = cmd.Run()
@@ -298,11 +298,11 @@ func projectPathInVM(projectName string) string {
 	return fmt.Sprintf("~/code/%s/", projectName)
 }
 
-func shell(username, hostname, configDir string) error {
+func shell(username, hostname, projectDir string) error {
 	client := &openssh.Client{
 		Username:       username,
 		Addr:           hostname,
-		ProjectDirName: projectDirName(configDir),
+		ProjectDirName: projectDirName(projectDir),
 	}
 	return client.Shell()
 }
@@ -311,8 +311,8 @@ const defaultProjectDirName = "devbox_project"
 
 // Ideally, we'd pass in devbox.Devbox struct and call ProjectDir but it
 // makes it hard to wrap this in a test
-func projectDirName(configDir string) string {
-	name := filepath.Base(configDir)
+func projectDirName(projectDir string) string {
+	name := filepath.Base(projectDir)
 	if name == "/" || name == "." {
 		return defaultProjectDirName
 	}
@@ -340,11 +340,11 @@ func parseVMEnvVar() (username string, vmHostname string) {
 
 // Proof of concept: look for a gitignore file in the current directory.
 // To harden this, we must:
-//  1. Look for .gitignore file in each ancestor directory of configDir, and include
-//     any rules that apply to configDir contents.
-//  2. Look for .gitignore file in each child directory of configDir and transform the
-//     rules to be relative to configDir.
-func gitIgnorePaths(configDir string) ([]string, error) {
+//  1. Look for .gitignore file in each ancestor directory of projectDir, and include
+//     any rules that apply to projectDir contents.
+//  2. Look for .gitignore file in each child directory of projectDir and transform the
+//     rules to be relative to projectDir.
+func gitIgnorePaths(projectDir string) ([]string, error) {
 
 	// We must always ignore .devbox folder. It can contain information that
 	// is platform-specific, and so we should not sync it to the cloud-shell.
@@ -352,7 +352,7 @@ func gitIgnorePaths(configDir string) ([]string, error) {
 	// and in the future, versions of specific packages in the flakes.lock file.
 	result := []string{".devbox"}
 
-	fpath := filepath.Join(configDir, ".gitignore")
+	fpath := filepath.Join(projectDir, ".gitignore")
 	if _, err := os.Stat(fpath); err != nil {
 		if os.IsNotExist(err) {
 			return result, nil

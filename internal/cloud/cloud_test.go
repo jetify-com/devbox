@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfigDirName(t *testing.T) {
+func TestProjectDirName(t *testing.T) {
 
 	testCases := []struct {
-		configDir string
-		dirName   string
+		projectDir string
+		dirName    string
 	}{
 		{"/", defaultProjectDirName},
 		{".", defaultProjectDirName},
@@ -21,9 +21,9 @@ func TestConfigDirName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.configDir, func(t *testing.T) {
+		t.Run(testCase.projectDir, func(t *testing.T) {
 			assert := assert.New(t)
-			assert.Equal(testCase.dirName, projectDirName(testCase.configDir))
+			assert.Equal(testCase.dirName, projectDirName(testCase.projectDir))
 		})
 	}
 }
