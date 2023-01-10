@@ -230,7 +230,7 @@ func (d *Devbox) Shell() error {
 		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		nix.WithConfigDir(d.projectDir),
+		nix.WithProjectDir(d.projectDir),
 	}
 	// TODO: separate package suggestions from shell planners
 	if featureflag.PKGConfig.Enabled() {
@@ -270,7 +270,7 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
-		nix.WithConfigDir(d.projectDir),
+		nix.WithProjectDir(d.projectDir),
 	)
 
 	if err != nil {
@@ -309,7 +309,7 @@ func (d *Devbox) RunScript(scriptName string) error {
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
-		nix.WithConfigDir(d.projectDir),
+		nix.WithProjectDir(d.projectDir),
 	}
 
 	if featureflag.PKGConfig.Enabled() {

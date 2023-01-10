@@ -49,7 +49,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			s := &Shell{
-				configDir:       "path/to/configDir",
+				projectDir:      "path/to/projectDir",
 				userShellrcPath: test.shellrcPath,
 				UserInitHook:    test.hook,
 				pluginInitHook:  `echo "Welcome to the devbox!"`,
