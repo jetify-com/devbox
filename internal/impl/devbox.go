@@ -67,7 +67,11 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 		prompt := &survey.Input{
 			Message: "Do you want to enable direnv integration for this devbox project?[y/n]",
 		}
-		survey.AskOne(prompt, &result)
+		err = survey.AskOne(prompt, &result)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+
 		if strings.ToLower(result) == "y" {
 			envrcfilePath := filepath.Join(dir, ".envrc")
 			filesExist := fileutil.Exists(envrcfilePath)
