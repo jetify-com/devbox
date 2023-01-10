@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -276,11 +277,11 @@ func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs [
 	// look at the name to know which env vars or args to set when launching the shell.
 	switch s.name {
 	case shBash:
-		extraArgs = []string{"--rcfile", shellrc}
+		extraArgs = []string{"--rcfile", shellescape.Quote(shellrc)}
 	case shZsh:
-		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, filepath.Dir(shellrc))}
+		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, shellescape.Quote(filepath.Dir(shellrc)))}
 	case shKsh, shPosix:
-		extraEnv = []string{fmt.Sprintf(`ENV=%s`, shellrc)}
+		extraEnv = []string{fmt.Sprintf(`ENV=%s`, shellescape.Quote(shellrc))}
 	}
 	return extraEnv, extraArgs
 }
