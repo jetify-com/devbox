@@ -4,10 +4,12 @@
 package midcobra
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -91,12 +93,18 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 			"packages":   pkgs,
 		})
 	})
-	// verified with manual testing that the sentryID returned by CaptureException
-	// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
-	sentry.CaptureException(runErr)
+
 	var sentryEventID string
-	if runErr != nil {
-		sentryEventID = m.executionID
+
+	var exitErr *exec.ExitError
+	// If the error is from the exec call, do not log such error in sentry.
+	if !errors.As(runErr, &exitErr) {
+		// verified with manual testing that the sentryID returned by CaptureException
+		// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
+		sentry.CaptureException(runErr)
+		if runErr != nil {
+			sentryEventID = m.executionID
+		}
 	}
 
 	trackEvent(segmentClient, &event{
