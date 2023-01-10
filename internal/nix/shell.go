@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
@@ -275,20 +276,7 @@ func (s *Shell) execCommand() string {
 	// Link other files that affect the shell settings and environments.
 	s.linkShellStartupFiles(filepath.Dir(shellrc))
 
-	// Shells have different ways of overriding the shellrc, so we need to
-	// look at the name to know which env vars or args to set.
-	var (
-		extraEnv  []string
-		extraArgs []string
-	)
-	switch s.name {
-	case shBash:
-		extraArgs = []string{"--rcfile", fmt.Sprintf(`"%s"`, shellrc)}
-	case shZsh:
-		extraEnv = []string{fmt.Sprintf(`"ZDOTDIR=%s"`, filepath.Dir(shellrc))}
-	case shKsh, shPosix:
-		extraEnv = []string{fmt.Sprintf(`"ENV=%s"`, shellrc)}
-	}
+	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
 	args = append(args, extraEnv...)
 	args = append(args, s.binPath)
 	if s.ScriptCommand != "" {
@@ -315,6 +303,20 @@ func (s *Shell) RunInShell() error {
 	cmd.Stderr = os.Stderr
 	debug.Log("Executing command from inside devbox shell: %v", cmd.Args)
 	return errors.WithStack(cmd.Run())
+}
+
+func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs []string) {
+	// Shells have different ways of overriding the shellrc, so we need to
+	// look at the name to know which env vars or args to set when launching the shell.
+	switch s.name {
+	case shBash:
+		extraArgs = []string{"--rcfile", shellescape.Quote(shellrc)}
+	case shZsh:
+		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, shellescape.Quote(filepath.Dir(shellrc)))}
+	case shKsh, shPosix:
+		extraEnv = []string{fmt.Sprintf(`ENV=%s`, shellescape.Quote(shellrc))}
+	}
+	return extraEnv, extraArgs
 }
 
 func (s *Shell) execCommandInShell() (string, string, string) {
