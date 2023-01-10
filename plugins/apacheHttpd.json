@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "readme": "If you with to edit the config file, please copy it out of the .devbox directory.",
   "env": {
-    "HTTPD_DEVBOX_CONFIG_DIR": "{{ .DevboxConfigDir }}",
+    "HTTPD_DEVBOX_CONFIG_DIR": "{{ .DevboxProjectDir }}",
     "HTTPD_CONFDIR": "{{ .DevboxDir }}",
     "HTTPD_ERROR_LOG_FILE": "{{ .Virtenv }}/error.log",
     "HTTPD_PORT": "8080"

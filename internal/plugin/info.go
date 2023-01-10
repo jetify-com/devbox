@@ -9,11 +9,11 @@ import (
 )
 
 func PrintReadme(
-	pkg, rootDir string,
+	pkg, projectDir string,
 	w io.Writer,
 	showSourceEnv, markdown bool,
 ) error {
-	cfg, err := getConfigIfAny(pkg, rootDir)
+	cfg, err := getConfigIfAny(pkg, projectDir)
 
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func PrintReadme(
 	}
 
 	if showSourceEnv {
-		err = printSourceEnvMessage(pkg, rootDir, w)
+		err = printSourceEnvMessage(pkg, projectDir, w)
 	}
 	return err
 }
@@ -132,8 +132,8 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 	return errors.WithStack(err)
 }
 
-func printSourceEnvMessage(pkg, rootDir string, w io.Writer) error {
-	env, err := Env([]string{pkg}, rootDir)
+func printSourceEnvMessage(pkg, projectDir string, w io.Writer) error {
+	env, err := Env([]string{pkg}, projectDir)
 	if err != nil {
 		return err
 	}
