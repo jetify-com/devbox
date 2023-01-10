@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -60,12 +61,31 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 		)
 	}
 	// .envrc file creation
-	envrcfilePath := filepath.Join(dir, ".envrc")
-	filesExist := fileutil.Exists(envrcfilePath)
-	if !filesExist { // don't overwrite an existing .envrc
-		err := generate.CreateEnvrc(tmplFS, dir)
-		if err != nil { //move forward with devbox init flow and not interrupt
-			debug.Log("Failed to generate .envrc file. Reason: %s", err)
+	if commandExists("direnv") {
+		// prompt for direnv allow
+		var result string
+		prompt := &survey.Input{
+			Message: "Do you want to enable direnv integration for this devbox project?[y/n]",
+		}
+		err = survey.AskOne(prompt, &result)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+
+		if strings.ToLower(result) == "y" {
+			envrcfilePath := filepath.Join(dir, ".envrc")
+			filesExist := fileutil.Exists(envrcfilePath)
+			if !filesExist { // don't overwrite an existing .envrc
+				err := generate.CreateEnvrc(tmplFS, dir)
+				if err != nil {
+					return false, errors.WithStack(err)
+				}
+			}
+			cmd := exec.Command("direnv", "allow")
+			err = cmd.Run()
+			if err != nil {
+				return false, errors.WithStack(err)
+			}
 		}
 	}
 
@@ -665,4 +685,9 @@ func IsDevboxShellEnabled() bool {
 		return false
 	}
 	return inDevboxShell
+}
+
+func commandExists(command string) bool {
+	_, err := exec.LookPath(command)
+	return err == nil
 }
