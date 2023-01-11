@@ -349,19 +349,16 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds, env)
 }
 
-func (d *Devbox) AddPluginEnv() error {
+func (d *Devbox) PluginEnv() (string, error) {
 	pluginEnvs, err := plugin.Env(d.cfg.Packages, d.projectDir)
 	if err != nil {
-		return err
+		return "", err
 	}
 	script := ""
 	for _, pluginEnv := range pluginEnvs {
 		script += fmt.Sprintf("export %s\n", pluginEnv)
 	}
-	// we have to use stdout here because d.writer is set to output to stderr
-	// which makes direnv unable to read the output
-	fmt.Fprintln(os.Stdout, script)
-	return nil
+	return script, nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
