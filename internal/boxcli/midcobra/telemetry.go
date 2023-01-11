@@ -65,52 +65,28 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
-		BatchSize: 1, /* no batching */
-		// Discard logs:
-		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, 0)),
-		Verbose: false,
-	})
-
-	defer func() {
-		_ = segmentClient.Close()
-	}()
-
 	subcmd, subargs, parseErr := getSubcommand(cmd, args)
 	if parseErr != nil {
 		return // Ignore invalid commands
 	}
 
 	pkgs := getPackages(cmd)
-
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("command", subcmd.CommandPath())
-		scope.SetContext("command", map[string]interface{}{
-			"subcommand": subcmd.CommandPath(),
-			"args":       subargs,
-			"packages":   pkgs,
-		})
-	})
-	// verified with manual testing that the sentryID returned by CaptureException
-	// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
-	sentry.CaptureException(runErr)
-	var sentryEventID string
-	if runErr != nil {
-		sentryEventID = m.executionID
+	evt := &event{
+		AppName:      m.opts.AppName,
+		AppVersion:   m.opts.AppVersion,
+		Command:      subcmd.CommandPath(),
+		CommandArgs:  subargs,
+		CommandError: runErr,
+		DeviceID:     telemetry.DeviceID(),
+		Duration:     time.Since(m.startTime),
+		Failed:       runErr != nil,
+		Packages:     pkgs,
+		Shell:        os.Getenv("SHELL"),
 	}
 
-	trackEvent(segmentClient, &event{
-		AppName:       m.opts.AppName,
-		AppVersion:    m.opts.AppVersion,
-		Command:       subcmd.CommandPath(),
-		CommandArgs:   subargs,
-		DeviceID:      telemetry.DeviceID(),
-		Duration:      time.Since(m.startTime),
-		Failed:        runErr != nil,
-		Packages:      pkgs,
-		SentryEventID: sentryEventID,
-		Shell:         os.Getenv("SHELL"),
-	})
+	m.trackError(evt) // Sentry
+
+	m.trackEvent(evt) // Segment
 }
 
 func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
@@ -147,11 +123,29 @@ func getPackages(c *cobra.Command) []string {
 	return box.Config().Packages
 }
 
+func (m *telemetryMiddleware) trackError(evt *event) {
+	if evt == nil || evt.CommandError == nil {
+		// Don't send anything to sentry if the error is nil.
+		return
+	}
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("command", evt.Command)
+		scope.SetContext("command", map[string]interface{}{
+			"subcommand": evt.Command,
+			"args":       evt.CommandArgs,
+			"packages":   evt.Packages,
+		})
+	})
+	sentry.CaptureException(evt.CommandError)
+}
+
 type event struct {
 	AppName       string
 	AppVersion    string
 	Command       string
 	CommandArgs   []string
+	CommandError  error
 	DeviceID      string
 	Duration      time.Duration
 	Failed        bool
@@ -160,8 +154,29 @@ type event struct {
 	Shell         string
 }
 
-func trackEvent(client segment.Client, evt *event) {
-	_ = client.Enqueue(segment.Track{ // Ignore errors, telemetry is best effort
+func (m *telemetryMiddleware) trackEvent(evt *event) {
+	if evt == nil {
+		return
+	}
+
+	if evt.CommandError != nil {
+		// verified with manual testing that the sentryID returned by CaptureException
+		// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
+		evt.SentryEventID = m.executionID
+	}
+
+	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
+		BatchSize: 1, /* no batching */
+		// Discard logs:
+		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, 0)),
+		Verbose: false,
+	})
+
+	defer func() {
+		_ = segmentClient.Close()
+	}()
+
+	_ = segmentClient.Enqueue(segment.Track{ // Ignore errors, telemetry is best effort
 		AnonymousId: evt.DeviceID, // Use device id instead
 		Event:       fmt.Sprintf("[%s] Command: %s", evt.AppName, evt.Command),
 		Context: &segment.Context{
