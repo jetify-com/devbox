@@ -3,7 +3,11 @@ package plugin
 import (
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 )
@@ -11,7 +15,7 @@ import (
 func PrintReadme(
 	pkg, rootDir string,
 	w io.Writer,
-	showSourceEnv, markdown bool,
+	markdown bool,
 ) error {
 	cfg, err := getConfigIfAny(pkg, rootDir)
 
@@ -45,9 +49,6 @@ func PrintReadme(
 		return err
 	}
 
-	if showSourceEnv {
-		err = printSourceEnvMessage(pkg, rootDir, w)
-	}
 	return err
 }
 
@@ -132,18 +133,26 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 	return errors.WithStack(err)
 }
 
-func printSourceEnvMessage(pkg, rootDir string, w io.Writer) error {
-	env, err := Env([]string{pkg}, rootDir)
-	if err != nil {
-		return err
+func PrintEnvUpdateMessage(pkgs []string, projectDir string, w io.Writer) error {
+	commands := []string{"hash -r"}
+	for _, pkg := range pkgs {
+		if path := getEnvFilePathIfExist(pkg, projectDir); path != "" {
+			wd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			relPath, err := filepath.Rel(wd, path)
+			if err != nil {
+				return err
+			}
+			commands = append(commands, fmt.Sprintf("source %s", relPath))
+		}
 	}
-	if len(env) > 0 {
-		_, err = fmt.Fprintf(
+	color.New(color.FgYellow).
+		Fprintf(
 			w,
-			"To ensure environment is set, run `source %s/%s/env`\n\n",
-			VirtenvPath,
-			pkg,
+			"Run `%s` to ensure your shell is updated.\n\n",
+			strings.Join(commands, " && "),
 		)
-	}
-	return errors.WithStack(err)
+	return nil
 }
