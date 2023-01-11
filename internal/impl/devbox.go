@@ -215,7 +215,6 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	// tes
 	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
