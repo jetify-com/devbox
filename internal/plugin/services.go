@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -53,6 +54,11 @@ func StartServices(pkgs, serviceNames []string, root string, w io.Writer) error 
 	if err != nil {
 		return err
 	}
+	envVars, err := Env(pkgs, root)
+	if err != nil {
+		return err
+	}
+
 	for _, name := range serviceNames {
 		service, found := services[name]
 		if !found {
@@ -61,6 +67,8 @@ func StartServices(pkgs, serviceNames []string, root string, w io.Writer) error 
 		cmd := exec.Command("sh", "-c", service.Start)
 		cmd.Stdout = w
 		cmd.Stderr = w
+		cmd.Env = envVars
+		cmd.Env = append(cmd.Env, os.Environ()...)
 		if err = cmd.Run(); err != nil {
 			if len(serviceNames) == 1 {
 				return usererr.WithUserMessage(err, "Service %q failed to start", name)
@@ -78,6 +86,10 @@ func StopServices(pkgs, serviceNames []string, root string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	envVars, err := Env(pkgs, root)
+	if err != nil {
+		return err
+	}
 	for _, name := range serviceNames {
 		service, found := services[name]
 		if !found {
@@ -86,6 +98,8 @@ func StopServices(pkgs, serviceNames []string, root string, w io.Writer) error {
 		cmd := exec.Command("sh", "-c", service.Stop)
 		cmd.Stdout = w
 		cmd.Stderr = w
+		cmd.Env = envVars
+		cmd.Env = append(cmd.Env, os.Environ()...)
 		if err = cmd.Run(); err != nil {
 			if len(serviceNames) == 1 {
 				return usererr.WithUserMessage(err, "Service %q failed to stop", name)
