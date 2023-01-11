@@ -52,7 +52,7 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 
 	if flags.PrintEnv {
 		// return here to prevent opening a devbox shell
-		return box.PrintShellEnv()
+		return box.AddPluginEnv()
 	}
 
 	if devbox.IsDevboxShellEnabled() {

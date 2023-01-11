@@ -29,7 +29,7 @@ type Devbox interface {
 	GenerateEnvrc(force bool) error
 	Info(pkg string, markdown bool) error
 	ListScripts() []string
-	PrintShellEnv() error
+	AddPluginEnv() error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(pkgs ...string) error
