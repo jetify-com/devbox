@@ -65,11 +65,9 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 
 	var postRunErr error
 	var userExecErr *usererr.UserExecError
-	if err != nil {
-		// If the error is from a user exec call, exclude such error from postrun hooks.
-		if !errors.As(err, &userExecErr) {
-			postRunErr = err
-		}
+	// If the error is from a user exec call, exclude such error from postrun hooks.
+	if err != nil && !errors.As(err, &userExecErr) {
+		postRunErr = err
 	}
 
 	// Run the 'post' hooks. Note that unlike the default PostRun cobra functionality these
@@ -84,6 +82,7 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 		// If the error is from the exec call, return the exit code of the exec call.
 		// Note: order matters! Check if it is a user exec error before a generic exit error.
 		var exitErr *exec.ExitError
+		var userExecErr *usererr.UserExecError
 		if errors.As(err, &userExecErr) {
 			return userExecErr.ExitCode()
 		}

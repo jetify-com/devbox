@@ -91,7 +91,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 			"packages":   pkgs,
 		})
 	})
-
 	// verified with manual testing that the sentryID returned by CaptureException
 	// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
 	sentry.CaptureException(runErr)
