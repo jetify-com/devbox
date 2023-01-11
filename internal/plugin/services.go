@@ -17,10 +17,10 @@ type service struct {
 	Stop  string `json:"stop"`
 }
 
-func GetServices(pkgs []string, rootDir string) (Services, error) {
+func GetServices(pkgs []string, projectDir string) (Services, error) {
 	services := map[string]service{}
 	for _, pkg := range pkgs {
-		c, err := getConfigIfAny(pkg, rootDir)
+		c, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err
 		}

@@ -13,11 +13,11 @@ import (
 )
 
 func PrintReadme(
-	pkg, rootDir string,
+	pkg, projectDir string,
 	w io.Writer,
 	markdown bool,
 ) error {
-	cfg, err := getConfigIfAny(pkg, rootDir)
+	cfg, err := getConfigIfAny(pkg, projectDir)
 
 	if err != nil {
 		return err

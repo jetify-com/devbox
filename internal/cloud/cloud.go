@@ -27,25 +27,20 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func Shell(projectDir string, w io.Writer) error {
+func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	c := color.New(color.FgMagenta).Add(color.Bold)
 	c.Fprintln(w, "Devbox Cloud")
 	fmt.Fprintln(w, "Remote development environments powered by Nix")
 	fmt.Fprint(w, "\n")
 
 	username, vmHostname := parseVMEnvVar()
+	// The flag for githubUsername overrides any env-var, since flags are a more
+	// explicit action compared to an env-var which could be latently present.
+	if githubUsername != "" {
+		username = githubUsername
+	}
 	if username == "" {
-		stepGithubUsername := stepper.Start("Detecting your Github username...")
-		var err error
-		username, err = queryGithubUsername()
-		if err == nil && username != "" {
-			stepGithubUsername.Success("Username: %s", username)
-		} else {
-			stepGithubUsername.Fail("Unable to resolve username")
-			// The query for Github username is best effort, and if it fails to resolve
-			// we fallback to prompting the user, and suggesting the local computer username.
-			username = promptUsername()
-		}
+		username = getGithubUsername()
 	}
 	debug.Log("username: %s", username)
 
@@ -80,6 +75,14 @@ func Shell(projectDir string, w io.Writer) error {
 			var region string
 			vmHostname, region = getVirtualMachine(sshClient)
 			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
+
+			// We save the username to local file only after we get a successful response
+			// from the gateway, because the gateway will verify that the user's SSH keys
+			// match their claimed username from github.
+			err = openssh.SaveGithubUsernameToLocalFile(username)
+			if err != nil {
+				debug.Log("Failed to save username: %v", err)
+			}
 		}
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
@@ -109,17 +112,39 @@ func PortForward(local, remote string) error {
 	return exec.Command("ssh", "-N", vmHostname, "-L", portMap).Run()
 }
 
+func getGithubUsername() string {
+
+	username, err := openssh.GithubUsernameFromLocalFile()
+	if err != nil || username == "" {
+		if err != nil {
+			debug.Log("failed to get auth.Username. Error: %v", err)
+		}
+
+		username, err = queryGithubUsername()
+		if err == nil && username != "" {
+			debug.Log("Username from ssh -T git@github.com: %s", username)
+		} else {
+			// The query for Github username is best effort, and if it fails to resolve
+			// we fallback to prompting the user, and suggesting the local computer username.
+			username = promptUsername()
+		}
+	} else {
+		debug.Log("Username from locally-cached file: %s", username)
+	}
+	return username
+}
+
 func promptUsername() string {
 	username := ""
 	prompt := &survey.Input{
 		Message: "What is your github username?",
 		Default: os.Getenv("USER"),
 	}
-	debug.Log("Failed to get username from Github. Falling back to suggesting $USER: %s", prompt.Default)
 	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
 		log.Fatal(err)
 	}
+	debug.Log("Username from prompting user: %s", username)
 	return username
 }
 
@@ -163,10 +188,14 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
 
 func syncFiles(username, hostname, projectDir string) error {
 
-	projectName := projectDirName(projectDir)
-	debug.Log("Will sync files to directory: ~/code/%s", projectName)
+	relProjectPathInVM, err := relativeProjectPathInVM(projectDir)
+	if err != nil {
+		return err
+	}
+	absPathInVM := absoluteProjectPathInVM(username, relProjectPathInVM)
+	debug.Log("absPathInVM: %s", absPathInVM)
 
-	err := copyConfigFileToVM(hostname, username, projectDir, projectName)
+	err = copyConfigFileToVM(hostname, username, projectDir, absPathInVM)
 	if err != nil {
 		return err
 	}
@@ -184,7 +213,9 @@ func syncFiles(username, hostname, projectDir string) error {
 	// TODO: instead of id, have the server return the machine's name and use that
 	// here to. It'll make things easier to debug.
 	machineID, _, _ := strings.Cut(hostname, ".")
-	mutagenSessionName := mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", projectName, machineID))
+	mutagenSessionName := mutagen.SanitizeSessionName(fmt.Sprintf("devbox-%s-%s", machineID,
+		hyphenatePath(relProjectPathInVM)))
+
 	_, err = mutagen.Sync(&mutagen.SessionSpec{
 		// If multiple projects can sync to the same machine, we need the name to also include
 		// the project's id.
@@ -195,7 +226,7 @@ func syncFiles(username, hostname, projectDir string) error {
 		// the projects files. If we pick a pre-existing directories with other files, those
 		// files will be synced back to the local directory (due to two-way-sync) and pollute
 		// the user's local project
-		BetaPath: projectPathInVM(projectName),
+		BetaPath: absPathInVM,
 		EnvVars:  env,
 		Ignore: mutagen.SessionIgnore{
 			VCS:   true,
@@ -210,7 +241,7 @@ func syncFiles(username, hostname, projectDir string) error {
 	time.Sleep(1 * time.Second)
 
 	// In a background routine, update the sync status in the cloud VM
-	go updateSyncStatus(mutagenSessionName, username, hostname, projectName)
+	go updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM)
 	return nil
 }
 
@@ -218,12 +249,13 @@ func syncFiles(username, hostname, projectDir string) error {
 //
 // wait for the mutagen session's status to change to "watching", and update the remote VM
 // when the initial project sync completes and then exit.
-func updateSyncStatus(mutagenSessionName, username, hostname, projectName string) {
+func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM string) {
+
 	status := "disconnected"
 
 	// Ensure the destination directory exists
 	destServer := fmt.Sprintf("%s@%s", username, hostname)
-	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, projectName)
+	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, hyphenatePath(filepath.Base(relProjectPathInVM)))
 	remoteCmd := fmt.Sprintf("mkdir -p %s", destDir)
 	cmd := exec.Command("ssh", destServer, remoteCmd)
 	err := cmd.Run()
@@ -274,11 +306,11 @@ func getSyncStatus(mutagenSessionName string) (string, error) {
 	return sessions[0].Status, nil
 }
 
-func copyConfigFileToVM(hostname, username, projectDir, projectName string) error {
+func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 
 	// Ensure the devbox-project's directory exists in the VM
 	destServer := fmt.Sprintf("%s@%s", username, hostname)
-	cmd := exec.Command("ssh", destServer, "--", "mkdir", "-p", projectPathInVM(projectName))
+	cmd := exec.Command("ssh", destServer, "--", "mkdir", "-p", pathInVM)
 	err := cmd.Run()
 	debug.Log("ssh mkdir command: %s with error: %s", cmd, err)
 	if err != nil {
@@ -287,36 +319,68 @@ func copyConfigFileToVM(hostname, username, projectDir, projectName string) erro
 
 	// Copy the config file to the devbox-project directory in the VM
 	configFilePath := filepath.Join(projectDir, "devbox.json")
-	destPath := fmt.Sprintf("%s:%s", destServer, projectPathInVM(projectName))
+	destPath := fmt.Sprintf("%s:%s", destServer, pathInVM)
 	cmd = exec.Command("scp", configFilePath, destPath)
 	err = cmd.Run()
 	debug.Log("scp devbox.json command: %s with error: %s", cmd, err)
 	return errors.WithStack(err)
 }
 
-func projectPathInVM(projectName string) string {
-	return fmt.Sprintf("~/code/%s/", projectName)
-}
-
 func shell(username, hostname, projectDir string) error {
+	projectPath, err := relativeProjectPathInVM(projectDir)
+	if err != nil {
+		return err
+	}
+
 	client := &openssh.Client{
-		Username:       username,
-		Addr:           hostname,
-		ProjectDirName: projectDirName(projectDir),
+		Username: username,
+		Addr:     hostname,
+		PathInVM: absoluteProjectPathInVM(username, projectPath),
 	}
 	return client.Shell()
 }
 
-const defaultProjectDirName = "devbox_project"
-
+// relativeProjectPathInVM refers to the project path relative to the user's
+// home-directory within the VM.
+//
 // Ideally, we'd pass in devbox.Devbox struct and call ProjectDir but it
 // makes it hard to wrap this in a test
-func projectDirName(projectDir string) string {
-	name := filepath.Base(projectDir)
-	if name == "/" || name == "." {
-		return defaultProjectDirName
+func relativeProjectPathInVM(projectDir string) (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.WithStack(err)
 	}
-	return name
+
+	// get absProjectDir to expand "." and so on
+	absProjectDir, err := filepath.Abs(projectDir)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	projectDir = filepath.Clean(absProjectDir)
+
+	if !strings.HasPrefix(projectDir, home) {
+		projectDir, err = filepath.Abs(projectDir)
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		return filepath.Join(outsideHomedirDirectory, projectDir), nil
+	}
+
+	relativeProjectDir, err := filepath.Rel(home, projectDir)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return relativeProjectDir, nil
+}
+
+const outsideHomedirDirectory = "outside-homedir-code"
+
+func absoluteProjectPathInVM(sshUser, relativeProjectPath string) string {
+	vmHomeDir := fmt.Sprintf("/home/%s", sshUser)
+	if strings.HasPrefix(relativeProjectPath, outsideHomedirDirectory) {
+		return fmt.Sprintf("%s/%s", vmHomeDir, relativeProjectPath)
+	}
+	return fmt.Sprintf("%s/%s/", vmHomeDir, relativeProjectPath)
 }
 
 func parseVMEnvVar() (username string, vmHostname string) {
@@ -384,4 +448,8 @@ func vmHostnameFromSSHControlPath() string {
 	}
 	// empty string means that aren't any active VM connections
 	return ""
+}
+
+func hyphenatePath(path string) string {
+	return strings.ReplaceAll(path, "/", "-")
 }

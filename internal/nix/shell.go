@@ -17,6 +17,7 @@ import (
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -210,7 +211,13 @@ func (s *Shell) Run(nixShellFilePath string) error {
 
 		debug.Log("Executing nix develop command: %v", cmd.Args)
 		debug.Log("Executing nix develop command with env: %v", cmd.Environ())
-		return errors.WithStack(cmd.Run())
+
+		err := cmd.Run()
+		if err != nil && s.ScriptCommand != "" {
+			// Report error as exec error when executing shell -- <cmd> script.
+			err = usererr.NewExecError(err)
+		}
+		return errors.WithStack(err)
 	}
 
 	// Launch a fallback shell if we couldn't find the path to the user's
@@ -237,7 +244,12 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	cmd.Stderr = os.Stderr
 
 	debug.Log("Executing nix-shell command: %v", cmd.Args)
-	return errors.WithStack(cmd.Run())
+	err := cmd.Run()
+	if err != nil && s.ScriptCommand != "" {
+		// Report error as exec error when executing shell -- <cmd> script.
+		err = usererr.NewExecError(err)
+	}
+	return errors.WithStack(err)
 }
 
 // execCommand is a command that replaces the current shell with s. This is what
@@ -302,7 +314,8 @@ func (s *Shell) RunInShell() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	debug.Log("Executing command from inside devbox shell: %v", cmd.Args)
-	return errors.WithStack(cmd.Run())
+
+	return errors.WithStack(usererr.NewExecError(cmd.Run()))
 }
 
 func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs []string) {

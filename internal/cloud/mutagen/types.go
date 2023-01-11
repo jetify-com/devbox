@@ -2,7 +2,8 @@ package mutagen
 
 import (
 	"errors"
-	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 type SessionIgnore struct {
@@ -33,10 +34,29 @@ func (s *SessionSpec) Validate() error {
 	return nil
 }
 
+// SanitizeSessionName ensures the input string contains letter, number or dash
+// runes. This matches the implementation in mutagen's codebase:
+// https://github.com/mutagen-io/mutagen/blob/master/pkg/selection/names.go
+//
 // TODO savil. Refactor SessionSpec so that this is always applied.
 // We can make it a struct that uses a constructor, and make Sync a method on the struct.
 func SanitizeSessionName(input string) string {
-	return strings.ReplaceAll(input, ".", "-")
+	result := make([]byte, 0, len(input))
+
+	// note that for-range over a string extracts characters of type rune
+	for index, char := range input {
+		// the first character must be a letter
+		if index == 0 && !unicode.IsLetter(char) {
+			result = utf8.AppendRune(result, 'a')
+		}
+
+		if unicode.IsLetter(char) || unicode.IsNumber(char) || char == '-' {
+			result = utf8.AppendRune(result, char)
+		} else {
+			result = utf8.AppendRune(result, '-')
+		}
+	}
+	return string(result)
 }
 
 // Based on the structs available at: https://github.com/mutagen-io/mutagen/blob/master/pkg/api/models/synchronization/session.go

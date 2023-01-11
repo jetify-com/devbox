@@ -15,6 +15,8 @@ import (
 
 type cloudShellCmdFlags struct {
 	config configFlags
+
+	githubUsername string
 }
 
 func CloudCmd() *cobra.Command {
@@ -43,6 +45,9 @@ func cloudShellCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().StringVarP(
+		&flags.githubUsername, "username", "u", "", "Github username to use for ssh",
+	)
 	return command
 }
 
@@ -74,5 +79,5 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(box.ProjectDir(), cmd.ErrOrStderr())
+	return cloud.Shell(cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
 }
