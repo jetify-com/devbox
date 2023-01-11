@@ -16,6 +16,13 @@ content readable.
 
 */ -}}
 
+{{ range $name, $value := .NixEnv }}
+export {{ $name }}={{ $value }}
+{{ end }}
+
+# The shell shellHook defined in shell.nix.
+eval $shellHook
+
 {{- if .OriginalInit -}}
 
 # Begin {{ .OriginalInitPath }}
