@@ -101,11 +101,11 @@ type variable struct {
 	Value any    // can be a string or an array of strings (iff type is array).
 }
 
-// printDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
+// PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func printDevEnv(nixShellFilePath string) (*varsAndFuncs, error) {
+func PrintDevEnv(nixFilePath string) (*varsAndFuncs, error) {
 	cmd := exec.Command("nix", "print-dev-env",
-		"-f", nixShellFilePath,
+		"-f", nixFilePath,
 		"--extra-experimental-features", "nix-command",
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes",
