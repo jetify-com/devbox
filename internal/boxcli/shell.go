@@ -51,8 +51,14 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	}
 
 	if flags.PrintEnv {
+		script, err := box.PluginEnv()
+		if err != nil {
+			return err
+		}
+		// print to stdout instead of stderr so that direnv can read the output
+		cmd.Print(script)
 		// return here to prevent opening a devbox shell
-		return box.PrintShellEnv()
+		return nil
 	}
 
 	if devbox.IsDevboxShellEnabled() {

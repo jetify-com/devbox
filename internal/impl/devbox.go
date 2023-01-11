@@ -348,15 +348,16 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds, env)
 }
 
-func (d *Devbox) PrintShellEnv() error {
-	profileBinDir, err := d.profileBinDir()
+func (d *Devbox) PluginEnv() (string, error) {
+	pluginEnvs, err := plugin.Env(d.cfg.Packages, d.projectDir)
 	if err != nil {
-		return errors.WithStack(err)
+		return "", err
 	}
-	// TODO: For now we just updated the PATH but this may need to evolve
-	// to essentially a parsed shellrc.tmpl
-	fmt.Fprintf(d.writer, "export PATH=\"%s:$PATH\"", profileBinDir)
-	return nil
+	script := ""
+	for _, pluginEnv := range pluginEnvs {
+		script += fmt.Sprintf("export %s\n", pluginEnv)
+	}
+	return script, nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
