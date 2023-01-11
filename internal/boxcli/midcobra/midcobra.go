@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
 type Executable interface {
@@ -62,17 +63,29 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	// Execute the cobra command:
 	err := ex.cmd.ExecuteContext(ctx)
 
+	var postRunErr error
+	var userExecErr *usererr.UserExecError
+	// If the error is from a user exec call, exclude such error from postrun hooks.
+	if err != nil && !errors.As(err, &userExecErr) {
+		postRunErr = err
+	}
+
 	// Run the 'post' hooks. Note that unlike the default PostRun cobra functionality these
 	// run even if the command resulted in an error. This is useful when we still want to clean up
 	// before the program exists or we want to log something. The error, if any, gets passed
 	// to the post hook.
 	for _, m := range ex.middlewares {
-		m.postRun(ex.cmd, args, err)
+		m.postRun(ex.cmd, args, postRunErr)
 	}
 
 	if err != nil {
 		// If the error is from the exec call, return the exit code of the exec call.
+		// Note: order matters! Check if it is a user exec error before a generic exit error.
 		var exitErr *exec.ExitError
+		var userExecErr *usererr.UserExecError
+		if errors.As(err, &userExecErr) {
+			return userExecErr.ExitCode()
+		}
 		if errors.As(err, &exitErr) {
 			return exitErr.ExitCode()
 		}
