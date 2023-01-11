@@ -290,7 +290,7 @@ func (s *Shell) computeNixShellEnv(nixShellFilePath string) (map[string]string, 
 	ignoreList := []string{"HOME"} // do not overwrite the user's HOME.
 
 	vars := map[string]string{}
-	for name, v := range vaf.Variables {
+	for name, vrb := range vaf.Variables {
 		if slices.Contains(ignoreList, name) {
 			continue
 		}
@@ -300,8 +300,8 @@ func (s *Shell) computeNixShellEnv(nixShellFilePath string) (map[string]string, 
 		// var: export VAR=VAL
 		// exported: export VAR=VAL
 		// array: declare -a VAR=('VAL1' 'VAL2' )
-		if v.Type == "exported" {
-			vars[name] = shellescape.Quote(v.Value.(string))
+		if vrb.Type == "exported" {
+			vars[name] = shellescape.Quote(vrb.Value.(string))
 		}
 	}
 
