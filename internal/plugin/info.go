@@ -139,11 +139,11 @@ func PrintEnvUpdateMessage(pkgs []string, projectDir string, w io.Writer) error 
 		if path := getEnvFilePathIfExist(pkg, projectDir); path != "" {
 			wd, err := os.Getwd()
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			relPath, err := filepath.Rel(wd, path)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			commands = append(commands, fmt.Sprintf("source %s", relPath))
 		}

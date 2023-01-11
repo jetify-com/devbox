@@ -625,11 +625,13 @@ func (d *Devbox) printPackageUpdateMessage(
 		// (Only when in devbox shell) Prompt the user to run hash -r
 		// to ensure we refresh the shell hash and load the proper environment.
 		if IsDevboxShellEnabled() {
-			plugin.PrintEnvUpdateMessage(
+			if err := plugin.PrintEnvUpdateMessage(
 				lo.Ternary(mode == install, pkgs, []string{}),
 				d.projectDir,
 				d.writer,
-			)
+			); err != nil {
+				return err
+			}
 		}
 	} else {
 		fmt.Fprintf(d.writer, "No packages %s.\n", verb)
