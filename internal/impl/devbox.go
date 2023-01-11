@@ -164,7 +164,6 @@ func (d *Devbox) Add(pkgs ...string) error {
 				pkg,
 				d.projectDir,
 				d.writer,
-				IsDevboxShellEnabled(),
 				false, /*markdown*/
 			); err != nil {
 				return err
@@ -423,7 +422,6 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		pkg,
 		d.projectDir,
 		d.writer,
-		false, /*showSourceEnv*/
 		markdown,
 	)
 }
@@ -605,7 +603,7 @@ func (d *Devbox) printPackageUpdateMessage(
 
 	if len(pkgs) > 0 {
 
-		successMsg := fmt.Sprintf("%s (%s) is now %s.", pkgs[0], infos[0], verb)
+		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
 		if len(pkgs) > 1 {
 			pkgsWithVersion := []string{}
 			for idx, pkg := range pkgs {
@@ -622,13 +620,18 @@ func (d *Devbox) printPackageUpdateMessage(
 		}
 		fmt.Fprint(d.writer, successMsg)
 
-		// (Only when in devbox shell) Prompt the user to run `hash -r` to ensure
-		// their shell can access the most recently installed binaries, or ensure
-		// their recently uninstalled binaries are not accidentally still available.
-		if !IsDevboxShellEnabled() {
-			fmt.Fprintln(d.writer)
-		} else {
-			fmt.Fprintln(d.writer, " Run `hash -r` to ensure your shell is updated.")
+		fmt.Fprintln(d.writer)
+
+		// (Only when in devbox shell) Prompt the user to run hash -r
+		// to ensure we refresh the shell hash and load the proper environment.
+		if IsDevboxShellEnabled() {
+			if err := plugin.PrintEnvUpdateMessage(
+				lo.Ternary(mode == install, pkgs, []string{}),
+				d.projectDir,
+				d.writer,
+			); err != nil {
+				return err
+			}
 		}
 	} else {
 		fmt.Fprintf(d.writer, "No packages %s.\n", verb)
