@@ -272,7 +272,11 @@ func (s *Shell) execCommand() string {
 	// override the shellrc file, so just launch the shell without any
 	// additional args.
 	if s.userShellrcPath == "" {
-		return strings.Join(append(args, s.binPath), " ")
+		args = append(args, s.binPath)
+		if s.ScriptCommand != "" {
+			args = append(args, "-ic", shellescape.Quote(s.ScriptCommand))
+		}
+		return strings.Join(args, " ")
 	}
 
 	// Create a devbox shellrc file that runs the user's shellrc + the shell
