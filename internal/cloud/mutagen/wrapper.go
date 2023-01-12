@@ -221,3 +221,25 @@ func ensureMutagen() string {
 	}
 	return installPath
 }
+
+func labelFlag(labels map[string]string) []string {
+	if len(labels) == 0 {
+		return []string{}
+	}
+	labelSlice := []string{}
+	for k, v := range labels {
+		labelSlice = append(labelSlice, fmt.Sprintf("%s=%s", k, v))
+	}
+	return []string{"--label", strings.Join(labelSlice, ",")}
+}
+
+func labelSelectorFlag(labels map[string]string) []string {
+	if len(labels) == 0 {
+		return []string{}
+	}
+	labelSlice := []string{}
+	for k, v := range labels {
+		labelSlice = append(labelSlice, fmt.Sprintf("%s=%s", k, v))
+	}
+	return []string{"--label-selector", strings.Join(labelSlice, ",")}
+}

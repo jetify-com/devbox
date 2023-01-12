@@ -108,15 +108,15 @@ func PortForward(local, remote string) (string, error) {
 	if vmHostname == "" {
 		return "", usererr.New("No VM found. Please run `devbox cloud shell` first.")
 	}
-	return mutagen.ForwardCreate(vmHostname, local, remote)
+	return mutagenbox.ForwardCreate(vmHostname, local, remote)
 }
 
 func PortForwardTerminateAll() error {
-	return mutagen.ForwardTerminateAll()
+	return mutagenbox.ForwardTerminateAll()
 }
 
 func PortForwardList() ([]string, error) {
-	return mutagen.ForwardList()
+	return mutagenbox.ForwardList()
 }
 
 func getGithubUsername() string {
