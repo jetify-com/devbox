@@ -70,6 +70,10 @@ const sidebars = {
             label: 'devbox generate devcontainer'
         }, {
             type: 'doc',
+            id: 'cli_reference/devbox_generate_direnv',
+            label: 'devbox generate direnv  '
+        }, {
+            type: 'doc',
             id: 'cli_reference/devbox_generate_dockerfile',
             label: 'devbox generate dockerfile'
         }, {
@@ -80,10 +84,6 @@ const sidebars = {
             type: 'doc',
             id: 'cli_reference/devbox_init',
             label: 'devbox init'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_plan',
-            label: 'devbox plan'
         }, {
             type: 'doc',
             id: 'cli_reference/devbox_rm',
@@ -206,6 +206,7 @@ const sidebars = {
             collapsed: true,
             items: [
                 { type: 'doc', id: 'devbox_examples/servers/apache' },
+                { type: 'doc', id: 'devbox_examples/servers/caddy' },
                 { type: 'doc', id: 'devbox_examples/servers/nginx' }
             ]
         }]

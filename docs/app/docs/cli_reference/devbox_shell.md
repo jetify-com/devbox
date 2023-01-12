@@ -17,6 +17,7 @@ devbox shell [<dir>] -- [<cmd>] [flags]
 ```text
   --print-env  Print a script to setup a devbox shell environment
   -h, --help   help for shell
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

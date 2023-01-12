@@ -1,7 +1,7 @@
 ---
 title: PostgreSQL
 ---
-PostgreSQL can be automatically configured by Devbox via the built-in Postgres PLugin. This plugin will activate automatically when you install Postgres using `devbox add postgresql`
+PostgreSQL can be automatically configured by Devbox via the built-in Postgres Plugin. This plugin will activate automatically when you install Postgres using `devbox add postgresql`
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/postgres)
 
@@ -27,6 +27,7 @@ You can use `devbox services start|stop postgresql` to start or stop the Postgre
 
 ### Environment Variables
 
+`PGHOST=./.devbox/virtenv/postgresql`
 `PGDATA=./.devbox/virtenv/postgresql/data`
 
 This variable tells PostgreSQL which directory to use for creating and storing databases. 

@@ -10,6 +10,7 @@ devbox services restart [service]... [flags]
 
 ```bash
   -h, --help   help for restart
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

@@ -10,6 +10,7 @@ devbox add <pkg>... [flags]
 
 ```text
   -h, --help   help for add
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

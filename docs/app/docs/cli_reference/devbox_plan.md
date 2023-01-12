@@ -10,6 +10,7 @@ devbox plan [<dir>] [flags]
 
 ```text
   -h, --help   help for plan
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

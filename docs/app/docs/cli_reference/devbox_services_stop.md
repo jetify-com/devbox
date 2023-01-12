@@ -10,6 +10,7 @@ devbox services stop [service]... [flags]
 
 ```bash
   -h, --help   help for stop
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO
