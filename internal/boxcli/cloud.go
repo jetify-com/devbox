@@ -53,25 +53,72 @@ func cloudShellCmd() *cobra.Command {
 
 func cloudPortForwardCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:    "port-forward <local-port>:<remote-port>",
-		Short:  "Port forwards a local port to a remote devbox cloud port",
+		Use:   "port-forward <local-port>:<remote-port> | <port> | :<remote-port> | terminate",
+		Short: "Port forwards a local port to a remote devbox cloud port",
+		Long: "Port forwards a local port to a remote devbox cloud port. If a " +
+			"single port is specified, it is used for local and remote. If no local" +
+			" port is specified, we find a suitable local port. Use 'terminate' to " +
+			"terminate all port forwards.",
 		Hidden: true,
 		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ports := strings.Split(args[0], ":")
+			ports := []string{}
+			if strings.ContainsRune(args[0], ':') {
+				ports = strings.Split(args[0], ":")
+			} else {
+				ports = append(ports, args[0], args[0])
+			}
+
 			if len(ports) != 2 {
 				return usererr.New("Invalid port format. Expected <local-port>:<remote-port>")
 			}
-			err := cloud.PortForward(ports[0], ports[1])
+			localPort, err := cloud.PortForward(ports[0], ports[1])
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			cmd.PrintErrf("Port forwarding %s:%s\n", ports[0], ports[1])
+			cmd.PrintErrf(
+				"Port forwarding %s:%s\nTo view in browser, visit http://localhost:%[1]s\n",
+				localPort,
+				ports[1],
+			)
 			return nil
 		},
 	}
-
+	command.AddCommand(cloudPortForwardList())
+	command.AddCommand(cloudPortForwardTerminateAllCmd())
 	return command
+}
+
+func cloudPortForwardTerminateAllCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:    "terminate",
+		Short:  "Terminates all port forwards managed by devbox",
+		Hidden: true,
+		Args:   cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cloud.PortForwardTerminateAll()
+		},
+	}
+}
+
+func cloudPortForwardList() *cobra.Command {
+	return &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "Lists all port forwards managed by devbox",
+		Hidden:  true,
+		Args:    cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			l, err := cloud.PortForwardList()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			for _, p := range l {
+				cmd.Println(p)
+			}
+			return nil
+		},
+	}
 }
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
