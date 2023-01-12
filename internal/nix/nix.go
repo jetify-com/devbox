@@ -91,3 +91,34 @@ func parseInfo(pkg string, data []byte) *Info {
 func DefaultEnv() []string {
 	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
 }
+
+type varsAndFuncs struct {
+	Functions map[string]string   // the key is the name, the value is the body.
+	Variables map[string]variable // the key is the name.
+}
+type variable struct {
+	Type  string // valid types are var, exported, and array.
+	Value any    // can be a string or an array of strings (iff type is array).
+}
+
+// PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
+// all the environment variables and bash functions required to create a nix shell.
+func PrintDevEnv(nixFilePath string) (*varsAndFuncs, error) {
+	cmd := exec.Command("nix", "print-dev-env",
+		"-f", nixFilePath,
+		"--extra-experimental-features", "nix-command",
+		"--extra-experimental-features", "ca-derivations",
+		"--option", "experimental-features", "nix-command flakes",
+		"--json")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var vaf varsAndFuncs
+	err = json.Unmarshal(out, &vaf)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &vaf, nil
+}
