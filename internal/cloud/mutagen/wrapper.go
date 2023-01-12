@@ -1,12 +1,14 @@
 package mutagen
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -55,7 +57,7 @@ func Create(spec *SessionSpec) error {
 		}
 	}
 
-	return execMutagen(args, spec.EnvVars)
+	return execMutagenEnv(args, spec.EnvVars)
 }
 
 func List(envVars map[string]string, names ...string) ([]Session, error) {
@@ -92,25 +94,25 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 func Pause(names ...string) error {
 	args := []string{"sync", "pause"}
 	args = append(args, names...)
-	return execMutagen(args, nil /*envVars*/)
+	return execMutagen(args)
 }
 
 func Resume(envVars map[string]string, names ...string) error {
 	args := []string{"sync", "resume"}
 	args = append(args, names...)
-	return execMutagen(args, envVars)
+	return execMutagenEnv(args, envVars)
 }
 
 func Flush(names ...string) error {
 	args := []string{"sync", "flush"}
 	args = append(args, names...)
-	return execMutagen(args, nil /*envVars*/)
+	return execMutagen(args)
 }
 
 func Reset(envVars map[string]string, names ...string) error {
 	args := []string{"sync", "reset"}
 	args = append(args, names...)
-	return execMutagen(args, envVars)
+	return execMutagenEnv(args, envVars)
 }
 
 func Terminate(env map[string]string, labels map[string]string, names ...string) error {
@@ -121,27 +123,45 @@ func Terminate(env map[string]string, labels map[string]string, names ...string)
 	}
 
 	args = append(args, names...)
-	return execMutagen(args, env)
+	return execMutagenEnv(args, env)
 }
 
-func execMutagen(args []string, envVars map[string]string) error {
+func execMutagen(args []string) error {
+	return execMutagenEnv(args, nil)
+}
+
+func execMutagenEnv(args []string, envVars map[string]string) error {
+	_, err := execMutagenOut(args, envVars)
+	return err
+}
+
+func execMutagenOut(args []string, envVars map[string]string) ([]byte, error) {
 	binPath := ensureMutagen()
 	cmd := exec.Command(binPath, args...)
 	cmd.Env = envAsKeyValueStrings(envVars)
 
-	debugPrintExecCmd(cmd)
-	out, err := cmd.CombinedOutput()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
-	if err != nil {
-		debug.Log("execMutagen error: %s, out: %s", err, string(out))
+	debugPrintExecCmd(cmd)
+
+	if err := cmd.Run(); err != nil {
+		debug.Log(
+			"execMutagen error: %s, stdout: %s, stderr: %s",
+			err,
+			stdout.String(),
+			stderr.String(),
+		)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
-			return errors.New(strings.TrimSpace(string(out)))
+			return nil, errors.New(strings.TrimSpace(stderr.String()))
 		}
-		return err
+		return nil, err
 	}
 
 	debug.Log("execMutagen worked for cmd: %s", cmd)
-	return nil
+	return stdout.Bytes(), nil
 }
 
 // debugPrintExecCmd prints the command to be run, along with MUTAGEN env-vars
@@ -200,4 +220,26 @@ func ensureMutagen() string {
 		panic(err)
 	}
 	return installPath
+}
+
+func labelFlag(labels map[string]string) []string {
+	if len(labels) == 0 {
+		return []string{}
+	}
+	labelSlice := []string{}
+	for k, v := range labels {
+		labelSlice = append(labelSlice, fmt.Sprintf("%s=%s", k, v))
+	}
+	return []string{"--label", strings.Join(labelSlice, ",")}
+}
+
+func labelSelectorFlag(labels map[string]string) []string {
+	if len(labels) == 0 {
+		return []string{}
+	}
+	labelSlice := []string{}
+	for k, v := range labels {
+		labelSlice = append(labelSlice, fmt.Sprintf("%s=%s", k, v))
+	}
+	return []string{"--label-selector", strings.Join(labelSlice, ",")}
 }

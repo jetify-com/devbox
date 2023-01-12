@@ -103,13 +103,20 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	return shell(username, vmHostname, projectDir)
 }
 
-func PortForward(local, remote string) error {
+func PortForward(local, remote string) (string, error) {
 	vmHostname := vmHostnameFromSSHControlPath()
 	if vmHostname == "" {
-		return usererr.New("No VM found. Please run `devbox cloud shell` first.")
+		return "", usererr.New("No VM found. Please run `devbox cloud shell` first.")
 	}
-	portMap := fmt.Sprintf("%s:%s:%s", local, vmHostname, remote)
-	return exec.Command("ssh", "-N", vmHostname, "-L", portMap).Run()
+	return mutagenbox.ForwardCreate(vmHostname, local, remote)
+}
+
+func PortForwardTerminateAll() error {
+	return mutagenbox.ForwardTerminateAll()
+}
+
+func PortForwardList() ([]string, error) {
+	return mutagenbox.ForwardList()
 }
 
 func getGithubUsername() string {
