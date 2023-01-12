@@ -511,6 +511,11 @@ var envToKeep = map[string]bool{
 	"NIX_SSL_CERT_FILE":         true, // The path to Nix-installed SSL certificates (used by some Nix programs).
 	"SSL_CERT_FILE":             true, // The path to non-Nix SSL certificates (used by some Nix and non-Nix programs).
 	"NIXPKGS_ALLOW_UNFREE":      true, // Whether to allow the use of unfree packages.
+
+	// Devbox
+	//
+	// Variables specific to devbox configuration.
+	"DEVBOX_USE_VERSION": true, // Version of devbox used upon invoking `devbox shell`.
 }
 
 func buildAllowList(allowList []string) map[string]bool {
