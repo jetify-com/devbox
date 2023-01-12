@@ -291,11 +291,11 @@ func (s *Shell) execCommand() string {
 	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
 	args = append(args, extraEnv...)
 	args = append(args, s.binPath)
+	args = append(args, extraArgs...)
 	if s.ScriptCommand != "" {
 		args = append(args, "-ic")
 		args = append(args, "run_script")
 	}
-	args = append(args, extraArgs...)
 	return strings.Join(args, " ")
 }
 
