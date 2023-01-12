@@ -11,6 +11,7 @@ devbox services <ls|restart|start|stop> [flags]
 ```bash
   -c, --config string   path to directory containing a devbox.json config file
   -h, --help            help for services
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

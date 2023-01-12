@@ -15,6 +15,7 @@ devbox generate devcontainer [flags]
 ```bash
   -f, --force   force overwrite on existing files
   -h, --help    help for devcontainer
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ### SEE ALSO

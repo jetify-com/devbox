@@ -11,6 +11,7 @@ devbox version [flags]
 ```text
   -h, --help      help for version
   -v, --verbose   Verbose: displays additional version information
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO

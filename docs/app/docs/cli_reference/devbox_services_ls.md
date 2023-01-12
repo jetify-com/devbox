@@ -10,6 +10,7 @@ devbox services ls [flags]
 
 ```bash
   -h, --help   help for ls
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ### SEE ALSO

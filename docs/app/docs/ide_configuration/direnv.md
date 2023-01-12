@@ -12,20 +12,32 @@ ___
 
 ### Setting up Devbox Shell and direnv
 
-Note: If you already have a devbox project you may skip to step 3.
+#### New Project
 
-1. `devbox init` if you don't have a devbox.json in the root directory of your project.
-2. `devbox shell -- 'ls'` to activate devbox shell temporarily and make sure dependencies mentioned in your devbox.json are installed.
-3. Create a new file, name it `.envrc` and put the following snippet inside it:
-    ```bash
-    use_devbox() {
-        watch_file devbox.json
-        eval $(devbox shell --print-env)
-    }
-    use devbox
-    ```
-4. Run `direnv allow` to give permission to `direnv` to setup your environment variables.
-5. At this point, your project directory is setup so that every time you `cd` into it, the binaries from your devbox shell will be used. To test this, you can compare running `which python3` from your project directory and outside.
+If you have direnv installed, Devbox will generate an .envrc file when you run `devbox init` and prompt you to enable it:
+
+```bash
+➜  devbox init
+? Do you want to enable direnv integration for this devbox project?[y/n] y
+direnv: loading ~/src/devbox/docs/.envrc
+direnv: using devbox
+```
+
+This will generate a `.envrc` file in your root directory along with your `devbox.json`, and run `direnv allow` so that your shell will activate whenever you navigate to the directory.
+
+If you choose not to enable the integration, you can enable it at anytime by running `direnv allow`, or following the global settings below
+
+#### Existing Project
+
+For an existing project, you can add a `.envrc` file by running `devbox generate envrc`:
+
+```bash
+➜  devbox generate direnv
+? Do you want to enable direnv integration for this devbox project?[y/n] y
+direnv: loading ~/src/devbox/docs/.envrc
+direnv: using devbox
+```
+
 
 ### Global settings for direnv
 

@@ -10,6 +10,7 @@ devbox rm <pkg>... [flags]
 
 ```text
   -h, --help   help for rm
+  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
 ## SEE ALSO
