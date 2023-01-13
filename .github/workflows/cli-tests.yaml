@@ -78,7 +78,7 @@ jobs:
       - name: Run tests
         run: go test -race -cover ./...
 
-  cli-cicd-test:
+  auto-nix-install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
