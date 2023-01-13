@@ -77,3 +77,18 @@ jobs:
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Run tests
         run: go test -race -cover ./...
+
+  auto-nix-install: # ensure Devbox installs nix and works properly after installation.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+          cache: true
+      - name: Build devbox
+        run: go install ./cmd/devbox
+      - name: Install nix and devbox packages
+        run: |
+          NIX_INSTALLER_NO_CHANNEL_ADD=1
+          devbox shell -- echo "Installing packages..."
