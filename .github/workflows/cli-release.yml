@@ -102,5 +102,5 @@ jobs:
       - name: Update latest version in s3
         run: |
           tmp_file=$(mktemp)
-          echo "${{ env.release_tag }}" > $tmp_file
+          echo "${{ github.ref_name }}" > $tmp_file
           aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/latest/version
