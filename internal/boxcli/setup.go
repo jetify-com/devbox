@@ -73,6 +73,12 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 	if err := nix.Install(cmd.ErrOrStderr()); err != nil {
 		return err
 	}
+
+	// Source again
+	if err := nix.SourceNixEnv(); err != nil {
+		return err
+	}
+
 	cmd.PrintErrln("Nix installed successfully. Devbox is ready to use!.")
 	return nil
 }
