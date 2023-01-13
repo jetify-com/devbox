@@ -75,6 +75,10 @@ func cloudPortForwardCmd() *cobra.Command {
 }
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
+	if devbox.IsDevboxShellEnabled() {
+		return shellInceptionErrorMsg("devbox cloud shell")
+	}
+
 	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
