@@ -19,7 +19,6 @@ func Install(writer io.Writer) error {
 		return errors.WithStack(err)
 	}
 	defer r.Close()
-	defer w.Close()
 
 	cmd := exec.Command("sh", "-c", installScript)
 	// Attach stdout but no stdin. This makes the command run in non-TTY mode
@@ -30,17 +29,22 @@ func Install(writer io.Writer) error {
 	cmd.Stderr = w
 
 	fmt.Fprintln(writer, "Installing Nix. This may require sudo access.")
-	if err = cmd.Start(); err != nil {
+	err = cmd.Start()
+	w.Close()
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
+	done := make(chan struct{})
 	go func() {
 		_, err := io.Copy(os.Stdout, r)
 		if err != nil {
 			fmt.Fprintln(writer, err)
 		}
+		close(done)
 	}()
 
+	<-done
 	return errors.WithStack(cmd.Wait())
 }
 
