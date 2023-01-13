@@ -29,7 +29,7 @@ func SourceNixEnv() error {
 	cmd := exec.Command(
 		"/bin/sh",
 		"-c",
-		fmt.Sprintf("source %s ; echo '<<<ENVIRONMENT>>>' ; env", srcFile),
+		fmt.Sprintf(". %s ; echo '<<<ENVIRONMENT>>>' ; env", srcFile),
 	)
 
 	bs, err := cmd.CombinedOutput()
