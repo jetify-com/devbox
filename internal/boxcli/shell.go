@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
 type shellCmdFlags struct {
@@ -62,7 +63,7 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	}
 
 	if devbox.IsDevboxShellEnabled() {
-		return errors.New("You are already in an active devbox shell.\nRun 'exit' before calling devbox shell again. Shell inception is not supported.")
+		return shellInceptionErrorMsg("devbox shell")
 	}
 
 	if len(cmds) > 0 {
@@ -98,4 +99,9 @@ func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (str
 	cmds := args[index:]
 
 	return path, cmds, nil
+}
+
+func shellInceptionErrorMsg(cmdPath string) error {
+	return usererr.New("You are already in an active devbox shell.\nRun `exit` before calling `%s` again."+
+		" Shell inception is not supported.", cmdPath)
 }
