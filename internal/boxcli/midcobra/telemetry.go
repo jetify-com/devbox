@@ -4,6 +4,9 @@
 package midcobra
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -11,9 +14,11 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -176,6 +181,9 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 		_ = segmentClient.Close()
 	}()
 
+	// deliberately ignore error
+	_ = identifyUser(segmentClient, evt.DeviceID)
+
 	_ = segmentClient.Enqueue(segment.Track{ // Ignore errors, telemetry is best effort
 		AnonymousId: evt.DeviceID, // Use device id instead
 		Event:       fmt.Sprintf("[%s] Command: %s", evt.AppName, evt.Command),
@@ -200,4 +208,40 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 			Set("sentry_event_id", evt.SentryEventID).
 			Set("shell", evt.Shell),
 	})
+}
+
+func identifyUser(segmentClient segment.Client, deviceID string) error {
+	username, err := openssh.GithubUsernameFromLocalFile()
+	if err != nil {
+		return err
+	}
+
+	userId, err := userIdFromGithubUsername(username)
+	if err != nil {
+		// early return if there was an
+		return err
+	}
+	if userId == "" {
+		// an empty userId means that we do not a github username saved
+		return nil
+	}
+
+	err = segmentClient.Enqueue(segment.Identify{
+		AnonymousId: deviceID,
+		UserId:      userId,
+		Traits:      segment.NewTraits().Set("githubUsername", username),
+	})
+	return errors.WithStack(err)
+}
+
+// userIdFromGithubUsername hashes the github username and produces a 64-char string as userId
+func userIdFromGithubUsername(username string) (string, error) {
+
+	const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
+	mac := hmac.New(sha256.New, []byte(salt))
+
+	const githubPrefix = "github:"
+	mac.Write([]byte(githubPrefix + username))
+
+	return hex.EncodeToString(mac.Sum(nil)), nil
 }
