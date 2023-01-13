@@ -78,7 +78,7 @@ jobs:
       - name: Run tests
         run: go test -race -cover ./...
 
-  auto-nix-install:
+  auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

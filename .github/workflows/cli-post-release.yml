@@ -1,5 +1,5 @@
-name: cli-publish
-# Publish the Devbox CLI
+name: cli-post-release
+# Finalize and announce the release once its been published on Github.
 
 on:
   release:
