@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -55,8 +56,8 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 		if err != nil {
 			return err
 		}
-		// print to stdout instead of stderr so that direnv can read the output
-		cmd.Print(script)
+		// explicitly print to stdout instead of stderr so that direnv can read the output
+		fmt.Fprint(os.Stdout, script)
 		// return here to prevent opening a devbox shell
 		return nil
 	}
