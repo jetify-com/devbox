@@ -203,6 +203,22 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 		UserId:      evt.UserID,
 	})
 
+	cloudRegion := os.Getenv("DEVBOX_REGION")
+	isInDevboxCloud := cloudRegion != ""
+	properties := segment.NewProperties().
+		Set("command", evt.Command).
+		Set("command_args", evt.CommandArgs).
+		Set("failed", evt.Failed).
+		Set("duration", evt.Duration.Milliseconds()).
+		Set("packages", evt.Packages).
+		Set("sentry_event_id", evt.SentryEventID).
+		Set("shell", evt.Shell).
+		Set("cloud", isInDevboxCloud)
+
+	if isInDevboxCloud {
+		properties.Set("cloud.region", cloudRegion)
+	}
+
 	_ = segmentClient.Enqueue(segment.Track{ // Ignore errors, telemetry is best effort
 		AnonymousId: evt.AnonymousID, // Use device id instead
 		Event:       fmt.Sprintf("[%s] Command: %s", evt.AppName, evt.Command),
@@ -218,15 +234,8 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 				Name: telemetry.OS(),
 			},
 		},
-		Properties: segment.NewProperties().
-			Set("command", evt.Command).
-			Set("command_args", evt.CommandArgs).
-			Set("failed", evt.Failed).
-			Set("duration", evt.Duration.Milliseconds()).
-			Set("packages", evt.Packages).
-			Set("sentry_event_id", evt.SentryEventID).
-			Set("shell", evt.Shell),
-		UserId: evt.UserID,
+		Properties: properties,
+		UserId:     evt.UserID,
 	})
 }
 

@@ -577,6 +577,7 @@ var envToKeep = map[string]bool{
 	//
 	// Variables specific to devbox configuration.
 	"DEVBOX_USE_VERSION": true, // Version of devbox used upon invoking `devbox shell`.
+	"DEVBOX_REGION":      true, // Region of the Devbox cloud
 }
 
 func buildAllowList(allowList []string) map[string]bool {
