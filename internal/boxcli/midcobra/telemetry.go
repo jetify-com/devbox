@@ -216,26 +216,22 @@ func identifyUser(segmentClient segment.Client, deviceID string) error {
 		return err
 	}
 
-	userId, err := userIdFromGithubUsername(username)
-	if err != nil {
-		// early return if there was an
-		return err
-	}
-	if userId == "" {
-		// an empty userId means that we do not a github username saved
+	userID := userIDFromGithubUsername(username)
+	if userID == "" {
+		// an empty userID means that we do not a github username saved
 		return nil
 	}
 
 	err = segmentClient.Enqueue(segment.Identify{
 		AnonymousId: deviceID,
-		UserId:      userId,
+		UserId:      userID,
 		Traits:      segment.NewTraits().Set("githubUsername", username),
 	})
 	return errors.WithStack(err)
 }
 
-// userIdFromGithubUsername hashes the github username and produces a 64-char string as userId
-func userIdFromGithubUsername(username string) (string, error) {
+// userIDFromGithubUsername hashes the github username and produces a 64-char string as userId
+func userIDFromGithubUsername(username string) string {
 
 	const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
 	mac := hmac.New(sha256.New, []byte(salt))
@@ -243,5 +239,5 @@ func userIdFromGithubUsername(username string) (string, error) {
 	const githubPrefix = "github:"
 	mac.Write([]byte(githubPrefix + username))
 
-	return hex.EncodeToString(mac.Sum(nil)), nil
+	return hex.EncodeToString(mac.Sum(nil))
 }
