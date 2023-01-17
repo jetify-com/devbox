@@ -14,6 +14,8 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 )
 
+const nixDaemonFlag = "daemon"
+
 func SetupCmd() *cobra.Command {
 	setupCommand := &cobra.Command{
 		Use:    "setup",
@@ -29,6 +31,7 @@ func SetupCmd() *cobra.Command {
 		},
 	}
 
+	installNixCommand.Flags().Bool(nixDaemonFlag, false, "Install Nix in multi-user mode.")
 	setupCommand.AddCommand(installNixCommand)
 	return setupCommand
 }
@@ -42,7 +45,7 @@ func runInstallNixCmd(cmd *cobra.Command) error {
 		)
 		return nil
 	}
-	return nix.Install(cmd.ErrOrStderr())
+	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
 func ensureNixInstalled(cmd *cobra.Command, args []string) error {
@@ -70,7 +73,7 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 		fmt.Scanln()
 	}
 
-	if err := nix.Install(cmd.ErrOrStderr()); err != nil {
+	if err := nix.Install(cmd.ErrOrStderr(), nil); err != nil {
 		return err
 	}
 
@@ -81,4 +84,16 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 
 	cmd.PrintErrln("Nix installed successfully. Devbox is ready to use!")
 	return nil
+}
+
+func nixDaemonFlagVal(cmd *cobra.Command) *bool {
+	if !cmd.Flags().Changed(nixDaemonFlag) {
+		return nil
+	}
+
+	val, err := cmd.Flags().GetBool(nixDaemonFlag)
+	if err != nil {
+		return nil
+	}
+	return &val
 }
