@@ -100,7 +100,6 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 		opt(sh)
 	}
 
-	debug.Log("Detected shell: %s", sh.binPath)
 	debug.Log("Recognized shell as: %s", sh.binPath)
 	debug.Log("Looking for user's shell init file at: %s", sh.userShellrcPath)
 	return sh, nil
