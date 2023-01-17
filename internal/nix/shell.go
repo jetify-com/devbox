@@ -264,7 +264,6 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		// Use nix-shell
 		cmd = exec.Command("nix-shell", "--command", s.execCommand(), "--pure")
 		keepArgs := toKeepArgs(env, buildAllowList(s.env))
-		fmt.Printf("kept args: %+v\n", keepArgs)
 		cmd.Args = append(cmd.Args, keepArgs...)
 		cmd.Args = append(cmd.Args, nixShellFilePath)
 		cmd.Env = env

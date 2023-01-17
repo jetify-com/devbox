@@ -16,22 +16,22 @@ content readable.
 
 */ -}}
 
-{{ range $name, $value := .NixEnv }}
+{{- range $name, $value := .NixEnv -}}
 export {{ $name }}={{ $value }}
 {{ end }}
 
-# The shell shellHook defined in shell.nix.
+{{- if .NixEnv }}
+# Run the shell hook defined in shell.nix.
 eval $shellHook
+{{ end -}}
 
-{{- if .OriginalInit -}}
-
+{{ if .OriginalInit }}
 # Begin {{ .OriginalInitPath }}
 
 {{ .OriginalInit }}
 
 # End {{ .OriginalInitPath }}
-
-{{ end -}}
+{{ end }}
 
 # Begin Devbox Post-init Hook
 
