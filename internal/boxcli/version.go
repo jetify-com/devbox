@@ -27,7 +27,7 @@ func VersionCmd() *cobra.Command {
 	}
 
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value
-		"Verbose: displays additional version information",
+		"displays additional version information",
 	)
 	return command
 }
