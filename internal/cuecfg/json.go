@@ -24,7 +24,7 @@ func MarshalJSON(v interface{}) ([]byte, error) {
 	if err := e.Encode(v); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return buff.Bytes(), nil
+	return bytes.TrimRight(buff.Bytes(), "\n"), nil
 }
 
 func unmarshalJSON(data []byte, v interface{}) error {
