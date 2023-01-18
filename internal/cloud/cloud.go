@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,7 +39,11 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 		username = githubUsername
 	}
 	if username == "" {
-		username = getGithubUsername()
+		var err error
+		username, err = getGithubUsername()
+		if err != nil {
+			return err
+		}
 	}
 	debug.Log("username: %s", username)
 
@@ -73,7 +76,10 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 			stepVM.Success("Detected existing virtual machine")
 		} else {
 			var region string
-			vmHostname, region = getVirtualMachine(sshClient)
+			vmHostname, region, err = getVirtualMachine(sshClient)
+			if err != nil {
+				return err
+			}
 			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
 
 			// We save the username to local file only after we get a successful response
@@ -91,7 +97,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
-		log.Fatal(err)
+		return err
 	}
 	s2.Success("File syncing started")
 
@@ -119,7 +125,7 @@ func PortForwardList() ([]string, error) {
 	return mutagenbox.ForwardList()
 }
 
-func getGithubUsername() string {
+func getGithubUsername() (string, error) {
 
 	username, err := openssh.GithubUsernameFromLocalFile()
 	if err != nil || username == "" {
@@ -133,15 +139,18 @@ func getGithubUsername() string {
 		} else {
 			// The query for Github username is best effort, and if it fails to resolve
 			// we fallback to prompting the user, and suggesting the local computer username.
-			username = promptUsername()
+			username, err = promptUsername()
+			if err != nil {
+				return "", err
+			}
 		}
 	} else {
 		debug.Log("Username from locally-cached file: %s", username)
 	}
-	return username
+	return username, nil
 }
 
-func promptUsername() string {
+func promptUsername() (string, error) {
 	username := ""
 	prompt := &survey.Input{
 		Message: "What is your github username?",
@@ -149,10 +158,10 @@ func promptUsername() string {
 	}
 	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
-		log.Fatal(err)
+		return "", errors.WithStack(err)
 	}
 	debug.Log("Username from prompting user: %s", username)
-	return username
+	return username, nil
 }
 
 type vm struct {
@@ -170,14 +179,14 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
+func getVirtualMachine(client openssh.Client) (vmHost string, region string, err error) {
 	sshOut, err := client.Exec("auth")
 	if err != nil {
-		log.Fatalln("error requesting VM:", err)
+		return "", "", errors.Wrapf(err, "error requesting VM")
 	}
 	resp := &vm{}
 	if err := json.Unmarshal(sshOut, resp); err != nil {
-		log.Fatalf("error unmarshaling gateway response %q: %v", sshOut, err)
+		return "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
 	}
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
 		debug.Log("got gateway response:\n\t%s", redacted)
@@ -185,12 +194,10 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string) {
 	if resp.VMPrivateKey != "" {
 		err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
 		if err != nil {
-			log.Fatalf("error adding new VM key: %v", err)
+			return "", "", errors.Wrapf(err, "error adding new VM key")
 		}
 	}
-	vmHost = resp.VMHost
-	region = resp.VMRegion
-	return
+	return resp.VMHost, resp.VMRegion, nil
 }
 
 func syncFiles(username, hostname, projectDir string) error {
