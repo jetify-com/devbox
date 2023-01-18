@@ -134,6 +134,7 @@ type event struct {
 	AnonymousID   string
 	AppName       string
 	AppVersion    string
+	CloudRegion   string
 	Command       string
 	CommandArgs   []string
 	CommandError  error
@@ -164,6 +165,7 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		AnonymousID:  telemetry.DeviceID(),
 		AppName:      m.opts.AppName,
 		AppVersion:   m.opts.AppVersion,
+		CloudRegion:  os.Getenv("DEVBOX_REGION"),
 		Command:      subcmd.CommandPath(),
 		CommandArgs:  subargs,
 		CommandError: runErr,
@@ -219,6 +221,7 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 			},
 		},
 		Properties: segment.NewProperties().
+			Set("cloud_region", evt.CloudRegion).
 			Set("command", evt.Command).
 			Set("command_args", evt.CommandArgs).
 			Set("failed", evt.Failed).
