@@ -3,13 +3,28 @@
 
 package cuecfg
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
 
+	"github.com/pkg/errors"
+)
+
+// MarshalJSON marshals the given value to JSON. It does not HTML escape and
+// adds standard indentation.
+//
 // TODO: consider using cue's JSON marshaller instead of
 // "encoding/json" ... it might have extra functionality related
 // to the cue language.
-func marshalJSON(v interface{}) ([]byte, error) {
-	return json.MarshalIndent(v, "", "  ")
+func MarshalJSON(v interface{}) ([]byte, error) {
+	buff := &bytes.Buffer{}
+	e := json.NewEncoder(buff)
+	e.SetIndent("", "  ")
+	e.SetEscapeHTML(false)
+	if err := e.Encode(v); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return bytes.TrimRight(buff.Bytes(), "\n"), nil
 }
 
 func unmarshalJSON(data []byte, v interface{}) error {

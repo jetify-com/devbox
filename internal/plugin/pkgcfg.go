@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/nix"
@@ -139,7 +140,7 @@ func createEnvFile(pkg, projectDir string) error {
 	env := ""
 	for _, val := range envVars {
 		parts := strings.SplitN(val, "=", 2)
-		escaped, err := json.Marshal(parts[1])
+		escaped, err := cuecfg.MarshalJSON(parts[1])
 		if err != nil {
 			return errors.WithStack(err)
 		}

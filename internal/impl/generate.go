@@ -5,7 +5,6 @@ package impl
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -87,7 +87,10 @@ func writeFromTemplate(path string, plan interface{}, tmplName string) error {
 }
 
 func toJSON(a any) string {
-	data, _ := json.Marshal(a)
+	data, err := cuecfg.MarshalJSON(a)
+	if err != nil {
+		panic(err)
+	}
 	return string(data)
 }
 

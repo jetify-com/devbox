@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
 func TestCommandsUnmarshalString(t *testing.T) {
@@ -84,7 +85,7 @@ func TestCommandsUnmarshalString(t *testing.T) {
 						i, got, want)
 				}
 			}
-			b, err := json.Marshal(got)
+			b, err := cuecfg.MarshalJSON(got)
 			if err != nil {
 				t.Fatal("Got error marshalling back to JSON:", err)
 			}
@@ -156,7 +157,7 @@ func ExampleCommands_AppendScript() {
 			echo "this is always printed"
 		fi`,
 	)
-	b, _ := json.MarshalIndent(&shCmds, "", "  ")
+	b, _ := cuecfg.MarshalJSON(&shCmds)
 	fmt.Println(string(b))
 
 	// Output:

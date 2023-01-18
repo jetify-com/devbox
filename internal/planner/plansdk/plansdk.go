@@ -4,11 +4,11 @@
 package plansdk
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/imdario/mergo"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/pkgslice"
 )
 
@@ -72,7 +72,7 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 }
 
 func (p PlanError) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.Error())
+	return cuecfg.MarshalJSON(p.Error())
 }
 
 func FileExists(path string) bool {

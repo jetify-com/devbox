@@ -21,7 +21,7 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 
 	switch extension {
 	case ".json":
-		return marshalJSON(valuePtr)
+		return MarshalJSON(valuePtr)
 	case ".yml", ".yaml":
 		return marshalYaml(valuePtr)
 	case ".toml":
