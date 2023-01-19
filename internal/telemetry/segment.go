@@ -19,6 +19,29 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 )
 
+// cmdStartTime records the time at the start of any devbox command invocation.
+var cmdStartTime time.Time
+
+// Event contains common fields used in our segment events
+type Event struct {
+	AnonymousID string
+	AppName     string
+	AppVersion  string
+	CloudRegion string
+	OsName      string
+	UserID      string
+}
+
+// ttiEvent contains fields used to log the time-to-interactive event. For now,
+// this is used for devbox shell (local and cloud).
+type ttiEvent struct {
+	Event
+	// TODO savil. Can this be time.Duration as done in midcobra.telemetry?
+	durationSeconds int
+}
+
+// NewSegmentClient returns a client object to use for segment logging.
+// Callers are responsible for calling client.Close().
 func NewSegmentClient(telemetryKey string) segment.Client {
 	segmentClient, _ := segment.NewWithConfig(telemetryKey, segment.Config{
 		BatchSize: 1, /* no batching */
@@ -30,8 +53,9 @@ func NewSegmentClient(telemetryKey string) segment.Client {
 	return segmentClient
 }
 
-var cmdStartTime time.Time
-
+// CommandStartTime records and returns the time at the start of the command invocation.
+// It must be called initially at the start of the cobra (or other framework) command
+// stack. Subsequent calls returns the time from the first invocation of this function.
 func CommandStartTime() time.Time {
 	if cmdStartTime.IsZero() {
 		cmdStartTime = time.Now()
@@ -39,20 +63,8 @@ func CommandStartTime() time.Time {
 	return cmdStartTime
 }
 
-type Event struct {
-	AnonymousID string
-	AppName     string
-	AppVersion  string
-	CloudRegion string
-	OsName      string
-	UserID      string
-}
-
-type ttiEvent struct {
-	Event
-	durationSeconds int
-}
-
+// LogShellTimeToInteractiveEvent logs the duration from start of the command
+// till the shell was ready to be interactive.
 func LogShellTimeToInteractiveEvent(startTime string) error {
 	start, err := timeFromUnixTimestamp(startTime)
 	if err != nil {
@@ -71,10 +83,6 @@ func LogShellTimeToInteractiveEvent(startTime string) error {
 		durationSeconds: int(math.Round(time.Since(start).Seconds())),
 	}
 
-	return logShellTimeToInteractiveEvent(evt)
-}
-
-func logShellTimeToInteractiveEvent(evt ttiEvent) error {
 	fmt.Printf("DEBUG: logging with duration %d\n", evt.durationSeconds)
 	if build.TelemetryKey == "" {
 		// disabled
@@ -127,6 +135,8 @@ func UserIDFromGithubUsername() string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+// timeFromUnixTimestamp is a helper utility that converts the timestamp string
+// into a golang time.Time struct
 func timeFromUnixTimestamp(timestamp string) (time.Time, error) {
 
 	i, err := strconv.ParseInt(timestamp, 10, 64)
