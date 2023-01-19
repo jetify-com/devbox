@@ -12,7 +12,7 @@ This Github Action also supports caching the packages and dependencies installed
 
 In your project's workflow YAML, add the following step: 
 
-```
+```yaml
 - name: Install devbox
   uses: jetpack-io/devbox-install-action@v0.2.0
 ```
@@ -54,7 +54,7 @@ The `devbox-install-action` provides the following inputs:
 
 An example of this configuration is below: 
 
-```
+```yaml
 - name: Install devbox
   uses: jetpack-io/devbox-install-action@v0.2.0
   with:
