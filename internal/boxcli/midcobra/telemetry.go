@@ -4,12 +4,7 @@
 package midcobra
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"time"
 
@@ -17,7 +12,6 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -57,7 +51,7 @@ type telemetryMiddleware struct {
 var _ Middleware = (*telemetryMiddleware)(nil)
 
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
-	m.startTime = time.Now()
+	m.startTime = telemetry.CommandStartTime()
 	if !m.disabled {
 		sentry := telemetry.NewSentry(m.opts.SentryDSN)
 		sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
@@ -130,11 +124,10 @@ func (m *telemetryMiddleware) trackError(evt *event) {
 	sentry.CaptureException(evt.CommandError)
 }
 
+// Consider renaming this to commandEvent
+// since it has info about the specific command run.
 type event struct {
-	AnonymousID   string
-	AppName       string
-	AppVersion    string
-	CloudRegion   string
+	telemetry.Event
 	Command       string
 	CommandArgs   []string
 	CommandError  error
@@ -159,13 +152,17 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 	pkgs := getPackages(cmd)
 
 	// an empty userID means that we do not have a github username saved
-	userID := userIDFromGithubUsername()
+	userID := telemetry.UserIDFromGithubUsername()
 
 	return &event{
-		AnonymousID:  telemetry.DeviceID(),
-		AppName:      m.opts.AppName,
-		AppVersion:   m.opts.AppVersion,
-		CloudRegion:  os.Getenv("DEVBOX_REGION"),
+		Event: telemetry.Event{
+			AnonymousID: telemetry.DeviceID(),
+			AppName:     m.opts.AppName,
+			AppVersion:  m.opts.AppVersion,
+			CloudRegion: os.Getenv("DEVBOX_REGION"),
+			OsName:      telemetry.OS(),
+			UserID:      userID,
+		},
 		Command:      subcmd.CommandPath(),
 		CommandArgs:  subargs,
 		CommandError: runErr,
@@ -173,7 +170,6 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		Failed:       runErr != nil,
 		Packages:     pkgs,
 		Shell:        os.Getenv("SHELL"),
-		UserID:       userID,
 	}
 }
 
@@ -188,13 +184,7 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 		evt.SentryEventID = m.executionID
 	}
 
-	segmentClient, _ := segment.NewWithConfig(m.opts.TelemetryKey, segment.Config{
-		BatchSize: 1, /* no batching */
-		// Discard logs:
-		Logger:  segment.StdLogger(log.New(io.Discard, "" /* prefix */, 0)),
-		Verbose: false,
-	})
-
+	segmentClient := telemetry.NewSegmentClient(m.opts.TelemetryKey)
 	defer func() {
 		_ = segmentClient.Close()
 	}()
@@ -217,7 +207,7 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 				Version: evt.AppVersion,
 			},
 			OS: segment.OSInfo{
-				Name: telemetry.OS(),
+				Name: evt.OsName,
 			},
 		},
 		Properties: segment.NewProperties().
@@ -231,21 +221,4 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 			Set("shell", evt.Shell),
 		UserId: evt.UserID,
 	})
-}
-
-// userIDFromGithubUsername hashes the github username and produces a 64-char string as userId.
-// Returns an empty string if no github username is found.
-func userIDFromGithubUsername() string {
-	username, err := openssh.GithubUsernameFromLocalFile()
-	if err != nil || username == "" {
-		return ""
-	}
-
-	const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
-	mac := hmac.New(sha256.New, []byte(salt))
-
-	const githubPrefix = "github:"
-	mac.Write([]byte(githubPrefix + username))
-
-	return hex.EncodeToString(mac.Sum(nil))
 }

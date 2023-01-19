@@ -56,6 +56,9 @@ type Shell struct {
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
 	historyFile string
+
+	// shellStartTime is the unix timestamp for when the command was invoked
+	shellStartTime string
 }
 
 type ShellOption func(*Shell)
@@ -149,6 +152,12 @@ func WithPKGConfigDir(pkgConfigDir string) ShellOption {
 func WithProjectDir(projectDir string) ShellOption {
 	return func(s *Shell) {
 		s.projectDir = projectDir
+	}
+}
+
+func WithShellStartTime(time string) ShellOption {
+	return func(s *Shell) {
+		s.shellStartTime = time
 	}
 }
 
@@ -465,6 +474,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PluginInitHook   string
 		PathPrepend      string
 		ScriptCommand    string
+		ShellStartTime   string
 		ProfileBinDir    string
 		HistoryFile      string
 		NixEnv           map[string]string
@@ -477,6 +487,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
 		PathPrepend:      pathPrepend,
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
+		ShellStartTime:   s.shellStartTime,
 		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		NixEnv:           vars,

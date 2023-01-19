@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/telemetry"
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
@@ -347,9 +349,10 @@ func shell(username, hostname, projectDir string) error {
 	}
 
 	client := &openssh.Client{
-		Username: username,
-		Addr:     hostname,
-		PathInVM: absoluteProjectPathInVM(username, projectPath),
+		Addr:             hostname,
+		CommandStartTime: strconv.FormatInt(telemetry.CommandStartTime().Unix(), 10),
+		PathInVM:         absoluteProjectPathInVM(username, projectPath),
+		Username:         username,
 	}
 	return client.Shell()
 }

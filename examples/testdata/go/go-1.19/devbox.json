@@ -3,7 +3,10 @@
     "go_1_19"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": null,
+    "scripts": {
+      "go-version": "go version"
+    }
   },
   "nixpkgs": {
     "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"

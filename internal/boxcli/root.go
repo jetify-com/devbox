@@ -44,6 +44,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(GenerateCmd())
 	command.AddCommand(InfoCmd())
 	command.AddCommand(InitCmd())
+	command.AddCommand(LogCmd())
 	command.AddCommand(PlanCmd())
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(RunCmd())
