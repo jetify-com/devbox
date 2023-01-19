@@ -83,6 +83,15 @@ func (td *TestDevbox) Shell() (string, error) {
 	return string(output), nil
 }
 
+func (td *TestDevbox) Generate(subcommand string) (string, error) {
+	cmd := exec.Command("devbox", "generate", subcommand)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
 func (td *TestDevbox) SetDevboxJson(path string) error {
 	td.devboxJsonPath = path
 	return nil

@@ -1,7 +1,5 @@
 {
-  "packages": [
-    "go_1_17"
-  ],
+  "packages": [],
   "shell": {
     "init_hook": null
   },

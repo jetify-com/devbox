@@ -8,15 +8,14 @@ type TestDevbox interface {
 	// Setting up the environment to run a devbox command
 	SetDevboxJson(path string) error
 	GetDevboxJson() (*impl.DevboxJson, error)
-	// SetEnvVariables(input map[string]string) error
-	// SetConfigFile(path string, file []byte) error
 
 	// Running specific devbox commands and asserting their output
 	Add(pkgs ...string) (string, error)
-	Rm(pkgs ...string) (string, error)
-	Shell() (string, error)
-	Run(script string) (string, error)
+	Generate(subcommand string) (string, error)
 	Info(pkg string, markdown bool) (string, error)
+	Rm(pkgs ...string) (string, error)
+	Run(script string) (string, error)
+	Shell() (string, error)
 	Version() (string, error)
 	//... and other devbox commands
 }
