@@ -2,13 +2,13 @@
 title: Using Devbox in CI/CD with Github Actions
 ---
 
-This guide explains how to use Devbox in CI/CD using Github Actions. The [devbox-install-action](https://github.com/jetpack-io/devbox-install-action) will install Devbox CLI and any packages + configuration defined in your `devbox.json` file. You can then run tasks or scripts within `devbox shell` to reproduce your environment.
+This guide explains how to use Devbox in CI/CD using Github Actions. The [devbox-install-action](https://github.com/marketplace/actions/devbox-installer) will install Devbox CLI and any packages + configuration defined in your `devbox.json` file. You can then run tasks or scripts within `devbox shell` to reproduce your environment.
 
 This Github Action also supports caching the packages and dependencies installed in your `devbox.json`, which can significantly improve CI build times. 
 
 ## Usage
 
-`devbox-install-action` is available on the [Github Marketplace](https://github.com/jetpack-io/devbox-install-action) 
+`devbox-install-action` is available on the [Github Marketplace](https://github.com/marketplace/actions/devbox-installer) 
 
 In your project's workflow YAML, add the following step: 
 
