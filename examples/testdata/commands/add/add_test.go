@@ -1,4 +1,4 @@
-package testcommands
+package testadd
 
 import (
 	"testing"

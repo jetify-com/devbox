@@ -1,4 +1,4 @@
-package testcommands
+package testversion
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package testcommands
+package testinfo
 
 import (
 	"fmt"
