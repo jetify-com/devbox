@@ -36,7 +36,7 @@ const sidebars = {
         }]
     }, {
         type: 'category',
-        label: 'Guides',
+        label: 'Configuring your Project',
         collapsed: true,
         items: [{
             type: 'doc',
@@ -50,6 +50,14 @@ const sidebars = {
         }, {
             type: 'doc',
             id: 'guides/services'
+        }]
+    }, {
+        type: 'category',
+        label: "CI/CD Reference",
+        collapsed: true,
+        items: [{
+            type: 'doc',
+            id: 'continuous_integration/github_action'
         }]
     }, {
         type: 'category',
@@ -126,7 +134,7 @@ const sidebars = {
         id: 'configuration'
     }, {
         type: 'category',
-        label: "IDE Configuration",
+        label: "IDE Reference",
         collapsed: false,
         items: [{
             type: 'doc',

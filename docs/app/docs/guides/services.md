@@ -17,8 +17,10 @@ Currently, Devbox Services are only available via [Plugins](plugins.md). Future 
 The following plugins provide a service that can be managed with `devbox services`: 
 
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
+* [Caddy](../devbox_examples/servers/caddy.md) (caddy)
 * [Nginx](../devbox_examples/servers/nginx.md) (nginx)
 * [PostgreSQL](../devbox_examples/databases/postgres.md) (postgresql)
+* [Redis](../devbox_examples/databases/redis.md) (redis)
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82)
 
 The service will be made available to your project when you install the packages using `devbox add`. 

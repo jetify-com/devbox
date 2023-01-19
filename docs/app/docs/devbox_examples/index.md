@@ -23,12 +23,14 @@ You can view the full list of examples in our [Example Repo](https://github.com/
 
 ## Servers
 * [Apache](servers/apache.md)
+* [Caddy](servers/caddy.md)
 * [NGINX](servers/nginx.md)
 
 ## Full Stack Examples
 These examples combine configuration from multiple examples to create a full stack for development and deployment. 
 
 * [Drupal](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/drupal)
+* [Jekyll](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/jekyll)
 * [LAMP (Linux, Apache, MariaDB, PHP)](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lamp-stack)
 * [LEMP (Linux, NGINX, MariaDB, PHP)](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lemp-stack)
 * [Ruby on Rails](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/rails)

@@ -1,8 +1,8 @@
 ---
-title: Automatic Package Configuration with Plugins
+title: Using Devbox Plugins
 ---
 
-**Plugins**  are a new feature in Devbox that provide a default Devbox configuration for a Nix package. Plugins make it easier to get started with packages that require additional setup when installed with Nix, and they offer a familiar interface for configuring packages. They also help keep all of your project's configuration within your project directory, which helps maintain portability and isolation.
+This doc describes how to use Devbox Plugins with your project. **Plugins**  are provide a default Devbox configuration for a Nix package. Plugins make it easier to get started with packages that require additional setup when installed with Nix, and they offer a familiar interface for configuring packages. They also help keep all of your project's configuration within your project directory, which helps maintain portability and isolation.
 
 If a plugin is available for your package, it will activate when you install the plugin using `devbox add <package name>`.  
 
@@ -10,7 +10,9 @@ If a plugin is available for your package, it will activate when you install the
 Plugins are available for the following packages. You can activate the plugins for these packages by running `devbox add <package_name>`:
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
 * [Nginx](../devbox_examples/servers/nginx.md) (nginx)
+* [Caddy](../devbox_examples/servers/caddy.md) (caddy)
 * [PostgreSQL](../devbox_examples/databases/postgres.md) (postgresql)
+* [Redis](../devbox_examples/databases/redis.md) (redis)
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82)
 * [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0)
 
