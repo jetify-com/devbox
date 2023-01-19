@@ -1,5 +1,5 @@
 ---
-title: Configuring and Running Scripts
+title: Running Scripts
 ---
 
 This doc describes how to configure and run scripts using `devbox run`. Scripts started with `devbox run` are launched in a interactive `devbox shell` that terminates once the script finishes, or is interrupted by CTRL-C. 

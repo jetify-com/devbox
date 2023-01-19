@@ -1,5 +1,5 @@
 ---
-title: Configuration Guide
+title: devbox.json Reference
 sidebar_position: 5
 ---
 

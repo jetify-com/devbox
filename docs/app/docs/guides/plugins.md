@@ -1,5 +1,5 @@
 ---
-title: Automatic Package Configuration with Plugins
+title: Using Devbox Plugins
 ---
 
 This doc describes how to use Devbox Plugins with your project. **Plugins**  are provide a default Devbox configuration for a Nix package. Plugins make it easier to get started with packages that require additional setup when installed with Nix, and they offer a familiar interface for configuring packages. They also help keep all of your project's configuration within your project directory, which helps maintain portability and isolation.
