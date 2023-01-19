@@ -14,8 +14,8 @@ type TestDevbox interface {
 	// Running specific devbox commands and asserting their output
 	Add(pkgs ...string) (string, error)
 	Rm(pkgs ...string) (string, error)
-	// Shell() (string, error)
-	// Run(script string) (string, error)
+	Shell() (string, error)
+	Run(script string) (string, error)
 	Info(pkg string, markdown bool) (string, error)
 	Version() (string, error)
 	//... and other devbox commands

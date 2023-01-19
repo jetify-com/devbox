@@ -13,6 +13,7 @@ func TestAdd(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, output, "go_1_17 (go-1.17.13) is now installed.")
 	td.SetDevboxJson("devbox.json")
-	devboxjson, _ := td.GetDevboxJson()
+	devboxjson, err := td.GetDevboxJson()
+	assert.NoError(t, err)
 	assert.Contains(t, devboxjson.Packages, "go_1_17")
 }

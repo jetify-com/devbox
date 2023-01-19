@@ -65,6 +65,24 @@ func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
 	return string(output), nil
 }
 
+func (td *TestDevbox) Run(script string) (string, error) {
+	cmd := exec.Command("devbox", "run", script)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
+func (td *TestDevbox) Shell() (string, error) {
+	cmd := exec.Command("devbox", "shell")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
 func (td *TestDevbox) SetDevboxJson(path string) error {
 	td.devboxJsonPath = path
 	return nil
