@@ -22,7 +22,7 @@ func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "shell -- [<cmd>]",
 		Short: "Start a new shell or run a command with access to your packages",
-		Long: "Start a new shell or run a command with access to your packages. \n" +
+		Long: "Start a new shell or run a command with access to your packages.\n\n" +
 			"If invoked without `cmd`, devbox will start an interactive shell.\n" +
 			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
@@ -35,7 +35,7 @@ func ShellCmd() *cobra.Command {
 	}
 
 	command.Flags().BoolVar(
-		&flags.PrintEnv, "print-env", false, "Print script to setup shell environment")
+		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
 	flags.config.register(command)
 	return command
 }

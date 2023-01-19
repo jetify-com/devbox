@@ -27,7 +27,7 @@ func InfoCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
-	command.Flags().BoolVar(&flags.markdown, "markdown", false, "Output in markdown format")
+	command.Flags().BoolVar(&flags.markdown, "markdown", false, "output in markdown format")
 	return command
 }
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
 // Formats for marshalling and unmarshalling a series of shell commands in a
@@ -78,9 +80,9 @@ func (s *Commands) AppendScript(script string) {
 func (s Commands) MarshalJSON() ([]byte, error) {
 	switch s.MarshalAs {
 	case CmdArray:
-		return json.Marshal(s.Cmds)
+		return cuecfg.MarshalJSON(s.Cmds)
 	case CmdString:
-		return json.Marshal(s.String())
+		return cuecfg.MarshalJSON(s.String())
 	default:
 		panic(fmt.Sprintf("invalid command format: %s", s.MarshalAs))
 	}

@@ -55,7 +55,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 				pluginInitHook:  `echo "Welcome to the devbox!"`,
 				profileDir:      "./.devbox/profile",
 			}
-			gotPath, err := s.writeDevboxShellrc()
+			gotPath, err := s.writeDevboxShellrc(map[string]string{})
 			if err != nil {
 				t.Fatal("Got writeDevboxShellrc error:", err)
 			}
