@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/debug"
 	"golang.org/x/exp/slices"
 )
 
@@ -22,7 +23,7 @@ func RunCmd() *cobra.Command {
 		Use:     "run <script>",
 		Short:   "Starts a new devbox shell and runs the target script",
 		Long:    "Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`",
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.MinimumNArgs(1),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runScriptCmd(cmd, args, flags)
@@ -36,10 +37,12 @@ func RunCmd() *cobra.Command {
 
 func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 
-	path, script, err := parseScriptArgs(args, flags)
+	path, script, scriptArgs, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return err
 	}
+	debug.Log("script: %s", script)
+	debug.Log("script args: %v", scriptArgs)
 
 	// Check the directory exists.
 	box, err := devbox.Open(path, cmd.ErrOrStderr())
@@ -58,21 +61,23 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	if devbox.IsDevboxShellEnabled() {
 		err = box.RunScriptInShell(script)
 	} else {
-		err = box.RunScript(script)
+		err = box.RunScript(script, scriptArgs)
 	}
 	return err
 }
 
-func parseScriptArgs(args []string, flags runCmdFlags) (string, string, error) {
+func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string, error) {
 	path, err := configPathFromUser([]string{}, &flags.config)
 	if err != nil {
-		return "", "", err
+		return "", "", nil, err
 	}
 
 	script := ""
-	if len(args) == 1 {
+	scriptArgs := []string{}
+	if len(args) >= 1 {
 		script = args[0]
+		scriptArgs = args[1:]
 	}
 
-	return path, script, nil
+	return path, script, scriptArgs, nil
 }

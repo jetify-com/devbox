@@ -249,7 +249,7 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) RunScript(scriptName string) error {
+func (d *Devbox) RunScript(scriptName string, scriptArgs []string) error {
 	if featureflag.NixDevEnvRun.Disabled() {
 		return d.RunScriptInNewNixShell(scriptName)
 	}
@@ -273,7 +273,8 @@ func (d *Devbox) RunScript(scriptName string) error {
 	}
 
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.RunScript(nixShellFilePath, d.projectDir, d.scriptPath(scriptName), pluginEnv)
+	scriptWithArgs := strings.Join(append([]string{d.scriptPath(scriptName)}, scriptArgs...), " ")
+	return nix.RunScript(nixShellFilePath, d.projectDir, scriptWithArgs, pluginEnv)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
