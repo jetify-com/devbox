@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"io"
 	"log"
-	"math"
 	"os"
 	"strconv"
 	"time"
@@ -26,6 +25,7 @@ type Event struct {
 	AnonymousID string
 	AppName     string
 	AppVersion  string
+	Duration    time.Duration
 	CloudRegion string
 	OsName      string
 	UserID      string
@@ -36,8 +36,6 @@ type Event struct {
 type ttiEvent struct {
 	Event
 	eventName string
-	// TODO savil. Can this be time.Duration as done in midcobra.telemetry?
-	durationSeconds int
 }
 
 // NewSegmentClient returns a client object to use for segment logging.
@@ -83,11 +81,11 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 			AppName:     opts.AppName,
 			AppVersion:  opts.AppVersion,
 			CloudRegion: os.Getenv("DEVBOX_REGION"),
+			Duration:    time.Since(start),
 			OsName:      OS(),
 			UserID:      UserIDFromGithubUsername(),
 		},
-		eventName:       eventName,
-		durationSeconds: int(math.Round(time.Since(start).Seconds())),
+		eventName: eventName,
 	}
 
 	segmentClient := NewSegmentClient(build.TelemetryKey)
@@ -113,7 +111,7 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		},
 		Properties: segment.NewProperties().
 			Set("is_cloud", lo.Ternary(evt.CloudRegion != "", "true", "false")).
-			Set("duration_seconds", evt.durationSeconds),
+			Set("duration", evt.Duration.Milliseconds()),
 		UserId: evt.UserID,
 	})
 	return nil

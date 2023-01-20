@@ -126,7 +126,6 @@ type event struct {
 	Command       string
 	CommandArgs   []string
 	CommandError  error
-	Duration      time.Duration
 	Failed        bool
 	Packages      []string
 	SentryEventID string
@@ -155,13 +154,13 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			AppName:     m.opts.AppName,
 			AppVersion:  m.opts.AppVersion,
 			CloudRegion: os.Getenv("DEVBOX_REGION"),
+			Duration:    time.Since(m.startTime),
 			OsName:      telemetry.OS(),
 			UserID:      userID,
 		},
 		Command:      subcmd.CommandPath(),
 		CommandArgs:  subargs,
 		CommandError: runErr,
-		Duration:     time.Since(m.startTime),
 		Failed:       runErr != nil,
 		Packages:     pkgs,
 		Shell:        os.Getenv("SHELL"),
