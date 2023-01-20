@@ -138,7 +138,9 @@ func UserIDFromGithubUsername() string {
 }
 
 // timeFromUnixTimestamp is a helper utility that converts the timestamp string
-// into a golang time.Time struct
+// into a golang time.Time struct.
+//
+// See UnixTimestampFromTime for the inverse function.
 func timeFromUnixTimestamp(timestamp string) (time.Time, error) {
 
 	i, err := strconv.ParseInt(timestamp, 10, 64)
@@ -146,4 +148,12 @@ func timeFromUnixTimestamp(timestamp string) (time.Time, error) {
 		return time.Time{}, errors.WithStack(err)
 	}
 	return time.Unix(i, 0), nil
+}
+
+// UnixTimestampFromTime is a helper utility that converts a golang time.Time struct
+// to a timestamp string.
+//
+// See timeFromUnixTimestamp for the inverse function.
+func UnixTimestampFromTime(t time.Time) string {
+	return strconv.FormatInt(t.Unix(), 10)
 }
