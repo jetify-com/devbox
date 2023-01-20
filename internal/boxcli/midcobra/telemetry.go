@@ -21,24 +21,19 @@ import (
 // 1. We only collect anonymized data – nothing that is personally identifiable
 // 2. Data is only stored in SOC 2 compliant systems, and we are SOC 2 compliant ourselves.
 // 3. Users should always have the ability to opt-out.
-func Telemetry(opts *TelemetryOpts) Middleware {
+func Telemetry() Middleware {
+
+	opts := telemetry.InitOpts()
 
 	return &telemetryMiddleware{
 		opts:     *opts,
-		disabled: telemetry.DoNotTrack() || opts.TelemetryKey == "" || opts.SentryDSN == "",
+		disabled: !telemetry.IsEnabled(opts),
 	}
-}
-
-type TelemetryOpts struct {
-	AppName      string
-	AppVersion   string
-	SentryDSN    string // used by error reporting
-	TelemetryKey string
 }
 
 type telemetryMiddleware struct {
 	// Setup:
-	opts     TelemetryOpts
+	opts     telemetry.Opts
 	disabled bool
 
 	// Used during execution:

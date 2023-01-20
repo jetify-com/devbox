@@ -223,7 +223,7 @@ func (d *Devbox) Shell() error {
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
 	if shellStartTime == "" {
-		shellStartTime = strconv.FormatInt(telemetry.CommandStartTime().Unix(), 10)
+		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
 	}
 
 	opts := []nix.ShellOption{

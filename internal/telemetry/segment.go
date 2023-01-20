@@ -67,6 +67,12 @@ func CommandStartTime() time.Time {
 // LogShellDurationEvent logs the duration from start of the command
 // till the shell was ready to be interactive.
 func LogShellDurationEvent(eventName string, startTime string) error {
+	opts := InitOpts()
+	if !IsEnabled(opts) {
+		// disabled
+		return nil
+	}
+
 	start, err := timeFromUnixTimestamp(startTime)
 	if err != nil {
 		return errors.WithStack(err)
@@ -75,8 +81,8 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	evt := ttiEvent{
 		Event: Event{
 			AnonymousID: DeviceID(),
-			AppName:     "",
-			AppVersion:  "",
+			AppName:     opts.AppName,
+			AppVersion:  opts.AppVersion,
 			CloudRegion: os.Getenv("DEVBOX_REGION"),
 			OsName:      OS(),
 			UserID:      UserIDFromGithubUsername(),
@@ -86,10 +92,6 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	}
 
 	fmt.Printf("DEBUG: logging with duration %d\n", evt.durationSeconds)
-	if build.TelemetryKey == "" {
-		// disabled
-		return nil
-	}
 
 	segmentClient := NewSegmentClient(build.TelemetryKey)
 	defer func() {
