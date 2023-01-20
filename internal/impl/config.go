@@ -21,15 +21,6 @@ type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
 	Packages []string `cue:"[...string]" json:"packages"`
-	// InstallStage defines the actions that should be taken when
-	// installing language-specific libraries.
-	InstallStage *Stage `json:"install_stage,omitempty"`
-	// BuildStage defines the actions that should be taken when
-	// compiling the application binary.
-	BuildStage *Stage `json:"build_stage,omitempty"`
-	// StartStage defines the actions that should be taken when
-	// starting (running) the application.
-	StartStage *Stage `json:"start_stage,omitempty"`
 
 	// Shell configures the devbox shell environment.
 	Shell struct {
