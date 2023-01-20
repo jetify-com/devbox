@@ -27,7 +27,7 @@ func Telemetry() Middleware {
 
 	return &telemetryMiddleware{
 		opts:     *opts,
-		disabled: !telemetry.IsEnabled(opts),
+		disabled: telemetry.IsDisabled(opts),
 	}
 }
 

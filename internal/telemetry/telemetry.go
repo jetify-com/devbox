@@ -27,7 +27,7 @@ func InitOpts() *Opts {
 	}
 }
 
-func IsEnabled(opts *Opts) bool {
+func IsDisabled(opts *Opts) bool {
 	return DoNotTrack() || opts.TelemetryKey == "" || opts.SentryDSN == ""
 }
 

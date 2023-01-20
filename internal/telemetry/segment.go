@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"log"
 	"math"
@@ -68,7 +67,7 @@ func CommandStartTime() time.Time {
 // till the shell was ready to be interactive.
 func LogShellDurationEvent(eventName string, startTime string) error {
 	opts := InitOpts()
-	if !IsEnabled(opts) {
+	if IsDisabled(opts) {
 		// disabled
 		return nil
 	}
@@ -90,8 +89,6 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		eventName:       eventName,
 		durationSeconds: int(math.Round(time.Since(start).Seconds())),
 	}
-
-	fmt.Printf("DEBUG: logging with duration %d\n", evt.durationSeconds)
 
 	segmentClient := NewSegmentClient(build.TelemetryKey)
 	defer func() {
