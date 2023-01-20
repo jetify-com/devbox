@@ -36,6 +36,7 @@ type Event struct {
 // this is used for devbox shell (local and cloud).
 type ttiEvent struct {
 	Event
+	eventName string
 	// TODO savil. Can this be time.Duration as done in midcobra.telemetry?
 	durationSeconds int
 }
@@ -63,9 +64,9 @@ func CommandStartTime() time.Time {
 	return cmdStartTime
 }
 
-// LogShellTimeToInteractiveEvent logs the duration from start of the command
+// LogShellDurationEvent logs the duration from start of the command
 // till the shell was ready to be interactive.
-func LogShellTimeToInteractiveEvent(startTime string) error {
+func LogShellDurationEvent(eventName string, startTime string) error {
 	start, err := timeFromUnixTimestamp(startTime)
 	if err != nil {
 		return errors.WithStack(err)
@@ -80,6 +81,7 @@ func LogShellTimeToInteractiveEvent(startTime string) error {
 			OsName:      OS(),
 			UserID:      UserIDFromGithubUsername(),
 		},
+		eventName:       eventName,
 		durationSeconds: int(math.Round(time.Since(start).Seconds())),
 	}
 
@@ -97,7 +99,7 @@ func LogShellTimeToInteractiveEvent(startTime string) error {
 	// Ignore errors, telemetry is best effort
 	_ = segmentClient.Enqueue(segment.Track{
 		AnonymousId: evt.AnonymousID,
-		Event:       "shell-time-to-interactive",
+		Event:       evt.eventName,
 		Context: &segment.Context{
 			Device: segment.DeviceInfo{
 				Id: evt.AnonymousID,
