@@ -36,6 +36,7 @@ func ShellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
+
 	flags.config.register(command)
 	return command
 }

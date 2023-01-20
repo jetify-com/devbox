@@ -6,8 +6,30 @@ import (
 	"strconv"
 
 	"github.com/denisbrodbeck/machineid"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
+
+// Opts are global values that apply to the entire devbox binary
+type Opts struct {
+	AppName      string
+	AppVersion   string
+	SentryDSN    string // used by error reporting
+	TelemetryKey string
+}
+
+func InitOpts() *Opts {
+	return &Opts{
+		AppName:      "devbox",
+		AppVersion:   build.Version,
+		SentryDSN:    build.SentryDSN,
+		TelemetryKey: build.TelemetryKey,
+	}
+}
+
+func IsDisabled(opts *Opts) bool {
+	return DoNotTrack() || opts.TelemetryKey == "" || opts.SentryDSN == ""
+}
 
 func DoNotTrack() bool {
 	// https://consoledonottrack.com/

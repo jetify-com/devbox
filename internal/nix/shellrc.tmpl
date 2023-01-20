@@ -51,6 +51,11 @@ export {{ $name }}={{ $value }}
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
 
+{{- if .ShellStartTime }}
+# log that the shell is ready now!
+devbox log shell-ready {{ .ShellStartTime }}
+{{ end }}
+
 # End Devbox Post-init Hook
 
 {{- if .UserHook }}
@@ -78,6 +83,11 @@ cd $workingDir
 {{- end }}
 
 # End Plugin Init Hook
+
+{{- if .ShellStartTime }}
+# log that the shell is interactive now!
+devbox log shell-interactive {{ .ShellStartTime }}
+{{ end }}
 
 # Begin Script command
 

@@ -24,6 +24,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/telemetry"
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
@@ -46,6 +47,10 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 		}
 	}
 	debug.Log("username: %s", username)
+
+	// Record the start time for telemetry, now that we are done with prompting
+	// for github username.
+	telemetryShellStartTime := time.Now()
 
 	sshClient := openssh.Client{
 		Username: username,
@@ -106,7 +111,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
 
-	return shell(username, vmHostname, projectDir)
+	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
 }
 
 func PortForward(local, remote string) (string, error) {
@@ -340,16 +345,17 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 	return errors.WithStack(err)
 }
 
-func shell(username, hostname, projectDir string) error {
+func shell(username, hostname, projectDir string, shellStartTime time.Time) error {
 	projectPath, err := relativeProjectPathInVM(projectDir)
 	if err != nil {
 		return err
 	}
 
 	client := &openssh.Client{
-		Username: username,
-		Addr:     hostname,
-		PathInVM: absoluteProjectPathInVM(username, projectPath),
+		Addr:           hostname,
+		PathInVM:       absoluteProjectPathInVM(username, projectPath),
+		ShellStartTime: telemetry.UnixTimestampFromTime(shellStartTime),
+		Username:       username,
 	}
 	return client.Shell()
 }

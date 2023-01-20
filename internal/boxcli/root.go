@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -44,6 +43,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(GenerateCmd())
 	command.AddCommand(InfoCmd())
 	command.AddCommand(InitCmd())
+	command.AddCommand(LogCmd())
 	command.AddCommand(PlanCmd())
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(RunCmd())
@@ -63,12 +63,7 @@ func RootCmd() *cobra.Command {
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
-	exe.AddMiddleware(midcobra.Telemetry(&midcobra.TelemetryOpts{
-		AppName:      "devbox",
-		AppVersion:   build.Version,
-		SentryDSN:    build.SentryDSN,
-		TelemetryKey: build.TelemetryKey,
-	}))
+	exe.AddMiddleware(midcobra.Telemetry())
 	exe.AddMiddleware(debugMiddleware)
 	return exe.Execute(ctx, args)
 }

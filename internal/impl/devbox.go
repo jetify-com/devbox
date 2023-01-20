@@ -28,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
 )
 
@@ -220,6 +221,11 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
+	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
+	if shellStartTime == "" {
+		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
+	}
+
 	opts := []nix.ShellOption{
 		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
 		nix.WithProfile(profileDir),
@@ -227,6 +233,7 @@ func (d *Devbox) Shell() error {
 		nix.WithProjectDir(d.projectDir),
 		nix.WithEnvVariables(env),
 		nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
+		nix.WithShellStartTime(shellStartTime),
 	}
 
 	shell, err := nix.DetectShell(opts...)

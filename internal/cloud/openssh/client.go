@@ -17,14 +17,20 @@ import (
 )
 
 type Client struct {
-	Username string
-	Addr     string
-	PathInVM string
+	Addr           string
+	PathInVM       string
+	ShellStartTime string // unix timestamp
+	Username       string
 }
 
 func (c *Client) Shell() error {
+
 	cmd := c.cmd("-t")
-	remoteCmd := fmt.Sprintf(`bash -l -c "start_devbox_shell.sh \"%s\""`, c.PathInVM)
+	remoteCmd := fmt.Sprintf(
+		`bash -l -c "start_devbox_shell.sh \"%s\" %s"`,
+		c.PathInVM,
+		c.ShellStartTime,
+	)
 	cmd.Args = append(cmd.Args, remoteCmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
