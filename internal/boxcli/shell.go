@@ -42,6 +42,7 @@ func ShellCmd() *cobra.Command {
 }
 
 func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
+
 	path, cmds, err := parseShellArgs(cmd, args, flags)
 	if err != nil {
 		return err

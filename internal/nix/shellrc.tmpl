@@ -86,7 +86,7 @@ cd $workingDir
 
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
-devbox log shell-interactive {{ .ShellStartTime }}
+devbox log shell-interactive {{ .ShellStartTime }} {{ .SentrySpan }}
 {{ end }}
 
 # Begin Script command

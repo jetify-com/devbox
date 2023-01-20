@@ -5,6 +5,7 @@
 package impl
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -199,6 +201,8 @@ func (d *Devbox) Generate() error {
 }
 
 func (d *Devbox) Shell() error {
+	span := sentry.StartSpan(context.Background(), "local shell", sentry.TransactionName("local shell"))
+
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
@@ -234,6 +238,7 @@ func (d *Devbox) Shell() error {
 		nix.WithEnvVariables(env),
 		nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
 		nix.WithShellStartTime(shellStartTime),
+		nix.WithSentrySpan(span),
 	}
 
 	shell, err := nix.DetectShell(opts...)

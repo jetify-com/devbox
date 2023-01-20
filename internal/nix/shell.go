@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/alessio/shellescape"
+	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -59,6 +60,8 @@ type Shell struct {
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime string
+
+	sentrySpan *sentry.Span
 }
 
 type ShellOption func(*Shell)
@@ -158,6 +161,12 @@ func WithProjectDir(projectDir string) ShellOption {
 func WithShellStartTime(time string) ShellOption {
 	return func(s *Shell) {
 		s.shellStartTime = time
+	}
+}
+
+func WithSentrySpan(span *sentry.Span) ShellOption {
+	return func(s *Shell) {
+		s.sentrySpan = span
 	}
 }
 
@@ -465,6 +474,11 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		}
 	}
 
+	sentrySpanSerialized, err := s.sentrySpan.MarshalJSON()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		EnvToKeep        map[string]string
@@ -474,6 +488,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PluginInitHook   string
 		PathPrepend      string
 		ScriptCommand    string
+		SentrySpan       string
 		ShellStartTime   string
 		ProfileBinDir    string
 		HistoryFile      string
@@ -486,6 +501,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
 		PathPrepend:      pathPrepend,
+		SentrySpan:       string(sentrySpanSerialized),
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		ProfileBinDir:    s.profileDir + "/bin",

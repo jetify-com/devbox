@@ -4,12 +4,15 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
@@ -63,12 +66,23 @@ func CommandStartTime() time.Time {
 
 // LogShellDurationEvent logs the duration from start of the command
 // till the shell was ready to be interactive.
-func LogShellDurationEvent(eventName string, startTime string) error {
+func LogShellDurationEvent(eventName string, startTime string, sentrySpan string) error {
 	opts := InitOpts()
 	if IsDisabled(opts) {
 		// disabled
 		return nil
 	}
+
+	fmt.Printf("sentrySpan: %s\n", sentrySpan)
+	var spanStruct struct {
+		*sentry.Span
+		ParentSpanID string `json:"parent_span_id,omitempty"`
+	}
+	if err := json.Unmarshal([]byte(sentrySpan), &spanStruct); err != nil {
+		return errors.WithStack(err)
+	}
+
+	spanStruct.Finish()
 
 	start, err := timeFromUnixTimestamp(startTime)
 	if err != nil {
@@ -92,6 +106,8 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	defer func() {
 		_ = segmentClient.Close()
 	}()
+
+	fmt.Printf("For event %s, duration: %s\n", evt.eventName, evt.Duration.Milliseconds())
 
 	// Ignore errors, telemetry is best effort
 	_ = segmentClient.Enqueue(segment.Track{
