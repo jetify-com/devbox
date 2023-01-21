@@ -13,7 +13,7 @@ require (
 	github.com/creekorful/mvnparser v1.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.13.0
-	github.com/getsentry/sentry-go v0.16.0
+	github.com/getsentry/sentry-go v0.17.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13

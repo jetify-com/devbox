@@ -12,6 +12,7 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -63,7 +64,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	m.trackError(evt) // Sentry
+	if usererr.ShouldLogError(runErr) {
+		m.trackError(evt) // Sentry
+	}
 
 	m.trackEvent(evt) // Segment
 }
