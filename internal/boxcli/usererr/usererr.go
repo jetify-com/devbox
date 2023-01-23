@@ -17,11 +17,26 @@ type combined struct {
 	source      error
 	userMessage string
 	level       level
+	logged      bool
 }
 
+// New creates new user error with the given message. By default these errors
+// are not logged to Sentry. If you want to log the error, use NewLogged
 func New(msg string, args ...any) error {
 	return errors.WithStack(&combined{
 		userMessage: fmt.Sprintf(msg, args...),
+	})
+}
+
+// NewLogged creates new user error with the given message. These messages are
+// logged to Sentry without the message (for privacy reasons). This is useful
+// for unexpected errors that we want to make sure to log but we also want to
+// attach a good human readable message to.
+func NewLogged(msg string, args ...any) error {
+	return errors.WithStack(&combined{
+		userMessage: fmt.Sprintf(msg, args...),
+		level:       levelError,
+		logged:      true,
 	})
 }
 
@@ -33,8 +48,10 @@ func NewWarning(msg string, args ...any) error {
 }
 
 func WithUserMessage(source error, msg string, args ...any) error {
-	if source == nil {
-		return nil
+	// We don't want to wrap the error if it already has a user message. Doing
+	// so would obscure the original error message which is likely more useful.
+	if source == nil || HasUserMessage(source) {
+		return source
 	}
 	return &combined{
 		source:      source,
@@ -45,6 +62,18 @@ func WithUserMessage(source error, msg string, args ...any) error {
 func HasUserMessage(err error) bool {
 	c := &combined{}
 	return errors.As(err, &c) // note double pointer
+}
+
+// ShouldLogError returns true if the it's a logged user error or is a non-user error
+func ShouldLogError(err error) bool {
+	if err == nil {
+		return false
+	}
+	c := &combined{}
+	if errors.As(err, &c) {
+		return c.logged
+	}
+	return true
 }
 
 func IsWarning(err error) bool {

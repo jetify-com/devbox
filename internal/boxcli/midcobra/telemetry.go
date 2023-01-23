@@ -12,6 +12,7 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -103,8 +104,8 @@ func getPackages(c *cobra.Command) []string {
 }
 
 func (m *telemetryMiddleware) trackError(evt *event) {
-	if evt == nil || evt.CommandError == nil {
-		// Don't send anything to sentry if the error is nil.
+	// Ensure error is not nil and not a non-loggable user error
+	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
 		return
 	}
 
