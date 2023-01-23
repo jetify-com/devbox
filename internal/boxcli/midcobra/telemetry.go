@@ -64,9 +64,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		return
 	}
 
-	if usererr.ShouldLogError(runErr) {
-		m.trackError(evt) // Sentry
-	}
+	m.trackError(evt) // Sentry
 
 	m.trackEvent(evt) // Segment
 }
@@ -106,8 +104,8 @@ func getPackages(c *cobra.Command) []string {
 }
 
 func (m *telemetryMiddleware) trackError(evt *event) {
-	if evt == nil || evt.CommandError == nil {
-		// Don't send anything to sentry if the error is nil.
+	// Ensure error is not nil and not a non-loggable user error
+	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
 		return
 	}
 

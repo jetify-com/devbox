@@ -66,6 +66,9 @@ func HasUserMessage(err error) bool {
 
 // ShouldLogError returns true if the it's a logged user error or is a non-user error
 func ShouldLogError(err error) bool {
+	if err == nil {
+		return false
+	}
 	c := &combined{}
 	if errors.As(err, &c) {
 		return c.logged
