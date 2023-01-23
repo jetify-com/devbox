@@ -126,7 +126,7 @@ Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/qui
 
 `devbox help` - see all commands
 
-See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/) for the full list of commands.
+See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/devbox/) for the full list of commands.
 
 ## Join our Developer Community
 
