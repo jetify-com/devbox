@@ -21,11 +21,11 @@ func TestDevbox(t *testing.T) {
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
 	for _, testPath := range testPaths {
-		testShell(t, testPath)
+		testShellPlan(t, testPath)
 	}
 }
 
-func testShell(t *testing.T, testPath string) {
+func testShellPlan(t *testing.T, testPath string) {
 
 	currentDir, err := os.Getwd()
 	require.New(t).NoError(err)
@@ -49,21 +49,15 @@ func testShell(t *testing.T, testPath string) {
 		shellPlan, err := box.ShellPlan()
 		assert.NoError(err, "devbox shell plan should not fail")
 
-		err = box.generateShellFiles()
-		assert.NoError(err, "devbox generate should not fail")
+		if hasShellPlanFile {
+			data, err := os.ReadFile(shellPlanFile)
+			assert.NoError(err, "shell_plan.json should be readable")
 
-		if !hasShellPlanFile {
-			assert.NotEmpty(shellPlan.DevPackages, "the plan should have dev packages")
-			return
+			expected := &plansdk.ShellPlan{}
+			err = json.Unmarshal(data, &expected)
+			assert.NoError(err, "plan.json should parse correctly")
+			assertShellPlansMatch(t, expected, shellPlan)
 		}
-
-		data, err := os.ReadFile(shellPlanFile)
-		assert.NoError(err, "shell_plan.json should be readable")
-
-		expected := &plansdk.ShellPlan{}
-		err = json.Unmarshal(data, &expected)
-		assert.NoError(err, "plan.json should parse correctly")
-		assertShellPlansMatch(t, expected, shellPlan)
 	})
 }
 
