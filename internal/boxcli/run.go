@@ -62,7 +62,7 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 	}
 
 	script := ""
-	scriptArgs := []string{}
+	var scriptArgs []string
 	if len(args) >= 1 {
 		script = args[0]
 		scriptArgs = args[1:]
