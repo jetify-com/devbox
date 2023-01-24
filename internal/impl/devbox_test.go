@@ -23,11 +23,11 @@ func TestDevbox(t *testing.T) {
 
 	for _, testPath := range testPaths {
 		if !strings.Contains(testPath, "/commands/") {
-			testShell(t, testPath)
+			testShellPlan(t, testPath)
 		}
 	}
 }
-func testShell(t *testing.T, testPath string) {
+func testShellPlan(t *testing.T, testPath string) {
 
 	currentDir, err := os.Getwd()
 	require.New(t).NoError(err)
