@@ -697,20 +697,20 @@ func (d *Devbox) installNixProfile() (err error) {
 func (d *Devbox) writeScriptsToFiles() error {
 	err := os.MkdirAll(filepath.Join(d.projectDir, scriptsDir), 0755) // Ensure directory exists.
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// TODO: Clean up any old files from previous runs.
 
 	// Write all hooks to a file.
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	hooks := strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
 	err = d.writeScriptFile(hooksFilename, hooks)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Write scripts to files.
@@ -719,7 +719,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 			name,
 			fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body))
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -729,7 +729,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	script, err := os.Create(d.scriptPath(name))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer func() {
 		cerr := script.Close()
@@ -739,10 +739,10 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	}()
 	err = script.Chmod(0755)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	_, err = script.WriteString(body)
-	return err
+	return errors.WithStack(err)
 }
 
 func (d *Devbox) scriptPath(scriptName string) string {
