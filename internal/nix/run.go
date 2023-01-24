@@ -35,7 +35,7 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", scriptPath)
+	cmd := exec.Command("sh", "-c", cmdWithArgs)
 	cmd.Env = append(nixEnv, additionalEnv...)
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin
