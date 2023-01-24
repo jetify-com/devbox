@@ -14,6 +14,7 @@
   },
   "services": {
     "apache": {
+      "port": "$HTTPD_PORT",
       "start": "apachectl start -f $HTTPD_CONFDIR/httpd.conf",
       "stop": "apachectl stop -f $HTTPD_CONFDIR/httpd.conf"
     }

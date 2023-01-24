@@ -4,7 +4,11 @@
 package boxcli
 
 import (
+	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -86,6 +90,7 @@ func cloudPortForwardCmd() *cobra.Command {
 	}
 	command.AddCommand(cloudPortForwardList())
 	command.AddCommand(cloudPortForwardTerminateAllCmd())
+	command.AddCommand(cloudPortForwardAuto())
 	return command
 }
 
@@ -116,6 +121,29 @@ func cloudPortForwardList() *cobra.Command {
 			for _, p := range l {
 				cmd.Println(p)
 			}
+			return nil
+		},
+	}
+}
+
+func cloudPortForwardAuto() *cobra.Command {
+	return &cobra.Command{
+		Use:    "auto",
+		Short:  "Automatically port forwards all ports managed by devbox",
+		Hidden: true,
+		Args:   cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			box, err := devbox.Open("", cmd.ErrOrStderr())
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if err = cloud.AutoPortForward(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir()); err != nil {
+				return err
+			}
+			done := make(chan os.Signal, 1)
+			signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
+			fmt.Println("Listening, press ctrl+c to end...")
+			<-done // Will block here until user hits ctrl+c
 			return nil
 		},
 	}
