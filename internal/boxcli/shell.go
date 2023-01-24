@@ -69,7 +69,7 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	}
 
 	if len(cmds) > 0 {
-		fmt.Fprintf(cmd.ErrOrStderr(),
+		fmt.Fprint(cmd.ErrOrStderr(),
 			color.HiYellowString("[Warning] \"devbox shell -- <cmd>\" is deprecated and will disappear "+
 				"in a future version. Use \"devbox run -- <cmd>\" instead\n"))
 		err = box.Exec(cmds...)
