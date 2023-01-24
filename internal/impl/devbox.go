@@ -587,14 +587,14 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while... ", installingVerb)
+	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
 
 	// We need to re-install the packages
 	if err := d.installNixProfile(); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Fprintln(d.writer, "done.")
+	fmt.Fprintln(d.writer, "Done.")
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
@@ -668,12 +668,38 @@ func (d *Devbox) installNixProfile() (err error) {
 			}
 		}()
 	} else {
-		cmd = exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-		)
+		packages := append([]string{""}, d.cfg.Packages...)
+		defer func() {
+			// ensure the full development.nix is written back, even if we early return due to some error
+			d.cfg.Packages = packages
+			_ = d.generateShellFiles()
+		}()
+
+		for _, pkg := range packages {
+			if pkg == "" {
+				fmt.Fprintf(d.writer, "Ensure nixpkgs is downloaded, extracted and evaluated.\n")
+			} else {
+				fmt.Fprintf(d.writer, "Ensure package installed: %s\n", pkg)
+			}
+			d.cfg.Packages = []string{pkg}
+			if err = d.generateShellFiles(); err != nil {
+				return err
+			}
+
+			cmd = exec.Command(
+				"nix-env",
+				"--profile", profileDir,
+				"--install",
+				"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+			)
+			cmd.Env = nix.DefaultEnv()
+			_, err = cmd.Output()
+			if err != nil {
+				return errors.Errorf("error running command %s: %v", cmd, err)
+			}
+		}
+
+		return nil
 	}
 
 	cmd.Env = nix.DefaultEnv()
