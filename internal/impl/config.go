@@ -6,6 +6,7 @@ package impl
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -186,13 +187,19 @@ func validateConfig(cfg *Config) error {
 	}
 	return nil
 }
+
+var whitespace = regexp.MustCompile(`\s`)
+
 func validateScripts(cfg *Config) error {
 	for k := range cfg.Shell.Scripts {
 		if strings.TrimSpace(k) == "" {
 			return errors.New("cannot have script with empty name in devbox.json")
 		}
+		if whitespace.MatchString(k) {
+			return errors.Errorf("cannot have script name with whitespace in devbox.json: %s", k)
+		}
 		if strings.TrimSpace(cfg.Shell.Scripts[k].String()) == "" {
-			return errors.New("cannot have an empty script value in devbox.json")
+			return errors.Errorf("cannot have an empty script body in devbox.json: %s", k)
 		}
 	}
 	return nil
