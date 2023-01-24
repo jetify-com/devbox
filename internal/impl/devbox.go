@@ -250,7 +250,7 @@ func (d *Devbox) Shell() error {
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	if featureflag.NixDevEnvRun.Disabled() {
+	if featureflag.StrictRun.Disabled() {
 		return d.RunScriptInNewNixShell(cmdName)
 	}
 
