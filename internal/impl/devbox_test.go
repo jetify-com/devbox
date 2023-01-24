@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -21,10 +22,11 @@ func TestDevbox(t *testing.T) {
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
 	for _, testPath := range testPaths {
-		testShellPlan(t, testPath)
+		if !strings.Contains(testPath, "/commands/") {
+			testShellPlan(t, testPath)
+		}
 	}
 }
-
 func testShellPlan(t *testing.T, testPath string) {
 
 	currentDir, err := os.Getwd()

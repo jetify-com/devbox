@@ -27,3 +27,9 @@ __pycache__/
 # Java
 *.class
 *.jar
+
+# devcontainer
+*.devcontainer
+
+# test specific files
+examples/testdata/commands/generate/Dockerfile
