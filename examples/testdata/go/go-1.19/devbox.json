@@ -1,7 +1,8 @@
 {
   "packages": [
     "go_1_19",
-    "bazel"
+    "bazel",
+    "vim"
   ],
   "shell": {
     "init_hook": null,

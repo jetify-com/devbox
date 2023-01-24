@@ -688,11 +688,6 @@ func (d *Devbox) installNixProfile() (err error) {
 
 	// Non flakes below:
 	packages := append([]string{""}, d.cfg.Packages...)
-	defer func() {
-		// ensure the full development.nix is written back, even if we early return due to some error
-		d.cfg.Packages = packages
-		_ = d.generateShellFiles()
-	}()
 
 	total := len(packages)
 	for idx, pkg := range packages {
@@ -710,17 +705,21 @@ func (d *Devbox) installNixProfile() (err error) {
 
 		step := stepper.Start(msg)
 
-		d.cfg.Packages = []string{pkg}
-		if err = d.generateShellFiles(); err != nil {
-			return err
-		}
-
-		cmd = exec.Command(
+		cmd := exec.Command(
 			"nix-env",
 			"--profile", profileDir,
+			// TODO savil. hook this up to gcurtis's mirrorURL
+			"-f", fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
 			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
 		)
+		if pkg != "" {
+			cmd.Args = append(cmd.Args, "--attr", pkg)
+		} else {
+			// TODO savil. Figure out how to pre-install just the nixpkgs
+			step.Fail(msg)
+			continue
+		}
+
 		cmd.Env = nix.DefaultEnv()
 		_, err = cmd.Output()
 		if err != nil {
