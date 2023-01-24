@@ -735,10 +735,9 @@ func (d *Devbox) writeScriptsToFiles() error {
 	// Delete any files that weren't written just now.
 	for _, entry := range entries {
 		if _, ok := written[entry.Name()]; !ok && !entry.IsDir() {
-			err = os.Remove(d.scriptPath(entry.Name()))
+			err := os.Remove(d.scriptPath(entry.Name()))
 			if err != nil {
 				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
-				err = nil
 			}
 		}
 	}
