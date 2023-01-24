@@ -270,7 +270,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
+		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
 	}
 
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
