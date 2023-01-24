@@ -58,8 +58,7 @@ func cloudPortForwardCmd() *cobra.Command {
 		Long: "Port forwards a local port to a remote devbox cloud port. If 0 or " +
 			"no local port is specified, we find a suitable local port. Use 'stop' " +
 			"to stop all port forwards.",
-		Hidden: true,
-		Args:   cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ports := strings.Split(args[0], ":")
 
@@ -85,10 +84,9 @@ func cloudPortForwardCmd() *cobra.Command {
 
 func cloudPortForwardStopCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:    "stop",
-		Short:  "Stops all port forwards managed by devbox",
-		Hidden: true,
-		Args:   cobra.ExactArgs(0),
+		Use:   "stop",
+		Short: "Stops all port forwards managed by devbox",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cloud.PortForwardTerminateAll()
 		},
@@ -100,7 +98,6 @@ func cloudPortForwardList() *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "Lists all port forwards managed by devbox",
-		Hidden:  true,
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			l, err := cloud.PortForwardList()
