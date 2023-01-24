@@ -13,7 +13,7 @@ import (
 
 func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, additionalEnv []string) error {
 	if cmdWithArgs == "" {
-		return errors.New("attempted to run a command but gave an empty command")
+		return errors.New("attempted to run an empty command or script")
 	}
 
 	vaf, err := PrintDevEnv(nixShellFilePath)
