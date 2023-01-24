@@ -20,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -667,56 +668,69 @@ func (d *Devbox) installNixProfile() (err error) {
 				_ = d.copyFlakeLockToDevboxLock()
 			}
 		}()
-	} else {
-		packages := append([]string{""}, d.cfg.Packages...)
-		defer func() {
-			// ensure the full development.nix is written back, even if we early return due to some error
-			d.cfg.Packages = packages
-			_ = d.generateShellFiles()
-		}()
 
-		for _, pkg := range packages {
-			if pkg == "" {
-				fmt.Fprintf(d.writer, "Ensure nixpkgs is downloaded, extracted and evaluated.\n")
-			} else {
-				fmt.Fprintf(d.writer, "Ensure package installed: %s\n", pkg)
-			}
-			d.cfg.Packages = []string{pkg}
-			if err = d.generateShellFiles(); err != nil {
-				return err
-			}
+		cmd.Env = nix.DefaultEnv()
 
-			cmd = exec.Command(
-				"nix-env",
-				"--profile", profileDir,
-				"--install",
-				"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-			)
-			cmd.Env = nix.DefaultEnv()
-			_, err = cmd.Output()
-			if err != nil {
-				return errors.Errorf("error running command %s: %v", cmd, err)
-			}
+		debug.Log("Running command: %s\n", cmd.Args)
+		_, err = cmd.Output()
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return errors.Errorf("running command %s: exit status %d with command stderr: %s",
+				cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+		}
+		if err != nil {
+			return errors.Errorf("running command %s: %v", cmd, err)
 		}
 
 		return nil
 	}
 
-	cmd.Env = nix.DefaultEnv()
+	// Non flakes below:
+	packages := append([]string{""}, d.cfg.Packages...)
+	defer func() {
+		// ensure the full development.nix is written back, even if we early return due to some error
+		d.cfg.Packages = packages
+		_ = d.generateShellFiles()
+	}()
 
-	debug.Log("Running command: %s\n", cmd.Args)
-	_, err = cmd.Output()
+	total := len(packages)
+	for idx, pkg := range packages {
+		stepNum := idx + 1
 
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
-			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+		info, infoFound := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
+		var msg string
+		if pkg == "" {
+			msg = fmt.Sprintf("[%d/%d] nixpkgs", stepNum, total)
+		} else if infoFound {
+			msg = fmt.Sprintf("[%d/%d] %s (%s)", stepNum, total, pkg, info.Version)
+		} else {
+			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+		}
+
+		step := stepper.Start(msg)
+
+		d.cfg.Packages = []string{pkg}
+		if err = d.generateShellFiles(); err != nil {
+			return err
+		}
+
+		cmd = exec.Command(
+			"nix-env",
+			"--profile", profileDir,
+			"--install",
+			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+		)
+		cmd.Env = nix.DefaultEnv()
+		_, err = cmd.Output()
+		if err != nil {
+			step.Fail(msg)
+			return errors.Errorf("error running command %s: %v", cmd, err)
+		}
+		step.Success(msg)
 	}
-	if err != nil {
-		return errors.Errorf("running command %s: %v", cmd, err)
-	}
 
-	return
+	return nil
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
