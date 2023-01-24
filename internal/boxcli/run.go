@@ -4,13 +4,10 @@
 package boxcli
 
 import (
-	"sort"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/debug"
-	"golang.org/x/exp/slices"
 )
 
 type runCmdFlags struct {
@@ -50,14 +47,6 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	// Validate script exists.
-	scripts := box.ListScripts()
-	sort.Slice(scripts, func(i, j int) bool { return scripts[i] < scripts[j] })
-	if script == "" || !slices.Contains(scripts, script) {
-		return errors.Errorf("no script found with name \"%s\". "+
-			"Here's a list of the existing scripts in devbox.json: %v", script, scripts)
-	}
-
 	if devbox.IsDevboxShellEnabled() {
 		err = box.RunScriptInShell(script)
 	} else {
@@ -73,10 +62,13 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 	}
 
 	script := ""
-	scriptArgs := []string{}
+	var scriptArgs []string
 	if len(args) >= 1 {
 		script = args[0]
 		scriptArgs = args[1:]
+	} else {
+		// this should never happen because cobra should prevent it, but it's better to be defensive.
+		return "", "", nil, errors.New("no command or script provided")
 	}
 
 	return path, script, scriptArgs, nil

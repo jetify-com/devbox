@@ -249,14 +249,9 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) RunScript(scriptName string, scriptArgs []string) error {
+func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	if featureflag.NixDevEnvRun.Disabled() {
-		return d.RunScriptInNewNixShell(scriptName)
-	}
-
-	script := d.cfg.Shell.Scripts[scriptName]
-	if script == nil {
-		return errors.Errorf("unable to find a script with name %s", scriptName)
+		return d.RunScriptInNewNixShell(cmdName)
 	}
 
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
@@ -272,9 +267,14 @@ func (d *Devbox) RunScript(scriptName string, scriptArgs []string) error {
 		return err
 	}
 
+	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
+	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
+		// it's a script, so replace the command with the script file's path.
+		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
+	}
+
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	scriptWithArgs := strings.Join(append([]string{d.scriptPath(scriptName)}, scriptArgs...), " ")
-	return nix.RunScript(nixShellFilePath, d.projectDir, scriptWithArgs, pluginEnv)
+	return nix.RunScript(nixShellFilePath, d.projectDir, strings.Join(cmdWithArgs, " "), pluginEnv)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.

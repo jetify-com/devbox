@@ -11,9 +11,9 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(nixShellFilePath string, projectDir string, scriptPath string, additionalEnv []string) error {
-	if scriptPath == "" {
-		return errors.New("attempted to run script but did not specify script name")
+func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, additionalEnv []string) error {
+	if cmdWithArgs == "" {
+		return errors.New("attempted to run an empty command or script")
 	}
 
 	vaf, err := PrintDevEnv(nixShellFilePath)
@@ -28,7 +28,7 @@ func RunScript(nixShellFilePath string, projectDir string, scriptPath string, ad
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", scriptPath)
+	cmd := exec.Command("sh", "-c", cmdWithArgs)
 	cmd.Env = append(nixEnv, additionalEnv...)
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin
