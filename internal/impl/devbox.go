@@ -700,9 +700,15 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// TODO: Clean up any old files from previous runs.
+
+	// Read dir contents before writing, so we can clean up later.
+	entries, err := os.ReadDir(filepath.Join(d.projectDir, scriptsDir))
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	// Write all hooks to a file.
+	written := map[string]struct{}{} // set semantics; value is irrelevant
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
@@ -713,14 +719,26 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	written[d.scriptFilename(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
 		err = d.writeScriptFile(
 			name,
-			fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body))
+			fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body))
 		if err != nil {
 			return errors.WithStack(err)
+		}
+		written[d.scriptFilename(name)] = struct{}{}
+	}
+
+	// Delete any files that weren't written just now.
+	for _, entry := range entries {
+		if _, ok := written[entry.Name()]; !ok && !entry.IsDir() {
+			err := os.Remove(d.scriptPath(entry.Name()))
+			if err != nil {
+				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
+			}
 		}
 	}
 
@@ -728,7 +746,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 }
 
 func (d *Devbox) writeScriptFile(name string, body string) (err error) {
-	script, err := os.Create(d.scriptPath(name))
+	script, err := os.Create(d.scriptPath(d.scriptFilename(name)))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -746,8 +764,12 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	return errors.WithStack(err)
 }
 
-func (d *Devbox) scriptPath(scriptName string) string {
-	return filepath.Join(d.projectDir, scriptsDir, scriptName+".sh")
+func (d *Devbox) scriptPath(filename string) string {
+	return filepath.Join(d.projectDir, scriptsDir, filename)
+}
+
+func (d *Devbox) scriptFilename(scriptName string) string {
+	return scriptName + ".sh"
 }
 
 // Move to a utility package?
