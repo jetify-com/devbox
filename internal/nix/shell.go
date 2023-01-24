@@ -294,7 +294,7 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		// via `devbox run` or the deprecated `devbox shell -- <command>`. In this case,
 		// we do want to return the exit code of the script that was run.
 		if s.ScriptCommand != "" {
-			err = usererr.NewExecError(err)
+			return usererr.NewExecError(err)
 		}
 		return nil
 	}
