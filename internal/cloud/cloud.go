@@ -22,9 +22,9 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
-	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
