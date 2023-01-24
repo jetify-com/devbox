@@ -282,10 +282,25 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
-	if err != nil && s.ScriptCommand != "" {
-		// Report error as exec error when executing shell -- <cmd> script.
-		err = usererr.NewExecError(err)
+
+	// If the error is an ExitError, this means the shell started up fine but there was
+	// an error from executing a shell command or script.
+	//
+	// This could be from one of the generated shellrc commands, but more likely is from
+	// a user's command or script. So, we want to return nil for this.
+	if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
+
+		// The exception to the previous comment is if we are executing a shell script
+		// via `devbox run` or the deprecated `devbox shell -- <command>`. In this case,
+		// we do want to return the exit code of the script that was run.
+		if s.ScriptCommand != "" {
+			return usererr.NewExecError(err)
+		}
+		return nil
 	}
+
+	// This means that there was a error from devbox's code or nix's code. Not a user
+	// error and so we do return it.
 	return errors.WithStack(err)
 }
 
