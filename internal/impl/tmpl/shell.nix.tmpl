@@ -1,11 +1,7 @@
 let
+  mirrorURL = builtins.getEnv "DEVBOX_NIXPKGS_URL";
   pkgs = import (fetchTarball {
-    # Commit hash as of 2022-08-16
-    # `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
-    url = "{{ .NixpkgsInfo.URL }}";
-    {{- if .NixpkgsInfo.Sha256 }}
-    sha256 = "{{ .NixpkgsInfo.Sha256 }}";
-    {{- end }}
+    url = if mirrorURL == "" then "{{ .NixpkgsInfo.URL }}" else mirrorURL;
   }) {
     {{- if .NixOverlays }}
       overlays = [
