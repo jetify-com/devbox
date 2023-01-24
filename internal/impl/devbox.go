@@ -38,6 +38,9 @@ const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
+
+	scriptsDir    = ".devbox/gen/scripts"
+	hooksFilename = ".hooks"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -246,10 +249,9 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) RunScriptInShell(scriptName string) error {
-	profileDir, err := d.profileDir()
-	if err != nil {
-		return err
+func (d *Devbox) RunScript(scriptName string) error {
+	if featureflag.NixDevEnvRun.Disabled() {
+		return d.RunScriptInNewNixShell(scriptName)
 	}
 
 	script := d.cfg.Shell.Scripts[scriptName]
@@ -257,23 +259,26 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 		return errors.Errorf("unable to find a script with name %s", scriptName)
 	}
 
-	shell, err := nix.DetectShell(
-		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		nix.WithUserScript(scriptName, script.String()),
-		nix.WithProjectDir(d.projectDir),
-	)
-
-	if err != nil {
-		fmt.Fprint(d.writer, err)
-		shell = &nix.Shell{}
+	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		return err
 	}
 
-	return shell.RunInShell()
+	if err := d.writeScriptsToFiles(); err != nil {
+		return err
+	}
+
+	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	if err != nil {
+		return err
+	}
+
+	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
+	return nix.RunScript(nixShellFilePath, d.projectDir, d.scriptPath(scriptName), pluginEnv)
 }
 
-// TODO: consider unifying the implementations of RunScript and Shell.
-func (d *Devbox) RunScript(scriptName string) error {
+// RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
+// Deprecated: RunScript should be used instead.
+func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
 		return err
 	}
@@ -319,6 +324,33 @@ func (d *Devbox) RunScript(scriptName string) error {
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.Run(nixShellFilePath)
+}
+
+// TODO: deprecate in favor of RunScript().
+func (d *Devbox) RunScriptInShell(scriptName string) error {
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return err
+	}
+
+	script := d.cfg.Shell.Scripts[scriptName]
+	if script == nil {
+		return errors.Errorf("unable to find a script with name %s", scriptName)
+	}
+
+	shell, err := nix.DetectShell(
+		nix.WithProfile(profileDir),
+		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
+		nix.WithUserScript(scriptName, script.String()),
+		nix.WithProjectDir(d.projectDir),
+	)
+
+	if err != nil {
+		fmt.Fprint(d.writer, err)
+		shell = &nix.Shell{}
+	}
+
+	return shell.RunInShell()
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -658,6 +690,63 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	return
+}
+
+// writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
+// Scripts (and hooks) are persisted so that we can easily call them from devbox run (inside or outside shell).
+func (d *Devbox) writeScriptsToFiles() error {
+	err := os.MkdirAll(filepath.Join(d.projectDir, scriptsDir), 0755) // Ensure directory exists.
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// TODO: Clean up any old files from previous runs.
+
+	// Write all hooks to a file.
+	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	hooks := strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
+	// always write it, even if there are no hooks, because scripts will source it.
+	err = d.writeScriptFile(hooksFilename, hooks)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Write scripts to files.
+	for name, body := range d.cfg.Shell.Scripts {
+		err = d.writeScriptFile(
+			name,
+			fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
+}
+
+func (d *Devbox) writeScriptFile(name string, body string) (err error) {
+	script, err := os.Create(d.scriptPath(name))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		cerr := script.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	err = script.Chmod(0755)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = script.WriteString(body)
+	return errors.WithStack(err)
+}
+
+func (d *Devbox) scriptPath(scriptName string) string {
+	return filepath.Join(d.projectDir, scriptsDir, scriptName+".sh")
 }
 
 // Move to a utility package?
