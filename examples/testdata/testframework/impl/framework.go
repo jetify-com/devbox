@@ -3,33 +3,24 @@
 package impl
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"os/exec"
+	"io"
+	"os"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox/internal/boxcli"
+	"go.jetpack.io/devbox/internal/impl"
 )
-
-type DevboxJson struct {
-	Packages []string `cue:"[...string]" json:"packages"`
-	Shell    struct {
-		InitHook shellcmd.Commands             `json:"init_hook,omitempty"`
-		Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
-	} `json:"shell,omitempty"`
-
-	Nixpkgs struct {
-		Commit string `json:"commit,omitempty"`
-	} `json:"nixpkgs,omitempty"`
-}
 
 type TestDevbox struct {
 	devboxJsonPath string
 }
 
 func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
-	cmd := exec.Command("devbox", "info", pkg)
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.InfoCmd()
+	output, err := runCmd(cmd, []string{pkg}, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -37,8 +28,8 @@ func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
 }
 
 func (td *TestDevbox) Version() (string, error) {
-	cmd := exec.Command("devbox", "version")
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.VersionCmd()
+	output, err := runCmd(cmd, nil, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -46,9 +37,8 @@ func (td *TestDevbox) Version() (string, error) {
 }
 
 func (td *TestDevbox) Add(pkgs ...string) (string, error) {
-	args := append([]string{"add"}, pkgs...)
-	cmd := exec.Command("devbox", args...)
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.AddCmd()
+	output, err := runCmd(cmd, pkgs, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -56,9 +46,8 @@ func (td *TestDevbox) Add(pkgs ...string) (string, error) {
 }
 
 func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
-	args := append([]string{"rm"}, pkgs...)
-	cmd := exec.Command("devbox", args...)
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.RemoveCmd()
+	output, err := runCmd(cmd, pkgs, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -66,8 +55,8 @@ func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
 }
 
 func (td *TestDevbox) Run(script string) (string, error) {
-	cmd := exec.Command("devbox", "run", script)
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.RunCmd()
+	output, err := runCmd(cmd, []string{script}, true)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -75,8 +64,8 @@ func (td *TestDevbox) Run(script string) (string, error) {
 }
 
 func (td *TestDevbox) Shell() (string, error) {
-	cmd := exec.Command("devbox", "shell")
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.ShellCmd()
+	output, err := runCmd(cmd, nil, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -84,8 +73,8 @@ func (td *TestDevbox) Shell() (string, error) {
 }
 
 func (td *TestDevbox) Generate(subcommand string) (string, error) {
-	cmd := exec.Command("devbox", "generate", subcommand)
-	output, err := cmd.CombinedOutput()
+	cmd := boxcli.GenerateCmd()
+	output, err := runCmd(cmd, []string{subcommand}, false)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -97,12 +86,12 @@ func (td *TestDevbox) SetDevboxJson(path string) error {
 	return nil
 }
 
-func (td *TestDevbox) GetDevboxJson() (*DevboxJson, error) {
-	file, err := ioutil.ReadFile(td.devboxJsonPath)
+func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
+	file, err := os.ReadFile(td.devboxJsonPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	data := &DevboxJson{}
+	data := &impl.Config{}
 	err = json.Unmarshal(file, &data)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -112,4 +101,17 @@ func (td *TestDevbox) GetDevboxJson() (*DevboxJson, error) {
 
 func Open() *TestDevbox {
 	return &TestDevbox{}
+}
+
+func runCmd(cmd *cobra.Command, args []string, useStderr bool) (string, error) {
+	b := bytes.NewBufferString("")
+	cmd.SetErr(b)
+	cmd.SetOut(b)
+	cmd.SetArgs(args)
+	cmd.Execute()
+	out, err := io.ReadAll(b)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }

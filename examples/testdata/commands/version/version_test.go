@@ -13,5 +13,5 @@ func TestVersion(t *testing.T) {
 	td := testframework.Open()
 	output, err := td.Version()
 	assert.NoError(t, err)
-	assert.Contains(t, output, "0.2.2")
+	assert.Contains(t, output, "0.0.0-dev")
 }

@@ -2,12 +2,15 @@
 // Use of this source code is governed by the license in the LICENSE file.
 package testframework
 
-import "go.jetpack.io/devbox/examples/testdata/testframework/impl"
+import (
+	"go.jetpack.io/devbox/examples/testdata/testframework/impl"
+	internalImpl "go.jetpack.io/devbox/internal/impl"
+)
 
 type TestDevbox interface {
 	// Setting up the environment to run a devbox command
 	SetDevboxJson(path string) error
-	GetDevboxJson() (*impl.DevboxJson, error)
+	GetDevboxJson() (*internalImpl.Config, error)
 
 	// Running specific devbox commands and asserting their output
 	Add(pkgs ...string) (string, error)
