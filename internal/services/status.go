@@ -47,10 +47,12 @@ func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update
 						fmt.Fprintf(w, "Error reading status file: %s\n", err)
 						continue
 					}
+					// Only call callback if something has changed
 					if !reflect.DeepEqual(status, newStatus) {
-						// Only call callback if something has changed
 						status = update(newStatus)
-						updateStatusFile(projectDir, status)
+						if err := updateStatusFile(projectDir, status); err != nil {
+							fmt.Fprintf(w, "Error updating status file: %s\n", err)
+						}
 					}
 				}
 			case err, ok := <-watcher.Errors:
