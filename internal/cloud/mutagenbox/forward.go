@@ -13,7 +13,7 @@ import (
 
 func ForwardCreate(host, localPort, remotePort string) (string, error) {
 	var err error
-	if localPort == "" {
+	if localPort == "" || localPort == "0" {
 		localPort, err = getFreePort()
 		if err != nil {
 			return "", err
