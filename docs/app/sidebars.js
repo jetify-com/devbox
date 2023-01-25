@@ -53,6 +53,15 @@ const sidebars = {
         }]
     }, {
         type: 'category',
+        label: 'Devbox Cloud',
+        link: { type: 'doc', id: 'devbox_cloud/index' },
+        collapsed: true,
+        items: [{
+            type: 'doc',
+            id: 'devbox_cloud/getting_started'
+        }]
+    }, {
+        type: 'category',
         label: "CI/CD Reference",
         collapsed: true,
         items: [{
