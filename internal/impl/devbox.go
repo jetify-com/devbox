@@ -562,21 +562,23 @@ func (d *Devbox) writeScriptsToFiles() error {
 		return errors.WithStack(err)
 	}
 	hooks := strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
-	// always write it, even if there are no hooks, because scripts will source it.
-	err = d.writeScriptFile(hooksFilename, hooks)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	written[d.scriptFilename(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
+		hooks += fmt.Sprintf("\nalias %s=%s", name, d.scriptFilename(name))
 		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		written[d.scriptFilename(name)] = struct{}{}
 	}
+	// Always write it, even if there are no hooks, because scripts will source it.
+	// TODO: add guard to prevent hook from running multiple times and wreaking havoc
+	err = d.writeScriptFile(hooksFilename, hooks)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	written[d.scriptFilename(hooksFilename)] = struct{}{}
 
 	// Delete any files that weren't written just now.
 	for _, entry := range entries {
