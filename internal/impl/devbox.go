@@ -29,7 +29,6 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux/stream"
 	"golang.org/x/exp/slices"
 )
 
@@ -678,8 +677,9 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	cmd.Env = nix.DefaultEnv()
-
-	err = stream.RunCommand(d.writer, cmd)
+	cmd.Stdout = d.writer
+	cmd.Stderr = d.writer
+	err = cmd.Run()
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
