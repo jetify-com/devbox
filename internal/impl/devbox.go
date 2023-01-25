@@ -555,6 +555,12 @@ func (d *Devbox) generateShellFiles() error {
 	return generateForShell(d.projectDir, plan, d.pluginManager)
 }
 
+func (d *Devbox) recreateProfileDir() (string, error) {
+	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
+	_ = os.Remove(absPath)
+	return d.profileDir()
+}
+
 func (d *Devbox) profileDir() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
@@ -656,7 +662,10 @@ func (d *Devbox) printPackageUpdateMessage(
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix or flake.nix
 func (d *Devbox) installNixProfile() (err error) {
-	profileDir, err := d.profileDir()
+	// Re-create the profile dir to avoid conflicts with previous versions
+	// of the profile that may have the same binary installed under a different
+	// `/nix/store` path
+	profileDir, err := d.recreateProfileDir()
 	if err != nil {
 		return err
 	}
