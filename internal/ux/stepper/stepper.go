@@ -45,3 +45,8 @@ func (s *Stepper) Success(format string, a ...any) {
 	s.spinner.FinalMSG = fmt.Sprintf("%s %s\n", color.GreenString("✓"), msg)
 	s.spinner.Stop()
 }
+
+func (s *Stepper) Display(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	s.spinner.Suffix = fmt.Sprintf(" %s %s", color.YellowString("→"), msg)
+}
