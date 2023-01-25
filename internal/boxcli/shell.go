@@ -6,7 +6,6 @@ package boxcli
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -22,12 +21,12 @@ func ShellCmd() *cobra.Command {
 	flags := shellCmdFlags{}
 	command := &cobra.Command{
 		Use:   "shell -- [<cmd>]",
-		Short: "Start a new shell with access to your packages",
-		Long: "Start a new shell with access to your packages.\n\n" +
-			"The shell will be started using the devbox.json found in the --config flag directory. " +
-			"If --config isn't set, then devbox recursively searches the current directory and its parents.\n\n" +
-			"[Deprecated] If invoked as devbox shell -- <cmd>, devbox will run the command in a shell and then exit. " +
-			"This behavior is deprecated and will be removed. Please use devbox run -- <cmd> instead.",
+		Short: "Start a new shell or run a command with access to your packages",
+		Long: "Start a new shell or run a command with access to your packages.\n\n" +
+			"If invoked without `cmd`, devbox will start an interactive shell.\n" +
+			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
+			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
+			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
 		Args:    validateShellArgs,
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -69,9 +68,6 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	}
 
 	if len(cmds) > 0 {
-		fmt.Fprint(cmd.ErrOrStderr(),
-			color.HiYellowString("[Warning] \"devbox shell -- <cmd>\" is deprecated and will disappear "+
-				"in a future version. Use \"devbox run -- <cmd>\" instead\n"))
 		err = box.Exec(cmds...)
 	} else {
 		err = box.Shell()
