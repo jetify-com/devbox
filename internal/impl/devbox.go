@@ -707,19 +707,23 @@ func (d *Devbox) installNixProfile() (err error) {
 
 		step := stepper.Start(msg)
 
-		cmd := exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			// TODO savil. hook this up to gcurtis's mirrorURL
-			"-f", fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
-			"--install",
-		)
+		var cmd *exec.Cmd
 		if pkg != "" {
-			cmd.Args = append(cmd.Args, "--attr", pkg)
+			cmd = exec.Command(
+				"nix-env",
+				"--profile", profileDir,
+				// TODO savil. hook this up to gcurtis's mirrorURL
+				"-f", fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
+				"--install",
+				"--attr", pkg,
+			)
 		} else {
-			// Warm the nixpkgs cache.
-			// TODO savil. Find a way without installing the hello-world program.
-			cmd.Args = append(cmd.Args, "--attr", "hello")
+			cmd = exec.Command(
+				"nix-instantiate",
+				"--eval",
+				"--attr", "path",
+				fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
+			)
 		}
 
 		cmd.Env = nix.DefaultEnv()
