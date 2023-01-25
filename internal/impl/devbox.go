@@ -612,10 +612,8 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		return err
 	}
 
-	err = os.WriteFile(hashFile, hash, 0644)
-	if err != nil {
+	if err := os.WriteFile(hashFile, hash, 0644); err != nil {
 		debug.Log("error writing hash file: %s", err)
-		err = nil
 	}
 
 	return nil
@@ -626,7 +624,7 @@ func (d *Devbox) configHash() []byte {
 	config, err := os.ReadFile(filepath.Join(d.projectDir, configFilename))
 	if err != nil {
 		debug.Log("error reading config: %s", err)
-		err = nil
+		return nil
 	}
 	checksum := sha256.Sum256(config)
 	return checksum[:]
@@ -646,7 +644,7 @@ func (d *Devbox) hashesMatch(hashFile string, hash []byte) bool {
 				debug.Log("error reading hash file: %s", err)
 				return false
 			} else {
-				return bytes.Compare(savedHash, hash) == 0
+				return bytes.Equal(savedHash, hash)
 			}
 		}
 	}
