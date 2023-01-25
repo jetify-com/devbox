@@ -73,7 +73,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 
 	if vmHostname == "" {
-		stepVM := stepper.Start("Creating a virtual machine on the cloud...")
+		stepVM := stepper.Start(w, "Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
 		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
@@ -98,7 +98,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
-	s2 := stepper.Start("Starting file syncing...")
+	s2 := stepper.Start(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
@@ -106,7 +106,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	s2.Success("File syncing started")
 
-	s3 := stepper.Start("Connecting to virtual machine...")
+	s3 := stepper.Start(w, "Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
