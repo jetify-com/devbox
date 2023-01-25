@@ -29,6 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux/stepper"
 	"golang.org/x/exp/slices"
 )
 
@@ -587,14 +588,14 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while... ", installingVerb)
+	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
 
 	// We need to re-install the packages
 	if err := d.installNixProfile(); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Fprintln(d.writer, "done.")
+	fmt.Fprintln(d.writer, "Done.")
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
@@ -667,30 +668,73 @@ func (d *Devbox) installNixProfile() (err error) {
 				_ = d.copyFlakeLockToDevboxLock()
 			}
 		}()
-	} else {
-		cmd = exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-		)
+
+		cmd.Env = nix.DefaultEnv()
+
+		debug.Log("Running command: %s\n", cmd.Args)
+		_, err = cmd.Output()
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return errors.Errorf("running command %s: exit status %d with command stderr: %s",
+				cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+		}
+		if err != nil {
+			return errors.Errorf("running command %s: %v", cmd, err)
+		}
+
+		return nil
 	}
 
-	cmd.Env = nix.DefaultEnv()
+	// Non flakes below:
 
-	debug.Log("Running command: %s\n", cmd.Args)
-	_, err = cmd.Output()
+	// Append an empty string to warm the nixpkgs cache
+	packages := append([]string{""}, d.cfg.Packages...)
 
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
-			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
+	total := len(packages)
+	for idx, pkg := range packages {
+		stepNum := idx + 1
+
+		var msg string
+		if pkg == "" {
+			msg = fmt.Sprintf("[%d/%d] nixpkgs", stepNum, total)
+		} else {
+			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+		}
+
+		step := stepper.Start(msg)
+
+		// TODO savil. hook this up to gcurtis's mirrorURL
+		nixPkgsURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit)
+
+		var cmd *exec.Cmd
+		if pkg != "" {
+			cmd = exec.Command(
+				"nix-env",
+				"--profile", profileDir,
+				"-f", nixPkgsURL,
+				"--install",
+				"--attr", pkg,
+			)
+		} else {
+			cmd = exec.Command(
+				"nix-instantiate",
+				"--eval",
+				"--attr", "path",
+				nixPkgsURL,
+			)
+		}
+
+		cmd.Env = nix.DefaultEnv()
+		_, err = cmd.Output()
+		if err != nil {
+			step.Fail(msg)
+			return errors.Errorf("error running command %s: %v", cmd, err)
+		}
+		step.Success(msg)
 	}
-	if err != nil {
-		return errors.Errorf("running command %s: %v", cmd, err)
-	}
 
-	return
+	return nil
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
