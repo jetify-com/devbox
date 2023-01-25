@@ -695,25 +695,24 @@ func (d *Devbox) installNixProfile() (err error) {
 	for idx, pkg := range packages {
 		stepNum := idx + 1
 
-		info, infoFound := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
 		var msg string
 		if pkg == "" {
 			msg = fmt.Sprintf("[%d/%d] nixpkgs", stepNum, total)
-		} else if infoFound {
-			msg = fmt.Sprintf("[%d/%d] %s (%s)", stepNum, total, pkg, info.Version)
 		} else {
 			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		}
 
 		step := stepper.Start(msg)
 
+		// TODO savil. hook this up to gcurtis's mirrorURL
+		nixPkgsURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit)
+
 		var cmd *exec.Cmd
 		if pkg != "" {
 			cmd = exec.Command(
 				"nix-env",
 				"--profile", profileDir,
-				// TODO savil. hook this up to gcurtis's mirrorURL
-				"-f", fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
+				"-f", nixPkgsURL,
 				"--install",
 				"--attr", pkg,
 			)
@@ -722,7 +721,7 @@ func (d *Devbox) installNixProfile() (err error) {
 				"nix-instantiate",
 				"--eval",
 				"--attr", "path",
-				fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit),
+				nixPkgsURL,
 			)
 		}
 
