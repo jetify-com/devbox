@@ -678,7 +678,10 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = ux.NewFilterWriter(d.writer, "devbox-development")
+	cmd.Stdout = ux.NewFilterWriter(d.writer,
+		`replacing old 'devbox-development'`,
+		`installing 'devbox-development'`,
+	)
 	cmd.Stderr = cmd.Stdout
 
 	err = cmd.Run()
