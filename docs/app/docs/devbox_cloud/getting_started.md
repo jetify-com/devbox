@@ -18,22 +18,22 @@ Devbox Cloud is currently in Beta and under active development.
 Devbox Cloud Shell requires the following: 
 
 * **Devbox 0.2.0 or higher.** If you do not have Nix installed on your machine, Devbox will install it with the default configuration for your OS 
-* **A Github Account with an SSH Key Configured**. This is used by Devbox to authenticate and connect you to your Cloud VM. If you do not have an SSH Key associated with your Github account, follow the instructions here:
+* **A Github Account with an SSH Key Configured**. This is used by Devbox to authenticate and connect you to your Cloud VM.
 
 
-### Authenticate automatically with your Github account
+### Step 1: Authenticate with Github
 
-Devbox provides an easy password-less login flow using the SSH keys attached to your Github Account. If you do not have SSH keys configured with Github, follow the instructions here. 
+Devbox provides an easy password-less login flow using the SSH keys attached to your Github Account. If you do not have SSH keys configured with Github, follow the instructions here: [Connecting to Github with SSH](https://docs.github.com/en/enterprise-server@3.4/authentication/connecting-to-github-with-ssh/about-ssh)
 
 When you run `devbox cloud shell`, Devbox will first attempt to infer your Github username from your local environment, and prompt you if a username cannot be found. 
 
-```bash
-$ devbox cloud shell
-```
+Once Devbox has your username, it will authenticate you over SSH using the private/public keypair associated with your Github Account. 
 
-Once Devbox has your username, it will authenticate you over SSH using the private/public keypair associated with your Github Account. Note that Devbox never reads or stores your private key: All authentication is done via SSH
+:::note
+All authentication is handled via SSH. Devbox never reads or stores your private key.
+:::  
 
-### Launch your Devbox Shell in a Cloud VM
+### Step 2: Launch your Devbox Shell in a Cloud VM
 
 Once you are authenticated, Devbox will provision and start your Cloud Shell: 
 1. First, we will provision a VM within your region and connect using SSH. 
@@ -44,7 +44,61 @@ Once you are authenticated, Devbox will provision and start your Cloud Shell:
 
 If you are using Devbox for the first time, this process may take over 1 minute to complete, depending on the size and number of your project's dependencies. Subsequent sessions will reuse your VM, and should boot up and start in a few seconds
 
-### Edit your files and code locally, then sync to the cloud
+#### Example
+
+Let's create a simple project that uses Python 3.10 with Poetry to manage our packages. We'll start by running `devbox init` in our project directory, and then adding the packages:
+
+```bash
+devbox init 
+```
+```bash
+devbox add python310 poetry
+```
+
+This should create a devbox.json in your directory that looks like the following: 
+
+```json
+{
+  "packages": [
+    "poetry",
+    "python310"
+  ],
+  "shell": {
+    "init_hook": null
+  },
+  "nixpkgs": {
+    "commit": "52e3e80afff4b16ccb7c52e9f0f5220552f03d04"
+  }
+}
+```
+Now you can start your Cloud Shell by running `devbox cloud shell`
+
+```md
+Devbox Cloud
+Remote development environments powered by Nix
+
+✓ Created a virtual machine in Sunnyvale, California (US)
+✓ File syncing started
+✓ Connecting to virtual machine
+
+
+Installing nix packages. This may take a while... done.
+Starting a devbox shell...
+...
+
+(devbox) ~/src/devbox-cloud-test 💫 watching for changes
+❯
+```
+
+You are now connected to your remote shell
+
+
+### Step 3: Sync your Local Changes to Devbox Cloud
 
 When you start your cloud session, your files are kept locally, and synchronized with your Devbox Cloud VM when changes are detected. This means you can use your favorite tools and editors to develop your project, while running in an isolated cloud environment. 
 
+#### Example
+
+Let's 
+
+### Step 4: Test your Services with Port-forwarding
