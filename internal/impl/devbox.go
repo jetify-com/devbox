@@ -5,7 +5,6 @@
 package impl
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +29,6 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux/stepper"
 	"golang.org/x/exp/slices"
 )
 
@@ -669,111 +667,28 @@ func (d *Devbox) installNixProfile() (err error) {
 				_ = d.copyFlakeLockToDevboxLock()
 			}
 		}()
-
-		cmd.Env = nix.DefaultEnv()
-
-		debug.Log("Running command: %s\n", cmd.Args)
-		_, err = cmd.Output()
-
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return errors.Errorf("running command %s: exit status %d with command stderr: %s",
-				cmd, exitErr.ExitCode(), string(exitErr.Stderr))
-		}
-		if err != nil {
-			return errors.Errorf("running command %s: %v", cmd, err)
-		}
-
-		return nil
+	} else { // Non flakes:
+		cmd = exec.Command(
+			"nix-env",
+			"--profile", profileDir,
+			"--install",
+			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+		)
 	}
 
-	// Non flakes below:
+	cmd.Env = nix.DefaultEnv()
+	cmd.Stdout = d.writer
+	cmd.Stderr = d.writer
+	err = cmd.Run()
 
-	// Append an empty string to warm the nixpkgs cache
-	packages := append([]string{""}, d.cfg.Packages...)
-
-	total := len(packages)
-	for idx, pkg := range packages {
-		stepNum := idx + 1
-
-		var msg string
-		if pkg == "" {
-			msg = fmt.Sprintf("[%d/%d] nixpkgs", stepNum, total)
-		} else {
-			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		}
-
-		step := stepper.Start(d.writer, msg)
-
-		// TODO savil. hook this up to gcurtis's mirrorURL
-		nixPkgsURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit)
-
-		var cmd *exec.Cmd
-		if pkg != "" {
-			cmd = exec.Command(
-				"nix-env",
-				"--profile", profileDir,
-				"-f", nixPkgsURL,
-				"--install",
-				"--attr", pkg,
-			)
-		} else {
-			cmd = exec.Command(
-				"nix-instantiate",
-				"--eval",
-				"--attr", "path",
-				nixPkgsURL,
-			)
-		}
-
-		cmd.Env = nix.DefaultEnv()
-
-		// Get a pipe to read from standard out
-		pipe, err := cmd.StdoutPipe()
-		if err != nil {
-			return errors.New("unable to open stdout pipe")
-		}
-
-		// Use the same writer for standard error
-		cmd.Stderr = cmd.Stdout
-
-		// Make a new channel which will be used to ensure we get all output
-		done := make(chan struct{})
-
-		// Create a scanner which scans pipe in a line-by-line fashion
-		scanner := bufio.NewScanner(pipe)
-
-		// Use the scanner to scan the output line by line and log it
-		// It's running in a goroutine so that it doesn't block
-		go func() {
-
-			// Read line by line and process it
-			for scanner.Scan() {
-				line := scanner.Text()
-				step.Display(fmt.Sprintf("%s   %s", msg, line))
-			}
-
-			// We're all done, unblock the channel
-			done <- struct{}{}
-		}()
-
-		// Start the command and check for errors
-		if err := cmd.Start(); err != nil {
-			step.Fail(msg)
-			return errors.Errorf("error starting command %s: %v", cmd, err)
-		}
-
-		// Wait for all output to be processed
-		<-done
-
-		// Wait for the command to finish
-		if err = cmd.Wait(); err != nil {
-			step.Fail(msg)
-			return errors.Errorf("error running command %s: %v", cmd, err)
-		}
-		step.Success(msg)
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
 	}
-
+	if err != nil {
+		return errors.Errorf("running command %s: %v", cmd, err)
+	}
 	return nil
 }
 
