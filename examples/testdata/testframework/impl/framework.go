@@ -20,7 +20,16 @@ type TestDevbox struct {
 
 func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
 	cmd := boxcli.InfoCmd()
-	output, err := runCmd(cmd, []string{pkg}, false)
+	output, err := runCmd(cmd, []string{pkg})
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
+func (td *TestDevbox) Init() (string, error) {
+	cmd := boxcli.InitCmd()
+	output, err := runCmd(cmd, nil)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -29,7 +38,7 @@ func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
 
 func (td *TestDevbox) Version() (string, error) {
 	cmd := boxcli.VersionCmd()
-	output, err := runCmd(cmd, nil, false)
+	output, err := runCmd(cmd, nil)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -38,7 +47,7 @@ func (td *TestDevbox) Version() (string, error) {
 
 func (td *TestDevbox) Add(pkgs ...string) (string, error) {
 	cmd := boxcli.AddCmd()
-	output, err := runCmd(cmd, pkgs, false)
+	output, err := runCmd(cmd, pkgs)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -47,7 +56,7 @@ func (td *TestDevbox) Add(pkgs ...string) (string, error) {
 
 func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
 	cmd := boxcli.RemoveCmd()
-	output, err := runCmd(cmd, pkgs, false)
+	output, err := runCmd(cmd, pkgs)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -56,7 +65,7 @@ func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
 
 func (td *TestDevbox) Run(script string) (string, error) {
 	cmd := boxcli.RunCmd()
-	output, err := runCmd(cmd, []string{script}, true)
+	output, err := runCmd(cmd, []string{script})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -65,7 +74,7 @@ func (td *TestDevbox) Run(script string) (string, error) {
 
 func (td *TestDevbox) Shell() (string, error) {
 	cmd := boxcli.ShellCmd()
-	output, err := runCmd(cmd, nil, false)
+	output, err := runCmd(cmd, nil)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -74,7 +83,7 @@ func (td *TestDevbox) Shell() (string, error) {
 
 func (td *TestDevbox) Generate(subcommand string) (string, error) {
 	cmd := boxcli.GenerateCmd()
-	output, err := runCmd(cmd, []string{subcommand}, false)
+	output, err := runCmd(cmd, []string{subcommand})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -103,7 +112,7 @@ func Open() *TestDevbox {
 	return &TestDevbox{}
 }
 
-func runCmd(cmd *cobra.Command, args []string, useStderr bool) (string, error) {
+func runCmd(cmd *cobra.Command, args []string) (string, error) {
 	b := bytes.NewBufferString("")
 	cmd.SetErr(b)
 	cmd.SetOut(b)
