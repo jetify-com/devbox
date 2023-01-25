@@ -20,7 +20,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -30,6 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux/stepper"
 	"golang.org/x/exp/slices"
 )
 
@@ -687,6 +687,8 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	// Non flakes below:
+
+	// Append an empty string to warm the nixpkgs cache
 	packages := append([]string{""}, d.cfg.Packages...)
 
 	total := len(packages)
@@ -715,9 +717,9 @@ func (d *Devbox) installNixProfile() (err error) {
 		if pkg != "" {
 			cmd.Args = append(cmd.Args, "--attr", pkg)
 		} else {
-			// TODO savil. Figure out how to pre-install just the nixpkgs
-			step.Fail(msg)
-			continue
+			// Warm the nixpkgs cache.
+			// TODO savil. Find a way without installing the hello-world program.
+			cmd.Args = append(cmd.Args, "--attr", "hello")
 		}
 
 		cmd.Env = nix.DefaultEnv()
