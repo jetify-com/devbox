@@ -1,15 +1,19 @@
 package impl
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/cloudflare/ahocorasick"
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 // packageNameRegex matches valid Nix package names and their base32 hash.
@@ -253,4 +257,39 @@ type Package struct {
 	// DirectDependencies are the other packages in the store that this
 	// package depends on. It does not contain transitive dependencies.
 	DirectDependencies []Package
+}
+
+func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
+	pkgs := []string{}
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	cmd := exec.Command("nix-env", "-q", "-p", profileDir, "--json")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	installed := map[string]struct {
+		Name string `json:"name"`
+	}{}
+	if err := json.Unmarshal(out, &installed); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	for _, i := range installed {
+		// rekey by name
+		installed[i.Name] = i
+	}
+
+	for _, pkg := range d.cfg.Packages {
+		info, found := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
+		if !found {
+			pkgs = append(pkgs, pkg)
+		} else if _, ok := installed[info.String()]; !ok {
+			pkgs = append(pkgs, pkg)
+		}
+	}
+
+	return pkgs, nil
 }

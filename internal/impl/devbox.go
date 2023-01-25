@@ -585,18 +585,11 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		return err
 	}
 
-	installingVerb := "Installing"
-	if mode == uninstall {
-		installingVerb = "Uninstalling"
-	}
-	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
-
 	// We need to re-install the packages
-	if err := d.installNixProfile(); err != nil {
+	if err := d.installNixProfile(mode); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Fprintln(d.writer, "Done.")
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
@@ -655,7 +648,7 @@ func (d *Devbox) printPackageUpdateMessage(
 
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix or flake.nix
-func (d *Devbox) installNixProfile() (err error) {
+func (d *Devbox) installNixProfile(mode installMode) (err error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -689,8 +682,23 @@ func (d *Devbox) installNixProfile() (err error) {
 
 	// Non flakes below:
 
+	pkgs, err := d.pendingPackagesForInstallation()
+	if err != nil {
+		return err
+	}
+
+	if len(pkgs) == 0 {
+		return nil
+	}
+
+	installingVerb := "Installing"
+	if mode == uninstall {
+		installingVerb = "Uninstalling"
+	}
+	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
+
 	// Append an empty string to warm the nixpkgs cache
-	packages := append([]string{""}, d.cfg.Packages...)
+	packages := append([]string{""}, pkgs...)
 
 	total := len(packages)
 	for idx, pkg := range packages {
@@ -773,6 +781,8 @@ func (d *Devbox) installNixProfile() (err error) {
 		}
 		step.Success(msg)
 	}
+
+	fmt.Fprintln(d.writer, "Done.")
 
 	return nil
 }
