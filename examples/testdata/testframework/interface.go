@@ -16,6 +16,7 @@ type TestDevbox interface {
 	Add(pkgs ...string) (string, error)
 	Generate(subcommand string) (string, error)
 	Info(pkg string, markdown bool) (string, error)
+	Init() (string, error)
 	Rm(pkgs ...string) (string, error)
 	Run(script string) (string, error)
 	Shell() (string, error)

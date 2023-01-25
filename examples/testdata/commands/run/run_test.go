@@ -16,3 +16,17 @@ func TestRun(t *testing.T) {
 	_, err = td.Run("test1")
 	assert.NoError(t, err)
 }
+
+func TestRunCommand(t *testing.T) {
+	td := testframework.Open()
+	err := td.SetDevboxJson("devbox.json")
+	assert.NoError(t, err)
+
+	_, err = td.Run("ls > test.txt")
+	assert.NoError(t, err)
+	assert.FileExists(t, "test.txt")
+
+	_, err = td.Run("rm test.txt")
+	assert.NoError(t, err)
+	assert.NoFileExists(t, "test.txt")
+}
