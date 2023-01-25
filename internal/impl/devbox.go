@@ -5,6 +5,7 @@
 package impl
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -726,8 +727,47 @@ func (d *Devbox) installNixProfile() (err error) {
 		}
 
 		cmd.Env = nix.DefaultEnv()
-		_, err = cmd.Output()
+
+		// Get a pipe to read from standard out
+		pipe, err := cmd.StdoutPipe()
 		if err != nil {
+			return errors.New("unable to open stdout pipe")
+		}
+
+		// Use the same writer for standard error
+		cmd.Stderr = cmd.Stdout
+
+		// Make a new channel which will be used to ensure we get all output
+		done := make(chan struct{})
+
+		// Create a scanner which scans pipe in a line-by-line fashion
+		scanner := bufio.NewScanner(pipe)
+
+		// Use the scanner to scan the output line by line and log it
+		// It's running in a goroutine so that it doesn't block
+		go func() {
+
+			// Read line by line and process it
+			for scanner.Scan() {
+				line := scanner.Text()
+				step.Display(fmt.Sprintf("%s   %s", msg, line))
+			}
+
+			// We're all done, unblock the channel
+			done <- struct{}{}
+		}()
+
+		// Start the command and check for errors
+		if err := cmd.Start(); err != nil {
+			step.Fail(msg)
+			return errors.Errorf("error starting command %s: %v", cmd, err)
+		}
+
+		// Wait for all output to be processed
+		<-done
+
+		// Wait for the command to finish
+		if err = cmd.Wait(); err != nil {
 			step.Fail(msg)
 			return errors.Errorf("error running command %s: %v", cmd, err)
 		}

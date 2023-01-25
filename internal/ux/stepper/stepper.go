@@ -45,3 +45,9 @@ func (s *Stepper) Success(format string, a ...any) {
 	s.spinner.FinalMSG = fmt.Sprintf("%s %s\n", color.GreenString("✓"), msg)
 	s.spinner.Stop()
 }
+
+func (s *Stepper) Display(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	// we need to add a space prefix to give a small gap between the spinner animation and the msg
+	s.spinner.Suffix = fmt.Sprintf(" %s", msg)
+}
