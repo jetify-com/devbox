@@ -6,6 +6,8 @@ package impl
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
@@ -581,6 +584,12 @@ const (
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
+	hashFile := filepath.Join(d.projectDir, ".devbox/gen/hash.txt")
+	hash := d.configHash()
+	if mode == install && d.hashesMatch(hashFile, hash) {
+		return nil // no change in config, skip install
+	}
+
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
@@ -598,7 +607,50 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	}
 	fmt.Fprintln(d.writer, "Done.")
 
-	return plugin.RemoveInvalidSymlinks(d.projectDir)
+	err := plugin.RemoveInvalidSymlinks(d.projectDir)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(hashFile, hash, 0644)
+	if err != nil {
+		debug.Log("error writing hash file: %s", err)
+		err = nil
+	}
+
+	return nil
+}
+
+func (d *Devbox) configHash() []byte {
+	// Consider hashing d.cfg instead of re-reading the file here.
+	config, err := os.ReadFile(filepath.Join(d.projectDir, configFilename))
+	if err != nil {
+		debug.Log("error reading config: %s", err)
+		err = nil
+	}
+	checksum := sha256.Sum256(config)
+	return checksum[:]
+}
+
+func (d *Devbox) hashesMatch(hashFile string, hash []byte) bool {
+	f, err := os.Stat(hashFile)
+	if err != nil && !os.IsNotExist(err) {
+		debug.Log("error reading hash file: %s", err)
+		return false
+	} else if err == nil { // exists
+		if f.ModTime().Add(1 * time.Hour).Before(time.Now()) {
+			return false
+		} else {
+			savedHash, err := os.ReadFile(hashFile)
+			if err != nil {
+				debug.Log("error reading hash file: %s", err)
+				return false
+			} else {
+				return bytes.Compare(savedHash, hash) == 0
+			}
+		}
+	}
+	return false
 }
 
 func (d *Devbox) printPackageUpdateMessage(
