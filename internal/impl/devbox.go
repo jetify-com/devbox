@@ -705,8 +705,10 @@ func (d *Devbox) installNixProfile() (err error) {
 
 		step := stepper.Start(d.writer, msg)
 
-		// TODO savil. hook this up to gcurtis's mirrorURL
 		nixPkgsURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit)
+		if mirrorURL := os.Getenv("DEVBOX_MIRROR_URL"); mirrorURL != "" {
+			nixPkgsURL = mirrorURL
+		}
 
 		var cmd *exec.Cmd
 		if pkg != "" {
