@@ -729,16 +729,19 @@ func (d *Devbox) installNixProfile() (err error) {
 		cmd.Env = nix.DefaultEnv()
 
 		// Get a pipe to read from standard out
-		r, _ := cmd.StdoutPipe()
+		pipe, err := cmd.StdoutPipe()
+		if err != nil {
+			return errors.New("unable to open stdout pipe")
+		}
 
-		// Use the same pipe for standard error
+		// Use the same writer for standard error
 		cmd.Stderr = cmd.Stdout
 
 		// Make a new channel which will be used to ensure we get all output
 		done := make(chan struct{})
 
-		// Create a scanner which scans r in a line-by-line fashion
-		scanner := bufio.NewScanner(r)
+		// Create a scanner which scans pipe in a line-by-line fashion
+		scanner := bufio.NewScanner(pipe)
 
 		// Use the scanner to scan the output line by line and log it
 		// It's running in a goroutine so that it doesn't block
@@ -755,8 +758,7 @@ func (d *Devbox) installNixProfile() (err error) {
 		}()
 
 		// Start the command and check for errors
-		err := cmd.Start()
-		if err != nil {
+		if err := cmd.Start(); err != nil {
 			step.Fail(msg)
 			return errors.Errorf("error starting command %s: %v", cmd, err)
 		}
@@ -765,8 +767,7 @@ func (d *Devbox) installNixProfile() (err error) {
 		<-done
 
 		// Wait for the command to finish
-		err = cmd.Wait()
-		if err != nil {
+		if err = cmd.Wait(); err != nil {
 			step.Fail(msg)
 			return errors.Errorf("error running command %s: %v", cmd, err)
 		}
