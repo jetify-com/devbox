@@ -18,6 +18,42 @@ type TestDevbox struct {
 	devboxJsonPath string
 }
 
+func (td *TestDevbox) SetDevboxJson(path string) error {
+	td.devboxJsonPath = path
+	return nil
+}
+
+func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
+	file, err := os.ReadFile(td.devboxJsonPath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	data := &impl.Config{}
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return data, nil
+}
+
+func (td *TestDevbox) Add(pkgs ...string) (string, error) {
+	cmd := boxcli.AddCmd()
+	output, err := runCmd(cmd, pkgs)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
+func (td *TestDevbox) Generate(subcommand string) (string, error) {
+	cmd := boxcli.GenerateCmd()
+	output, err := runCmd(cmd, []string{subcommand})
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(output), nil
+}
+
 func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
 	cmd := boxcli.InfoCmd()
 	output, err := runCmd(cmd, []string{pkg})
@@ -30,24 +66,6 @@ func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
 func (td *TestDevbox) Init() (string, error) {
 	cmd := boxcli.InitCmd()
 	output, err := runCmd(cmd, nil)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return string(output), nil
-}
-
-func (td *TestDevbox) Version() (string, error) {
-	cmd := boxcli.VersionCmd()
-	output, err := runCmd(cmd, nil)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return string(output), nil
-}
-
-func (td *TestDevbox) Add(pkgs ...string) (string, error) {
-	cmd := boxcli.AddCmd()
-	output, err := runCmd(cmd, pkgs)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -81,31 +99,13 @@ func (td *TestDevbox) Shell() (string, error) {
 	return string(output), nil
 }
 
-func (td *TestDevbox) Generate(subcommand string) (string, error) {
-	cmd := boxcli.GenerateCmd()
-	output, err := runCmd(cmd, []string{subcommand})
+func (td *TestDevbox) Version() (string, error) {
+	cmd := boxcli.VersionCmd()
+	output, err := runCmd(cmd, nil)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 	return string(output), nil
-}
-
-func (td *TestDevbox) SetDevboxJson(path string) error {
-	td.devboxJsonPath = path
-	return nil
-}
-
-func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
-	file, err := os.ReadFile(td.devboxJsonPath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	data := &impl.Config{}
-	err = json.Unmarshal(file, &data)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return data, nil
 }
 
 func Open() *TestDevbox {
