@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -47,10 +48,14 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	if devbox.IsDevboxShellEnabled() {
-		err = box.RunScriptInShell(script)
-	} else {
+	if featureflag.StrictRun.Enabled() {
 		err = box.RunScript(script, scriptArgs)
+	} else {
+		if devbox.IsDevboxShellEnabled() {
+			err = box.RunScriptInShell(script)
+		} else {
+			err = box.RunScript(script, scriptArgs)
+		}
 	}
 	return err
 }

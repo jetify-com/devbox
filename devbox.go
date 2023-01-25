@@ -34,6 +34,7 @@ type Devbox interface {
 	// the devbox environment.
 	Remove(pkgs ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
+	// TODO: Deprecate in favor of RunScript
 	RunScriptInShell(scriptName string) error
 	Services() (plugin.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child
