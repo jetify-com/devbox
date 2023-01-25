@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/cloudflare/ahocorasick"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -285,6 +286,14 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 	for _, pkg := range d.cfg.Packages {
 		info, found := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
 		if !found {
+			// Not found can happen if the user puts a bad package name in devbox.json
+			// but it can also happen is nix search fails for some reason. We print
+			// an error but try to install the package anyway just in case.
+			color.New(color.FgRed).Fprintf(
+				d.writer,
+				"Package %s not found in nixpkgs\n\n",
+				pkg,
+			)
 			pkgs = append(pkgs, pkg)
 		} else if _, ok := installed[info.String()]; !ok {
 			pkgs = append(pkgs, pkg)
