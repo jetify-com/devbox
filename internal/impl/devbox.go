@@ -715,6 +715,7 @@ func (d *Devbox) installNixProfile() (err error) {
 				"--profile", profileDir,
 				"-f", nixPkgsURL,
 				"--install",
+				"--remove-all",
 				"--attr", pkg,
 			)
 		} else {
