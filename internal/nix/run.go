@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -24,7 +23,7 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 	nixEnv := []string{}
 	for k, v := range vaf.Variables {
 		if v.Type == "exported" {
-			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", k, shellescape.Quote(v.Value.(string))))
+			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", k, v.Value.(string)))
 		}
 	}
 
