@@ -132,6 +132,18 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		// if error installing, revert devbox.json
+		// This is not perfect because there may be more than 1 package being
+		// installed and we don't know which one failed. But it's better than
+		// blindly add all packages.
+		color.New(color.FgRed).Fprintf(
+			d.writer,
+			"There was an error installing nix packages: %v. "+
+				"Packages were not added to devbox.json\n",
+			strings.Join(pkgs, ", "),
+		)
+		d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, pkgs)
+		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
 
