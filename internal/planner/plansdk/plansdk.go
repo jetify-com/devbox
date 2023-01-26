@@ -5,7 +5,9 @@ package plansdk
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/imdario/mergo"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -91,11 +93,34 @@ type NixpkgsInfo struct {
 	Sha256 string
 }
 
-// The commit hash for nixos-22.11 on 2022-12-06 from status.nixos.org
-const DefaultNixpkgsCommit = "52e3e80afff4b16ccb7c52e9f0f5220552f03d04"
+// The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
+const DefaultNixpkgsCommit = "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
 
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
+	mirror := nixpkgsMirrorURL(commitHash)
+	if mirror != "" {
+		return &NixpkgsInfo{
+			URL: mirror,
+		}, nil
+	}
 	return &NixpkgsInfo{
 		URL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
 	}, nil
+}
+
+func nixpkgsMirrorURL(commitHash string) string {
+	// Use DEVBOX_REGION as a hint to see if we're in Devbox Cloud.
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return ""
+	}
+
+	// Check that the mirror is responsive and has the tar file. We can't
+	// leave this up to Nix because fetchTarball will retry indefinitely.
+	client := &http.Client{Timeout: 3 * time.Second}
+	mirrorURL := fmt.Sprintf("http://[fdaa:0:a780:0:1::2]:8081/nixos/nixpkgs/archive/%s.tar.gz", commitHash)
+	resp, err := client.Head(mirrorURL)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return ""
+	}
+	return mirrorURL
 }

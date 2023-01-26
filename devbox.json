@@ -12,6 +12,6 @@
     }
   },
   "nixpkgs": {
-    "commit": "aa7e3b940ad90ba58a5d8c0a2269ec557c9ecc70"
+    "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
   }
 }
