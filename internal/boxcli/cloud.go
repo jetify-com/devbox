@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -113,7 +114,8 @@ func cloudPortForwardList() *cobra.Command {
 }
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
-	if devbox.IsDevboxShellEnabled() {
+	// calling `devbox cloud shell` when already in the VM is not allowed.
+	if region := os.Getenv("DEVBOX_REGION"); region != "" {
 		return shellInceptionErrorMsg("devbox cloud shell")
 	}
 
