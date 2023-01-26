@@ -29,7 +29,6 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/slices"
 )
 
@@ -203,7 +202,7 @@ func (d *Devbox) Generate() error {
 }
 
 func (d *Devbox) Shell() error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -255,7 +254,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return d.RunScriptInNewNixShell(cmdName)
 	}
 
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -281,7 +280,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
 // Deprecated: RunScript should be used instead.
 func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -366,7 +365,7 @@ func (d *Devbox) ListScripts() []string {
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -577,6 +576,7 @@ type installMode string
 const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
+	ensure    installMode = "ensure"
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
@@ -588,14 +588,16 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
+
+	if mode != ensure {
+		_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
+	}
 
 	// We need to re-install the packages
 	if err := d.installNixProfile(); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Fprintln(d.writer, "Done.")
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
@@ -632,8 +634,6 @@ func (d *Devbox) printPackageUpdateMessage(
 			)
 		}
 		fmt.Fprint(d.writer, successMsg)
-
-		fmt.Fprintln(d.writer)
 
 		// (Only when in devbox shell) Prompt the user to run hash -r
 		// to ensure we refresh the shell hash and load the proper environment.
@@ -678,10 +678,8 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = ux.NewFilterWriter(d.writer,
-		`replacing old 'devbox-development'`,
-		`installing 'devbox-development'`,
-	)
+	cmd.Stdout = &nixPackageInstallWriter{d.writer}
+
 	cmd.Stderr = cmd.Stdout
 
 	err = cmd.Run()
