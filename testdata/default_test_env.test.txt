@@ -1,0 +1,9 @@
+# Test that the environment is setup correctly by our testing framework.
+
+# PATH should be empty
+cmpenv expected.env actual.env 
+
+-- actual.env --
+PATH=$PATH
+-- expected.env --
+PATH=
