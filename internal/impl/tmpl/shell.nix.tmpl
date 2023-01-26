@@ -17,7 +17,7 @@ let
   };
   {{- range .Definitions}}
     {{.}}
-  {{end -}}
+  {{ end }}
 in with pkgs;
 mkShell {
   shellHook =
@@ -47,6 +47,6 @@ mkShell {
      packages = [
       {{- range .DevPackages}}
         {{.}}
-      {{end -}}
+      {{- end }}
     ];
 }

@@ -15,7 +15,7 @@ let
   };
   {{- range .Definitions}}
     {{.}}
-  {{end -}}
+  {{ end }}
 in with pkgs;
 buildEnv {
   ignoreCollisions = true;
@@ -23,7 +23,7 @@ buildEnv {
   paths = [
   {{- range .DevPackages}}
     {{.}}
-  {{end -}}
+  {{- end }}
   ];
   pathsToLink = [ "/bin" "/share" "/lib"];
 }
