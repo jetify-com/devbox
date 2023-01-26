@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -18,18 +17,19 @@ type TestDevbox struct {
 	TmpDir string
 }
 
+func (td *TestDevbox) GetTestDir() string {
+	return td.TmpDir
+}
+
 func (td *TestDevbox) SetDevboxJson(fileContent string) error {
-	filePath := filepath.Join(td.TmpDir, "devbox.json")
-	if err := os.WriteFile(filePath, []byte(fileContent), 0777); err != nil {
+	if err := os.WriteFile("devbox.json", []byte(fileContent), 0666); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
-	// devboxJsonPath := "devbox.json"
-	devboxJsonPath := filepath.Join(td.TmpDir, "devbox.json")
-	file, err := os.ReadFile(devboxJsonPath)
+	file, err := os.ReadFile("devbox.json")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -43,10 +43,8 @@ func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
 
 func (td *TestDevbox) RunCommand(cmd *cobra.Command, args ...string) (string, error) {
 	// change into temp directory and run command
-	os.Chdir(td.TmpDir)
 	output, err := runCmd(cmd, args)
 	// regardless of error or not change back into current working directory
-	os.Chdir("..")
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -121,12 +119,14 @@ func Open() *TestDevbox {
 	if err != nil {
 		panic(err)
 	}
+	os.Chdir(tmpDir)
 	return &TestDevbox{
 		TmpDir: tmpDir,
 	}
 }
 
 func (td *TestDevbox) Close() error {
+	os.Chdir("..")
 	return os.RemoveAll(td.TmpDir)
 }
 

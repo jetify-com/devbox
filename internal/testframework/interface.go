@@ -10,6 +10,7 @@ import (
 
 type TestDevbox interface {
 	// Setting up the environment to run a devbox command
+	GetTestDir() string
 	SetDevboxJson(fileContent string) error
 	GetDevboxJson() (*impl.Config, error)
 
