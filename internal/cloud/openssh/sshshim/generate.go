@@ -5,16 +5,12 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 )
 
 // Setup creates the ssh and scp symlinks
 func Setup() error {
-	if featureflag.SSHShim.Disabled() {
-		return nil
-	}
 	shimDir, err := mutagenbox.ShimDir()
 	if err != nil {
 		return errors.WithStack(err)
