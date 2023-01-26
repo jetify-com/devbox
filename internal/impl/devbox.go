@@ -111,6 +111,7 @@ func (d *Devbox) Config() *Config {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
+	original := d.cfg.Packages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
@@ -142,7 +143,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 				"Packages were not added to devbox.json\n",
 			strings.Join(pkgs, ", "),
 		)
-		d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, pkgs)
+		d.cfg.Packages = original
 		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
