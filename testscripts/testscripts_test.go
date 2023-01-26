@@ -80,22 +80,22 @@ func getTestscriptParams(dir string) testscript.Params {
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
 			// Usage: env.path.len <number>
 			// Checks that the PATH environment variable has the expected number of entries.
-			"env.path.len": func(ts *testscript.TestScript, neg bool, args []string) {
+			"env.path.len": func(script *testscript.TestScript, neg bool, args []string) {
 				if len(args) != 1 {
-					ts.Fatalf("usage: env.path.len N")
+					script.Fatalf("usage: env.path.len N")
 				}
 				expectedN, err := strconv.Atoi(args[0])
-				ts.Check(err)
+				script.Check(err)
 
-				path := ts.Getenv("PATH")
+				path := script.Getenv("PATH")
 				actualN := len(strings.Split(path, ":"))
 				if neg {
 					if actualN == expectedN {
-						ts.Fatalf("path length is %d, expected != %d", actualN, expectedN)
+						script.Fatalf("path length is %d, expected != %d", actualN, expectedN)
 					}
 				} else {
 					if actualN != expectedN {
-						ts.Fatalf("path length is %d, expected %d", actualN, expectedN)
+						script.Fatalf("path length is %d, expected %d", actualN, expectedN)
 					}
 				}
 			},
@@ -103,32 +103,32 @@ func getTestscriptParams(dir string) testscript.Params {
 			// Usage: json.superset superset.json subset.json
 			// Checks that the JSON in superset.json contains all the keys and values
 			// present in subset.json.
-			"json.superset": func(ts *testscript.TestScript, neg bool, args []string) {
+			"json.superset": func(script *testscript.TestScript, neg bool, args []string) {
 				if len(args) != 2 {
-					ts.Fatalf("usage: json.superset superset.json subset.json")
+					script.Fatalf("usage: json.superset superset.json subset.json")
 				}
 
 				if neg {
-					ts.Fatalf("json.superset does not support negation")
+					script.Fatalf("json.superset does not support negation")
 				}
 
-				data1 := ts.ReadFile(args[0])
+				data1 := script.ReadFile(args[0])
 				tree1 := map[string]interface{}{}
 				err := json.Unmarshal([]byte(data1), &tree1)
-				ts.Check(err)
+				script.Check(err)
 
-				data2 := ts.ReadFile(args[1])
+				data2 := script.ReadFile(args[1])
 				tree2 := map[string]interface{}{}
 				err = json.Unmarshal([]byte(data2), &tree2)
-				ts.Check(err)
+				script.Check(err)
 
 				for expectedKey, expectedValue := range tree2 {
 					if actualValue, ok := tree1[expectedKey]; ok {
 						if !reflect.DeepEqual(actualValue, expectedValue) {
-							ts.Fatalf("key '%s': expected '%v', got '%v'", expectedKey, expectedValue, actualValue)
+							script.Fatalf("key '%s': expected '%v', got '%v'", expectedKey, expectedValue, actualValue)
 						}
 					} else {
-						ts.Fatalf("key '%s' not found, expected value '%v'", expectedKey, expectedValue)
+						script.Fatalf("key '%s' not found, expected value '%v'", expectedKey, expectedValue)
 					}
 				}
 
