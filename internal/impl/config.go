@@ -138,7 +138,6 @@ func findProjectDirFromParentDirSearch(root string, absPath string) (string, err
 		cur = filepath.Dir(cur)
 	}
 	if plansdk.FileExists(filepath.Join(cur, configFilename)) {
-
 		return cur, nil
 	}
 	return "", missingConfigError(absPath, true /*didCheckParents*/)
