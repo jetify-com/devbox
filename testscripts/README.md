@@ -12,3 +12,7 @@ commands. Examples include:
 + `devbox init`
 + `devbox add <pkg>`
 + ...
+
+We've also added some handy comparison functions
++ `path.len <number>`: verifies that the PATH environment variable has the given number of entries
++ `json.superset <superset.json> <subset.json>`: verifies that `superset.json` has all the keys and values present in `subset.json`
