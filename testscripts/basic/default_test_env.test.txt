@@ -1,0 +1,11 @@
+# Test that the environment is setup correctly by our testing framework.
+
+# PATH should have a single entry: the one setup by the testing framework
+env.path.len 1
+
+# Through that path we should be able to execute devbox:
+exec devbox version
+
+# But nothing else (including common tools):
+! exec grep --version
+! exec echo "echo should not be in path"
