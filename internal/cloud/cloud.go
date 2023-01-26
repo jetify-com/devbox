@@ -33,6 +33,10 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	fmt.Fprintln(w, "Remote development environments powered by Nix")
 	fmt.Fprint(w, "\n")
 
+	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
+		return err
+	}
+
 	username, vmHostname := parseVMEnvVar()
 	// The flag for githubUsername overrides any env-var, since flags are a more
 	// explicit action compared to an env-var which could be latently present.
@@ -472,4 +476,39 @@ func vmHostnameFromSSHControlPath() string {
 
 func hyphenatePath(path string) string {
 	return strings.ReplaceAll(path, "/", "-")
+}
+
+func ensureProjectDirIsNotSensitive(dir string) error {
+
+	// isSensitiveDir checks if the dir is the rootdir or the user's homedir
+	isSensitiveDir := func(dir string) bool {
+		dir = filepath.Clean(dir)
+		if dir == "/" {
+			return true
+		}
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return false
+		}
+		return dir == filepath.Clean(home)
+	}
+
+	if isSensitiveDir(dir) {
+		// check for a git repository in this folder before using this project config
+		// (and potentially syncing all the code to devbox-cloud)
+		_, err := os.Stat(filepath.Join(dir, ".git"))
+		if err != nil {
+			if os.IsNotExist(err) {
+				return usererr.New(
+					"Found a config (devbox.json) file at %s, "+
+						"but since it is a sensitive directory we require it to be part of a git repository "+
+						"before we sync it to devbox cloud",
+					dir,
+				)
+			}
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
