@@ -8,4 +8,4 @@ services:
   devbox-web:
     type: web
     port: 80
-    url: www.jetpack.io/devbox/
+    url: www.jetpack.io/devbox/docs/

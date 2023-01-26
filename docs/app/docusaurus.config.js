@@ -9,7 +9,7 @@ const config = {
     title: 'Devbox',
     tagline: 'Instant, easy, and predictable shells and containers',
     url: 'https://www.jetpack.io',
-    baseUrl: '/devbox/',
+    baseUrl: '/devbox/docs/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     favicon: 'img/favicon.ico',
@@ -33,17 +33,13 @@ const config = {
             /** @type {import('@docusaurus/preset-classic').Options} */
             ({
                 docs: {
+                    routeBasePath: '/',
                     sidebarPath: require.resolve('./sidebars.js'),
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
                     editUrl: "https://github.com/jetpack-io/devbox/tree/main/docs/app/"
                 },
-                // blog: {
-                //     showReadingTime: true,
-                //     // Please change this to your repo.
-                //     // Remove this to remove the "edit this page" links.
-                //     editUrl: 'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-                // },
+                blog: false,
                 theme: {
                     customCss: require.resolve('./src/css/custom.css'),
                 },
@@ -103,11 +99,11 @@ const config = {
                     title: "Devbox",
                     items: [{
                             label: "Home",
-                            to: "/"
+                            to: "https://www.jetpack.io/devbox"
                         },
                         {
                             label: "Docs",
-                            to: "/docs"
+                            to: "https://www.jetpack.io/devbox/docs/"
                         }
                     ]
                 },
