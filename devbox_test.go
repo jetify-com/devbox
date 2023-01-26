@@ -15,7 +15,7 @@ func TestScripts(t *testing.T) {
 	dirs := findScriptDirs()
 	require.NotEmpty(t, dirs, "no test scripts found in testdata/")
 
-	// Loop through all the directories and run an tests scripts (files ending
+	// Loop through all the directories and run all tests scripts (files ending
 	// in .test.txt)
 	for _, dir := range dirs {
 		t.Run(dir, func(t *testing.T) {
