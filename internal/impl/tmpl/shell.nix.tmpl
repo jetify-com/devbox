@@ -1,7 +1,5 @@
 let
   pkgs = import (fetchTarball {
-    # Commit hash as of 2022-08-16
-    # `git ls-remote https://github.com/nixos/nixpkgs nixos-unstable`
     url = "{{ .NixpkgsInfo.URL }}";
     {{- if .NixpkgsInfo.Sha256 }}
     sha256 = "{{ .NixpkgsInfo.Sha256 }}";
