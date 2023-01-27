@@ -360,7 +360,8 @@ func shell(username, hostname, projectDir string, shellStartTime time.Time) erro
 		ShellStartTime: telemetry.UnixTimestampFromTime(shellStartTime),
 		Username:       username,
 	}
-	return client.Shell()
+	sessionErrors := newSSHSessionErrors()
+	return cloudShellErrorHandler(client.Shell(sessionErrors), sessionErrors)
 }
 
 // relativeProjectPathInVM refers to the project path relative to the user's
