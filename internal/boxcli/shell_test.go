@@ -293,7 +293,7 @@ func (sh *shell) exit(t *testing.T) {
 }
 
 func TestShell(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -308,7 +308,7 @@ func TestShell(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	output, err := td.RunCommand(ShellCmd())
 	assert.NoError(t, err)

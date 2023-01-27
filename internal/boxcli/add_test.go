@@ -10,7 +10,7 @@ import (
 )
 
 func TestAdd(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -22,12 +22,12 @@ func TestAdd(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	output, err := td.RunCommand(AddCmd(), "go_1_17")
 	assert.NoError(t, err)
 	assert.Contains(t, output, "go_1_17 (go-1.17.13) is now installed.")
-	devboxjson, err := td.GetDevboxJson()
+	updatedDevboxJSON, err := td.GetDevboxJSON()
 	assert.NoError(t, err)
-	assert.Contains(t, devboxjson.Packages, "go_1_17")
+	assert.Contains(t, updatedDevboxJSON.Packages, "go_1_17")
 }

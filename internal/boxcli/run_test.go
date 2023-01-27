@@ -10,7 +10,7 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -25,14 +25,14 @@ func TestRun(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	_, err = td.RunCommand(RunCmd(), "test1")
 	assert.NoError(t, err)
 }
 
 func TestRunCommand(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -47,11 +47,11 @@ func TestRunCommand(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
-	td.SetEnv("DEVBOX_FEATURE_STRICT_RUN", "1")
-	o, err := td.RunCommand(RunCmd(), "ls > test.txt")
-	t.Log(o)
+	err = td.SetEnv("DEVBOX_FEATURE_STRICT_RUN", "1")
+	assert.NoError(t, err)
+	_, err = td.RunCommand(RunCmd(), "ls > test.txt")
 	assert.NoError(t, err)
 	assert.FileExists(t, "test.txt")
 

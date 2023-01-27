@@ -12,8 +12,8 @@ type TestDevbox interface {
 	// Setting up the environment to run a devbox command
 	GetTestDir() string
 	SetEnv(key string, value string) error
-	SetDevboxJson(fileContent string) error
-	GetDevboxJson() (*impl.Config, error)
+	SetDevboxJSON(fileContent string) error
+	GetDevboxJSON() (*impl.Config, error)
 	CreateFile(fileName string, fileContent string) error
 	Close() error
 

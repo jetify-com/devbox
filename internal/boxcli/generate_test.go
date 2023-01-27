@@ -10,7 +10,7 @@ import (
 )
 
 func TestGenerateDockerfile(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -22,7 +22,7 @@ func TestGenerateDockerfile(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	// devbox generate dockerfile doesn't generate any output
 	_, err = td.RunCommand(GenerateCmd(), "dockerfile")
@@ -31,7 +31,7 @@ func TestGenerateDockerfile(t *testing.T) {
 }
 
 func TestGenerateDevcontainer(t *testing.T) {
-	devboxJson := `
+	devboxJSON := `
 	{
 		"packages": [],
 		"shell": {
@@ -43,7 +43,7 @@ func TestGenerateDevcontainer(t *testing.T) {
 	}`
 	td := testframework.Open()
 	defer td.Close()
-	err := td.SetDevboxJson(devboxJson)
+	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	// devbox generate devcontainer doesn't generate any output
 	_, err = td.RunCommand(GenerateCmd(), "devcontainer")
