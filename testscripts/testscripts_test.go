@@ -14,6 +14,7 @@ import (
 	"github.com/rogpeppe/go-internal/testscript"
 	"github.com/stretchr/testify/require"
 	"go.jetpack.io/devbox/internal/boxcli"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 func TestScripts(t *testing.T) {
@@ -65,7 +66,7 @@ func getTestscriptParams(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
 		RequireExplicitExec: true,
-		TestWork:            false, // Set to true if you're trying to debug a test.
+		TestWork:            true, // Set to true if you're trying to debug a test.
 		Setup: func(env *testscript.Env) error {
 			// Ensure path is empty so that we rely only on the PATH set by devbox
 			// itself.
@@ -75,6 +76,30 @@ func getTestscriptParams(dir string) testscript.Params {
 			oldPath := env.Getenv("PATH")
 			newPath := strings.Split(oldPath, ":")[0]
 			env.Setenv("PATH", newPath)
+
+			// Both devbox itself and nix ocassionally create some files in
+			// XDG_CACHE_HOME (which defaults to ~/.cache). For purposes of this
+			// test set it to a location within the test's working directory:
+			cacheHome := filepath.Join(env.WorkDir, ".cache")
+			env.Setenv("XDG_CACHE_HOME", cacheHome)
+			err := os.MkdirAll(cacheHome, 0755) // Ensure dir exists.
+			if err != nil {
+				return err
+			}
+
+			// There is one directory we do want to share across tests: nix's cache.
+			// Without it tests are very slow, and nix would end up re-downloading
+			// nixpkgs every time.
+			// Here we create a shared location for nix's cache, and symlink from
+			// the test's working directory.
+			err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0755) // Ensure dir exists.
+			if err != nil {
+				return err
+			}
+			err = os.Symlink(xdg.CacheSubpath("devbox-tests/nix"), filepath.Join(cacheHome, "nix"))
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
