@@ -1,5 +1,5 @@
 ---
-title: Devbox Cloud Beta
+title: Devbox Cloud Open Beta
 ---
 
 Devbox Cloud is a new way to create and run your Devbox Project in an isolated cloud environment. Devbox Cloud let's you quickly spin up an on-demand Linux Edge VM with your Devbox dependencies and shell, using either a local project or your browser.

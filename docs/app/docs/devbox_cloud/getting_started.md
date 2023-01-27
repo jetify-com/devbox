@@ -27,7 +27,7 @@ Devbox provides an easy password-less login flow using the SSH keys attached to 
 
 When you run `devbox cloud shell`, Devbox will first attempt to infer your Github username from your local environment, and prompt you if a username cannot be found. 
 
-Once Devbox has your username, it will authenticate you over SSH using the private/public keypair associated with your Github Account. 
+Once Devbox has your username, it will authenticate you over SSH using the private/public key pair associated with your Github Account. 
 
 :::note
 All authentication is handled via SSH. Devbox never reads or stores your private key.
@@ -44,7 +44,7 @@ Once you are authenticated, Devbox will provision and start your Cloud Shell:
 
 If you are using Devbox for the first time, this process may take over 1 minute to complete, depending on the size and number of your project's dependencies. Subsequent sessions will reuse your VM, and should boot up and start in a few seconds
 
-#### Example
+#### Example: Initialize a Python Project in Cloud Shell
 
 Let's create a simple project that uses Python 3.10 with Poetry to manage our packages. We'll start by running `devbox init` in our project directory, and then adding the packages:
 
@@ -97,8 +97,89 @@ You are now connected to your remote shell
 
 When you start your cloud session, your files are kept locally, and synchronized with your Devbox Cloud VM when changes are detected. This means you can use your favorite tools and editors to develop your project, while running in an isolated cloud environment. 
 
-#### Example
+#### Example: Add a Simple Flask App
 
-Let's 
+Let's add a simple Flask "Hello World" to our project to test the syncing.  
+
+1. On your local machine, create a pyproject.toml file with the following: 
+
+  ```toml
+  [tool.poetry]
+  name = "devbox-cloud-test"
+  version = "0.1.0"
+  description = ""
+  authors = ["Your Name <you@example.com>"]
+  packages = [{include = "devbox_cloud_test"}]
+
+  [tool.poetry.dependencies]
+  python = "^3.10"
+  Flask = "^2.2.2"
+
+
+  [build-system]
+  requires = ["poetry-core"]
+  build-backend = "poetry.core.masonry.api"
+  ```
+
+1. Create a file locally called `hello.py`, with the following contents:
+
+  ```python
+    from flask import Flask
+
+    app = Flask(__name__)
+
+    @app.route('/')
+    def index():
+        return '<h1>Hello from Devbox Cloud!</h1>'
+  ```
+
+1. These files will be automatically synced to your Devbox Cloud Shell, meaning you can install and run the Flask server remotely: 
+
+```bash
+poetry install
+poetry run flask --app hello run
+```
+
+This should start your Flask app with the development server:
+
+```bash
+ * Serving Flask app 'hello'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+```
 
 ### Step 4: Test your Services with Port-forwarding
+
+Once your service is running, you may want to test it with your browser or local tools, or you may want to expose services running on your remote shell to your local machine. 
+
+ You can do this using `devbox cloud forward :<remote_port>`, which will forward ports from your cloud instance to your local machine. If you provide just the remote port, Devbox will forward it to a randomly assigned local port.
+
+You can view the full list of port-forwards on your machine using `devbox cloud forward ls`. You can also terminate port=forwarding with `devbox cloud forward termiante`. 
+
+#### Example: Port-forwarding our Flask App
+
+Our Flask app in the example above is listening on port 5000 of the remote machine. Using `devbox cloud forward`, we can access that service from our localhost:
+
+```bash
+devbox cloud forward 5000:5000
+
+Port forwarding 5000:5000
+To view in browser, visit http://localhost:5000
+```
+
+Now if we curl `localhost:5000`, we should see our message:
+
+```bash
+curl localhost:5000
+<h1>Hello from Devbox Cloud!</h1>
+```
+
+## Next Steps
+
+* Learn how to activate [Devbox Cloud Shell in your Browser](browser_getting_started.md)
+* Try out one of our [Examples](../devbox_examples/index.md) in Devbox Cloud Shell
+* Learn more about the [Devbox Cloud Shell Open Beta](index.md)
+* Join the [Discord Community](https://discord.gg/jetpack-io)
+* File an Issue or Contribute on our [Github Repo](https://github.com/jetpack-io/devbox)

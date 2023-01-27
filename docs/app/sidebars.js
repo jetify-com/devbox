@@ -54,9 +54,12 @@ const sidebars = {
     }, {
         type: 'category',
         label: 'Devbox Cloud',
-        link: { type: 'doc', id: 'devbox_cloud/index' },
+        link: { type: 'doc', id: 'devbox_cloud/devbox_cloud' },
         collapsed: true,
         items: [{
+            type: 'doc',
+            id: 'devbox_cloud/devbox_cloud'
+        }, {
             type: 'doc',
             id: 'devbox_cloud/getting_started'
         }]
