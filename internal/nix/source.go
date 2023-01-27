@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/hashicorp/go-envparse"
@@ -35,6 +36,7 @@ func SourceNixEnv() error {
 		echo PATH=$PATH;
 		echo NIX_PROFILES=$NIX_PROFILES;
 		echo NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE;
+		echo MANPATH=$MANPATH;
 	`, srcFile)
 	cmd := exec.Command(
 		"/bin/sh",
@@ -55,7 +57,9 @@ func SourceNixEnv() error {
 	}
 
 	for k, v := range envvars {
-		os.Setenv(k, v)
+		if len(strings.TrimSpace(v)) > 0 {
+			os.Setenv(k, v)
+		}
 	}
 
 	return nil
