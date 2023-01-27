@@ -17,21 +17,21 @@ var sshSessionErrorStrings = []string{
 // For performance and privacy it doesn't actually keep any content from the
 // sessions, but instead just keeps track of which errors were encountered.
 type sshSessionErrors struct {
-	errors map[string]string
+	errors map[string]bool
 }
 
 var _ io.Writer = (*sshSessionErrors)(nil)
 
 func newSSHSessionErrors() *sshSessionErrors {
 	return &sshSessionErrors{
-		errors: make(map[string]string),
+		errors: make(map[string]bool),
 	}
 }
 
 func (s *sshSessionErrors) Write(p []byte) (n int, err error) {
 	for _, errorString := range sshSessionErrorStrings {
 		if strings.Contains(string(p), errorString) {
-			s.errors[errorString] = string(p)
+			s.errors[errorString] = true
 		}
 	}
 	return len(p), nil
@@ -46,7 +46,7 @@ func cloudShellErrorHandler(err error, sessionErrors *sshSessionErrors) error {
 	}
 
 	// This usually on initial setup when running start_devbox_shell.sh
-	if _, ok := sessionErrors.errors[errApplyNixDerivationString]; ok {
+	if found := sessionErrors.errors[errApplyNixDerivationString]; found {
 		return usererr.WithLoggedUserMessage(
 			err,
 			"Failed to apply Nix derivation. This can happen if your devbox (nix) "+
