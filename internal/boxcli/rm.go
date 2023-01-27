@@ -16,9 +16,10 @@ type removeCmdFlags struct {
 func RemoveCmd() *cobra.Command {
 	flags := removeCmdFlags{}
 	command := &cobra.Command{
-		Use:   "rm <pkg>...",
-		Short: "Remove a package from your devbox",
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "rm <pkg>...",
+		Short:   "Remove a package from your devbox",
+		Args:    cobra.MinimumNArgs(1),
+		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRemoveCmd(cmd, args, flags)
 		},
