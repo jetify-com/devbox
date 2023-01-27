@@ -503,7 +503,7 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 			// prompt for direnv allow
 			var result string
 			prompt := &survey.Input{
-				Message: "Do you want to enable direnv integration for this devbox project? [y/n]",
+				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
 			}
 			err := survey.AskOne(prompt, &result)
 			if err != nil {
