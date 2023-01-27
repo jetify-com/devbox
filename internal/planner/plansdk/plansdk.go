@@ -33,8 +33,6 @@ type ShellPlan struct {
 	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
 	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
-	// Nix overlays. Currently, Rust needs it for shell.
-	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
 	// Nix expressions. Currently, PHP needs it for shell.
 	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
 	// GeneratedFiles is a map of name => content for files that should be generated
@@ -54,7 +52,7 @@ type PlannerForPackages interface {
 }
 
 // MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
-// and overlays is the union of the packages, definitions, and overlays of the input plans,
+// and shellInitHooks is the union of the packages, definitions, and shellInitHooks of the input plans,
 // respectively.
 func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	shellPlan := &ShellPlan{}
@@ -67,7 +65,6 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 
 	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
 	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
-	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
 	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
 
 	return shellPlan, nil

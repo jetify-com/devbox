@@ -5,13 +5,6 @@ let
     sha256 = "{{ .NixpkgsInfo.Sha256 }}";
     {{- end }}
   }) {
-    {{- if .NixOverlays }}
-      overlays = [
-      {{- range .NixOverlays }}
-        (import (fetchTarball "{{.}}"))
-      {{ end -}}
-      ];
-    {{- end }}
   };
   {{- range .Definitions}}
     {{.}}
