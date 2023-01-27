@@ -33,7 +33,7 @@ func SourceNixEnv() error {
 	script := heredoc.Docf(`
 		. %s;
 		echo PATH=$PATH;
-		echo NIX_PROFILEs=$NIX_PROFILES;
+		echo NIX_PROFILES=$NIX_PROFILES;
 		echo NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE;
 	`, srcFile)
 	cmd := exec.Command(
@@ -46,7 +46,7 @@ func SourceNixEnv() error {
 	if err != nil {
 		// When there's an error, the output is usually an error message that
 		// was printed to stderr and that we want in the error for debugging.
-		return errors.WithMessage(err, string(bs))
+		return errors.Wrap(err, string(bs))
 	}
 	envvars, err := envparse.Parse(bytes.NewReader(bs))
 
