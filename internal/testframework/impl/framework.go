@@ -17,6 +17,10 @@ type TestDevbox struct {
 	TmpDir string
 }
 
+func (td *TestDevbox) SetEnv(key string, value string) error {
+	return os.Setenv(key, value)
+}
+
 func (td *TestDevbox) GetTestDir() string {
 	return td.TmpDir
 }
@@ -41,6 +45,13 @@ func (td *TestDevbox) GetDevboxJson() (*impl.Config, error) {
 	return data, nil
 }
 
+func (td *TestDevbox) CreateFile(fileName string, fileContent string) error {
+	if err := os.WriteFile(fileName, []byte(fileContent), 0666); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func (td *TestDevbox) RunCommand(cmd *cobra.Command, args ...string) (string, error) {
 	// change into temp directory and run command
 	output, err := runCmd(cmd, args)
@@ -50,69 +61,6 @@ func (td *TestDevbox) RunCommand(cmd *cobra.Command, args ...string) (string, er
 	}
 	return string(output), nil
 }
-
-// func (td *TestDevbox) Generate(subcommand string) (string, error) {
-// 	cmd := boxcli.GenerateCmd()
-// 	output, err := runCmd(cmd, []string{subcommand})
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Info(pkg string, markdown bool) (string, error) {
-// 	cmd := boxcli.InfoCmd()
-// 	output, err := runCmd(cmd, []string{pkg})
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Init() (string, error) {
-// 	cmd := boxcli.InitCmd()
-// 	output, err := runCmd(cmd, nil)
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Rm(pkgs ...string) (string, error) {
-// 	cmd := boxcli.RemoveCmd()
-// 	output, err := runCmd(cmd, pkgs)
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Run(script string) (string, error) {
-// 	cmd := boxcli.RunCmd()
-// 	output, err := runCmd(cmd, []string{script})
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Shell() (string, error) {
-// 	cmd := boxcli.ShellCmd()
-// 	output, err := runCmd(cmd, nil)
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
-
-// func (td *TestDevbox) Version() (string, error) {
-// 	cmd := boxcli.VersionCmd()
-// 	output, err := runCmd(cmd, nil)
-// 	if err != nil {
-// 		return "", errors.WithStack(err)
-// 	}
-// 	return string(output), nil
-// }
 
 func Open() *TestDevbox {
 	tmpDir, err := os.MkdirTemp(".", ".test_tmp_*")
@@ -127,6 +75,7 @@ func Open() *TestDevbox {
 
 func (td *TestDevbox) Close() error {
 	os.Chdir("..")
+	os.Clearenv()
 	return os.RemoveAll(td.TmpDir)
 }
 

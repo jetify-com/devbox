@@ -11,21 +11,14 @@ import (
 type TestDevbox interface {
 	// Setting up the environment to run a devbox command
 	GetTestDir() string
+	SetEnv(key string, value string) error
 	SetDevboxJson(fileContent string) error
 	GetDevboxJson() (*impl.Config, error)
+	CreateFile(fileName string, fileContent string) error
+	Close() error
 
 	// Running specific devbox commands and asserting their output
-	Close() error
 	RunCommand(cmd *cobra.Command, args ...string) (string, error)
-	// Add(cmd *cobra.Command, pkgs ...string) (string, error)
-	// Generate(subcommand string) (string, error)
-	// Info(pkg string, markdown bool) (string, error)
-	// Init() (string, error)
-	// Rm(pkgs ...string) (string, error)
-	// Run(script string) (string, error)
-	// Shell() (string, error)
-	// Version() (string, error)
-	//... and other devbox commands
 }
 
 func Open() TestDevbox {
