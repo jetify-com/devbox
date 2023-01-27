@@ -83,10 +83,13 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
 			stepVM.Success("Detected existing virtual machine")
 		} else {
-			var region string
-			vmHostname, region, err = getVirtualMachine(sshClient)
+			var region, vmUser string
+			vmUser, vmHostname, region, err = getVirtualMachine(sshClient)
 			if err != nil {
 				return err
+			}
+			if vmUser != "" {
+				username = vmUser
 			}
 			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
 
@@ -178,6 +181,7 @@ type vm struct {
 	VMHost       string `json:"vm_host"`
 	VMHostPort   int    `json:"vm_host_port"`
 	VMRegion     string `json:"vm_region"`
+	VMUsername   string `json:"vm_username"`
 	VMPublicKey  string `json:"vm_public_key"`
 	VMPrivateKey string `json:"vm_private_key"`
 }
@@ -187,14 +191,14 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(client openssh.Client) (vmHost string, region string, err error) {
+func getVirtualMachine(client openssh.Client) (vmUser, vmHost, region string, err error) {
 	sshOut, err := client.Exec("auth")
 	if err != nil {
-		return "", "", errors.Wrapf(err, "error requesting VM")
+		return "", "", "", errors.Wrapf(err, "error requesting VM")
 	}
 	resp := &vm{}
 	if err := json.Unmarshal(sshOut, resp); err != nil {
-		return "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
+		return "", "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
 	}
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
 		debug.Log("got gateway response:\n\t%s", redacted)
@@ -202,10 +206,10 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string, err
 	if resp.VMPrivateKey != "" {
 		err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
 		if err != nil {
-			return "", "", errors.Wrapf(err, "error adding new VM key")
+			return "", "", "", errors.Wrapf(err, "error adding new VM key")
 		}
 	}
-	return resp.VMHost, resp.VMRegion, nil
+	return resp.VMUsername, resp.VMHost, resp.VMRegion, nil
 }
 
 func syncFiles(username, hostname, projectDir string) error {
