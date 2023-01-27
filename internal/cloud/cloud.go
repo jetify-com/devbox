@@ -28,10 +28,9 @@ import (
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
-	c := color.New(color.FgMagenta).Add(color.Bold)
-	c.Fprintln(w, "Devbox Cloud")
-	fmt.Fprintln(w, "Remote development environments powered by Nix")
-	fmt.Fprint(w, "\n")
+	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
+	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
+	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
 
 	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
 		return err
