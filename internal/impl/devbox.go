@@ -40,8 +40,9 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir    = ".devbox/gen/scripts"
-	hooksFilename = ".hooks"
+	scriptsDir           = ".devbox/gen/scripts"
+	hooksFilename        = ".hooks"
+	arbitraryCmdFilename = ".cmd"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -281,10 +282,17 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
+	var cmdWithArgs []string
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
 		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+	} else {
+		// Arbitrary commands should also run the hooks, so we write them to a file as well.
+		err := d.writeScriptFile(arbitraryCmdFilename, d.scriptBody(fmt.Sprintf("%s $@", cmdName)))
+		if err != nil {
+			return err
+		}
+		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}, cmdArgs...)
 	}
 
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
@@ -741,9 +749,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
-		err = d.writeScriptFile(
-			name,
-			fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body))
+		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -788,6 +794,10 @@ func (d *Devbox) scriptPath(filename string) string {
 
 func (d *Devbox) scriptFilename(scriptName string) string {
 	return scriptName + ".sh"
+}
+
+func (d *Devbox) scriptBody(body string) string {
+	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
 }
 
 // Move to a utility package?
