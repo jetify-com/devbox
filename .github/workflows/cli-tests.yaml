@@ -10,6 +10,8 @@ on:
   push:
     branches-ignore:
       - main
+    paths-ignore:
+      - 'docs/**'
   workflow_call:
   workflow_dispatch:
 
