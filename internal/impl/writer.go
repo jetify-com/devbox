@@ -11,14 +11,15 @@ var nixPackageInstallIgnore = []string{
 }
 
 type nixPackageInstallWriter struct {
-	w io.Writer
+	w      io.Writer
+	indent string
 }
 
 func (fw *nixPackageInstallWriter) Write(p []byte) (n int, err error) {
 	lines := strings.Split(string(p), "\n")
 	for _, line := range lines {
 		if line != "" && !fw.ignore(line) {
-			_, err = io.WriteString(fw.w, "\t"+line+"\n")
+			_, err = io.WriteString(fw.w, fw.indent+line+"\n")
 			if err != nil {
 				return
 			}
