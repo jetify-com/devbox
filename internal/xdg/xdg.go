@@ -1,7 +1,4 @@
-package mutagen
-
-// TODO: publish as it's own shared package that other binaries
-// can use.
+package xdg
 
 import (
 	"os"
