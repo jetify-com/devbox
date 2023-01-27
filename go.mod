@@ -5,6 +5,7 @@ go 1.19
 require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/alessio/shellescape v1.4.1
 	github.com/bmatcuk/doublestar/v4 v4.4.0
 	github.com/briandowns/spinner v1.19.0
@@ -16,6 +17,7 @@ require (
 	github.com/getsentry/sentry-go v0.17.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/go-envparse v0.1.0
 	github.com/imdario/mergo v0.3.13
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
@@ -61,5 +63,4 @@ require (
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	gopkg.in/errgo.v2 v2.1.0 // indirect
 )
