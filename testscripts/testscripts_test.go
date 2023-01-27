@@ -66,7 +66,7 @@ func getTestscriptParams(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
 		RequireExplicitExec: true,
-		TestWork:            true, // Set to true if you're trying to debug a test.
+		TestWork:            false, // Set to true if you're trying to debug a test.
 		Setup: func(env *testscript.Env) error {
 			// Ensure path is empty so that we rely only on the PATH set by devbox
 			// itself.
@@ -77,7 +77,7 @@ func getTestscriptParams(dir string) testscript.Params {
 			newPath := strings.Split(oldPath, ":")[0]
 			env.Setenv("PATH", newPath)
 
-			// Both devbox itself and nix ocassionally create some files in
+			// Both devbox itself and nix occasionally create some files in
 			// XDG_CACHE_HOME (which defaults to ~/.cache). For purposes of this
 			// test set it to a location within the test's working directory:
 			cacheHome := filepath.Join(env.WorkDir, ".cache")
