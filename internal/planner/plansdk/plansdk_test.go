@@ -14,7 +14,6 @@ func TestMergeShellPlans(t *testing.T) {
 	plan2 := &ShellPlan{
 		DevPackages:   []string{},
 		Definitions:   []string{"a"},
-		NixOverlays:   []string{"b"},
 		ShellInitHook: []string{"a", "b"},
 		GeneratedFiles: map[string]string{
 			"a": "b",
@@ -28,18 +27,15 @@ func TestMergeShellPlans(t *testing.T) {
 	// Test merge array
 	plan1 = &ShellPlan{
 		Definitions:   []string{"a"},
-		NixOverlays:   []string{"b"},
 		ShellInitHook: []string{"c"},
 	}
 	plan2 = &ShellPlan{
 		Definitions:   []string{"a"},
-		NixOverlays:   []string{"a"},
 		ShellInitHook: []string{"a", "b"},
 	}
 	expected = &ShellPlan{
 		DevPackages:   []string{},
 		Definitions:   []string{"a"},
-		NixOverlays:   []string{"b", "a"},
 		ShellInitHook: []string{"c", "a", "b"},
 	}
 	actual, err = MergeShellPlans(plan1, plan2)
@@ -63,7 +59,6 @@ func TestMergeShellPlans(t *testing.T) {
 	expected = &ShellPlan{
 		DevPackages:   []string{},
 		Definitions:   []string{},
-		NixOverlays:   []string{},
 		ShellInitHook: []string{},
 		GeneratedFiles: map[string]string{
 			"a": "b",
