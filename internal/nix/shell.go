@@ -490,7 +490,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PathPrepend      string
 		ScriptCommand    string
 		ShellStartTime   string
-		ProfileBinDir    string
 		HistoryFile      string
 		NixEnv           map[string]string
 	}{
@@ -503,7 +502,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PathPrepend:      pathPrepend,
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
-		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		NixEnv:           vars,
 	})
