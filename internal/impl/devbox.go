@@ -607,7 +607,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	}
 
 	// We need to re-install the packages
-	if err := d.installNixProfile(); err != nil {
+	if err := d.installNixProfile(mode); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
@@ -667,7 +667,7 @@ func (d *Devbox) printPackageUpdateMessage(
 
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix or flake.nix
-func (d *Devbox) installNixProfile() (err error) {
+func (d *Devbox) installNixProfile(mode installMode) (err error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
@@ -691,7 +691,10 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = &nixPackageInstallWriter{d.writer}
+	cmd.Stdout = &nixPackageInstallWriter{
+		d.writer,
+		lo.Ternary(mode != ensure, "\t", ""),
+	}
 
 	cmd.Stderr = cmd.Stdout
 
