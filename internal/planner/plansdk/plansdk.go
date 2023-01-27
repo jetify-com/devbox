@@ -91,7 +91,7 @@ type NixpkgsInfo struct {
 }
 
 // The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
-const DefaultNixpkgsCommit = "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
+const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
 
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 	mirror := nixpkgsMirrorURL(commitHash)
