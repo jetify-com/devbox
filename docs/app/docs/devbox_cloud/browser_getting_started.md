@@ -1,5 +1,5 @@
 ---
-title: Getting started with Devbox Cloud in your Browser
+title: Getting Started From Your Browser
 ---
 
 ## Hold
