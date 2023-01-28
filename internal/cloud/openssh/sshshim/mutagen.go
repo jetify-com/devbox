@@ -25,7 +25,7 @@ func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
 		return true, nil
 	}
 
-	if isActive, err := checkActiveVM(vmAddr); err != nil {
+	if isActive, err := checkActiveVMWithRetries(vmAddr); err != nil {
 		return false, errors.WithStack(err)
 	} else if !isActive {
 		debug.Log("terminating mutagen session for vm: %s", vmAddr)
@@ -52,6 +52,23 @@ func terminateMutagenSessions(vmAddr string) error {
 	}
 
 	return mutagenbox.ForwardTerminateAll()
+}
+
+func checkActiveVMWithRetries(vmAddr string) (bool, error) {
+	var err error
+
+	// Try 3 times:
+	for num := 0; num < 3; num++ {
+		var isActive bool
+		isActive, err = checkActiveVM(vmAddr)
+		if err == nil && isActive {
+			// found an active VM
+			return true, nil
+		}
+		time.Sleep(10 * time.Second)
+		debug.Log("Try %d failed to find activeVM for %s", num, vmAddr)
+	}
+	return false, err
 }
 
 func checkActiveVM(vmAddr string) (bool, error) {
