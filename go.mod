@@ -31,6 +31,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20221109205753-fc8884afc316
 	golang.org/x/mod v0.7.0
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/debug"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 )
 
 func EnableDebug() {
-	if w, err := logFile(); err == nil {
+	if w, err := logFileWriter(); err == nil {
 		debug.SetOutput(w)
 	} else {
 		fmt.Fprintf(os.Stderr, "failed to init ssh log file: %s", err)
@@ -29,22 +30,17 @@ func EnableDebug() {
 }
 
 // logFile captures output for logging and when there is a failure
-// NOTE: Ideally, we should limit the size of this log file, but it is always truncated
-// because only the last ssh invocation (which may have failed) has its output saved.
-// So size should hopefully not be crazy big.
-func logFile() (io.Writer, error) {
+func logFileWriter() (io.Writer, error) {
 	dirPath, err := mutagenbox.ShimDir()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	file, err := os.OpenFile(
-		filepath.Join(dirPath, logFileName),
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC,
-		0700,
-	)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return file, nil
+	return &lumberjack.Logger{
+		Filename:   filepath.Join(dirPath, logFileName),
+		MaxSize:    2, // megabytes
+		MaxBackups: 2,
+		MaxAge:     28,   // days
+		Compress:   true, // disabled by default
+	}, nil
 }
