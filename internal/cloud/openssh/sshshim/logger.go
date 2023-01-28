@@ -9,10 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/natefinch/lumberjack"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/debug"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (

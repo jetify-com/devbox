@@ -21,7 +21,6 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
-	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pelletier/go-toml/v2 v2.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.9.0
@@ -32,6 +31,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20221109205753-fc8884afc316
 	golang.org/x/mod v0.7.0
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -64,5 +64,4 @@ require (
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
