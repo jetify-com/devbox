@@ -11,8 +11,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
@@ -47,6 +49,22 @@ func Exec(path string, command []string, env []string) error {
 }
 
 func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
+	if featureflag.Flakes.Enabled() {
+		return flakesPkgInfo(nixpkgsCommit, pkg)
+	}
+	return legacyPkgInfo(nixpkgsCommit, pkg)
+}
+
+func legacyPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
+	info, err := plansdk.GetNixpkgsInfo(nixpkgsCommit)
+	if err != nil {
+		return nil, false
+	}
+	cmd := exec.Command("nix-env", "-qa", "-A", pkg, "-f", info.URL, "--json")
+	return pkgInfo(cmd, pkg)
+}
+
+func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 	exactPackage := fmt.Sprintf("nixpkgs/%s#%s", nixpkgsCommit, pkg)
 	if nixpkgsCommit == "" {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
@@ -55,6 +73,10 @@ func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 	cmd := exec.Command("nix", "search",
 		"--extra-experimental-features", "nix-command flakes",
 		"--json", exactPackage)
+	return pkgInfo(cmd, pkg)
+}
+
+func pkgInfo(cmd *exec.Cmd, pkg string) (*Info, bool) {
 	cmd.Env = DefaultEnv()
 	cmd.Stderr = os.Stderr
 	debug.Log("running command: %s\n", cmd)
