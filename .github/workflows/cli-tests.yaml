@@ -49,9 +49,9 @@ jobs:
             ~/.cache/golangci-lint
             ~/.cache/go-build
             ~/go/pkg
-          key: golangci-lint-cache-${{ steps.current-time.outputs.day }}
+          key: golangci-lint-cache-${{ runner.os }}-${{ steps.current-time.outputs.day }}
           restore-keys: |
-            golangci-lint-cache-
+            golangci-lint-cache-${{ runner.os }}-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.4.0
         with:
