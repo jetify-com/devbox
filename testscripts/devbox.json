@@ -4,6 +4,6 @@
     "init_hook": null
   },
   "nixpkgs": {
-    "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
+    "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
   }
 }

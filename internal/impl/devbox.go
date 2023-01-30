@@ -112,6 +112,7 @@ func (d *Devbox) Config() *Config {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
+	original := d.cfg.Packages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
@@ -133,6 +134,18 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		// if error installing, revert devbox.json
+		// This is not perfect because there may be more than 1 package being
+		// installed and we don't know which one failed. But it's better than
+		// blindly add all packages.
+		color.New(color.FgRed).Fprintf(
+			d.writer,
+			"There was an error installing nix packages: %v. "+
+				"Packages were not added to devbox.json\n",
+			strings.Join(pkgs, ", "),
+		)
+		d.cfg.Packages = original
+		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
 
@@ -203,7 +216,7 @@ func (d *Devbox) Generate() error {
 }
 
 func (d *Devbox) Shell() error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -250,17 +263,12 @@ func (d *Devbox) Shell() error {
 	return shell.Run(nixShellFilePath)
 }
 
-func (d *Devbox) RunScript(scriptName string) error {
-	if featureflag.NixDevEnvRun.Disabled() {
-		return d.RunScriptInNewNixShell(scriptName)
+func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
+	if featureflag.StrictRun.Disabled() {
+		return d.RunScriptInNewNixShell(cmdName)
 	}
 
-	script := d.cfg.Shell.Scripts[scriptName]
-	if script == nil {
-		return errors.Errorf("unable to find a script with name %s", scriptName)
-	}
-
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -273,14 +281,20 @@ func (d *Devbox) RunScript(scriptName string) error {
 		return err
 	}
 
+	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
+	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
+		// it's a script, so replace the command with the script file's path.
+		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+	}
+
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.RunScript(nixShellFilePath, d.projectDir, d.scriptPath(scriptName), pluginEnv)
+	return nix.RunScript(nixShellFilePath, d.projectDir, strings.Join(cmdWithArgs, " "), pluginEnv)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
 // Deprecated: RunScript should be used instead.
 func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -365,7 +379,7 @@ func (d *Devbox) ListScripts() []string {
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -490,7 +504,7 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 			// prompt for direnv allow
 			var result string
 			prompt := &survey.Input{
-				Message: "Do you want to enable direnv integration for this devbox project?[y/n]",
+				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
 			}
 			err := survey.AskOne(prompt, &result)
 			if err != nil {
@@ -576,6 +590,7 @@ type installMode string
 const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
+	ensure    installMode = "ensure"
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
@@ -587,14 +602,18 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
-	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while... ", installingVerb)
+
+	if mode == ensure {
+		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
+	} else {
+		_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
+	}
 
 	// We need to re-install the packages
 	if err := d.installNixProfile(); err != nil {
 		fmt.Fprintln(d.writer)
 		return errors.Wrap(err, "apply Nix derivation")
 	}
-	fmt.Fprintln(d.writer, "done.")
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
@@ -632,8 +651,6 @@ func (d *Devbox) printPackageUpdateMessage(
 		}
 		fmt.Fprint(d.writer, successMsg)
 
-		fmt.Fprintln(d.writer)
-
 		// (Only when in devbox shell) Prompt the user to run hash -r
 		// to ensure we refresh the shell hash and load the proper environment.
 		if IsDevboxShellEnabled() {
@@ -667,7 +684,7 @@ func (d *Devbox) installNixProfile() (err error) {
 				_ = d.copyFlakeLockToDevboxLock()
 			}
 		}()
-	} else {
+	} else { // Non flakes:
 		cmd = exec.Command(
 			"nix-env",
 			"--profile", profileDir,
@@ -677,9 +694,11 @@ func (d *Devbox) installNixProfile() (err error) {
 	}
 
 	cmd.Env = nix.DefaultEnv()
+	cmd.Stdout = &nixPackageInstallWriter{d.writer}
 
-	debug.Log("Running command: %s\n", cmd.Args)
-	_, err = cmd.Output()
+	cmd.Stderr = cmd.Stdout
+
+	err = cmd.Run()
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
@@ -689,8 +708,7 @@ func (d *Devbox) installNixProfile() (err error) {
 	if err != nil {
 		return errors.Errorf("running command %s: %v", cmd, err)
 	}
-
-	return
+	return nil
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -700,9 +718,15 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// TODO: Clean up any old files from previous runs.
+
+	// Read dir contents before writing, so we can clean up later.
+	entries, err := os.ReadDir(filepath.Join(d.projectDir, scriptsDir))
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	// Write all hooks to a file.
+	written := map[string]struct{}{} // set semantics; value is irrelevant
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
@@ -713,14 +737,26 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	written[d.scriptFilename(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
 		err = d.writeScriptFile(
 			name,
-			fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body))
+			fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body))
 		if err != nil {
 			return errors.WithStack(err)
+		}
+		written[d.scriptFilename(name)] = struct{}{}
+	}
+
+	// Delete any files that weren't written just now.
+	for _, entry := range entries {
+		if _, ok := written[entry.Name()]; !ok && !entry.IsDir() {
+			err := os.Remove(d.scriptPath(entry.Name()))
+			if err != nil {
+				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
+			}
 		}
 	}
 
@@ -728,7 +764,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 }
 
 func (d *Devbox) writeScriptFile(name string, body string) (err error) {
-	script, err := os.Create(d.scriptPath(name))
+	script, err := os.Create(d.scriptPath(d.scriptFilename(name)))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -746,8 +782,12 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	return errors.WithStack(err)
 }
 
-func (d *Devbox) scriptPath(scriptName string) string {
-	return filepath.Join(d.projectDir, scriptsDir, scriptName+".sh")
+func (d *Devbox) scriptPath(filename string) string {
+	return filepath.Join(d.projectDir, scriptsDir, filename)
+}
+
+func (d *Devbox) scriptFilename(scriptName string) string {
+	return scriptName + ".sh"
 }
 
 // Move to a utility package?

@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 func Create(spec *SessionSpec) error {
@@ -214,7 +215,7 @@ func envAsKeyValueStrings(userEnv map[string]string) []string {
 }
 
 func ensureMutagen() string {
-	installPath := CacheSubpath("mutagen/bin/mutagen")
+	installPath := xdg.CacheSubpath("mutagen/bin/mutagen")
 	err := InstallMutagenOnce(installPath)
 	if err != nil {
 		panic(err)

@@ -2,10 +2,7 @@
     description = "A devbox shell";
 
     inputs = {
-        # master branch can be slow because not all binaries are built and populated in the cache.
-        # using the nixpkgs-unstable tag ensures everything has been built and populated in the cache.
-        # https://www.reddit.com/r/NixOS/comments/ydr4po/comment/itv6oqo/?utm_source=reddit&utm_medium=web2x&context=3
-        nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+        nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
 
         flake-utils.url = "github:numtide/flake-utils";
     };

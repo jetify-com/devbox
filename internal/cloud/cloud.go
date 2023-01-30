@@ -23,17 +23,20 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
-	"go.jetpack.io/devbox/internal/cloud/stepper"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
-	c := color.New(color.FgMagenta).Add(color.Bold)
-	c.Fprintln(w, "Devbox Cloud")
-	fmt.Fprintln(w, "Remote development environments powered by Nix")
-	fmt.Fprint(w, "\n")
+	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
+	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
+	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
+
+	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
+		return err
+	}
 
 	username, vmHostname := parseVMEnvVar()
 	// The flag for githubUsername overrides any env-var, since flags are a more
@@ -75,7 +78,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 
 	if vmHostname == "" {
-		stepVM := stepper.Start("Creating a virtual machine on the cloud...")
+		stepVM := stepper.Start(w, "Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
 		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
@@ -100,7 +103,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
-	s2 := stepper.Start("Starting file syncing...")
+	s2 := stepper.Start(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
 		s2.Fail("Starting file syncing [FAILED]")
@@ -108,7 +111,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	s2.Success("File syncing started")
 
-	s3 := stepper.Start("Connecting to virtual machine...")
+	s3 := stepper.Start(w, "Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
@@ -387,7 +390,8 @@ func shell(username, hostname, projectDir string, shellStartTime time.Time) erro
 		ShellStartTime: telemetry.UnixTimestampFromTime(shellStartTime),
 		Username:       username,
 	}
-	return client.Shell()
+	sessionErrors := newSSHSessionErrors()
+	return cloudShellErrorHandler(client.Shell(sessionErrors), sessionErrors)
 }
 
 // relativeProjectPathInVM refers to the project path relative to the user's
@@ -502,4 +506,39 @@ func vmHostnameFromSSHControlPath() string {
 
 func hyphenatePath(path string) string {
 	return strings.ReplaceAll(path, "/", "-")
+}
+
+func ensureProjectDirIsNotSensitive(dir string) error {
+
+	// isSensitiveDir checks if the dir is the rootdir or the user's homedir
+	isSensitiveDir := func(dir string) bool {
+		dir = filepath.Clean(dir)
+		if dir == "/" {
+			return true
+		}
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return false
+		}
+		return dir == filepath.Clean(home)
+	}
+
+	if isSensitiveDir(dir) {
+		// check for a git repository in this folder before using this project config
+		// (and potentially syncing all the code to devbox-cloud)
+		_, err := os.Stat(filepath.Join(dir, ".git"))
+		if err != nil {
+			if os.IsNotExist(err) {
+				return usererr.New(
+					"Found a config (devbox.json) file at %s, "+
+						"but since it is a sensitive directory we require it to be part of a git repository "+
+						"before we sync it to devbox cloud",
+					dir,
+				)
+			}
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }

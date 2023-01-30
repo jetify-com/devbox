@@ -5,6 +5,7 @@ package stepper
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -15,8 +16,8 @@ type Stepper struct {
 	spinner *spinner.Spinner
 }
 
-func Start(format string, a ...any) *Stepper {
-	spinner := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+func Start(w io.Writer, format string, a ...any) *Stepper {
+	spinner := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(w))
 	err := spinner.Color("magenta")
 	if err != nil {
 		panic(err)
@@ -44,4 +45,10 @@ func (s *Stepper) Success(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	s.spinner.FinalMSG = fmt.Sprintf("%s %s\n", color.GreenString("✓"), msg)
 	s.spinner.Stop()
+}
+
+func (s *Stepper) Display(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	// we need to add a space prefix to give a small gap between the spinner animation and the msg
+	s.spinner.Suffix = fmt.Sprintf(" %s", msg)
 }

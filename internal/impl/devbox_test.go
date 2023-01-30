@@ -67,7 +67,6 @@ func assertShellPlansMatch(t *testing.T, expected *plansdk.ShellPlan, actual *pl
 	assert := assert.New(t)
 
 	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
-	assert.ElementsMatch(expected.NixOverlays, actual.NixOverlays, "NixOverlays should match")
 }
 
 func fileExists(path string) bool {

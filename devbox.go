@@ -33,7 +33,8 @@ type Devbox interface {
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(pkgs ...string) error
-	RunScript(scriptName string) error
+	RunScript(scriptName string, scriptArgs []string) error
+	// TODO: Deprecate in favor of RunScript
 	RunScriptInShell(scriptName string) error
 	Services() (plugin.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child

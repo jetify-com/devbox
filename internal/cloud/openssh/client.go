@@ -6,6 +6,7 @@ package openssh
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"net"
 	"os"
@@ -23,7 +24,7 @@ type Client struct {
 	Username       string
 }
 
-func (c *Client) Shell() error {
+func (c *Client) Shell(w io.Writer) error {
 
 	cmd := c.cmd("-t")
 	remoteCmd := fmt.Sprintf(
@@ -33,8 +34,8 @@ func (c *Client) Shell() error {
 	)
 	cmd.Args = append(cmd.Args, remoteCmd)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = io.MultiWriter(os.Stdout, w)
+	cmd.Stderr = io.MultiWriter(os.Stderr, w)
 	return logCmdRun(cmd)
 }
 

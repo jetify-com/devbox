@@ -103,6 +103,6 @@ func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (str
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {
-	return usererr.New("You are already in an active devbox shell.\nRun `exit` before calling `%s` again."+
+	return usererr.New("You are already in an active %[1]s.\nRun `exit` before calling `%[1]s` again."+
 		" Shell inception is not supported.", cmdPath)
 }

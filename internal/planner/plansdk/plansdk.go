@@ -5,7 +5,9 @@ package plansdk
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/imdario/mergo"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -31,8 +33,6 @@ type ShellPlan struct {
 	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
 	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
-	// Nix overlays. Currently, Rust needs it for shell.
-	NixOverlays []string `cue:"[...string]" json:"nix_overlays,omitempty"`
 	// Nix expressions. Currently, PHP needs it for shell.
 	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
 	// GeneratedFiles is a map of name => content for files that should be generated
@@ -52,7 +52,7 @@ type PlannerForPackages interface {
 }
 
 // MergeShellPlans merges multiple Plans into one. The merged plan's packages, definitions,
-// and overlays is the union of the packages, definitions, and overlays of the input plans,
+// and shellInitHooks is the union of the packages, definitions, and shellInitHooks of the input plans,
 // respectively.
 func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	shellPlan := &ShellPlan{}
@@ -65,7 +65,6 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 
 	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
 	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
-	shellPlan.NixOverlays = pkgslice.Unique(shellPlan.NixOverlays)
 	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
 
 	return shellPlan, nil
@@ -91,11 +90,34 @@ type NixpkgsInfo struct {
 	Sha256 string
 }
 
-// The commit hash for nixos-22.11 on 2022-12-06 from status.nixos.org
-const DefaultNixpkgsCommit = "52e3e80afff4b16ccb7c52e9f0f5220552f03d04"
+// The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
+const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
 
 func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
+	mirror := nixpkgsMirrorURL(commitHash)
+	if mirror != "" {
+		return &NixpkgsInfo{
+			URL: mirror,
+		}, nil
+	}
 	return &NixpkgsInfo{
 		URL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
 	}, nil
+}
+
+func nixpkgsMirrorURL(commitHash string) string {
+	// Use DEVBOX_REGION as a hint to see if we're in Devbox Cloud.
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return ""
+	}
+
+	// Check that the mirror is responsive and has the tar file. We can't
+	// leave this up to Nix because fetchTarball will retry indefinitely.
+	client := &http.Client{Timeout: 3 * time.Second}
+	mirrorURL := fmt.Sprintf("http://[fdaa:0:a780:0:1::2]:8081/nixos/nixpkgs/archive/%s.tar.gz", commitHash)
+	resp, err := client.Head(mirrorURL)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return ""
+	}
+	return mirrorURL
 }

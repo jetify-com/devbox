@@ -5,17 +5,10 @@ let
     sha256 = "{{ .NixpkgsInfo.Sha256 }}";
     {{- end }}
   }) {
-    {{- if .NixOverlays }}
-      overlays = [
-      {{- range .NixOverlays }}
-        (import (fetchTarball "{{.}}"))
-      {{ end -}}
-      ];
-    {{- end }}
   };
   {{- range .Definitions}}
     {{.}}
-  {{end -}}
+  {{ end }}
 in with pkgs;
 buildEnv {
   ignoreCollisions = true;
@@ -23,7 +16,7 @@ buildEnv {
   paths = [
   {{- range .DevPackages}}
     {{.}}
-  {{end -}}
+  {{- end }}
   ];
   pathsToLink = [ "/bin" "/share" "/lib"];
 }
