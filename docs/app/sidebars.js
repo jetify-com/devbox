@@ -89,6 +89,18 @@ const sidebars = {
                 label: 'devbox add'
             }, {
                 type: 'doc',
+                id: 'cli_reference/devbox_cloud',
+                label: 'devbox cloud'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_cloud_forward',
+                label: 'devbox cloud forward'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_cloud_shell',
+                label: 'devbox cloud shell'
+            }, {
+                type: 'doc',
                 id: 'cli_reference/devbox_generate',
                 label: 'devbox generate'
             }, {
