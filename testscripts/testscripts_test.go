@@ -100,6 +100,10 @@ func getTestscriptParams(dir string) testscript.Params {
 			if err != nil {
 				return err
 			}
+
+			// Enable new `devbox run` so we can use it in tests. This is temporary,
+			// and should be removed once we enable this feature flag.
+			env.Setenv("DEVBOX_FEATURE_STRICT_RUN", "1")
 			return nil
 		},
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){

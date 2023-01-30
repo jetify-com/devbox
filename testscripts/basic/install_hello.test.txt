@@ -13,7 +13,6 @@ exec devbox add hello
 ! exec hello
 
 # Run hello and check it prints the right output
-env DEVBOX_FEATURE_STRICT_RUN=1  # Temporary until we enable the feature
 exec devbox run hello
 stdout 'Hello, world!'
 ! stderr .+  # No stderr output
