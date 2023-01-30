@@ -7,7 +7,6 @@ Use cases for Devbox Cloud include:
 * Easy Preview Environments for your project -- Contributors or developers can 
 * Develop in a consistent environment from any Machine -- Log on to your Cloud Shell from anywhere, and develop in a consistent Dev environment anywhere in the world. Our VMs are deployed at the edge using Fly.io to provide a low-latency environment
 
-
 :::note
 Devbox Cloud is currently in Beta and under active development. 
 ::: 

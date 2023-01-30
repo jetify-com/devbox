@@ -2,9 +2,6 @@
 title: Devbox Cloud Open Beta FAQ
 ---
 
-### What is Devbox Cloud?
-
-
 ### What do I need to use Devbox Cloud?
 
 To use Devbox Cloud from your Browser, you will need a Github Account. 
@@ -32,11 +29,11 @@ Devbox Cloud is free to use during the Open Beta period, subject to the restrict
 * **RAM**: 1 GB
 * **SSD**: 8 GB
 
-If you need additional resources for your project, please reach out to us for [Early Access]
+If you need additional resources for your project, please reach out to us for **[Early Access](https://jetpack-io.typeform.com/devbox-cloud)**
 
 ### I want to request more resources, persistence, or a different OS for my VM.
 
-Future releases will add more flexibility and features as part of our paid plans. If you'd like to sign up for early access to these plans, please sign up for our [Early Access List](https://admin.typeform.com/form/j3HLy8iu/share)
+Future releases will add more flexibility and features as part of our paid plans. If you'd like to sign up for early access to these plans, please sign up for **[Early Access](https://jetpack-io.typeform.com/devbox-cloud)**
 
 ### What OS does Devbox Cloud use?
 
@@ -50,7 +47,7 @@ You can have up to 3 concurrent VMs per Github Account.
 
 VMs will stay alive for up to 5 minutes after a user disconnects. After that point, the VM and all data will be deleted.
 
-#### Where will Devbox run my VM?
+### Where will Devbox run my VM?
 
 Devbox VMs are run as Fly Machines in local Data Centers. To minimize latency, Devbox Cloud will attempt to create a Fly Machine as close to your current location as possible. 
 
