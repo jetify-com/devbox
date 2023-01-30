@@ -177,8 +177,8 @@ curl localhost:5000
 
 ## Next Steps
 
-* Learn how to activate [Devbox Cloud Shell in your Browser](browser_getting_started.md)
-* Try out one of our [Examples](../devbox_examples/index.md) in Devbox Cloud Shell
-* Learn more about the [Devbox Cloud Shell Open Beta](index.md)
-* Join the [Discord Community](https://discord.gg/jetpack-io)
-* File an Issue or Contribute on our [Github Repo](https://github.com/jetpack-io/devbox)
+* Learn how to activate **[Devbox Cloud Shell in your Browser](browser_getting_started.md)**
+* Try out one of our **[Examples](../devbox_examples/index.md)** in Devbox Cloud Shell
+* Learn more about the **[Devbox Cloud Shell Open Beta](index.md)**
+* Join the **[Discord Community](https://discord.gg/jetpack-io)**
+* File an Issue or Contribute on our **[Github Repo](https://github.com/jetpack-io/devbox)**
