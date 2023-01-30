@@ -7,9 +7,6 @@ concurrency:
 
 on:
   pull_request:
-  push:
-    branches-ignore:
-      - main
     paths-ignore:
       - 'docs/**'
   workflow_call:
@@ -36,14 +33,27 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3.5.0
         with:
           go-version-file: ./go.mod
-          cache: false # use golangci cache instead
+      - name: Get current time
+        uses: josStorer/get-current-time@v2.0.2
+        id: current-time
+      - name: Mount golangci-lint cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+            ~/go/pkg
+          key: golangci-lint-cache-${{ runner.os }}-${{ steps.current-time.outputs.day }}
+          restore-keys: |
+            golangci-lint-cache-${{ runner.os }}-
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.2.0
+        uses: golangci/golangci-lint-action@v3.4.0
         with:
           args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
+          skip-cache: true
 
   test:
     strategy:
@@ -53,7 +63,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3.5.0
         with:
           go-version-file: ./go.mod
           cache: true
@@ -84,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3.5.0
         with:
           go-version-file: ./go.mod
           cache: true
