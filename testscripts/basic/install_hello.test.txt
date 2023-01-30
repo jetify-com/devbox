@@ -15,4 +15,7 @@ exec devbox add hello
 # Run hello and check it prints the right output
 exec devbox run hello
 stdout 'Hello, world!'
-! stderr .+  # No stderr output
+
+# Once we have better progress output, we should check that stderr is empty, with:
+# ! stderr .+  # No stderr output
+# As is, we always print 'Ensuring packages are installed'.
