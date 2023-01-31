@@ -28,7 +28,9 @@ Other versions available include:
 
 ## Pipenv
 
-[**Example Link**](https://github.com/jetpack-io/devbox-examples/tree/main/development/python/pipenv)
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/python/pipenv)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/python/pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages. 
 
@@ -48,7 +50,10 @@ You can install `pipenv` by adding it to the packages in your `devbox.json`. You
 This init_hook will automatically start your virtualenv when you run `devbox shell`.
 
 ## Poetry
+
 [**Example Link**](https://github.com/jetpack-io/devbox-examples/tree/main/development/python/poetry/poetry-demo)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/python/poetry/poetry-demo)
 
 [Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project. 
 

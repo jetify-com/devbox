@@ -29,6 +29,11 @@ This will install the OpenJDK version 19. Other versions available include:
 Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are available in Nixpkgs, and can be found using [NixPkg Search](https://search.nixos.org/packages?channel=22.05&from=0&size=50&sort=relevance&type=packages&query=jdk#)
 
 ## Gradle
+
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/java/gradle/hello-world)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/java/gradle/hello-world)
+
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below: 
 
 1. Create a dummy folder: `dummy/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
@@ -68,6 +73,10 @@ An example `devbox.json` would look like the following:
 ```
 
 ## Maven
+
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/java/maven/hello-world)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/java/maven/hello-world)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 

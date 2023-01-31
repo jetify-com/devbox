@@ -5,6 +5,8 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/postgres)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=databases/postgres)
+
 ## Adding Postgres to your Shell
 
 `devbox add postgresql glibcLocales`, or in your `devbox.json`, add
