@@ -204,7 +204,15 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
+                    id: 'devbox_examples/languages/haskell'
+                },
+                {
+                    type: 'doc',
                     id: 'devbox_examples/languages/java'
+                },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/nim'
                 },
                 {
                     type: 'doc',
@@ -226,6 +234,10 @@ const sidebars = {
                     type: 'doc',
                     id: 'devbox_examples/languages/rust'
                 },
+                {
+                    type: 'doc',
+                    id: 'devbox_examples/languages/zig'
+                }
             ]
         }, {
             type: 'category',
