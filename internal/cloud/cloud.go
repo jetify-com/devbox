@@ -191,7 +191,7 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(sshCmd *openssh.Cmd) (vmHost, vmHost, region string, err error) {
+func getVirtualMachine(sshCmd *openssh.Cmd) (vmUser, vmHost, region string, err error) {
 	sshOut, err := sshCmd.ExecRemote("auth")
 	if err != nil {
 		return "", "", "", errors.Wrapf(err, "error requesting VM")
