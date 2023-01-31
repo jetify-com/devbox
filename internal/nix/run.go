@@ -34,7 +34,12 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", cmdWithArgs)
+	// Try to find sh in the PATH, if not, default to a well known absolute path.
+	shPath, err := exec.LookPath("sh")
+	if err != nil {
+		shPath = "/bin/sh"
+	}
+	cmd := exec.Command(shPath, "-c", cmdWithArgs)
 	cmd.Env = append(nixEnv, additionalEnv...)
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin

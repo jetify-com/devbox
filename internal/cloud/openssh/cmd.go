@@ -17,15 +17,23 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-type Client struct {
-	Addr           string
+type Cmd struct {
+	// DestinationAddr is a "hostname[:port]" that specifies the remote host
+	// and port to connect to.
+	DestinationAddr string
+
+	// Username is the remote login name.
+	Username string
+
 	PathInVM       string
 	ShellStartTime string // unix timestamp
-	Username       string
 }
 
-func (c *Client) Shell(w io.Writer) error {
+func Command(user, dest string) *Cmd {
+	return &Cmd{DestinationAddr: dest, Username: user}
+}
 
+func (c *Cmd) Shell(w io.Writer) error {
 	cmd := c.cmd("-t")
 	remoteCmd := fmt.Sprintf(
 		`bash -l -c "start_devbox_shell.sh \"%s\" %s"`,
@@ -39,9 +47,9 @@ func (c *Client) Shell(w io.Writer) error {
 	return logCmdRun(cmd)
 }
 
-func (c *Client) Exec(remoteCmd string) ([]byte, error) {
-	sshCmd := c.cmd()
-	sshCmd.Args = append(sshCmd.Args, remoteCmd)
+func (c *Cmd) ExecRemote(cmd string) ([]byte, error) {
+	sshCmd := c.cmd("-T")
+	sshCmd.Args = append(sshCmd.Args, cmd)
 
 	var stdout, stderr bytes.Buffer
 	sshCmd.Stdout = &stdout
@@ -58,16 +66,14 @@ func (c *Client) Exec(remoteCmd string) ([]byte, error) {
 	return stdout.Bytes(), nil
 }
 
-func (c *Client) cmd(sshArgs ...string) *exec.Cmd {
-	host, port := splitHostPort(c.Addr)
-	cmd := exec.Command("ssh", sshArgs...)
-	cmd.Args = append(cmd.Args, destination(c.Username, host))
-
-	// Add any necessary flags:
+func (c *Cmd) cmd(sshArgs ...string) *exec.Cmd {
+	host, port := splitHostPort(c.DestinationAddr)
+	cmd := exec.Command("ssh", "-l", c.Username)
 	if port != 0 && port != 22 {
 		cmd.Args = append(cmd.Args, "-p", strconv.Itoa(port))
 	}
-
+	cmd.Args = append(cmd.Args, sshArgs...)
+	cmd.Args = append(cmd.Args, host)
 	return cmd
 }
 
@@ -83,15 +89,6 @@ func splitHostPort(addr string) (host string, port int) {
 		return host, 22
 	}
 	return host, port
-}
-
-func destination(username, hostname string) string {
-	result := hostname
-	if username != "" {
-		result = username + "@" + result
-	}
-
-	return result
 }
 
 func logCmdRun(cmd *exec.Cmd) error {

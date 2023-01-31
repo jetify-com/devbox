@@ -164,6 +164,10 @@ const sidebars = {
                 },
                 {
                     type: 'doc',
+                    id: 'devbox_examples/languages/fsharp'
+                },
+                {
+                    type: 'doc',
                     id: 'devbox_examples/languages/go'
                 },
                 {
