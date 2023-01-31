@@ -1,8 +1,8 @@
 ---
-title: C#, F#, and .NET
+title: C# and .NET
 ---
 
-C#, F# and .NET projects can be easily generated in Devbox by adding the dotnet SDK to your project. You can then create new projects using `dotnet new`
+C# and .NET projects can be easily generated in Devbox by adding the dotnet SDK to your project. You can then create new projects using `dotnet new`
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/csharp)
 
@@ -26,7 +26,3 @@ Other versions available include:
 ## Creating a new C# Project
 
 `dotnet new console -lang "C#" -o <name>`
-
-## Creating a new F# Project
-
-`dotnet new console -lang "F#" -o <name>`
