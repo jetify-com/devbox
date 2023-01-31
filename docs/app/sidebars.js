@@ -53,98 +53,130 @@ const sidebars = {
         }]
     }, {
         type: 'category',
-        label: "CI/CD Reference",
+        label: 'Devbox Cloud',
+        link: { type: 'doc', id: 'devbox_cloud/index' },
         collapsed: true,
         items: [{
             type: 'doc',
-            id: 'continuous_integration/github_action'
+            id: 'devbox_cloud/getting_started'
+        }, {
+            type: 'doc',
+            id: 'devbox_cloud/browser_getting_started'
+        }, {
+            type: 'doc',
+            id: 'devbox_cloud/beta_faq'
         }]
     }, {
         type: 'category',
-        label: 'CLI Reference',
-        link: { type: 'doc', id: 'cli_reference/devbox' },
-        collapsed: true,
-        items: [{
-            type: 'doc',
-            id: 'cli_reference/devbox_add',
-            label: 'devbox add'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_generate',
-            label: 'devbox generate'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_generate_devcontainer',
-            label: 'devbox generate devcontainer'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_generate_direnv',
-            label: 'devbox generate direnv  '
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_generate_dockerfile',
-            label: 'devbox generate dockerfile'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_info',
-            label: 'devbox info'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_init',
-            label: 'devbox init'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_rm',
-            label: 'devbox rm'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_run',
-            label: 'devbox run'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_services',
-            label: 'devbox services'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_services_ls',
-            label: 'devbox services ls'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_services_restart',
-            label: 'devbox services restart'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_services_start',
-            label: 'devbox services start'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_services_stop',
-            label: 'devbox services stop'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_shell',
-            label: 'devbox shell'
-        }, {
-            type: 'doc',
-            id: 'cli_reference/devbox_version',
-            label: 'devbox version'
-        }]
-    }, {
-        type: 'doc',
-        id: 'configuration'
-    }, {
-        type: 'category',
-        label: "IDE Reference",
+        label: 'Reference',
         collapsed: false,
         items: [{
-            type: 'doc',
-            id: 'ide_configuration/direnv',
+            type: 'category',
+            label: "CI/CD Reference",
+            collapsed: true,
+            items: [{
+                type: 'doc',
+                id: 'continuous_integration/github_action'
+            }]
+        }, {
+            type: 'category',
+            label: 'Devbox CLI',
+            link: { type: 'doc', id: 'cli_reference/devbox' },
+            collapsed: true,
+            items: [{
+                type: 'doc',
+                id: 'cli_reference/devbox_add',
+                label: 'devbox add'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_cloud',
+                label: 'devbox cloud'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_cloud_forward',
+                label: 'devbox cloud forward'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_cloud_shell',
+                label: 'devbox cloud shell'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_generate',
+                label: 'devbox generate'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_generate_devcontainer',
+                label: 'devbox generate devcontainer'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_generate_direnv',
+                label: 'devbox generate direnv  '
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_generate_dockerfile',
+                label: 'devbox generate dockerfile'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_info',
+                label: 'devbox info'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_init',
+                label: 'devbox init'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_rm',
+                label: 'devbox rm'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_run',
+                label: 'devbox run'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_services',
+                label: 'devbox services'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_services_ls',
+                label: 'devbox services ls'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_services_restart',
+                label: 'devbox services restart'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_services_start',
+                label: 'devbox services start'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_services_stop',
+                label: 'devbox services stop'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_shell',
+                label: 'devbox shell'
+            }, {
+                type: 'doc',
+                id: 'cli_reference/devbox_version',
+                label: 'devbox version'
+            }]
         }, {
             type: 'doc',
-            id: 'ide_configuration/eclipse',
+            id: 'configuration'
         }, {
-            type: 'doc',
-            id: 'ide_configuration/vscode'
+            type: 'category',
+            label: "IDE Reference",
+            collapsed: true,
+            items: [{
+                type: 'doc',
+                id: 'ide_configuration/direnv',
+            }, {
+                type: 'doc',
+                id: 'ide_configuration/eclipse',
+            }, {
+                type: 'doc',
+                id: 'ide_configuration/vscode'
+            }]
         }]
     }, {
         type: 'category',
