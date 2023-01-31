@@ -8,12 +8,17 @@ In addition to using [Devbox Cloud from your terminal](getting_started.md), you 
 
 ### Getting Started
 
+:::note
+If you are trying to open a private repository in Devbox Cloud, you will first have to install the [**Devbox Cloud app**](https://github.com/apps/devbox-cloud) from the Github Marketplace. This gives Devbox Cloud permissions to clone your repositories to the cloud VMs
+:::
+
 1. Navigate to the Github Repo that you want to preview in Devbox Cloud
 2. Copy the URL, and prepend it with `https://devbox.sh/`. For example, to open the Devbox repo, you would enter [https://devbox.sh/github.com/jetpack-io/devbox](http://devbox.sh/github.com/jetpack-io/devbox)
 3. Follow the prompts to sign in with your Github Account.
 4. Your project should now launch in a terminal session in your browser
    1. If the project has a `devbox.json` in the root directory, then Devbox will automatically install your packages and launch you into a devbox shell.
-   2. If the project does not have a `devbox.json`, you can create one using `devbox init`, and add packages with `devbox add`. 
+   2. If the project does not have a `devbox.json`, a blank one will be automatically created using `devbox init`. You can add packages to the VM using `devbox add`.
+
 
 ### Opening a specific branch of a project
 
