@@ -2,6 +2,10 @@
 title: Ruby
 ---
 
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/ruby)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/ruby)
+
 Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. This plugin will activate automatically when you install Ruby 2.7 using `devbox add ruby`. 
 
 ## Adding Ruby to your shell
@@ -28,6 +32,8 @@ Devbox will automatically create the following configuration when you install Ru
 
 ### Environment Variables
 
+These environment variables configure Gem to install your gems locally, and set your Gem Home to a local folder
+
 ```bash
 RUBY_CONFDIR={PROJECT_DIR}/.devbox/virtenv/ruby
 GEMRC={PROJECT_DIR}/.devbox/virtenv/ruby/.gemrc
@@ -35,6 +41,9 @@ GEM_HOME={PROJECT_DIR}/.devbox/virtenv/ruby
 ```
 
 ### Init Hook
-```bash
 
+This hook ensures that your locally installed Gems are in your PATH while running `devbox shell`
+
+```bash
+"export PATH=\"{{ .Virtenv }}/bin:$PATH\""
 ```

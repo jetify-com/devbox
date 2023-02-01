@@ -6,6 +6,8 @@ Redis can be configured automatically using Devbox's built in Redis plugin. This
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/redis)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=databases/redis)
+
 ## Adding Redis to your shell
 
 `devbox add redis`, or in your Devbox.json

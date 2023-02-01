@@ -6,6 +6,9 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/nodejs)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/nodejs/nodejs-npm)
+
+
 ## Adding NodeJS to your Shell
 
 `devbox add nodejs`, or in your `devbox.json`:
@@ -23,6 +26,10 @@ Other versions available include:
 * `nodejs-19_x` (NodeJS 19)
 
 ## Adding Yarn as your Package Manager
+
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/nodejs/nodejs-yarn)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/nodejs/nodejs-yarn)
 
 `devbox add yarn`, or in your `devbox.json` add: 
 ```json
