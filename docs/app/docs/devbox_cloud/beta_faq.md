@@ -31,7 +31,7 @@ Devbox Cloud is free to use during the Open Beta period, subject to the restrict
 
 If you need additional resources for your project, please reach out to us for **[Early Access](https://jetpack-io.typeform.com/devbox-cloud)**
 
-### I want to request more resources, persistence, or a different OS for my VM.
+### I want to request more resources, persistence, or a different OS for my VM
 
 Future releases will add more flexibility and features as part of our paid plans. If you'd like to sign up for early access to these plans, please sign up for **[Early Access](https://jetpack-io.typeform.com/devbox-cloud)**
 
