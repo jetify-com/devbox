@@ -8,6 +8,7 @@ You can view the full list of examples in our [Example Repo](https://github.com/
 ## Languages
 * [C#/.NET](languages/csharp.md)
 * [Elixir](languages/elixir.md)
+* [F#/.NET](languages/fsharp.md)
 * [Go](languages/go.md)
 * [Haskell](languages/haskell.md)
 * [Java](languages/java.md)
