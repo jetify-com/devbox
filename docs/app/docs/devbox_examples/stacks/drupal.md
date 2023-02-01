@@ -8,7 +8,7 @@ This example shows how to run a Drupal application in Devbox. It makes use of th
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/drupal)
 
-## How to Run the example
+## How to Run 
 
 In this directory, run:
 
