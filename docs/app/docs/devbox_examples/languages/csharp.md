@@ -6,6 +6,8 @@ C# and .NET projects can be easily generated in Devbox by adding the dotnet SDK 
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/csharp)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/csharp/hello-world)
+
 ## Adding .NET to your project
 
 `devbox add dotnet-sdk`, or add the following to your `devbox.json`:
