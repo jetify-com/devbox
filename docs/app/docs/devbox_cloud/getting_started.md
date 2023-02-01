@@ -4,7 +4,7 @@ Devbox Cloud is a new way to create and run your Devbox Project in an isolated c
 
 Use cases for Devbox Cloud include: 
 * Testing out Packages or Scripts in an Isolated Linux Environment -- Preview different combinations or environments in a remote VM
-* Easy Preview Environments for your project -- Contributors or developers can 
+* Easy Preview Environments for your project -- Developers or contributors can quickly test your project in a cloud development environment, using the same packages and configuration.
 * Develop in a consistent environment from any Machine -- Log on to your Cloud Shell from anywhere, and develop in a consistent Dev environment anywhere in the world. Our VMs are deployed at the edge using Fly.io to provide a low-latency environment
 
 :::note
@@ -16,7 +16,7 @@ Devbox Cloud is currently in Beta and under active development.
 ### Prerequisites
 Devbox Cloud Shell requires the following: 
 
-* **Devbox 0.2.0 or higher.** If you do not have Nix installed on your machine, Devbox will install it with the default configuration for your OS 
+* **Devbox 0.3.0 or higher.** If you do not have Nix installed on your machine, Devbox will install it with the default configuration for your OS.
 * **A Github Account with an SSH Key Configured**. This is used by Devbox to authenticate and connect you to your Cloud VM.
 
 
