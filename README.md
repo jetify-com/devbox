@@ -20,6 +20,10 @@ Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is i
 
 ## Demo
 
+You can try out Devbox in your browser using the button below: 
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
+
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
