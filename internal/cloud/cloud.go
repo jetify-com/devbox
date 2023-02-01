@@ -76,12 +76,12 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 
 	if vmHostname == "" {
-		stepVM := stepper.Start(w, "Creating a virtual machine on the cloud...")
+		color.New(color.FgGreen).Fprintln(w, "Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
 		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
-			stepVM.Success("Detected existing virtual machine")
+			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
 		} else {
 			var region, vmUser string
 			vmUser, vmHostname, region, err = getVirtualMachine(sshCmd)
@@ -91,7 +91,7 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 			if vmUser != "" {
 				username = vmUser
 			}
-			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
+			color.New(color.FgGreen).Fprintf(w, "Created a virtual machine in %s\n", fly.RegionName(region))
 
 			// We save the username to local file only after we get a successful response
 			// from the gateway, because the gateway will verify that the user's SSH keys
@@ -104,13 +104,13 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
-	s2 := stepper.Start(w, "Starting file syncing...")
+	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
-		s2.Fail("Starting file syncing [FAILED]")
+		color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
 		return err
 	}
-	s2.Success("File syncing started")
+	color.New(color.FgGreen).Fprintln(w, "File syncing started")
 
 	s3 := stepper.Start(w, "Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
