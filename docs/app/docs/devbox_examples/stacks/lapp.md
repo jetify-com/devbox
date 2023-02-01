@@ -15,7 +15,7 @@ This example shows how to build a simple application using Apache, PHP, and Post
 3. Create the database and load the test data by using `devbox run create_db`.
 4. You can now test the app using `localhost:8080` to hit the Apache Server. If you want Apache to listen on a different port, you can change the `HTTPD_PORT` environment variable in the Devbox init_hook.
 
-### How to Recreate this Example
+## How to Recreate this Example
 
 1. Create a new project with `devbox init`
 1. Add the packages using the command below. Installing the packages with `devbox add` will ensure that the plugins are activated:
