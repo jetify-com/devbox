@@ -4,7 +4,7 @@ title: Jekyll
 
 This example demonstrates how to create and run a Jekyll blog in Devbox. It makes use of the Ruby Plugin to configure and setup your project. 
 
-[Example Repo](https://github.com/jetpack-io/devbox-examples?folder=stacks/jekyll)
+[Example Repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/jekyll)
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/jekyll)
 

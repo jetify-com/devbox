@@ -4,7 +4,7 @@ title: Ruby on Rails
 
 This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database. 
 
-[Example Repo](https://github.com/jetpack-io/devbox-examples?folder=stacks/rails)
+[Example Repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/rails)
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/rails)
 
