@@ -5,6 +5,8 @@ To use a local MariaDB for development with Devbox and Nix, you will need to con
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/mariadb)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=databases/mariadb)
+
 ## Adding MariaDB to your Shell
 
 `devbox add mariadb`, or in your `devbox.json` add

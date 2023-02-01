@@ -27,6 +27,8 @@ permissions:
 jobs:
   tests:
     uses: ./.github/workflows/cli-tests.yaml
+    with:
+      run-mac-tests: true
 
   prerelease:
     runs-on: ubuntu-latest

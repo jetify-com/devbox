@@ -6,6 +6,8 @@ Caddy can be configured automatically using Devbox's built in Caddy plugin. This
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/caddy)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=servers/caddy)
+
 ### Adding Caddy to your Shell
 
 Run `devbox add caddy`, or add the following to your `devbox.json`
