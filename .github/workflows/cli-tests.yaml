@@ -11,6 +11,9 @@ on:
     branches:
       - main
   workflow_call:
+    inputs:
+      run-mac-tests:
+        type: boolean
   workflow_dispatch:
 
 permissions:
@@ -29,7 +32,7 @@ jobs:
   golangci-lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-12]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -59,9 +62,13 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-12]
+        os: [ubuntu-latest, macos-latest]
+        exclude:
+          # This expression basically says run mac tests if on main branch or
+          # if this job is triggered by another workflow with "with: run-mac-tests: true"
+          - os: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 'dummy' || 'macos-latest' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '20' || '10' }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
