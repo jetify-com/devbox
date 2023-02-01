@@ -68,7 +68,7 @@ jobs:
           # if this job is triggered by another workflow with "with: run-mac-tests: true"
           - os: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 'dummy' || 'macos-latest' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '20' || '10' }}
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 20 || 10 }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
