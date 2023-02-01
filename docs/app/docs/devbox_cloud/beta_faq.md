@@ -9,7 +9,7 @@ To use Devbox Cloud from your Browser, you will need a Github Account.
 To use Devbox Cloud from your CLI, you will need: 
 
 * A Github account with linked SSH keys
-* Devbox 0.2.4 or later 
+* Devbox 0.3.0 or later 
 
 ### Does my project need to use Devbox to use Devbox Cloud?
 
