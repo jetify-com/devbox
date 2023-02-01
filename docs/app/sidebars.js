@@ -265,6 +265,17 @@ const sidebars = {
                 { type: 'doc', id: 'devbox_examples/servers/caddy' },
                 { type: 'doc', id: 'devbox_examples/servers/nginx' }
             ]
+        }, {
+            type: 'category',
+            label: 'Stacks',
+            collapsed: true,
+            items: [
+                { type: 'doc', id: 'devbox_examples/stacks/drupal' },
+                { type: 'doc', id: 'devbox_examples/stacks/jekyll' },
+                { type: 'doc', id: 'devbox_examples/stacks/lapp' },
+                { type: 'doc', id: 'devbox_examples/stacks/lepp' },
+                { type: 'doc', id: 'devbox_examples/stacks/rails' }
+            ]
         }]
     }],
 };
