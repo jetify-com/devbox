@@ -8,7 +8,7 @@ Nim projects can be run in Devbox by adding Nim and Nimble to your project. For 
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/development/nim/spinnytest)
 
-## Adding Go to your Project
+## Adding Nim to your Project
 
 `devbox add nim nimble-unwrapped openssl_1_1`, or add the following to your `devbox.json`
 
