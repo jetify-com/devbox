@@ -13,7 +13,7 @@ func TestRm(t *testing.T) {
 	devboxJSON := `
 	{
 		"packages": [
-			"go_1_17"
+			"hello"
 		],
 		"shell": {
 		  "init_hook": null
@@ -26,10 +26,10 @@ func TestRm(t *testing.T) {
 	defer td.Close()
 	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
-	output, err := td.RunCommand(RemoveCmd(), "go_1_17")
+	output, err := td.RunCommand(RemoveCmd(), "hello")
 	assert.NoError(t, err)
-	assert.Contains(t, output, "go_1_17 (go-1.17.13) is now removed.")
+	assert.Contains(t, output, "hello (hello-2.12.1) is now removed.")
 	devboxjson, err := td.GetDevboxJSON()
 	assert.NoError(t, err)
-	assert.NotContains(t, devboxjson.Packages, "go_1_17")
+	assert.NotContains(t, devboxjson.Packages, "hello")
 }

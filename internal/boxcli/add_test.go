@@ -24,10 +24,10 @@ func TestAdd(t *testing.T) {
 	defer td.Close()
 	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
-	output, err := td.RunCommand(AddCmd(), "go_1_17")
+	output, err := td.RunCommand(AddCmd(), "hello")
 	assert.NoError(t, err)
-	assert.Contains(t, output, "go_1_17 (go-1.17.13) is now installed.")
+	assert.Contains(t, output, "hello (hello-2.12.1) is now installed.")
 	updatedDevboxJSON, err := td.GetDevboxJSON()
 	assert.NoError(t, err)
-	assert.Contains(t, updatedDevboxJSON.Packages, "go_1_17")
+	assert.Contains(t, updatedDevboxJSON.Packages, "hello")
 }
