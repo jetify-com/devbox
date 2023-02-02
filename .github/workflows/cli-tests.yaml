@@ -82,7 +82,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get install dash zsh
-            curl -o /home/shellspec.tar.gz https://github.com/shellspec/shellspec/archive/0.28.1.tar.gz
+            sudo curl -o /home/shellspec.tar.gz https://github.com/shellspec/shellspec/archive/0.28.1.tar.gz
             tar xvzf shellspec.tar.gz
             sudo ln -s /home/shellspec/shellspec /usr/local/bin/
           elif [ "$RUNNER_OS" == "macOS" ]; then
