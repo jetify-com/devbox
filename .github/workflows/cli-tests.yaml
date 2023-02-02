@@ -82,7 +82,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get install dash zsh
-            sudo curl -fsSL https://git.io/shellspec | sh -s 0.28.1
+            sudo curl -fsSL https://git.io/shellspec | sh -s 0.28.1 -- --yes
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew update
             brew tap shellspec/shellspec
