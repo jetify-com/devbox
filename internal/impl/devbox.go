@@ -306,7 +306,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
-		return errors.Errorf("unable to find a script with name %s", scriptName)
+		return usererr.New("unable to find a script with name %s", scriptName)
 	}
 
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
@@ -349,7 +349,7 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
-		return errors.Errorf("unable to find a script with name %s", scriptName)
+		return usererr.New("unable to find a script with name %s", scriptName)
 	}
 
 	shell, err := nix.DetectShell(
