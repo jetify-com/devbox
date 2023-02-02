@@ -47,6 +47,11 @@ type telemetryMiddleware struct {
 // telemetryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*telemetryMiddleware)(nil)
 
+func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
+	m.executionID = execID
+	return m
+}
+
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = telemetry.CommandStartTime()
 	if !m.disabled {
@@ -68,40 +73,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	m.trackError(evt) // Sentry
 
 	m.trackEvent(evt) // Segment
-}
-
-func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
-	m.executionID = execID
-	return m
-}
-
-func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
-	if c.TraverseChildren {
-		subcmd, subargs, err = c.Traverse(args)
-	} else {
-		subcmd, subargs, err = c.Find(args)
-	}
-	return subcmd, subargs, err
-}
-
-func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
-	configFlag := c.Flag("config")
-	// for shell, run, and add command, path can be set via --config
-	// if --config is not set, default to current directory which is ""
-	// the only exception is the init command, for the path can be set with args
-	// since after running init there will be no packages set in devbox.json
-	// we can safely ignore this case.
-	var path string
-	if configFlag != nil {
-		path = configFlag.Value.String()
-	}
-
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return []string{}, ""
-	}
-
-	return box.Config().Packages, box.Config().Nixpkgs.Commit
 }
 
 // Consider renaming this to commandEvent
@@ -234,4 +205,33 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 			Set("shell", evt.Shell),
 		UserId: evt.UserID,
 	})
+}
+
+func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
+	if c.TraverseChildren {
+		subcmd, subargs, err = c.Traverse(args)
+	} else {
+		subcmd, subargs, err = c.Find(args)
+	}
+	return subcmd, subargs, err
+}
+
+func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
+	configFlag := c.Flag("config")
+	// for shell, run, and add command, path can be set via --config
+	// if --config is not set, default to current directory which is ""
+	// the only exception is the init command, for the path can be set with args
+	// since after running init there will be no packages set in devbox.json
+	// we can safely ignore this case.
+	var path string
+	if configFlag != nil {
+		path = configFlag.Value.String()
+	}
+
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return []string{}, ""
+	}
+
+	return box.Config().Packages, box.Config().Nixpkgs.Commit
 }
