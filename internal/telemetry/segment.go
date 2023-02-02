@@ -4,14 +4,15 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
@@ -31,12 +32,13 @@ type Event struct {
 	UserID      string
 }
 
-// ttiEvent contains fields used to log the time-to-interactive event. For now,
-// this is used for devbox shell (local and cloud).
-type ttiEvent struct {
-	Event
-	eventName string
-}
+type shellAccessKind string
+
+const (
+	local   shellAccessKind = "local"
+	ssh     shellAccessKind = "ssh"
+	browser shellAccessKind = "browser"
+)
 
 // NewSegmentClient returns a client object to use for segment logging.
 // Callers are responsible for calling client.Close().
@@ -75,17 +77,14 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		return errors.WithStack(err)
 	}
 
-	evt := ttiEvent{
-		Event: Event{
-			AnonymousID: DeviceID(),
-			AppName:     opts.AppName,
-			AppVersion:  opts.AppVersion,
-			CloudRegion: os.Getenv("DEVBOX_REGION"),
-			Duration:    time.Since(start),
-			OsName:      OS(),
-			UserID:      UserIDFromGithubUsername(),
-		},
-		eventName: eventName,
+	evt := Event{
+		AnonymousID: DeviceID(),
+		AppName:     opts.AppName,
+		AppVersion:  opts.AppVersion,
+		CloudRegion: os.Getenv("DEVBOX_REGION"),
+		Duration:    time.Since(start),
+		OsName:      OS(),
+		UserID:      UserIDFromGithubUsername(),
 	}
 
 	segmentClient := NewSegmentClient(build.TelemetryKey)
@@ -96,7 +95,8 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	// Ignore errors, telemetry is best effort
 	_ = segmentClient.Enqueue(segment.Track{
 		AnonymousId: evt.AnonymousID,
-		Event:       evt.eventName,
+		// Event name. We trim the prefix from shell-interactive/shell-ready to avoid redundancy.
+		Event: fmt.Sprintf("[%s] Shell Event: %s", evt.AppName, strings.TrimPrefix(eventName, "shell-")),
 		Context: &segment.Context{
 			Device: segment.DeviceInfo{
 				Id: evt.AnonymousID,
@@ -110,7 +110,7 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 			},
 		},
 		Properties: segment.NewProperties().
-			Set("is_cloud", lo.Ternary(evt.CloudRegion != "", "true", "false")).
+			Set("shell_access", shellAccess()).
 			Set("duration", evt.Duration.Milliseconds()),
 		UserId: evt.UserID,
 	})
@@ -153,4 +153,16 @@ func timeFromUnixTimestamp(timestamp string) (time.Time, error) {
 // See timeFromUnixTimestamp for the inverse function.
 func UnixTimestampFromTime(t time.Time) string {
 	return strconv.FormatInt(t.Unix(), 10)
+}
+
+func shellAccess() shellAccessKind {
+	// Check if running in devbox cloud
+	if os.Getenv("DEVBOX_REGION") != "" {
+		// Check if running via ssh tty (i.e. ssh shell)
+		if os.Getenv("SSH_TTY") != "" {
+			return ssh
+		}
+		return browser
+	}
+	return local
 }
