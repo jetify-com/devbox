@@ -6,6 +6,7 @@ package midcobra
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -83,7 +84,7 @@ func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, suba
 	return subcmd, subargs, err
 }
 
-func getPackages(c *cobra.Command) []string {
+func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 	configFlag := c.Flag("config")
 	// for shell, run, and add command, path can be set via --config
 	// if --config is not set, default to current directory which is ""
@@ -97,27 +98,10 @@ func getPackages(c *cobra.Command) []string {
 
 	box, err := devbox.Open(path, os.Stdout)
 	if err != nil {
-		return []string{}
+		return []string{}, ""
 	}
 
-	return box.Config().Packages
-}
-
-func (m *telemetryMiddleware) trackError(evt *event) {
-	// Ensure error is not nil and not a non-loggable user error
-	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
-		return
-	}
-
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("command", evt.Command)
-		scope.SetContext("command", map[string]interface{}{
-			"subcommand": evt.Command,
-			"args":       evt.CommandArgs,
-			"packages":   evt.Packages,
-		})
-	})
-	sentry.CaptureException(evt.CommandError)
+	return box.Config().Packages, box.Config().Nixpkgs.Commit
 }
 
 // Consider renaming this to commandEvent
@@ -129,6 +113,9 @@ type event struct {
 	CommandError  error
 	Failed        bool
 	Packages      []string
+	CommitHash    string // the nikpkgs commit hash in devbox.json
+	InDevboxShell bool
+	DevboxEnv     map[string]any // Devbox-specific environment variables
 	SentryEventID string
 	Shell         string
 	UserID        string
@@ -144,10 +131,18 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		return nil
 	}
 
-	pkgs := getPackages(cmd)
+	pkgs, hash := getPackagesAndCommitHash(cmd)
 
 	// an empty userID means that we do not have a github username saved
 	userID := telemetry.UserIDFromGithubUsername()
+
+	devboxEnv := map[string]interface{}{}
+	for _, e := range os.Environ() {
+		if strings.HasPrefix(e, "DEVBOX") && strings.Contains(e, "=") {
+			key := strings.Split(e, "=")[0]
+			devboxEnv[key] = os.Getenv(key)
+		}
+	}
 
 	return &event{
 		Event: telemetry.Event{
@@ -159,13 +154,36 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			OsName:      telemetry.OS(),
 			UserID:      userID,
 		},
-		Command:      subcmd.CommandPath(),
-		CommandArgs:  subargs,
-		CommandError: runErr,
-		Failed:       runErr != nil,
-		Packages:     pkgs,
-		Shell:        os.Getenv("SHELL"),
+		Command:       subcmd.CommandPath(),
+		CommandArgs:   subargs,
+		CommandError:  runErr,
+		Failed:        runErr != nil,
+		Packages:      pkgs,
+		CommitHash:    hash,
+		InDevboxShell: devbox.IsDevboxShellEnabled(),
+		DevboxEnv:     devboxEnv,
+		Shell:         os.Getenv("SHELL"),
 	}
+}
+
+func (m *telemetryMiddleware) trackError(evt *event) {
+	// Ensure error is not nil and not a non-loggable user error
+	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
+		return
+	}
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("command", evt.Command)
+		scope.SetContext("command", map[string]interface{}{
+			"command":      evt.Command,
+			"command args": evt.CommandArgs,
+			"packages":     evt.Packages,
+			"nixpkgs hash": evt.CommitHash,
+			"in shell":     evt.InDevboxShell,
+		})
+		scope.SetContext("devbox env", evt.DevboxEnv)
+	})
+	sentry.CaptureException(evt.CommandError)
 }
 
 func (m *telemetryMiddleware) trackEvent(evt *event) {
