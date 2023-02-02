@@ -77,14 +77,15 @@ jobs:
           cache: true
       - name: Build devbox
         run: go install ./cmd/devbox
-      - name: Install additional shells (dash, zsh)
+      - name: Install additional tools and shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get install dash zsh
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew update
-            brew install dash zsh
+            brew tap shellspec/shellspec
+            brew install dash zsh shellspec
           fi
       - name: Install Nix
         run: |
@@ -95,8 +96,14 @@ jobs:
           echo "NIX_PROFILES=$NIX_PROFILES" >> $GITHUB_ENV
           echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
-      - name: Run tests
+      - name: Run go tests
         run: go test -race -cover ./...
+      - name: Run shellspec tests (bash)
+        run: shellspec testscripts shellspec/ -s /bin/bash -f document
+      - name: Run shellspec tests (zsh)
+        run: shellspec testscripts shellspec/ -s /bin/zsh -f document
+      - name: Run shellspec tests (dash)
+        run: shellspec testscripts shellspec/ -s /bin/dash -f document
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     runs-on: ubuntu-latest
