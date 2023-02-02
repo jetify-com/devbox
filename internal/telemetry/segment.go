@@ -156,14 +156,13 @@ func UnixTimestampFromTime(t time.Time) string {
 }
 
 func shellAccess() shellAccessKind {
-	// START_WEB_TERMINAL is used to ensure a VM is started for a browser shell.
-	// In the future, we may change our model to reuse VMs for either browser or ssh shells
-	// and so should update this logic accordingly.
-	if os.Getenv("START_WEB_TERMINAL") == "1" {
+	// Check if running in devbox cloud
+	if os.Getenv("DEVBOX_REGION") != "" {
+		// Check if running via ssh tty (i.e. ssh shell)
+		if os.Getenv("SSH_TTY") != "" {
+			return ssh
+		}
 		return browser
-	} else if os.Getenv("DEVBOX_REGION") != "" {
-		return ssh
-	} else {
-		return local
 	}
+	return local
 }
