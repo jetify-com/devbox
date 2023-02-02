@@ -588,6 +588,9 @@ var envToKeep = map[string]bool{
 	"SHELL_SESSIONS_DISABLE": true, // Respect session save/resume setting (see /etc/zshrc_Apple_Terminal).
 	"SECURITYSESSIONID":      true,
 
+	// SSH variables
+	"SSH_TTY": true, // Used by devbox telemetry logging
+
 	// Nix + Devbox
 	//
 	// Variables specific to running in a Nix shell and devbox shell.
