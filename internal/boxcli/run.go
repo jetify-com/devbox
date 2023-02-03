@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -73,7 +74,7 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 		scriptArgs = args[1:]
 	} else {
 		// this should never happen because cobra should prevent it, but it's better to be defensive.
-		return "", "", nil, errors.New("no command or script provided")
+		return "", "", nil, usererr.New("no command or script provided")
 	}
 
 	return path, script, scriptArgs, nil
