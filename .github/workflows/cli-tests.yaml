@@ -82,8 +82,8 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get install dash zsh
-            sudo wget -o /home/shellspec.tar.gz https://github.com/shellspec/shellspec/archive/0.28.1.tar.gz
-            sudo tar xvzf /home/shellspec.tar.gz
+            sudo wget -sLo /home/shellspec.tar.gz https://github.com/shellspec/shellspec/releases/download/0.28.1/shellspec-dist.tar.gz
+            tar xvzf /home/shellspec.tar.gz
             sudo ln -s /home/shellspec/shellspec /usr/local/bin/
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew update
