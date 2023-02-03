@@ -103,11 +103,11 @@ jobs:
       - name: Run go tests
         run: go test -race -cover ./...
       - name: Run shellspec tests (bash)
-        run: shellspec testscripts shellspec/ -s /bin/bash -f document
+        run: shellspec testscripts/shellspec/ -s /bin/bash -f document
       - name: Run shellspec tests (zsh)
-        run: shellspec testscripts shellspec/ -s /bin/zsh -f document
+        run: shellspec testscripts/shellspec/ -s /bin/zsh -f document
       - name: Run shellspec tests (dash)
-        run: shellspec testscripts shellspec/ -s /bin/dash -f document
+        run: shellspec testscripts/shellspec/ -s /bin/dash -f document
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     runs-on: ubuntu-latest
