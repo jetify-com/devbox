@@ -1,11 +1,14 @@
-Describe 'devbox init tests'
-    AfterAll '$(rm devbox.json && rm -r .devbox)'
-    Path devboxJSON="devbox.json"
-    Skip 'Not checking devbox version in branches'
+Describe 'Check devbox version'
+    Skip 'No need to check for non-release tests'
     It 'Checks devbox vesion'
         When call devbox version
         The output should equal '0.3.2'
     End
+End
+
+Describe 'devbox basic tests'
+    AfterAll '$(rm devbox.json && rm -r .devbox)'
+    Path devboxJSON="devbox.json"
     It 'Creates a devbox.json'
         When run devbox init
         The path devboxJSON should be file
