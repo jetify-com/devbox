@@ -83,7 +83,8 @@ jobs:
             sudo apt-get update
             sudo apt-get install dash zsh
             sudo curl -sLo /home/shellspec.tar.gz https://github.com/shellspec/shellspec/releases/download/0.28.1/shellspec-dist.tar.gz
-            tar xvzf /home/shellspec.tar.gz && mv shellspec/ /home/
+            tar xvzf /home/shellspec.tar.gz
+            sudo mv shellspec/ /home/
             sudo ln -s /home/shellspec/shellspec /usr/local/bin/
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew update
