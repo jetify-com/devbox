@@ -338,7 +338,11 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 
 	// Ensure the devbox-project's directory exists in the VM
 	mkdirCmd := openssh.Command(username, hostname)
-	_, err := mkdirCmd.ExecRemote(fmt.Sprintf(`mkdir -p "%s"`, pathInVM))
+	// This is the first command we run on the VM. Sometimes is takes fly.io a few seconds
+	// to propagate DNS, especially if the VM is located in a different region than
+	// the proxy (this can happen if the gateway is in a different region to proxy)
+	// We retry a few times to avoid failing the command.
+	_, err := mkdirCmd.ExecRemoteWithRetry(fmt.Sprintf(`mkdir -p "%s"`, pathInVM), 5, 4)
 	if err != nil {
 		debug.Log("error copying config file to VM: %v", err)
 		return errors.WithStack(err)
