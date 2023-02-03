@@ -4,6 +4,7 @@
 package cloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +24,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
@@ -134,6 +136,34 @@ func PortForwardTerminateAll() error {
 
 func PortForwardList() ([]string, error) {
 	return mutagenbox.ForwardList()
+}
+
+func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error {
+	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) services.StatusFile {
+		host := vmHostnameFromSSHControlPath()
+		if host == "" {
+			return update
+		}
+
+		hostKey := strings.Split(host, ".")[0]
+		if hostStatus, ok := update.Hosts[hostKey]; ok {
+			for _, service := range hostStatus.Services {
+				if service.Running && service.Port != "" {
+					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
+					if err != nil {
+						fmt.Fprintf(w, "Failed to create port forward for %s: %v", service.Name, err)
+					}
+					service.LocalPort = localPort
+				} else if service.Port != "" {
+					if err := mutagenbox.ForwardTerminateByHostPort(host, service.Port); err != nil {
+						fmt.Fprintf(w, "Failed to terminate port forward for %s: %v", service.Name, err)
+					}
+					service.LocalPort = ""
+				}
+			}
+		}
+		return update
+	})
 }
 
 func getGithubUsername() (string, error) {

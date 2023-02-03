@@ -28,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
 )
@@ -544,18 +545,18 @@ func (d *Devbox) Services() (plugin.Services, error) {
 	return plugin.GetServices(d.cfg.Packages, d.projectDir)
 }
 
-func (d *Devbox) StartServices(services ...string) error {
+func (d *Devbox) StartServices(serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec(append([]string{"devbox", "services", "start"}, services...)...)
+		return d.Exec(append([]string{"devbox", "services", "start"}, serviceNames...)...)
 	}
-	return plugin.StartServices(d.cfg.Packages, services, d.projectDir, d.writer)
+	return services.Start(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
 }
 
-func (d *Devbox) StopServices(services ...string) error {
+func (d *Devbox) StopServices(serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec(append([]string{"devbox", "services", "stop"}, services...)...)
+		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)
 	}
-	return plugin.StopServices(d.cfg.Packages, services, d.projectDir, d.writer)
+	return services.Stop(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
