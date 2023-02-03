@@ -28,10 +28,13 @@ import (
 )
 
 func Shell(w io.Writer, projectDir string, githubUsername string) error {
-	c := color.New(color.FgMagenta).Add(color.Bold)
-	c.Fprintln(w, "Devbox Cloud")
-	fmt.Fprintln(w, "Remote development environments powered by Nix")
-	fmt.Fprint(w, "\n")
+	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
+	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
+	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
+
+	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
+		return err
+	}
 
 	username, vmHostname := parseVMEnvVar()
 	// The flag for githubUsername overrides any env-var, since flags are a more
@@ -52,15 +55,15 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	// for github username.
 	telemetryShellStartTime := time.Now()
 
-	sshClient := openssh.Client{
-		Username: username,
-		Addr:     "gateway.devbox.sh",
+	sshCmd := &openssh.Cmd{
+		Username:        username,
+		DestinationAddr: "gateway.devbox.sh",
 	}
 	// When developing we can use this env variable to point
 	// to a different gateway
 	var err error
 	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
-		sshClient.Addr = envGateway
+		sshCmd.DestinationAddr = envGateway
 		err = openssh.SetupInsecureDebug(envGateway)
 	} else {
 		err = openssh.SetupDevbox()
@@ -73,19 +76,22 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 
 	if vmHostname == "" {
-		stepVM := stepper.Start(w, "Creating a virtual machine on the cloud...")
+		color.New(color.FgGreen).Fprintln(w, "Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
 		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
 			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
-			stepVM.Success("Detected existing virtual machine")
+			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
 		} else {
-			var region string
-			vmHostname, region, err = getVirtualMachine(sshClient)
+			var region, vmUser string
+			vmUser, vmHostname, region, err = getVirtualMachine(sshCmd)
 			if err != nil {
 				return err
 			}
-			stepVM.Success("Created a virtual machine in %s", fly.RegionName(region))
+			if vmUser != "" {
+				username = vmUser
+			}
+			color.New(color.FgGreen).Fprintf(w, "Created a virtual machine in %s\n", fly.RegionName(region))
 
 			// We save the username to local file only after we get a successful response
 			// from the gateway, because the gateway will verify that the user's SSH keys
@@ -98,13 +104,13 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
-	s2 := stepper.Start(w, "Starting file syncing...")
+	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
-		s2.Fail("Starting file syncing [FAILED]")
+		color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
 		return err
 	}
-	s2.Success("File syncing started")
+	color.New(color.FgGreen).Fprintln(w, "File syncing started")
 
 	s3 := stepper.Start(w, "Connecting to virtual machine...")
 	time.Sleep(1 * time.Second)
@@ -175,6 +181,7 @@ type vm struct {
 	VMHost       string `json:"vm_host"`
 	VMHostPort   int    `json:"vm_host_port"`
 	VMRegion     string `json:"vm_region"`
+	VMUsername   string `json:"vm_username"`
 	VMPublicKey  string `json:"vm_public_key"`
 	VMPrivateKey string `json:"vm_private_key"`
 }
@@ -184,14 +191,14 @@ func (vm vm) redact() *vm {
 	return &vm
 }
 
-func getVirtualMachine(client openssh.Client) (vmHost string, region string, err error) {
-	sshOut, err := client.Exec("auth")
+func getVirtualMachine(sshCmd *openssh.Cmd) (vmUser, vmHost, region string, err error) {
+	sshOut, err := sshCmd.ExecRemote("auth")
 	if err != nil {
-		return "", "", errors.Wrapf(err, "error requesting VM")
+		return "", "", "", errors.Wrapf(err, "error requesting VM")
 	}
 	resp := &vm{}
 	if err := json.Unmarshal(sshOut, resp); err != nil {
-		return "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
+		return "", "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
 	}
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
 		debug.Log("got gateway response:\n\t%s", redacted)
@@ -199,10 +206,10 @@ func getVirtualMachine(client openssh.Client) (vmHost string, region string, err
 	if resp.VMPrivateKey != "" {
 		err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
 		if err != nil {
-			return "", "", errors.Wrapf(err, "error adding new VM key")
+			return "", "", "", errors.Wrapf(err, "error adding new VM key")
 		}
 	}
-	return resp.VMHost, resp.VMRegion, nil
+	return resp.VMUsername, resp.VMHost, resp.VMRegion, nil
 }
 
 func syncFiles(username, hostname, projectDir string) error {
@@ -273,19 +280,20 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 	status := "disconnected"
 
 	// Ensure the destination directory exists
-	destServer := fmt.Sprintf("%s@%s", username, hostname)
 	destDir := fmt.Sprintf("/home/%s/.config/devbox/starship/%s", username, hyphenatePath(filepath.Base(relProjectPathInVM)))
-	remoteCmd := fmt.Sprintf("mkdir -p %s", destDir)
-	cmd := exec.Command("ssh", destServer, remoteCmd)
-	err := cmd.Run()
-	debug.Log("mkdir starship mutagen_status command: %s with error: %s", cmd, err)
+	mkdirCmd := openssh.Command(username, hostname)
+	_, err := mkdirCmd.ExecRemote(fmt.Sprintf(`mkdir -p "%s"`, destDir))
+	if err != nil {
+		debug.Log("error setting initial starship mutagen status: %v", err)
+	}
 
 	// Set an initial status
 	displayableStatus := "initial sync"
-	remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
-	cmd = exec.Command("ssh", destServer, remoteCmd)
-	err = cmd.Run()
-	debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
+	statusCmd := openssh.Command(username, hostname)
+	_, err = statusCmd.ExecRemote(fmt.Sprintf(`echo "%s" > "%s/mutagen_status.txt"`, displayableStatus, destDir))
+	if err != nil {
+		debug.Log("error setting initial starship mutagen status: %v", err)
+	}
 	time.Sleep(5 * time.Second)
 
 	debug.Log("Starting check for file sync status")
@@ -302,10 +310,11 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 			displayableStatus = "\"watching for changes\""
 		}
 
-		remoteCmd = fmt.Sprintf("echo %s > %s/mutagen_status.txt", displayableStatus, destDir)
-		cmd = exec.Command("ssh", destServer, remoteCmd)
-		err = cmd.Run()
-		debug.Log("scp starship.toml with command: %s and error: %s", cmd, err)
+		statusCmd := openssh.Command(username, hostname)
+		_, err = statusCmd.ExecRemote(fmt.Sprintf(`echo "%s" > "%s/mutagen_status.txt"`, displayableStatus, destDir))
+		if err != nil {
+			debug.Log("error setting initial starship mutagen status: %v", err)
+		}
 		time.Sleep(5 * time.Second)
 	}
 }
@@ -328,18 +337,18 @@ func getSyncStatus(mutagenSessionName string) (string, error) {
 func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 
 	// Ensure the devbox-project's directory exists in the VM
-	destServer := fmt.Sprintf("%s@%s", username, hostname)
-	cmd := exec.Command("ssh", destServer, "--", "mkdir", "-p", pathInVM)
-	err := cmd.Run()
-	debug.Log("ssh mkdir command: %s with error: %s", cmd, err)
+	mkdirCmd := openssh.Command(username, hostname)
+	_, err := mkdirCmd.ExecRemote(fmt.Sprintf(`mkdir -p "%s"`, pathInVM))
 	if err != nil {
+		debug.Log("error copying config file to VM: %v", err)
 		return errors.WithStack(err)
 	}
 
 	// Copy the config file to the devbox-project directory in the VM
+	destServer := fmt.Sprintf("%s@%s", username, hostname)
 	configFilePath := filepath.Join(projectDir, "devbox.json")
 	destPath := fmt.Sprintf("%s:%s", destServer, pathInVM)
-	cmd = exec.Command("scp", configFilePath, destPath)
+	cmd := exec.Command("scp", configFilePath, destPath)
 	err = cmd.Run()
 	debug.Log("scp devbox.json command: %s with error: %s", cmd, err)
 	return errors.WithStack(err)
@@ -351,13 +360,14 @@ func shell(username, hostname, projectDir string, shellStartTime time.Time) erro
 		return err
 	}
 
-	client := &openssh.Client{
-		Addr:           hostname,
-		PathInVM:       absoluteProjectPathInVM(username, projectPath),
-		ShellStartTime: telemetry.UnixTimestampFromTime(shellStartTime),
-		Username:       username,
+	cmd := &openssh.Cmd{
+		DestinationAddr: hostname,
+		PathInVM:        absoluteProjectPathInVM(username, projectPath),
+		ShellStartTime:  telemetry.UnixTimestampFromTime(shellStartTime),
+		Username:        username,
 	}
-	return client.Shell()
+	sessionErrors := newSSHSessionErrors()
+	return cloudShellErrorHandler(cmd.Shell(sessionErrors), sessionErrors)
 }
 
 // relativeProjectPathInVM refers to the project path relative to the user's
@@ -472,4 +482,39 @@ func vmHostnameFromSSHControlPath() string {
 
 func hyphenatePath(path string) string {
 	return strings.ReplaceAll(path, "/", "-")
+}
+
+func ensureProjectDirIsNotSensitive(dir string) error {
+
+	// isSensitiveDir checks if the dir is the rootdir or the user's homedir
+	isSensitiveDir := func(dir string) bool {
+		dir = filepath.Clean(dir)
+		if dir == "/" {
+			return true
+		}
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return false
+		}
+		return dir == filepath.Clean(home)
+	}
+
+	if isSensitiveDir(dir) {
+		// check for a git repository in this folder before using this project config
+		// (and potentially syncing all the code to devbox-cloud)
+		_, err := os.Stat(filepath.Join(dir, ".git"))
+		if err != nil {
+			if os.IsNotExist(err) {
+				return usererr.New(
+					"Found a config (devbox.json) file at %s, "+
+						"but since it is a sensitive directory we require it to be part of a git repository "+
+						"before we sync it to devbox cloud",
+					dir,
+				)
+			}
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }

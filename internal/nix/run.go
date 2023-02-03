@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -24,7 +23,7 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 	nixEnv := []string{}
 	for k, v := range vaf.Variables {
 		if v.Type == "exported" {
-			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", k, shellescape.Quote(v.Value.(string))))
+			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", k, v.Value.(string)))
 		}
 	}
 
@@ -35,7 +34,12 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 		}
 	}
 
-	cmd := exec.Command("sh", "-c", cmdWithArgs)
+	// Try to find sh in the PATH, if not, default to a well known absolute path.
+	shPath, err := exec.LookPath("sh")
+	if err != nil {
+		shPath = "/bin/sh"
+	}
+	cmd := exec.Command(shPath, "-c", cmdWithArgs)
 	cmd.Env = append(nixEnv, additionalEnv...)
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin

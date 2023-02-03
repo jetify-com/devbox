@@ -59,6 +59,17 @@ func WithUserMessage(source error, msg string, args ...any) error {
 	}
 }
 
+func WithLoggedUserMessage(source error, msg string, args ...any) error {
+	if source == nil || HasUserMessage(source) {
+		return source
+	}
+	return &combined{
+		logged:      true,
+		source:      source,
+		userMessage: fmt.Sprintf(msg, args...),
+	}
+}
+
 func HasUserMessage(err error) bool {
 	c := &combined{}
 	return errors.As(err, &c) // note double pointer

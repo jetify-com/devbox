@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cloud/mutagen"
 )
 
@@ -39,10 +38,6 @@ func DefaultSyncLabels(machineID string) map[string]string {
 }
 
 func DefaultEnv() (map[string]string, error) {
-	if featureflag.SSHShim.Disabled() {
-		return map[string]string{}, nil
-	}
-
 	shimDir, err := ShimDir()
 	if err != nil {
 		return nil, err

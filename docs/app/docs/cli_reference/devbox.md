@@ -16,6 +16,7 @@ devbox [flags]
 ## SEE ALSO
 
 * [devbox add](./devbox_add.md)	 - Add a new package to your devbox
+* [devbox cloud](./devbox_cloud.md) - [Preview] Create and manage a remote dev environment with Devbox Cloud
 * [devbox generate](devbox_generate.md)  - Generate supporting files for your project
 * [devbox info](devbox_info.md)  - Display package and plugin info
 * [devbox init](./devbox_init.md)	 - Initialize a directory as a devbox project

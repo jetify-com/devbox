@@ -32,4 +32,4 @@ __pycache__/
 *.devcontainer
 
 # test specific files
-examples/testdata/commands/generate/Dockerfile
+.test_tmp_*

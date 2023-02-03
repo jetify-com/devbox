@@ -1,0 +1,21 @@
+# Devbox should be able to install a very simple package like 'hello'
+# and it should work.
+
+# Ensure hello is not found anywhere in the environment
+! exec hello
+! exec devbox run hello
+
+# Initialize devbox
+exec devbox init
+
+# Add the package and run hello with devbox
+exec devbox add hello
+! exec hello
+
+# Run hello and check it prints the right output
+exec devbox run hello
+stdout 'Hello, world!'
+
+# Once we have better progress output, we should check that stderr is empty, with:
+# ! stderr .+  # No stderr output
+# As is, we always print 'Ensuring packages are installed'.

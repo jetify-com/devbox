@@ -1,0 +1,12 @@
+# Start on an empty directory and check that devbox init works correctly.
+
+! exists devbox.json
+exec devbox init
+exists devbox.json
+
+json.superset devbox.json expected.json
+
+-- expected.json --
+{
+  "packages": []
+}

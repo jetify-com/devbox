@@ -1,19 +1,14 @@
 let
-  mirrorURL = builtins.getEnv "DEVBOX_NIXPKGS_URL";
   pkgs = import (fetchTarball {
-    url = if mirrorURL == "" then "{{ .NixpkgsInfo.URL }}" else mirrorURL;
-  }) {
-    {{- if .NixOverlays }}
-      overlays = [
-      {{- range .NixOverlays }}
-        (import (fetchTarball "{{.}}"))
-      {{ end -}}
-      ];
+    url = "{{ .NixpkgsInfo.URL }}";
+    {{- if .NixpkgsInfo.Sha256 }}
+    sha256 = "{{ .NixpkgsInfo.Sha256 }}";
     {{- end }}
+  }) {
   };
   {{- range .Definitions}}
     {{.}}
-  {{end -}}
+  {{ end }}
 in with pkgs;
 mkShell {
   shellHook =
@@ -43,6 +38,6 @@ mkShell {
      packages = [
       {{- range .DevPackages}}
         {{.}}
-      {{end -}}
+      {{- end }}
     ];
 }

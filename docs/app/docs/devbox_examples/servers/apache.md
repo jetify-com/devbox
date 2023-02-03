@@ -6,6 +6,8 @@ Apache can be automatically configured by Devbox via the built-in Apache Plugin.
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/apache)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=servers/apache)
+
 ### Adding Apache to your Shell
 
 Run `devbox add apacheHttpd`, or add the following to your `devbox.json`

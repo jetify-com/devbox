@@ -14,6 +14,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.jetpack.io/devbox/internal/testframework"
 )
 
 func testShellHello(t *testing.T, name string) {
@@ -287,4 +290,27 @@ func (sh *shell) exit(t *testing.T) {
 		t.Fatal("Error waiting for shell to exit:", err)
 	}
 	sh.exited = true
+}
+
+func TestShell(t *testing.T) {
+	devboxJSON := `
+	{
+		"packages": [],
+		"shell": {
+		  "scripts": {
+			"test1": "echo test1"
+		  },
+		  "init_hook": null
+		},
+		"nixpkgs": {
+		  "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
+		}
+	}`
+	td := testframework.Open()
+	defer td.Close()
+	err := td.SetDevboxJSON(devboxJSON)
+	assert.NoError(t, err)
+	output, err := td.RunCommand(ShellCmd())
+	assert.NoError(t, err)
+	assert.Contains(t, output, "Starting a devbox shell...")
 }

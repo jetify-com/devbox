@@ -5,7 +5,6 @@
 package impl
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +29,6 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux/stepper"
 	"golang.org/x/exp/slices"
 )
 
@@ -113,6 +111,7 @@ func (d *Devbox) Config() *Config {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
+	original := d.cfg.Packages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
@@ -134,6 +133,18 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(install); err != nil {
+		// if error installing, revert devbox.json
+		// This is not perfect because there may be more than 1 package being
+		// installed and we don't know which one failed. But it's better than
+		// blindly add all packages.
+		color.New(color.FgRed).Fprintf(
+			d.writer,
+			"There was an error installing nix packages: %v. "+
+				"Packages were not added to devbox.json\n",
+			strings.Join(pkgs, ", "),
+		)
+		d.cfg.Packages = original
+		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
 
@@ -204,7 +215,7 @@ func (d *Devbox) Generate() error {
 }
 
 func (d *Devbox) Shell() error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -256,7 +267,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return d.RunScriptInNewNixShell(cmdName)
 	}
 
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -282,7 +293,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
 // Deprecated: RunScript should be used instead.
 func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -367,7 +378,7 @@ func (d *Devbox) ListScripts() []string {
 }
 
 func (d *Devbox) Exec(cmds ...string) error {
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
 
@@ -492,7 +503,7 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 			// prompt for direnv allow
 			var result string
 			prompt := &survey.Input{
-				Message: "Do you want to enable direnv integration for this devbox project?[y/n]",
+				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
 			}
 			err := survey.AskOne(prompt, &result)
 			if err != nil {
@@ -578,11 +589,23 @@ type installMode string
 const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
+	ensure    installMode = "ensure"
 )
 
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if err := d.generateShellFiles(); err != nil {
 		return err
+	}
+
+	installingVerb := "Installing"
+	if mode == uninstall {
+		installingVerb = "Uninstalling"
+	}
+
+	if mode == ensure {
+		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
+	} else {
+		_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
 	}
 
 	// We need to re-install the packages
@@ -627,8 +650,6 @@ func (d *Devbox) printPackageUpdateMessage(
 		}
 		fmt.Fprint(d.writer, successMsg)
 
-		fmt.Fprintln(d.writer)
-
 		// (Only when in devbox shell) Prompt the user to run hash -r
 		// to ensure we refresh the shell hash and load the proper environment.
 		if IsDevboxShellEnabled() {
@@ -662,25 +683,17 @@ func (d *Devbox) installNixProfile(mode installMode) (err error) {
 				_ = d.copyFlakeLockToDevboxLock()
 			}
 		}()
-
-		cmd.Env = nix.DefaultEnv()
-
-		debug.Log("Running command: %s\n", cmd.Args)
-		_, err = cmd.Output()
-
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return errors.Errorf("running command %s: exit status %d with command stderr: %s",
-				cmd, exitErr.ExitCode(), string(exitErr.Stderr))
-		}
-		if err != nil {
-			return errors.Errorf("running command %s: %v", cmd, err)
-		}
-
-		return nil
+	} else { // Non flakes:
+		cmd = exec.Command(
+			"nix-env",
+			"--profile", profileDir,
+			"--install",
+			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+		)
 	}
 
-	// Non flakes below:
+	cmd.Env = nix.DefaultEnv()
+	cmd.Stdout = &nixPackageInstallWriter{d.writer}
 
 	pkgs, err := d.pendingPackagesForInstallation()
 	if err != nil {
@@ -691,99 +704,29 @@ func (d *Devbox) installNixProfile(mode installMode) (err error) {
 		return nil
 	}
 
+	color.New(color.FgGreen).Fprintf(
+		d.writer,
+		"Installing the following packages:\n%s", strings.Join(pkgs, "\n"),
+	)
+
 	installingVerb := "Installing"
 	if mode == uninstall {
 		installingVerb = "Uninstalling"
 	}
 	_, _ = fmt.Fprintf(d.writer, "%s nix packages. This may take a while...\n", installingVerb)
 
-	// Append an empty string to warm the nixpkgs cache
-	packages := append([]string{""}, pkgs...)
+	cmd.Stderr = cmd.Stdout
 
-	total := len(packages)
-	for idx, pkg := range packages {
-		stepNum := idx + 1
+	err = cmd.Run()
 
-		var msg string
-		if pkg == "" {
-			msg = fmt.Sprintf("[%d/%d] nixpkgs", stepNum, total)
-		} else {
-			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		}
-
-		step := stepper.Start(d.writer, msg)
-
-		// TODO savil. hook this up to gcurtis's mirrorURL
-		nixPkgsURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", d.cfg.Nixpkgs.Commit)
-
-		var cmd *exec.Cmd
-		if pkg != "" {
-			cmd = exec.Command(
-				"nix-env",
-				"--profile", profileDir,
-				"-f", nixPkgsURL,
-				"--install",
-				"--attr", pkg,
-			)
-		} else {
-			cmd = exec.Command(
-				"nix-instantiate",
-				"--eval",
-				"--attr", "path",
-				nixPkgsURL,
-			)
-		}
-
-		cmd.Env = nix.DefaultEnv()
-
-		// Get a pipe to read from standard out
-		pipe, err := cmd.StdoutPipe()
-		if err != nil {
-			return errors.New("unable to open stdout pipe")
-		}
-
-		// Use the same writer for standard error
-		cmd.Stderr = cmd.Stdout
-
-		// Make a new channel which will be used to ensure we get all output
-		done := make(chan struct{})
-
-		// Create a scanner which scans pipe in a line-by-line fashion
-		scanner := bufio.NewScanner(pipe)
-
-		// Use the scanner to scan the output line by line and log it
-		// It's running in a goroutine so that it doesn't block
-		go func() {
-
-			// Read line by line and process it
-			for scanner.Scan() {
-				line := scanner.Text()
-				step.Display(fmt.Sprintf("%s   %s", msg, line))
-			}
-
-			// We're all done, unblock the channel
-			done <- struct{}{}
-		}()
-
-		// Start the command and check for errors
-		if err := cmd.Start(); err != nil {
-			step.Fail(msg)
-			return errors.Errorf("error starting command %s: %v", cmd, err)
-		}
-
-		// Wait for all output to be processed
-		<-done
-
-		// Wait for the command to finish
-		if err = cmd.Wait(); err != nil {
-			step.Fail(msg)
-			return errors.Errorf("error running command %s: %v", cmd, err)
-		}
-		step.Success(msg)
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
 	}
-
-	fmt.Fprintln(d.writer, "Done.")
-
+	if err != nil {
+		return errors.Errorf("running command %s: %v", cmd, err)
+	}
 	return nil
 }
 

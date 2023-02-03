@@ -490,7 +490,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PathPrepend      string
 		ScriptCommand    string
 		ShellStartTime   string
-		ProfileBinDir    string
 		HistoryFile      string
 		NixEnv           map[string]string
 	}{
@@ -503,7 +502,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		PathPrepend:      pathPrepend,
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
-		ProfileBinDir:    s.profileDir + "/bin",
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		NixEnv:           vars,
 	})
@@ -589,6 +587,9 @@ var envToKeep = map[string]bool{
 	"TERM_SESSION_ID":        true,
 	"SHELL_SESSIONS_DISABLE": true, // Respect session save/resume setting (see /etc/zshrc_Apple_Terminal).
 	"SECURITYSESSIONID":      true,
+
+	// SSH variables
+	"SSH_TTY": true, // Used by devbox telemetry logging
 
 	// Nix + Devbox
 	//

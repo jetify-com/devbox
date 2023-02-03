@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,9 +22,11 @@ type cloudShellCmdFlags struct {
 
 func CloudCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:    "cloud",
-		Short:  "Remote development environments on the cloud",
-		Hidden: true,
+		Use:   "cloud",
+		Short: "[Preview] Remote development environments on the cloud",
+		Long: "Remote development environments on the cloud. All cloud commands " +
+			"are currently in developer preview and may have some rough edges. " +
+			"Please report any issues to https://github.com/jetpack-io/devbox/issues",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -38,7 +41,7 @@ func cloudShellCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "shell",
-		Short: "Shell into a cloud environment that matches your local devbox environment",
+		Short: "[Preview] Shell into a cloud environment that matches your local devbox environment",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCloudShellCmd(cmd, &flags)
 		},
@@ -54,7 +57,7 @@ func cloudShellCmd() *cobra.Command {
 func cloudPortForwardCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "forward <local-port>:<remote-port> | :<remote-port> | stop | list",
-		Short: "Port forwards a local port to a remote devbox cloud port",
+		Short: "[Preview] Port forwards a local port to a remote devbox cloud port",
 		Long: "Port forwards a local port to a remote devbox cloud port. If 0 or " +
 			"no local port is specified, we find a suitable local port. Use 'stop' " +
 			"to stop all port forwards.",
@@ -113,7 +116,8 @@ func cloudPortForwardList() *cobra.Command {
 }
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
-	if devbox.IsDevboxShellEnabled() {
+	// calling `devbox cloud shell` when already in the VM is not allowed.
+	if region := os.Getenv("DEVBOX_REGION"); region != "" {
 		return shellInceptionErrorMsg("devbox cloud shell")
 	}
 

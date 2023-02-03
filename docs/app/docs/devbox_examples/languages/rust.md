@@ -6,6 +6,8 @@ The easiest way to manage Rust with Devbox is to install `rustup`, and then conf
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/rust)
 
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/rust)
+
 ```json
 {
     "packages": [
