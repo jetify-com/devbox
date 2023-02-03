@@ -1,6 +1,7 @@
 Describe 'devbox init tests'
     AfterAll '$(rm devbox.json && rm -r .devbox)'
     Path devboxJSON="devbox.json"
+    Skip 'Not checking devbox version in branches'
     It 'Checks devbox vesion'
         When call devbox version
         The output should equal '0.3.2'
