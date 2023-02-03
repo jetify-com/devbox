@@ -20,7 +20,7 @@ content readable.
 export {{ $name }}={{ $value }}
 {{ end -}}
 
-{{- if .NixEnv }}
+{{- if .IsFlakesDisabled }}
 # Run the shell hook defined in shell.nix.
 eval $shellHook
 
