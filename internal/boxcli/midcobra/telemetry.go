@@ -131,7 +131,6 @@ type event struct {
 	Packages      []string
 	SentryEventID string
 	Shell         string
-	UserID        string
 }
 
 // newEventIfValid creates a new telemetry event, but returns nil if we cannot construct
