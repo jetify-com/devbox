@@ -29,7 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func Shell(w io.Writer, projectDir string, githubUsername string) error {
+func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
@@ -119,6 +119,10 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
 
+	if err = AutoPortForward(ctx, w, projectDir); err != nil {
+		return err
+	}
+
 	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
 }
 
@@ -139,30 +143,42 @@ func PortForwardList() ([]string, error) {
 }
 
 func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error {
-	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) services.StatusFile {
+	debug.Log("Starting auto port forwarding")
+	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) (services.StatusFile, bool) {
+		debug.Log("Received service status update: %v", update)
 		host := vmHostnameFromSSHControlPath()
 		if host == "" {
-			return update
+			return update, false
 		}
 
 		hostKey := strings.Split(host, ".")[0]
+		saveChanges := false
 		if hostStatus, ok := update.Hosts[hostKey]; ok {
 			for _, service := range hostStatus.Services {
 				if service.Running && service.Port != "" {
+					debug.Log("Forwarding %s to %s", service.Name, service.Port)
 					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
+					debug.Log("Forwarding %s to %s: %s", service.Name, service.Port, localPort)
 					if err != nil {
 						fmt.Fprintf(w, "Failed to create port forward for %s: %v", service.Name, err)
 					}
-					service.LocalPort = localPort
+					if service.LocalPort != localPort {
+						service.LocalPort = localPort
+						saveChanges = true
+					}
 				} else if service.Port != "" {
+					debug.Log("Terminating forward %s to %s", service.Name, service.Port)
 					if err := mutagenbox.ForwardTerminateByHostPort(host, service.Port); err != nil {
 						fmt.Fprintf(w, "Failed to terminate port forward for %s: %v", service.Name, err)
 					}
-					service.LocalPort = ""
+					if service.LocalPort != "" {
+						service.LocalPort = ""
+						saveChanges = true
+					}
 				}
 			}
 		}
-		return update
+		return update, saveChanges
 	})
 }
 

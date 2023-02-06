@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"reflect"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/debug"
 )
 
-type statusUpdate func(status StatusFile) StatusFile
+// statusUpdate returns a possibly updated status file and a boolean indicating
+// whether the status file should be saved. This prevents infinite loops when
+// the status file is updated.
+type statusUpdate func(status StatusFile) (StatusFile, bool)
 
 func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update statusUpdate) error {
 	if err := initStatusFile(projectDir); err != nil {
@@ -34,22 +38,30 @@ func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update
 
 	// Start listening for events.
 	go func() {
-		var status StatusFile
+		debug.Log("listening to changes on %s", statusFilePath(projectDir))
 		for {
 			select {
 			case event, ok := <-watcher.Events:
+				debug.Log("event: %s", event)
 				if !ok {
 					return
 				}
-				if event.Has(fsnotify.Write) {
-					newStatus, err := readStatusFile(projectDir)
+				if os.Getenv("DEVBOX_REGION") != "" {
+					status, _ := readStatusFile(projectDir)
+					fmt.Fprintf(w, "Status changed: %v", status.Hosts["6e8292db74ee87"].Services["apache"])
+				}
+				// mutagen sync changes show up as create events
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Chmod) {
+					debug.Log("file changed (write event)")
+					status, err := readStatusFile(projectDir)
 					if err != nil {
 						fmt.Fprintf(w, "Error reading status file: %s\n", err)
 						continue
 					}
 					// Only call callback if something has changed
-					if !reflect.DeepEqual(status, newStatus) {
-						status = update(newStatus)
+					debug.Log("status changed, calling callback")
+					status, saveChanges := update(status)
+					if saveChanges {
 						if err := updateStatusFile(projectDir, status); err != nil {
 							fmt.Fprintf(w, "Error updating status file: %s\n", err)
 						}
@@ -127,7 +139,13 @@ func updateStatusFile(projectDir string, status StatusFile) error {
 }
 
 func updateServiceStatus(projectDir string, statusUpdate *serviceStatus) error {
-	hostname, _ := lo.Coalesce(os.Getenv("HOSTNAME"), "localhost")
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return nil
+	}
+	hostname, err := hostname()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	status, err := readStatusFile(projectDir)
 	if err != nil {
@@ -156,4 +174,12 @@ func readStatusFile(projectDir string) (StatusFile, error) {
 		return StatusFile{}, errors.WithStack(err)
 	}
 	return status, nil
+}
+
+func hostname() (string, error) {
+	stdout, err := exec.Command("uname", "-n").Output()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return strings.TrimSpace(string(stdout)), nil
 }

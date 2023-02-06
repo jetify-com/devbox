@@ -91,7 +91,7 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 			return nil
 		}
 	}
-	return box.StartServices(services...)
+	return box.StartServices(cmd.Context(), services...)
 }
 
 func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
@@ -109,7 +109,7 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 			return nil
 		}
 	}
-	return box.StopServices(services...)
+	return box.StopServices(cmd.Context(), services...)
 }
 
 func serviceNames(box devbox.Devbox) ([]string, error) {
