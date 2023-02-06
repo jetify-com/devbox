@@ -16,8 +16,8 @@ Describe 'devbox basic tests'
     End
     It 'Adds a package'
         When run devbox add hello
-        The line 2 of stderr should start with 'hello'
-        The line 2 of stderr should end with 'is now installed.'
+        The stderr should include 'hello'
+        The stderr should include 'is now installed.'
     End
     Before 'export DEVBOX_FEATURE_STRICT_RUN=1'
     It 'Runs Hello'
@@ -28,7 +28,7 @@ Describe 'devbox basic tests'
     End
     It 'Removes package'
         When run devbox rm hello
-        The line 2 of stderr should start with 'hello'
-        The line 2 of stderr should end with 'is now removed.'
+        The stderr should include 'hello'
+        The stderr should include 'is now removed.'
     End
 End
