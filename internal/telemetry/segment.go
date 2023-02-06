@@ -1,9 +1,6 @@
 package telemetry
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -122,30 +119,18 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 // If not authenticated, or there's an error, then an empty string is returned, which segment
 // would treat as logged-out or anonymous user.
 func UserIDFromGithubUsername() string {
+
 	username, err := openssh.GithubUsernameFromLocalFile()
 	if err != nil || username == "" {
 		return ""
 	}
 
-	// hashFromUsername hashes the github username and produces a 64-char string as userID.
-	// Returns an empty string if no github username is found.
-	hashFromUsername := func(username string) string {
+	const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
+	const githubPrefix = "github:"
 
-		const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
-		mac := hmac.New(sha256.New, []byte(salt))
-
-		const githubPrefix = "github:"
-		mac.Write([]byte(githubPrefix + username))
-
-		return hex.EncodeToString(mac.Sum(nil))
-	}
-
-	hash := hashFromUsername(username)
-	uid, err := uuid.FromBytes([]byte(hash)[:16])
-	if err != nil {
-		return ""
-	}
-	return uid.String()
+	// We use a version 5 uuid.
+	// A good comparison of types of uuids is at: https://www.uuidtools.com/uuid-versions-explained
+	return uuid.NewSHA1(uuid.MustParse(salt), []byte(githubPrefix+username)).String()
 }
 
 // timeFromUnixTimestamp is a helper utility that converts the timestamp string
