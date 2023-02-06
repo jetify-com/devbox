@@ -644,7 +644,7 @@ func (d *Devbox) printPackageUpdateMessage(
 				)
 			}
 			successMsg = fmt.Sprintf(
-				"%s are now %s.",
+				"%s are now %s.\n",
 				strings.Join(pkgsWithVersion, ", "),
 				verb,
 			)
