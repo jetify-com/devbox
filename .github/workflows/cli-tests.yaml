@@ -97,6 +97,7 @@ jobs:
             brew update
             brew tap shellspec/shellspec
             brew install shellspec
+          fi
       - name: Install Nix
         run: |
           sh <(curl -L https://nixos.org/nix/install) --no-modify-profile --daemon --daemon-user-count 1
