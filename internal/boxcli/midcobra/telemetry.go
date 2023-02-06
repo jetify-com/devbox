@@ -127,6 +127,7 @@ type event struct {
 	Command       string
 	CommandArgs   []string
 	CommandError  error
+	CommandHidden bool
 	Failed        bool
 	Packages      []string
 	SentryEventID string
@@ -161,14 +162,17 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		Command:      subcmd.CommandPath(),
 		CommandArgs:  subargs,
 		CommandError: runErr,
-		Failed:       runErr != nil,
-		Packages:     pkgs,
-		Shell:        os.Getenv("SHELL"),
+		// The command is hidden if either the top-level command is hidden or
+		// the specific sub-command that was executed is hidden.
+		CommandHidden: cmd.Hidden || subcmd.Hidden,
+		Failed:        runErr != nil,
+		Packages:      pkgs,
+		Shell:         os.Getenv("SHELL"),
 	}
 }
 
 func (m *telemetryMiddleware) trackEvent(evt *event) {
-	if evt == nil {
+	if evt == nil || evt.CommandHidden {
 		return
 	}
 
