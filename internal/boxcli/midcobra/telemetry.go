@@ -82,6 +82,7 @@ type event struct {
 	Command       string
 	CommandArgs   []string
 	CommandError  error
+	CommandHidden bool
 	Failed        bool
 	Packages      []string
 	CommitHash    string // the nikpkgs commit hash in devbox.json
@@ -89,7 +90,6 @@ type event struct {
 	DevboxEnv     map[string]any // Devbox-specific environment variables
 	SentryEventID string
 	Shell         string
-	UserID        string
 }
 
 // newEventIfValid creates a new telemetry event, but returns nil if we cannot construct
@@ -125,9 +125,12 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			OsName:      telemetry.OS(),
 			UserID:      userID,
 		},
-		Command:       subcmd.CommandPath(),
-		CommandArgs:   subargs,
-		CommandError:  runErr,
+		Command:      subcmd.CommandPath(),
+		CommandArgs:  subargs,
+		CommandError: runErr,
+		// The command is hidden if either the top-level command is hidden or
+		// the specific sub-command that was executed is hidden.
+		CommandHidden: cmd.Hidden || subcmd.Hidden,
 		Failed:        runErr != nil,
 		Packages:      pkgs,
 		CommitHash:    hash,
@@ -158,7 +161,7 @@ func (m *telemetryMiddleware) trackError(evt *event) {
 }
 
 func (m *telemetryMiddleware) trackEvent(evt *event) {
-	if evt == nil {
+	if evt == nil || evt.CommandHidden {
 		return
 	}
 

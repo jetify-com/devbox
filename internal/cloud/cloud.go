@@ -4,6 +4,7 @@
 package cloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +24,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
@@ -134,6 +136,34 @@ func PortForwardTerminateAll() error {
 
 func PortForwardList() ([]string, error) {
 	return mutagenbox.ForwardList()
+}
+
+func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error {
+	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) services.StatusFile {
+		host := vmHostnameFromSSHControlPath()
+		if host == "" {
+			return update
+		}
+
+		hostKey := strings.Split(host, ".")[0]
+		if hostStatus, ok := update.Hosts[hostKey]; ok {
+			for _, service := range hostStatus.Services {
+				if service.Running && service.Port != "" {
+					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
+					if err != nil {
+						fmt.Fprintf(w, "Failed to create port forward for %s: %v", service.Name, err)
+					}
+					service.LocalPort = localPort
+				} else if service.Port != "" {
+					if err := mutagenbox.ForwardTerminateByHostPort(host, service.Port); err != nil {
+						fmt.Fprintf(w, "Failed to terminate port forward for %s: %v", service.Name, err)
+					}
+					service.LocalPort = ""
+				}
+			}
+		}
+		return update
+	})
 }
 
 func getGithubUsername() (string, error) {
@@ -338,7 +368,11 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 
 	// Ensure the devbox-project's directory exists in the VM
 	mkdirCmd := openssh.Command(username, hostname)
-	_, err := mkdirCmd.ExecRemote(fmt.Sprintf(`mkdir -p "%s"`, pathInVM))
+	// This is the first command we run on the VM. Sometimes is takes fly.io a few seconds
+	// to propagate DNS, especially if the VM is located in a different region than
+	// the proxy (this can happen if the gateway is in a different region to proxy)
+	// We retry a few times to avoid failing the command.
+	_, err := mkdirCmd.ExecRemoteWithRetry(fmt.Sprintf(`mkdir -p "%s"`, pathInVM), 5, 4)
 	if err != nil {
 		debug.Log("error copying config file to VM: %v", err)
 		return errors.WithStack(err)
