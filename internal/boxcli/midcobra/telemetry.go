@@ -6,6 +6,7 @@ package midcobra
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -46,6 +47,11 @@ type telemetryMiddleware struct {
 // telemetryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*telemetryMiddleware)(nil)
 
+func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
+	m.executionID = execID
+	return m
+}
+
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = telemetry.CommandStartTime()
 	if !m.disabled {
@@ -69,57 +75,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	m.trackEvent(evt) // Segment
 }
 
-func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
-	m.executionID = execID
-	return m
-}
-
-func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
-	if c.TraverseChildren {
-		subcmd, subargs, err = c.Traverse(args)
-	} else {
-		subcmd, subargs, err = c.Find(args)
-	}
-	return subcmd, subargs, err
-}
-
-func getPackages(c *cobra.Command) []string {
-	configFlag := c.Flag("config")
-	// for shell, run, and add command, path can be set via --config
-	// if --config is not set, default to current directory which is ""
-	// the only exception is the init command, for the path can be set with args
-	// since after running init there will be no packages set in devbox.json
-	// we can safely ignore this case.
-	var path string
-	if configFlag != nil {
-		path = configFlag.Value.String()
-	}
-
-	box, err := devbox.Open(path, os.Stdout)
-	if err != nil {
-		return []string{}
-	}
-
-	return box.Config().Packages
-}
-
-func (m *telemetryMiddleware) trackError(evt *event) {
-	// Ensure error is not nil and not a non-loggable user error
-	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
-		return
-	}
-
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("command", evt.Command)
-		scope.SetContext("command", map[string]interface{}{
-			"subcommand": evt.Command,
-			"args":       evt.CommandArgs,
-			"packages":   evt.Packages,
-		})
-	})
-	sentry.CaptureException(evt.CommandError)
-}
-
 // Consider renaming this to commandEvent
 // since it has info about the specific command run.
 type event struct {
@@ -130,6 +85,9 @@ type event struct {
 	CommandHidden bool
 	Failed        bool
 	Packages      []string
+	CommitHash    string // the nikpkgs commit hash in devbox.json
+	InDevboxShell bool
+	DevboxEnv     map[string]any // Devbox-specific environment variables
 	SentryEventID string
 	Shell         string
 }
@@ -144,10 +102,18 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		return nil
 	}
 
-	pkgs := getPackages(cmd)
+	pkgs, hash := getPackagesAndCommitHash(cmd)
 
 	// an empty userID means that we do not have a github username saved
 	userID := telemetry.UserIDFromGithubUsername()
+
+	devboxEnv := map[string]interface{}{}
+	for _, e := range os.Environ() {
+		if strings.HasPrefix(e, "DEVBOX") && strings.Contains(e, "=") {
+			key := strings.Split(e, "=")[0]
+			devboxEnv[key] = os.Getenv(key)
+		}
+	}
 
 	return &event{
 		Event: telemetry.Event{
@@ -167,8 +133,31 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		CommandHidden: cmd.Hidden || subcmd.Hidden,
 		Failed:        runErr != nil,
 		Packages:      pkgs,
+		CommitHash:    hash,
+		InDevboxShell: devbox.IsDevboxShellEnabled(),
+		DevboxEnv:     devboxEnv,
 		Shell:         os.Getenv("SHELL"),
 	}
+}
+
+func (m *telemetryMiddleware) trackError(evt *event) {
+	// Ensure error is not nil and not a non-loggable user error
+	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
+		return
+	}
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("command", evt.Command)
+		scope.SetContext("command", map[string]interface{}{
+			"command":      evt.Command,
+			"command args": evt.CommandArgs,
+			"packages":     evt.Packages,
+			"nixpkgs hash": evt.CommitHash,
+			"in shell":     evt.InDevboxShell,
+		})
+		scope.SetContext("devbox env", evt.DevboxEnv)
+	})
+	sentry.CaptureException(evt.CommandError)
 }
 
 func (m *telemetryMiddleware) trackEvent(evt *event) {
@@ -219,4 +208,33 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 			Set("shell", evt.Shell),
 		UserId: evt.UserID,
 	})
+}
+
+func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
+	if c.TraverseChildren {
+		subcmd, subargs, err = c.Traverse(args)
+	} else {
+		subcmd, subargs, err = c.Find(args)
+	}
+	return subcmd, subargs, err
+}
+
+func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
+	configFlag := c.Flag("config")
+	// for shell, run, and add command, path can be set via --config
+	// if --config is not set, default to current directory which is ""
+	// the only exception is the init command, for the path can be set with args
+	// since after running init there will be no packages set in devbox.json
+	// we can safely ignore this case.
+	var path string
+	if configFlag != nil {
+		path = configFlag.Value.String()
+	}
+
+	box, err := devbox.Open(path, os.Stdout)
+	if err != nil {
+		return []string{}, ""
+	}
+
+	return box.Config().Packages, box.Config().Nixpkgs.Commit
 }
