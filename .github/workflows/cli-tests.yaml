@@ -82,6 +82,13 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get install dash zsh
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew update
+            brew install dash zsh
+          fi
+      - name: Install Shellspec
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
             sudo curl -sLo /home/shellspec.tar.gz https://github.com/shellspec/shellspec/releases/download/0.28.1/shellspec-dist.tar.gz
             tar xvzf /home/shellspec.tar.gz
             sudo mv shellspec/ /home/
@@ -89,8 +96,7 @@ jobs:
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew update
             brew tap shellspec/shellspec
-            brew install dash zsh shellspec
-          fi
+            brew install shellspec
       - name: Install Nix
         run: |
           sh <(curl -L https://nixos.org/nix/install) --no-modify-profile --daemon --daemon-user-count 1
