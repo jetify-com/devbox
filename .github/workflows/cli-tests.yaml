@@ -114,9 +114,13 @@ jobs:
           cd testscripts/shellspec/
           shellspec -s /bin/bash -f document
       - name: Run shellspec tests (zsh)
-        run: shellspec -s /bin/zsh -f document
+        run: |
+          cd testscripts/shellspec/
+          shellspec -s /bin/zsh -f document
       - name: Run shellspec tests (dash)
-        run: shellspec -s /bin/dash -f document
+        run: |
+          cd testscripts/shellspec/
+          shellspec -s /bin/dash -f document
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     runs-on: ubuntu-latest
