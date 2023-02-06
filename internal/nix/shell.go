@@ -453,7 +453,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		EnvToKeep        map[string]string
-		IsFlakesDisabled bool
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -466,7 +465,6 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 	}{
 		ProjectDir:       s.projectDir,
 		EnvToKeep:        envToKeepFlakes,
-		IsFlakesDisabled: featureflag.Flakes.Disabled(),
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
