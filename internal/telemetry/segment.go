@@ -1,9 +1,6 @@
 package telemetry
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
 	"go.jetpack.io/devbox/internal/build"
@@ -117,21 +115,22 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	return nil
 }
 
-// UserIDFromGithubUsername hashes the github username and produces a 64-char string as userID.
-// Returns an empty string if no github username is found.
+// UserIDFromGithubUsername returns a uuid string if the user has authenticated with github.
+// If not authenticated, or there's an error, then an empty string is returned, which segment
+// would treat as logged-out or anonymous user.
 func UserIDFromGithubUsername() string {
+
 	username, err := openssh.GithubUsernameFromLocalFile()
 	if err != nil || username == "" {
 		return ""
 	}
 
 	const salt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
-	mac := hmac.New(sha256.New, []byte(salt))
-
 	const githubPrefix = "github:"
-	mac.Write([]byte(githubPrefix + username))
 
-	return hex.EncodeToString(mac.Sum(nil))
+	// We use a version 5 uuid.
+	// A good comparison of types of uuids is at: https://www.uuidtools.com/uuid-versions-explained
+	return uuid.NewSHA1(uuid.MustParse(salt), []byte(githubPrefix+username)).String()
 }
 
 // timeFromUnixTimestamp is a helper utility that converts the timestamp string
