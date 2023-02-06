@@ -12,17 +12,16 @@
         let pkgs = nixpkgs.legacyPackages.${system};
 
         in {
+            # TODO savil. Revisit. Can we replace devshell with just buildEnv?
+            # since we use print-dev-env to start the shell manually.
             defaultPackage = pkgs.buildEnv {
-                ignoreCollisions = true;
                 name="devbox-shell-env";
                 paths = [
                   {{- range .DevPackages}}
                     pkgs.{{.}}
                   {{end -}}
                 ];
-                pathsToLink = [ "/bin" "/share" "/lib"];
             };
-            # TODO savil. Revisit. I think we may not need the devshell at all since we use print-dev-env to start the shell manually.
             devShell = pkgs.mkShell {
               shellHook =
                 ''
