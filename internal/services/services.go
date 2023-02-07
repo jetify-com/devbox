@@ -76,11 +76,11 @@ func toggleServices(
 				fmt.Fprintf(w, "Error getting port: %s\n", err)
 			}
 			if port != "" {
-				if err := listenToAutoPortForwardingChanges(ctx, name, w, projectDir, action, &waitGroup); err != nil {
+				if err := listenToAutoPortForwardingChangesOnRemote(ctx, name, w, projectDir, action, &waitGroup); err != nil {
 					fmt.Fprintf(w, "Error listening to port forwarding changes: %s\n", err)
 				}
 			}
-			if err := updateServiceStatusOnCloud(projectDir, &ServiceStatus{
+			if err := updateServiceStatusOnRemote(projectDir, &ServiceStatus{
 				Name:    name,
 				Port:    port,
 				Running: action == startService,
@@ -94,7 +94,7 @@ func toggleServices(
 	return nil
 }
 
-func listenToAutoPortForwardingChanges(
+func listenToAutoPortForwardingChangesOnRemote(
 	ctx context.Context,
 	serviceName string,
 	w io.Writer,

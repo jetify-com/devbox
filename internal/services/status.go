@@ -119,7 +119,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 	return nil
 }
 
-func updateServiceStatusOnCloud(projectDir string, s *ServiceStatus) error {
+func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
 	if os.Getenv("DEVBOX_REGION") == "" {
 		return nil
 	}

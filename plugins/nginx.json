@@ -15,7 +15,6 @@
   },
   "services": {
     "nginx": {
-      "port": "8081",
       "start": "nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR -e error.log -g \"pid nginx.pid;\"",
       "stop": "pkill nginx"
     }
