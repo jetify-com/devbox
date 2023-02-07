@@ -20,18 +20,29 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 		return err
 	}
 
-	nixEnv := []string{}
+	env := map[string]string{}
 	for k, v := range vaf.Variables {
 		if v.Type == "exported" {
-			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", k, v.Value.(string)))
+			env[k] = v.Value.(string)
 		}
 	}
 
 	// Overwrite/leak whitelisted vars into nixEnv:
 	for name, leak := range leakVarsForRun {
 		if leak {
-			nixEnv = append(nixEnv, fmt.Sprintf("%s=%s", name, os.Getenv(name)))
+			env[name] = os.Getenv(name)
 		}
+	}
+
+	// Include the host PATH at the end.
+	env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], os.Getenv("PATH"))
+
+	// TODO: prepend the nix profile path
+	// TODO: move function outside nix package so it can be unified with pluginEnv
+
+	envPairs := []string{}
+	for k, v := range env {
+		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	// Try to find sh in the PATH, if not, default to a well known absolute path.
@@ -40,7 +51,7 @@ func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, a
 		shPath = "/bin/sh"
 	}
 	cmd := exec.Command(shPath, "-c", cmdWithArgs)
-	cmd.Env = append(nixEnv, additionalEnv...)
+	cmd.Env = append(envPairs, additionalEnv...)
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
