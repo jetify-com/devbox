@@ -12,7 +12,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating
@@ -45,11 +44,9 @@ func ListenToChanges(ctx context.Context, opts *ListenerOpts) error {
 
 	// Start listening for events.
 	go func() {
-		debug.Log("listening to changes on %s", cloudFilePath(opts.ProjectDir))
 		for {
 			select {
 			case event, ok := <-watcher.Events:
-				debug.Log("event: %s", event)
 				if !ok {
 					return
 				}
@@ -61,8 +58,7 @@ func ListenToChanges(ctx context.Context, opts *ListenerOpts) error {
 						fmt.Fprintf(opts.Writer, "Error reading status file: %s\n", err)
 						continue
 					}
-					// Only call callback if something has changed
-					debug.Log("status changed, calling callback")
+
 					status, saveChanges := opts.UpdateFunc(status)
 					if saveChanges {
 						if err := writeServiceStatusFile(event.Name, status); err != nil {

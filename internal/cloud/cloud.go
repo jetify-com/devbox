@@ -144,7 +144,6 @@ func PortForwardList() ([]string, error) {
 }
 
 func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string) error {
-	debug.Log("Starting auto port forwarding")
 	return services.ListenToChanges(ctx,
 		&services.ListenerOpts{
 			HostID:     hostID,
@@ -161,9 +160,7 @@ func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string
 
 				saveChanges := false
 				if service.Running && service.Port != "" {
-					debug.Log("Forwarding %s to %s", service.Name, service.Port)
 					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
-					debug.Log("Forwarding %s to %s: %s", service.Name, service.Port, localPort)
 					if err != nil {
 						fmt.Fprintf(w, "Failed to create port forward for %s: %v", service.Name, err)
 					}
@@ -172,7 +169,6 @@ func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string
 						saveChanges = true
 					}
 				} else if service.Port != "" {
-					debug.Log("Terminating forward %s to %s", service.Name, service.Port)
 					if err := mutagenbox.ForwardTerminateByHostPort(host, service.Port); err != nil {
 						fmt.Fprintf(w, "Failed to terminate port forward for %s: %v", service.Name, err)
 					}
