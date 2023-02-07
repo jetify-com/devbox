@@ -40,8 +40,9 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir    = ".devbox/gen/scripts"
-	hooksFilename = ".hooks"
+	scriptsDir           = ".devbox/gen/scripts"
+	hooksFilename        = ".hooks"
+	arbitraryCmdFilename = ".cmd"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -281,10 +282,23 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
+	var cmdWithArgs []string
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
 		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+	} else {
+		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
+		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
+		// which we don't want. So, one solution is to write the entire command and its arguments into the
+		// file itself, but that may not be great if the variables contain sensitive information. Instead,
+		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
+		err := d.writeScriptFile(arbitraryCmdFilename, d.scriptBody("eval $DEVBOX_RUN_CMD\n"))
+		if err != nil {
+			return err
+		}
+		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
+		// TODO: move this env var elsewhere. I will move all the env stuff into a single ComputeEnv() function.
+		pluginEnv = append(pluginEnv, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
 	}
 
 	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
@@ -741,9 +755,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
-		err = d.writeScriptFile(
-			name,
-			fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body))
+		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -788,6 +800,10 @@ func (d *Devbox) scriptPath(filename string) string {
 
 func (d *Devbox) scriptFilename(scriptName string) string {
 	return scriptName + ".sh"
+}
+
+func (d *Devbox) scriptBody(body string) string {
+	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
 }
 
 // Move to a utility package?
