@@ -47,7 +47,7 @@ func toggleServices(
 	if err != nil {
 		return err
 	}
-	var wg sync.WaitGroup
+	var waitGroup sync.WaitGroup
 	for _, name := range serviceNames {
 		service, found := services[name]
 		if !found {
@@ -76,11 +76,11 @@ func toggleServices(
 				fmt.Fprintf(w, "Error getting port: %s\n", err)
 			}
 			if port != "" {
-				if err := listenToAutoPortForwardingChanges(ctx, name, w, projectDir, action, &wg); err != nil {
+				if err := listenToAutoPortForwardingChanges(ctx, name, w, projectDir, action, &waitGroup); err != nil {
 					fmt.Fprintf(w, "Error listening to port forwarding changes: %s\n", err)
 				}
 			}
-			if err := updateServiceStatus(projectDir, &serviceStatus{
+			if err := updateServiceStatusOnCloud(projectDir, &ServiceStatus{
 				Name:    name,
 				Port:    port,
 				Running: action == startService,
@@ -90,7 +90,7 @@ func toggleServices(
 		}
 	}
 
-	wg.Wait()
+	waitGroup.Wait()
 	return nil
 }
 
@@ -100,7 +100,7 @@ func listenToAutoPortForwardingChanges(
 	w io.Writer,
 	projectDir string,
 	action serviceAction,
-	wg *sync.WaitGroup,
+	waitGroup *sync.WaitGroup,
 ) error {
 
 	if os.Getenv("DEVBOX_REGION") == "" {
@@ -112,7 +112,7 @@ func listenToAutoPortForwardingChanges(
 	}
 
 	fmt.Fprintf(w, "Waiting for port forwarding to start/stop for service %q\n", serviceName)
-	wg.Add(1)
+	waitGroup.Add(1)
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -124,7 +124,7 @@ func listenToAutoPortForwardingChanges(
 		defer m.Unlock()
 		if ctx.Err() == nil {
 			cancel()
-			wg.Done()
+			waitGroup.Done()
 		}
 	}
 
@@ -135,18 +135,27 @@ func listenToAutoPortForwardingChanges(
 		done()
 	})
 
-	// Listen to changes in the status file
-	return ListenToChanges(ctx, w, projectDir, func(update StatusFile) (StatusFile, bool) {
-		fmt.Println(update.Hosts[hostname].Services[serviceName])
-		service := update.Hosts[hostname].Services[serviceName]
-		if action == startService && service.Running && service.Port != "" && service.LocalPort != "" {
-			color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> %s:%s\n", hostname, service.Port, "http://localhost", service.LocalPort)
-			done()
-		}
-		if action == stopService && !service.Running && service.Port != "" {
-			color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> localhost stopped\n", hostname, service.Port)
-			done()
-		}
-		return update, false
-	})
+	// Listen to changes in the service status file
+	return ListenToChanges(
+		ctx,
+		&ListenerOpts{
+			HostID:     hostname,
+			ProjectDir: projectDir,
+			Writer:     w,
+			UpdateFunc: func(service *ServiceStatus) (*ServiceStatus, bool) {
+				if service == nil || service.Name != serviceName {
+					return service, false
+				}
+				if action == startService && service.Running && service.Port != "" && service.LocalPort != "" {
+					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> %s:%s\n", hostname, service.Port, "http://localhost", service.LocalPort)
+					done()
+				}
+				if action == stopService && !service.Running && service.Port != "" {
+					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> localhost stopped\n", hostname, service.Port)
+					done()
+				}
+				return service, false
+			},
+		},
+	)
 }

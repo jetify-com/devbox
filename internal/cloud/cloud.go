@@ -119,7 +119,8 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
 
-	if err = AutoPortForward(ctx, w, projectDir); err != nil {
+	hostID := strings.Split(vmHostname, ".")[0]
+	if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
 		return err
 	}
 
@@ -142,19 +143,23 @@ func PortForwardList() ([]string, error) {
 	return mutagenbox.ForwardList()
 }
 
-func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error {
+func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string) error {
 	debug.Log("Starting auto port forwarding")
-	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) (services.StatusFile, bool) {
-		debug.Log("Received service status update: %v", update)
-		host := vmHostnameFromSSHControlPath()
-		if host == "" {
-			return update, false
-		}
+	return services.ListenToChanges(ctx,
+		&services.ListenerOpts{
+			HostID:     hostID,
+			ProjectDir: projectDir,
+			Writer:     w,
+			UpdateFunc: func(service *services.ServiceStatus) (*services.ServiceStatus, bool) {
+				if service == nil {
+					return service, false
+				}
+				host := vmHostnameFromSSHControlPath()
+				if host == "" {
+					return service, false
+				}
 
-		hostKey := strings.Split(host, ".")[0]
-		saveChanges := false
-		if hostStatus, ok := update.Hosts[hostKey]; ok {
-			for _, service := range hostStatus.Services {
+				saveChanges := false
 				if service.Running && service.Port != "" {
 					debug.Log("Forwarding %s to %s", service.Name, service.Port)
 					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
@@ -176,10 +181,10 @@ func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error 
 						saveChanges = true
 					}
 				}
-			}
-		}
-		return update, saveChanges
-	})
+				return service, saveChanges
+			},
+		},
+	)
 }
 
 func getGithubUsername() (string, error) {
