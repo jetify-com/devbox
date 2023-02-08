@@ -1,9 +1,0 @@
-{
-  "packages": [],
-  "shell": {
-    "init_hook": null
-  },
-  "nixpkgs": {
-    "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
-  }
-}
