@@ -227,8 +227,6 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
@@ -261,7 +259,7 @@ func (d *Devbox) Shell() error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
@@ -301,8 +299,13 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		pluginEnv = append(pluginEnv, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.RunScript(nixShellFilePath, d.projectDir, strings.Join(cmdWithArgs, " "), pluginEnv)
+	return nix.RunScript(
+		d.nixShellFilePath(),
+		d.nixFlakesFilePath(),
+		d.projectDir,
+		strings.Join(cmdWithArgs, " "),
+		pluginEnv,
+	)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
@@ -318,7 +321,6 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
 		return usererr.New("unable to find a script with name %s", scriptName)
@@ -352,7 +354,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 // TODO: deprecate in favor of RunScript().
@@ -794,6 +796,14 @@ func (d *Devbox) scriptFilename(scriptName string) string {
 
 func (d *Devbox) scriptBody(body string) string {
 	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+}
+
+func (d *Devbox) nixShellFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
+}
+
+func (d *Devbox) nixFlakesFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
 // Move to a utility package?

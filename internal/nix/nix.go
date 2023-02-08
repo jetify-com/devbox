@@ -125,13 +125,19 @@ type variable struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(nixFilePath string) (*varsAndFuncs, error) {
-	cmd := exec.Command("nix", "print-dev-env",
-		"-f", nixFilePath,
+func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
+	cmd := exec.Command("nix", "print-dev-env")
+	if featureflag.Flakes.Enabled() {
+		cmd.Args = append(cmd.Args, nixFlakesFilePath)
+	} else {
+		cmd.Args = append(cmd.Args, "-f", nixShellFilePath)
+	}
+	cmd.Args = append(cmd.Args,
 		"--extra-experimental-features", "nix-command",
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes",
 		"--json")
+	debug.Log("Running print-dev-env cmd: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)

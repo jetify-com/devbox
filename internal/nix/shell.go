@@ -171,7 +171,7 @@ func rcfilePath(basename string) string {
 	return filepath.Join(home, basename)
 }
 
-func (s *Shell) Run(nixShellFilePath string) error {
+func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
 	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
 	// assume they are.
@@ -194,44 +194,12 @@ func (s *Shell) Run(nixShellFilePath string) error {
 		"NIXPKGS_ALLOW_UNFREE=1",
 	)
 
-	if featureflag.Flakes.Enabled() {
-		if s.binPath == "" {
-			return errors.New("Unsupported for flakes: shell having no binPath")
-		}
-		cmd := exec.Command("nix", "develop", ".devbox/gen/flake",
-			"--extra-experimental-features", "nix-command flakes",
-			"--verbose",
-			"--ignore-environment",
-			"--command", "/bin/bash", "-c", s.execCommand(),
-			"--keep", "PARENT_PATH", // TODO savil. Why does it not show up inside devbox shell?
-		)
-
-		for _, keyVal := range env {
-			if strings.HasPrefix(keyVal, "PARENT_PATH") {
-				debug.Log("PARENT_PATH in env is %s\n", keyVal)
-			}
-		}
-
-		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
-		cmd.Env = env
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		debug.Log("Executing nix develop command: %v", cmd.Args)
-		debug.Log("Executing nix develop command with env: %v", cmd.Environ())
-
-		err := cmd.Run()
-		if err != nil && s.ScriptCommand != "" {
-			// Report error as exec error when executing shell -- <cmd> script.
-			err = usererr.NewExecError(err)
-		}
-		return errors.WithStack(err)
-	}
-
 	// Launch a fallback shell if we couldn't find the path to the user's
 	// default shell.
 	if s.binPath == "" {
+		if featureflag.Flakes.Enabled() {
+			return errors.New("No default shell not supported in Flakes mode")
+		}
 		cmd := exec.Command("nix-shell", "--pure")
 		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
 		cmd.Args = append(cmd.Args, nixShellFilePath)
@@ -247,7 +215,7 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	var cmd *exec.Cmd
 	if featureflag.NixlessShell.Enabled() {
 		// Get the required env vars from nix, and then spawn a shell directly.
-		vars, err := s.computeNixShellEnv(nixShellFilePath)
+		vars, err := s.computeNixShellEnv(nixShellFilePath, nixFlakesFilePath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -304,12 +272,13 @@ func (s *Shell) Run(nixShellFilePath string) error {
 	return errors.WithStack(err)
 }
 
-func (s *Shell) computeNixShellEnv(nixShellFilePath string) (map[string]string, error) {
-	vaf, err := PrintDevEnv(nixShellFilePath)
+func (s *Shell) computeNixShellEnv(nixShellFilePath, nixFlakesFilePath string) (map[string]string, error) {
+	vaf, err := PrintDevEnv(nixShellFilePath, nixFlakesFilePath)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	ignoreList := []string{"HOME"} // do not overwrite the user's HOME.
+	// TODO remove TMPDIR for shell purity? But maybe it is okay, since each system will have a different TMPDIR.
+	ignoreList := []string{"HOME", "TMPDIR"} // do not overwrite the user's HOME.
 
 	vars := map[string]string{}
 	for name, vrb := range vaf.Variables {
@@ -471,6 +440,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 	}
 
 	envToKeepFlakes := map[string]string{}
+	// TODO savil: 80% confidence this can be removed
 	if featureflag.Flakes.Enabled() {
 		// `nix develop` has a list of ignoreVars, which we may want to not-ignore.
 		// For now, including just TERM since it affects shell cursor movement UX.
