@@ -25,7 +25,10 @@ type Config struct {
 
 	// Shell configures the devbox shell environment.
 	Shell struct {
+		// Env contains environment variables that will be set in shell
 		// InitHook contains commands that will run at shell startup.
+		// Scripts contain commands that can be executed via devbox run
+		Env      map[string]string             `json:"env,omitempty"`
 		InitHook shellcmd.Commands             `json:"init_hook,omitempty"`
 		Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
 	} `json:"shell,omitempty"`

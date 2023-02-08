@@ -238,6 +238,12 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		return err
 	}
+	fmt.Println(env)
+	env, err = d.appendConfigEnv(env)
+	if err != nil {
+		return err
+	}
+	fmt.Println(env)
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
 	if shellStartTime == "" {
@@ -278,6 +284,10 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	}
 
 	env, err := d.computeNixEnv()
+	if err != nil {
+		return err
+	}
+	env, err = d.appendConfigEnv(env)
 	if err != nil {
 		return err
 	}
@@ -329,6 +339,11 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	}
 
 	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	if err != nil {
+		return err
+	}
+	env, err = d.appendConfigEnv(env)
+
 	if err != nil {
 		return err
 	}
@@ -720,6 +735,15 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 	envPairs = append(envPairs, pluginEnv...)
 
 	return envPairs, nil
+}
+
+// addConfigEnv takes env variables that are to be set (plugin Env vars)
+// and appends env variables defined in devbox.json to it.
+func (d *Devbox) appendConfigEnv(env []string) ([]string, error) {
+	for key, value := range d.cfg.Shell.Env {
+		env = append(env, fmt.Sprintf("%s=%s", key, value))
+	}
+	return env, nil
 }
 
 // installNixProfile installs or uninstalls packages to or from this
