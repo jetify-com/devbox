@@ -112,6 +112,7 @@ func (d *Devbox) Config() *Config {
 	return d.cfg
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) Add(pkgs ...string) error {
 	original := d.cfg.Packages
 	// Check packages are valid before adding.
@@ -164,6 +165,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	return d.printPackageUpdateMessage(install, pkgs)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) Remove(pkgs ...string) error {
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.Packages below.
@@ -185,6 +187,10 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if err := plugin.Remove(d.projectDir, uninstalledPackages); err != nil {
+		return err
+	}
+
+	if err := d.removePackagesFromProfile(uninstalledPackages); err != nil {
 		return err
 	}
 
@@ -583,6 +589,7 @@ func (d *Devbox) generateShellFiles() error {
 	return generateForShell(d.projectDir, plan, d.pluginManager)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) profileDir() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
@@ -592,6 +599,7 @@ func (d *Devbox) profileDir() (string, error) {
 	return absPath, nil
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) profileBinDir() (string, error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
@@ -609,31 +617,40 @@ const (
 	ensure    installMode = "ensure"
 )
 
+// TODO savil. move to packages.go
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
-
-	installingVerb := "Installing"
-	if mode == uninstall {
-		installingVerb = "Uninstalling"
-	}
-
 	if mode == ensure {
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
-	} else {
-		_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
 	}
 
-	// We need to re-install the packages
-	if err := d.installNixProfile(); err != nil {
-		fmt.Fprintln(d.writer)
-		return errors.Wrap(err, "apply Nix derivation")
+	if featureflag.Flakes.Enabled() {
+		if err := d.addPackagesToProfile(mode); err != nil {
+			return err
+		}
+
+	} else {
+		if mode == install || mode == uninstall {
+			installingVerb := "Installing"
+			if mode == uninstall {
+				installingVerb = "Uninstalling"
+			}
+			_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
+		}
+
+		// We need to re-install the packages
+		if err := d.installNixProfile(); err != nil {
+			fmt.Fprintln(d.writer)
+			return errors.Wrap(err, "apply Nix derivation")
+		}
 	}
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) printPackageUpdateMessage(
 	mode installMode,
 	pkgs []string,
@@ -730,8 +747,9 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 	return envPairs, nil
 }
 
+// TODO savil. move to packages.go
 // installNixProfile installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix or flake.nix
+// devbox's Nix profile so that it matches what's in development.nix
 func (d *Devbox) installNixProfile() (err error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
