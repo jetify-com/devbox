@@ -690,22 +690,12 @@ func (d *Devbox) installNixProfile() (err error) {
 		return err
 	}
 
-	var cmd *exec.Cmd
-	if featureflag.Flakes.Enabled() {
-		cmd = d.installNixProfileFlakeCommand(profileDir)
-		defer func() {
-			if err == nil {
-				_ = d.copyFlakeLockToDevboxLock()
-			}
-		}()
-	} else { // Non flakes:
-		cmd = exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-		)
-	}
+	cmd := exec.Command(
+		"nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+	)
 
 	cmd.Env = nix.DefaultEnv()
 	cmd.Stdout = &nixPackageInstallWriter{d.writer}
