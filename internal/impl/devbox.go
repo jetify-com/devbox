@@ -238,12 +238,10 @@ func (d *Devbox) Shell() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(env)
 	env, err = d.appendConfigEnv(env)
 	if err != nil {
 		return err
 	}
-	fmt.Println(env)
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
 	if shellStartTime == "" {
