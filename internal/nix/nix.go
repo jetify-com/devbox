@@ -4,6 +4,7 @@
 package nix
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -137,13 +138,19 @@ type variable struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(nixFilePath string) (*varsAndFuncs, error) {
-	cmd := exec.Command("nix", "print-dev-env",
-		"-f", nixFilePath,
+func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
+	cmd := exec.Command("nix", "print-dev-env")
+	if featureflag.Flakes.Enabled() {
+		cmd.Args = append(cmd.Args, nixFlakesFilePath)
+	} else {
+		cmd.Args = append(cmd.Args, "-f", nixShellFilePath)
+	}
+	cmd.Args = append(cmd.Args,
 		"--extra-experimental-features", "nix-command",
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes",
 		"--json")
+	debug.Log("Running print-dev-env cmd: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -155,4 +162,37 @@ func PrintDevEnv(nixFilePath string) (*varsAndFuncs, error) {
 		return nil, errors.WithStack(err)
 	}
 	return &vaf, nil
+}
+
+// ProfileInstall calls nix profile install with default profile
+func ProfileInstall(nixpkgsCommit, pkg string) error {
+	cmd := exec.Command("nix", "profile", "install",
+		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not provide attribute")) {
+		return ErrPackageNotFound
+	}
+
+	return errors.WithStack(err)
+}
+
+func ProfileRemove(nixpkgsCommit, pkg string) error {
+	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
+	if !found {
+		return ErrPackageNotFound
+	}
+	cmd := exec.Command("nix", "profile", "remove",
+		info.attributeKey,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not match any packages")) {
+		return ErrPackageNotInstalled
+	}
+
+	return errors.WithStack(err)
 }
