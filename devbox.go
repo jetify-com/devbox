@@ -18,6 +18,7 @@ type Devbox interface {
 	// environment. It validates that the Nix package exists, but doesn't install
 	// it. Adding a duplicate package is a no-op.
 	Add(pkgs ...string) error
+	AddGlobal(pkgs ...string) error
 	Config() *impl.Config
 	ProjectDir() string
 	Exec(cmds ...string) error
@@ -30,9 +31,11 @@ type Devbox interface {
 	Info(pkg string, markdown bool) error
 	ListScripts() []string
 	PluginEnv() (string, error)
+	PrintGlobalList() error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(pkgs ...string) error
+	RemoveGlobal(pkgs ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
 	// TODO: Deprecate in favor of RunScript
 	RunScriptInShell(scriptName string) error
