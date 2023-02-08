@@ -177,8 +177,9 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// assume they are.
 	nixProfileDirs := splitNixList(os.Getenv("NIX_PROFILES"))
 
-	// Copy the current PATH into nix-shell, but clean it up first.
-	parentPath := cleanEnvPath(os.Getenv("PATH"))
+	// Copy the current PATH into nix-shell, but clean and remove some
+	// directories that are incompatible.
+	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
 
 	env := append(s.env, os.Environ()...)
 	env = append(
@@ -626,7 +627,9 @@ func splitNixList(s string) []string {
 //
 //  1. Applies filepath.Clean.
 //  2. Removes the path if it's relative (must begin with '/' and not be '.').
-func cleanEnvPath(pathEnv string) string {
+//  3. Removes the path if it's a descendant of a user Nix profile directory
+//     (the default Nix profile is kept).
+func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
 	split := filepath.SplitList(pathEnv)
 	if len(split) == 0 {
 		return ""
@@ -635,8 +638,27 @@ func cleanEnvPath(pathEnv string) string {
 	cleaned := make([]string, 0, len(split))
 	for _, path := range split {
 		path = filepath.Clean(path)
-		// Don't allow relative paths.
-		if path[0] == '/' {
+		if path == "." || path[0] != '/' {
+			// Don't allow relative paths.
+			continue
+		}
+
+		keep := true
+		for _, profileDir := range nixProfileDirs {
+			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or
+			// $HOME/.nix-profile. The former contains Nix itself (nix-store, nix-env,
+			// etc.), which we want to keep so it's available in the shell. The latter
+			// contains programs that the user installed with Nix, which we want to filter
+			// out so that only devbox-managed Nix packages are available.
+			isProfileDir := strings.HasPrefix(path, profileDir)
+			isSystemProfile := strings.HasPrefix(profileDir, "/nix")
+			if isProfileDir && !isSystemProfile {
+				keep = false
+				break
+			}
+		}
+
+		if keep {
 			cleaned = append(cleaned, path)
 		}
 	}
