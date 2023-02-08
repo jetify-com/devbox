@@ -23,7 +23,6 @@ export {{ $name }}={{ $value }}
 {{- if .NixEnv }}
 # Run the shell hook defined in shell.nix.
 eval $shellHook
-
 {{ end -}}
 
 {{- if .OriginalInit -}}

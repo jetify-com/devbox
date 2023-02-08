@@ -10,12 +10,17 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, additionalEnv []string) error {
+func RunScript(
+	nixShellFilePath, nixFlakesFilePath string,
+	projectDir string,
+	cmdWithArgs string,
+	additionalEnv []string,
+) error {
 	if cmdWithArgs == "" {
 		return errors.New("attempted to run an empty command or script")
 	}
 
-	vaf, err := PrintDevEnv(nixShellFilePath)
+	vaf, err := PrintDevEnv(nixShellFilePath, nixFlakesFilePath)
 	if err != nil {
 		return err
 	}
