@@ -4,6 +4,7 @@
 package nix
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -22,6 +23,7 @@ import (
 const ProfilePath = ".devbox/nix/profile/default"
 
 var ErrPackageNotFound = errors.New("package not found")
+var ErrPackageNotInstalled = errors.New("package not installed")
 
 func PkgExists(nixpkgsCommit, pkg string) bool {
 	_, found := PkgInfo(nixpkgsCommit, pkg)
@@ -29,9 +31,12 @@ func PkgExists(nixpkgsCommit, pkg string) bool {
 }
 
 type Info struct {
-	NixName string
-	Name    string
-	Version string
+	// attribute key is different in flakes vs legacy so we should only use it
+	// if we know exactly which version we are using
+	attributeKey string
+	NixName      string
+	Name         string
+	Version      string
 }
 
 func (i *Info) String() string {
@@ -98,11 +103,12 @@ func parseInfo(pkg string, data []byte) *Info {
 	if err != nil {
 		panic(err)
 	}
-	for _, result := range results {
+	for key, result := range results {
 		pkgInfo := &Info{
-			NixName: pkg,
-			Name:    result["pname"].(string),
-			Version: result["version"].(string),
+			attributeKey: key,
+			NixName:      pkg,
+			Name:         result["pname"].(string),
+			Version:      result["version"].(string),
 		}
 
 		return pkgInfo
@@ -149,4 +155,37 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 		return nil, errors.WithStack(err)
 	}
 	return &vaf, nil
+}
+
+// ProfileInstall calls nix profile install with default profile
+func ProfileInstall(nixpkgsCommit, pkg string) error {
+	cmd := exec.Command("nix", "profile", "install",
+		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not provide attribute")) {
+		return ErrPackageNotFound
+	}
+
+	return errors.WithStack(err)
+}
+
+func ProfileRemove(nixpkgsCommit, pkg string) error {
+	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
+	if !found {
+		return ErrPackageNotFound
+	}
+	cmd := exec.Command("nix", "profile", "remove",
+		info.attributeKey,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not match any packages")) {
+		return ErrPackageNotInstalled
+	}
+
+	return errors.WithStack(err)
 }
