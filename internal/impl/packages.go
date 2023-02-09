@@ -133,11 +133,11 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 		if err != nil {
 			return err
 		}
-		packageName, err := item.PackageName()
+		name, err := item.PackageName()
 		if err != nil {
 			return err
 		}
-		nameToAttributePath[packageName] = attrPath
+		nameToAttributePath[name] = attrPath
 	}
 
 	for _, pkg := range pkgs {
