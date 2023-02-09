@@ -8,6 +8,9 @@ on:
   push:
     branches:
       - main
+  merge_group:
+    branches:
+      - main
 
 env:
   JETPACK_SECRET_KEY: ${{ secrets.JETPACK_SECRET_KEY }}
