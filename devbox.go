@@ -64,3 +64,7 @@ func InitConfig(dir string, writer io.Writer) (bool, error) {
 func IsDevboxShellEnabled() bool {
 	return impl.IsDevboxShellEnabled()
 }
+
+func GlobalConfigPath() (string, error) {
+	return impl.GlobalConfigPath()
+}
