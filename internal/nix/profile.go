@@ -165,7 +165,7 @@ func (item *NixProfileListItem) PackageName() (string, error) {
 		)
 	}
 
-	packageName := parts[len(parts)-1]
+	packageName := strings.Join(parts[2:], ".")
 	return packageName, nil
 }
 
