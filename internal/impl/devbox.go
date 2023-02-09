@@ -227,8 +227,6 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
@@ -261,7 +259,7 @@ func (d *Devbox) Shell() error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
@@ -300,8 +298,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		env = append(env, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.RunScript(nixShellFilePath, d.projectDir, strings.Join(cmdWithArgs, " "), env)
+	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
@@ -317,7 +314,6 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
 		return usererr.New("unable to find a script with name %s", scriptName)
@@ -351,7 +347,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 // TODO: deprecate in favor of RunScript().
@@ -682,8 +678,7 @@ func (d *Devbox) printPackageUpdateMessage(
 }
 
 func (d *Devbox) computeNixEnv() ([]string, error) {
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	vaf, err := nix.PrintDevEnv(nixShellFilePath)
+	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
 		return nil, err
 	}
@@ -730,22 +725,12 @@ func (d *Devbox) installNixProfile() (err error) {
 		return err
 	}
 
-	var cmd *exec.Cmd
-	if featureflag.Flakes.Enabled() {
-		cmd = d.installNixProfileFlakeCommand(profileDir)
-		defer func() {
-			if err == nil {
-				_ = d.copyFlakeLockToDevboxLock()
-			}
-		}()
-	} else { // Non flakes:
-		cmd = exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-		)
-	}
+	cmd := exec.Command(
+		"nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+	)
 
 	cmd.Env = nix.DefaultEnv()
 	cmd.Stdout = &nixPackageInstallWriter{d.writer}
@@ -844,6 +829,14 @@ func (d *Devbox) scriptFilename(scriptName string) string {
 
 func (d *Devbox) scriptBody(body string) string {
 	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+}
+
+func (d *Devbox) nixShellFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
+}
+
+func (d *Devbox) nixFlakesFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
 // Move to a utility package?

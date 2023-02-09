@@ -9,7 +9,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(nixShellFilePath string, projectDir string, cmdWithArgs string, env []string) error {
+func RunScript(projectDir string, cmdWithArgs string, env []string) error {
 	if cmdWithArgs == "" {
 		return errors.New("attempted to run an empty command or script")
 	}
