@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"golang.org/x/exp/slices"
 )
 
 //go:embed shellrc.tmpl
@@ -265,33 +264,6 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// This means that there was a error from devbox's code or nix's code. Not a user
 	// error and so we do return it.
 	return errors.WithStack(err)
-}
-
-func (s *Shell) computeNixShellEnv(nixShellFilePath, nixFlakesFilePath string) (map[string]string, error) {
-	vaf, err := PrintDevEnv(nixShellFilePath, nixFlakesFilePath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	// TODO remove TMPDIR for shell purity? But maybe it is okay, since each system will have a different TMPDIR.
-	ignoreList := []string{"HOME", "TMPDIR"} // do not overwrite the user's HOME.
-
-	vars := map[string]string{}
-	for name, vrb := range vaf.Variables {
-		if slices.Contains(ignoreList, name) {
-			continue
-		}
-
-		// We only care about "exported" because the var and array types seem to only be used by nix-defined
-		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
-		// var: export VAR=VAL
-		// exported: export VAR=VAL
-		// array: declare -a VAR=('VAL1' 'VAL2' )
-		if vrb.Type == "exported" {
-			vars[name] = shellescape.Quote(vrb.Value.(string))
-		}
-	}
-
-	return vars, nil
 }
 
 // execCommand is a command that replaces the current shell with s. This is what
