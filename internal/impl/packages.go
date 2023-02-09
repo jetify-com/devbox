@@ -97,7 +97,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 			} else {
 				errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
 			}
-			fmt.Fprintf(d.writer, errorMsg)
+			fmt.Fprint(d.writer, errorMsg)
 
 			fmt.Fprintf(d.writer, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
