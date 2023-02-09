@@ -194,5 +194,7 @@ func ProfileRemove(nixpkgsCommit, pkg string) error {
 // FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.
 // TODO savil. Ensure this works with the nixed cache service.
 func FlakeNixpkgs(commit string) string {
-	return "github:NixOS/nixpkgs/" + commit
+	// Using nixpkgs/<commit> means:
+	// The nixpkgs entry in the flake registry, with its Git revision overridden to a specific value.
+	return "nixpkgs/" + commit
 }
