@@ -275,7 +275,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	env, err := d.computeNixEnv()
 	if err != nil {
 		return err
 	}
@@ -295,17 +295,10 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 			return err
 		}
 		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
-		// TODO: move this env var elsewhere. I will move all the env stuff into a single ComputeEnv() function.
-		pluginEnv = append(pluginEnv, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
+		env = append(env, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
 	}
 
-	return nix.RunScript(
-		d.nixShellFilePath(),
-		d.nixFlakesFilePath(),
-		d.projectDir,
-		strings.Join(cmdWithArgs, " "),
-		pluginEnv,
-	)
+	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
@@ -684,6 +677,46 @@ func (d *Devbox) printPackageUpdateMessage(
 	return nil
 }
 
+func (d *Devbox) computeNixEnv() ([]string, error) {
+	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
+	if err != nil {
+		return nil, err
+	}
+
+	env := map[string]string{}
+	for k, v := range vaf.Variables {
+		if v.Type == "exported" {
+			env[k] = v.Value.(string)
+		}
+	}
+
+	// Overwrite/leak whitelisted vars into nixEnv:
+	for name, leak := range leakVarsForRun {
+		if leak {
+			env[name] = os.Getenv(name)
+		}
+	}
+
+	// Include the host PATH at the end.
+	env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], os.Getenv("PATH"))
+
+	// TODO: prepend the nix profile path
+	// TODO: prepend package config dir
+
+	envPairs := []string{}
+	for k, v := range env {
+		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	if err != nil {
+		return nil, err
+	}
+	envPairs = append(envPairs, pluginEnv...)
+
+	return envPairs, nil
+}
+
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix or flake.nix
 func (d *Devbox) installNixProfile() (err error) {
@@ -818,4 +851,24 @@ func IsDevboxShellEnabled() bool {
 func commandExists(command string) bool {
 	_, err := exec.LookPath(command)
 	return err == nil
+}
+
+// leakVarsForRun contains a list of variables that, if set in the host, will be copied
+// to the environment of devbox run. If they're NOT set in the host, they will be set
+// to an empty value for devbox run. NOTE: we want to keep this list AS SMALL AS POSSIBLE.
+// The longer this list, the less "pure" devbox run becomes.
+//
+// In particular, this list should be much smaller than that of devbox shell, since we
+// do want to allow more parts of the host environment to leak into a shell session, so
+// that the shell session is easy to use for our users. However, in devbox run, we value
+// reproducibility above interactive ease-of-use.
+var leakVarsForRun = map[string]bool{
+	"HOME": true, // Without this, HOME is set to /homeless-shelter and most programs fail.
+
+	// Where to write temporary files. nix print-dev-env sets these to an unwriteable path,
+	// so we override that here with whatever the host has set.
+	"TMP":     true,
+	"TEMP":    true,
+	"TMPDIR":  true,
+	"TEMPDIR": true,
 }
