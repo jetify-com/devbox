@@ -13,7 +13,7 @@ import (
 
 // packages.go has functions for adding, removing and getting info about nix packages
 
-// addPackagesToProfile inspects the packages in devbox.json, and checks which of them
+// addPackagesToProfile inspects the packages in devbox.json, checks which of them
 // are missing from the nix profile, and then installs each package individually into the
 // nix profile.
 func (d *Devbox) addPackagesToProfile(mode installMode) error {
@@ -31,15 +31,15 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 
 	if len(pkgs) == 0 {
 		return nil
-	} else {
-		var msg string
-		if len(pkgs) == 1 {
-			msg = fmt.Sprintf("Installing the following package: %s.\n", pkgs[0])
-		} else {
-			msg = fmt.Sprintf("Installing the following %d packages: %s.\n", len(pkgs), strings.Join(pkgs, ", "))
-		}
-		color.New(color.FgGreen).Fprintf(d.writer, msg)
 	}
+
+	var msg string
+	if len(pkgs) == 1 {
+		msg = fmt.Sprintf("Installing the following package: %s.\n", pkgs[0])
+	} else {
+		msg = fmt.Sprintf("Installing the following %d packages: %s.\n", len(pkgs), strings.Join(pkgs, ", "))
+	}
+	color.New(color.FgGreen).Fprintf(d.writer, msg)
 
 	profileDir, err := d.profileDir()
 	if err != nil {
@@ -55,27 +55,27 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 	for idx, pkg := range packages {
 		stepNum := idx + 1
 
-		var msg string
+		var stepMsg string
 		if pkg == "" {
-			msg = fmt.Sprintf("[%d/%d] nixpkgs registry", stepNum, total)
+			stepMsg = fmt.Sprintf("[%d/%d] nixpkgs registry", stepNum, total)
 		} else {
-			msg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+			stepMsg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		}
-		fmt.Printf("%s\n", msg)
+		fmt.Printf("%s\n", stepMsg)
 
 		var cmd *exec.Cmd
-		if pkg != "" {
+		if pkg == "" {
+			cmd = exec.Command(
+				"nix", "flake", "prefetch",
+				"--extra-experimental-features", "nix-command flakes",
+				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
+			)
+		} else {
 			cmd = exec.Command(
 				"nix", "profile", "install",
 				"--profile", profileDir,
 				"--extra-experimental-features", "nix-command flakes",
 				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
-			)
-		} else {
-			cmd = exec.Command(
-				"nix", "flake", "prefetch",
-				"--extra-experimental-features", "nix-command flakes",
-				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
 			)
 		}
 
@@ -83,22 +83,30 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		cmd.Stdout = &nixPackageInstallWriter{d.writer}
 		cmd.Stderr = cmd.Stdout
 		err = cmd.Run()
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			msg := fmt.Sprintf(
-				"running command %s: exit status %d with command stderr: %s",
-				cmd, exitErr.ExitCode(), string(exitErr.Stderr),
-			)
-			color.New(color.FgRed).Printf("%s: Fail\n", msg)
-			return errors.New(msg)
-		}
+
 		if err != nil {
-			msg := fmt.Sprintf("running command %s: %v", cmd, err)
-			color.New(color.FgRed).Printf("%s: Fail\n", msg)
-			return errors.New(msg)
+
+			// ExitErrors can give us more information so handle that specially.
+			var errorMsg string
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) {
+				errorMsg = fmt.Sprintf(
+					"Error running command %s. Exit status is %d. Command stderr: %s",
+					cmd, exitErr.ExitCode(), string(exitErr.Stderr),
+				)
+			} else {
+				errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
+			}
+			fmt.Fprintf(d.writer, errorMsg)
+
+			fmt.Fprintf(d.writer, "%s: ", stepMsg)
+			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
+
+			return errors.New(errorMsg)
 		}
-		fmt.Printf("%s: ", msg)
-		color.New(color.FgGreen).Printf("Success\n")
+
+		fmt.Fprintf(d.writer, "%s: ", stepMsg)
+		color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	}
 
 	return nil
