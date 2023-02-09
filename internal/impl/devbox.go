@@ -237,6 +237,13 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
+	if featureflag.NixlessShell.Enabled() {
+		env, err = d.computeNixEnv()
+		if err != nil {
+			return err
+		}
+	}
+
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
 	if shellStartTime == "" {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
