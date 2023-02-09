@@ -249,6 +249,8 @@ func (d *Devbox) Shell() error {
 		if err != nil {
 			return err
 		}
+	} else {
+		env = append(env, d.getConfigEnvs(env)...)
 	}
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
@@ -746,6 +748,13 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 	hostPath := nix.CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
 	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
+
+	if featureflag.EnvConfig.Enabled() {
+		// Include env variables in config
+		for key, value := range d.cfg.Shell.Env {
+			env[key] = value
+		}
+	}
 
 	return env, nil
 }
