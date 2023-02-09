@@ -37,35 +37,17 @@ devbox run build-linux
 devbox run lint
 ```
 
+* Run and Test the Devbox CLI:
+
+```bash
+./dist/devbox <test_command>
+```
+
 * For the best experience working on Devbox with VSCode, we recommend running:
 
 ```bash
 devbox shell -- code
 ```
-
-## Building and Testing
-
-Devbox is setup like a typical Go project. After installing the required tools and setting up your environment. You can make changes in the source code, build, and test your changes by following these steps:
-
-1. Install dependencies:
-
-    ```bash
-    go install
-    ```
-
-2. Build Devbox:
-
-    ```bash
-    go build -o ./devbox cmd/devbox/main.go
-    ```
-
-    This will build an executable file.
-
-3. Run and test Devbox:
-
-    ```bash
-    ./devbox <your_test_command>
-    ```
 
 ### Setting up the Environment Without Devbox
 
@@ -102,7 +84,7 @@ If you are unable to install or use Devbox, you can manually replicate the envir
 * Run and test Devbox:
 
     ```bash
-    ./devbox <your_test_command>
+    ./dist/devbox <your_test_command>
     ```
 
 ## Pull Request Process
