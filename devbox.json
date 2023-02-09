@@ -1,20 +1,21 @@
 {
-  "packages": [
-    "go_1_19",
-    "golangci-lint"
-  ],
-  "shell": {
-    "init_hook": [
-      "export \"GOROOT=$(go env GOROOT)\"",
-      "export \"PATH=$(pwd)/dist:$PATH\""
+    "packages": [
+        "go_1_19",
+        "golangci-lint"
     ],
-    "scripts": {
-      "build": "go build -o dist/devbox cmd/devbox/main.go",
-      "build-linux": "GOOS=linux go build -o dist/devbox-linux cmd/devbox/main.go",
-      "lint": "golangci-lint run"
+    "shell": {
+        "init_hook": [
+            "export \"GOROOT=$(go env GOROOT)\"",
+            "export \"PATH=$(pwd)/dist:$PATH\""
+        ],
+        "scripts": {
+            "build": "go build -o dist/devbox cmd/devbox/main.go",
+            "build-linux": "GOOS=linux go build -o dist/devbox-linux cmd/devbox/main.go",
+            "lint": "golangci-lint run",
+            "code": "code ."
+        }
+    },
+    "nixpkgs": {
+        "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
     }
-  },
-  "nixpkgs": {
-    "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
-  }
 }

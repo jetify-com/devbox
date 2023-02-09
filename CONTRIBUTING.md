@@ -10,7 +10,7 @@ Before making any changes to the source code (documentation excluded) make sure 
 
 ### With Devbox
 
-The easiest way to setup and build devbox is with Devbox!
+The easiest way to develop Devbox is with Devbox!
 
 * Install Devbox using the command below. If you don't have Nix installed, Devbox will automatically install it for you when you run a command.
 
@@ -18,13 +18,13 @@ The easiest way to setup and build devbox is with Devbox!
 curl -fsSL https://get.jetpack.io/devbox | bash
 ```
 
-* Start a Devbox Shell for the project
+* You can start up a development shell with all the dependencies installed by running
 
 ```bash
 devbox shell
 ```
 
-* Build the Devbox CLI:
+* Build the Devbox CLI. Note: You can run these commands outside of Devbox Shell
 
 ```bash
 # Build for your current OS
@@ -43,10 +43,10 @@ devbox run lint
 ./dist/devbox <test_command>
 ```
 
-* For the best experience working on Devbox with VSCode, we recommend running:
+* For the best experience working on Devbox with VSCode, we recommend starting VSCode from inside your Devbox shell. You can also run:
 
 ```bash
-devbox shell -- code
+devbox run code
 ```
 
 ### Setting up the Environment Without Devbox
