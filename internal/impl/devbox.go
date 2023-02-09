@@ -751,9 +751,7 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	if featureflag.EnvConfig.Enabled() {
 		// Include env variables in config
-		for key, value := range d.cfg.Shell.Env {
-			env[key] = value
-		}
+		envPairs = append(envPairs, d.getConfigEnvs()...)
 	}
 
 	return env, nil
@@ -888,6 +886,27 @@ func (d *Devbox) packages() []string {
 
 func (d *Devbox) pluginVirtenvPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
+}
+
+func (d *Devbox) getConfigEnvs() []string {
+	mapperfunc := func(value string) string {
+		// Special variables that should return correct value in Config
+		switch value {
+		case "PWD":
+			return d.ProjectDir()
+		case "PATH":
+			return os.Getenv("PATH")
+		}
+		return ""
+	}
+	var configEnvs []string
+	// Include env variables in config
+	for key, value := range d.cfg.Shell.Env {
+		// parse values for "$VAR" or "${VAR}"
+		parsedValue := os.Expand(value, mapperfunc)
+		configEnvs = append(configEnvs, fmt.Sprintf("%s=%s", key, parsedValue))
+	}
+	return configEnvs
 }
 
 // Move to a utility package?
