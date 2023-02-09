@@ -16,13 +16,10 @@ content readable.
 
 */ -}}
 
-{{- range $name, $value := .NixEnv -}}
-export {{ $name }}={{ $value }}
-{{ end -}}
-
-{{- if .NixEnv }}
+{{- if .RunNixShellHook -}}
 # Run the shell hook defined in shell.nix.
 eval $shellHook
+
 {{ end -}}
 
 {{- if .OriginalInit -}}
