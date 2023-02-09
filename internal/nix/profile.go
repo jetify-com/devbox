@@ -1,6 +1,7 @@
 package nix
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os/exec"
@@ -28,10 +29,10 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 	// that we need to parse.
 	cmd.Stderr = writer
 
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	//out, err := cmd.Output()
+	//if err != nil {
+	//	return nil, errors.WithStack(err)
+	//}
 
 	// The `out` output is of the form:
 	// <index> <UnlockedReference> <LockedReference> <NixStorePath>
@@ -39,18 +40,31 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 	// Using an example:
 	// 0 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
 	// 1 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim /nix/store/gapbqxx1d49077jk8ay38z11wgr12p23-vim-9.0.0609
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+
+	out, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	items := []*NixProfileListItem{}
-	for _, line := range lines {
-		item, err := parseNixProfileListItemIfAny(line)
+	scanner := bufio.NewScanner(out)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		item, err := parseNixProfileListItem(line)
 		if err != nil {
 			return nil, err
 		}
-		if item == nil {
-			continue
-		}
+
 		items = append(items, item)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return nil, errors.WithStack(err)
 	}
 	return items, nil
 }
@@ -71,42 +85,39 @@ type NixProfileListItem struct {
 	nixStorePath string
 }
 
-func parseNixProfileListItemIfAny(line string) (*NixProfileListItem, error) {
-	// line is a line of printed output from `nix profile list`
-	//
-	// line example:
-	// 0 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
-	line = strings.TrimSpace(line)
-	if line == "" {
-		return nil, nil
-	}
+func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 
-	// parts example:
-	// [
-	//   0
-	//   github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
-	//   github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
-	//   /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
-	// ]
-	parts := strings.Split(line, " ")
-	if len(parts) != 4 {
-		return nil, errors.Errorf(
-			"Expected 4 parts for line in nix profile list, but got %d parts. Line: %s",
-			len(parts),
-			line,
-		)
-	}
+	scanner := bufio.NewScanner(strings.NewReader(line))
+	scanner.Split(bufio.ScanWords)
 
-	index, err := strconv.Atoi(parts[0])
+	if !scanner.Scan() {
+		return nil, errors.New("incomplete nix profile list line. Expected index.")
+	}
+	index, err := strconv.Atoi(scanner.Text())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
+	if !scanner.Scan() {
+		return nil, errors.New("incomplete nix profile list line. Expected unlockedReference.")
+	}
+	unlockedReference := scanner.Text()
+
+	if !scanner.Scan() {
+		return nil, errors.New("incomplete nix profile list line. Expected lockedReference")
+	}
+	lockedReference := scanner.Text()
+
+	if !scanner.Scan() {
+		return nil, errors.New("incomplete nix profile list line. Expected nixStorePath.")
+	}
+	nixStorePath := scanner.Text()
+
 	return &NixProfileListItem{
 		index:             index,
-		unlockedReference: parts[1],
-		lockedReference:   parts[2],
-		nixStorePath:      parts[3],
+		unlockedReference: unlockedReference,
+		lockedReference:   lockedReference,
+		nixStorePath:      nixStorePath,
 	}, nil
 }
 

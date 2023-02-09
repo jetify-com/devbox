@@ -13,7 +13,7 @@ func TestNixProfileListItem(t *testing.T) {
 		"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 		"/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3",
 	)
-	item, err := parseNixProfileListItemIfAny(line)
+	item, err := parseNixProfileListItem(line)
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
