@@ -70,6 +70,7 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
+// docs: https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-profile-list.html
 type NixProfileListItem struct {
 	// An integer that can be used to unambiguously identify the package in
 	// invocations of nix profile remove and nix profile upgrade.
@@ -85,6 +86,8 @@ type NixProfileListItem struct {
 	nixStorePath string
 }
 
+// parseNixProfileListItem reads each line of output (from `nix profile list`) and converts
+// into a golang struct. Refer to NixProfileListItem struct definition for explanation of each field.
 func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(line))
