@@ -115,7 +115,9 @@ A single `bash` command or list of `bash` commands that should run before the us
 
 #### `services` *object*
 
-A map of services that your plugin exposes to the user through `devbox services`. 
+A map of services that your plugin exposes to the user through `devbox services`. Services should have a `start` command and `stop` command defined so that Devbox can safely start and stop your service.
+
+For more details, see our [Services Documentation](https://www.jetpack.io/devbox/docs/guides/services/)
 
 ## Tips for Writing Plugins
 
