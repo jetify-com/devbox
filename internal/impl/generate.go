@@ -121,9 +121,11 @@ func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
 	// git update-index --assume-unchanged path/to/flake.nix
 	// https://nixos.wiki/wiki/Flakes#How_to_add_a_file_locally_in_git_but_not_include_it_in_commits
 	cmd := exec.Command("git", "-C", flakeDir, "init")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	if debug.IsEnabled() {
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	err = cmd.Run()
 	if err != nil {
 		return errors.WithStack(err)
@@ -131,9 +133,11 @@ func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
 
 	// add the flake.nix file to git
 	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	if debug.IsEnabled() {
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	err = cmd.Run()
 	if err != nil {
 		return errors.WithStack(err)

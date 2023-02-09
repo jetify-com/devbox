@@ -70,7 +70,7 @@ func legacyPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 }
 
 func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
-	exactPackage := fmt.Sprintf("nixpkgs/%s#%s", nixpkgsCommit, pkg)
+	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
 	if nixpkgsCommit == "" {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
 	}
@@ -177,7 +177,8 @@ func ProfileRemove(nixpkgsCommit, pkg string) error {
 	if !found {
 		return ErrPackageNotFound
 	}
-	cmd := exec.Command("nix", "profile", "remove",
+	cmd := exec.Command(
+		"nix", "profile", "remove",
 		info.attributeKey,
 		"--extra-experimental-features", "nix-command flakes",
 	)
@@ -188,4 +189,12 @@ func ProfileRemove(nixpkgsCommit, pkg string) error {
 	}
 
 	return errors.WithStack(err)
+}
+
+// FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.
+// TODO savil. Ensure this works with the nixed cache service.
+func FlakeNixpkgs(commit string) string {
+	// Using nixpkgs/<commit> means:
+	// The nixpkgs entry in the flake registry, with its Git revision overridden to a specific value.
+	return "nixpkgs/" + commit
 }
