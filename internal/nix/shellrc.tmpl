@@ -16,10 +16,6 @@ content readable.
 
 */ -}}
 
-{{- range .NixEnv -}}
-export {{ . }}
-{{ end -}}
-
 {{- if .RunNixShellHook -}}
 # Run the shell hook defined in shell.nix.
 eval $shellHook
