@@ -113,7 +113,7 @@ func (d *Devbox) Config() *Config {
 }
 
 func (d *Devbox) Add(pkgs ...string) error {
-	original := d.cfg.Packages
+	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
@@ -124,10 +124,10 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 	// Add to Packages to config only if it's not already there
 	for _, pkg := range pkgs {
-		if slices.Contains(d.cfg.Packages, pkg) {
+		if slices.Contains(d.cfg.RawPackages, pkg) {
 			continue
 		}
-		d.cfg.Packages = append(d.cfg.Packages, pkg)
+		d.cfg.RawPackages = append(d.cfg.RawPackages, pkg)
 	}
 	if err := d.saveCfg(); err != nil {
 		return err
@@ -145,7 +145,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 				"Packages were not added to devbox.json\n",
 			strings.Join(pkgs, ", "),
 		)
-		d.cfg.Packages = original
+		d.cfg.RawPackages = original
 		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
@@ -166,11 +166,11 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 func (d *Devbox) Remove(pkgs ...string) error {
 
-	// First, save which packages are being uninstalled. Do this before we modify d.cfg.Packages below.
-	uninstalledPackages := lo.Intersect(d.cfg.Packages, pkgs)
+	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
+	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
 
 	var missingPkgs []string
-	d.cfg.Packages, missingPkgs = lo.Difference(d.cfg.Packages, pkgs)
+	d.cfg.RawPackages, missingPkgs = lo.Difference(d.cfg.RawPackages, pkgs)
 
 	if len(missingPkgs) > 0 {
 		fmt.Fprintf(
@@ -196,7 +196,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
-	userDefinedPkgs := d.cfg.Packages
+	userDefinedPkgs := d.packages()
 	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
 	shellPlan.DevPackages = userDefinedPkgs
 
@@ -227,12 +227,12 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
 
-	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	env, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -326,12 +326,12 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		return usererr.New("unable to find a script with name %s", scriptName)
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
 
-	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	env, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -404,7 +404,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 		return err
 	}
 
-	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	env, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -419,7 +419,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 }
 
 func (d *Devbox) PluginEnv() (string, error) {
-	pluginEnvs, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	pluginEnvs, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return "", err
 	}
@@ -475,7 +475,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			return errors.WithStack(err)
 		}
 		// generate devcontainer.json
-		err = generate.CreateDevcontainer(devContainerPath, d.cfg.Packages)
+		err = generate.CreateDevcontainer(devContainerPath, d.packages())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -558,21 +558,21 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (plugin.Services, error) {
-	return plugin.GetServices(d.cfg.Packages, d.projectDir)
+	return plugin.GetServices(d.packages(), d.projectDir)
 }
 
 func (d *Devbox) StartServices(serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "start"}, serviceNames...)...)
 	}
-	return services.Start(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
+	return services.Start(d.packages(), serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) StopServices(serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)
 	}
-	return services.Stop(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
+	return services.Stop(d.packages(), serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
@@ -733,7 +733,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -804,6 +804,10 @@ func (d *Devbox) nixShellFilePath() string {
 
 func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
+}
+
+func (d *Devbox) packages() []string {
+	return d.cfg.Packages(d.writer)
 }
 
 // Move to a utility package?

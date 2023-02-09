@@ -5,7 +5,10 @@ package impl
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -19,7 +22,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 			return err
 		}
 	}
-	d.cfg.Packages = lo.Uniq(append(d.cfg.Packages, pkgs...))
+	d.cfg.RawPackages = lo.Uniq(append(d.cfg.RawPackages, pkgs...))
 	return d.saveCfg()
 }
 
@@ -31,13 +34,21 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 			return err
 		}
 	}
-	d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, pkgs)
+	d.cfg.RawPackages, _ = lo.Difference(d.cfg.RawPackages, pkgs)
 	return d.saveCfg()
 }
 
 func (d *Devbox) PrintGlobalList() error {
-	for _, p := range d.cfg.Packages {
+	for _, p := range d.cfg.RawPackages {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil
+}
+
+func GlobalConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return filepath.Join(home, "/.config/devbox/"), nil
 }
