@@ -43,7 +43,7 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 
 	items := []*NixProfileListItem{}
 	for _, line := range lines {
-		item, err := ParseNixProfileListItemIfAny(line)
+		item, err := parseNixProfileListItemIfAny(line)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +71,7 @@ type NixProfileListItem struct {
 	nixStorePath string
 }
 
-func ParseNixProfileListItemIfAny(line string) (*NixProfileListItem, error) {
+func parseNixProfileListItemIfAny(line string) (*NixProfileListItem, error) {
 	// line is a line of printed output from `nix profile list`
 	//
 	// line example:
