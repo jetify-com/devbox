@@ -171,20 +171,14 @@ func rcfilePath(basename string) string {
 }
 
 func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
-	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
-	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
-	// assume they are.
-	nixProfileDirs := splitNixList(os.Getenv("NIX_PROFILES"))
-
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
-	parentPath := cleanEnvPath(os.Getenv("PATH"), nixProfileDirs)
+	parentPath := cleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
 	env := append(s.env, os.Environ()...)
 	env = append(
 		env,
 		"PARENT_PATH="+parentPath,
-		"NIX_PROFILES="+strings.Join(nixProfileDirs, " "),
 
 		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
 		// inside the devbox shell.
@@ -585,7 +579,12 @@ func splitNixList(s string) []string {
 //  2. Removes the path if it's relative (must begin with '/' and not be '.').
 //  3. Removes the path if it's a descendant of a user Nix profile directory
 //     (the default Nix profile is kept).
-func cleanEnvPath(pathEnv string, nixProfileDirs []string) string {
+func cleanEnvPath(pathEnv string, nixProfilesEnv string) string {
+	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
+	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
+	// assume they are.
+	nixProfileDirs := splitNixList(nixProfilesEnv)
+
 	split := filepath.SplitList(pathEnv)
 	if len(split) == 0 {
 		return ""
