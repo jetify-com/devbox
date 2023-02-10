@@ -50,13 +50,18 @@ func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.Name, i.Version)
 }
 
-func Exec(path string, command []string, env []string) error {
+func Exec(path string, command []string, envPairs map[string]string) error {
+	env := DefaultEnv()
+	for k, v := range envPairs {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	runCmd := strings.Join(command, " ")
 	cmd := exec.Command("nix-shell", path, "--run", runCmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = append(DefaultEnv(), env...)
+	cmd.Env = env
 	return errors.WithStack(usererr.NewExecError(cmd.Run()))
 }
 

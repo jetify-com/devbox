@@ -309,7 +309,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 			return err
 		}
 		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
-		env = append(env, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
+		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
@@ -696,7 +696,7 @@ func (d *Devbox) printPackageUpdateMessage(
 // 3. Append the cleaned host PATH (tradeoff between reproducibility and ease of use).
 // 4. Prepend the devbox-managed nix profile path (which is needed to support devbox add inside shell--can we do without it?).
 // 5. Prepend the paths of any plugins (tbd whether it's actually needed).
-func (d *Devbox) computeNixEnv() ([]string, error) {
+func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
@@ -722,6 +722,20 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 		}
 	}
 
+	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range pluginEnv {
+		env[k] = v
+	}
+
+	// TODO: add shell-specific vars, including:
+	// - NIXPKGS_ALLOW_UNFREE=1 (not needed in run because we don't expect nix calls there)
+	// - __ETC_PROFILE_NIX_SOURCED=1 (not needed in run because we don't expect rc files to try to load nix profiles)
+	// - HISTFILE (not needed in run because it's non-interactive)
+	// - (some of) nix.envToKeep.
+
 	// PATH handling.
 	pluginVirtenvPath := d.pluginVirtenvPath() // TODO: consider removing this; not being used?
 	nixProfilePath, err := d.profileBinPath()
@@ -733,24 +747,7 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 
 	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
 
-	envPairs := []string{}
-	for k, v := range env {
-		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)
-	if err != nil {
-		return nil, err
-	}
-	envPairs = append(envPairs, pluginEnv...)
-
-	// TODO: add shell-specific vars, including:
-	// - NIXPKGS_ALLOW_UNFREE=1 (not needed in run because we don't expect nix calls there)
-	// - __ETC_PROFILE_NIX_SOURCED=1 (not needed in run because we don't expect rc files to try to load nix profiles)
-	// - HISTFILE (not needed in run because it's non-interactive)
-	// - (some of) nix.envToKeep.
-
-	return envPairs, nil
+	return env, nil
 }
 
 // TODO savil. move to packages.go

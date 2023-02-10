@@ -129,9 +129,11 @@ func WithHistoryFile(historyFile string) ShellOption {
 
 // TODO: Consider removing this once plugins add env vars directly to binaries
 // via wrapper scripts.
-func WithEnvVariables(envVariables []string) ShellOption {
+func WithEnvVariables(envVariables map[string]string) ShellOption {
 	return func(s *Shell) {
-		s.env = append(s.env, envVariables...)
+		for k, v := range envVariables {
+			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
+		}
 	}
 }
 

@@ -1,6 +1,7 @@
 package nix
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -9,9 +10,14 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(projectDir string, cmdWithArgs string, env []string) error {
+func RunScript(projectDir string, cmdWithArgs string, env map[string]string) error {
 	if cmdWithArgs == "" {
 		return errors.New("attempted to run an empty command or script")
+	}
+
+	envPairs := []string{}
+	for k, v := range env {
+		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	// Try to find sh in the PATH, if not, default to a well known absolute path.
@@ -20,7 +26,7 @@ func RunScript(projectDir string, cmdWithArgs string, env []string) error {
 		shPath = "/bin/sh"
 	}
 	cmd := exec.Command(shPath, "-c", cmdWithArgs)
-	cmd.Env = env
+	cmd.Env = envPairs
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

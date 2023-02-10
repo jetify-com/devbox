@@ -107,8 +107,8 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 // Env returns the environment variables for the given plugins.
 // TODO: We should associate the env variables with the individual plugin
 // binaries via wrappers instead of adding to the environment everywhere.
-func Env(pkgs []string, projectDir string) ([]string, error) {
-	env := []string{}
+func Env(pkgs []string, projectDir string) (map[string]string, error) {
+	env := map[string]string{}
 	for _, pkg := range pkgs {
 		cfg, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
@@ -118,7 +118,7 @@ func Env(pkgs []string, projectDir string) ([]string, error) {
 			continue
 		}
 		for k, v := range cfg.Env {
-			env = append(env, fmt.Sprintf("%s=%s", k, v))
+			env[k] = v
 		}
 	}
 	return env, nil
