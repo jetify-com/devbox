@@ -7,17 +7,25 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"reflect"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 )
 
-type statusUpdate func(status StatusFile) StatusFile
+// updateFunc returns a possibly updated service status and a boolean indicating
+// whether the status file should be saved. This prevents infinite loops when
+// the status file is updated.
+type updateFunc func(status *ServiceStatus) (*ServiceStatus, bool)
 
-func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update statusUpdate) error {
-	if err := initStatusFile(projectDir); err != nil {
+type ListenerOpts struct {
+	HostID     string
+	ProjectDir string
+	UpdateFunc updateFunc
+	Writer     io.Writer
+}
+
+func ListenToChanges(ctx context.Context, opts *ListenerOpts) error {
+	if err := initCloudDir(opts.ProjectDir, opts.HostID); err != nil {
 		return err
 	}
 
@@ -34,24 +42,25 @@ func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update
 
 	// Start listening for events.
 	go func() {
-		var status StatusFile
 		for {
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
 					return
 				}
-				if event.Has(fsnotify.Write) {
-					newStatus, err := readStatusFile(projectDir)
+
+				// mutagen sync changes show up as create events
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+					status, err := readServiceStatus(event.Name)
 					if err != nil {
-						fmt.Fprintf(w, "Error reading status file: %s\n", err)
+						fmt.Fprintf(opts.Writer, "Error reading status file: %s\n", err)
 						continue
 					}
-					// Only call callback if something has changed
-					if !reflect.DeepEqual(status, newStatus) {
-						status = update(newStatus)
-						if err := updateStatusFile(projectDir, status); err != nil {
-							fmt.Fprintf(w, "Error updating status file: %s\n", err)
+
+					status, saveChanges := opts.UpdateFunc(status)
+					if saveChanges {
+						if err := writeServiceStatusFile(event.Name, status); err != nil {
+							fmt.Fprintf(opts.Writer, "Error updating status file: %s\n", err)
 						}
 					}
 				}
@@ -59,101 +68,77 @@ func ListenToChanges(ctx context.Context, w io.Writer, projectDir string, update
 				if !ok {
 					return
 				}
-				fmt.Fprintf(w, "error: %s\n", err)
+				fmt.Fprintf(opts.Writer, "error: %s\n", err)
 			}
 		}
 	}()
 
-	return errors.WithStack(watcher.Add(statusFilePath(projectDir)))
+	// We only want events for the specific host.
+	return errors.WithStack(watcher.Add(filepath.Join(cloudFilePath(opts.ProjectDir), opts.HostID)))
 }
 
 func cloudFilePath(projectDir string) string {
 	return filepath.Join(projectDir, ".devbox.cloud")
 }
 
-func statusFilePath(projectDir string) string {
-	return filepath.Join(cloudFilePath(projectDir), "services.json")
-}
-
-// initStatusFile creates the status file if it doesn't exist.
-func initStatusFile(projectDir string) error {
-	filePath := statusFilePath(projectDir)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		sf := StatusFile{Hosts: map[string]*host{}}
-		content, err := json.MarshalIndent(sf, "", "  ")
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		_ = os.Mkdir(cloudFilePath(projectDir), 0755)
+// initCloudDir creates the service status directory and a .gitignore file
+func initCloudDir(projectDir, hostID string) error {
+	cloudDirPath := cloudFilePath(projectDir)
+	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0755)
+	gitignorePath := filepath.Join(cloudDirPath, ".gitignore")
+	if _, err := os.Stat(gitignorePath); os.IsNotExist(err) {
 		if err := os.WriteFile(
-			filepath.Join(cloudFilePath(projectDir), ".gitignore"),
+			gitignorePath,
 			[]byte("*"),
 			0644,
 		); err != nil {
-			return errors.WithStack(err)
-		}
-
-		if err := os.WriteFile(filePath, content, 0644); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 	return nil
 }
 
-type StatusFile struct {
-	Hosts map[string]*host `json:"hosts"`
-}
-
-type host struct {
-	Services map[string]*serviceStatus `json:"services"`
-}
-
-type serviceStatus struct {
+type ServiceStatus struct {
 	LocalPort string `json:"local_port"`
 	Name      string `json:"name"`
 	Port      string `json:"port"`
 	Running   bool   `json:"running"`
 }
 
-func updateStatusFile(projectDir string, status StatusFile) error {
+func writeServiceStatusFile(path string, status *ServiceStatus) error {
 	content, err := json.Marshal(status)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := os.WriteFile(statusFilePath(projectDir), content, 0644); err != nil {
+	_ = os.MkdirAll(filepath.Dir(path), 0755) // create path, ignore error
+	if err := os.WriteFile(path, content, 0644); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func updateServiceStatus(projectDir string, statusUpdate *serviceStatus) error {
-	hostname, _ := lo.Coalesce(os.Getenv("HOSTNAME"), "localhost")
-
-	status, err := readStatusFile(projectDir)
+func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return nil
+	}
+	host, err := os.Hostname()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	if _, ok := status.Hosts[hostname]; !ok {
-		status.Hosts[hostname] = &host{Services: map[string]*serviceStatus{}}
-	}
-
-	status.Hosts[hostname].Services[statusUpdate.Name] = statusUpdate
-	return updateStatusFile(projectDir, status)
+	cloudDirPath := cloudFilePath(projectDir)
+	return writeServiceStatusFile(filepath.Join(cloudDirPath, host, s.Name+".json"), s)
 }
 
-func readStatusFile(projectDir string) (StatusFile, error) {
-	if err := initStatusFile(projectDir); err != nil {
-		return StatusFile{}, err
+func readServiceStatus(path string) (*ServiceStatus, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil, nil
 	}
 
-	content, err := os.ReadFile(statusFilePath(projectDir))
+	content, err := os.ReadFile(path)
 	if err != nil {
-		return StatusFile{}, errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
-	var status StatusFile
-	if err := json.Unmarshal(content, &status); err != nil {
-		return StatusFile{}, errors.WithStack(err)
-	}
-	return status, nil
+	status := &ServiceStatus{}
+	return status, errors.WithStack(json.Unmarshal(content, status))
 }

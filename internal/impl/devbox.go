@@ -5,6 +5,7 @@
 package impl
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -567,18 +568,18 @@ func (d *Devbox) Services() (plugin.Services, error) {
 	return plugin.GetServices(d.cfg.Packages, d.projectDir)
 }
 
-func (d *Devbox) StartServices(serviceNames ...string) error {
+func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "start"}, serviceNames...)...)
 	}
-	return services.Start(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
+	return services.Start(ctx, d.cfg.Packages, serviceNames, d.projectDir, d.writer)
 }
 
-func (d *Devbox) StopServices(serviceNames ...string) error {
+func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)
 	}
-	return services.Stop(d.cfg.Packages, serviceNames, d.projectDir, d.writer)
+	return services.Stop(ctx, d.cfg.Packages, serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
