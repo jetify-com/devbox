@@ -33,7 +33,9 @@ eval $shellHook
 
 # Begin Devbox Post-init Hook
 
+{{ if .PathPrepend -}}
 PATH="{{ .PathPrepend }}:$PATH"
+{{- end }}
 
 {{- if .HistoryFile }}
 HISTFILE={{.HistoryFile}}

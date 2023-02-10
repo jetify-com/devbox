@@ -229,7 +229,7 @@ func (d *Devbox) Shell() error {
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
 
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (d *Devbox) Shell() error {
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithProjectDir(d.projectDir),
 		nix.WithEnvVariables(env),
-		nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
+		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
 		nix.WithShellStartTime(shellStartTime),
 	}
 
@@ -323,7 +323,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
 
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		nix.WithUserScript(scriptName, script.String()),
 		nix.WithProjectDir(d.projectDir),
 		nix.WithEnvVariables(env),
-		nix.WithPKGConfigDir(filepath.Join(d.projectDir, plugin.VirtenvBinPath)),
+		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
 	}
 
 	shell, err := nix.DetectShell(opts...)
@@ -366,7 +366,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 
 // TODO: deprecate in favor of RunScript().
 func (d *Devbox) RunScriptInShell(scriptName string) error {
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 		return err
 	}
 
-	profileBinDir, err := d.profileBinDir()
+	profileBinPath, err := d.profileBinPath()
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 
 	virtenvBinPath := filepath.Join(d.projectDir, plugin.VirtenvBinPath) + ":"
 
-	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinDir)
+	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinPath)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
 	nixDir := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
@@ -683,6 +683,19 @@ func (d *Devbox) printPackageUpdateMessage(
 	return nil
 }
 
+// computeNixEnv computes the environment (i.e. set of env variables) to be used on
+// devbox execution commands (i.e. devbox run, shell). In short, the environment is
+// calculated as follows:
+// 1. Start with the output of nix print-dev-env
+// 2. Allow a limited set of variables (leakedVars) in the host machine to "leak" in (e.g. HOME).
+// 3. Include any plugin env vars.
+//
+// The PATH variable has some special handling. In short:
+// 1. Start with the PATH as defined by nix (through nix print-dev-env).
+// 2. TODO: Clean the host PATH of any nix paths.
+// 3. Append the cleaned host PATH (tradeoff between reproducibility and ease of use).
+// 4. Prepend the devbox-managed nix profile path (which is needed to support devbox add inside shell--can we do without it?).
+// 5. Prepend the paths of any plugins (tbd whether it's actually needed).
 func (d *Devbox) computeNixEnv() ([]string, error) {
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
@@ -709,11 +722,16 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 		}
 	}
 
-	// Include the host PATH at the end.
-	env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], os.Getenv("PATH"))
+	// PATH handling.
+	pluginVirtenvPath := d.pluginVirtenvPath() // TODO: consider removing this; not being used?
+	nixProfilePath, err := d.profileBinPath()
+	if err != nil {
+		return nil, err
+	}
+	nixPath := env["PATH"]
+	hostPath := os.Getenv("PATH") // TODO: clean the nix paths, after confirming we actually need to do so.
 
-	// TODO: prepend the nix profile path
-	// TODO: prepend package config dir
+	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
 
 	envPairs := []string{}
 	for k, v := range env {
@@ -726,6 +744,12 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 	}
 	envPairs = append(envPairs, pluginEnv...)
 
+	// TODO: add shell-specific vars, including:
+	// - NIXPKGS_ALLOW_UNFREE=1 (not needed in run because we don't expect nix calls there)
+	// - __ETC_PROFILE_NIX_SOURCED=1 (not needed in run because we don't expect rc files to try to load nix profiles)
+	// - HISTFILE (not needed in run because it's non-interactive)
+	// - (some of) nix.envToKeep.
+
 	return envPairs, nil
 }
 
@@ -733,7 +757,7 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix
 func (d *Devbox) installNixProfile() (err error) {
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -852,6 +876,10 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
+func (d *Devbox) pluginVirtenvPath() string {
+	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
+}
+
 // Move to a utility package?
 func IsDevboxShellEnabled() bool {
 	inDevboxShell, err := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
@@ -871,6 +899,7 @@ func commandExists(command string) bool {
 // to an empty value.
 // NOTE: we want to keep this list AS SMALL AS POSSIBLE. The longer this list, the less "pure"
 // (and therefore, reproducible) devbox becomes.
+// TODO: allow user to specify more vars to leak, in order to make development easier.
 var leakedVars = map[string]bool{
 	"HOME": true, // Without this, HOME is set to /homeless-shelter and most programs fail.
 
