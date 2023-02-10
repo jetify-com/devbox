@@ -2,6 +2,7 @@ package nix
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
@@ -180,4 +181,39 @@ func (item *NixProfileListItem) String() string {
 		item.lockedReference,
 		item.nixStorePath,
 	)
+}
+
+// ProfileInstall calls nix profile install with default profile
+func ProfileInstall(profilePath, nixpkgsCommit, pkg string) error {
+	cmd := exec.Command("nix", "profile", "install",
+		"--profile", profilePath,
+		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not provide attribute")) {
+		return ErrPackageNotFound
+	}
+
+	return errors.Wrap(err, string(out))
+}
+
+func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
+	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
+	if !found {
+		return ErrPackageNotFound
+	}
+	cmd := exec.Command("nix", "profile", "remove",
+		"--profile", profilePath,
+		info.attributeKey,
+		"--extra-experimental-features", "nix-command flakes",
+	)
+	cmd.Env = DefaultEnv()
+	out, err := cmd.CombinedOutput()
+	if bytes.Contains(out, []byte("does not match any packages")) {
+		return ErrPackageNotInstalled
+	}
+
+	return errors.Wrap(err, string(out))
 }
