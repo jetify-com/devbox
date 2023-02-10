@@ -1,0 +1,19 @@
+name: 'Close stale issues and PRs'
+# Marks issues and PRs as stale after 30 days, then closes them if marked stale for 5 days
+on:
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v7
+        with:
+          stale-issue-message: 'This issue is stale because it has been open 30 days with no activity. Remove the `stale` label or add a comment, otherwise this issue will be closed in 5 days.'
+          stale-pr-message: 'This PR is stale because it has been open 30 days with no activity. Remove the `stale` label or add a comment, otherwise this PR will be closed in 5 days.'
+          exempt-issue-labels: 'future'
+          exempt-pr-labels: 'awaiting-approval, work-in-progress'
+          days-before-stale: 30
+          days-before-close: 5
+          debug-only: true

@@ -1,22 +1,26 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"time"
 
+	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
-func Start(pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-	return toggleServices(pkgs, serviceNames, projectDir, w, startService)
+func Start(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
+	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, startService)
 }
 
-func Stop(pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-	return toggleServices(pkgs, serviceNames, projectDir, w, stopService)
+func Stop(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
+	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, stopService)
 }
 
 type serviceAction int
@@ -27,6 +31,7 @@ const (
 )
 
 func toggleServices(
+	ctx context.Context,
 	pkgs,
 	serviceNames []string,
 	projectDir string,
@@ -41,6 +46,7 @@ func toggleServices(
 	if err != nil {
 		return err
 	}
+	contextChannels := []<-chan struct{}{}
 	for _, name := range serviceNames {
 		service, found := services[name]
 		if !found {
@@ -68,7 +74,16 @@ func toggleServices(
 			if err != nil {
 				fmt.Fprintf(w, "Error getting port: %s\n", err)
 			}
-			if err := updateServiceStatus(projectDir, &serviceStatus{
+			if port != "" {
+				// Wait 5 seconds for each port forwarding to start. The function may
+				// cancel the context earlier if it detects it already started
+				childCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				contextChannels = append(contextChannels, childCtx.Done())
+				if err := listenToAutoPortForwardingChangesOnRemote(childCtx, name, w, projectDir, action, cancel); err != nil {
+					fmt.Fprintf(w, "Error listening to port forwarding changes: %s\n", err)
+				}
+			}
+			if err := updateServiceStatusOnRemote(projectDir, &ServiceStatus{
 				Name:    name,
 				Port:    port,
 				Running: action == startService,
@@ -77,5 +92,54 @@ func toggleServices(
 			}
 		}
 	}
+
+	for _, c := range contextChannels {
+		<-c
+	}
+
 	return nil
+}
+
+func listenToAutoPortForwardingChangesOnRemote(
+	ctx context.Context,
+	serviceName string,
+	w io.Writer,
+	projectDir string,
+	action serviceAction,
+	cancel context.CancelFunc,
+) error {
+
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return nil
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	fmt.Fprintf(w, "Waiting for port forwarding to start/stop for service %q\n", serviceName)
+
+	// Listen to changes in the service status file
+	return ListenToChanges(
+		ctx,
+		&ListenerOpts{
+			HostID:     hostname,
+			ProjectDir: projectDir,
+			Writer:     w,
+			UpdateFunc: func(service *ServiceStatus) (*ServiceStatus, bool) {
+				if service == nil || service.Name != serviceName {
+					return service, false
+				}
+				if action == startService && service.Running && service.Port != "" && service.LocalPort != "" {
+					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> %s:%s\n", hostname, service.Port, "http://localhost", service.LocalPort)
+					cancel()
+				}
+				if action == stopService && !service.Running && service.Port != "" {
+					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> localhost stopped\n", hostname, service.Port)
+					cancel()
+				}
+				return service, false
+			},
+		},
+	)
 }

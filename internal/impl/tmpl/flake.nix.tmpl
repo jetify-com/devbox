@@ -12,22 +12,9 @@
         let pkgs = nixpkgs.legacyPackages.${system};
 
         in {
-            # defaultPackage is used by the `nix profile --install`
-            defaultPackage = pkgs.buildEnv {
-                ignoreCollisions = true;
-                name="devbox-shell-env";
-                paths = [
-                  {{- range .DevPackages}}
-                    pkgs.{{.}}
-                  {{end -}}
-                ];
-                pathsToLink = [ "/bin" "/share" "/lib" ];
-            };
             devShell = pkgs.mkShell {
               shellHook =
                 ''
-                  echo "Starting a devbox shell..."
-
                   # We're technically no longer in a Nix shell after this hook because we
                   # exec a devbox shell.
                   export IN_NIX_SHELL=0

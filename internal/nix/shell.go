@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"golang.org/x/exp/slices"
 )
 
 //go:embed shellrc.tmpl
@@ -214,12 +213,7 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 
 	var cmd *exec.Cmd
 	if featureflag.NixlessShell.Enabled() {
-		// Get the required env vars from nix, and then spawn a shell directly.
-		vars, err := s.computeNixShellEnv(nixShellFilePath, nixFlakesFilePath)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		shellrc, err := s.writeDevboxShellrc(vars)
+		shellrc, err := s.writeDevboxShellrc()
 		if err != nil {
 			// We don't have a good fallback here, since all the variables we need for anything to work
 			// are in the shellrc file. For now let's fail. Later on, we should remove the vars from the
@@ -233,7 +227,7 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 		extraEnv, extraArgs := s.shellRCOverrides(shellrc)
 
 		cmd = exec.Command(s.binPath)
-		cmd.Env = append(filterVars(env, buildAllowList(s.env)), extraEnv...)
+		cmd.Env = append(filterVars(s.env, buildAllowList(s.env)), extraEnv...)
 		cmd.Args = append(cmd.Args, extraArgs...)
 		debug.Log("Executing shell %s with args: %v", s.binPath, cmd.Args)
 	} else {
@@ -272,33 +266,6 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	return errors.WithStack(err)
 }
 
-func (s *Shell) computeNixShellEnv(nixShellFilePath, nixFlakesFilePath string) (map[string]string, error) {
-	vaf, err := PrintDevEnv(nixShellFilePath, nixFlakesFilePath)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	// TODO remove TMPDIR for shell purity? But maybe it is okay, since each system will have a different TMPDIR.
-	ignoreList := []string{"HOME", "TMPDIR"} // do not overwrite the user's HOME.
-
-	vars := map[string]string{}
-	for name, vrb := range vaf.Variables {
-		if slices.Contains(ignoreList, name) {
-			continue
-		}
-
-		// We only care about "exported" because the var and array types seem to only be used by nix-defined
-		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
-		// var: export VAR=VAL
-		// exported: export VAR=VAL
-		// array: declare -a VAR=('VAL1' 'VAL2' )
-		if vrb.Type == "exported" {
-			vars[name] = shellescape.Quote(vrb.Value.(string))
-		}
-	}
-
-	return vars, nil
-}
-
 // execCommand is a command that replaces the current shell with s. This is what
 // Run sets the nix-shell --command flag to.
 func (s *Shell) execCommand() string {
@@ -328,7 +295,7 @@ func (s *Shell) execCommand() string {
 
 	// Create a devbox shellrc file that runs the user's shellrc + the shell
 	// hook in devbox.json.
-	shellrc, err := s.writeDevboxShellrc(map[string]string{})
+	shellrc, err := s.writeDevboxShellrc()
 	if err != nil {
 		// Fall back to just launching the shell without a custom
 		// shellrc.
@@ -392,7 +359,7 @@ func (s *Shell) execCommandInShell() (string, string, string) {
 	return s.binPath, strings.Join(args, " "), s.ScriptCommand
 }
 
-func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err error) {
+func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	if s.userShellrcPath == "" {
 		// If this happens, then there's a bug with how we detect shells
 		// and their shellrc paths. If the shell is unknown or we can't
@@ -433,26 +400,16 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		}
 	}()
 
-	// TODO: probably need to change this.
-	pathPrepend := s.profileDir + "/bin"
-	if s.pkgConfigDir != "" {
-		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
-	}
-
-	envToKeepFlakes := map[string]string{}
-	// TODO savil: 80% confidence this can be removed
-	if featureflag.Flakes.Enabled() {
-		// `nix develop` has a list of ignoreVars, which we may want to not-ignore.
-		// For now, including just TERM since it affects shell cursor movement UX.
-		// https://github.com/NixOS/nix/blob/master/src/nix/develop.cc#L241-L259
-		envToKeepFlakes = map[string]string{
-			"TERM": os.Getenv("TERM"),
+	pathPrepend := ""
+	if featureflag.NixlessShell.Disabled() {
+		pathPrepend = s.profileDir + "/bin"
+		if s.pkgConfigDir != "" {
+			pathPrepend = s.pkgConfigDir + ":" + pathPrepend
 		}
 	}
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		ProjectDir       string
-		EnvToKeep        map[string]string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -461,10 +418,9 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		ScriptCommand    string
 		ShellStartTime   string
 		HistoryFile      string
-		NixEnv           map[string]string
+		RunNixShellHook  bool
 	}{
 		ProjectDir:       s.projectDir,
-		EnvToKeep:        envToKeepFlakes,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),
@@ -473,7 +429,7 @@ func (s *Shell) writeDevboxShellrc(vars map[string]string) (path string, err err
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
-		NixEnv:           vars,
+		RunNixShellHook:  featureflag.NixlessShell.Enabled(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
