@@ -1,10 +1,8 @@
 package nix
 
 import (
-	"bytes"
-	"os/exec"
-	"github.com/pkg/errors"
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
@@ -186,8 +184,9 @@ func (item *NixProfileListItem) String() string {
 }
 
 // ProfileInstall calls nix profile install with default profile
-func ProfileInstall(nixpkgsCommit, pkg string) error {
+func ProfileInstall(profilePath, nixpkgsCommit, pkg string) error {
 	cmd := exec.Command("nix", "profile", "install",
+		"--profile", profilePath,
 		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
 		"--extra-experimental-features", "nix-command flakes",
 	)
@@ -197,15 +196,16 @@ func ProfileInstall(nixpkgsCommit, pkg string) error {
 		return ErrPackageNotFound
 	}
 
-	return errors.WithStack(err)
+	return errors.Wrap(err, string(out))
 }
 
-func ProfileRemove(nixpkgsCommit, pkg string) error {
+func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
 	if !found {
 		return ErrPackageNotFound
 	}
 	cmd := exec.Command("nix", "profile", "remove",
+		"--profile", profilePath,
 		info.attributeKey,
 		"--extra-experimental-features", "nix-command flakes",
 	)
@@ -215,4 +215,5 @@ func ProfileRemove(nixpkgsCommit, pkg string) error {
 		return ErrPackageNotInstalled
 	}
 
-	return errors.WithStack(err)
+	return errors.Wrap(err, string(out))
+}
