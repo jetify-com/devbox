@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -47,7 +46,7 @@ func toggleServices(
 	if err != nil {
 		return err
 	}
-	var waitGroup sync.WaitGroup
+	contextChannels := []<-chan struct{}{}
 	for _, name := range serviceNames {
 		service, found := services[name]
 		if !found {
@@ -76,7 +75,11 @@ func toggleServices(
 				fmt.Fprintf(w, "Error getting port: %s\n", err)
 			}
 			if port != "" {
-				if err := listenToAutoPortForwardingChangesOnRemote(ctx, name, w, projectDir, action, &waitGroup); err != nil {
+				// Wait 5 seconds for each port forwarding to start. The function may
+				// cancel the context earlier if it detects it already started
+				childCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				contextChannels = append(contextChannels, childCtx.Done())
+				if err := listenToAutoPortForwardingChangesOnRemote(childCtx, name, w, projectDir, action, cancel); err != nil {
 					fmt.Fprintf(w, "Error listening to port forwarding changes: %s\n", err)
 				}
 			}
@@ -90,7 +93,10 @@ func toggleServices(
 		}
 	}
 
-	waitGroup.Wait()
+	for _, c := range contextChannels {
+		<-c
+	}
+
 	return nil
 }
 
@@ -100,40 +106,18 @@ func listenToAutoPortForwardingChangesOnRemote(
 	w io.Writer,
 	projectDir string,
 	action serviceAction,
-	waitGroup *sync.WaitGroup,
+	cancel context.CancelFunc,
 ) error {
 
 	if os.Getenv("DEVBOX_REGION") == "" {
 		return nil
 	}
-	hostname, err := hostname()
+	hostname, err := os.Hostname()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	fmt.Fprintf(w, "Waiting for port forwarding to start/stop for service %q\n", serviceName)
-	waitGroup.Add(1)
-
-	ctx, cancel := context.WithCancel(ctx)
-
-	// Done function is thread safe and will cancel the context and decrement the wait group
-	// if context is already canceled, it will not do anything
-	var m sync.Mutex
-	done := func() {
-		m.Lock()
-		defer m.Unlock()
-		if ctx.Err() == nil {
-			cancel()
-			waitGroup.Done()
-		}
-	}
-
-	// After 5 seconds, if the context has not been canceled, go ahead and cancel it
-	// and also decrement the wait group so that the caller can continue.
-	time.AfterFunc(5*time.Second, func() {
-		fmt.Fprintf(w, "Timeout waiting for port forwarding to start\n")
-		done()
-	})
 
 	// Listen to changes in the service status file
 	return ListenToChanges(
@@ -148,11 +132,11 @@ func listenToAutoPortForwardingChangesOnRemote(
 				}
 				if action == startService && service.Running && service.Port != "" && service.LocalPort != "" {
 					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> %s:%s\n", hostname, service.Port, "http://localhost", service.LocalPort)
-					done()
+					cancel()
 				}
 				if action == stopService && !service.Running && service.Port != "" {
 					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> localhost stopped\n", hostname, service.Port)
-					done()
+					cancel()
 				}
 				return service, false
 			},

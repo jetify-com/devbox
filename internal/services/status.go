@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
@@ -123,7 +121,7 @@ func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
 	if os.Getenv("DEVBOX_REGION") == "" {
 		return nil
 	}
-	host, err := hostname()
+	host, err := os.Hostname()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -143,12 +141,4 @@ func readServiceStatus(path string) (*ServiceStatus, error) {
 	}
 	status := &ServiceStatus{}
 	return status, errors.WithStack(json.Unmarshal(content, status))
-}
-
-func hostname() (string, error) {
-	stdout, err := exec.Command("uname", "-n").Output()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return strings.TrimSpace(string(stdout)), nil
 }
