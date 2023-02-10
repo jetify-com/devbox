@@ -46,6 +46,10 @@ func toggleServices(
 	if err != nil {
 		return err
 	}
+	env := []string{}
+	for k, v := range envVars {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
 	contextChannels := []<-chan struct{}{}
 	for _, name := range serviceNames {
 		service, found := services[name]
@@ -59,7 +63,7 @@ func toggleServices(
 		)
 		cmd.Stdout = w
 		cmd.Stderr = w
-		cmd.Env = envVars
+		cmd.Env = env
 		cmd.Env = append(cmd.Env, os.Environ()...)
 		if err = cmd.Run(); err != nil {
 			actionString := lo.Ternary(action == startService, "start", "stop")
