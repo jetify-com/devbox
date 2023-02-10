@@ -125,7 +125,7 @@ func TestCleanEnvPath(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := cleanEnvPath(test.inPath, test.nixProfiles)
+			got := CleanEnvPath(test.inPath, test.nixProfiles)
 			if got != test.outPath {
 				t.Errorf("Got incorrect cleaned PATH.\ngot:  %s\nwant: %s", got, test.outPath)
 			}

@@ -729,7 +729,7 @@ func (d *Devbox) computeNixEnv() ([]string, error) {
 		return nil, err
 	}
 	nixPath := env["PATH"]
-	hostPath := os.Getenv("PATH") // TODO: clean the nix paths, after confirming we actually need to do so.
+	hostPath := nix.CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
 	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
 
