@@ -49,7 +49,7 @@ func TestRunCommand(t *testing.T) {
 	defer td.Close()
 	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
-	err = td.SetEnv("DEVBOX_FEATURE_STRICT_RUN", "1")
+	err = td.SetEnv("DEVBOX_FEATURE_UNIFIED_ENV", "1")
 	assert.NoError(t, err)
 	_, err = td.RunCommand(RunCmd(), "ls > test.txt")
 	assert.NoError(t, err)

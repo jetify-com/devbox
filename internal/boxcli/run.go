@@ -49,7 +49,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	if featureflag.StrictRun.Enabled() {
+	if featureflag.UnifiedEnv.Enabled() {
 		err = box.RunScript(script, scriptArgs)
 	} else {
 		if devbox.IsDevboxShellEnabled() {
