@@ -96,6 +96,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 				"--extra-experimental-features", "nix-command flakes",
 				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
 			)
+			cmd.Stdout = d.writer
 		} else {
 			cmd = exec.Command(
 				"nix", "profile", "install",
@@ -103,10 +104,10 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 				"--extra-experimental-features", "nix-command flakes",
 				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
 			)
+			cmd.Stdout = &nixPackageInstallWriter{d.writer}
 		}
 
 		cmd.Env = nix.DefaultEnv()
-		cmd.Stdout = &nixPackageInstallWriter{d.writer}
 		cmd.Stderr = cmd.Stdout
 		err = cmd.Run()
 
