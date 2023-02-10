@@ -13,7 +13,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
@@ -51,9 +50,6 @@ type Stage struct {
 var commitMismatchWarningShown = false
 
 func (c *Config) Packages(w io.Writer) []string {
-	if featureflag.Home.Disabled() {
-		return c.RawPackages
-	}
 	path, err := GlobalConfigPath()
 	if err != nil {
 		return c.RawPackages

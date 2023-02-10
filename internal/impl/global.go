@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
@@ -37,7 +38,10 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		}
 	}
 	d.cfg.RawPackages = lo.Uniq(append(d.cfg.RawPackages, added...))
-	return d.saveCfg()
+	if err := d.saveCfg(); err != nil {
+		return err
+	}
+	return ensureGlobalProfileInPath()
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
@@ -89,4 +93,19 @@ func GlobalConfigPath() (string, error) {
 		return "", errors.WithStack(err)
 	}
 	return filepath.Join(home, "/.config/devbox/"), nil
+}
+
+// Checks if the global profile is in the path
+func ensureGlobalProfileInPath() error {
+	profilePath, err := globalProfilePath()
+	if err != nil {
+		return err
+	}
+	binPath := filepath.Join(profilePath, "bin")
+	if !strings.Contains(os.Getenv("PATH"), binPath) {
+		return usererr.NewWarning(
+			"devbox global profile is not in your PATH. Add `export PATH=$PATH:%s` to your shell config to fix this.", binPath,
+		)
+	}
+	return nil
 }
