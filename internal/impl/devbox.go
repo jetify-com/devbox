@@ -751,7 +751,7 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	if featureflag.EnvConfig.Enabled() {
 		// Include env variables in config
-		envPairs = append(envPairs, d.getConfigEnvs()...)
+		envPairs = append(envPairs, d.getConfigEnvs(envPairs)...)
 	}
 
 	return env, nil
@@ -888,14 +888,22 @@ func (d *Devbox) pluginVirtenvPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }
 
-func (d *Devbox) getConfigEnvs() []string {
+func (d *Devbox) getConfigEnvs(computedEnv []string) []string {
+	// convert key=value strings to map of {key: value}
+	computedEnvMap := map[string]string{}
+	for _, kvpair := range computedEnv {
+		splitKV := strings.SplitN(kvpair, "=", 2)
+		computedEnvMap[splitKV[0]] = splitKV[1]
+	}
 	mapperfunc := func(value string) string {
-		// Special variables that should return correct value in Config
+		// Special variables that should return correct value
 		switch value {
 		case "PWD":
 			return d.ProjectDir()
-		case "PATH":
-			return os.Getenv("PATH")
+		}
+		// check if referenced variables exists in computed environment
+		if v, ok := computedEnvMap[value]; ok {
+			return v
 		}
 		return ""
 	}
