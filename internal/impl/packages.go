@@ -10,6 +10,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -20,7 +21,9 @@ func (d *Devbox) profileDir() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 
 	// Ensure the directory is cleared of old state if the Flakes feature has been turned on (or off)
-	_ = resetProfileDirForFlakes(absPath)
+	if err := resetProfileDirForFlakes(absPath); err != nil {
+		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
+	}
 
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
 		return "", errors.WithStack(err)
