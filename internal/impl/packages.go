@@ -17,7 +17,7 @@ import (
 
 // packages.go has functions for adding, removing and getting info about nix packages
 
-func (d *Devbox) profileDir() (string, error) {
+func (d *Devbox) profilePath() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 
 	if err := resetProfileDirForFlakes(absPath); err != nil {
@@ -31,8 +31,8 @@ func (d *Devbox) profileDir() (string, error) {
 	return absPath, nil
 }
 
-func (d *Devbox) profileBinDir() (string, error) {
-	profileDir, err := d.profileDir()
+func (d *Devbox) profileBinPath() (string, error) {
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return "", err
 	}
