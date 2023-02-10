@@ -18,7 +18,8 @@ import (
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
-// Instead of using directory, prefer using the devbox.ProfilePath() function that ensures the directory exists.
+// or `nix profile install --profile ProfilePath <package...>`
+// Instead of using directory, prefer using the devbox.ProfileDir() function that ensures the directory exists.
 const ProfilePath = ".devbox/nix/profile/default"
 
 var ErrPackageNotFound = errors.New("package not found")
@@ -76,7 +77,7 @@ func legacyPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 }
 
 func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
-	exactPackage := fmt.Sprintf("nixpkgs/%s#%s", nixpkgsCommit, pkg)
+	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
 	if nixpkgsCommit == "" {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
 	}
@@ -161,4 +162,12 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 		return nil, errors.WithStack(err)
 	}
 	return &vaf, nil
+}
+
+// FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.
+// TODO savil. Ensure this works with the nixed cache service.
+func FlakeNixpkgs(commit string) string {
+	// Using nixpkgs/<commit> means:
+	// The nixpkgs entry in the flake registry, with its Git revision overridden to a specific value.
+	return "nixpkgs/" + commit
 }

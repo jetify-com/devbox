@@ -5,6 +5,7 @@
 package devbox
 
 import (
+	"context"
 	"io"
 
 	"go.jetpack.io/devbox/internal/impl"
@@ -46,8 +47,8 @@ type Devbox interface {
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
 	ShellPlan() (*plansdk.ShellPlan, error)
-	StartServices(services ...string) error
-	StopServices(services ...string) error
+	StartServices(ctx context.Context, services ...string) error
+	StopServices(ctx context.Context, services ...string) error
 }
 
 // Open opens a devbox by reading the config file in dir.

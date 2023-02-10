@@ -51,7 +51,7 @@ func terminateMutagenSessions(vmAddr string) error {
 		return err
 	}
 
-	return mutagenbox.ForwardTerminateAll()
+	return mutagenbox.ForwardTerminateByHost(hostname)
 }
 
 func checkActiveVMWithRetries(vmAddr string) (bool, error) {

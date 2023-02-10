@@ -29,7 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func Shell(w io.Writer, projectDir string, githubUsername string) error {
+func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
@@ -119,6 +119,11 @@ func Shell(w io.Writer, projectDir string, githubUsername string) error {
 	s3.Stop("Connecting to virtual machine")
 	fmt.Fprint(w, "\n")
 
+	hostID := strings.Split(vmHostname, ".")[0]
+	if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
+		return err
+	}
+
 	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
 }
 
@@ -138,32 +143,44 @@ func PortForwardList() ([]string, error) {
 	return mutagenbox.ForwardList()
 }
 
-func AutoPortForward(ctx context.Context, w io.Writer, projectDir string) error {
-	return services.ListenToChanges(ctx, w, projectDir, func(update services.StatusFile) services.StatusFile {
-		host := vmHostnameFromSSHControlPath()
-		if host == "" {
-			return update
-		}
+func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string) error {
+	return services.ListenToChanges(ctx,
+		&services.ListenerOpts{
+			HostID:     hostID,
+			ProjectDir: projectDir,
+			Writer:     w,
+			UpdateFunc: func(service *services.ServiceStatus) (*services.ServiceStatus, bool) {
+				if service == nil {
+					return service, false
+				}
+				host := vmHostnameFromSSHControlPath()
+				if host == "" {
+					return service, false
+				}
 
-		hostKey := strings.Split(host, ".")[0]
-		if hostStatus, ok := update.Hosts[hostKey]; ok {
-			for _, service := range hostStatus.Services {
+				saveChanges := false
 				if service.Running && service.Port != "" {
 					localPort, err := mutagenbox.ForwardCreateIfNotExists(host, "", service.Port)
 					if err != nil {
 						fmt.Fprintf(w, "Failed to create port forward for %s: %v", service.Name, err)
 					}
-					service.LocalPort = localPort
+					if service.LocalPort != localPort {
+						service.LocalPort = localPort
+						saveChanges = true
+					}
 				} else if service.Port != "" {
 					if err := mutagenbox.ForwardTerminateByHostPort(host, service.Port); err != nil {
 						fmt.Fprintf(w, "Failed to terminate port forward for %s: %v", service.Name, err)
 					}
-					service.LocalPort = ""
+					if service.LocalPort != "" {
+						service.LocalPort = ""
+						saveChanges = true
+					}
 				}
-			}
-		}
-		return update
-	})
+				return service, saveChanges
+			},
+		},
+	)
 }
 
 func getGithubUsername() (string, error) {

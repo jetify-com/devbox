@@ -27,8 +27,9 @@ func ForwardCreate(host, localPort, remotePort string) (string, error) {
 	local := "tcp:127.0.0.1:" + localPort
 	remote := host + ":22:tcp::" + remotePort
 	labels := map[string]string{
-		"devbox":         "true",
-		"remote-address": remoteAddressLabel(host, remotePort),
+		"devbox":      "true",
+		"remote-host": host,
+		"remote-port": remotePort,
 	}
 	env, err := DefaultEnv()
 	if err != nil {
@@ -39,7 +40,8 @@ func ForwardCreate(host, localPort, remotePort string) (string, error) {
 
 func ForwardCreateIfNotExists(host, localPort, remotePort string) (string, error) {
 	forwards, err := forwardListWithLabels(map[string]string{
-		"remote-address": remoteAddressLabel(host, remotePort),
+		"remote-host": host,
+		"remote-port": remotePort,
 	})
 	if err != nil {
 		return "", err
@@ -59,14 +61,26 @@ func ForwardTerminateAll() error {
 	return mutagen.ForwardTerminate(env, map[string]string{"devbox": "true"})
 }
 
+func ForwardTerminateByHost(host string) error {
+	env, err := DefaultEnv()
+	if err != nil {
+		return err
+	}
+	return mutagen.ForwardTerminate(env, map[string]string{
+		"devbox":      "true",
+		"remote-host": host,
+	})
+}
+
 func ForwardTerminateByHostPort(host, port string) error {
 	env, err := DefaultEnv()
 	if err != nil {
 		return err
 	}
 	return mutagen.ForwardTerminate(env, map[string]string{
-		"devbox":         "true",
-		"remote-address": remoteAddressLabel(host, port),
+		"devbox":      "true",
+		"remote-host": host,
+		"remote-port": port,
 	})
 }
 
@@ -122,8 +136,4 @@ func getFreePort() (string, error) {
 	}
 	defer l.Close()
 	return fmt.Sprintf("%d", l.Addr().(*net.TCPAddr).Port), nil
-}
-
-func remoteAddressLabel(host, port string) string {
-	return host + "-" + port // labels can't have colons
 }

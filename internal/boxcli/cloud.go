@@ -4,11 +4,8 @@
 package boxcli
 
 import (
-	"fmt"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -84,7 +81,6 @@ func cloudPortForwardCmd() *cobra.Command {
 		},
 	}
 	command.AddCommand(cloudPortForwardList())
-	command.AddCommand(cloudPortForwardAuto())
 	command.AddCommand(cloudPortForwardStopCmd())
 	return command
 }
@@ -119,29 +115,6 @@ func cloudPortForwardList() *cobra.Command {
 	}
 }
 
-func cloudPortForwardAuto() *cobra.Command {
-	return &cobra.Command{
-		Use:    "auto",
-		Short:  "Automatically port forwards all ports managed by devbox",
-		Hidden: true,
-		Args:   cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			box, err := devbox.Open("", cmd.ErrOrStderr())
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if err = cloud.AutoPortForward(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir()); err != nil {
-				return err
-			}
-			done := make(chan os.Signal, 1)
-			signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
-			fmt.Println("Listening, press ctrl+c to end...")
-			<-done // Will block here until user hits ctrl+c
-			return nil
-		},
-	}
-}
-
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud shell` when already in the VM is not allowed.
 	if region := os.Getenv("DEVBOX_REGION"); region != "" {
@@ -152,5 +125,5 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	return cloud.Shell(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
 }
