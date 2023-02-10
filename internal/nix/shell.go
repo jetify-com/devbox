@@ -212,7 +212,7 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	}
 
 	var cmd *exec.Cmd
-	if featureflag.NixlessShell.Enabled() {
+	if featureflag.UnifiedEnv.Enabled() {
 		shellrc, err := s.writeDevboxShellrc()
 		if err != nil {
 			// We don't have a good fallback here, since all the variables we need for anything to work
@@ -401,7 +401,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 	}()
 
 	pathPrepend := ""
-	if featureflag.NixlessShell.Disabled() {
+	if featureflag.UnifiedEnv.Disabled() {
 		pathPrepend = s.profileDir + "/bin"
 		if s.pkgConfigDir != "" {
 			pathPrepend = s.pkgConfigDir + ":" + pathPrepend
@@ -429,7 +429,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
-		RunNixShellHook:  featureflag.NixlessShell.Enabled(),
+		RunNixShellHook:  featureflag.UnifiedEnv.Enabled(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
