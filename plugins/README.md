@@ -46,7 +46,8 @@ Plugins are defined as JSON Template files, using the following schema:
   "services": {
     "service_name": {
       "start": "<start_command>",
-      "stop": "<stop_command>"
+      "stop": "<stop_command>",
+      "port": <number>
     }
   }
 }
@@ -56,20 +57,28 @@ Plugins are defined as JSON Template files, using the following schema:
 
 Plugins are activated whenever a developer runs `devbox shell`, runs a script with `devbox run`, or starts a service using `devbox services start|restart`. The lifecycle of a devbox shell with plugins goes in the following order.
 
-1. Plugin `env`
-2. devbox.json `env`
-3. Plugin `init_hook`
-4. devbox.json `init_hook`
-5. `devbox shell` 
-6. `devbox run` | `devbox services start/restart`
+```mermaid
+---
+title: Devbox Shell Lifecycle
+---
+flowchart TD
+   A[Plugin env] --> B
+   B[User env] --> C
+   C[Plugin init_hook] --> D[User Init Hook]
+   D -->  E{Start Shell}
+   E --> F & G & H
+   F[Interactive Shell]
+   G[Run Scripts]
+   H[Start Services]
+```
 
 ### Template Placeholders
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
 * `{{ .DevboxDirRoot }}` – replaced with the root folder of their project, where the user's `devbox.json` is stored.
-* `{{ .DevboxDir }}` – replaced with `{{ .DevboxDir }}/devbox.d/{{ plugin.name }}`. This directory is public and added to source control by default. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
-* `{{ .Virtenv }}` – replaced with `{{ .DevboxDirRoot }}/.devbox/virtenv/{{ plugin.name }}` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly.
+* `{{ .DevboxDir }}` – replaced with `{{ .DevboxDirRoot }}/devbox.d/{{ plugin.name }}`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
+* `{{ .Virtenv }}` – replaced with `{{ .DevboxDirRoot }}/.devbox/virtenv/{{ plugin.name }}` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 
 ### Fields
 
@@ -115,7 +124,7 @@ A single `bash` command or list of `bash` commands that should run before the us
 
 #### `services` *object*
 
-A map of services that your plugin exposes to the user through `devbox services`. Services should have a `start` command and `stop` command defined so that Devbox can safely start and stop your service.
+A map of services that your plugin exposes to the user through `devbox services`. Services should have a `start` command and `stop` command defined so that Devbox can safely start and stop your service. You can optionally specify a `port` for Devbox to use along with automatic port forwarding in Devbox Cloud
 
 For more details, see our [Services Documentation](https://www.jetpack.io/devbox/docs/guides/services/)
 
