@@ -400,10 +400,12 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		}
 	}()
 
-	// TODO: probably need to change this.
-	pathPrepend := s.profileDir + "/bin"
-	if s.pkgConfigDir != "" {
-		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
+	pathPrepend := ""
+	if featureflag.NixlessShell.Disabled() {
+		pathPrepend = s.profileDir + "/bin"
+		if s.pkgConfigDir != "" {
+			pathPrepend = s.pkgConfigDir + ":" + pathPrepend
+		}
 	}
 
 	err = shellrcTmpl.Execute(shellrcf, struct {

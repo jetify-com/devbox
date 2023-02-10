@@ -67,7 +67,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 	}
 	color.New(color.FgGreen).Fprintf(d.writer, msg)
 
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 		return nil
 	}
 
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 		return nil, errors.New("Not implemented for legacy non-flakes devbox")
 	}
 
-	profileDir, err := d.profileDir()
+	profileDir, err := d.profilePath()
 	if err != nil {
 		return nil, err
 	}
