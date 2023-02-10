@@ -590,25 +590,6 @@ func (d *Devbox) generateShellFiles() error {
 	return generateForShell(d.projectDir, plan, d.pluginManager)
 }
 
-// TODO savil. move to packages.go
-func (d *Devbox) profileDir() (string, error) {
-	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
-	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return absPath, nil
-}
-
-// TODO savil. move to packages.go
-func (d *Devbox) profileBinDir() (string, error) {
-	profileDir, err := d.profileDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(profileDir, "bin"), nil
-}
-
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
 type installMode string
 

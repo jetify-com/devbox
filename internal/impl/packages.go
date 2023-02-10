@@ -2,16 +2,40 @@ package impl
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
 // packages.go has functions for adding, removing and getting info about nix packages
+
+func (d *Devbox) profileDir() (string, error) {
+	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
+
+	// Ensure the directory is cleared of old state if the Flakes feature has been turned on (or off)
+	_ = resetProfileDirForFlakes(absPath)
+
+	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return absPath, nil
+}
+
+func (d *Devbox) profileBinDir() (string, error) {
+	profileDir, err := d.profileDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(profileDir, "bin"), nil
+}
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
 // are missing from the nix profile, and then installs each package individually into the
@@ -192,4 +216,37 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 		}
 	}
 	return pending, nil
+}
+
+var resetCheckDone = false
+
+func resetProfileDirForFlakes(profileDir string) (err error) {
+	if resetCheckDone {
+		return nil
+	}
+	defer func() {
+		if err == nil {
+			resetCheckDone = true
+		}
+	}()
+
+	dir, err := filepath.EvalSymlinks(profileDir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	needsReset := false
+	if featureflag.Flakes.Enabled() {
+		// older nix profiles have a manifest.nix file present
+		needsReset = fileutil.Exists(filepath.Join(dir, "manifest.nix"))
+	} else {
+		// newer flake nix profiles have a manifest.json file present
+		needsReset = fileutil.Exists(filepath.Join(dir, "manifest.json"))
+	}
+
+	if !needsReset {
+		return nil
+	}
+
+	return errors.WithStack(os.Remove(profileDir))
 }
