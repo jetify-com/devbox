@@ -48,19 +48,22 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
-var commitMismatchErrorShown = false
+var commitMismatchWarningShown = false
 
 func (c *Config) Packages(w io.Writer) []string {
 	if featureflag.Home.Disabled() {
 		return c.RawPackages
 	}
-	path, _ := GlobalConfigPath()
+	path, err := GlobalConfigPath()
+	if err != nil {
+		return c.RawPackages
+	}
 	global, err := readConfig(filepath.Join(path, "devbox.json"))
 	if err != nil {
 		return c.RawPackages
 	}
-	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchErrorShown {
-		commitMismatchErrorShown = true
+	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchWarningShown {
+		commitMismatchWarningShown = true
 		color.New(color.FgHiYellow).Fprint(w, "Warning: ")
 		fmt.Fprintln(
 			w,
