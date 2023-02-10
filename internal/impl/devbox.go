@@ -888,6 +888,12 @@ func (d *Devbox) pluginVirtenvPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }
 
+// Takes the computed env variables (nix + plugin) and adds env
+// variables defined in Config. It also parses variables in config
+// that are referenced by $VAR or ${VAR} and replaces them with
+// their value in the computed env variables. Note, this doesn't
+// allow env variables from outside the shell to be referenced so
+// no leaked variables are caused by this function.
 func (d *Devbox) getConfigEnvs(computedEnv []string) []string {
 	// convert key=value strings to map of {key: value}
 	computedEnvMap := map[string]string{}
@@ -909,7 +915,7 @@ func (d *Devbox) getConfigEnvs(computedEnv []string) []string {
 	}
 	var configEnvs []string
 	// Include env variables in config
-	for key, value := range d.cfg.Shell.Env {
+	for key, value := range d.cfg.Env {
 		// parse values for "$VAR" or "${VAR}"
 		parsedValue := os.Expand(value, mapperfunc)
 		configEnvs = append(configEnvs, fmt.Sprintf("%s=%s", key, parsedValue))
