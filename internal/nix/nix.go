@@ -4,7 +4,6 @@
 package nix
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,6 +27,13 @@ var ErrPackageNotInstalled = errors.New("package not installed")
 
 func PkgExists(nixpkgsCommit, pkg string) bool {
 	_, found := PkgInfo(nixpkgsCommit, pkg)
+	return found
+}
+
+// FlakesPkgExists returns true if the package exists in the nixpkgs commit
+// using flakes. This can be removed once flakes are the default.
+func FlakesPkgExists(nixpkgsCommit, pkg string) bool {
+	_, found := flakesPkgInfo(nixpkgsCommit, pkg)
 	return found
 }
 
@@ -156,40 +162,6 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 		return nil, errors.WithStack(err)
 	}
 	return &vaf, nil
-}
-
-// ProfileInstall calls nix profile install with default profile
-func ProfileInstall(nixpkgsCommit, pkg string) error {
-	cmd := exec.Command("nix", "profile", "install",
-		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
-		"--extra-experimental-features", "nix-command flakes",
-	)
-	cmd.Env = DefaultEnv()
-	out, err := cmd.CombinedOutput()
-	if bytes.Contains(out, []byte("does not provide attribute")) {
-		return ErrPackageNotFound
-	}
-
-	return errors.WithStack(err)
-}
-
-func ProfileRemove(nixpkgsCommit, pkg string) error {
-	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
-	if !found {
-		return ErrPackageNotFound
-	}
-	cmd := exec.Command(
-		"nix", "profile", "remove",
-		info.attributeKey,
-		"--extra-experimental-features", "nix-command flakes",
-	)
-	cmd.Env = DefaultEnv()
-	out, err := cmd.CombinedOutput()
-	if bytes.Contains(out, []byte("does not match any packages")) {
-		return ErrPackageNotInstalled
-	}
-
-	return errors.WithStack(err)
 }
 
 // FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.

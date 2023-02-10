@@ -244,7 +244,7 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	if featureflag.NixlessShell.Enabled() {
+	if featureflag.UnifiedEnv.Enabled() {
 		env, err = d.computeNixEnv()
 		if err != nil {
 			return err
@@ -277,7 +277,7 @@ func (d *Devbox) Shell() error {
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	if featureflag.StrictRun.Disabled() {
+	if featureflag.UnifiedEnv.Disabled() {
 		return d.RunScriptInNewNixShell(cmdName)
 	}
 
