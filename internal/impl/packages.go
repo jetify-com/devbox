@@ -20,7 +20,6 @@ import (
 func (d *Devbox) profileDir() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 
-	// Ensure the directory is cleared of old state if the Flakes feature has been turned on (or off)
 	if err := resetProfileDirForFlakes(absPath); err != nil {
 		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
 	}
@@ -223,6 +222,8 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 
 var resetCheckDone = false
 
+// resetProfileDirForFlakes ensures the profileDir directory is cleared of old
+// state if the Flakes feature has been changed, from the previous execution of a devbox command.
 func resetProfileDirForFlakes(profileDir string) (err error) {
 	if resetCheckDone {
 		return nil
