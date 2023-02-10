@@ -33,7 +33,7 @@ eval $shellHook
 
 # Begin Devbox Post-init Hook
 
-{{- if .PathPrepend }}
+{{ if .PathPrepend -}}
 PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
