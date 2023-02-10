@@ -41,8 +41,9 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir    = ".devbox/gen/scripts"
-	hooksFilename = ".hooks"
+	scriptsDir           = ".devbox/gen/scripts"
+	hooksFilename        = ".hooks"
+	arbitraryCmdFilename = ".cmd"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -112,6 +113,7 @@ func (d *Devbox) Config() *Config {
 	return d.cfg
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) Add(pkgs ...string) error {
 	original := d.cfg.Packages
 	// Check packages are valid before adding.
@@ -164,6 +166,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	return d.printPackageUpdateMessage(install, pkgs)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) Remove(pkgs ...string) error {
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.Packages below.
@@ -185,6 +188,10 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if err := plugin.Remove(d.projectDir, uninstalledPackages); err != nil {
+		return err
+	}
+
+	if err := d.removePackagesFromProfile(uninstalledPackages); err != nil {
 		return err
 	}
 
@@ -227,8 +234,6 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-
 	pluginHooks, err := plugin.InitHooks(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
@@ -237,6 +242,13 @@ func (d *Devbox) Shell() error {
 	env, err := plugin.Env(d.cfg.Packages, d.projectDir)
 	if err != nil {
 		return err
+	}
+
+	if featureflag.NixlessShell.Enabled() {
+		env, err = d.computeNixEnv()
+		if err != nil {
+			return err
+		}
 	}
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
@@ -261,7 +273,7 @@ func (d *Devbox) Shell() error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
@@ -277,19 +289,30 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	env, err := d.computeNixEnv()
 	if err != nil {
 		return err
 	}
 
-	cmdWithArgs := append([]string{cmdName}, cmdArgs...)
+	var cmdWithArgs []string
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
 		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+	} else {
+		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
+		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
+		// which we don't want. So, one solution is to write the entire command and its arguments into the
+		// file itself, but that may not be great if the variables contain sensitive information. Instead,
+		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
+		err := d.writeScriptFile(arbitraryCmdFilename, d.scriptBody("eval $DEVBOX_RUN_CMD\n"))
+		if err != nil {
+			return err
+		}
+		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
+		env = append(env, fmt.Sprintf("DEVBOX_RUN_CMD=%s", strings.Join(append([]string{cmdName}, cmdArgs...), " ")))
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.RunScript(nixShellFilePath, d.projectDir, strings.Join(cmdWithArgs, " "), pluginEnv)
+	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
 // RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
@@ -305,7 +328,6 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		return err
 	}
 
-	nixShellFilePath := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 	script := d.cfg.Shell.Scripts[scriptName]
 	if script == nil {
 		return usererr.New("unable to find a script with name %s", scriptName)
@@ -339,7 +361,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(nixShellFilePath)
+	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
 }
 
 // TODO: deprecate in favor of RunScript().
@@ -568,6 +590,7 @@ func (d *Devbox) generateShellFiles() error {
 	return generateForShell(d.projectDir, plan, d.pluginManager)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) profileDir() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
@@ -577,6 +600,7 @@ func (d *Devbox) profileDir() (string, error) {
 	return absPath, nil
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) profileBinDir() (string, error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
@@ -594,31 +618,40 @@ const (
 	ensure    installMode = "ensure"
 )
 
+// TODO savil. move to packages.go
 func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
-
-	installingVerb := "Installing"
-	if mode == uninstall {
-		installingVerb = "Uninstalling"
-	}
-
 	if mode == ensure {
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
-	} else {
-		_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
 	}
 
-	// We need to re-install the packages
-	if err := d.installNixProfile(); err != nil {
-		fmt.Fprintln(d.writer)
-		return errors.Wrap(err, "apply Nix derivation")
+	if featureflag.Flakes.Enabled() {
+		if err := d.addPackagesToProfile(mode); err != nil {
+			return err
+		}
+
+	} else {
+		if mode == install || mode == uninstall {
+			installingVerb := "Installing"
+			if mode == uninstall {
+				installingVerb = "Uninstalling"
+			}
+			_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
+		}
+
+		// We need to re-install the packages
+		if err := d.installNixProfile(); err != nil {
+			fmt.Fprintln(d.writer)
+			return errors.Wrap(err, "apply Nix derivation")
+		}
 	}
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
 
+// TODO savil. move to packages.go
 func (d *Devbox) printPackageUpdateMessage(
 	mode installMode,
 	pkgs []string,
@@ -669,30 +702,67 @@ func (d *Devbox) printPackageUpdateMessage(
 	return nil
 }
 
+func (d *Devbox) computeNixEnv() ([]string, error) {
+
+	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
+	if err != nil {
+		return nil, err
+	}
+
+	env := map[string]string{}
+	for k, v := range vaf.Variables {
+		// We only care about "exported" because the var and array types seem to only be used by nix-defined
+		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
+		// var: export VAR=VAL
+		// exported: export VAR=VAL
+		// array: declare -a VAR=('VAL1' 'VAL2' )
+		if v.Type == "exported" {
+			env[k] = v.Value.(string)
+		}
+	}
+
+	// Overwrite/leak whitelisted vars into nixEnv:
+	for name, leak := range leakedVars {
+		if leak {
+			env[name] = os.Getenv(name)
+		}
+	}
+
+	// Include the host PATH at the end.
+	env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], os.Getenv("PATH"))
+
+	// TODO: prepend the nix profile path
+	// TODO: prepend package config dir
+
+	envPairs := []string{}
+	for k, v := range env {
+		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	pluginEnv, err := plugin.Env(d.cfg.Packages, d.projectDir)
+	if err != nil {
+		return nil, err
+	}
+	envPairs = append(envPairs, pluginEnv...)
+
+	return envPairs, nil
+}
+
+// TODO savil. move to packages.go
 // installNixProfile installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix or flake.nix
+// devbox's Nix profile so that it matches what's in development.nix
 func (d *Devbox) installNixProfile() (err error) {
 	profileDir, err := d.profileDir()
 	if err != nil {
 		return err
 	}
 
-	var cmd *exec.Cmd
-	if featureflag.Flakes.Enabled() {
-		cmd = d.installNixProfileFlakeCommand(profileDir)
-		defer func() {
-			if err == nil {
-				_ = d.copyFlakeLockToDevboxLock()
-			}
-		}()
-	} else { // Non flakes:
-		cmd = exec.Command(
-			"nix-env",
-			"--profile", profileDir,
-			"--install",
-			"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-		)
-	}
+	cmd := exec.Command(
+		"nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+	)
 
 	cmd.Env = nix.DefaultEnv()
 	cmd.Stdout = &nixPackageInstallWriter{d.writer}
@@ -742,9 +812,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
-		err = d.writeScriptFile(
-			name,
-			fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body))
+		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -791,6 +859,18 @@ func (d *Devbox) scriptFilename(scriptName string) string {
 	return scriptName + ".sh"
 }
 
+func (d *Devbox) scriptBody(body string) string {
+	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+}
+
+func (d *Devbox) nixShellFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
+}
+
+func (d *Devbox) nixFlakesFilePath() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
+}
+
 // Move to a utility package?
 func IsDevboxShellEnabled() bool {
 	inDevboxShell, err := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
@@ -803,4 +883,20 @@ func IsDevboxShellEnabled() bool {
 func commandExists(command string) bool {
 	_, err := exec.LookPath(command)
 	return err == nil
+}
+
+// leakedVars contains a list of variables that, if set in the host, will be copied
+// to the environment of devbox run/shell. If they're NOT set in the host, they will be set
+// to an empty value.
+// NOTE: we want to keep this list AS SMALL AS POSSIBLE. The longer this list, the less "pure"
+// (and therefore, reproducible) devbox becomes.
+var leakedVars = map[string]bool{
+	"HOME": true, // Without this, HOME is set to /homeless-shelter and most programs fail.
+
+	// Where to write temporary files. nix print-dev-env sets these to an unwriteable path,
+	// so we override that here with whatever the host has set.
+	"TMP":     true,
+	"TEMP":    true,
+	"TMPDIR":  true,
+	"TEMPDIR": true,
 }

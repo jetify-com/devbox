@@ -16,12 +16,8 @@ content readable.
 
 */ -}}
 
-{{- range $name, $value := .NixEnv -}}
-export {{ $name }}={{ $value }}
-{{ end -}}
-
-{{- if .NixEnv }}
-# Run the shell hook defined in shell.nix.
+{{- if .RunNixShellHook -}}
+# Run the shell hook defined in shell.nix or flake.nix
 eval $shellHook
 
 {{ end -}}
@@ -43,11 +39,6 @@ PATH="{{ .PathPrepend }}:$PATH"
 HISTFILE={{.HistoryFile}}
 {{- end }}
 
-# Export env-vars which nix may remove by default, but are needed for shell UX
-{{ range $name, $value := .EnvToKeep }}
-export {{ $name }}={{ $value }}
-{{ end }}
-
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
 
@@ -58,31 +49,31 @@ devbox log shell-ready {{ .ShellStartTime }}
 
 # End Devbox Post-init Hook
 
-{{- if .UserHook }}
-
-# Begin Devbox User Hook
-
 # Switch to the directory where devbox.json config is
 workingDir=$(pwd)
 cd {{ .ProjectDir }}
 
-{{ .UserHook }}
+{{- if .PluginInitHook }}
 
-cd $workingDir
+# Begin Plugin Init Hook
+
+{{ .PluginInitHook }}
+
+# End Plugin Init Hook
+
+{{- end }}
+
+{{- if .UserHook }}
+
+# Begin Devbox User Hook
+
+{{ .UserHook }}
 
 # End Devbox User Hook
 
 {{- end }}
 
-# Begin Plugin Init Hook
-
-{{- if .PluginInitHook }}
-
-{{ .PluginInitHook }}
-
-{{- end }}
-
-# End Plugin Init Hook
+cd $workingDir
 
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
