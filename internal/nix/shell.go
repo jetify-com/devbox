@@ -406,20 +406,8 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
 	}
 
-	envToKeepFlakes := map[string]string{}
-	// TODO savil: 80% confidence this can be removed
-	if featureflag.Flakes.Enabled() {
-		// `nix develop` has a list of ignoreVars, which we may want to not-ignore.
-		// For now, including just TERM since it affects shell cursor movement UX.
-		// https://github.com/NixOS/nix/blob/master/src/nix/develop.cc#L241-L259
-		envToKeepFlakes = map[string]string{
-			"TERM": os.Getenv("TERM"),
-		}
-	}
-
 	err = shellrcTmpl.Execute(shellrcf, struct {
 		ProjectDir       string
-		EnvToKeep        map[string]string
 		OriginalInit     string
 		OriginalInitPath string
 		UserHook         string
@@ -431,7 +419,6 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		RunNixShellHook  bool
 	}{
 		ProjectDir:       s.projectDir,
-		EnvToKeep:        envToKeepFlakes,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: filepath.Clean(s.userShellrcPath),
 		UserHook:         strings.TrimSpace(s.UserInitHook),

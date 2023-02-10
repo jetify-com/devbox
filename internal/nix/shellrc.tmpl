@@ -17,7 +17,7 @@ content readable.
 */ -}}
 
 {{- if .RunNixShellHook -}}
-# Run the shell hook defined in shell.nix.
+# Run the shell hook defined in shell.nix or flake.nix
 eval $shellHook
 
 {{ end -}}
@@ -38,11 +38,6 @@ PATH="{{ .PathPrepend }}:$PATH"
 {{- if .HistoryFile }}
 HISTFILE={{.HistoryFile}}
 {{- end }}
-
-# Export env-vars which nix may remove by default, but are needed for shell UX
-{{ range $name, $value := .EnvToKeep }}
-export {{ $name }}={{ $value }}
-{{ end }}
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
