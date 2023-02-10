@@ -173,7 +173,7 @@ func rcfilePath(basename string) string {
 func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
-	parentPath := cleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
+	parentPath := CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
 	env := append(s.env, os.Environ()...)
 	env = append(
@@ -572,14 +572,14 @@ func splitNixList(s string) []string {
 	return split
 }
 
-// cleanEnvPath takes a string formatted as a shell PATH and cleans it for
+// CleanEnvPath takes a string formatted as a shell PATH and cleans it for
 // passing to nix-shell. It does the following rules for each entry:
 //
 //  1. Applies filepath.Clean.
 //  2. Removes the path if it's relative (must begin with '/' and not be '.').
 //  3. Removes the path if it's a descendant of a user Nix profile directory
 //     (the default Nix profile is kept).
-func cleanEnvPath(pathEnv string, nixProfilesEnv string) string {
+func CleanEnvPath(pathEnv string, nixProfilesEnv string) string {
 	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
 	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
 	// assume they are.
