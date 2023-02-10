@@ -12,17 +12,6 @@
         let pkgs = nixpkgs.legacyPackages.${system};
 
         in {
-            # defaultPackage is used by the `nix profile --install`
-            defaultPackage = pkgs.buildEnv {
-                ignoreCollisions = true;
-                name="devbox-shell-env";
-                paths = [
-                  {{- range .DevPackages}}
-                    pkgs.{{.}}
-                  {{end -}}
-                ];
-                pathsToLink = [ "/bin" "/share" "/lib" ];
-            };
             devShell = pkgs.mkShell {
               shellHook =
                 ''
