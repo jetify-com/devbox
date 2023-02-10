@@ -54,6 +54,11 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			Commit: plansdk.DefaultNixpkgsCommit,
 		},
 	}
+	if featureflag.EnvConfig.Enabled() {
+		// TODO: after removing feature flag we can decide if we want
+		// to have omitempty for Env in Config or not.
+		config.Env = map[string]string{}
+	}
 	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
@@ -519,12 +524,11 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 }
 
 // generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrc(force bool) error {
+func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
 	if force || !filesExist {
-		// .envrc file creation
 		if commandExists("direnv") {
 			// prompt for direnv allow
 			var result string
@@ -537,14 +541,19 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 			}
 
 			if strings.ToLower(result) == "y" {
-				if !filesExist { // don't overwrite an existing .envrc
-					err := generate.CreateEnvrc(tmplFS, d.projectDir)
-					if err != nil {
-						return errors.WithStack(err)
-					}
+				// .envrc file creation
+				err := generate.CreateEnvrc(tmplFS, d.projectDir)
+				if err != nil {
+					return errors.WithStack(err)
 				}
 				cmd := exec.Command("direnv", "allow")
 				err = cmd.Run()
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			} else if source == "generate" {
+				// .envrc file creation
+				err := generate.CreateEnvrc(tmplFS, d.projectDir)
 				if err != nil {
 					return errors.WithStack(err)
 				}
