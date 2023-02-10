@@ -4,12 +4,16 @@
 package impl
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
@@ -19,9 +23,10 @@ import (
 
 // Config defines a devbox environment as JSON.
 type Config struct {
-	// Packages is the slice of Nix packages that devbox makes available in
+	// RawPackages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	Packages []string `cue:"[...string]" json:"packages"`
+	// It's differentiated from Packages() which also includes global packages.
+	RawPackages []string `cue:"[...string]" json:"packages"`
 
 	// Shell configures the devbox shell environment.
 	Shell struct {
@@ -41,6 +46,32 @@ type NixpkgsConfig struct {
 // This contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `cue:"string" json:"command"`
+}
+
+var commitMismatchWarningShown = false
+
+func (c *Config) Packages(w io.Writer) []string {
+	if featureflag.Home.Disabled() {
+		return c.RawPackages
+	}
+	path, err := GlobalConfigPath()
+	if err != nil {
+		return c.RawPackages
+	}
+	global, err := readConfig(filepath.Join(path, "devbox.json"))
+	if err != nil {
+		return c.RawPackages
+	}
+	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchWarningShown {
+		commitMismatchWarningShown = true
+		color.New(color.FgHiYellow).Fprint(w, "Warning: ")
+		fmt.Fprintln(
+			w,
+			"local and global devbox.json have different nixpkgs commits. "+
+				"Will use the local version. This may lead to version mismatch and "+
+				"nix store bloat.")
+	}
+	return append(c.RawPackages, global.RawPackages...)
 }
 
 func readConfig(path string) (*Config, error) {

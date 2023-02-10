@@ -5,6 +5,7 @@ package midcobra
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -236,5 +237,5 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		return []string{}, ""
 	}
 
-	return box.Config().Packages, box.Config().Nixpkgs.Commit
+	return box.Config().Packages(io.Discard), box.Config().Nixpkgs.Commit
 }

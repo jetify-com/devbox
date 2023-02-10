@@ -212,7 +212,7 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 	}
 
 	pending := []string{}
-	for _, pkg := range d.cfg.Packages {
+	for _, pkg := range d.packages() {
 		if _, ok := installed[pkg]; !ok {
 			pending = append(pending, pkg)
 		}

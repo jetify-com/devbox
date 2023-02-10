@@ -36,7 +36,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 			added = append(added, pkg)
 		}
 	}
-	d.cfg.Packages = lo.Uniq(append(d.cfg.Packages, added...))
+	d.cfg.RawPackages = lo.Uniq(append(d.cfg.RawPackages, added...))
 	return d.saveCfg()
 }
 
@@ -45,7 +45,7 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	if err != nil {
 		return err
 	}
-	if _, missing := lo.Difference(d.cfg.Packages, pkgs); len(missing) > 0 {
+	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
 		fmt.Fprintf(
 			d.writer,
 			"%s the following packages were not found in your global devbox.json: %s\n",
@@ -54,7 +54,7 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		)
 	}
 	var removed []string
-	for _, pkg := range lo.Intersect(d.cfg.Packages, pkgs) {
+	for _, pkg := range lo.Intersect(d.cfg.RawPackages, pkgs) {
 		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
 		} else {
@@ -62,12 +62,12 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 			removed = append(removed, pkg)
 		}
 	}
-	d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, removed)
+	d.cfg.RawPackages, _ = lo.Difference(d.cfg.RawPackages, removed)
 	return d.saveCfg()
 }
 
 func (d *Devbox) PrintGlobalList() error {
-	for _, p := range d.cfg.Packages {
+	for _, p := range d.cfg.RawPackages {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil

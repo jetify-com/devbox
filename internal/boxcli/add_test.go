@@ -29,5 +29,5 @@ func TestAdd(t *testing.T) {
 	assert.Contains(t, output, "hello (hello-2.12.1) is now installed.")
 	updatedDevboxJSON, err := td.GetDevboxJSON()
 	assert.NoError(t, err)
-	assert.Contains(t, updatedDevboxJSON.Packages, "hello")
+	assert.Contains(t, updatedDevboxJSON.RawPackages, "hello")
 }

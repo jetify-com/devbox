@@ -31,5 +31,5 @@ func TestRm(t *testing.T) {
 	assert.Contains(t, output, "hello (hello-2.12.1) is now removed.")
 	devboxjson, err := td.GetDevboxJSON()
 	assert.NoError(t, err)
-	assert.NotContains(t, devboxjson.Packages, "hello")
+	assert.NotContains(t, devboxjson.RawPackages, "hello")
 }

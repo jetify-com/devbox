@@ -5,8 +5,6 @@ package boxcli
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -89,7 +87,7 @@ func globalListCmd() *cobra.Command {
 }
 
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := globalConfigPath()
+	path, err := devbox.GlobalConfigPath()
 	if err != nil {
 		return err
 	}
@@ -105,7 +103,7 @@ func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := globalConfigPath()
+	path, err := devbox.GlobalConfigPath()
 	if err != nil {
 		return err
 	}
@@ -121,7 +119,7 @@ func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := globalConfigPath()
+	path, err := devbox.GlobalConfigPath()
 	if err != nil {
 		return err
 	}
@@ -133,12 +131,4 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 	return box.PrintGlobalList()
-}
-
-func globalConfigPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Join(home, "/.config/devbox/"), nil
 }
