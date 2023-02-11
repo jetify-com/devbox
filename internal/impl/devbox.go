@@ -254,8 +254,14 @@ func (d *Devbox) Shell() error {
 		if err != nil {
 			return err
 		}
-	} else {
-		env = append(env, d.getConfigEnvs(env)...)
+	} else if featureflag.EnvConfig.Enabled() {
+		// TODO: this else-if can be removed when UnifiedEnv featureflag is
+		// removed. Since this logic already exists in computeNixEnv()
+
+		// Add env variables from config
+		for k, v := range d.configEnvs(env) {
+			env[k] = v
+		}
 	}
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
@@ -760,7 +766,9 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	if featureflag.EnvConfig.Enabled() {
 		// Include env variables in config
-		envPairs = append(envPairs, d.getConfigEnvs(envPairs)...)
+		for k, v := range d.configEnvs(env) {
+			env[k] = v
+		}
 	}
 
 	return env, nil
@@ -897,19 +905,13 @@ func (d *Devbox) pluginVirtenvPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }
 
-// Takes the computed env variables (nix + plugin) and adds env
+// configEnvs takes the computed env variables (nix + plugin) and adds env
 // variables defined in Config. It also parses variables in config
 // that are referenced by $VAR or ${VAR} and replaces them with
 // their value in the computed env variables. Note, this doesn't
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
-func (d *Devbox) getConfigEnvs(computedEnv []string) []string {
-	// convert key=value strings to map of {key: value}
-	computedEnvMap := map[string]string{}
-	for _, kvpair := range computedEnv {
-		splitKV := strings.SplitN(kvpair, "=", 2)
-		computedEnvMap[splitKV[0]] = splitKV[1]
-	}
+func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	mapperfunc := func(value string) string {
 		// Special variables that should return correct value
 		switch value {
@@ -917,17 +919,17 @@ func (d *Devbox) getConfigEnvs(computedEnv []string) []string {
 			return d.ProjectDir()
 		}
 		// check if referenced variables exists in computed environment
-		if v, ok := computedEnvMap[value]; ok {
+		if v, ok := computedEnv[value]; ok {
 			return v
 		}
 		return ""
 	}
-	var configEnvs []string
+	configEnvs := map[string]string{}
 	// Include env variables in config
 	for key, value := range d.cfg.Env {
 		// parse values for "$VAR" or "${VAR}"
 		parsedValue := os.Expand(value, mapperfunc)
-		configEnvs = append(configEnvs, fmt.Sprintf("%s=%s", key, parsedValue))
+		configEnvs[key] = parsedValue
 	}
 	return configEnvs
 }
