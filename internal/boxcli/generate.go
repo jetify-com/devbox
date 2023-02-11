@@ -114,7 +114,7 @@ func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) 
 	case "dockerfile":
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
-		return box.GenerateEnvrc(flags.force)
+		return box.GenerateEnvrc(flags.force, "generate")
 	}
 	return nil
 }
