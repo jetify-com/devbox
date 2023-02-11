@@ -138,13 +138,12 @@ func createEnvFile(pkg, projectDir string) error {
 		return err
 	}
 	env := ""
-	for _, val := range envVars {
-		parts := strings.SplitN(val, "=", 2)
-		escaped, err := cuecfg.MarshalJSON(parts[1])
+	for key, val := range envVars {
+		escaped, err := cuecfg.MarshalJSON(val)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		env += fmt.Sprintf("export %s=%s\n", parts[0], escaped)
+		env += fmt.Sprintf("export %s=%s\n", key, escaped)
 	}
 	filePath := filepath.Join(projectDir, VirtenvPath, pkg, "/env")
 	if err = createDir(filepath.Dir(filePath)); err != nil {
