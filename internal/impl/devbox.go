@@ -430,15 +430,45 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds, env)
 }
 
-func (d *Devbox) PluginEnv() (string, error) {
-	pluginEnvs, err := plugin.Env(d.packages(), d.projectDir)
+func (d *Devbox) PrintEnv() (string, error) {
+	script := ""
+	if featureflag.UnifiedEnv.Disabled() {
+		envs, err := plugin.Env(d.packages(), d.projectDir)
+		if err != nil {
+			return "", err
+		}
+		for k, v := range envs {
+			script += fmt.Sprintf("export %s=%s\n", k, v)
+		}
+		return script, nil
+	}
+	envs, err := d.computeNixEnv()
+	// exclude variables that direnv can't process
+	varsToExclude := []string{
+		"buildPhase",
+		"shellHook",
+	}
+	// wrap variables in quotes
+	varsToModify := []string{
+		"NIX_CFLAGS_COMPILE",
+		"NIX_HARDENING_ENABLE",
+		"NIX_LDFLAGS",
+		"__impureHostDeps",
+		"nativeBuildInputs",
+	}
+	for _, v := range varsToExclude {
+		envs[v] = ""
+	}
+	for _, v := range varsToModify {
+		envs[v] = fmt.Sprintf("\"%s\"", envs[v])
+	}
 	if err != nil {
 		return "", err
 	}
-	script := ""
-	for k, v := range pluginEnvs {
+	for k, v := range envs {
 		script += fmt.Sprintf("export %s=%s\n", k, v)
 	}
+
 	return script, nil
 }
 
