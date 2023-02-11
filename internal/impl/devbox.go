@@ -431,8 +431,8 @@ func (d *Devbox) PluginEnv() (string, error) {
 		return "", err
 	}
 	script := ""
-	for _, pluginEnv := range pluginEnvs {
-		script += fmt.Sprintf("export %s\n", pluginEnv)
+	for k, v := range pluginEnvs {
+		script += fmt.Sprintf("export %s=%s\n", k, v)
 	}
 	return script, nil
 }
