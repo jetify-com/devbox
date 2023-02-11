@@ -34,7 +34,7 @@ func runInitCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	err = box.GenerateEnvrc(false)
+	err = box.GenerateEnvrc(false, "init")
 	if err != nil {
 		return errors.WithStack(err)
 	}

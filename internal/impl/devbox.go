@@ -54,6 +54,11 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 			Commit: plansdk.DefaultNixpkgsCommit,
 		},
 	}
+	if featureflag.EnvConfig.Enabled() {
+		// TODO: after removing feature flag we can decide if we want
+		// to have omitempty for Env in Config or not.
+		config.Env = map[string]string{}
+	}
 	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
@@ -517,12 +522,11 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 }
 
 // generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrc(force bool) error {
+func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
 	if force || !filesExist {
-		// .envrc file creation
 		if commandExists("direnv") {
 			// prompt for direnv allow
 			var result string
@@ -535,14 +539,19 @@ func (d *Devbox) GenerateEnvrc(force bool) error {
 			}
 
 			if strings.ToLower(result) == "y" {
-				if !filesExist { // don't overwrite an existing .envrc
-					err := generate.CreateEnvrc(tmplFS, d.projectDir)
-					if err != nil {
-						return errors.WithStack(err)
-					}
+				// .envrc file creation
+				err := generate.CreateEnvrc(tmplFS, d.projectDir)
+				if err != nil {
+					return errors.WithStack(err)
 				}
 				cmd := exec.Command("direnv", "allow")
 				err = cmd.Run()
+				if err != nil {
+					return errors.WithStack(err)
+				}
+			} else if source == "generate" {
+				// .envrc file creation
+				err := generate.CreateEnvrc(tmplFS, d.projectDir)
 				if err != nil {
 					return errors.WithStack(err)
 				}
@@ -747,6 +756,13 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
 
+	if featureflag.EnvConfig.Enabled() {
+		// Include env variables in config
+		for k, v := range d.configEnvs(env) {
+			env[k] = v
+		}
+	}
+
 	return env, nil
 }
 
@@ -879,6 +895,35 @@ func (d *Devbox) packages() []string {
 
 func (d *Devbox) pluginVirtenvPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
+}
+
+// configEnvs takes the computed env variables (nix + plugin) and adds env
+// variables defined in Config. It also parses variables in config
+// that are referenced by $VAR or ${VAR} and replaces them with
+// their value in the computed env variables. Note, this doesn't
+// allow env variables from outside the shell to be referenced so
+// no leaked variables are caused by this function.
+func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
+	mapperfunc := func(value string) string {
+		// Special variables that should return correct value
+		switch value {
+		case "PWD":
+			return d.ProjectDir()
+		}
+		// check if referenced variables exists in computed environment
+		if v, ok := computedEnv[value]; ok {
+			return v
+		}
+		return ""
+	}
+	configEnvs := map[string]string{}
+	// Include env variables in config
+	for key, value := range d.cfg.Env {
+		// parse values for "$VAR" or "${VAR}"
+		parsedValue := os.Expand(value, mapperfunc)
+		configEnvs[key] = parsedValue
+	}
+	return configEnvs
 }
 
 // Move to a utility package?

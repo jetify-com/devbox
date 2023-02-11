@@ -27,6 +27,8 @@ type Config struct {
 	// It's differentiated from Packages() which also includes global packages.
 	RawPackages []string `cue:"[...string]" json:"packages"`
 
+	// Env allows specifying env variables
+	Env map[string]string `json:"env,omitempty"`
 	// Shell configures the devbox shell environment.
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
