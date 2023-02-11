@@ -254,14 +254,6 @@ func (d *Devbox) Shell() error {
 		if err != nil {
 			return err
 		}
-	} else if featureflag.EnvConfig.Enabled() {
-		// TODO: this else-if can be removed when UnifiedEnv featureflag is
-		// removed. Since this logic already exists in computeNixEnv()
-
-		// Add env variables from config
-		for k, v := range d.configEnvs(env) {
-			env[k] = v
-		}
 	}
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
