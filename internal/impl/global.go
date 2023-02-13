@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,11 +71,43 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	return d.saveCfg()
 }
 
+func (d *Devbox) PullGlobal(path string) error {
+	u, err := url.Parse(path)
+	if err == nil && u.Scheme != "" {
+		return d.pullGlobalFromURL(u)
+	}
+	return d.pullGlobalFromPath(path)
+}
+
 func (d *Devbox) PrintGlobalList() error {
 	for _, p := range d.cfg.RawPackages {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil
+}
+
+func (d *Devbox) pullGlobalFromURL(u *url.URL) error {
+	cfg, err := readConfigFromURL(u)
+	if err != nil {
+		return err
+	}
+	return d.AddGlobal(cfg.RawPackages...)
+}
+
+func (d *Devbox) pullGlobalFromPath(path string) error {
+	config, err := readConfig(path)
+	if err != nil {
+		return err
+	}
+	return d.AddGlobal(config.RawPackages...)
+}
+
+func GlobalConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return filepath.Join(home, "/.config/devbox/"), nil
 }
 
 func globalProfilePath() (string, error) {
@@ -85,14 +118,6 @@ func globalProfilePath() (string, error) {
 	nixDirPath := filepath.Join(configPath, "nix")
 	_ = os.MkdirAll(nixDirPath, 0755)
 	return filepath.Join(nixDirPath, "profile"), nil
-}
-
-func GlobalConfigPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Join(home, "/.config/devbox/"), nil
 }
 
 // Checks if the global profile is in the path

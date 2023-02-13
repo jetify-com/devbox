@@ -6,6 +6,8 @@ package impl
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -91,6 +93,24 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	return cfg, err
+}
+
+func readConfigFromURL(url *url.URL) (*Config, error) {
+	res, err := http.Get(url.String())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer res.Body.Close()
+	cfg := &Config{}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	ext := filepath.Ext(url.Path)
+	if !cuecfg.IsSupportedExtension(ext) {
+		ext = ".json"
+	}
+	return cfg, cuecfg.Unmarshal(data, ext, cfg)
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {

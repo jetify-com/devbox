@@ -22,6 +22,7 @@ func globalCmd() *cobra.Command {
 
 	cmd.AddCommand(globalAddCmd())
 	cmd.AddCommand(globalListCmd())
+	cmd.AddCommand(globalPullCmd())
 	cmd.AddCommand(globalRemoveCmd())
 
 	return cmd
@@ -86,6 +87,16 @@ func globalListCmd() *cobra.Command {
 	}
 }
 
+func globalPullCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "pull <file> | <url>",
+		Short:   "Pulls a global config from a file or URL",
+		PreRunE: ensureNixInstalled,
+		RunE:    pullGlobalCmdFunc,
+		Args:    cobra.ExactArgs(1),
+	}
+}
+
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	path, err := devbox.GlobalConfigPath()
 	if err != nil {
@@ -131,4 +142,19 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 	return box.PrintGlobalList()
+}
+
+func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
+	path, err := devbox.GlobalConfigPath()
+	if err != nil {
+		return err
+	}
+	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
+		return errors.WithStack(err)
+	}
+	box, err := devbox.Open(path, cmd.OutOrStdout())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return box.PullGlobal(args[0])
 }
