@@ -1,0 +1,13 @@
+{
+  "packages": [
+    "php81",
+    "php81Packages.composer",
+    "php81Extensions.ds"
+  ],
+  "shell": {
+    "init_hook": null
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
+}
