@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
 
 type devcontainerObject struct {
@@ -78,11 +79,17 @@ func CreateEnvrc(tmplFS embed.FS, path string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	// setup values to pass to template
+	tmplData := struct {
+		EnvConfigFlagDisabled bool
+	}{
+		EnvConfigFlagDisabled: featureflag.EnvConfig.Disabled(),
+	}
 	// get .envrc content
 	tmplName := "envrc.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	err = t.Execute(file, nil)
+	err = t.Execute(file, tmplData)
 	if err != nil {
 		return errors.WithStack(err)
 	}
