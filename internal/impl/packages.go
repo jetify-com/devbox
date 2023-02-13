@@ -50,6 +50,10 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return nil
 	}
 
+	if err := d.ensureNixpkgsPrefetched(); err != nil {
+		return err
+	}
+
 	pkgs, err := d.pendingPackagesForInstallation()
 	if err != nil {
 		return err
@@ -61,75 +65,40 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 
 	var msg string
 	if len(pkgs) == 1 {
-		msg = fmt.Sprintf("Installing the following package: %s.\n", pkgs[0])
+		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
 	} else {
-		msg = fmt.Sprintf("Installing the following %d packages: %s.\n", len(pkgs), strings.Join(pkgs, ", "))
+		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgs, ", "))
 	}
-	color.New(color.FgGreen).Fprintf(d.writer, msg)
+	fmt.Fprintf(d.writer, "\n%s\n\n", msg)
 
 	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
 
-	// Append an empty string to prefetch the nixpkgs as a distinct step
-	// TODO savil. Its a bit odd to always show nixpkgs as being installed during `devbox add`.
-	// Can we inspect the nix store to check if its been pre-fetched already?
-	packages := append([]string{""}, pkgs...)
-
-	total := len(packages)
-	for idx, pkg := range packages {
+	total := len(pkgs)
+	for idx, pkg := range pkgs {
 		stepNum := idx + 1
 
-		var stepMsg string
-		if pkg == "" {
-			stepMsg = fmt.Sprintf("[%d/%d] nixpkgs registry", stepNum, total)
-		} else {
-			stepMsg = fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		}
+		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		fmt.Printf("%s\n", stepMsg)
 
-		var cmd *exec.Cmd
-		if pkg == "" {
-			cmd = exec.Command(
-				"nix", "flake", "prefetch",
-				"--extra-experimental-features", "nix-command flakes",
-				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
-			)
-			cmd.Stdout = d.writer
-		} else {
-			cmd = exec.Command(
-				"nix", "profile", "install",
-				"--profile", profileDir,
-				"--extra-experimental-features", "nix-command flakes",
-				nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
-			)
-			cmd.Stdout = &nixPackageInstallWriter{d.writer}
-		}
+		cmd := exec.Command(
+			"nix", "profile", "install",
+			"--profile", profileDir,
+			"--extra-experimental-features", "nix-command flakes",
+			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
+		)
+		cmd.Stdout = &nixPackageInstallWriter{d.writer}
 
 		cmd.Env = nix.DefaultEnv()
 		cmd.Stderr = cmd.Stdout
 		err = cmd.Run()
-
 		if err != nil {
-
-			// ExitErrors can give us more information so handle that specially.
-			var errorMsg string
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
-				errorMsg = fmt.Sprintf(
-					"Error running command %s. Exit status is %d. Command stderr: %s",
-					cmd, exitErr.ExitCode(), string(exitErr.Stderr),
-				)
-			} else {
-				errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
-			}
-			fmt.Fprint(d.writer, errorMsg)
-
 			fmt.Fprintf(d.writer, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
 
-			return errors.New(errorMsg)
+			return errors.New(commandErrorMessage(cmd, err))
 		}
 
 		fmt.Fprintf(d.writer, "%s: ", stepMsg)
@@ -254,4 +223,45 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}
 
 	return errors.WithStack(os.Remove(profileDir))
+}
+
+// ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
+func (d *Devbox) ensureNixpkgsPrefetched() error {
+	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded.\n")
+	cmd := exec.Command(
+		"nix", "flake", "prefetch",
+		"--extra-experimental-features", "nix-command flakes",
+		nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
+	)
+	cmd.Env = nix.DefaultEnv()
+	cmd.Stdout = d.writer
+	cmd.Stderr = cmd.Stdout
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
+		color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
+		return errors.New(commandErrorMessage(cmd, err))
+	}
+	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
+	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
+	return nil
+}
+
+// Consider moving to cobra middleware where this could be generalized. There is
+// a complication in that its current form is useful because of the exec.Cmd. This
+// would be missing in the middleware, unless we pass it along by wrapping the error in
+// another struct.
+func commandErrorMessage(cmd *exec.Cmd, err error) string {
+	var errorMsg string
+
+	// ExitErrors can give us more information so handle that specially.
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		errorMsg = fmt.Sprintf(
+			"Error running command %s. Exit status is %d. Command stderr: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr),
+		)
+	} else {
+		errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
+	}
+	return errorMsg
 }
