@@ -50,7 +50,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return nil
 	}
 
-	if err := d.ensureNixpkgsPresence(); err != nil {
+	if err := d.ensureNixpkgsPrefetched(); err != nil {
 		return err
 	}
 
@@ -94,15 +94,11 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		cmd.Env = nix.DefaultEnv()
 		cmd.Stderr = cmd.Stdout
 		err = cmd.Run()
-
 		if err != nil {
-			errorMsg := commandErrorMessage(cmd, err)
-			fmt.Fprintln(d.writer, errorMsg)
-
 			fmt.Fprintf(d.writer, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
 
-			return errors.New(errorMsg)
+			return errors.New(commandErrorMessage(cmd, err))
 		}
 
 		fmt.Fprintf(d.writer, "%s: ", stepMsg)
@@ -229,8 +225,8 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	return errors.WithStack(os.Remove(profileDir))
 }
 
-// ensureNixpkgsPresence runs the prefetch step to download the flake of the registry
-func (d *Devbox) ensureNixpkgsPresence() error {
+// ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
+func (d *Devbox) ensureNixpkgsPrefetched() error {
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded.\n")
 	cmd := exec.Command(
 		"nix", "flake", "prefetch",
@@ -243,15 +239,17 @@ func (d *Devbox) ensureNixpkgsPresence() error {
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 		color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-		errorMsg := commandErrorMessage(cmd, err)
-		fmt.Fprintln(d.writer, errorMsg)
-		return errors.New(errorMsg)
+		return errors.New(commandErrorMessage(cmd, err))
 	}
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	return nil
 }
 
+// Consider moving to cobra middleware where this could be generalized. There is
+// a complication in that its current form is useful because of the exec.Cmd. This
+// would be missing in the middleware, unless we pass it along by wrapping the error in
+// another struct.
 func commandErrorMessage(cmd *exec.Cmd, err error) string {
 	var errorMsg string
 
