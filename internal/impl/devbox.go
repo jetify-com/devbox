@@ -250,7 +250,7 @@ func (d *Devbox) Shell() error {
 	}
 
 	if featureflag.UnifiedEnv.Enabled() {
-		env, err = d.computeNixEnv()
+		env, err = d.computeNixEnv(false)
 		if err != nil {
 			return err
 		}
@@ -294,7 +294,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	env, err := d.computeNixEnv()
+	env, err := d.computeNixEnv(true)
 	if err != nil {
 		return err
 	}
@@ -701,11 +701,11 @@ func (d *Devbox) printPackageUpdateMessage(
 //
 // The PATH variable has some special handling. In short:
 // 1. Start with the PATH as defined by nix (through nix print-dev-env).
-// 2. TODO: Clean the host PATH of any nix paths.
+// 2. Clean the host PATH of any nix paths.
 // 3. Append the cleaned host PATH (tradeoff between reproducibility and ease of use).
 // 4. Prepend the devbox-managed nix profile path (which is needed to support devbox add inside shell--can we do without it?).
 // 5. Prepend the paths of any plugins (tbd whether it's actually needed).
-func (d *Devbox) computeNixEnv() (map[string]string, error) {
+func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
@@ -754,7 +754,17 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 	nixPath := env["PATH"]
 	hostPath := nix.CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
-	env["PATH"] = fmt.Sprintf("%s:%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath, hostPath)
+	// NOTE: for devbox shell, we need to defer the PATH setting, because a user's init file may prepend
+	// stuff to PATH, which will then take precedence over the devbox-set PATH. Instead, we do the path
+	// prepending in shellrc.tmpl. I chose to use the `setFullPath` variable instead of something like
+	// `isShell` to discourage the addition of more logic that makes shell/run differ more.
+	pathPrepend := fmt.Sprintf("%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath)
+	if setFullPath {
+		env["PATH"] = fmt.Sprintf("%s:%s", pathPrepend, hostPath)
+	} else {
+		env["PATH"] = hostPath
+		env["DEVBOX_PATH_PREPEND"] = pathPrepend
+	}
 
 	if featureflag.EnvConfig.Enabled() {
 		// Include env variables in config
