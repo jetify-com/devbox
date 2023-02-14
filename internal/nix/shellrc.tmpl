@@ -35,7 +35,7 @@ eval $shellHook
 
 {{ if .UnifiedEnv -}}
 PATH="$DEVBOX_PATH_PREPEND:$PATH"
-{{ else }}
+{{- else -}}
 PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
