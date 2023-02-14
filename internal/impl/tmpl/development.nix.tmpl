@@ -1,22 +1,24 @@
 let
-  pkgs = import (fetchTarball {
-    url = "{{ .NixpkgsInfo.URL }}";
-    {{- if .NixpkgsInfo.Sha256 }}
-    sha256 = "{{ .NixpkgsInfo.Sha256 }}";
-    {{- end }}
-  }) {
-  };
+  pkgs = import
+    (fetchTarball {
+      url = "{{ .NixpkgsInfo.URL }}";
+      {{- if .NixpkgsInfo.Sha256 }}
+      sha256 = "{{ .NixpkgsInfo.Sha256 }}";
+      {{- end }}
+    })
+    { };
   {{- range .Definitions}}
     {{.}}
   {{ end }}
-in with pkgs;
+in
+with pkgs;
 buildEnv {
   ignoreCollisions = true;
   name = "devbox-development";
   paths = [
-  {{- range .DevPackages}}
-    {{.}}
-  {{- end }}
+    {{- range .DevPackages}}
+      {{.}}
+    {{- end }}
   ];
-  pathsToLink = [ "/bin" "/share" "/lib"];
+  pathsToLink = [ "/bin" "/share" "/lib" ];
 }

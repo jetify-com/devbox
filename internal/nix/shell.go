@@ -396,12 +396,9 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		}
 	}()
 
-	pathPrepend := ""
-	if featureflag.UnifiedEnv.Disabled() {
-		pathPrepend = s.profileDir + "/bin"
-		if s.pkgConfigDir != "" {
-			pathPrepend = s.pkgConfigDir + ":" + pathPrepend
-		}
+	pathPrepend := s.profileDir + "/bin"
+	if s.pkgConfigDir != "" {
+		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
 	}
 
 	err = shellrcTmpl.Execute(shellrcf, struct {
@@ -414,7 +411,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		ScriptCommand    string
 		ShellStartTime   string
 		HistoryFile      string
-		RunNixShellHook  bool
+		UnifiedEnv       bool
 	}{
 		ProjectDir:       s.projectDir,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
@@ -425,7 +422,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
-		RunNixShellHook:  featureflag.UnifiedEnv.Enabled(),
+		UnifiedEnv:       featureflag.UnifiedEnv.Enabled(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
