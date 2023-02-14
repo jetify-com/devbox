@@ -16,7 +16,7 @@ content readable.
 
 */ -}}
 
-{{- if .RunNixShellHook -}}
+{{- if .UnifiedEnv -}}
 # Run the shell hook defined in shell.nix or flake.nix
 eval $shellHook
 
@@ -33,10 +33,16 @@ eval $shellHook
 
 # Begin Devbox Post-init Hook
 
-{{ if .PathPrepend -}}
+{{ if .UnifiedEnv -}}
+PATH="$DEVBOX_PATH_PREPEND:$PATH"
+{{- else -}}
 PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
+{{- /*
+We need to set HISTFILE here because when starting a new shell, the shell will ignore the
+existing value of HISTFILE.
+*/ -}}
 {{- if .HistoryFile }}
 HISTFILE={{.HistoryFile}}
 {{- end }}
