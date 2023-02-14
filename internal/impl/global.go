@@ -87,19 +87,35 @@ func (d *Devbox) PrintGlobalList() error {
 }
 
 func (d *Devbox) pullGlobalFromURL(u *url.URL) error {
+	fmt.Fprintf(d.writer, "Pulling global config from %s\n", u)
 	cfg, err := readConfigFromURL(u)
 	if err != nil {
 		return err
 	}
-	return d.AddGlobal(cfg.RawPackages...)
+	return d.addFromPull(cfg.RawPackages)
 }
 
 func (d *Devbox) pullGlobalFromPath(path string) error {
-	config, err := readConfig(path)
+	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
+	cfg, err := readConfig(path)
 	if err != nil {
 		return err
 	}
-	return d.AddGlobal(config.RawPackages...)
+	return d.addFromPull(cfg.RawPackages)
+}
+
+func (d *Devbox) addFromPull(pkgs []string) error {
+	diff, _ := lo.Difference(pkgs, d.cfg.RawPackages)
+	if len(diff) == 0 {
+		fmt.Fprint(d.writer, "No new packages to install\n")
+		return nil
+	}
+	fmt.Fprintf(
+		d.writer,
+		"Installing the following packages: %s\n",
+		strings.Join(diff, ", "),
+	)
+	return d.AddGlobal(diff...)
 }
 
 func GlobalConfigPath() (string, error) {
