@@ -442,7 +442,7 @@ func (d *Devbox) PrintEnv() (string, error) {
 		}
 		return script, nil
 	}
-	envs, err := d.computeNixEnv()
+	envs, err := d.computeNixEnv(false)
 	if err != nil {
 		return "", err
 	}
