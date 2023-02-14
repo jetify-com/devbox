@@ -1,0 +1,56 @@
+# A single-line script should execute
+exec devbox run single_line
+stdout 'single line'
+
+# A multi-line script should execute
+exec devbox run multi_line
+stdout 'second line'
+stdout 'first line'
+
+# Ensure init hook is being run
+exec devbox run hook_runs
+stdout 'hook'
+
+# Use a package installed by devbox through a script
+exec devbox run hello_with_script
+stdout 'with script'
+
+# Use a package installed by devbox directly
+exec devbox run -- hello -g directly
+stdout 'directly'
+
+# TBD: Bad init hook should result in non-zero exit code
+#exec devbox --config bad_init run test
+#! stdout 'test'
+
+# NOTE: make sure each script prints out something unique. Otherwise,
+# we might get false positives when checking stdout.
+-- devbox.json --
+{
+  "packages": [
+    "hello"
+  ],
+  "shell": {
+    "init_hook": "export HOOK=hook",
+    "scripts": {
+      "single_line": "echo \"single line\"",
+      "multi_line": [
+        "echo \"first line\"",
+        "echo \"second line\""
+      ],
+      "hook_runs": "echo $HOOK",
+      "hello_with_script": "hello -g \"with script\""
+    }
+  }
+}
+
+-- bad_init/devbox.json --
+{
+  "packages": [],
+  "shell": {
+    "init_hook": "hello",
+    "scripts": {
+      "test": "echo \"test\""
+    }
+  }
+}
