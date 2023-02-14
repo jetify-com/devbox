@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
@@ -51,10 +51,9 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		return err
 	}
 	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
-		fmt.Fprintf(
+		ux.Fwarning(
 			d.writer,
-			"%s the following packages were not found in your global devbox.json: %s\n",
-			color.HiYellowString("Warning:"),
+			"the following packages were not found in your global devbox.json: %s\n",
 			strings.Join(missing, ", "),
 		)
 	}
@@ -92,7 +91,7 @@ func (d *Devbox) pullGlobalFromURL(u *url.URL) error {
 	if err != nil {
 		return err
 	}
-	return d.addFromPull(cfg.RawPackages)
+	return d.addFromPull(cfg)
 }
 
 func (d *Devbox) pullGlobalFromPath(path string) error {
@@ -101,11 +100,17 @@ func (d *Devbox) pullGlobalFromPath(path string) error {
 	if err != nil {
 		return err
 	}
-	return d.addFromPull(cfg.RawPackages)
+	return d.addFromPull(cfg)
 }
 
-func (d *Devbox) addFromPull(pkgs []string) error {
-	diff, _ := lo.Difference(pkgs, d.cfg.RawPackages)
+func (d *Devbox) addFromPull(pullCfg *Config) error {
+	if pullCfg.Nixpkgs.Commit != plansdk.DefaultNixpkgsCommit {
+		// TODO: For now show this warning, but we do plan to allow packages from
+		// multiple commits in the future
+		ux.Fwarning(d.writer, "nixpkgs commit mismatch. Using local one by default\n")
+	}
+
+	diff, _ := lo.Difference(pullCfg.RawPackages, d.cfg.RawPackages)
 	if len(diff) == 0 {
 		fmt.Fprint(d.writer, "No new packages to install\n")
 		return nil

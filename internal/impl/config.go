@@ -4,7 +4,6 @@
 package impl
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,13 +12,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 // Config defines a devbox environment as JSON.
@@ -64,12 +63,10 @@ func (c *Config) Packages(w io.Writer) []string {
 	}
 	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchWarningShown {
 		commitMismatchWarningShown = true
-		color.New(color.FgHiYellow).Fprint(w, "Warning: ")
-		fmt.Fprintln(
-			w,
+		ux.Fwarning(w,
 			"local and global devbox.json have different nixpkgs commits. "+
 				"Will use the local version. This may lead to version mismatch and "+
-				"nix store bloat.")
+				"nix store bloat.\n")
 	}
 	return append(c.RawPackages, global.RawPackages...)
 }
