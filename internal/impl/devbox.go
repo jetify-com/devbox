@@ -742,19 +742,19 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 	// Copy over (and overwrite) vars that we explicitly "leak", as well as DEVBOX_ vars.
 	for _, kv := range os.Environ() {
 		parts := strings.SplitN(kv, "=", 2)
-		k := parts[0]
-		v := parts[1]
+		key := parts[0]
+		val := parts[1]
 
 		if strings.HasPrefix(parts[0], "DEVBOX_") {
-			env[k] = v
+			env[key] = val
 		}
 
-		if _, ok := leakedVars[k]; ok {
-			env[k] = v
+		if _, ok := leakedVars[key]; ok {
+			env[key] = val
 		}
 
-		if _, ok := leakedVarsForShell[k]; ok {
-			env[k] = v
+		if _, ok := leakedVarsForShell[key]; ok {
+			env[key] = val
 		}
 	}
 
