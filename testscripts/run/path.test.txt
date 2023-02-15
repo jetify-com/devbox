@@ -1,0 +1,32 @@
+exec devbox init
+exec devbox add which
+
+# Non-default nix profiles are removed from PATH
+# NOTE: NIX_PROFILES is automatically set to contain the /nix/var/nix system profile, as
+# well as one at $HOME/.nix-profile
+env HOME=/home/test
+exec devbox run echo '$PATH'
+! stdout '/home/test/.nix-profile'
+
+# Ensure nix is accessible from the default profile
+exec devbox run which nix
+stdout '/nix/var/nix/profiles/default/bin/nix'
+
+# Relative paths in PATH are removed, others are cleaned
+env PATH=./relative/path:/some//dirty/../clean/path:$PATH
+exec devbox run echo '$PATH'
+! stdout 'relative/path'
+! stdout '/some//dirty/../clean/path'
+stdout '/some/clean/path'
+
+# Path contains path to installed nix packages
+stdout '-which-'
+
+# Path contains plugin virtual env path
+stdout '.devbox/virtenv/bin'
+
+# Path contains devbox-managed nix profiel path
+stdout '.devbox/nix/profile/default/bin'
+
+# TODO: verify that paths appear in desired order.
+# TODO: verify that bashrc file prepends do not prepend before nix paths.
