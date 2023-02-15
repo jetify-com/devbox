@@ -98,10 +98,7 @@ func globalPullCmd() *cobra.Command {
 }
 
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalConfigPath()
-	if err != nil {
-		return err
-	}
+	path := devbox.GlobalDataPath()
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -114,10 +111,7 @@ func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalConfigPath()
-	if err != nil {
-		return err
-	}
+	path := devbox.GlobalDataPath()
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -130,10 +124,7 @@ func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalConfigPath()
-	if err != nil {
-		return err
-	}
+	path := devbox.GlobalDataPath()
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -145,10 +136,7 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalConfigPath()
-	if err != nil {
-		return err
-	}
+	path := devbox.GlobalDataPath()
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
