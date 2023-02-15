@@ -55,7 +55,7 @@ var commitMismatchWarningShown = false
 func (c *Config) Packages(w io.Writer) []string {
 	dataPath, err := GlobalDataPath()
 	if err != nil {
-		ux.Ferror(w, "unable to get devbox global data path: %s", err)
+		ux.Ferror(w, "unable to get devbox global data path: %s\n", err)
 	}
 	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
 	if err != nil {
