@@ -15,6 +15,7 @@ with pkgs;
 mkShell {
   shellHook =
     ''
+      {{ if not unifiedEnv }}
       # We're technically no longer in a Nix shell after this hook because we
       # exec a devbox shell.
       export IN_NIX_SHELL=0
@@ -35,6 +36,8 @@ mkShell {
 
       {{ if debug }}
       echo "PATH=$PATH"
+      {{- end }}
+
       {{- end }}
     '';
   packages = [

@@ -223,7 +223,7 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 		extraEnv, extraArgs := s.shellRCOverrides(shellrc)
 
 		cmd = exec.Command(s.binPath)
-		cmd.Env = append(filterVars(s.env, buildAllowList(s.env)), extraEnv...)
+		cmd.Env = append(s.env, extraEnv...)
 		cmd.Args = append(cmd.Args, extraArgs...)
 		debug.Log("Executing shell %s with args: %v", s.binPath, cmd.Args)
 	} else {

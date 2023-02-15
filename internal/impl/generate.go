@@ -93,9 +93,10 @@ func toJSON(a any) string {
 }
 
 var templateFuncs = template.FuncMap{
-	"json":     toJSON,
-	"contains": strings.Contains,
-	"debug":    debug.IsEnabled,
+	"json":       toJSON,
+	"contains":   strings.Contains,
+	"debug":      debug.IsEnabled,
+	"unifiedEnv": featureflag.UnifiedEnv.Enabled,
 }
 
 func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {

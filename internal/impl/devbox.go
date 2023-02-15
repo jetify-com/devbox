@@ -710,8 +710,9 @@ func (d *Devbox) printPackageUpdateMessage(
 // devbox execution commands (i.e. devbox run, shell). In short, the environment is
 // calculated as follows:
 // 1. Start with the output of nix print-dev-env
-// 2. Allow a limited set of variables (leakedVars) in the host machine to "leak" in (e.g. HOME).
+// 2. Allow a limited set of variables (e.g. leakedVars) in the host machine to "leak" in (e.g. HOME).
 // 3. Include any plugin env vars.
+// 4. Include any user-defined env vars from devbox.json.
 //
 // The PATH variable has some special handling. In short:
 // 1. Start with the PATH as defined by nix (through nix print-dev-env).
@@ -738,13 +739,32 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 		}
 	}
 
-	// Overwrite/leak whitelisted vars into nixEnv:
-	for name, leak := range leakedVars {
-		if leak {
-			env[name] = os.Getenv(name)
+	// Copy over (and overwrite) vars that we explicitly "leak", as well as DEVBOX_ vars.
+	for _, kv := range os.Environ() {
+		key, val, found := strings.Cut(kv, "=")
+		if !found {
+			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+		}
+
+		if strings.HasPrefix(key, "DEVBOX_") {
+			env[key] = val
+		}
+
+		if _, ok := leakedVars[key]; ok {
+			env[key] = val
+		}
+
+		if _, ok := leakedVarsForShell[key]; ok {
+			env[key] = val
 		}
 	}
 
+	// These variables are only needed for shell, but we include them here in the computed env
+	// for both shell and run in order to be as identical as possible.
+	env["NIX_PKGS_ALLOW_UNFREE"] = "1"     // Only for shell because we don't expect nix calls within run
+	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
+
+	// Add any vars defined in plugins.
 	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)
 	if err != nil {
 		return nil, err
@@ -753,11 +773,13 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 		env[k] = v
 	}
 
-	// TODO: add shell-specific vars, including:
-	// - NIXPKGS_ALLOW_UNFREE=1 (not needed in run because we don't expect nix calls there)
-	// - __ETC_PROFILE_NIX_SOURCED=1 (not needed in run because we don't expect rc files to try to load nix profiles)
-	// - HISTFILE (not needed in run because it's non-interactive)
-	// - (some of) nix.envToKeep.
+	// Include env variables in devbox.json
+	if featureflag.EnvConfig.Enabled() {
+		// TODO: if the uer defines PATH here, how should it be handled?
+		for k, v := range d.configEnvs(env) {
+			env[k] = v
+		}
+	}
 
 	// PATH handling.
 	pluginVirtenvPath := d.pluginVirtenvPath() // TODO: consider removing this; not being used?
@@ -778,13 +800,6 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 	} else {
 		env["PATH"] = hostPath
 		env["DEVBOX_PATH_PREPEND"] = pathPrepend
-	}
-
-	if featureflag.EnvConfig.Enabled() {
-		// Include env variables in config
-		for k, v := range d.configEnvs(env) {
-			env[k] = v
-		}
 	}
 
 	return env, nil
@@ -979,4 +994,48 @@ var leakedVars = map[string]bool{
 	"TEMP":    true,
 	"TMPDIR":  true,
 	"TEMPDIR": true,
+}
+
+var leakedVarsForShell = map[string]bool{
+	// POSIX
+	//
+	// Variables that are part of the POSIX standard.
+	"OLDPWD": true,
+	"PWD":    true,
+	"TERM":   true,
+	"TZ":     true,
+	"USER":   true,
+
+	// POSIX Locale
+	//
+	// Variables that are part of the POSIX standard which define
+	// the shell's locale.
+	"LC_ALL":      true, // Sets and overrides all of the variables below.
+	"LANG":        true, // Default to use for any of the variables below that are unset or null.
+	"LC_COLLATE":  true, // Collation order.
+	"LC_CTYPE":    true, // Character classification and case conversion.
+	"LC_MESSAGES": true, // Formats of informative and diagnostic messages and interactive responses.
+	"LC_MONETARY": true, // Monetary formatting.
+	"LC_NUMERIC":  true, // Numeric, non-monetary formatting.
+	"LC_TIME":     true, // Date and time formats.
+
+	// Common
+	//
+	// Variables that most programs agree on, but aren't strictly
+	// part of POSIX.
+	"TERM_PROGRAM":         true, // Name of the terminal the shell is running in.
+	"TERM_PROGRAM_VERSION": true, // The version of TERM_PROGRAM.
+	"SHLVL":                true, // The number of nested shells.
+
+	// Apple Terminal
+	//
+	// Special-cased variables that macOS's Terminal.app sets before
+	// launching the shell. It's not clear what exactly all of these do,
+	// but it seems like omitting them can cause problems.
+	"TERM_SESSION_ID":        true,
+	"SHELL_SESSIONS_DISABLE": true, // Respect session save/resume setting (see /etc/zshrc_Apple_Terminal).
+	"SECURITYSESSIONID":      true,
+
+	// SSH variables
+	"SSH_TTY": true, // Used by devbox telemetry logging
 }
