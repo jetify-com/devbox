@@ -31,6 +31,7 @@ import (
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/slices"
 )
 
@@ -181,10 +182,9 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	d.cfg.RawPackages, missingPkgs = lo.Difference(d.cfg.RawPackages, pkgs)
 
 	if len(missingPkgs) > 0 {
-		fmt.Fprintf(
+		ux.Fwarning(
 			d.writer,
-			"%s the following packages were not found in your devbox.json: %s\n",
-			color.HiYellowString("Warning:"),
+			"the following packages were not found in your devbox.json: %s\n",
 			strings.Join(missingPkgs, ", "),
 		)
 	}

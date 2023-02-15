@@ -4,20 +4,21 @@
 package impl
 
 import (
-	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 // Config defines a devbox environment as JSON.
@@ -62,12 +63,10 @@ func (c *Config) Packages(w io.Writer) []string {
 	}
 	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchWarningShown {
 		commitMismatchWarningShown = true
-		color.New(color.FgHiYellow).Fprint(w, "Warning: ")
-		fmt.Fprintln(
-			w,
+		ux.Fwarning(w,
 			"local and global devbox.json have different nixpkgs commits. "+
 				"Will use the local version. This may lead to version mismatch and "+
-				"nix store bloat.")
+				"nix store bloat.\n")
 	}
 	return append(c.RawPackages, global.RawPackages...)
 }
@@ -91,6 +90,24 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	return cfg, err
+}
+
+func readConfigFromURL(url *url.URL) (*Config, error) {
+	res, err := http.Get(url.String())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer res.Body.Close()
+	cfg := &Config{}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	ext := filepath.Ext(url.Path)
+	if !cuecfg.IsSupportedExtension(ext) {
+		ext = ".json"
+	}
+	return cfg, cuecfg.Unmarshal(data, ext, cfg)
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {

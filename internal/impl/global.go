@@ -5,16 +5,17 @@ package impl
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
@@ -50,10 +51,9 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		return err
 	}
 	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
-		fmt.Fprintf(
+		ux.Fwarning(
 			d.writer,
-			"%s the following packages were not found in your global devbox.json: %s\n",
-			color.HiYellowString("Warning:"),
+			"the following packages were not found in your global devbox.json: %s\n",
 			strings.Join(missing, ", "),
 		)
 	}
@@ -70,11 +70,65 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	return d.saveCfg()
 }
 
+func (d *Devbox) PullGlobal(path string) error {
+	u, err := url.Parse(path)
+	if err == nil && u.Scheme != "" {
+		return d.pullGlobalFromURL(u)
+	}
+	return d.pullGlobalFromPath(path)
+}
+
 func (d *Devbox) PrintGlobalList() error {
 	for _, p := range d.cfg.RawPackages {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil
+}
+
+func (d *Devbox) pullGlobalFromURL(u *url.URL) error {
+	fmt.Fprintf(d.writer, "Pulling global config from %s\n", u)
+	cfg, err := readConfigFromURL(u)
+	if err != nil {
+		return err
+	}
+	return d.addFromPull(cfg)
+}
+
+func (d *Devbox) pullGlobalFromPath(path string) error {
+	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
+	cfg, err := readConfig(path)
+	if err != nil {
+		return err
+	}
+	return d.addFromPull(cfg)
+}
+
+func (d *Devbox) addFromPull(pullCfg *Config) error {
+	if pullCfg.Nixpkgs.Commit != plansdk.DefaultNixpkgsCommit {
+		// TODO: For now show this warning, but we do plan to allow packages from
+		// multiple commits in the future
+		ux.Fwarning(d.writer, "nixpkgs commit mismatch. Using local one by default\n")
+	}
+
+	diff, _ := lo.Difference(pullCfg.RawPackages, d.cfg.RawPackages)
+	if len(diff) == 0 {
+		fmt.Fprint(d.writer, "No new packages to install\n")
+		return nil
+	}
+	fmt.Fprintf(
+		d.writer,
+		"Installing the following packages: %s\n",
+		strings.Join(diff, ", "),
+	)
+	return d.AddGlobal(diff...)
+}
+
+func GlobalConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return filepath.Join(home, "/.config/devbox/"), nil
 }
 
 func globalProfilePath() (string, error) {
@@ -85,14 +139,6 @@ func globalProfilePath() (string, error) {
 	nixDirPath := filepath.Join(configPath, "nix")
 	_ = os.MkdirAll(nixDirPath, 0755)
 	return filepath.Join(nixDirPath, "profile"), nil
-}
-
-func GlobalConfigPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Join(home, "/.config/devbox/"), nil
 }
 
 // Checks if the global profile is in the path

@@ -33,6 +33,7 @@ type Devbox interface {
 	ListScripts() []string
 	PrintEnv() (string, error)
 	PrintGlobalList() error
+	PullGlobal(path string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(pkgs ...string) error

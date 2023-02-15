@@ -104,3 +104,12 @@ func WriteFile(path string, value any) error {
 	}
 	return nil
 }
+
+func IsSupportedExtension(ext string) bool {
+	switch ext {
+	case ".json", ".yml", ".yaml", ".toml", ".xml":
+		return true
+	default:
+		return false
+	}
+}
