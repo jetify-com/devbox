@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/pflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type DebugMiddleware struct {
@@ -54,7 +55,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	}
 	if usererr.HasUserMessage(runErr) {
 		if usererr.IsWarning(runErr) {
-			color.Yellow("\nWarning: %s\n\n", runErr.Error())
+			ux.Fwarning(cmd.ErrOrStderr(), runErr.Error())
 		} else {
 			color.Red("\nError: " + runErr.Error() + "\n\n")
 		}

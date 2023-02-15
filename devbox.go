@@ -67,6 +67,6 @@ func IsDevboxShellEnabled() bool {
 	return impl.IsDevboxShellEnabled()
 }
 
-func GlobalDataPath() string {
+func GlobalDataPath() (string, error) {
 	return impl.GlobalDataPath()
 }

@@ -53,7 +53,11 @@ type Stage struct {
 var commitMismatchWarningShown = false
 
 func (c *Config) Packages(w io.Writer) []string {
-	global, err := readConfig(filepath.Join(GlobalDataPath(), "devbox.json"))
+	dataPath, err := GlobalDataPath()
+	if err != nil {
+		ux.Ferror(w, "unable to get devbox global data path: %s", err)
+	}
+	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
 	if err != nil {
 		return c.RawPackages
 	}

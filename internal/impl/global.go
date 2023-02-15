@@ -30,7 +30,10 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		}
 	}
 	var added []string
-	profilePath := GlobalNixProfilePath()
+	profilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return err
+	}
 	for _, pkg := range pkgs {
 		if err := nix.ProfileInstall(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
@@ -55,7 +58,10 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		)
 	}
 	var removed []string
-	profilePath := GlobalNixProfilePath()
+	profilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return err
+	}
 	for _, pkg := range lo.Intersect(d.cfg.RawPackages, pkgs) {
 		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
@@ -121,22 +127,32 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 	return d.AddGlobal(diff...)
 }
 
-func GlobalDataPath() string {
+func GlobalDataPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
-	_ = os.MkdirAll(path, 0755)
-	return path
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return "", errors.WithStack(err)
+	}
+	return path, nil
 }
 
-func GlobalNixProfilePath() string {
-	return filepath.Join(GlobalDataPath(), "profile")
+func GlobalNixProfilePath() (string, error) {
+	path, err := GlobalDataPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(path, "profile"), nil
 }
 
 // Checks if the global profile is in the path
 func ensureGlobalProfileInPath() error {
+	nixProfilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return err
+	}
 	currentPath := xdg.DataSubpath("devbox/global/current")
 	// For now default is always current. In the future we will support multiple
 	// and allow user to switch.
-	if err := os.Symlink(GlobalNixProfilePath(), currentPath); err != nil && !os.IsExist(err) {
+	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
 		return errors.WithStack(err)
 	}
 	binPath := filepath.Join(currentPath, "bin")

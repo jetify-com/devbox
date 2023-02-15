@@ -91,6 +91,7 @@ func globalPullCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "pull <file> | <url>",
 		Short:   "Pulls a global config from a file or URL",
+		Long:    "Pulls a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
 		RunE:    pullGlobalCmdFunc,
 		Args:    cobra.ExactArgs(1),
@@ -98,7 +99,10 @@ func globalPullCmd() *cobra.Command {
 }
 
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path := devbox.GlobalDataPath()
+	path, err := devbox.GlobalDataPath()
+	if err != nil {
+		return err
+	}
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -111,7 +115,10 @@ func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path := devbox.GlobalDataPath()
+	path, err := devbox.GlobalDataPath()
+	if err != nil {
+		return err
+	}
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -124,7 +131,10 @@ func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path := devbox.GlobalDataPath()
+	path, err := devbox.GlobalDataPath()
+	if err != nil {
+		return err
+	}
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
@@ -136,7 +146,10 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path := devbox.GlobalDataPath()
+	path, err := devbox.GlobalDataPath()
+	if err != nil {
+		return err
+	}
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
