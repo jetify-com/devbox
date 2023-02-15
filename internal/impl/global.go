@@ -16,13 +16,13 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
+// In the future we will support multiple global profiles
+const currentGlobalProfile = "default"
+
 func (d *Devbox) AddGlobal(pkgs ...string) error {
-	profilePath, err := globalProfilePath()
-	if err != nil {
-		return err
-	}
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
 		if !nix.FlakesPkgExists(plansdk.DefaultNixpkgsCommit, pkg) {
@@ -30,6 +30,10 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		}
 	}
 	var added []string
+	profilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return err
+	}
 	for _, pkg := range pkgs {
 		if err := nix.ProfileInstall(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
@@ -46,10 +50,6 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
-	profilePath, err := globalProfilePath()
-	if err != nil {
-		return err
-	}
 	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
 		ux.Fwarning(
 			d.writer,
@@ -58,6 +58,10 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		)
 	}
 	var removed []string
+	profilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return err
+	}
 	for _, pkg := range lo.Intersect(d.cfg.RawPackages, pkgs) {
 		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
@@ -123,31 +127,35 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 	return d.AddGlobal(diff...)
 }
 
-func GlobalConfigPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
+func GlobalDataPath() (string, error) {
+	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
+	if err := os.MkdirAll(path, 0755); err != nil {
 		return "", errors.WithStack(err)
 	}
-	return filepath.Join(home, "/.config/devbox/"), nil
+	return path, nil
 }
 
-func globalProfilePath() (string, error) {
-	configPath, err := GlobalConfigPath()
+func GlobalNixProfilePath() (string, error) {
+	path, err := GlobalDataPath()
 	if err != nil {
 		return "", err
 	}
-	nixDirPath := filepath.Join(configPath, "nix")
-	_ = os.MkdirAll(nixDirPath, 0755)
-	return filepath.Join(nixDirPath, "profile"), nil
+	return filepath.Join(path, "profile"), nil
 }
 
 // Checks if the global profile is in the path
 func ensureGlobalProfileInPath() error {
-	profilePath, err := globalProfilePath()
+	nixProfilePath, err := GlobalNixProfilePath()
 	if err != nil {
 		return err
 	}
-	binPath := filepath.Join(profilePath, "bin")
+	currentPath := xdg.DataSubpath("devbox/global/current")
+	// For now default is always current. In the future we will support multiple
+	// and allow user to switch.
+	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
+		return errors.WithStack(err)
+	}
+	binPath := filepath.Join(currentPath, "bin")
 	if !strings.Contains(os.Getenv("PATH"), binPath) {
 		return usererr.NewWarning(
 			"devbox global profile is not in your PATH. Add `export PATH=$PATH:%s` to your shell config to fix this.", binPath,
