@@ -1,0 +1,54 @@
+{
+  description = "Nix Packages of php, php packages, and php extensions. These are jointly installed because php is recompiled with extensions.";
+  inputs = {
+      nixpkgs.url = "https://github.com/nixos/nixpkgs/archive/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62.tar.gz";
+
+      flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+
+        flake-utils.lib.eachDefaultSystem (system:
+        let pkgs = nixpkgs.legacyPackages.${system};
+            {{- range .Definitions}}
+            {{.}}
+            {{- end }}
+
+            # Generate a buildEnv so that the default package installed by this flake has
+            # all the devbox-packages. We don't use this in the devbox CLI code, but adding
+            # for completeness, and as a sane defaultPackage.
+            phpPackages = pkgs.buildEnv {
+                ignoreCollisions = true;
+                name="php-packages";
+                paths = with pkgs; [
+                    {{- range .DevPackages}}
+                    {{- if isPhpRelatedPackage . }}
+                    {{.}}
+                    {{- end -}}
+                    {{end }}
+                ];
+                pathsToLink = [ "/bin" "/share" "/lib" ];
+            };
+
+        in
+        with pkgs;
+        {
+             # We use `legacyPackages` to enable nix packages like `php81Packages.composer`.
+             #
+             # `legacyPackages` must be used instead of `packages` because flake packages must be derivations
+             # and flakes ban derivations nested in an attribute set. So, for example, the following code does not work:
+             # ```
+             # packages.php81Packages.composer = php81Packages.composer
+             # ```
+             # Flakes requires this "to enable efficient queries for the set of packages."
+             # ref. https://discourse.nixos.org/t/flake-questions/8741
+             {{- range .DevPackages}}
+             {{- if isPhpRelatedPackage . }}
+             legacyPackages.{{.}} = {{.}};
+             {{- end -}}
+             {{ end }}
+
+             # Flakes require a defaultPackage to be specified, so we must include this.
+             defaultPackage = phpPackages;
+        });
+}
