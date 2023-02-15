@@ -128,7 +128,7 @@ func GlobalDataPath() string {
 }
 
 func GlobalNixProfilePath() string {
-	return filepath.Join(GlobalDataPath(), "nix-profile")
+	return filepath.Join(GlobalDataPath(), "profile")
 }
 
 // Checks if the global profile is in the path
@@ -136,10 +136,10 @@ func ensureGlobalProfileInPath() error {
 	currentPath := xdg.DataSubpath("devbox/global/current")
 	// For now default is always current. In the future we will support multiple
 	// and allow user to switch.
-	if err := os.Symlink(GlobalDataPath(), currentPath); err != nil && !os.IsExist(err) {
+	if err := os.Symlink(GlobalNixProfilePath(), currentPath); err != nil && !os.IsExist(err) {
 		return errors.WithStack(err)
 	}
-	binPath := filepath.Join(currentPath, "nix-profile", "bin")
+	binPath := filepath.Join(currentPath, "bin")
 	if !strings.Contains(os.Getenv("PATH"), binPath) {
 		return usererr.NewWarning(
 			"devbox global profile is not in your PATH. Add `export PATH=$PATH:%s` to your shell config to fix this.", binPath,
