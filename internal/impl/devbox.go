@@ -763,6 +763,7 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 	// for both shell and run in order to be as identical as possible.
 	env["NIX_PKGS_ALLOW_UNFREE"] = "1"     // Only for shell because we don't expect nix calls within run
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
+	env["DEVBOX_SHELL_ENABLED"] = "1"      // Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 
 	// Add any vars defined in plugins.
 	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)

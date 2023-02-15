@@ -1,0 +1,4 @@
+# Do not support shell inception
+exec devbox init
+! exec devbox run devbox shell
+stdout 'Error: You are already in an active devbox shell.'
