@@ -20,7 +20,7 @@ mkShell {
       export IN_NIX_SHELL=0
       export DEVBOX_SHELL_ENABLED=1
 
-      # Undo the effects of `nix-shell --pure` on SSL certs.
+      # Undo the effects of "nix-shell --pure" on SSL certs.
       # See https://github.com/NixOS/nixpkgs/blob/dae204faa0243b4d0c0234a5f5f83a2549ecb5b7/pkgs/stdenv/generic/setup.sh#L677-L685
       if [ "$NIX_SSL_CERT_FILE" = "/no-cert-file.crt" ]; then
       	unset NIX_SSL_CERT_FILE

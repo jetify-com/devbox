@@ -430,15 +430,29 @@ func (d *Devbox) Exec(cmds ...string) error {
 	return nix.Exec(nixDir, cmds, env)
 }
 
-func (d *Devbox) PluginEnv() (string, error) {
-	pluginEnvs, err := plugin.Env(d.packages(), d.projectDir)
+func (d *Devbox) PrintEnv() (string, error) {
+	script := ""
+	if featureflag.UnifiedEnv.Disabled() {
+		envs, err := plugin.Env(d.packages(), d.projectDir)
+		if err != nil {
+			return "", err
+		}
+		for k, v := range envs {
+			script += fmt.Sprintf("export %s=%s\n", k, v)
+		}
+		return script, nil
+	}
+	envs, err := d.computeNixEnv(false)
 	if err != nil {
 		return "", err
 	}
-	script := ""
-	for k, v := range pluginEnvs {
-		script += fmt.Sprintf("export %s=%s\n", k, v)
+
+	for k, v := range envs {
+		// %q is for escaping quotes in env variables that
+		// have quotes in them e.g., shellHook
+		script += fmt.Sprintf("export %s=%q\n", k, v)
 	}
+
 	return script, nil
 }
 
