@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -264,4 +265,12 @@ func commandErrorMessage(cmd *exec.Cmd, err error) string {
 		errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
 	}
 	return errorMsg
+}
+
+func isPhpRelatedPackage(pkg string) bool {
+	return strings.HasPrefix(pkg, "php")
+}
+
+func hasPhpRelatedPackage(pkgs []string) bool {
+	return lo.SomeBy(pkgs, func(pkg string) bool { return isPhpRelatedPackage(pkg) })
 }
