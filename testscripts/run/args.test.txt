@@ -1,0 +1,13 @@
+# Test passing arguments to a script
+exec devbox run ekko hello there
+stdout 'hello there'
+
+-- devbox.json --
+{
+  "packages": [],
+  "shell": {
+    "scripts": {
+      "ekko": "echo $@"
+    }
+  }
+}
