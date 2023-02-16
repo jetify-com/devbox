@@ -54,7 +54,7 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	debug.Log("username: %s", username)
 
 	// Record the start time for telemetry, now that we are done with prompting
-	// for github username.
+	// for GitHub username.
 	telemetryShellStartTime := time.Now()
 
 	sshCmd := &openssh.Cmd{
@@ -184,28 +184,27 @@ func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string
 }
 
 func getGithubUsername() (string, error) {
-
 	username, err := openssh.GithubUsernameFromLocalFile()
-	if err != nil || username == "" {
-		if err != nil {
-			debug.Log("failed to get auth.Username. Error: %v", err)
-		}
-
-		username, err = queryGithubUsername()
-		if err == nil && username != "" {
-			debug.Log("Username from ssh -T git@github.com: %s", username)
-		} else {
-			// The query for Github username is best effort, and if it fails to resolve
-			// we fallback to prompting the user, and suggesting the local computer username.
-			username, err = promptUsername()
-			if err != nil {
-				return "", err
-			}
-		}
-	} else {
+	if err == nil && username != "" {
 		debug.Log("Username from locally-cached file: %s", username)
+		return username, nil
 	}
-	return username, nil
+
+	if err != nil {
+		debug.Log("failed to get auth.Username. Error: %v", err)
+	}
+	username, err = queryGithubUsername()
+	if err == nil && username != "" {
+		debug.Log("Username from ssh -T git@github.com: %s", username)
+		return username, nil
+	}
+
+	// The query for GitHub username is best effort, and if it fails to resolve
+	// we fallback to prompting the user, and suggesting the local computer username.
+	if err != nil {
+		debug.Log("failed to query auth.Username. Error: %v", err)
+	}
+	return promptUsername()
 }
 
 func promptUsername() (string, error) {
@@ -260,7 +259,6 @@ func getVirtualMachine(sshCmd *openssh.Cmd) (vmUser, vmHost, region string, err 
 }
 
 func syncFiles(username, hostname, projectDir string) error {
-
 	relProjectPathInVM, err := relativeProjectPathInVM(projectDir)
 	if err != nil {
 		return err
@@ -323,7 +321,6 @@ func syncFiles(username, hostname, projectDir string) error {
 // wait for the mutagen session's status to change to "watching", and update the remote VM
 // when the initial project sync completes and then exit.
 func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM string) {
-
 	status := "disconnected"
 
 	// Ensure the destination directory exists
@@ -345,7 +342,6 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 
 	debug.Log("Starting check for file sync status")
 	for status != "watching" {
-		var err error
 		status, err = getSyncStatus(mutagenSessionName)
 		if err != nil {
 			debug.Log("ERROR: getSyncStatus error is %s", err)
@@ -382,7 +378,6 @@ func getSyncStatus(mutagenSessionName string) (string, error) {
 }
 
 func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
-
 	// Ensure the devbox-project's directory exists in the VM
 	mkdirCmd := openssh.Command(username, hostname)
 	// This is the first command we run on the VM. Sometimes is takes fly.io a few seconds
@@ -490,7 +485,6 @@ func parseVMEnvVar() (username string, vmHostname string) {
 //  2. Look for .gitignore file in each child directory of projectDir and transform the
 //     rules to be relative to projectDir.
 func gitIgnorePaths(projectDir string) ([]string, error) {
-
 	// We must always ignore .devbox folder. It can contain information that
 	// is platform-specific, and so we should not sync it to the cloud-shell.
 	// Platform-specific info includes nix profile links to the nix store,
@@ -501,9 +495,8 @@ func gitIgnorePaths(projectDir string) ([]string, error) {
 	if _, err := os.Stat(fpath); err != nil {
 		if os.IsNotExist(err) {
 			return result, nil
-		} else {
-			return nil, errors.WithStack(err)
 		}
+		return nil, errors.WithStack(err)
 	}
 
 	contents, err := os.ReadFile(fpath)
@@ -536,7 +529,6 @@ func hyphenatePath(path string) string {
 }
 
 func ensureProjectDirIsNotSensitive(dir string) error {
-
 	// isSensitiveDir checks if the dir is the rootdir or the user's homedir
 	isSensitiveDir := func(dir string) bool {
 		dir = filepath.Clean(dir)
