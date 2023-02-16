@@ -196,7 +196,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	if err := d.removePackagesFromProfile(uninstalledPackages); err != nil {
+	if err := d.removePackagesFromProfile(uninstalledPackages, uninstall); err != nil {
 		return err
 	}
 
@@ -630,9 +630,10 @@ func (d *Devbox) generateShellFiles() error {
 type installMode string
 
 const (
-	install   installMode = "install"
-	uninstall installMode = "uninstall"
-	ensure    installMode = "ensure"
+	install      installMode = "install"
+	uninstall    installMode = "uninstall"
+	ensure       installMode = "ensure"
+	phpReinstall installMode = "phpReinstall"
 )
 
 // TODO savil. move to packages.go

@@ -55,7 +55,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return err
 	}
 
-	pkgs, err := d.pendingPackagesForInstallation()
+	pkgs, err := d.pendingPackagesForInstallation(mode)
 	if err != nil {
 		return err
 	}
@@ -88,8 +88,13 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 			"nix", "profile", "install",
 			"--profile", profileDir,
 			"--extra-experimental-features", "nix-command flakes",
-			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
 		)
+
+		if isPhpRelatedPackage(pkg) {
+			cmd.Args = append(cmd.Args, fmt.Sprintf(".devbox/gen/flake/php/flake.nix#%s", pkg))
+		} else {
+			cmd.Args = append(cmd.Args, nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg)
+		}
 		cmd.Stdout = &nixPackageInstallWriter{d.writer}
 
 		cmd.Env = nix.DefaultEnv()
@@ -106,10 +111,13 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	}
 
+	// Add a newline
+	fmt.Println()
+
 	return nil
 }
 
-func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
+func (d *Devbox) removePackagesFromProfile(pkgs []string, mode installMode) error {
 	if !featureflag.Flakes.Enabled() {
 		return nil
 	}
@@ -124,29 +132,26 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 		return err
 	}
 
-	nameToAttributePath := map[string]string{}
+	nameToStorePath := map[string]string{}
 	for _, item := range items {
-		attrPath, err := item.AttributePath()
-		if err != nil {
-			return err
-		}
 		name, err := item.PackageName()
 		if err != nil {
 			return err
 		}
-		nameToAttributePath[name] = attrPath
+		nameToStorePath[name] = item.StorePath()
 	}
 
 	for _, pkg := range pkgs {
-		attrPath, ok := nameToAttributePath[pkg]
+
+		storePath, ok := nameToStorePath[pkg]
 		if !ok {
-			return errors.Errorf("Did not find AttributePath for package: %s", pkg)
+			return errors.Errorf("Did not find StorePath for package: %s", pkg)
 		}
 
 		cmd := exec.Command("nix", "profile", "remove",
 			"--profile", profileDir,
 			"--extra-experimental-features", "nix-command flakes",
-			attrPath,
+			storePath,
 		)
 		cmd.Stdout = d.writer
 		cmd.Stderr = d.writer
@@ -155,10 +160,20 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 			return err
 		}
 	}
+
+	// If any of the packages left are php-related, then we need to ensure they are reapplied.
+	// We apply the mode-is-uninstall check to avoid recursion loops because this function (removePackagesFromProfile)
+	// is also called when ensurePackagesAreInstalled for mode in {ensure, install, phpReinstall}.
+	if mode == uninstall && hasPhpRelatedPackage(pkgs) {
+		if err := d.ensurePackagesAreInstalled(phpReinstall); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
+func (d *Devbox) pendingPackagesForInstallation(mode installMode) ([]string, error) {
 	if featureflag.Flakes.Disabled() {
 		return nil, errors.New("Not implemented for legacy non-flakes devbox")
 	}
@@ -188,6 +203,35 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 			pending = append(pending, pkg)
 		}
 	}
+
+	// If there is any phpPackagePending, or mode is PhpReinstall,
+	// then we must mark all php packages as pending.
+	// This will re-install them by the caller (presumably).
+	// Reason: php extensions may require php and related packages to be recompiled.
+	if mode == phpReinstall || hasPhpRelatedPackage(pending) {
+		for _, pkg := range d.packages() {
+			if isPhpRelatedPackage(pkg) {
+				pending = append(pending, pkg)
+			}
+		}
+
+		// Alas, to avoid nix profile priority conflicts,
+		// we must remove the php packages from the profile.
+		installedPhpPackages := lo.Filter(d.packages(), func(pkg string, _ int) bool {
+			_, isInstalled := installed[pkg]
+			return isPhpRelatedPackage(pkg) && isInstalled
+		})
+		if len(installedPhpPackages) > 0 {
+			color.New(color.FgHiYellow).Fprint(d.writer, "PHP packages will need to be re-installed.\n")
+			if err := d.removePackagesFromProfile(installedPhpPackages, mode); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// De-duplicate entries.
+	pending = lo.Uniq(pending)
+
 	return pending, nil
 }
 

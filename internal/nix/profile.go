@@ -173,6 +173,10 @@ func (item *NixProfileListItem) PackageName() (string, error) {
 	return packageName, nil
 }
 
+func (item *NixProfileListItem) StorePath() string {
+	return item.nixStorePath
+}
+
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
 func (item *NixProfileListItem) String() string {
 	return fmt.Sprintf("%d %s %s %s",

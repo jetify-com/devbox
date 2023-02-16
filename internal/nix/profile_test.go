@@ -9,6 +9,7 @@ type expectedTestData struct {
 	item        *NixProfileListItem
 	attrPath    string
 	packageName string
+	storePath   string
 }
 
 func TestNixProfileListItem(t *testing.T) {
@@ -33,6 +34,7 @@ func TestNixProfileListItem(t *testing.T) {
 				},
 				attrPath:    "legacyPackages.x86_64-darwin.go_1_19",
 				packageName: "go_1_19",
+				storePath:   "/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3",
 			},
 		},
 		"numpy": {
@@ -52,6 +54,27 @@ func TestNixProfileListItem(t *testing.T) {
 				},
 				attrPath:    "legacyPackages.x86_64-darwin.python39Packages.numpy",
 				packageName: "python39Packages.numpy",
+				storePath:   "/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3",
+			},
+		},
+		"php-flake": {
+			line: fmt.Sprintf(
+				"%d %s %s %s",
+				0,
+				"git+file:///Users/savil/code/jetpack/devbox/examples/testdata/php/php-extensions/.devbox/gen/flake?dir=php#packages.x86_64-darwin.phpPackages",
+				"git+file:///Users/savil/code/jetpack/devbox/examples/testdata/php/php-extensions/.devbox/gen/flake?dir=php#packages.x86_64-darwin.phpPackages",
+				"/nix/store/sgj8amkpmwchq7s9523jrnvvinfkzcg8-php-packages",
+			),
+			expected: expectedTestData{
+				item: &NixProfileListItem{
+					0,
+					"git+file:///Users/savil/code/jetpack/devbox/examples/testdata/php/php-extensions/.devbox/gen/flake?dir=php#packages.x86_64-darwin.phpPackages",
+					"git+file:///Users/savil/code/jetpack/devbox/examples/testdata/php/php-extensions/.devbox/gen/flake?dir=php#packages.x86_64-darwin.phpPackages",
+					"/nix/store/sgj8amkpmwchq7s9523jrnvvinfkzcg8-php-packages",
+				},
+				attrPath:    "packages.x86_64-darwin.phpPackages",
+				packageName: "phpPackages",
+				storePath:   "/nix/store/sgj8amkpmwchq7s9523jrnvvinfkzcg8-php-packages",
 			},
 		},
 	}
@@ -95,5 +118,10 @@ func testItem(t *testing.T, line string, expected expectedTestData) {
 	}
 	if gotPackageName != expected.packageName {
 		t.Errorf("expected package name %s but got %s", expected.packageName, gotPackageName)
+	}
+
+	gotStorePath := item.StorePath()
+	if gotStorePath != expected.storePath {
+		t.Errorf("expected nix store path %s but got %s", expected.storePath, gotStorePath)
 	}
 }
