@@ -143,6 +143,24 @@ func GlobalNixProfilePath() (string, error) {
 	return filepath.Join(path, "profile"), nil
 }
 
+// GenerateShellEnv generates shell commands that configure the user's shell
+// environment to work with Devbox packages. Most notably, it adds Devbox
+// packages to the user's PATH. The commands are intended to be evaluated in
+// the user's shell rcfile. For example:
+//
+//	echo 'eval "$(devbox global shellenv)"' >> ~/.zshrc
+func GenerateShellEnv() string {
+	// If the user has "eval $(devbox global shellenv)" in their shell's
+	// rcfile, then running "devbox shell" will cause these commands to be
+	// evaluated twice (once by the "parent" shell and once by the devbox
+	// shell). Prevent this by making the eval a no-op when we're already
+	// inside a devbox shell.
+	if IsDevboxShellEnabled() {
+		return ""
+	}
+	return `export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/devbox/global/current/bin${PATH+:$PATH}";`
+}
+
 // Checks if the global profile is in the path
 func ensureGlobalProfileInPath() error {
 	nixProfilePath, err := GlobalNixProfilePath()
@@ -157,9 +175,13 @@ func ensureGlobalProfileInPath() error {
 	}
 	binPath := filepath.Join(currentPath, "bin")
 	if !strings.Contains(os.Getenv("PATH"), binPath) {
-		return usererr.NewWarning(
-			"devbox global profile is not in your PATH. Add `export PATH=$PATH:%s` to your shell config to fix this.", binPath,
-		)
+		return usererr.NewWarning(`the devbox global profile is not in your $PATH.
+
+Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
+and restart your shell to fix this:
+
+	eval "$(devbox global shellenv)"
+`)
 	}
 	return nil
 }
