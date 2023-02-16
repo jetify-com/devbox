@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/impl"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -24,6 +25,7 @@ func globalCmd() *cobra.Command {
 	cmd.AddCommand(globalListCmd())
 	cmd.AddCommand(globalPullCmd())
 	cmd.AddCommand(globalRemoveCmd())
+	cmd.AddCommand(globalShellenvCmd())
 
 	return cmd
 }
@@ -95,6 +97,16 @@ func globalPullCmd() *cobra.Command {
 		PreRunE: ensureNixInstalled,
 		RunE:    pullGlobalCmdFunc,
 		Args:    cobra.ExactArgs(1),
+	}
+}
+
+func globalShellenvCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "shellenv",
+		Short: "Print shell commands that add Devbox packages to your PATH",
+		Run: func(*cobra.Command, []string) {
+			fmt.Print(impl.GenerateShellEnv())
+		},
 	}
 }
 
