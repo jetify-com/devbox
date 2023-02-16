@@ -1,0 +1,13 @@
+exec devbox init
+
+# We can run an arbitrary command
+exec devbox run echo "foo"
+stdout 'foo'
+
+# devbox shell -- <cmd> prints warning and is implemented with devbox run.
+# NOTE that devbox run passes DEVBOX_* vars through, but devbox shell does not.
+env DEVBOX_FOO=bar
+exec devbox shell -- echo '$DEVBOX_FOO'
+stdout 'bar'
+stderr '[Warning]' # for some reason, putting these two assertions in a single line makes the test fail.
+stderr '"devbox shell -- <cmd>" is deprecated and will disappear in a future version.' # Use "devbox run -- <cmd>" instead'
