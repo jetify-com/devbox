@@ -11,7 +11,6 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.4.0
 	github.com/briandowns/spinner v1.19.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184
 	github.com/creekorful/mvnparser v1.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.13.0
@@ -37,8 +36,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.org/x/net v0.2.0 // indirect
-
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
@@ -63,6 +60,7 @@ require (
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
+	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
