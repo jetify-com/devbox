@@ -1,0 +1,7 @@
+# Tests assert functions (since some are relatively complex)
+
+exec print a:b:c:d:e:fg:h
+path.order 'a' 'c' 'e'
+! path.order 'a' 'b' 'a'
+path.order 'a' 'f'
+! path.order 'a' 'c' 'h' 'h'

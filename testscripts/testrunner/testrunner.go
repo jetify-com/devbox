@@ -2,8 +2,10 @@ package testrunner
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -17,6 +19,10 @@ func Main(m *testing.M) int {
 		"devbox": func() int {
 			// Call the devbox CLI directly:
 			return boxcli.Execute(context.Background(), os.Args[1:])
+		},
+		"print": func() int { // Not 'echo' because we don't expand variables
+			fmt.Println(strings.Join(os.Args[1:], " "))
+			return 0
 		},
 	}
 	return testscript.RunMain(m, commands)

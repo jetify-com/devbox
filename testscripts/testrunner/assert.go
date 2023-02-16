@@ -13,6 +13,7 @@ import (
 var assertionMap = map[string]func(ts *testscript.TestScript, neg bool, args []string){
 	"env.path.len":  assertPathLength,
 	"json.superset": assertJSONSuperset,
+	"path.order":    assertPathOrder,
 }
 
 // Usage: env.path.len <number>
@@ -68,4 +69,50 @@ func assertJSONSuperset(script *testscript.TestScript, neg bool, args []string) 
 			script.Fatalf("key '%s' not found, expected value '%v'", expectedKey, expectedValue)
 		}
 	}
+}
+
+// Usage: path.order 'a' 'b' 'c'
+// Checks that whatever is in stdout, P, is a string in PATH format (i.e. colon-separated strings), and that
+// every one of the arguments ('a', 'b', and 'c') are contained in separate subpaths of P, exactly once, and
+// in order.
+func assertPathOrder(script *testscript.TestScript, neg bool, args []string) {
+	path := script.ReadFile("stdout")
+	subpaths := strings.Split(strings.Replace(path, "\n", "", -1), ":")
+
+	allInOrder := containsInOrder(subpaths, args)
+	if !neg && !allInOrder {
+		script.Fatalf("Did not find all expected in order in subpaths.\n\nSubpaths: %v\nExpected: %v", subpaths, args)
+	}
+	if neg && allInOrder {
+		script.Fatalf("Found all expected in subpaths.\n\nSubpaths: %v\nExpected: %v", subpaths, args)
+	}
+}
+
+func containsInOrder(subpaths []string, expected []string) bool {
+	if len(expected) == 0 {
+		return true // no parts passed in, assertion trivially holds.
+	}
+
+	if len(subpaths) < len(expected) {
+		return false
+	}
+
+	i := 0
+	j := 0
+outer:
+	for j < len(expected) {
+		currentExpected := expected[j]
+		for i < len(subpaths) {
+			if strings.Contains(subpaths[i], currentExpected) {
+				j++
+				i++
+				continue outer // found expected, move on to the next expected
+			} else {
+				i++ // didn't find it, try the next subpath
+			}
+		}
+		return false // ran out of subpaths, but not out of expected, so we fail.
+	}
+
+	return true // if we're here, we found everything
 }
