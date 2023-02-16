@@ -406,7 +406,8 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) Exec(cmds ...string) error {
+// TODO: deprecate in favor of RunScript().
+func (d *Devbox) ExecWithShell(cmds ...string) error {
 	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
@@ -426,8 +427,20 @@ func (d *Devbox) Exec(cmds ...string) error {
 	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinPath)
 	cmds = append([]string{pathWithProfileBin}, cmds...)
 
-	nixDir := filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
-	return nix.Exec(nixDir, cmds, env)
+	return nix.Exec(d.nixShellFilePath(), cmds, env)
+}
+
+// TODO: deprecate in favor of RunScript().
+func (d *Devbox) Exec(cmds ...string) error {
+	if featureflag.UnifiedEnv.Disabled() {
+		return d.ExecWithShell(cmds...)
+	} else {
+		if len(cmds) > 0 {
+			return d.RunScript(cmds[0], cmds[1:])
+		} else {
+			return errors.Errorf("cannot execute empty command: %v", cmds)
+		}
+	}
 }
 
 func (d *Devbox) PrintEnv() (string, error) {
