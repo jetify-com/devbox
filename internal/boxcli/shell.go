@@ -6,12 +6,12 @@ package boxcli
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type shellCmdFlags struct {
@@ -81,9 +81,8 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 
 	if len(cmds) > 0 {
 		if featureflag.UnifiedEnv.Enabled() {
-			fmt.Fprint(cmd.ErrOrStderr(),
-				color.HiYellowString("[Warning] \"devbox shell -- <cmd>\" is deprecated and will disappear "+
-					"in a future version. Use \"devbox run -- <cmd>\" instead\n"))
+			ux.Fwarning(cmd.ErrOrStderr(), "\"devbox shell -- <cmd>\" is deprecated and will disappear "+
+				"in a future version. Use \"devbox run -- <cmd>\" instead\n")
 		}
 		err = box.Exec(cmds...)
 	} else {
