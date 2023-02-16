@@ -6,15 +6,15 @@ import { posix } from 'path';
 // Your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
-	initialCheckDevboxJSON();
+	init();
 	// Creating file watchers to watch for events on devbox.json
 	const fswatcher = workspace.createFileSystemWatcher("**/devbox.json", false, false, false);
 	fswatcher.onDidDelete(e => commands.executeCommand('setContext', 'devbox.configFileExists', false));
 	fswatcher.onDidCreate(e => commands.executeCommand('setContext', 'devbox.configFileExists', true));
-	fswatcher.onDidChange(e => initialCheckDevboxJSON());
+	fswatcher.onDidChange(e => checkDevboxJSON());
 
 	// Check for devbox.json when a new folder is opened
-	workspace.onDidChangeWorkspaceFolders(async (e) => initialCheckDevboxJSON());
+	workspace.onDidChangeWorkspaceFolders(async (e) => checkDevboxJSON());
 
 	// run devbox shell when terminal is opened
 	window.onDidOpenTerminal(async (e) => {
@@ -46,7 +46,7 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox shell', true);
 	});
 
-	const devboxRemove = commands.registerCommand('devbox.remove', async () => {
+	const devboxRemove = commands.registerCommand('devboxNaNpxove', async () => {
 		const items = await getDevboxPackages();
 		if (items.length > 0) {
 			const result = await window.showQuickPick(items);
@@ -77,7 +77,30 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(generateDockerfile);
 }
 
-async function initialCheckDevboxJSON() {
+async function init() {
+	// check to activate a remote environment
+	checkRemoteEnv();
+	//check to activate devbox commands
+	checkDevboxJSON();
+}
+
+async function checkRemoteEnv() {
+	if (process.env["DEVBOX_OPEN_CLOUD_EDITOR"] === "1") {
+		try {
+			await commands.executeCommand("remote-tunnels.connectCurrentWindowToTunnel");
+			// if (response === undefined) {
+			// 	window.showErrorMessage("Couldn't connect to devbox cloud instance. Make sure to have 'Remote - Tunnels' extenstion installed and try again.");
+			// 	await commands.executeCommand("workbench.extensions.search", "ms-vscode.remote-server");
+			// }
+		} catch (e) {
+			window.showErrorMessage("Couldn't connect to devbox cloud instance. Make sure to have 'Remote - Tunnels' extenstion installed and try again.");
+			await commands.executeCommand("workbench.extensions.installExtension", "ms-vscode.remote-server");
+		}
+	}
+}
+
+
+async function checkDevboxJSON() {
 	// check if there is a workspace folder open
 	if (workspace.workspaceFolders) {
 		const workspaceUri = workspace.workspaceFolders[0].uri;
