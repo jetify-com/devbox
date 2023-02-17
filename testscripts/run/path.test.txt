@@ -19,14 +19,16 @@ exec devbox run echo '$PATH'
 ! stdout '/some//dirty/../clean/path'
 stdout '/some/clean/path'
 
-# Path contains path to installed nix packages
-stdout '-which-'
-
 # Path contains plugin virtual env path
 stdout '.devbox/virtenv/bin'
 
-# Path contains devbox-managed nix profiel path
+# Path contains devbox-managed nix profile path
 stdout '.devbox/nix/profile/default/bin'
 
-# TODO: verify that paths appear in desired order.
+# Path contains path to installed nix packages
+stdout '-which-'
+
+# Verify PATH is set in correct order: virtual env path, nix profile, nix packages, host path.
+path.order '.devbox/virtenv/bin' '.devbox/nix/profile/default/bin' '-which-' 'some/clean/path'
+
 # TODO: verify that bashrc file prepends do not prepend before nix paths.
