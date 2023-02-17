@@ -1,7 +1,7 @@
 {
   description = "Nix Packages of php, php packages, and php extensions. These are jointly installed because php is recompiled with extensions.";
   inputs = {
-      nixpkgs.url = "https://github.com/nixos/nixpkgs/archive/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62.tar.gz";
+      nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
 
       flake-utils.url = "github:numtide/flake-utils";
   };
