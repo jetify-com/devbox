@@ -55,7 +55,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(genDocsCmd())
 
 	command.PersistentFlags().BoolVarP(
-		&flags.quiet, "quiet", "q", false, "suppresses logs.")
+		&flags.quiet, "quiet", "q", false, "suppresses logs")
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
 
 	return command
