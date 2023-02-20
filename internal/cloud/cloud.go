@@ -607,7 +607,6 @@ func commandExists(command string) bool {
 func hasDevboxExtension() (bool, error) {
 	devboxExtensionID := "jetpack-io.devbox"
 	command := exec.Command("code", "--list-extensions", "|", "grep", devboxExtensionID)
-	command.Run()
 	output, err := command.Output()
 	if err != nil {
 		return false, err
