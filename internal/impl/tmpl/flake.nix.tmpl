@@ -9,9 +9,13 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        {{- range .Definitions}}
+        {{.}}
+        {{ end }}
 
-      in {
+      in with pkgs; {
         devShell = pkgs.mkShell {
           shellHook =
             ''
@@ -40,7 +44,7 @@
 
           buildInputs = [
             {{- range .DevPackages}}
-              pkgs.{{.}}
+              {{.}}
             {{end -}}
           ];
         };
