@@ -127,6 +127,33 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
 }
 
+func Edit(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+	// check if vscode is installed
+	if !commandExists("code") {
+		return usererr.New("This command requires VSCode to be installed and setup in PATH. \nVisit https://code.visualstudio.com/docs/setup/setup-overview for installation and instructions.")
+	}
+	// check if required vscode extensions are installed
+	ok, err := hasDevboxExtension()
+	if err != nil {
+		return err
+	} else if !ok {
+		return usererr.New("This command requires Devbox's VSCode extension to be installed. \nPlease install this extension and try again. https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox")
+	}
+	// TODO: open devbox cloud shell
+	// TODO: install vscode cli
+	// TODO: run code tunnel --accept-server-license-terms --name githubUsernames-devbox-cloud-server
+	// TODO: print the machine name as output or set as env variable before running "code ." command
+
+	// open vscode with env variable to trigger devbox extension's remote connection function
+	command := exec.Command("code", ".")
+	command.Env = append(command.Env, "DEVBOX_OPEN_CLOUD_EDITOR=1")
+	err = command.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func PortForward(local, remote string) (string, error) {
 	vmHostname := vmHostnameFromSSHControlPath()
 	if vmHostname == "" {
@@ -568,4 +595,22 @@ func ensureProjectDirIsNotSensitive(dir string) error {
 		}
 	}
 	return nil
+}
+
+// TODO: Move this function into a different package that can be referenced
+// from both here and from internal/impl/devbox.go
+func commandExists(command string) bool {
+	_, err := exec.LookPath(command)
+	return err == nil
+}
+
+func hasDevboxExtension() (bool, error) {
+	devboxExtensionID := "jetpack-io.devbox"
+	command := exec.Command("code", "--list-extensions", "|", "grep", devboxExtensionID)
+	command.Run()
+	output, err := command.Output()
+	if err != nil {
+		return false, err
+	}
+	return string(output) == devboxExtensionID, nil
 }

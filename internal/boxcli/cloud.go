@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -132,23 +131,22 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 }
 
 func cloudEditCmd() *cobra.Command {
-
+	flags := cloudShellCmdFlags{}
 	command := &cobra.Command{
 		Use:   "edit",
 		Short: "[Preview] Open editor connected to cloud shell environment",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCloudEditCmd(cmd)
+			return runCloudEditCmd(cmd, &flags)
 		},
 	}
 	return command
 }
 
-func runCloudEditCmd(cmd *cobra.Command) error {
-	command := exec.Command("code", ".")
-	command.Env = append(command.Env, "DEVBOX_OPEN_CLOUD_EDITOR=1")
-	err := command.Run()
+func runCloudEditCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-	return nil
+	return cloud.Edit(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+
 }
