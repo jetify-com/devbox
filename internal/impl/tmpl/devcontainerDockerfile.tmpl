@@ -26,6 +26,5 @@ WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
 COPY devbox.json devbox.json
 RUN devbox shell -- echo "Installing packages"
-ENTRYPOINT ["devbox"]
-CMD ['shell']
+CMD ["devbox", "shell"]
 
