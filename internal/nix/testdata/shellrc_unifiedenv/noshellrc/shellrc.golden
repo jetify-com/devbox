@@ -1,0 +1,33 @@
+# Run the shell hook defined in shell.nix or flake.nix
+eval $shellHook
+
+# Begin Devbox Post-init Hook
+
+PATH="$DEVBOX_PATH_PREPEND:$PATH"
+
+# Prepend to the prompt to make it clear we're in a devbox shell.
+export PS1="(devbox) $PS1"
+
+# End Devbox Post-init Hook
+
+# Switch to the directory where devbox.json config is
+workingDir=$(pwd)
+cd path/to/projectDir
+
+# Begin Plugin Init Hook
+
+echo "Welcome to the devbox!"
+
+# End Plugin Init Hook
+
+# Begin Devbox User Hook
+
+echo "Hello from a devbox shell hook!"
+
+# End Devbox User Hook
+
+cd $workingDir
+
+# Begin Script command
+
+# End Script command
