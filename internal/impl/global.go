@@ -5,7 +5,6 @@ package impl
 
 import (
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -194,23 +193,4 @@ func ensureGlobalProfileInPath() error {
 		return warningNotInPath
 	}
 	return nil
-}
-
-// This is a bit of a quick hack because AddGlobal doesn't work correctly
-// when initialized with a non global config. We should fix that by making config
-// optional and making addglobal always work.
-func addGlobal(w io.Writer, pkg string) error {
-	path, err := GlobalDataPath()
-	if err != nil {
-		return err
-	}
-	if _, err := InitConfig(path, w); err != nil {
-		return errors.WithStack(err)
-	}
-	box, err := Open(path, w)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return box.AddGlobal(pkg)
 }

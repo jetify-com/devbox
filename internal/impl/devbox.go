@@ -620,14 +620,15 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 	for _, s := range svcs {
 		if _, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
 			hasServiceWithProcessCompose = true
+			break
 		}
 	}
 	if !hasServiceWithProcessCompose {
-		return usererr.New("No services to start")
+		return usererr.New("No services with process-compose.yaml found")
 	}
-	if _, err := exec.LookPath("process-compose"); err != nil {
-		fmt.Fprintln(d.writer, "process-compose not found in PATH, installing as a global devbox package...")
-		if err = addGlobal(d.writer, "process-compose"); err != nil && !errors.Is(err, warningNotInPath) {
+	processComposePath, err := utilityLookPath("process-compose")
+	if err != nil {
+		if err = addDevboxUtilityPackage(d.writer, "process-compose"); err != nil && !errors.Is(err, warningNotInPath) {
 			return err
 		}
 	}
@@ -635,12 +636,7 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 		return d.Exec("devbox", "services", "manager")
 	}
 
-	globalBinPath, err := globalBinPath()
-	if err != nil {
-		return err
-	}
-
-	return services.StartProcessManager(ctx, globalBinPath, svcs)
+	return services.StartProcessManager(ctx, processComposePath, svcs)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {

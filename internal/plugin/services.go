@@ -26,7 +26,7 @@ func (s *service) Port() (string, error) {
 
 func (s *service) ProcessComposeYaml() (string, bool) {
 	for file := range s.config.CreateFiles {
-		if strings.HasSuffix(file, "process-compose.yaml") {
+		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
 			return file, true
 		}
 	}

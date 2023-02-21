@@ -4,14 +4,13 @@ import (
 	"context"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
 func StartProcessManager(
 	ctx context.Context,
-	globalBinPath string,
+	processComposePath string,
 	services plugin.Services,
 ) error {
 	flags := []string{"-p", "8280"}
@@ -20,7 +19,7 @@ func StartProcessManager(
 			flags = append(flags, "-f", file)
 		}
 	}
-	cmd := exec.Command(filepath.Join(globalBinPath, "process-compose"), flags...)
+	cmd := exec.Command(processComposePath, flags...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
