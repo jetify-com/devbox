@@ -938,9 +938,8 @@ func (d *Devbox) nixShellFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
 }
 
-// TODO savil: rename to shellFlakeFilePath
 func (d *Devbox) nixFlakesFilePath() string {
-	return filepath.Join(d.projectDir, ".devbox/gen/flake/shell/flake.nix")
+	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
 func (d *Devbox) packages() []string {

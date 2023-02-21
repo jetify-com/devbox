@@ -41,7 +41,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 		return errors.WithStack(err)
 	}
 
-	err = makeFlakeFiles(outPath, plan)
+	err = makeFlakeFile(outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -62,11 +62,8 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 	return nil
 }
 
-// writeFromTemplate writes a file in `path` directory location,
-// using the template specified by `tmplName`. `tmplName` is a filepath within the
-// `tmpl` directory in the devbox code.
-func writeFromTemplate(path string, plan *plansdk.ShellPlan, tmplName string) error {
-	embeddedPath := fmt.Sprintf("%s.tmpl", filepath.Join("tmpl", tmplName))
+func writeFromTemplate(path string, plan interface{}, tmplName string) error {
+	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
 
 	// Should we clear the directory so we start "fresh"?
 	outPath := filepath.Join(path, tmplName)
@@ -84,9 +81,7 @@ func writeFromTemplate(path string, plan *plansdk.ShellPlan, tmplName string) er
 		return errors.WithStack(err)
 	}
 	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
-	// We use ExecuteTemplate instead of Execute because we need to identify a template that may be
-	// in a sub-directory in tmplFS.
-	return errors.WithStack(t.ExecuteTemplate(f, filepath.Base(tmplName+".tmpl"), plan))
+	return errors.WithStack(t.Execute(f, plan))
 }
 
 func toJSON(a any) string {
@@ -98,50 +93,25 @@ func toJSON(a any) string {
 }
 
 var templateFuncs = template.FuncMap{
-	"json":                toJSON,
-	"contains":            strings.Contains,
-	"debug":               debug.IsEnabled,
-	"isPhpRelatedPackage": isPhpRelatedPackage,
-	"unifiedEnv":          featureflag.UnifiedEnv.Enabled,
+	"json":       toJSON,
+	"contains":   strings.Contains,
+	"debug":      debug.IsEnabled,
+	"unifiedEnv": featureflag.UnifiedEnv.Enabled,
 }
 
-func makeFlakeFiles(outPath string, plan *plansdk.ShellPlan) error {
+func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
 
 	if featureflag.Flakes.Disabled() {
 		return nil
 	}
 
 	flakeDir := filepath.Join(outPath, "flake")
-	if err := writeFlakeFile(flakeDir, plan, "shell"); err != nil {
-		return err
-	}
-
-	if hasPhpRelatedPackage(plan.DevPackages) {
-		if err := writeFlakeFile(flakeDir, plan, "php"); err != nil {
-			return err
-		}
-	} else {
-		// if an old php flake file exists, then clean it up
-		// deliberately ignore error since this is best effort
-		_ = os.Remove(filepath.Join(flakeDir, "php", "flake.nix"))
-	}
-	return nil
-}
-
-// writeFlakeFile will generate a flake.nix file using the template at `tmplSubDir` in the
-// devbox code.
-//
-// If the user's devbox project is within a git repo, then nix requires that it be tracked by git.
-// We do not want the user to actually need to track the generated flake.nix in their git repo.
-// So, as a workaround, we generate a temporary git repo and track it there.
-func writeFlakeFile(path string, plan *plansdk.ShellPlan, tmplSubDir string) error {
-
-	err := writeFromTemplate(path, plan, filepath.Join(tmplSubDir, "flake.nix"))
+	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if !isProjectInGitRepo(path) {
+	if !isProjectInGitRepo(outPath) {
 		// if we are not in a git repository, then carry on
 		return nil
 	}
@@ -151,7 +121,7 @@ func writeFlakeFile(path string, plan *plansdk.ShellPlan, tmplSubDir string) err
 	// Alternatively consider: git add intent-to-add path/to/flake.nix, and
 	// git update-index --assume-unchanged path/to/flake.nix
 	// https://nixos.wiki/wiki/Flakes#How_to_add_a_file_locally_in_git_but_not_include_it_in_commits
-	cmd := exec.Command("git", "-C", path, "init")
+	cmd := exec.Command("git", "-C", flakeDir, "init")
 	if debug.IsEnabled() {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -163,7 +133,7 @@ func writeFlakeFile(path string, plan *plansdk.ShellPlan, tmplSubDir string) err
 	}
 
 	// add the flake.nix file to git
-	cmd = exec.Command("git", "-C", path, "add", filepath.Join(tmplSubDir, "flake.nix"))
+	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix")
 	if debug.IsEnabled() {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
