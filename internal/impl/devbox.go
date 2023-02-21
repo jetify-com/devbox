@@ -611,6 +611,38 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return services.Start(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
 }
 
+func (d *Devbox) StartProcessManager(ctx context.Context) error {
+	svcs, err := d.Services()
+	if err != nil {
+		return err
+	}
+	hasServiceWithProcessCompose := false
+	for _, s := range svcs {
+		if _, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
+			hasServiceWithProcessCompose = true
+		}
+	}
+	if !hasServiceWithProcessCompose {
+		return usererr.New("No services to start")
+	}
+	if _, err := exec.LookPath("process-compose"); err != nil {
+		fmt.Fprintln(d.writer, "process-compose not found in PATH, installing as a global devbox package...")
+		if err = addGlobal(d.writer, "process-compose"); err != nil && !errors.Is(err, warningNotInPath) {
+			return err
+		}
+	}
+	if !IsDevboxShellEnabled() {
+		return d.Exec("devbox", "services", "manager")
+	}
+
+	globalBinPath, err := globalBinPath()
+	if err != nil {
+		return err
+	}
+
+	return services.StartProcessManager(ctx, globalBinPath, svcs)
+}
+
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)

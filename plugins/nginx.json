@@ -9,6 +9,7 @@
   },
   "create_files": {
     "{{ .Virtenv }}/temp": "",
+    "{{ .Virtenv }}/process-compose.yaml": "nginx/process-compose.yaml",
     "{{ .DevboxDir }}/nginx.conf": "nginx/nginx.conf",
     "{{ .DevboxDir }}/fastcgi.conf": "nginx/fastcgi.conf",
     "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"

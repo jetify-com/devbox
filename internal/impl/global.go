@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,6 +19,14 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
+
+var warningNotInPath = usererr.NewWarning(`the devbox global profile is not in your $PATH.
+
+Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
+and restart your shell to fix this:
+
+	eval "$(devbox global shellenv)"
+`)
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
@@ -143,6 +152,20 @@ func GlobalNixProfilePath() (string, error) {
 	return filepath.Join(path, "profile"), nil
 }
 
+func globalBinPath() (string, error) {
+	nixProfilePath, err := GlobalNixProfilePath()
+	if err != nil {
+		return "", err
+	}
+	currentPath := xdg.DataSubpath("devbox/global/current")
+	// For now default is always current. In the future we will support multiple
+	// and allow user to switch.
+	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
+		return "", errors.WithStack(err)
+	}
+	return filepath.Join(currentPath, "bin"), nil
+}
+
 // GenerateShellEnv generates shell commands that configure the user's shell
 // environment to work with Devbox packages. Most notably, it adds Devbox
 // packages to the user's PATH. The commands are intended to be evaluated in
@@ -163,25 +186,31 @@ func GenerateShellEnv() string {
 
 // Checks if the global profile is in the path
 func ensureGlobalProfileInPath() error {
-	nixProfilePath, err := GlobalNixProfilePath()
+	binPath, err := globalBinPath()
 	if err != nil {
 		return err
 	}
-	currentPath := xdg.DataSubpath("devbox/global/current")
-	// For now default is always current. In the future we will support multiple
-	// and allow user to switch.
-	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
-		return errors.WithStack(err)
-	}
-	binPath := filepath.Join(currentPath, "bin")
 	if !strings.Contains(os.Getenv("PATH"), binPath) {
-		return usererr.NewWarning(`the devbox global profile is not in your $PATH.
-
-Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
-and restart your shell to fix this:
-
-	eval "$(devbox global shellenv)"
-`)
+		return warningNotInPath
 	}
 	return nil
+}
+
+// This is a bit of a quick hack because AddGlobal doesn't work correctly
+// when initialized with a non global config. We should fix that by making config
+// optional and making addglobal always work.
+func addGlobal(w io.Writer, pkg string) error {
+	path, err := GlobalDataPath()
+	if err != nil {
+		return err
+	}
+	if _, err := InitConfig(path, w); err != nil {
+		return errors.WithStack(err)
+	}
+	box, err := Open(path, w)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.AddGlobal(pkg)
 }
