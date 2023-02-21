@@ -356,13 +356,6 @@ func (s *Shell) execCommandInShell() (string, string, string) {
 }
 
 func (s *Shell) writeDevboxShellrc() (path string, err error) {
-	if s.userShellrcPath == "" {
-		// If this happens, then there's a bug with how we detect shells
-		// and their shellrc paths. If the shell is unknown or we can't
-		// determine the shellrc path, then we should launch a fallback
-		// shell instead.
-		panic("writeDevboxShellrc called with an empty user shellrc path; use the fallback shell instead")
-	}
 
 	// We need a temp dir (as opposed to a temp file) because zsh uses
 	// ZDOTDIR to point to a new directory containing the .zshrc.
@@ -371,11 +364,11 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		return "", fmt.Errorf("create temp dir for shell init file: %v", err)
 	}
 
-	// This is a best-effort to include the user's existing shellrc. If we
-	// can't read it, then just omit it from the devbox shellrc.
-	userShellrc, err := os.ReadFile(s.userShellrcPath)
-	if err != nil {
-		userShellrc = []byte{}
+	// This is a best-effort to include the user's existing shellrc.
+	userShellrc := []byte{}
+	if s.userShellrcPath != "" {
+		// If we can't read it, then just omit it from the devbox shellrc.
+		userShellrc, _ = os.ReadFile(s.userShellrcPath)
 	}
 
 	// If the user already has a shellrc file, then give the devbox shellrc
