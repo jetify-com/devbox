@@ -6,11 +6,13 @@
     "HTTPD_DEVBOX_CONFIG_DIR": "{{ .DevboxProjectDir }}",
     "HTTPD_CONFDIR": "{{ .DevboxDir }}",
     "HTTPD_ERROR_LOG_FILE": "{{ .Virtenv }}/error.log",
+    "HTTPD_ACCESS_LOG_FILE": "{{ .Virtenv }}/access.log",
     "HTTPD_PORT": "8080"
   },
   "create_files": {
     "{{ .DevboxDir }}/httpd.conf": "apache/httpd.conf",
-    "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
+    "{{ .DevboxDirRoot }}/web/index.html": "web/index.html",
+    "{{ .Virtenv }}/process-compose.yaml": "apache/process-compose.yaml"
   },
   "services": {
     "apache": {

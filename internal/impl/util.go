@@ -6,9 +6,12 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/xdg"
 )
+
+// we need a more modern commit to get version of process-compose we want
+// once the default nixpkgs commit is updated, we can remove this
+const nixpkgsUtilityCommit = "f7475ce8950b761d80a13f3f81d2c23fce60c1dd"
 
 // addDevboxUtilityPackage adds a package to the devbox utility profile.
 // It's used to install applications devbox might need, like process-compose
@@ -19,7 +22,7 @@ func addDevboxUtilityPackage(pkg string) error {
 	if err != nil {
 		return err
 	}
-	return nix.ProfileInstall(profilePath, plansdk.DefaultNixpkgsCommit, pkg)
+	return nix.ProfileInstall(profilePath, nixpkgsUtilityCommit, pkg)
 }
 
 func utilityLookPath(binName string) (string, error) {
