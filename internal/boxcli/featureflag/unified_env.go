@@ -7,4 +7,4 @@ package featureflag
 // in impl.computeNixEnv().
 // The feature is called UnifiedEnv because we use the exact same environment for
 // both devbox shell and devbox run.
-var UnifiedEnv = disabled("UNIFIED_ENV")
+var UnifiedEnv = enabled("UNIFIED_ENV")
