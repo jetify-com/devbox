@@ -69,6 +69,11 @@ func getTestscriptParams(dir string) testscript.Params {
 		RequireExplicitExec: true,
 		TestWork:            false, // Set to true if you're trying to debug a test.
 		Setup:               setupTestEnv,
-		Cmds:                assertionMap,
+		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
+			"env.path.len":  assertPathLength,
+			"json.superset": assertJSONSuperset,
+			"path.order":    assertPathOrder,
+			"source.path":   sourcePath,
+		},
 	}
 }

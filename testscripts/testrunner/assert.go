@@ -9,13 +9,6 @@ import (
 	"github.com/rogpeppe/go-internal/testscript"
 )
 
-// Custom assertions we can use inside a testscript.
-var assertionMap = map[string]func(ts *testscript.TestScript, neg bool, args []string){
-	"env.path.len":  assertPathLength,
-	"json.superset": assertJSONSuperset,
-	"path.order":    assertPathOrder,
-}
-
 // Usage: env.path.len <number>
 // Checks that the PATH environment variable has the expected number of entries.
 func assertPathLength(script *testscript.TestScript, neg bool, args []string) {

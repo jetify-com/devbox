@@ -1,0 +1,12 @@
+exec devbox init
+
+# test adding and running hello
+exec devbox add hello
+! exec hello
+! stdout .
+
+# source shellenv and test again
+exec devbox shellenv
+source.path
+exec hello
+stdout 'Hello, world!'
