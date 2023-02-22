@@ -1,0 +1,8 @@
+version: "0.5"
+
+processes:
+  php-fpm:
+    command: "php-fpm -y {{ .DevboxDir }}/php-fpm.conf --nodaemonize"
+    availability:
+      restart: "always"
+  

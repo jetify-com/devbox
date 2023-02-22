@@ -1,0 +1,15 @@
+version: "0.5"
+
+processes:
+  apache:
+    command: "echo \"Apache starting on port $HTTPD_PORT\ http://localhost:$HTTPD_PORT\" && apachectl start -f $HTTPD_CONFDIR/httpd.conf -D FOREGROUND"
+    availability:
+      restart: "always"
+  apache-error:
+    command: "tail -f $HTTPD_ERROR_LOG_FILE"
+    availability:
+      restart: "always"
+  apache-access:
+    command: "tail -f $HTTPD_ACCESS_LOG_FILE"
+    availability:
+      restart: "always"

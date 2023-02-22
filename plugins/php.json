@@ -9,7 +9,8 @@
     "PHPFPM_PORT": "8082"
   },
   "create_files": {
-    "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf"
+    "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf",
+    "{{ .Virtenv }}/process-compose.yaml": "php/process-compose.yaml"
   },
   "services": {
     "php-fpm": {
