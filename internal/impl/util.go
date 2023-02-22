@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 
@@ -15,7 +14,7 @@ import (
 // It's used to install applications devbox might need, like process-compose
 // This is an alternative to a global install which would modify a user's
 // environment.
-func addDevboxUtilityPackage(w io.Writer, pkg string) error {
+func addDevboxUtilityPackage(pkg string) error {
 	profilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err

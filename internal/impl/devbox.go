@@ -628,7 +628,7 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 	}
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
-		if err = addDevboxUtilityPackage(d.writer, "process-compose"); err != nil && !errors.Is(err, warningNotInPath) {
+		if err = addDevboxUtilityPackage("process-compose"); err != nil {
 			return err
 		}
 	}
