@@ -38,7 +38,7 @@ func globalAddCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				fmt.Fprintf(
-					cmd.OutOrStdout(),
+					cmd.ErrOrStderr(),
 					"Usage: %s\n\n%s\n",
 					cmd.UseLine(),
 					toSearchForPackages,
@@ -65,7 +65,7 @@ func globalRemoveCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				fmt.Fprintf(
-					cmd.OutOrStdout(),
+					cmd.ErrOrStderr(),
 					"Usage: %s\n\n%s\n",
 					cmd.UseLine(),
 					toSearchForPackages,
@@ -165,7 +165,7 @@ func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
-	box, err := devbox.Open(path, cmd.OutOrStdout())
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
