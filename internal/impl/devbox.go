@@ -611,6 +611,34 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return services.Start(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
 }
 
+func (d *Devbox) StartProcessManager(ctx context.Context) error {
+	svcs, err := d.Services()
+	if err != nil {
+		return err
+	}
+	hasServiceWithProcessCompose := false
+	for _, s := range svcs {
+		if _, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
+			hasServiceWithProcessCompose = true
+			break
+		}
+	}
+	if !hasServiceWithProcessCompose {
+		return usererr.New("No services with process-compose.yaml found")
+	}
+	processComposePath, err := utilityLookPath("process-compose")
+	if err != nil {
+		if err = addDevboxUtilityPackage("process-compose"); err != nil {
+			return err
+		}
+	}
+	if !IsDevboxShellEnabled() {
+		return d.Exec("devbox", "services", "manager")
+	}
+
+	return services.StartProcessManager(ctx, processComposePath, svcs)
+}
+
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)
