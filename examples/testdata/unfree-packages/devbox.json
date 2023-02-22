@@ -1,5 +1,6 @@
 {
   "packages": [
+    "slack",
     "vscode"
   ],
   "shell": {
@@ -9,6 +10,6 @@
     }
   },
   "nixpkgs": {
-    "commit": "a3d745e701c337e65ef467d5a9400d9336a303a1"
+    "commit": "9e0eed654c705c7cafe192a8eba1610217f70544"
   }
 }
