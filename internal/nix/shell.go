@@ -25,6 +25,10 @@ import (
 var shellrcText string
 var shellrcTmpl = template.Must(template.New("shellrc").Parse(shellrcText))
 
+//go:embed shellrc_fish.tmpl
+var fishrcText string
+var fishrcTmpl = template.Must(template.New("shellrc_fish").Parse(fishrcText))
+
 type name string
 
 const (
@@ -32,6 +36,7 @@ const (
 	shBash    name = "bash"
 	shZsh     name = "zsh"
 	shKsh     name = "ksh"
+	shFish    name = "fish"
 	shPosix   name = "posix"
 )
 
@@ -85,6 +90,9 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 	case "ksh":
 		sh.name = shKsh
 		sh.userShellrcPath = rcfilePath(".kshrc")
+	case "fish":
+		sh.name = shFish
+		sh.userShellrcPath = fishConfig()
 	case "dash", "ash", "sh":
 		sh.name = shPosix
 		sh.userShellrcPath = os.Getenv("ENV")
@@ -170,6 +178,19 @@ func rcfilePath(basename string) string {
 		return ""
 	}
 	return filepath.Join(home, basename)
+}
+
+func fishConfig() string {
+	xdg := os.Getenv("XDG_CONFIG_HOME")
+	if xdg != "" {
+		return filepath.Join(xdg, "fish", "config.fish")
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return ""
+		}
+		return filepath.Join(home, ".config", "fish", "config.fish")
+	}
 }
 
 func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
@@ -342,6 +363,13 @@ func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs [
 		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, shellescape.Quote(filepath.Dir(shellrc)))}
 	case shKsh, shPosix:
 		extraEnv = []string{fmt.Sprintf(`ENV=%s`, shellescape.Quote(shellrc))}
+	case shFish:
+		if featureflag.UnifiedEnv.Enabled() {
+			extraArgs = []string{"-C", ". " + shellrc}
+		} else {
+			// Needs quotes because it's wrapped inside the nix-shell command
+			extraArgs = []string{"-C", shellescape.Quote(". " + shellrc)}
+		}
 	}
 	return extraEnv, extraArgs
 }
@@ -394,7 +422,12 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
 	}
 
-	err = shellrcTmpl.Execute(shellrcf, struct {
+	tmpl := shellrcTmpl
+	if s.name == shFish {
+		tmpl = fishrcTmpl
+	}
+
+	err = tmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		OriginalInit     string
 		OriginalInitPath string
