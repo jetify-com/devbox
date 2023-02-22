@@ -51,6 +51,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(ServicesCmd())
 	command.AddCommand(SetupCmd())
 	command.AddCommand(ShellCmd())
+	command.AddCommand(shellEnvCmd())
 	command.AddCommand(VersionCmd())
 	command.AddCommand(genDocsCmd())
 

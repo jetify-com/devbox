@@ -10,6 +10,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
 
 func PrintReadme(
@@ -134,6 +135,14 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 }
 
 func PrintEnvUpdateMessage(pkgs []string, projectDir string, w io.Writer) error {
+	if featureflag.UnifiedEnv.Enabled() {
+		color.New(color.FgYellow).Fprint(
+			w,
+			"\nTo update your shell and ensure your new packages are usable, "+
+				"please run:\n\neval $(devbox shellenv)\n\n\n",
+		)
+		return nil
+	}
 	commands := []string{"hash -r"}
 	for _, pkg := range pkgs {
 		if path := getEnvFilePathIfExist(pkg, projectDir); path != "" {
