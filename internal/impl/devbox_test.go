@@ -35,6 +35,7 @@ func testShellPlan(t *testing.T, testPath string) {
 	baseDir := filepath.Dir(testPath)
 	testName := fmt.Sprintf("%s_shell_plan", filepath.Base(baseDir))
 	t.Run(testName, func(t *testing.T) {
+		t.Setenv("XDG_DATA_HOME", "/tmp/devbox")
 		assert := assert.New(t)
 		shellPlanFile := filepath.Join(baseDir, "shell_plan.json")
 		hasShellPlanFile := fileExists(shellPlanFile)
