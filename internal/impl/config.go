@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
@@ -68,7 +69,7 @@ func (c *Config) Packages(w io.Writer) []string {
 				"Will use the local version. This may lead to version mismatch and "+
 				"nix store bloat.\n")
 	}
-	return append(c.RawPackages, global.RawPackages...)
+	return lo.Uniq(append(c.RawPackages, global.RawPackages...))
 }
 
 func readConfig(path string) (*Config, error) {
