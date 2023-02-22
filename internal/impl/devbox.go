@@ -443,7 +443,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 	}
 }
 
-func (d *Devbox) PrintEnv() (string, error) {
+func (d *Devbox) PrintEnv(setFullPath bool) (string, error) {
 	script := ""
 	if featureflag.UnifiedEnv.Disabled() {
 		envs, err := plugin.Env(d.packages(), d.projectDir)
@@ -455,7 +455,7 @@ func (d *Devbox) PrintEnv() (string, error) {
 		}
 		return script, nil
 	}
-	envs, err := d.computeNixEnv(false)
+	envs, err := d.computeNixEnv(setFullPath)
 	if err != nil {
 		return "", err
 	}
@@ -760,8 +760,7 @@ func (d *Devbox) printPackageUpdateMessage(
 // 1. Start with the PATH as defined by nix (through nix print-dev-env).
 // 2. Clean the host PATH of any nix paths.
 // 3. Append the cleaned host PATH (tradeoff between reproducibility and ease of use).
-// 4. Prepend the devbox-managed nix profile path (which is needed to support devbox add inside shell--can we do without it?).
-// 5. Prepend the paths of any plugins (tbd whether it's actually needed).
+// 4. Prepend the paths of any plugins (tbd whether it's actually needed).
 func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
@@ -826,10 +825,6 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 
 	// PATH handling.
 	pluginVirtenvPath := d.pluginVirtenvPath() // TODO: consider removing this; not being used?
-	nixProfilePath, err := d.profileBinPath()
-	if err != nil {
-		return nil, err
-	}
 	nixPath := env["PATH"]
 	hostPath := nix.CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
 
@@ -837,7 +832,7 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 	// stuff to PATH, which will then take precedence over the devbox-set PATH. Instead, we do the path
 	// prepending in shellrc.tmpl. I chose to use the `setFullPath` variable instead of something like
 	// `isShell` to discourage the addition of more logic that makes shell/run differ more.
-	pathPrepend := fmt.Sprintf("%s:%s:%s", pluginVirtenvPath, nixProfilePath, nixPath)
+	pathPrepend := fmt.Sprintf("%s:%s", pluginVirtenvPath, nixPath)
 	if setFullPath {
 		env["PATH"] = fmt.Sprintf("%s:%s", pathPrepend, hostPath)
 	} else {

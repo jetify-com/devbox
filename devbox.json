@@ -13,7 +13,8 @@
       "build-linux": "GOOS=linux go build -o dist/devbox-linux cmd/devbox/main.go",
       "build-linux-amd64": "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 cmd/devbox/main.go",
       "code": "code .",
-      "lint": "golangci-lint run"
+      "lint": "golangci-lint run",
+      "test": "go test -race -cover ./..."
     }
   },
   "nixpkgs": {
