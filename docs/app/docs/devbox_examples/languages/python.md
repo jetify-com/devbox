@@ -26,6 +26,30 @@ Other versions available include:
 * python39 (Python 3.9)
 * python311 (Python 3.11)
 
+## Installing Packages with Pip
+
+[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/python/pip)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/python/pip)
+
+[pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
+
+You can install `pip` by running `devbox add python3xxPackages.pip`, where `3xx` is the version of Python you want to install. This will also install the pip plugin for Devbox, which automatically creates a virtual environment for installing your packages locally
+
+Your virtual environment is created in the `.devbox/virtenv/pip` directory by default, and can be activated by running `source $VENV_DIR/bin/activate` in your devbox shell. You can activate the virtual environment automatically using the init_hook of your `devbox.json`:
+
+```json
+{
+    "packages": [
+        "python310",
+        "python310Packages.pip"
+    ],
+    "shell": {
+        "init_hook": ". $VENV_DIR/bin/activate"
+    }
+}
+``` 
+
 ## Pipenv
 
 [**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/python/pipenv)
