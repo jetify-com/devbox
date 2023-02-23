@@ -45,7 +45,7 @@ Your virtual environment is created in the `.devbox/virtenv/pip` directory by de
         "python310Packages.pip"
     ],
     "shell": {
-        "init_hook": "source $VENV_DIR/bin/activate"
+        "init_hook": ". $VENV_DIR/bin/activate"
     }
 }
 ``` 
