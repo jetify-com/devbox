@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 //go:embed shellrc.tmpl
@@ -181,16 +182,7 @@ func rcfilePath(basename string) string {
 }
 
 func fishConfig() string {
-	xdg := os.Getenv("XDG_CONFIG_HOME")
-	if xdg != "" {
-		return filepath.Join(xdg, "fish", "config.fish")
-	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return ""
-		}
-		return filepath.Join(home, ".config", "fish", "config.fish")
-	}
+	return filepath.Join(xdg.ConfigDir(), "fish", "config.fish")
 }
 
 func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
