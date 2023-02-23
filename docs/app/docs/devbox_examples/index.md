@@ -33,8 +33,9 @@ You can view the full list of examples in our [Example Repo](https://github.com/
 ## Full Stack Examples
 These examples combine configuration from multiple examples to create a full stack for development and deployment. 
 
-* [Drupal](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/drupal)
-* [Jekyll](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/jekyll)
-* [LAPP (Linux, Apache, PostgreSQL, PHP)](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lamp-stack)
-* [LEPP (Linux, NGINX, PostgreSQL, PHP)](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lemp-stack)
-* [Ruby on Rails](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/rails)
+* [Django](stacks/django.md)
+* [Drupal](stacks/drupal.md)
+* [Jekyll](stacks/jekyll.md)
+* [LAPP (Linux, Apache, PostgreSQL, PHP)](stacks/lapp.md)
+* [LEPP (Linux, NGINX, PostgreSQL, PHP)](stacks/lepp.md)
+* [Ruby on Rails](stacks/rails.md)
