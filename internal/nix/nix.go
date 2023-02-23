@@ -158,7 +158,7 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 	debug.Log("Running print-dev-env cmd: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, usererr.NewExecCmdError(cmd, err)
 	}
 
 	var vaf varsAndFuncs
