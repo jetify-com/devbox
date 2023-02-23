@@ -87,9 +87,8 @@ func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
 	}
 
-	cmd := exec.Command("nix", "search",
-		"--extra-experimental-features", "nix-command flakes",
-		"--json", exactPackage)
+	cmd := exec.Command("nix", "search", "--json", exactPackage)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	return pkgInfo(cmd, pkg)
 }
 
@@ -150,12 +149,8 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 	} else {
 		cmd.Args = append(cmd.Args, "-f", nixShellFilePath)
 	}
-	cmd.Args = append(cmd.Args,
-		"--extra-experimental-features", "nix-command",
-		"--extra-experimental-features", "ca-derivations",
-		"--option", "experimental-features", "nix-command flakes",
-		"--impure",
-		"--json")
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, "--impure", "--json")
 	debug.Log("Running print-dev-env cmd: %s\n", cmd)
 	cmd.Env = DefaultEnv()
 	out, err := cmd.Output()
@@ -177,4 +172,11 @@ func FlakeNixpkgs(commit string) string {
 	// Using nixpkgs/<commit> means:
 	// The nixpkgs entry in the flake registry, with its Git revision overridden to a specific value.
 	return "nixpkgs/" + commit
+}
+
+func ExperimentalFlags() []string {
+	return []string{
+		"--extra-experimental-features", "ca-derivations",
+		"--option", "experimental-features", "nix-command flakes",
+	}
 }
