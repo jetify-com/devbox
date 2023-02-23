@@ -1,0 +1,107 @@
+{{- /*
+
+This template defines the shellrc file that the devbox shell will run at
+startup when using the fish shell.
+
+It does _not_ include the user's original fish config, because unlike other
+shells, fish has multiple files as part of its config, and it's difficult
+to start a fish shell with a custom fish config. Instead, we let fish read
+the user's original config directly, and run these commands next.
+
+Devbox needs to ensure that the shell's PATH, prompt, and a few other things are
+set correctly after the user's shellrc runs. The commands to do this are in
+the "Devbox Post-init Hook" section.
+
+This file is useful for debugging shell errors, so try to keep the generated
+content readable.
+
+*/ -}}
+
+{{- if .UnifiedEnv -}}
+# Run the shell hook defined in shell.nix or flake.nix
+eval $shellHook
+
+{{ end -}}
+
+# Begin Devbox Post-init Hook
+
+{{- /*
+NOTE: fish_add_path doesn't play nicely with colon:separated:paths, and I'd rather not
+add string-splitting logic here nor parametrize computeNixEnv based on the shell being
+used. So here we (ab)use the fact that using "export" ahead of the variable definition
+makes fish do exactly what we want and behave in the same way as other shells.
+*/ -}}
+{{ if .UnifiedEnv -}}
+export PATH="$DEVBOX_PATH_PREPEND:$PATH"
+{{- else -}}
+export PATH="{{ .PathPrepend }}:$PATH"
+{{- end }}
+
+{{- /*
+Set the history file by setting fish_history. This is not exactly the same as with other
+shells, because we're not setting the file, but rather the session name, but it's a good
+enough approximation for now.
+*/ -}}
+{{- if .HistoryFile }}
+set fish_history devbox
+{{- end }}
+
+# Prepend to the prompt to make it clear we're in a devbox shell.
+functions -c fish_prompt __devbox_fish_prompt_orig
+function fish_prompt
+    echo "(devbox)" (__devbox_fish_prompt_orig)
+end
+
+{{- if .ShellStartTime }}
+# log that the shell is ready now!
+devbox log shell-ready {{ .ShellStartTime }}
+{{ end }}
+
+# End Devbox Post-init Hook
+
+# Switch to the directory where devbox.json config is
+set workingDir $(pwd)
+cd {{ .ProjectDir }}
+
+{{- if .PluginInitHook }}
+
+# Begin Plugin Init Hook
+
+{{ .PluginInitHook }}
+
+# End Plugin Init Hook
+
+{{- end }}
+
+{{- if .UserHook }}
+
+# Begin Devbox User Hook
+
+{{ .UserHook }}
+
+# End Devbox User Hook
+
+{{- end }}
+
+cd $workingDir
+
+{{- if .ShellStartTime }}
+# log that the shell is interactive now!
+devbox log shell-interactive {{ .ShellStartTime }}
+{{ end }}
+
+# Begin Script command
+
+{{- if .ScriptCommand }}
+
+function run_script
+    set workingDir $(pwd)
+    cd {{ .ProjectDir }}
+
+    {{  .ScriptCommand }}
+
+    cd $workingDir
+end
+{{- end }}
+
+# End Script command
