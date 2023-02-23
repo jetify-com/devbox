@@ -2,10 +2,13 @@ package impl
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -233,7 +236,8 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 		nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
 	)
 	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = d.writer
+
+	cmd.Stdout = NewDelayedWriter(d.writer)
 	cmd.Stderr = cmd.Stdout
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
@@ -243,4 +247,41 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	return nil
+}
+
+type DelayedWriter struct {
+	start  time.Time
+	writer io.Writer
+	buffer string
+	lock   sync.Mutex // May not be needed. Added to debug printing issue, but this didn't help.
+}
+
+func NewDelayedWriter(w io.Writer) *DelayedWriter {
+	return &DelayedWriter{
+		start:  time.Now(),
+		writer: w,
+	}
+}
+
+func (w *DelayedWriter) Write(p []byte) (n int, err error) {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+
+	if time.Now().Sub(w.start).Milliseconds() < 100 {
+		w.buffer = fmt.Sprintf("%s%s", w.buffer, string(p))
+		// if we `return 0, nil`, then we get an error message saying "short write".
+		return len(p), nil
+	}
+
+	if w.buffer != "" {
+		n1, err := fmt.Fprintf(w.writer, w.buffer)
+		if err != nil {
+			return n1, errors.WithStack(err)
+		}
+		w.buffer = ""
+	}
+
+	n2, err := fmt.Fprintf(w.writer, "%s", p)
+	n += n2
+	return n, errors.WithStack(err)
 }
