@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type Executable interface {
@@ -87,6 +89,11 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 			return userExecErr.ExitCode()
 		}
 		if errors.As(err, &exitErr) {
+			if !debug.IsEnabled() {
+				ux.Ferror(ex.cmd.ErrOrStderr(), "There was an internal error. "+
+					"Run with DEVBOX_DEBUG=1 for a detailed error message, and consider reporting it at "+
+					"https://github.com/jetpack-io/devbox/issues\n")
+			}
 			return exitErr.ExitCode()
 		}
 		return 1 // Error exit code

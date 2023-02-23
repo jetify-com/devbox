@@ -10,7 +10,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
@@ -98,8 +97,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		if err != nil {
 			fmt.Fprintf(d.writer, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-
-			return usererr.NewExecCmdError(cmd, err)
+			return errors.Wrapf(err, "Command: %s", cmd)
 		}
 
 		fmt.Fprintf(d.writer, "%s: ", stepMsg)
@@ -240,7 +238,7 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 		color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-		return usererr.NewExecCmdError(cmd, err)
+		return errors.Wrapf(err, "Command: %s", cmd)
 	}
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
