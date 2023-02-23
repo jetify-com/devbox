@@ -21,9 +21,9 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 
 	cmd := exec.Command(
 		"nix", "profile", "list",
-		"--extra-experimental-features", "nix-command flakes",
 		"--profile", profileDir,
 	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 
 	// We set stderr to a different output than stdout
 	// to ensure error output is not mingled with the stdout output
@@ -188,8 +188,8 @@ func ProfileInstall(profilePath, nixpkgsCommit, pkg string) error {
 	cmd := exec.Command("nix", "profile", "install",
 		"--profile", profilePath,
 		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
-		"--extra-experimental-features", "nix-command flakes",
 	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Env = DefaultEnv()
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not provide attribute")) {
@@ -207,8 +207,8 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	cmd := exec.Command("nix", "profile", "remove",
 		"--profile", profilePath,
 		info.attributeKey,
-		"--extra-experimental-features", "nix-command flakes",
 	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Env = DefaultEnv()
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not match any packages")) {

@@ -86,10 +86,10 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		cmd := exec.Command(
 			"nix", "profile", "install",
 			"--profile", profileDir,
-			"--extra-experimental-features", "nix-command flakes",
 			"--impure", // Needed to allow flags from environment to be used.
 			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
 		)
+		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 		cmd.Stdout = &nixPackageInstallWriter{d.writer}
 
 		cmd.Env = nix.DefaultEnv()
@@ -145,9 +145,9 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 
 		cmd := exec.Command("nix", "profile", "remove",
 			"--profile", profileDir,
-			"--extra-experimental-features", "nix-command flakes",
 			attrPath,
 		)
+		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 		cmd.Stdout = d.writer
 		cmd.Stderr = d.writer
 		err = cmd.Run()
@@ -231,9 +231,9 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded.\n")
 	cmd := exec.Command(
 		"nix", "flake", "prefetch",
-		"--extra-experimental-features", "nix-command flakes",
 		nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
 	)
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	cmd.Env = nix.DefaultEnv()
 	cmd.Stdout = d.writer
 	cmd.Stderr = cmd.Stdout
