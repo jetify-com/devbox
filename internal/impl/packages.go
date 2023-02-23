@@ -87,6 +87,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 			"nix", "profile", "install",
 			"--profile", profileDir,
 			"--extra-experimental-features", "nix-command flakes",
+			"--impure", // Needed to allow flags from environment to be used.
 			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
 		)
 		cmd.Stdout = &nixPackageInstallWriter{d.writer}

@@ -154,8 +154,10 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 		"--extra-experimental-features", "nix-command",
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes",
+		"--impure",
 		"--json")
 	debug.Log("Running print-dev-env cmd: %s\n", cmd)
+	cmd.Env = DefaultEnv()
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
