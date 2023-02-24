@@ -270,6 +270,7 @@ const sidebars = {
             label: 'Stacks',
             collapsed: true,
             items: [
+                { type: 'doc', id: 'devbox_examples/stacks/django' },
                 { type: 'doc', id: 'devbox_examples/stacks/drupal' },
                 { type: 'doc', id: 'devbox_examples/stacks/jekyll' },
                 { type: 'doc', id: 'devbox_examples/stacks/lapp' },
