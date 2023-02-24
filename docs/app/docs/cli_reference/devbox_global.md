@@ -8,7 +8,7 @@ You can also use Devbox as a global package manager by adding the following line
 
 `exec "$(devbox global shellenv)"`
 
-For more details, see: <TK />
+For more details, see [Use Devbox as your Primary Package Manager](../devbox_global.md).
 
 ```bash
 devbox global <subcommand> [flags]

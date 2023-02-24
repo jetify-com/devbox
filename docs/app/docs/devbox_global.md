@@ -1,5 +1,5 @@
 ---
-title: Use Devbox as your primary package manager
+title: Use Devbox as your Primary Package manager
 ---
 
 In addition to managing isolated development environments, you can use Devbox as a general package manager. Devbox Global allows you to add packages to a global `devbox.json.` This is useful for installing a standard set of tools you want to use across multiple Devbox Projects.
@@ -114,7 +114,7 @@ devbox global pull https://raw.githubusercontent.com/org/repo/branch/path/to/dev
 
 ### Learn more about Devbox
 
-* **[Getting Started](getting_started.md):** Learn how to install Devbox and create your first Devbox Shell.
+* **[Getting Started](quickstart.mdx):** Learn how to install Devbox and create your first Devbox Shell.
 * **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
 * **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
 * **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.

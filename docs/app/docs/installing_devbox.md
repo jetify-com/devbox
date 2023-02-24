@@ -15,5 +15,5 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 
 ## Next Steps
 
-* **[Getting Started](getting_started.md):** Learn how to create a dev environment with 
+* **[Getting Started](quickstart.mdx):** Learn how to create a dev environment with Devbox
 * **[Devbox Global](devbox_global.md):** Learn how to use the devbox as a global package manager
