@@ -8,9 +8,9 @@ ___
 [direnv](https://direnv.net) is an open source environment management tool that allows setting unique environment variables per directory in your file system. This guide covers how to configure direnv to seamlessly work with a devbox project.
 
 :::note 
-Devbox 0.4.0 makes changes to the direnv hook in order to ensure better compatibility with the user's host shell. 
+Devbox 0.4.0 makes changes to how the environment is sourced in order to ensure better compatibility with the user's host shell. This may raise some errors if you generated your `.envrc` file with an older version of devbox.
     
-If you generated your `.envrc` file with a previous version of devbox, you will need to run `devbox generate envrc --force` and then re-run `devbox shell` to apply the latest changes
+If you see any errors when activating your `.envrc` file, you will need to run `devbox generate direnv --force`, and then re-run `devbox shell` to apply the latest changes. Be sure to back up your old `.envrc` file before running this command.
 :::
 
 ### Prerequisites
