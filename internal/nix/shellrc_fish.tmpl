@@ -31,9 +31,9 @@ add string-splitting logic here nor parametrize computeNixEnv based on the shell
 used. So here we (ab)use the fact that using "export" ahead of the variable definition
 makes fish do exactly what we want and behave in the same way as other shells.
 */ -}}
-{{ if .UnifiedEnv -}}
+{{ if .UnifiedEnv }}
 export PATH="$DEVBOX_PATH_PREPEND:$PATH"
-{{- else -}}
+{{- else }}
 export PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
