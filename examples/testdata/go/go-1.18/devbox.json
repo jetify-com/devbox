@@ -1,11 +1,11 @@
 {
   "packages": [
-    "go"
+    "go_1_18"
   ],
   "shell": {
     "init_hook": null
   },
   "nixpkgs": {
-    "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
+    "commit": "9e0eed654c705c7cafe192a8eba1610217f70544"
   }
 }

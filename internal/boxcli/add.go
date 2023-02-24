@@ -29,7 +29,7 @@ func AddCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				fmt.Fprintf(
-					cmd.OutOrStdout(),
+					cmd.ErrOrStderr(),
 					"Usage: %s\n\n%s\n",
 					cmd.UseLine(),
 					toSearchForPackages,
