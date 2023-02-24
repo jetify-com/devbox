@@ -2,6 +2,7 @@ package impl
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // packages.go has functions for adding, removing and getting info about nix packages
@@ -228,6 +230,12 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 
 // ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
 func (d *Devbox) ensureNixpkgsPrefetched() error {
+	if isFetched, err := d.isNixpkgsFetched(); err != nil {
+		return errors.WithStack(err)
+	} else if isFetched {
+		return nil
+	}
+
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded.\n")
 	cmd := exec.Command(
 		"nix", "flake", "prefetch",
@@ -244,7 +252,48 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 	}
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
-	return nil
+
+	return d.saveToNixpkgsCommitFile()
+}
+
+func (d *Devbox) isNixpkgsFetched() (bool, error) {
+	path := d.nixpkgsCommitFilePath()
+	if !fileutil.Exists(path) {
+		return false, nil
+	}
+
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+	for _, line := range strings.Split(string(contents), "\r\n") {
+		if line == d.cfg.Nixpkgs.Commit {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (d *Devbox) saveToNixpkgsCommitFile() error {
+	path := d.nixpkgsCommitFilePath()
+
+	if err := os.Mkdir(filepath.Dir(path), 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return errors.WithStack(err)
+	}
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer file.Close()
+
+	_, err = fmt.Fprintf(file, "%s", d.cfg.Nixpkgs.Commit)
+	return errors.WithStack(err)
+}
+
+func (d *Devbox) nixpkgsCommitFilePath() string {
+	cacheDir := xdg.CacheSubpath("devbox")
+	return filepath.Join(cacheDir, "nixpkgs.txt")
 }
 
 // Consider moving to cobra middleware where this could be generalized. There is
