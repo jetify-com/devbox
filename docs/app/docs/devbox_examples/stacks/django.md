@@ -16,36 +16,54 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 
 ## How to Create this Example from Scratch
 
+### Setting up the Project
+
 1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/).
 1. Run `devbox init` to create a new Devbox project in your directory.
 1. Install Python and PostgreSQL with `devbox install python python310Packages.pip openssl postgresql`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
-1. Copy the requirements.txt and `todo_project` directories.
-1. Initialize your Postgres database with `devbox run -- initdb`.
-1. Start a devbox shell with `devbox shell`, then activate your virtual environment and install your requirements using the command below.
-
-    ```bash
-    source $VENV_DIR/bin/activate
-    pip install -r requirements.txt
-    ```
-
-    You can also add these lines to your `init_hook` so they run whenever you start a devbox shell.
-
-1. Run the following script to setup your database. This script will start the Postgres service, create the DB and user for your project, and run the Django project's migrations.
+1. Copy the requirements.txt and `todo_project` directory into the root folder of your project
+1. Start a devbox shell with `devbox shell`, then activate your virtual environment and install your requirements using the commands below.
 
    ```bash
-    echo "Creating DB"
-    devbox services restart postgresql
-    dropdb --if-exists todo_db
-    createdb todo_db
-    psql todo_db -c "CREATE USER todo_user WITH PASSWORD 'secretpassword';"
-    python todo_project/manage.py makemigrations
-    python todo_project/manage.py migrate
+   source $VENV_DIR/bin/activate
+   pip install -r requirements.txt
+   ```
+
+   You can also add these lines to your `init_hook` to automatically activate your venv whenever you start your shell
+
+
+### Setting up the Database
+
+The Django example uses a Postgres database. To set up the database, we will first create a new PostgreSQL database cluster, create the `todo_db` and user, and run the Django migrations.
+
+1. Initialize your Postgres database cluster with `devbox run initdb`.
+
+1. Start the Postgres service by running `devbox services start postgres`
+
+1. In your `devbox shell`, create the empty `todo_db` database and user with the following commands.
+
+   ```bash
+   createdb todo_db
+   psql todo_db -c "CREATE USER todo_user WITH PASSWORD 'secretpassword';"
    ```
 
    You can add this as a devbox script in your `devbox.json` file, so you can replicate the setup on other machines.
 
-1. You can now start your Django server by running the following command.
+1. Run the Django migrations to create the tables in your database.
+
+   ```bash
+   python todo_project/manage.py makemigrations
+   python todo_project/manage.py migrate
+   ```
+
+Your database is now ready to use. You can add these commands as a script in your `devbox.json` if you want to automate them for future use. See `create_db` in the projects `devbox.json` for an example.
+
+### Running the Server
+
+You can now start your Django server by running the following command.
 
    ```bash
    python todo_project/manage.py runserver
    ```
+
+This should start the development server. 
