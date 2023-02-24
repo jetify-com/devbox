@@ -98,8 +98,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		if err != nil {
 			fmt.Fprintf(d.writer, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-
-			return errors.New(commandErrorMessage(cmd, err))
+			return errors.Wrapf(err, "Command: %s", cmd)
 		}
 
 		fmt.Fprintf(d.writer, "%s: ", stepMsg)
@@ -240,29 +239,9 @@ func (d *Devbox) ensureNixpkgsPrefetched() error {
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 		color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-		return errors.New(commandErrorMessage(cmd, err))
+		return errors.Wrapf(err, "Command: %s", cmd)
 	}
 	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	return nil
-}
-
-// Consider moving to cobra middleware where this could be generalized. There is
-// a complication in that its current form is useful because of the exec.Cmd. This
-// would be missing in the middleware, unless we pass it along by wrapping the error in
-// another struct.
-func commandErrorMessage(cmd *exec.Cmd, err error) string {
-	var errorMsg string
-
-	// ExitErrors can give us more information so handle that specially.
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		errorMsg = fmt.Sprintf(
-			"Error running command %s. Exit status is %d. Command stderr: %s",
-			cmd, exitErr.ExitCode(), string(exitErr.Stderr),
-		)
-	} else {
-		errorMsg = fmt.Sprintf("Error running command %s. Error: %v", cmd, err)
-	}
-	return errorMsg
 }

@@ -4,8 +4,9 @@
 package midcobra
 
 import (
-	"fmt"
+	"errors"
 	"os"
+	"os/exec"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -59,12 +60,15 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 		} else {
 			color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "\nError: %s\n\n", runErr.Error())
 		}
-	} else {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Error: %v\n", runErr)
 	}
 
 	st := debug.EarliestStackTrace(runErr)
-	debug.Log("Error: %v\nExecutionID:%s\n%+v\n", runErr, d.executionID, st)
+	color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "Error: %v\n\n", runErr)
+	var exitErr *exec.ExitError
+	if errors.As(runErr, &exitErr) {
+		debug.Log("Command stderr: %s\n", exitErr.Stderr)
+	}
+	debug.Log("\nExecutionID:%s\n%+v\n", d.executionID, st)
 }
 
 func (d *DebugMiddleware) withExecutionID(execID string) Middleware {

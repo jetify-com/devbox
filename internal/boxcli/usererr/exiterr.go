@@ -1,12 +1,12 @@
 package usererr
 
 import (
-	"os/exec"
-
 	"errors"
+	"os/exec"
 )
 
-type UserExecError struct {
+// ExitError is an ExitError for a command run on behalf of a user
+type ExitError struct {
 	err *exec.ExitError
 }
 
@@ -19,22 +19,22 @@ func NewExecError(source error) error {
 	if !errors.As(source, &exitErr) {
 		return source
 	}
-	return &UserExecError{
+	return &ExitError{
 		err: exitErr,
 	}
 }
 
-func (e *UserExecError) Error() string {
+func (e *ExitError) Error() string {
 	return e.err.Error()
 }
 
-func (e *UserExecError) Is(target error) bool {
+func (e *ExitError) Is(target error) bool {
 	return errors.Is(e.err, target)
 }
 
-func (e *UserExecError) ExitCode() int {
+func (e *ExitError) ExitCode() int {
 	return e.err.ExitCode()
 }
 
 // Unwrap provides compatibility for Go 1.13 error chains.
-func (e *UserExecError) Unwrap() error { return e.err }
+func (e *ExitError) Unwrap() error { return e.err }
