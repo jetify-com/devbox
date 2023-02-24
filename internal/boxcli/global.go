@@ -18,7 +18,7 @@ func globalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "global",
 		Short:  "Manage global devbox packages",
-		Hidden: true,
+		Hidden: false,
 	}
 
 	cmd.AddCommand(globalAddCmd())
