@@ -5,7 +5,6 @@ package midcobra
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -64,7 +63,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	}
 
 	st := debug.EarliestStackTrace(runErr)
-	color.Red(fmt.Sprintf("Error: %v\n\n", runErr))
+	color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "Error: %v\n\n", runErr)
 	var exitErr *exec.ExitError
 	if errors.As(runErr, &exitErr) {
 		debug.Log("Command stderr: %s\n", exitErr.Stderr)
