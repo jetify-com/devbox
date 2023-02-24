@@ -1,5 +1,5 @@
 ---
-title: Use Devbox as your Primary Package manager
+title: Use Devbox as your Primary Package Manager
 ---
 
 In addition to managing isolated development environments, you can use Devbox as a general package manager. Devbox Global allows you to add packages to a global `devbox.json.` This is useful for installing a standard set of tools you want to use across multiple Devbox Projects.
