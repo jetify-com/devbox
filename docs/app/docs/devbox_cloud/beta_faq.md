@@ -1,5 +1,6 @@
 ---
 title: Devbox Cloud Open Beta FAQ
+sidebar_position: 4
 ---
 
 ### What do I need to use Devbox Cloud?

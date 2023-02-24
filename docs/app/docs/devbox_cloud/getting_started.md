@@ -1,4 +1,7 @@
-# Getting Started from your Terminal
+---
+title: Getting Started From Your Terminal
+sidebar_position: 2
+---
 
 Devbox Cloud is a new way to create and run your Devbox Project in an isolated cloud environment. 
 

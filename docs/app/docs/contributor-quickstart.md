@@ -67,6 +67,7 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 ## Next Steps
 
 ### Learn more about Devbox
+* **[Devbox Global](devbox_global.md):** Learn how to use the devbox as a global package manager
 * **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
 * **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
 * **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.

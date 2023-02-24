@@ -17,8 +17,12 @@ devbox cloud [subcommand] [flags]
   -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
+## Subcommands
+
+* [devbox cloud forward](devbox_cloud_forward.md)	 - [Preview] Port forwards a local port to a remote devbox cloud port
+* [devbox cloud shell](devbox_cloud_shell.md)	 - [Preview] Shell into a cloud environment that matches your local devbox environment
+
 ## SEE ALSO
 
 * [devbox](devbox.md)	 - Instant, easy, predictable development environments
-* [devbox cloud forward](devbox_cloud_forward.md)	 - [Preview] Port forwards a local port to a remote devbox cloud port
-* [devbox cloud shell](devbox_cloud_shell.md)	 - [Preview] Shell into a cloud environment that matches your local devbox environment
+

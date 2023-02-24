@@ -14,10 +14,13 @@ devbox generate <devcontainer|dockerfile> [flags]
   -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
-## SEE ALSO
+## Subcommands
 
-* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 * [devbox generate devcontainer](devbox_generate_devcontainer.md)	 - Generate Dockerfile and devcontainer.json files under .devcontainer/ directory
 * [devbox generate dockerfile](devbox_generate_dockerfile.md)	 - Generate a Dockerfile that replicates devbox shell
 * [devbox generate direnv](devbox_generate_direnv.md)  - Generate a .envrc file to use with direnv
+
+## SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 
