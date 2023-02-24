@@ -33,6 +33,9 @@ const sidebars = {
         }, {
             type: 'doc',
             id: 'contributor-quickstart'
+        }, {
+            type: 'doc',
+            id: 'devbox_global'
         }]
     }, {
         type: 'category',
