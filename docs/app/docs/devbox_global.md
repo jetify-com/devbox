@@ -62,9 +62,9 @@ If you want to make your global packages available in your host shell, you can a
 ### Add Global Packages to your current Host Shell
 To temporarily add the global packages to your current shell, run: 
 
-    ```bash
-    . <(devbox global shellenv)
-    ```
+```bash
+. <(devbox global shellenv)
+```
     
 You can also add a hook to your shell's config to make them available whenever you launch your shell:
 
@@ -81,17 +81,17 @@ Make sure to add this hook before any other hooks that use your global packages.
 ### Zsh
 Add the following command to your `~/.zshrc` file:
 
-   ```bash
-   eval "$(devbox global shellenv)"
-   ```
+```bash
+eval "$(devbox global shellenv)"
+```
 
 ### Fish
 
 Add the following command to your `~/.config/fish/config.fish` file:
 
-     ```bash
-     devbox global shellenv | source
-     ```
+```bash
+devbox global shellenv | source
+```
 
 
 ## Sharing Your Global Config
