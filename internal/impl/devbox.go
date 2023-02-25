@@ -780,6 +780,15 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 		}
 	}
 
+	// Hack to quickly fix TMPDIR being set to the temp directory Nix used
+	// in the build environment. When there's more time to test, we should
+	// probably include all of the variables that Nix ignores:
+	// https://github.com/NixOS/nix/blob/92611e6e4c1c5c712ca7d5f9a258640662d006df/src/nix/develop.cc#L291-L357
+	delete(env, "TEMP")
+	delete(env, "TEMPDIR")
+	delete(env, "TMP")
+	delete(env, "TMPDIR")
+
 	// Copy over (and overwrite) vars that we explicitly "leak", as well as DEVBOX_ vars.
 	for _, kv := range os.Environ() {
 		key, val, found := strings.Cut(kv, "=")
