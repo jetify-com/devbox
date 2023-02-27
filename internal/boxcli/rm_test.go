@@ -16,6 +16,9 @@ func TestRm(t *testing.T) {
 			"hello"
 		],
 		"shell": {
+		  "scripts": {
+			"test1": "echo test1"
+		  },
 		  "init_hook": null
 		},
 		"nixpkgs": {
@@ -26,6 +29,12 @@ func TestRm(t *testing.T) {
 	defer td.Close()
 	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
+
+	// First, run a devbox script to install the packages as a side-effect
+	_, err = td.RunCommand(RunCmd(), "test1")
+	assert.NoError(t, err)
+
+	// Now, run the Remove command
 	output, err := td.RunCommand(RemoveCmd(), "hello")
 	assert.NoError(t, err)
 	assert.Contains(t, output, "hello (hello-2.12.1) is now removed.")

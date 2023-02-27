@@ -41,6 +41,8 @@ const (
 	shPosix   name = "posix"
 )
 
+var ErrNoDefaultShellUnsupportedInFlakesMode = errors.New("No default shell not supported in Flakes mode")
+
 // Shell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
 type Shell struct {
@@ -205,8 +207,10 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// Launch a fallback shell if we couldn't find the path to the user's
 	// default shell.
 	if s.binPath == "" {
+
+		// TODO savil: fix this.
 		if featureflag.Flakes.Enabled() {
-			return errors.New("No default shell not supported in Flakes mode")
+			return ErrNoDefaultShellUnsupportedInFlakesMode
 		}
 		cmd := exec.Command("nix-shell", "--pure")
 		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
