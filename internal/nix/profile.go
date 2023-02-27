@@ -198,7 +198,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
 		return err
 	}
-	stepMsg := args.Package
+	stepMsg := fmt.Sprintf("Installing %s\n", args.Package)
 	if args.CustomStepMessage != "" {
 		stepMsg = args.CustomStepMessage
 	}

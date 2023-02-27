@@ -49,7 +49,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
-			NixpkgsCommit:     plansdk.DefaultNixpkgsCommit,
+			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
 			Writer:            d.writer,
