@@ -16,20 +16,29 @@ func TestRm(t *testing.T) {
 			"hello"
 		],
 		"shell": {
+		  "scripts": {
+			"test1": "echo test1"
+		  },
 		  "init_hook": null
 		},
 		"nixpkgs": {
 		  "commit": "af9e00071d0971eb292fd5abef334e66eda3cb69"
 		}
 	}`
-	td := testframework.Open()
-	defer td.Close()
-	err := td.SetDevboxJSON(devboxJSON)
+	testbox := testframework.Open()
+	defer testbox.Close()
+	err := testbox.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
-	output, err := td.RunCommand(RemoveCmd(), "hello")
+
+	// First, run a devbox script to install the packages as a side-effect
+	_, err = testbox.RunCommand(RunCmd(), "test1")
+	assert.NoError(t, err)
+
+	// Now, run the Remove command
+	output, err := testbox.RunCommand(RemoveCmd(), "hello")
 	assert.NoError(t, err)
 	assert.Contains(t, output, "hello (hello-2.12.1) is now removed.")
-	devboxjson, err := td.GetDevboxJSON()
+	devboxjson, err := testbox.GetDevboxJSON()
 	assert.NoError(t, err)
 	assert.NotContains(t, devboxjson.RawPackages, "hello")
 }
