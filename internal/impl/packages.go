@@ -112,7 +112,6 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 }
 
 func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
-	fmt.Printf("starting removePackagesFromProfile\n")
 	if !featureflag.Flakes.Enabled() {
 		return nil
 	}
@@ -139,8 +138,6 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 		}
 		nameToAttributePath[name] = attrPath
 	}
-	fmt.Printf("nameToAttributePath is %v\n", nameToAttributePath)
-	fmt.Printf("pkgs is %v\n", pkgs)
 
 	for _, pkg := range pkgs {
 		attrPath, ok := nameToAttributePath[pkg]
