@@ -79,11 +79,11 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
-			ExtraFlags:        []string{"--priority", d.getPackagePriority(pkg)},
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
-			Package:           pkg,
-			ProfilePath:       profileDir,
-			Writer:            d.writer,
+			// ExtraFlags:        []string{"--priority", d.getPackagePriority(pkg)},
+			NixpkgsCommit: d.cfg.Nixpkgs.Commit,
+			Package:       pkg,
+			ProfilePath:   profileDir,
+			Writer:        d.writer,
 		}); err != nil {
 			return err
 		}
