@@ -41,7 +41,8 @@ const (
 	shPosix   name = "posix"
 )
 
-var ErrNoDefaultShellUnsupportedInFlakesMode = errors.New("No default shell not supported in Flakes mode")
+var ErrNoRecognizableShellFound = errors.New(
+	"SHELL in undefined, and couldn't find any common shells in PATH")
 
 // Shell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
@@ -70,14 +71,63 @@ type Shell struct {
 
 type ShellOption func(*Shell)
 
-// DetectShell attempts to determine the user's default shell.
-func DetectShell(opts ...ShellOption) (*Shell, error) {
-	path := os.Getenv("SHELL")
-	if path == "" {
-		return nil, errors.New("unable to detect the current shell")
+// NewShell initializes the Shell struct so it can be used to start a shell environment
+// for the devbox project.
+func NewShell(opts ...ShellOption) (*Shell, error) {
+	shPath, err := shellPath()
+	if err != nil {
+		return nil, err
+	}
+	sh := initShellBinaryFields(shPath)
+
+	for _, opt := range opts {
+		opt(sh)
 	}
 
-	sh := &Shell{binPath: filepath.Clean(path)}
+	debug.Log("Recognized shell as: %s", sh.binPath)
+	debug.Log("Looking for user's shell init file at: %s", sh.userShellrcPath)
+	return sh, nil
+}
+
+// shellPath returns the path to a shell binary, or error if none found.
+func shellPath() (path string, err error) {
+	defer func() {
+		if err != nil {
+			path = filepath.Clean(path)
+		}
+	}()
+
+	// First, check the SHELL environment variable.
+	path = os.Getenv("SHELL")
+	if path != "" {
+		debug.Log("Using SHELL env var for shell binary path: %s\n", path)
+		return path, nil
+	}
+
+	// Second, attempt to find the path to one of these common shells
+	shells := []string{"sh", "bash", "zsh", "ksh", "fish", "dash", "ash"}
+	for _, shell := range shells {
+		var err error
+		path, err = exec.LookPath(shell)
+		if err != nil {
+			if errors.Is(err, exec.ErrNotFound) {
+				continue
+			}
+			return "", errors.WithStack(err)
+		}
+		debug.Log("SHELL env var is undefined. Falling back to a common shell accessible in PATH: %s\n", path)
+		return path, nil
+	}
+
+	// Else, return an error
+	return "", ErrNoRecognizableShellFound
+}
+
+// initShellBinaryFields initializes the fields specific to the shell binary that will be used
+// for the devbox shell.
+func initShellBinaryFields(path string) *Shell {
+
+	sh := &Shell{binPath: path}
 	base := filepath.Base(path)
 	// Login shell
 	if base[0] == '-' {
@@ -108,14 +158,7 @@ func DetectShell(opts ...ShellOption) (*Shell, error) {
 	default:
 		sh.name = shUnknown
 	}
-
-	for _, opt := range opts {
-		opt(sh)
-	}
-
-	debug.Log("Recognized shell as: %s", sh.binPath)
-	debug.Log("Looking for user's shell init file at: %s", sh.userShellrcPath)
-	return sh, nil
+	return sh
 }
 
 // If/once we end up making plugins the same as devbox.json we probably want
@@ -203,26 +246,6 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 		// Always allow unfree packages.
 		"NIXPKGS_ALLOW_UNFREE=1",
 	)
-
-	// Launch a fallback shell if we couldn't find the path to the user's
-	// default shell.
-	if s.binPath == "" {
-
-		// TODO savil: fix this.
-		if featureflag.Flakes.Enabled() {
-			return ErrNoDefaultShellUnsupportedInFlakesMode
-		}
-		cmd := exec.Command("nix-shell", "--pure")
-		cmd.Args = append(cmd.Args, toKeepArgs(env, buildAllowList(s.env))...)
-		cmd.Args = append(cmd.Args, nixShellFilePath)
-		cmd.Env = env
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		debug.Log("Unable to detect the user's shell, falling back to: %v", cmd.Args)
-		return errors.WithStack(cmd.Run())
-	}
 
 	var cmd *exec.Cmd
 	if featureflag.UnifiedEnv.Enabled() {
