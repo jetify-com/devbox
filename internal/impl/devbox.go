@@ -848,6 +848,13 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 		env["DEVBOX_PATH_PREPEND"] = pathPrepend
 	}
 
+	for _, kv := range os.Environ() {
+		k, v, _ := strings.Cut(kv, "=")
+		if _, ok := env[k]; !ok {
+			env[k] = v
+		}
+	}
+
 	return env, nil
 }
 
