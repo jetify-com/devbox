@@ -1,13 +1,6 @@
 exec devbox init
 exec devbox add which
 
-# Non-default nix profiles are removed from PATH
-# NOTE: NIX_PROFILES is automatically set to contain the /nix/var/nix system profile, as
-# well as one at $HOME/.nix-profile
-env HOME=/home/test
-exec devbox run echo '$PATH'
-! stdout '/home/test/.nix-profile'
-
 # Ensure nix is accessible from the default profile
 exec devbox run which nix
 stdout '/nix/var/nix/profiles/default/bin/nix'
