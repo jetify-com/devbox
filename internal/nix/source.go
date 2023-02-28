@@ -10,19 +10,36 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/hashicorp/go-envparse"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/xdg"
 )
+
+func nixLinks() []string {
+	return []string{
+		"/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh",
+		filepath.Join(os.Getenv("HOME"), ".nix-profile/etc/profile.d/nix.sh"),
+		// logic introduced in https://github.com/NixOS/nix/pull/5588/files
+		xdg.StateSubpath("nix/profile/etc/profile.d/nix.sh"),
+	}
+}
 
 func SourceNixEnv() error {
 	// if command is not in path, the source the nix startup files and hopefully
 	// the command will be found. (we should still check that nix is actually
 	// installed before we get here)
-	srcFile := "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-	// if global (multi-user) daemon file is missing, try getting the single user
-	// file.
-	if _, err := os.Stat(srcFile); os.IsNotExist(err) {
-		srcFile = filepath.Join(
-			os.Getenv("HOME"),
-			"/.nix-profile/etc/profile.d/nix.sh",
+	srcFile := ""
+	for _, f := range nixLinks() {
+		if _, err := os.Stat(f); err == nil {
+			srcFile = f
+			break
+		}
+	}
+
+	if srcFile == "" {
+		return usererr.New(
+			"Unable to find nix startup file. If /nix directory exists it's " +
+				"possible the installation did not complete successfully. Follow " +
+				"instructions at https://nixos.org/download.html for manual install.",
 		)
 	}
 
