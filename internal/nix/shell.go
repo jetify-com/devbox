@@ -425,27 +425,27 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 
 	exportEnv := ""
 	if featureflag.UnifiedEnv.Enabled() {
-		sb := strings.Builder{}
+		strb := strings.Builder{}
 		for _, kv := range s.env {
 			k, v, ok := strings.Cut(kv, "=")
 			if !ok {
 				continue
 			}
-			sb.WriteString("export ")
-			sb.WriteString(k)
-			sb.WriteString(`="`)
+			strb.WriteString("export ")
+			strb.WriteString(k)
+			strb.WriteString(`="`)
 			for _, r := range v {
 				switch r {
 				// Special characters inside double quotes:
 				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
 				case '$', '`', '"', '\\', '\n':
-					sb.WriteRune('\\')
+					strb.WriteRune('\\')
 				}
-				sb.WriteRune(r)
+				strb.WriteRune(r)
 			}
-			sb.WriteString("\"\n")
+			strb.WriteString("\"\n")
 		}
-		exportEnv = strings.TrimSpace(sb.String())
+		exportEnv = strings.TrimSpace(strb.String())
 	}
 
 	err = tmpl.Execute(shellrcf, struct {

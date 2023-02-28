@@ -798,20 +798,20 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 
 	// Add environment variables from "nix print-dev-env" except for a few
 	// special ones we need to ignore.
-	for k, v := range vaf.Variables {
+	for key, val := range vaf.Variables {
 		// We only care about "exported" because the var and array types seem to only be used by nix-defined
 		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
 		// var: export VAR=VAL
 		// exported: export VAR=VAL
 		// array: declare -a VAR=('VAL1' 'VAL2' )
-		if v.Type != "exported" {
+		if val.Type != "exported" {
 			continue
 		}
 
 		// SSL_CERT_FILE is a special-case. We only ignore it if it's
 		// set to a specific value. This emulates the behavior of
 		// "nix develop".
-		if k == "SSL_CERT_FILE" && v.Value.(string) == "/no-cert-file.crt" {
+		if key == "SSL_CERT_FILE" && val.Value.(string) == "/no-cert-file.crt" {
 			continue
 		}
 
@@ -820,11 +820,11 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 		// and TMPDIR points to a missing directory. We want to ignore
 		// those values and just use the values from the current
 		// environment instead.
-		if ignoreDevEnvVar[k] {
+		if ignoreDevEnvVar[key] {
 			continue
 		}
 
-		env[k] = v.Value.(string)
+		env[key] = val.Value.(string)
 	}
 	nixEnvPath := env["PATH"]
 	debug.Log("nix environment PATH is: %s", nixEnvPath)
