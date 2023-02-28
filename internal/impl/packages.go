@@ -89,6 +89,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		cmd := exec.Command(
 			"nix", "profile", "install",
 			"--profile", profileDir,
+			"--priority", d.getPackagePriority(pkg),
 			"--impure", // Needed to allow flags from environment to be used.
 			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
 		)
@@ -191,6 +192,18 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 		}
 	}
 	return pending, nil
+}
+
+// This sets the priority of non-devbox.json packages to be slightly lower (higher number)
+// than devbox.json packages. This matters for profile installs, but doesn't matter
+// much for the flakes.nix file. There we rely on the order of packages (local ahead of global)
+func (d *Devbox) getPackagePriority(pkg string) string {
+	for _, p := range d.cfg.RawPackages {
+		if p == pkg {
+			return "5"
+		}
+	}
+	return "6" // Anything higher than 5 (default) would be correct
 }
 
 var resetCheckDone = false
