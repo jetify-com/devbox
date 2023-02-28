@@ -18,7 +18,7 @@ func (fw *PackageInstallWriter) Write(p []byte) (n int, err error) {
 	lines := strings.Split(string(p), "\n")
 	for _, line := range lines {
 		if line != "" && !fw.ignore(line) {
-			_, err = io.WriteString(fw, "\t"+line+"\n")
+			_, err = io.WriteString(fw.Writer, "\t"+line+"\n")
 			if err != nil {
 				return
 			}
