@@ -46,9 +46,13 @@ const (
 var ErrNoRecognizableShellFound = errors.New(
 	"SHELL in undefined, and couldn't find any common shells in PATH")
 
-// Shell configures a user's shell to run in Devbox. Its zero value is a
+// TODO move to `impl` package. This is no longer a pure nix shell.
+// Also consider splitting this struct's functionality so that there is a simpler
+// `nix.Shell` that can produce a raw nix shell once again.
+//
+// DevboxShell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
-type Shell struct {
+type DevboxShell struct {
 	name            name
 	binPath         string
 	projectDir      string // path to where devbox.json config resides
@@ -71,11 +75,11 @@ type Shell struct {
 	shellStartTime string
 }
 
-type ShellOption func(*Shell)
+type ShellOption func(*DevboxShell)
 
-// NewShell initializes the Shell struct so it can be used to start a shell environment
+// NewDevboxShell initializes the DevboxShell struct so it can be used to start a shell environment
 // for the devbox project.
-func NewShell(nixpkgsCommitHash string, opts ...ShellOption) (*Shell, error) {
+func NewDevboxShell(nixpkgsCommitHash string, opts ...ShellOption) (*DevboxShell, error) {
 	shPath, err := shellPath(nixpkgsCommitHash)
 	if err != nil {
 		return nil, err
@@ -153,9 +157,9 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 
 // initShellBinaryFields initializes the fields specific to the shell binary that will be used
 // for the devbox shell.
-func initShellBinaryFields(path string) *Shell {
+func initShellBinaryFields(path string) *DevboxShell {
 
-	sh := &Shell{binPath: path}
+	sh := &DevboxShell{binPath: path}
 	base := filepath.Base(path)
 	// Login shell
 	if base[0] == '-' {
@@ -192,19 +196,19 @@ func initShellBinaryFields(path string) *Shell {
 // If/once we end up making plugins the same as devbox.json we probably want
 // to merge all init hooks into single field
 func WithPluginInitHook(hook string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.pluginInitHook = hook
 	}
 }
 
 func WithProfile(profileDir string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.profileDir = profileDir
 	}
 }
 
 func WithHistoryFile(historyFile string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.historyFile = historyFile
 	}
 }
@@ -212,7 +216,7 @@ func WithHistoryFile(historyFile string) ShellOption {
 // TODO: Consider removing this once plugins add env vars directly to binaries
 // via wrapper scripts.
 func WithEnvVariables(envVariables map[string]string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		for k, v := range envVariables {
 			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -220,26 +224,26 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 }
 
 func WithUserScript(name string, command string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.ScriptName = name
 		s.ScriptCommand = command
 	}
 }
 
 func WithPKGConfigDir(pkgConfigDir string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.pkgConfigDir = pkgConfigDir
 	}
 }
 
 func WithProjectDir(projectDir string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.projectDir = projectDir
 	}
 }
 
 func WithShellStartTime(time string) ShellOption {
-	return func(s *Shell) {
+	return func(s *DevboxShell) {
 		s.shellStartTime = time
 	}
 }
@@ -258,7 +262,7 @@ func fishConfig() string {
 	return filepath.Join(xdg.ConfigDir(), "fish", "config.fish")
 }
 
-func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
+func (s *DevboxShell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
 	parentPath := CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
@@ -332,7 +336,7 @@ func (s *Shell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 
 // execCommand is a command that replaces the current shell with s. This is what
 // Run sets the nix-shell --command flag to.
-func (s *Shell) execCommand() string {
+func (s *DevboxShell) execCommand() string {
 	// We exec env, which will then exec the shell. This lets us set
 	// additional environment variables before any of the shell's init
 	// scripts run.
@@ -381,7 +385,7 @@ func (s *Shell) execCommand() string {
 	return strings.Join(args, " ")
 }
 
-func (s *Shell) RunInShell() error {
+func (s *DevboxShell) RunInShell() error {
 	env := append(
 		os.Environ(),
 		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
@@ -400,7 +404,7 @@ func (s *Shell) RunInShell() error {
 	return errors.WithStack(usererr.NewExecError(cmd.Run()))
 }
 
-func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs []string) {
+func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs []string) {
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set when launching the shell.
 	switch s.name {
@@ -421,7 +425,7 @@ func (s *Shell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs [
 	return extraEnv, extraArgs
 }
 
-func (s *Shell) execCommandInShell() (string, string, string) {
+func (s *DevboxShell) execCommandInShell() (string, string, string) {
 	args := []string{}
 
 	if s.ScriptCommand != "" {
@@ -430,7 +434,7 @@ func (s *Shell) execCommandInShell() (string, string, string) {
 	return s.binPath, strings.Join(args, " "), s.ScriptCommand
 }
 
-func (s *Shell) writeDevboxShellrc() (path string, err error) {
+func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 
 	// We need a temp dir (as opposed to a temp file) because zsh uses
 	// ZDOTDIR to point to a new directory containing the .zshrc.
@@ -510,7 +514,7 @@ func (s *Shell) writeDevboxShellrc() (path string, err error) {
 // within the devbox shell.
 //
 // We do not link the .{shell}rc files, since devbox modifies them. See writeDevboxShellrc
-func (s *Shell) linkShellStartupFiles(shellSettingsDir string) {
+func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 
 	// For now, we only need to do this for zsh shell
 	if s.name == shZsh {
