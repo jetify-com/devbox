@@ -93,10 +93,12 @@ jobs:
         run: |
           sh <(curl -L https://nixos.org/nix/install) --no-modify-profile --daemon --daemon-user-count 1
           . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          export NIX_PATH=nixpkgs=https://github.com/nixos/nixpkgs/tarball/nixos-unstable
           nix-build '<nixpkgs>' -A stdenv -A bash -A hello
           echo "__ETC_PROFILE_NIX_SOURCED=1" >> $GITHUB_ENV
           echo "NIX_PROFILES=$NIX_PROFILES" >> $GITHUB_ENV
           echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV
+          echo "NIX_PATH=$NIX_PATH" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Run tests
         run: go test -race -cover -v ./...
