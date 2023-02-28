@@ -1,21 +1,17 @@
 package impl
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // packages.go has functions for adding, removing and getting info about nix packages
@@ -53,10 +49,6 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return nil
 	}
 
-	if err := d.ensureNixpkgsPrefetched(); err != nil {
-		return err
-	}
-
 	pkgs, err := d.pendingPackagesForInstallation()
 	if err != nil {
 		return err
@@ -84,29 +76,17 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		stepNum := idx + 1
 
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		fmt.Printf("%s\n", stepMsg)
 
-		cmd := exec.Command(
-			"nix", "profile", "install",
-			"--profile", profileDir,
-			"--priority", d.getPackagePriority(pkg),
-			"--impure", // Needed to allow flags from environment to be used.
-			nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit)+"#"+pkg,
-		)
-		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-		cmd.Stdout = &nixPackageInstallWriter{d.writer}
-
-		cmd.Env = nix.DefaultEnv()
-		cmd.Stderr = cmd.Stdout
-		err = cmd.Run()
-		if err != nil {
-			fmt.Fprintf(d.writer, "%s: ", stepMsg)
-			color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-			return errors.Wrapf(err, "Command: %s", cmd)
+		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
+			CustomStepMessage: stepMsg,
+			ExtraFlags:        []string{"--priority", d.getPackagePriority(pkg)},
+			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
+			Package:           pkg,
+			ProfilePath:       profileDir,
+			Writer:            d.writer,
+		}); err != nil {
+			return err
 		}
-
-		fmt.Fprintf(d.writer, "%s: ", stepMsg)
-		color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
 	}
 
 	return nil
@@ -146,6 +126,7 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 			return errors.Errorf("Did not find AttributePath for package: %s", pkg)
 		}
 
+		// TODO: unify this with nix.ProfileRemove
 		cmd := exec.Command("nix", "profile", "remove",
 			"--profile", profileDir,
 			attrPath,
@@ -239,100 +220,4 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}
 
 	return errors.WithStack(os.Remove(profileDir))
-}
-
-// ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
-func (d *Devbox) ensureNixpkgsPrefetched() error {
-	// Look up the cached map of commitHash:nixStoreLocation
-	commitToLocation, err := d.nixpkgsCommitFileContents()
-	if err != nil {
-		return err
-	}
-
-	// Check if this nixpkgs.Commit is located in the local /nix/store
-	location, isPresent := commitToLocation[d.cfg.Nixpkgs.Commit]
-	if isPresent {
-		if fi, err := os.Stat(location); err == nil && fi.IsDir() {
-			// The nixpkgs for this commit hash is present, so we don't need to prefetch
-			return nil
-		}
-	}
-
-	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded.\n")
-	cmd := exec.Command(
-		"nix", "flake", "prefetch",
-		nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
-	)
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = d.writer
-	cmd.Stderr = cmd.Stdout
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
-		color.New(color.FgRed).Fprintf(d.writer, "Fail\n")
-		return errors.Wrapf(err, "Command: %s", cmd)
-	}
-	fmt.Fprintf(d.writer, "Ensuring nixpkgs registry is downloaded: ")
-	color.New(color.FgGreen).Fprintf(d.writer, "Success\n")
-
-	return d.saveToNixpkgsCommitFile(commitToLocation)
-}
-
-func (d *Devbox) nixpkgsCommitFileContents() (map[string]string, error) {
-	path := nixpkgsCommitFilePath()
-	if !fileutil.Exists(path) {
-		return map[string]string{}, nil
-	}
-
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	commitToLocation := map[string]string{}
-	if err := json.Unmarshal(contents, &commitToLocation); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return commitToLocation, nil
-}
-
-func (d *Devbox) saveToNixpkgsCommitFile(commitToLocation map[string]string) error {
-	// Make a query to get the /nix/store path for this commit hash.
-	cmd := exec.Command("nix", "flake", "prefetch", "--json",
-		nix.FlakeNixpkgs(d.cfg.Nixpkgs.Commit),
-	)
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	out, err := cmd.Output()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// read the json response
-	var prefetchData struct {
-		StorePath string `json:"storePath"`
-	}
-	if err := json.Unmarshal(out, &prefetchData); err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Ensure the nixpkgs commit file path exists so we can write an update to it
-	path := nixpkgsCommitFilePath()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil && !errors.Is(err, fs.ErrExist) {
-		return errors.WithStack(err)
-	}
-
-	// write to the map, jsonify it, and write that json to the nixpkgsCommit file
-	commitToLocation[d.cfg.Nixpkgs.Commit] = prefetchData.StorePath
-	serialized, err := json.Marshal(commitToLocation)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	err = os.WriteFile(path, serialized, 0644)
-	return errors.WithStack(err)
-}
-
-func nixpkgsCommitFilePath() string {
-	cacheDir := xdg.CacheSubpath("devbox")
-	return filepath.Join(cacheDir, "nixpkgs.json")
 }

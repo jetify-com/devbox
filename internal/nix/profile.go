@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
@@ -183,20 +184,55 @@ func (item *NixProfileListItem) String() string {
 	)
 }
 
+type ProfileInstallArgs struct {
+	CustomStepMessage string
+	ExtraFlags        []string
+	NixpkgsCommit     string
+	Package           string
+	ProfilePath       string
+	Writer            io.Writer
+}
+
 // ProfileInstall calls nix profile install with default profile
-func ProfileInstall(profilePath, nixpkgsCommit, pkg string) error {
-	cmd := exec.Command("nix", "profile", "install",
-		"--profile", profilePath,
-		"nixpkgs/"+nixpkgsCommit+"#"+pkg,
-	)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Env = DefaultEnv()
-	out, err := cmd.CombinedOutput()
-	if bytes.Contains(out, []byte("does not provide attribute")) {
-		return ErrPackageNotFound
+func ProfileInstall(args *ProfileInstallArgs) error {
+	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
+		return err
+	}
+	stepMsg := args.Package
+	if args.CustomStepMessage != "" {
+		stepMsg = args.CustomStepMessage
+		// Only print this first one if we have a custom message. Otherwise it feels
+		// repetitive.
+		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	return errors.Wrap(err, string(out))
+	cmd := exec.Command("nix", "profile", "install",
+		"--profile", args.ProfilePath,
+		"--impure", // Needed to allow flags from environment to be used.
+		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
+	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, args.ExtraFlags...)
+
+	cmd.Env = DefaultEnv()
+	cmd.Stdout = &PackageInstallWriter{args.Writer}
+	var stderr bytes.Buffer
+	cmd.Stderr = io.MultiWriter(&stderr, cmd.Stdout)
+
+	if err := cmd.Run(); err != nil {
+		if strings.Contains(stderr.String(), "does not provide attribute") {
+			return ErrPackageNotFound
+		}
+
+		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
+		return errors.Wrapf(err, "Command: %s", cmd)
+	}
+
+	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
+
+	return nil
 }
 
 func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
