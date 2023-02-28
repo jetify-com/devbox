@@ -159,7 +159,7 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 // for the devbox shell.
 func initShellBinaryFields(path string) *DevboxShell {
 
-	sh := &DevboxShell{binPath: path}
+	shell := &DevboxShell{binPath: path}
 	base := filepath.Base(path)
 	// Login shell
 	if base[0] == '-' {
@@ -167,30 +167,30 @@ func initShellBinaryFields(path string) *DevboxShell {
 	}
 	switch base {
 	case "bash":
-		sh.name = shBash
-		sh.userShellrcPath = rcfilePath(".bashrc")
+		shell.name = shBash
+		shell.userShellrcPath = rcfilePath(".bashrc")
 	case "zsh":
-		sh.name = shZsh
-		sh.userShellrcPath = rcfilePath(".zshrc")
+		shell.name = shZsh
+		shell.userShellrcPath = rcfilePath(".zshrc")
 	case "ksh":
-		sh.name = shKsh
-		sh.userShellrcPath = rcfilePath(".kshrc")
+		shell.name = shKsh
+		shell.userShellrcPath = rcfilePath(".kshrc")
 	case "fish":
-		sh.name = shFish
-		sh.userShellrcPath = fishConfig()
-	case "dash", "ash", "sh":
-		sh.name = shPosix
-		sh.userShellrcPath = os.Getenv("ENV")
+		shell.name = shFish
+		shell.userShellrcPath = fishConfig()
+	case "dash", "ash", "shell":
+		shell.name = shPosix
+		shell.userShellrcPath = os.Getenv("ENV")
 
 		// Just make up a name if there isn't already an init file set
 		// so we have somewhere to put a new one.
-		if sh.userShellrcPath == "" {
-			sh.userShellrcPath = ".shinit"
+		if shell.userShellrcPath == "" {
+			shell.userShellrcPath = ".shinit"
 		}
 	default:
-		sh.name = shUnknown
+		shell.name = shUnknown
 	}
-	return sh
+	return shell
 }
 
 // If/once we end up making plugins the same as devbox.json we probably want
