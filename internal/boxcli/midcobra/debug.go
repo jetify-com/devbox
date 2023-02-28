@@ -57,13 +57,15 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if usererr.HasUserMessage(runErr) {
 		if usererr.IsWarning(runErr) {
 			ux.Fwarning(cmd.ErrOrStderr(), runErr.Error())
+			return
 		} else {
 			color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "\nError: %s\n\n", runErr.Error())
 		}
+	} else {
+		color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "Error: %v\n\n", runErr)
 	}
 
 	st := debug.EarliestStackTrace(runErr)
-	color.New(color.FgRed).Fprintf(cmd.ErrOrStderr(), "Error: %v\n\n", runErr)
 	var exitErr *exec.ExitError
 	if errors.As(runErr, &exitErr) {
 		debug.Log("Command stderr: %s\n", exitErr.Stderr)
