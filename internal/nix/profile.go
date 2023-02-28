@@ -198,12 +198,13 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
 		return err
 	}
-	stepMsg := fmt.Sprintf("Installing %s\n", args.Package)
+	stepMsg := args.Package
 	if args.CustomStepMessage != "" {
 		stepMsg = args.CustomStepMessage
+		// Only print this first one if we have a custom message. Otherwise it feels
+		// repetitive.
+		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
-
-	fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 
 	cmd := exec.Command("nix", "profile", "install",
 		"--profile", args.ProfilePath,
@@ -215,9 +216,14 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 
 	cmd.Env = DefaultEnv()
 	cmd.Stdout = &PackageInstallWriter{args.Writer}
-	cmd.Stderr = cmd.Stdout
+	var stderr bytes.Buffer
+	cmd.Stderr = io.MultiWriter(&stderr, cmd.Stdout)
 
 	if err := cmd.Run(); err != nil {
+		if strings.Contains(stderr.String(), "does not provide attribute") {
+			return ErrPackageNotFound
+		}
+
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
 		return errors.Wrapf(err, "Command: %s", cmd)
