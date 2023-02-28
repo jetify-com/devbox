@@ -271,7 +271,7 @@ func (d *Devbox) Shell() error {
 		nix.WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := nix.NewShell(opts...)
+	shell, err := nix.NewShell(d.cfg.Nixpkgs.Commit, opts...)
 	if err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
 	}
 
-	shell, err := nix.NewShell(opts...)
+	shell, err := nix.NewShell(d.cfg.Nixpkgs.Commit, opts...)
 
 	if err != nil {
 		fmt.Fprint(d.writer, err)
@@ -381,6 +381,7 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 	}
 
 	shell, err := nix.NewShell(
+		d.cfg.Nixpkgs.Commit,
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),

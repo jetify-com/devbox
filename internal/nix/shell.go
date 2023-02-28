@@ -6,6 +6,7 @@ package nix
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
@@ -73,8 +75,8 @@ type ShellOption func(*Shell)
 
 // NewShell initializes the Shell struct so it can be used to start a shell environment
 // for the devbox project.
-func NewShell(opts ...ShellOption) (*Shell, error) {
-	shPath, err := shellPath()
+func NewShell(nixpkgsCommitHash string, opts ...ShellOption) (*Shell, error) {
+	shPath, err := shellPath(nixpkgsCommitHash)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +92,7 @@ func NewShell(opts ...ShellOption) (*Shell, error) {
 }
 
 // shellPath returns the path to a shell binary, or error if none found.
-func shellPath() (path string, err error) {
+func shellPath(nixpkgsCommitHash string) (path string, err error) {
 	defer func() {
 		if err != nil {
 			path = filepath.Clean(path)
@@ -104,19 +106,45 @@ func shellPath() (path string, err error) {
 		return path, nil
 	}
 
-	// Second, attempt to find the path to one of these common shells
-	shells := []string{"sh", "bash", "zsh", "ksh", "fish", "dash", "ash"}
-	for _, shell := range shells {
-		var err error
-		path, err = exec.LookPath(shell)
+	// Second, fallback to using the bash that nix uses by default.
+
+	var bashNixStorePath string // of the form /nix/store/{hash}-bash-{version}/
+	if featureflag.Flakes.Enabled() {
+		cmd := exec.Command(
+			"nix", "eval", "--raw",
+			fmt.Sprintf("%s#bash", FlakeNixpkgs(nixpkgsCommitHash)),
+		)
+		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		out, err := cmd.Output()
 		if err != nil {
-			if errors.Is(err, exec.ErrNotFound) {
-				continue
-			}
 			return "", errors.WithStack(err)
 		}
-		debug.Log("SHELL env var is undefined. Falling back to a common shell accessible in PATH: %s\n", path)
-		return path, nil
+		bashNixStorePath = string(out)
+	} else {
+		nixpkgsInfo, err := plansdk.GetNixpkgsInfo(nixpkgsCommitHash)
+		if err != nil {
+			return "", err
+		}
+		expr := fmt.Sprintf(
+			"let pkgs = import (fetchTarball { url = \"%s\"; }) {}; in {inherit(pkgs.bash) outPath; }",
+			nixpkgsInfo.URL,
+		)
+		cmd := exec.Command("nix-instantiate", "--eval", "--strict",
+			"--json",
+			"--expr", expr,
+		)
+		out, err := cmd.Output()
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		if err := json.Unmarshal(out, &bashNixStorePath); err != nil {
+			return "", errors.WithStack(err)
+		}
+	}
+
+	if bashNixStorePath != "" {
+		// the output is the raw path to the bash installation in the /nix/store
+		return fmt.Sprintf("%s/bin/bash", bashNixStorePath), nil
 	}
 
 	// Else, return an error
