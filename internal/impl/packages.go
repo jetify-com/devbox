@@ -184,7 +184,7 @@ func (d *Devbox) getPackagePriority(pkg string) string {
 			return "5"
 		}
 	}
-	return "6" // Anyting higher than 5 (default) would be correct
+	return "6" // Anything higher than 5 (default) would be correct
 }
 
 var resetCheckDone = false
