@@ -53,8 +53,10 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	if nix.DirExists() {
-		if err := nix.SourceNixEnv(); err != nil || nix.BinaryInstalled() {
+		if err := nix.SourceNixEnv(); err != nil {
 			return err
+		} else if nix.BinaryInstalled() {
+			return nil
 		}
 
 		return usererr.New(
