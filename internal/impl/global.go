@@ -42,8 +42,18 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	if err != nil {
 		return err
 	}
-	for _, pkg := range pkgs {
-		if err := nix.ProfileInstall(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
+
+	total := len(pkgs)
+	for idx, pkg := range pkgs {
+		stepNum := idx + 1
+		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
+			CustomStepMessage: stepMsg,
+			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
+			Package:           pkg,
+			ProfilePath:       profilePath,
+			Writer:            d.writer,
+		}); err != nil {
 			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
 		} else {
 			fmt.Fprintf(d.writer, "%s is now installed\n", pkg)

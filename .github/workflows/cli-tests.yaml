@@ -99,7 +99,7 @@ jobs:
           echo "NIX_SSL_CERT_FILE=$NIX_SSL_CERT_FILE" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Run tests
-        run: go test -race -cover ./...
+        run: go test -race -cover -v ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     runs-on: ubuntu-latest
@@ -114,4 +114,4 @@ jobs:
       - name: Install nix and devbox packages
         run: |
           NIX_INSTALLER_NO_CHANNEL_ADD=1
-          devbox shell -- echo "Installing packages..."
+          devbox run echo "Installing packages..."
