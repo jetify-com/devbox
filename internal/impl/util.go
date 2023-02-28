@@ -17,12 +17,17 @@ const nixpkgsUtilityCommit = "f7475ce8950b761d80a13f3f81d2c23fce60c1dd"
 // It's used to install applications devbox might need, like process-compose
 // This is an alternative to a global install which would modify a user's
 // environment.
-func addDevboxUtilityPackage(pkg string) error {
+func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 	profilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err
 	}
-	return nix.ProfileInstall(profilePath, nixpkgsUtilityCommit, pkg)
+	return nix.ProfileInstall(&nix.ProfileInstallArgs{
+		NixpkgsCommit: nixpkgsUtilityCommit,
+		Package:       pkg,
+		ProfilePath:   profilePath,
+		Writer:        d.writer,
+	})
 }
 
 func utilityLookPath(binName string) (string, error) {
