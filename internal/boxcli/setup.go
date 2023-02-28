@@ -6,12 +6,15 @@ package boxcli
 import (
 	"fmt"
 	"os"
+	"os/user"
 
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 const nixDaemonFlag = "daemon"
@@ -75,7 +78,7 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 		fmt.Scanln()
 	}
 
-	if err := nix.Install(cmd.ErrOrStderr(), nil); err != nil {
+	if err := nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd)); err != nil {
 		return err
 	}
 
@@ -90,6 +93,13 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 
 func nixDaemonFlagVal(cmd *cobra.Command) *bool {
 	if !cmd.Flags().Changed(nixDaemonFlag) {
+		if u, err := user.Current(); err == nil && u.Uid == "0" {
+			ux.Fwarning(
+				cmd.ErrOrStderr(),
+				"Running as root. Installing Nix in multi-user mode.\n",
+			)
+			return lo.ToPtr(true)
+		}
 		return nil
 	}
 
