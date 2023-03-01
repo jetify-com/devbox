@@ -102,11 +102,13 @@ jobs:
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Run tests
         run: |
-          export NIX_PATH=nixpkgs=https://github.com/nixos/nixpkgs/tarball/nixos-unstable
           go test -race -cover -v ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
