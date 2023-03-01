@@ -295,6 +295,7 @@ func (sh *shell) exit(t *testing.T) {
 }
 
 func TestShell(t *testing.T) {
+	t.Setenv("NIX_PATH", "nixpkgs=https://github.com/nixos/nixpkgs/tarball/nixos-unstable")
 	devboxJSON := `
 	{
 		"packages": [],
