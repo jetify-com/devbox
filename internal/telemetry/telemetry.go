@@ -55,3 +55,7 @@ func OS() string {
 
 	return os
 }
+
+func IsWSL() bool {
+	return OS() == "wsl"
+}
