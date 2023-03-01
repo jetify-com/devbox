@@ -6,7 +6,6 @@ package boxcli
 import (
 	"fmt"
 	"os"
-	"os/user"
 
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
@@ -93,7 +92,7 @@ func ensureNixInstalled(cmd *cobra.Command, args []string) error {
 
 func nixDaemonFlagVal(cmd *cobra.Command) *bool {
 	if !cmd.Flags().Changed(nixDaemonFlag) {
-		if u, err := user.Current(); err == nil && u.Uid == "0" {
+		if os.Geteuid() == 0 {
 			ux.Fwarning(
 				cmd.ErrOrStderr(),
 				"Running as root. Installing Nix in multi-user mode.\n",
