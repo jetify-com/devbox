@@ -16,8 +16,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/testframework"
 )
 
@@ -314,13 +312,6 @@ func TestShell(t *testing.T) {
 	err := td.SetDevboxJSON(devboxJSON)
 	assert.NoError(t, err)
 	output, err := td.RunCommand(ShellCmd())
-	if featureflag.Flakes.Enabled() {
-		assert.Error(t, err)
-		if !errors.Is(err, nix.ErrNoDefaultShellUnsupportedInFlakesMode) {
-			assert.Fail(t, "Expected error %s but received %s", nix.ErrNoDefaultShellUnsupportedInFlakesMode, err)
-		}
-	} else {
-		assert.NoError(t, err)
-		assert.Contains(t, output, "Starting a devbox shell...")
-	}
+	assert.NoError(t, err)
+	assert.Contains(t, output, "Starting a devbox shell...")
 }
