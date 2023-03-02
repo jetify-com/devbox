@@ -272,10 +272,9 @@ func (d *Devbox) Shell() error {
 		nix.WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := nix.DetectShell(opts...)
+	shell, err := nix.NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
 	if err != nil {
-		// Fall back to using a plain Nix shell.
-		shell = &nix.Shell{}
+		return err
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
@@ -359,11 +358,11 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
 	}
 
-	shell, err := nix.DetectShell(opts...)
+	shell, err := nix.NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
 
 	if err != nil {
 		fmt.Fprint(d.writer, err)
-		shell = &nix.Shell{}
+		return err
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
@@ -382,7 +381,8 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 		return usererr.New("unable to find a script with name %s", scriptName)
 	}
 
-	shell, err := nix.DetectShell(
+	shell, err := nix.NewDevboxShell(
+		d.cfg.Nixpkgs.Commit,
 		nix.WithProfile(profileDir),
 		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		nix.WithUserScript(scriptName, script.String()),
@@ -391,7 +391,7 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 
 	if err != nil {
 		fmt.Fprint(d.writer, err)
-		shell = &nix.Shell{}
+		return err
 	}
 
 	return shell.RunInShell()

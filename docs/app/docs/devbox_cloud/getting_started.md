@@ -158,7 +158,7 @@ Once your service is running, you may want to test it with your browser or local
 
  You can do this using `devbox cloud forward :<remote_port>`, which will forward ports from your cloud instance to your local machine. If you provide just the remote port, Devbox will forward it to a randomly assigned local port.
 
-You can view the full list of port-forwards on your machine using `devbox cloud forward ls`. You can also terminate port=forwarding with `devbox cloud forward termiante`. 
+You can view the full list of port-forwards on your machine using `devbox cloud forward ls`. You can also terminate port=forwarding with `devbox cloud forward terminate`. 
 
 #### Example: Port-forwarding our Flask App
 

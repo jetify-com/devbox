@@ -1,0 +1,34 @@
+exec devbox run -- php index.php
+stdout 'done\n'
+
+-- devbox.json --
+{
+  "packages": [
+    "php81",
+    "php81Packages.composer",
+    "php81Extensions.ds"
+  ],
+  "shell": {
+    "init_hook": null
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
+}
+
+-- index.php --
+<?php
+
+// Check that the extension is loaded.
+if (!extension_loaded('ds')) {
+    echo("ds extension is not enabled");
+    exit(0);
+}
+
+$vec = new \Ds\Vector(["hello", "world"]);
+
+echo("Original vector elements\n");
+foreach ($vec as $idx => $elem) {
+  echo("idx: $idx and elem: $elem\n");
+}
+echo("done\n");

@@ -20,6 +20,7 @@ func nixLinks() []string {
 		filepath.Join(os.Getenv("HOME"), ".nix-profile/etc/profile.d/nix.sh"),
 		// logic introduced in https://github.com/NixOS/nix/pull/5588/files
 		xdg.StateSubpath("nix/profile/etc/profile.d/nix.sh"),
+		xdg.StateSubpath("nix/profiles/profile/etc/profile.d/nix.sh"),
 	}
 }
 

@@ -32,6 +32,13 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 jobs:
+  typos:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: crate-ci/typos@v1.13.10
+
   golangci-lint:
     strategy:
       matrix:
@@ -101,10 +108,14 @@ jobs:
           echo "NIX_PATH=$NIX_PATH" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
       - name: Run tests
-        run: go test -race -cover -v ./...
+        run: |
+          go test -race -cover -v ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
