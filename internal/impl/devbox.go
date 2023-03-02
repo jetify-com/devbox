@@ -244,13 +244,14 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	env, err := plugin.Env(d.packages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
+	var env map[string]string
 	if featureflag.UnifiedEnv.Enabled() {
-		env, err = d.computeNixEnv(false)
+		env, err = d.computeNixEnv()
+		if err != nil {
+			return err
+		}
+	} else {
+		env, err = plugin.Env(d.packages(), d.projectDir)
 		if err != nil {
 			return err
 		}
@@ -293,7 +294,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	env, err := d.computeNixEnv(true)
+	env, err := d.computeNixEnv()
 	if err != nil {
 		return err
 	}
@@ -443,7 +444,7 @@ func (d *Devbox) Exec(cmds ...string) error {
 	}
 }
 
-func (d *Devbox) PrintEnv(setFullPath bool) (string, error) {
+func (d *Devbox) PrintEnv() (string, error) {
 	script := ""
 	if featureflag.UnifiedEnv.Disabled() {
 		envs, err := plugin.Env(d.packages(), d.projectDir)
@@ -455,7 +456,7 @@ func (d *Devbox) PrintEnv(setFullPath bool) (string, error) {
 		}
 		return script, nil
 	}
-	envs, err := d.computeNixEnv(setFullPath)
+	envs, err := d.computeNixEnv()
 	if err != nil {
 		return "", err
 	}
@@ -748,66 +749,85 @@ func (d *Devbox) printPackageUpdateMessage(
 	return nil
 }
 
-// computeNixEnv computes the environment (i.e. set of env variables) to be used on
-// devbox execution commands (i.e. devbox run, shell). In short, the environment is
-// calculated as follows:
-// 1. Start with the output of nix print-dev-env
-// 2. Allow a limited set of variables (e.g. leakedVars) in the host machine to "leak" in (e.g. HOME).
-// 3. Include any plugin env vars.
-// 4. Include any user-defined env vars from devbox.json.
+// computeNixEnv computes the set of environment variables that define a Devbox
+// environment. The "devbox run" and "devbox shell" commands source these
+// variables into a shell before executing a command or showing an interactive
+// prompt.
 //
-// The PATH variable has some special handling. In short:
-// 1. Start with the PATH as defined by nix (through nix print-dev-env).
-// 2. Clean the host PATH of any nix paths.
-// 3. Append the cleaned host PATH (tradeoff between reproducibility and ease of use).
-// 4. Prepend the paths of any plugins (tbd whether it's actually needed).
-func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
+// The process for building the environment involves layering sets of
+// environment variables on top of each other, with each layer overwriting any
+// duplicate keys from the previous:
+//
+//  1. Copy variables from the current environment except for those in
+//     ignoreCurrentEnvVar, such as PWD and SHELL.
+//  2. Copy variables from "nix print-dev-env" except for those in
+//     ignoreDevEnvVar, such as TMPDIR and HOME.
+//  3. Copy variables from Devbox plugins.
+//  4. Set PATH to the concatenation of the PATHs from step 3, step 2, and
+//     step 1 (in that order).
+//
+// The final result is a set of environment variables where Devbox plugins have
+// the highest priority, then Nix environment variables, and then variables
+// from the current environment. Similarly, the PATH gives Devbox plugin
+// binaries the highest priority, then Nix packages, and then non-Nix
+// programs.
+//
+// Note that the shellrc.tmpl template (which sources this environment) does
+// some additional processing. The computeNixEnv environment won't necessarily
+// represent the final "devbox run" or "devbox shell" environments.
+func (d *Devbox) computeNixEnv() (map[string]string, error) {
+	currentEnv := os.Environ()
+	env := make(map[string]string, len(currentEnv))
+	for _, kv := range currentEnv {
+		key, val, found := strings.Cut(kv, "=")
+		if !found {
+			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+		}
+		if ignoreCurrentEnvVar[key] {
+			continue
+		}
+		env[key] = val
+	}
+	currentEnvPath := env["PATH"]
+	debug.Log("current environment PATH is: %s", currentEnvPath)
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
 		return nil, err
 	}
 
-	env := map[string]string{}
-	for k, v := range vaf.Variables {
+	// Add environment variables from "nix print-dev-env" except for a few
+	// special ones we need to ignore.
+	for key, val := range vaf.Variables {
 		// We only care about "exported" because the var and array types seem to only be used by nix-defined
 		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
 		// var: export VAR=VAL
 		// exported: export VAR=VAL
 		// array: declare -a VAR=('VAL1' 'VAL2' )
-		if v.Type == "exported" {
-			env[k] = v.Value.(string)
+		if val.Type != "exported" {
+			continue
 		}
+
+		// SSL_CERT_FILE is a special-case. We only ignore it if it's
+		// set to a specific value. This emulates the behavior of
+		// "nix develop".
+		if key == "SSL_CERT_FILE" && val.Value.(string) == "/no-cert-file.crt" {
+			continue
+		}
+
+		// Certain variables get set to invalid values after Nix builds
+		// the shell environment. For example, HOME=/homeless-shelter
+		// and TMPDIR points to a missing directory. We want to ignore
+		// those values and just use the values from the current
+		// environment instead.
+		if ignoreDevEnvVar[key] {
+			continue
+		}
+
+		env[key] = val.Value.(string)
 	}
-
-	// Hack to quickly fix TMPDIR being set to the temp directory Nix used
-	// in the build environment. When there's more time to test, we should
-	// probably include all of the variables that Nix ignores:
-	// https://github.com/NixOS/nix/blob/92611e6e4c1c5c712ca7d5f9a258640662d006df/src/nix/develop.cc#L291-L357
-	delete(env, "TEMP")
-	delete(env, "TEMPDIR")
-	delete(env, "TMP")
-	delete(env, "TMPDIR")
-
-	// Copy over (and overwrite) vars that we explicitly "leak", as well as DEVBOX_ vars.
-	for _, kv := range os.Environ() {
-		key, val, found := strings.Cut(kv, "=")
-		if !found {
-			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
-		}
-
-		if strings.HasPrefix(key, "DEVBOX_") {
-			env[key] = val
-		}
-
-		if _, ok := leakedVars[key]; ok {
-			env[key] = val
-		}
-
-		if _, ok := leakedVarsForShell[key]; ok {
-			env[key] = val
-		}
-	}
+	nixEnvPath := env["PATH"]
+	debug.Log("nix environment PATH is: %s", nixEnvPath)
 
 	// These variables are only needed for shell, but we include them here in the computed env
 	// for both shell and run in order to be as identical as possible.
@@ -831,22 +851,12 @@ func (d *Devbox) computeNixEnv(setFullPath bool) (map[string]string, error) {
 		}
 	}
 
-	// PATH handling.
-	pluginVirtenvPath := d.pluginVirtenvPath() // TODO: consider removing this; not being used?
-	nixPath := env["PATH"]
-	hostPath := nix.CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
+	// TODO: consider removing this; not being used?
+	pluginVirtenvPath := d.pluginVirtenvPath()
+	debug.Log("plugin virtual environment PATH is: %s", pluginVirtenvPath)
 
-	// NOTE: for devbox shell, we need to defer the PATH setting, because a user's init file may prepend
-	// stuff to PATH, which will then take precedence over the devbox-set PATH. Instead, we do the path
-	// prepending in shellrc.tmpl. I chose to use the `setFullPath` variable instead of something like
-	// `isShell` to discourage the addition of more logic that makes shell/run differ more.
-	pathPrepend := fmt.Sprintf("%s:%s", pluginVirtenvPath, nixPath)
-	if setFullPath {
-		env["PATH"] = fmt.Sprintf("%s:%s", pathPrepend, hostPath)
-	} else {
-		env["PATH"] = hostPath
-		env["DEVBOX_PATH_PREPEND"] = pathPrepend
-	}
+	env["PATH"] = nix.JoinPathLists(pluginVirtenvPath, nixEnvPath, currentEnvPath)
+	debug.Log("computed unified environment PATH is: %s", env["PATH"])
 
 	return env, nil
 }
@@ -1025,63 +1035,43 @@ func commandExists(command string) bool {
 	return err == nil
 }
 
-// leakedVars contains a list of variables that, if set in the host, will be copied
-// to the environment of devbox run/shell. If they're NOT set in the host, they will be set
-// to an empty value.
-// NOTE: we want to keep this list AS SMALL AS POSSIBLE. The longer this list, the less "pure"
-// (and therefore, reproducible) devbox becomes.
-// TODO: allow user to specify more vars to leak, in order to make development easier.
-var leakedVars = map[string]bool{
-	"HOME": true, // Without this, HOME is set to /homeless-shelter and most programs fail.
+// ignoreCurrentEnvVar contains environment variables that Devbox should remove
+// from the slice of [os.Environ] variables before sourcing them. These are
+// variables that are set automatically by a new shell.
+var ignoreCurrentEnvVar = map[string]bool{
+	// Devbox may change the working directory of the shell, so using the
+	// original PWD and OLDPWD would be wrong.
+	"PWD":    true,
+	"OLDPWD": true,
 
-	// Where to write temporary files. nix print-dev-env sets these to an unwriteable path,
-	// so we override that here with whatever the host has set.
-	"TMP":     true,
-	"TEMP":    true,
-	"TMPDIR":  true,
-	"TEMPDIR": true,
+	// SHLVL is the number of nested shells. Copying it would give the
+	// Devbox shell the same level as the parent shell.
+	"SHLVL": true,
+
+	// The parent shell isn't guaranteed to be the same as the Devbox shell.
+	"SHELL": true,
 }
 
-var leakedVarsForShell = map[string]bool{
-	// POSIX
-	//
-	// Variables that are part of the POSIX standard.
-	"OLDPWD": true,
-	"PWD":    true,
-	"TERM":   true,
-	"TZ":     true,
-	"USER":   true,
-
-	// POSIX Locale
-	//
-	// Variables that are part of the POSIX standard which define
-	// the shell's locale.
-	"LC_ALL":      true, // Sets and overrides all of the variables below.
-	"LANG":        true, // Default to use for any of the variables below that are unset or null.
-	"LC_COLLATE":  true, // Collation order.
-	"LC_CTYPE":    true, // Character classification and case conversion.
-	"LC_MESSAGES": true, // Formats of informative and diagnostic messages and interactive responses.
-	"LC_MONETARY": true, // Monetary formatting.
-	"LC_NUMERIC":  true, // Numeric, non-monetary formatting.
-	"LC_TIME":     true, // Date and time formats.
-
-	// Common
-	//
-	// Variables that most programs agree on, but aren't strictly
-	// part of POSIX.
-	"TERM_PROGRAM":         true, // Name of the terminal the shell is running in.
-	"TERM_PROGRAM_VERSION": true, // The version of TERM_PROGRAM.
-	"SHLVL":                true, // The number of nested shells.
-
-	// Apple Terminal
-	//
-	// Special-cased variables that macOS's Terminal.app sets before
-	// launching the shell. It's not clear what exactly all of these do,
-	// but it seems like omitting them can cause problems.
-	"TERM_SESSION_ID":        true,
-	"SHELL_SESSIONS_DISABLE": true, // Respect session save/resume setting (see /etc/zshrc_Apple_Terminal).
-	"SECURITYSESSIONID":      true,
-
-	// SSH variables
-	"SSH_TTY": true, // Used by devbox telemetry logging
+// ignoreDevEnvVar contains environment variables that Devbox should remove from
+// the slice of [Devbox.PrintDevEnv] variables before sourcing them.
+//
+// This list comes directly from the "nix develop" source:
+// https://github.com/NixOS/nix/blob/f08ad5bdbac02167f7d9f5e7f9bab57cf1c5f8c4/src/nix/develop.cc#L257-L275
+var ignoreDevEnvVar = map[string]bool{
+	"BASHOPTS":           true,
+	"HOME":               true,
+	"NIX_BUILD_TOP":      true,
+	"NIX_ENFORCE_PURITY": true,
+	"NIX_LOG_FD":         true,
+	"NIX_REMOTE":         true,
+	"PPID":               true,
+	"SHELL":              true,
+	"SHELLOPTS":          true,
+	"TEMP":               true,
+	"TEMPDIR":            true,
+	"TERM":               true,
+	"TMP":                true,
+	"TMPDIR":             true,
+	"TZ":                 true,
+	"UID":                true,
 }

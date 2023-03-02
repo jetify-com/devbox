@@ -7,9 +7,9 @@ export PS1="(devbox) $PS1"
 
 # End Devbox Post-init Hook
 
-# Switch to the directory where devbox.json config is
-workingDir=$(pwd)
-cd path/to/projectDir
+# Run plugin and user init hooks from the devbox.json directory.
+working_dir="$(pwd)"
+cd "path/to/projectDir" || exit
 
 # Begin Plugin Init Hook
 
@@ -23,8 +23,4 @@ echo "Hello from a devbox shell hook!"
 
 # End Devbox User Hook
 
-cd $workingDir
-
-# Begin Script command
-
-# End Script command
+cd "$working_dir" || exit

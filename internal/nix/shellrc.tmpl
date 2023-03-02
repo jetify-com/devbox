@@ -16,35 +16,25 @@ content readable.
 
 */ -}}
 
-{{- if .UnifiedEnv -}}
-# Run the shell hook defined in shell.nix or flake.nix
-eval $shellHook
-
-{{ end -}}
-
-{{- if .OriginalInit -}}
-# Begin {{ .OriginalInitPath }}
-
-{{ .OriginalInit }}
-
-# End {{ .OriginalInitPath }}
+{{- if .OriginalInitPath -}}
+. "{{ .OriginalInitPath }}"
 
 {{ end -}}
 
 # Begin Devbox Post-init Hook
 
-{{ if .UnifiedEnv -}}
-PATH="$DEVBOX_PATH_PREPEND:$PATH"
+{{ with .ExportEnv -}}
+{{ . }}
 {{- else -}}
 PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
 {{- /*
-We need to set HISTFILE here because when starting a new shell, the shell will ignore the
-existing value of HISTFILE.
+We need to set HISTFILE here because when starting a new shell, the shell will
+ignore the existing value of HISTFILE.
 */ -}}
 {{- if .HistoryFile }}
-HISTFILE={{.HistoryFile}}
+HISTFILE="{{ .HistoryFile }}"
 {{- end }}
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
@@ -57,9 +47,9 @@ devbox log shell-ready {{ .ShellStartTime }}
 
 # End Devbox Post-init Hook
 
-# Switch to the directory where devbox.json config is
-workingDir=$(pwd)
-cd {{ .ProjectDir }}
+# Run plugin and user init hooks from the devbox.json directory.
+working_dir="$(pwd)"
+cd "{{ .ProjectDir }}" || exit
 
 {{- if .PluginInitHook }}
 
@@ -81,26 +71,26 @@ cd {{ .ProjectDir }}
 
 {{- end }}
 
-cd $workingDir
+cd "$working_dir" || exit
 
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
 devbox log shell-interactive {{ .ShellStartTime }}
 {{ end }}
 
-# Begin Script command
-
 {{- if .ScriptCommand }}
 
-function run_script {
-    workingDir=$(pwd)
-    cd {{ .ProjectDir }}
+# Begin Script Command
 
-    {{  .ScriptCommand }}
+run_script() {
+	working_dir="$(pwd)"
+	cd "{{ .ProjectDir }}" || exit
 
-    cd $workingDir
+	{{ .ScriptCommand }}
+
+	cd "$working_dir" || exit
 }
 
-{{- end }}
+# End Script Command
 
-# End Script command
+{{- end }}

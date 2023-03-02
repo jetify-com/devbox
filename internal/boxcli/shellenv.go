@@ -41,5 +41,5 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	return box.PrintEnv(true)
+	return box.PrintEnv()
 }

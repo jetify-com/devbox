@@ -265,7 +265,7 @@ func fishConfig() string {
 func (s *DevboxShell) Run(nixShellFilePath, nixFlakesFilePath string) error {
 	// Copy the current PATH into nix-shell, but clean and remove some
 	// directories that are incompatible.
-	parentPath := CleanEnvPath(os.Getenv("PATH"), os.Getenv("NIX_PROFILES"))
+	parentPath := JoinPathLists(os.Getenv("PATH"))
 
 	env := append(s.env, os.Environ()...)
 	env = append(
@@ -478,6 +478,31 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		tmpl = fishrcTmpl
 	}
 
+	exportEnv := ""
+	if featureflag.UnifiedEnv.Enabled() {
+		strb := strings.Builder{}
+		for _, kv := range s.env {
+			k, v, ok := strings.Cut(kv, "=")
+			if !ok {
+				continue
+			}
+			strb.WriteString("export ")
+			strb.WriteString(k)
+			strb.WriteString(`="`)
+			for _, r := range v {
+				switch r {
+				// Special characters inside double quotes:
+				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
+				case '$', '`', '"', '\\', '\n':
+					strb.WriteRune('\\')
+				}
+				strb.WriteRune(r)
+			}
+			strb.WriteString("\"\n")
+		}
+		exportEnv = strings.TrimSpace(strb.String())
+	}
+
 	err = tmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		OriginalInit     string
@@ -488,18 +513,18 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ScriptCommand    string
 		ShellStartTime   string
 		HistoryFile      string
-		UnifiedEnv       bool
+		ExportEnv        string
 	}{
 		ProjectDir:       s.projectDir,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
-		OriginalInitPath: filepath.Clean(s.userShellrcPath),
+		OriginalInitPath: s.userShellrcPath,
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
 		PathPrepend:      pathPrepend,
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
-		UnifiedEnv:       featureflag.UnifiedEnv.Enabled(),
+		ExportEnv:        exportEnv,
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -637,62 +662,33 @@ func toKeepArgs(env []string, allowList map[string]bool) []string {
 	return args
 }
 
-// splitNixList splits and cleans a list of space-delimited paths. It is similar
-// to filepath.SplitList for Nix environment variables, which do not use
-// filepath.ListSeparator.
-func splitNixList(s string) []string {
-	split := strings.Fields(s)
-	for i, dir := range split {
-		split[i] = filepath.Clean(dir)
-	}
-	return split
-}
-
-// CleanEnvPath takes a string formatted as a shell PATH and cleans it for
-// passing to nix-shell. It does the following rules for each entry:
+// JoinPathLists joins and cleans PATH-style strings of
+// [os.ListSeparator] delimited paths. To clean a path list, it splits it and
+// does the following for each element:
 //
-//  1. Applies filepath.Clean.
+//  1. Applies [filepath.Clean].
 //  2. Removes the path if it's relative (must begin with '/' and not be '.').
-//  3. Removes the path if it's a descendant of a user Nix profile directory
-//     (the default Nix profile is kept).
-func CleanEnvPath(pathEnv string, nixProfilesEnv string) string {
-	// Just to be safe, we need to guarantee that the NIX_PROFILES paths
-	// have been filepath.Clean'ed. The shellrc.tmpl has some commands that
-	// assume they are.
-	nixProfileDirs := splitNixList(nixProfilesEnv)
-
-	split := filepath.SplitList(pathEnv)
-	if len(split) == 0 {
+//  3. Removes the path if it's a duplicate.
+func JoinPathLists(pathLists ...string) string {
+	if len(pathLists) == 0 {
 		return ""
 	}
 
-	cleaned := make([]string, 0, len(split))
-	for _, path := range split {
-		path = filepath.Clean(path)
-		if path == "." || path[0] != '/' {
-			// Don't allow relative paths.
-			continue
-		}
-
-		keep := true
-		for _, profileDir := range nixProfileDirs {
-			// nixProfileDirs may be of the form: /nix/var/nix/profile/default or
-			// $HOME/.nix-profile. The former contains Nix itself (nix-store, nix-env,
-			// etc.), which we want to keep so it's available in the shell. The latter
-			// contains programs that the user installed with Nix, which we want to filter
-			// out so that only devbox-managed Nix packages are available.
-			isProfileDir := strings.HasPrefix(path, profileDir)
-			isSystemProfile := strings.HasPrefix(profileDir, "/nix")
-			if isProfileDir && !isSystemProfile {
-				keep = false
-				break
+	seen := make(map[string]bool)
+	var cleaned []string
+	for _, path := range pathLists {
+		for _, path := range filepath.SplitList(path) {
+			path = filepath.Clean(path)
+			if path == "." || path[0] != '/' {
+				// Remove empty paths and don't allow relative
+				// paths for security reasons.
+				continue
 			}
-		}
-
-		if keep {
-			cleaned = append(cleaned, path)
+			if !seen[path] {
+				cleaned = append(cleaned, path)
+			}
+			seen[path] = true
 		}
 	}
-
 	return strings.Join(cleaned, string(filepath.ListSeparator))
 }
