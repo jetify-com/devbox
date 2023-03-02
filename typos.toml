@@ -1,2 +1,5 @@
 [default.extend-words]
 AKE = "AKE"
+
+[files]
+extend-exclude=["*.svg"]
