@@ -244,7 +244,7 @@ func getVirtualMachine(sshCmd *openssh.Cmd) (vmUser, vmHost, region string, err 
 	}
 	resp := &vm{}
 	if err := json.Unmarshal(sshOut, resp); err != nil {
-		return "", "", "", errors.Wrapf(err, "error unmarshaling gateway response %q", sshOut)
+		return "", "", "", errors.Wrapf(err, "error unmarshalling gateway response %q", sshOut)
 	}
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
 		debug.Log("got gateway response:\n\t%s", redacted)
