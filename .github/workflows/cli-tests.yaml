@@ -34,10 +34,11 @@ env:
 jobs:
   typos:
     name: Spell Check with Typos
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: crate-ci/typos@v1.13.10
+      - uses: crate-ci/typos@v1.13.16
 
   golangci-lint:
     strategy:
