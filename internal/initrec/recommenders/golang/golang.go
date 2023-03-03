@@ -43,11 +43,10 @@ func getGoPackage(srcDir string) string {
 	v, ok := versionMap[goVersion]
 	if ok {
 		return v
-	} else {
-		// Should we be throwing an error instead, if we don't have a nix package
-		// for the specified version of go?
-		return defaultPkg
 	}
+	// Should we be throwing an error instead, if we don't have a nix package
+	// for the specified version of go?
+	return defaultPkg
 }
 
 func parseGoVersion(gomodPath string) string {

@@ -97,9 +97,8 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 			return exitErr.ExitCode()
 		}
 		return 1 // Error exit code
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func ExecutionID() string {

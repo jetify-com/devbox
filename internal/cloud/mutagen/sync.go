@@ -38,9 +38,8 @@ func Sync(spec *SessionSpec) (*Session, error) {
 	}
 	if len(sessions) > 0 {
 		return &sessions[0], nil
-	} else {
-		return nil, errors.New("failed to find session that was just created")
 	}
+	return nil, errors.New("failed to find session that was just created")
 	// TODO: starting the mutagen session currently fails if there's any error or
 	// interactivity required for the ssh connection.
 	// That includes:
