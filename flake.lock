@@ -1,0 +1,56 @@
+{
+  "nodes": {
+    "devbox-source": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1677791812,
+        "narHash": "sha256-9aGmX21TUINGDA3NB/OrGXi8W4i+b8fKS8ft8GtQxNM=",
+        "owner": "jetpack-io",
+        "repo": "devbox",
+        "rev": "c249fa1da3a24eb686220da378bc9dcdc6d49680",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jetpack-io",
+        "ref": "0.4.2",
+        "repo": "devbox",
+        "type": "github"
+      }
+    },
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1676283394,
+        "narHash": "sha256-XX2f9c3iySLCw54rJ/CZs+ZK6IQy7GXNY4nSOyu2QG4=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "3db36a8b464d0c4532ba1c7dda728f4576d6d073",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "narHash": "sha256-Jgq50e4S4JVCYpWLqrabBzDp/1mfaxHCh8/OOorHTy0=",
+        "type": "tarball",
+        "url": "https://github.com/nixos/nixpkgs/archive/3954218cf613eba8e0dcefa9abe337d26bc48fd0.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/nixos/nixpkgs/archive/3954218cf613eba8e0dcefa9abe337d26bc48fd0.tar.gz"
+      }
+    },
+    "root": {
+      "inputs": {
+        "devbox-source": "devbox-source",
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
