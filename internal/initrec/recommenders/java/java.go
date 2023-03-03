@@ -109,9 +109,8 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 	v, ok := jVersionMap[javaVersion.Major()]
 	if ok {
 		return v, nil
-	} else {
-		return defaultJava, nil
 	}
+	return defaultJava, nil
 }
 
 func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, error) {

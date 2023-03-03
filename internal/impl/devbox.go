@@ -212,11 +212,11 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
 	shellPlan.DevPackages = userDefinedPkgs
 
-	if nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit); err != nil {
+	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
+	if err != nil {
 		return nil, err
-	} else {
-		shellPlan.NixpkgsInfo = nixpkgsInfo
 	}
+	shellPlan.NixpkgsInfo = nixpkgsInfo
 
 	return shellPlan, nil
 }
@@ -435,13 +435,11 @@ func (d *Devbox) ExecWithShell(cmds ...string) error {
 func (d *Devbox) Exec(cmds ...string) error {
 	if featureflag.UnifiedEnv.Disabled() {
 		return d.ExecWithShell(cmds...)
-	} else {
-		if len(cmds) > 0 {
-			return d.RunScript(cmds[0], cmds[1:])
-		} else {
-			return errors.Errorf("cannot execute empty command: %v", cmds)
-		}
 	}
+	if len(cmds) > 0 {
+		return d.RunScript(cmds[0], cmds[1:])
+	}
+	return errors.Errorf("cannot execute empty command: %v", cmds)
 }
 
 func (d *Devbox) PrintEnv() (string, error) {

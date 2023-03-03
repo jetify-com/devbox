@@ -24,7 +24,6 @@ func queryGithubUsername() (string, error) {
 	err := cmd.Run()
 
 	if err != nil {
-
 		if e := (&exec.ExitError{}); errors.As(err, &e) && e.ExitCode() == 1 {
 			// This is the Happy case, and we can parse out the error message
 			debug.Log(
@@ -32,11 +31,10 @@ func queryGithubUsername() (string, error) {
 				bufErr.String(),
 			)
 			return parseUsernameFromErrorMessage(bufErr.String()), nil
-		} else {
-			// This is the sad case, and we should let the caller figure out how to proceed with the user
-			debug.Log("error from command `%s`: %v, out: %v, stderr: %v", cmd, err, bufOut.String(), bufErr.String())
-			return "", errors.WithStack(err)
 		}
+		// This is the sad case, and we should let the caller figure out how to proceed with the user
+		debug.Log("error from command `%s`: %v, out: %v, stderr: %v", cmd, err, bufOut.String(), bufErr.String())
+		return "", errors.WithStack(err)
 	}
 
 	return "", nil
