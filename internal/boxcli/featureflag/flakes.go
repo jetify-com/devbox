@@ -1,3 +1,3 @@
 package featureflag
 
-var Flakes = disabled("FLAKES")
+var Flakes = enabled("FLAKES")
