@@ -25,13 +25,14 @@
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
 
       commit = builtins.substring 0 7 self.shortRev;
-      version = "0.4.2";
+      semver = "0.4.2";
     in {
 
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
         let 
           pkgs = nixpkgsFor.${system};
+          version = "${semver}.${commit}";
           pname = "devbox";
           name = "devbox-${version}";
 
@@ -39,8 +40,8 @@
           devbox = pkgs.buildGoModule {
             inherit pname;
             inherit name;
+            inherit version;
 
-            version = "${version}.${commit}";
 
             src = ./.;
 
