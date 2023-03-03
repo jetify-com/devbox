@@ -117,7 +117,7 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	for _, pkg := range pkgs {
 		if strings.Contains(pkg, "python3") {
 			devcontainerContent.Customizations.Vscode.Settings = map[string]any{
-				"python.defaultInterpreterPath": "/devbox/.devbox/nix/profile/default/bin/python3",
+				"python.defaultInterpreterPath": "/code/.devbox/nix/profile/default/bin/python3",
 			}
 			devcontainerContent.Customizations.Vscode.Extensions =
 				append(devcontainerContent.Customizations.Vscode.Extensions, "ms-python.python")
