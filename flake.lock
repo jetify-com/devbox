@@ -1,22 +1,5 @@
 {
   "nodes": {
-    "devbox-source": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1677791812,
-        "narHash": "sha256-9aGmX21TUINGDA3NB/OrGXi8W4i+b8fKS8ft8GtQxNM=",
-        "owner": "jetpack-io",
-        "repo": "devbox",
-        "rev": "c249fa1da3a24eb686220da378bc9dcdc6d49680",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jetpack-io",
-        "ref": "0.4.2",
-        "repo": "devbox",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "locked": {
         "lastModified": 1676283394,
@@ -45,7 +28,6 @@
     },
     "root": {
       "inputs": {
-        "devbox-source": "devbox-source",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs"
       }

@@ -6,17 +6,9 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
-    devbox-source = {
-      type= "github";
-      owner = "jetpack-io";
-      repo = "devbox";
-      ref = "0.4.2";
-      flake = false;
-    };
-
   };
 
-  outputs = { self, nixpkgs, devbox-source, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils }:
     let
 
       # to work with older version of flakes
@@ -32,6 +24,7 @@
       # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
 
+      commit = builtins.substring 0 7 self.shortRev;
       version = "0.4.2";
     in {
 
@@ -44,11 +37,12 @@
 
         in {
           devbox = pkgs.buildGoModule {
-            inherit version;
             inherit pname;
             inherit name;
 
-            src = devbox-source;
+            version = "${version}.${commit}";
+
+            src = ./.;
 
             # integration tests want filesystem access
             doCheck = false;
