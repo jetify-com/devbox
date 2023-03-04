@@ -6,19 +6,29 @@ import { posix } from 'path';
 // Your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
-	initialCheckDevboxJSON();
+	initialCheckDevboxJSON(context);
 	// Creating file watchers to watch for events on devbox.json
 	const fswatcher = workspace.createFileSystemWatcher("**/devbox.json", false, false, false);
-	fswatcher.onDidDelete(e => commands.executeCommand('setContext', 'devbox.configFileExists', false));
-	fswatcher.onDidCreate(e => commands.executeCommand('setContext', 'devbox.configFileExists', true));
-	fswatcher.onDidChange(e => initialCheckDevboxJSON());
+
+	fswatcher.onDidDelete(e => {
+		commands.executeCommand('setContext', 'devbox.configFileExists', false);
+		context.workspaceState.update("configFileExists", false);
+	});
+	fswatcher.onDidCreate(e => {
+		commands.executeCommand('setContext', 'devbox.configFileExists', true);
+		context.workspaceState.update("configFileExists", true);
+	});
+	fswatcher.onDidChange(e => initialCheckDevboxJSON(context));
 
 	// Check for devbox.json when a new folder is opened
-	workspace.onDidChangeWorkspaceFolders(async (e) => initialCheckDevboxJSON());
+	workspace.onDidChangeWorkspaceFolders(async (e) => initialCheckDevboxJSON(context));
 
 	// run devbox shell when terminal is opened
 	window.onDidOpenTerminal(async (e) => {
-		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal") && e.name !== "DevboxTerminal") {
+		if (workspace.getConfiguration("devbox").get("autoShellOnTerminal")
+			&& e.name !== "DevboxTerminal"
+			&& context.workspaceState.get("configFileExists")
+		) {
 			await runInTerminal('devbox shell', true);
 		}
 	});
@@ -77,7 +87,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(generateDockerfile);
 }
 
-async function initialCheckDevboxJSON() {
+async function initialCheckDevboxJSON(context: ExtensionContext) {
 	// check if there is a workspace folder open
 	if (workspace.workspaceFolders) {
 		const workspaceUri = workspace.workspaceFolders[0].uri;
@@ -86,11 +96,13 @@ async function initialCheckDevboxJSON() {
 			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
 			// devbox.json exists setcontext for devbox commands to be available
 			commands.executeCommand('setContext', 'devbox.configFileExists', true);
+			context.workspaceState.update("configFileExists", true);
 
 		} catch (err) {
 			console.log(err);
 			// devbox.json does not exist
 			commands.executeCommand('setContext', 'devbox.configFileExists', false);
+			context.workspaceState.update("configFileExists", false);
 			console.log("devbox.json does not exist");
 		}
 	}
