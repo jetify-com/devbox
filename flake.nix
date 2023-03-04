@@ -16,9 +16,6 @@
   outputs = { self, nixpkgs, flake-utils, gomod2nix }:
     let
 
-      # to work with older version of flakes
-      lastModifiedDate =
-        self.lastModifiedDate or self.lastModified or "19700101";
       # System types to support.
       supportedSystems =
         [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
