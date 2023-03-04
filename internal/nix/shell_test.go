@@ -15,7 +15,7 @@ import (
 var update = flag.Bool("update", false, "update the golden files with the test results")
 
 func TestWriteDevboxShellrc(t *testing.T) {
-	os.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "0")
+	t.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "0")
 	testdirs, err := filepath.Glob("testdata/shellrc/*")
 	if err != nil {
 		t.Fatal("Error globbing testdata:", err)
@@ -24,7 +24,7 @@ func TestWriteDevboxShellrc(t *testing.T) {
 }
 
 func TestWriteDevboxShellrcWithUnifiedEnv(t *testing.T) {
-	os.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "1")
+	t.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "1")
 	testdirs, err := filepath.Glob("testdata/shellrc_unifiedenv/*")
 	if err != nil {
 		t.Fatal("Error globbing testdata:", err)
