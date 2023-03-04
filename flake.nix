@@ -6,9 +6,14 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
+    gomod2nix = {
+      url = "github:nix-community/gomod2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, gomod2nix }:
     let
 
       # to work with older version of flakes
@@ -22,7 +27,9 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
       # Nixpkgs instantiated for supported system types.
-      nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
+      nixpkgsFor = forAllSystems (system: import nixpkgs { 
+        inherit system; 
+        overlays = [ gomod2nix.overlays.default ];});
 
       commit = builtins.substring 0 7 self.shortRev;
       semver = "0.4.2";
@@ -37,13 +44,16 @@
           name = "devbox-${version}";
 
         in {
-          devbox = pkgs.buildGoModule {
+          devbox = pkgs.buildGoApplication {
             inherit pname;
             inherit name;
             inherit version;
 
+            nativeBuildInputs = with pkgs; [ installShellFiles ];
 
             src = ./.;
+
+            modules = ./gomod2nix.toml;
 
             # integration tests want filesystem access
             doCheck = false;
@@ -53,11 +63,6 @@
               "-w"
               "-X go.jetpack.io/devbox/internal/build.Version=${version}"
             ];
-
-            nativeBuildInputs = with pkgs; [ installShellFiles ];
-
-            vendorSha256 =
-              "sha256-62cJVlrGdrBSK+yzOA4WiHvplEMuKo09qp95+aX3WY0=";
 
             postInstall = ''
               installShellCompletion --cmd devbox \
@@ -79,6 +84,7 @@
               gotools
               go-tools
               golangci-lint
+              gomod2nix.packages.${system}.default
             ];
           };
         });
