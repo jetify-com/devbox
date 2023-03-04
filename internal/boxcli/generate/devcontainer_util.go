@@ -6,9 +6,11 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/debug"
 )
 
 type devcontainerObject struct {
@@ -114,11 +116,19 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		RemoteUser: "devbox",
 	}
 
+	// match only python3 or python3xx as package names
+	py3pattern, err := regexp.Compile(`(python3)$|(python3[0-9]{1,2})$`)
+	if err != nil {
+		debug.Log("Failed to compile regex")
+		return nil
+	}
 	for _, pkg := range pkgs {
-		if strings.Contains(pkg, "python3") {
+		if py3pattern.MatchString(pkg) {
+			// Setup python3 interpreter path to devbox in the container
 			devcontainerContent.Customizations.Vscode.Settings = map[string]any{
 				"python.defaultInterpreterPath": "/code/.devbox/nix/profile/default/bin/python3",
 			}
+			// add python extension if a python3 package is installed
 			devcontainerContent.Customizations.Vscode.Extensions =
 				append(devcontainerContent.Customizations.Vscode.Extensions, "ms-python.python")
 		}
