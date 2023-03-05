@@ -16,6 +16,7 @@
   outputs = { self, nixpkgs, flake-utils, gomod2nix }:
     let
 
+      lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
       # System types to support.
       supportedSystems =
         [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
@@ -28,7 +29,12 @@
         inherit system; 
         overlays = [ gomod2nix.overlays.default ];});
 
-      commit = builtins.substring 0 7 self.shortRev;
+      commit = if builtins.hasAttr "shortRev" self 
+      then
+        builtins.substring 0 7 self.shortRev
+      else
+        "precommit-${lastModifiedDate}";
+        
       semver = "0.4.2";
     in {
 
