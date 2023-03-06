@@ -17,12 +17,6 @@ content readable.
 
 */ -}}
 
-{{- if .UnifiedEnv -}}
-# Run the shell hook defined in shell.nix or flake.nix
-eval $shellHook
-
-{{ end -}}
-
 # Begin Devbox Post-init Hook
 
 {{- /*
@@ -31,8 +25,8 @@ add string-splitting logic here nor parametrize computeNixEnv based on the shell
 used. So here we (ab)use the fact that using "export" ahead of the variable definition
 makes fish do exactly what we want and behave in the same way as other shells.
 */ -}}
-{{ if .UnifiedEnv }}
-export PATH="$DEVBOX_PATH_PREPEND:$PATH"
+{{ with .ExportEnv }}
+{{ . }}
 {{- else }}
 export PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
@@ -60,8 +54,8 @@ devbox log shell-ready {{ .ShellStartTime }}
 # End Devbox Post-init Hook
 
 # Switch to the directory where devbox.json config is
-set workingDir $(pwd)
-cd {{ .ProjectDir }}
+set workingDir "$(pwd)"
+cd "{{ .ProjectDir }}" || exit
 
 {{- if .PluginInitHook }}
 
@@ -83,7 +77,7 @@ cd {{ .ProjectDir }}
 
 {{- end }}
 
-cd $workingDir
+cd "$workingDir" || exit
 
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
@@ -95,13 +89,14 @@ devbox log shell-interactive {{ .ShellStartTime }}
 {{- if .ScriptCommand }}
 
 function run_script
-    set workingDir $(pwd)
-    cd {{ .ProjectDir }}
+    set workingDir "$(pwd)"
+    cd "{{ .ProjectDir }}" || exit
 
     {{  .ScriptCommand }}
 
-    cd $workingDir
+    cd "$workingDir" || exit
 end
-{{- end }}
 
 # End Script command
+
+{{- end }}

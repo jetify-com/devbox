@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -217,8 +218,14 @@ func WithHistoryFile(historyFile string) ShellOption {
 // via wrapper scripts.
 func WithEnvVariables(envVariables map[string]string) ShellOption {
 	return func(s *DevboxShell) {
-		for k, v := range envVariables {
-			s.env = append(s.env, fmt.Sprintf("%s=%s", k, v))
+		keys := make([]string, 0, len(envVariables))
+		for k := range envVariables {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			s.env = append(s.env, fmt.Sprintf("%s=%s", k, envVariables[k]))
 		}
 	}
 }
