@@ -1048,6 +1048,9 @@ var ignoreCurrentEnvVar = map[string]bool{
 
 	// The parent shell isn't guaranteed to be the same as the Devbox shell.
 	"SHELL": true,
+
+	// The "_" variable is read-only, so we ignore it to avoid attempting to write it later.
+	"_": true,
 }
 
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
