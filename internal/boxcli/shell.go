@@ -9,9 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/ux"
 )
 
 type shellCmdFlags struct {
@@ -20,26 +18,16 @@ type shellCmdFlags struct {
 }
 
 func ShellCmd() *cobra.Command {
-	var longHelp string
-	if featureflag.UnifiedEnv.Enabled() {
-		longHelp = "Start a new shell with access to your packages.\n\n" +
-			"The shell will be started using the devbox.json found in the --config flag directory. " +
-			"If --config isn't set, then devbox recursively searches the current directory and its parents.\n\n" +
-			"[Deprecated] If invoked as devbox shell -- <cmd>, devbox will run the command in a shell and then exit. " +
-			"This behavior is deprecated and will be removed. Please use devbox run -- <cmd> instead."
-	} else {
-		longHelp = "Start a new shell or run a command with access to your packages.\n\n" +
+	flags := shellCmdFlags{}
+	command := &cobra.Command{
+		Use:   "shell",
+		Short: "Start a new shell with access to your packages",
+		Long: "Start a new shell or run a command with access to your packages.\n\n" +
 			"If invoked without `cmd`, devbox will start an interactive shell.\n" +
 			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
 			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
-			"If --config isn't set, then devbox recursively searches the current directory and its parents."
-	}
-	flags := shellCmdFlags{}
-	command := &cobra.Command{
-		Use:     "shell -- [<cmd>]",
-		Short:   "Start a new shell with access to your packages",
-		Long:    longHelp,
-		Args:    validateShellArgs,
+			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
+		Args:    cobra.NoArgs,
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runShellCmd(cmd, args, flags)
@@ -54,7 +42,7 @@ func ShellCmd() *cobra.Command {
 }
 
 func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
-	path, cmds, err := parseShellArgs(cmd, args, flags)
+	path, _, err := parseShellArgs(cmd, args, flags)
 	if err != nil {
 		return err
 	}
@@ -71,35 +59,18 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 		}
 		// explicitly print to stdout instead of stderr so that direnv can read the output
 		fmt.Fprint(cmd.OutOrStdout(), script)
-		// return here to prevent opening a devbox shell
-		return nil
+		return nil // return here to prevent opening a devbox shell
 	}
 
 	if devbox.IsDevboxShellEnabled() {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	if len(cmds) > 0 {
-		if featureflag.UnifiedEnv.Enabled() {
-			ux.Fwarning(cmd.ErrOrStderr(), "\"devbox shell -- <cmd>\" is deprecated and will disappear "+
-				"in a future version. Use \"devbox run -- <cmd>\" instead\n")
-		}
-		err = box.Exec(cmds...)
-	} else {
-		err = box.Shell()
-	}
-	return err
-}
-
-func validateShellArgs(cmd *cobra.Command, args []string) error {
-	lenAtDash := cmd.ArgsLenAtDash()
-	if lenAtDash > 1 {
-		return fmt.Errorf("accepts at most 1 directory, received %d", lenAtDash)
-	}
-	return nil
+	return box.Shell()
 }
 
 func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (string, []string, error) {
+	// TODO: remove code that takes config path from an arguments.
 	index := cmd.ArgsLenAtDash()
 	if index < 0 {
 		configPath, err := configPathFromUser(args, &flags.config)
