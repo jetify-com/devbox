@@ -12,8 +12,8 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-// returns true if a liveVM is found, OR sshArgs were connecting to a server that is not a devbox-VM.
-// returns false iff the sshArgs were connecting to a devbox VM AND a deadVM is found.
+// EnsureLiveVMOrTerminateMutagenSessions returns true if a liveVM is found, OR sshArgs were connecting to a server that is not a devbox-VM.
+// EnsureLiveVMOrTerminateMutagenSessions returns false iff the sshArgs were connecting to a devbox VM AND a deadVM is found.
 func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
 	vmAddr := vmAddressIfAny(sshArgs)
 

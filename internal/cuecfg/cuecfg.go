@@ -63,18 +63,18 @@ func Unmarshal(data []byte, extension string, valuePtr any) error {
 }
 
 func InitFile(path string, valuePtr any) (bool, error) {
-	if _, err := os.Stat(path); err == nil {
+	_, err := os.Stat(path)
+	if err == nil {
 		// File already exists, don't create a new one.
 		// TODO: should we read and write again, in case the schema needs updating?
 		return false, nil
-	} else if errors.Is(err, os.ErrNotExist) {
+	}
+	if errors.Is(err, os.ErrNotExist) {
 		// File does not exist, create a new one:
 		return true, WriteFile(path, valuePtr)
-	} else {
-		// Error case:
-		return false, errors.WithStack(err)
 	}
-
+	// Error case:
+	return false, errors.WithStack(err)
 }
 
 func ParseFile(path string, valuePtr any) error {

@@ -44,11 +44,7 @@ func Install(url string, installDir string) error {
 	if err != nil {
 		return err
 	}
-	err = fileutil.Untar(tarReader, installDir)
-	if err != nil {
-		return err
-	}
-	return nil
+	return fileutil.Untar(tarReader, installDir)
 }
 
 func mutagenURL() string {

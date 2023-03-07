@@ -1,7 +1,6 @@
 package fileutil
 
-// TODO: publish as it's own shared package that other binaries
-// can use.
+// TODO: publish as it's own shared package that other binaries can use.
 
 import (
 	"context"
@@ -40,22 +39,14 @@ func Untar(archive io.Reader, destPath string) error {
 		case mode.IsRegular():
 			return untarFile(fromFile, abs)
 		case mode.IsDir():
-			if err := os.MkdirAll(abs, 0755); err != nil {
-				return err
-			}
+			return os.MkdirAll(abs, 0755)
 		default:
 			return fmt.Errorf("archive contained entry %s of unsupported file type %v", fromFile.Name(), mode)
 		}
-
-		return nil
 	}
 
 	// Start extraction using our handler.
-	err = format.Extract(context.Background(), archive, nil /* all files */, handler)
-	if err != nil {
-		return err
-	}
-	return nil
+	return format.Extract(context.Background(), archive, nil /* all files */, handler)
 }
 
 func untarFile(fromFile archiver.File, abs string) error {

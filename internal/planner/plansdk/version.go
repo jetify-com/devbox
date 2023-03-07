@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Handles very simple numeric semver versions (e.g. "1.2.3")
+// Version handles very simple numeric semver versions (e.g. "1.2.3")
 type Version string
 
 func NewVersion(v string) (*Version, error) {
