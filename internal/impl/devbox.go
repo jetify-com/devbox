@@ -172,17 +172,17 @@ func (d *Devbox) Shell() error {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
 	}
 
-	opts := []nix.ShellOption{
-		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
-		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		nix.WithProjectDir(d.projectDir),
-		nix.WithEnvVariables(env),
-		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
-		nix.WithShellStartTime(shellStartTime),
+	opts := []ShellOption{
+		WithPluginInitHook(strings.Join(pluginHooks, "\n")),
+		WithProfile(profileDir),
+		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
+		WithProjectDir(d.projectDir),
+		WithEnvVariables(env),
+		WithPKGConfigDir(d.pluginVirtenvPath()),
+		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := nix.NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
+	shell, err := NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
 	if err != nil {
 		return err
 	}
@@ -258,17 +258,17 @@ func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
 		return err
 	}
 
-	opts := []nix.ShellOption{
-		nix.WithPluginInitHook(strings.Join(pluginHooks, "\n")),
-		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		nix.WithUserScript(scriptName, script.String()),
-		nix.WithProjectDir(d.projectDir),
-		nix.WithEnvVariables(env),
-		nix.WithPKGConfigDir(d.pluginVirtenvPath()),
+	opts := []ShellOption{
+		WithPluginInitHook(strings.Join(pluginHooks, "\n")),
+		WithProfile(profileDir),
+		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
+		WithUserScript(scriptName, script.String()),
+		WithProjectDir(d.projectDir),
+		WithEnvVariables(env),
+		WithPKGConfigDir(d.pluginVirtenvPath()),
 	}
 
-	shell, err := nix.NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
+	shell, err := NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
 
 	if err != nil {
 		fmt.Fprint(d.writer, err)
@@ -291,12 +291,12 @@ func (d *Devbox) RunScriptInShell(scriptName string) error {
 		return usererr.New("unable to find a script with name %s", scriptName)
 	}
 
-	shell, err := nix.NewDevboxShell(
+	shell, err := NewDevboxShell(
 		d.cfg.Nixpkgs.Commit,
-		nix.WithProfile(profileDir),
-		nix.WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		nix.WithUserScript(scriptName, script.String()),
-		nix.WithProjectDir(d.projectDir),
+		WithProfile(profileDir),
+		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
+		WithUserScript(scriptName, script.String()),
+		WithProjectDir(d.projectDir),
 	)
 
 	if err != nil {
@@ -670,7 +670,7 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 	pluginVirtenvPath := d.pluginVirtenvPath()
 	debug.Log("plugin virtual environment PATH is: %s", pluginVirtenvPath)
 
-	env["PATH"] = nix.JoinPathLists(pluginVirtenvPath, nixEnvPath, currentEnvPath)
+	env["PATH"] = JoinPathLists(pluginVirtenvPath, nixEnvPath, currentEnvPath)
 	debug.Log("computed unified environment PATH is: %s", env["PATH"])
 
 	return env, nil
