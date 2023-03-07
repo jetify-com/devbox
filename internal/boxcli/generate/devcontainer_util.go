@@ -52,9 +52,8 @@ func CreateDockerfile(tmplFS embed.FS, path string) error {
 	return nil
 }
 
-// Creates a devcontainer.json in path and writes getDevcontainerContent's output into it
+// CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
 func CreateDevcontainer(path string, pkgs []string) error {
-
 	// create devcontainer.json file
 	file, err := os.Create(filepath.Join(path, "devcontainer.json"))
 	if err != nil {

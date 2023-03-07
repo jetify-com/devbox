@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-// Package devbox creates isolated development environments.
+// Package impl creates isolated development environments.
 package impl
 
 import (
@@ -84,7 +84,6 @@ type Devbox struct {
 }
 
 func Open(path string, writer io.Writer) (*Devbox, error) {
-
 	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
@@ -400,8 +399,8 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 	)
 }
 
-// generates devcontainer.json and Dockerfile for vscode run-in-container
-// and Github Codespaces
+// GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
+// and GitHub Codespaces
 func (d *Devbox) GenerateDevcontainer(force bool) error {
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.projectDir, ".devcontainer/")
@@ -436,7 +435,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 	return nil
 }
 
-// generates a Dockerfile that replicates the devbox shell
+// GenerateDockerfile generates a Dockerfile that replicates the devbox shell
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
@@ -457,7 +456,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return nil
 }
 
-// generates a .envrc file that makes direnv integration convenient
+// GenerateEnvrc generates a .envrc file that makes direnv integration convenient
 func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
@@ -804,10 +803,7 @@ func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 
 // Move to a utility package?
 func IsDevboxShellEnabled() bool {
-	inDevboxShell, err := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
-	if err != nil {
-		return false
-	}
+	inDevboxShell, _ := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
 	return inDevboxShell
 }
 

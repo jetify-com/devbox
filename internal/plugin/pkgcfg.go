@@ -149,10 +149,7 @@ func createEnvFile(pkg, projectDir string) error {
 	if err = createDir(filepath.Dir(filePath)); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filePath, []byte(env), 0644); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(os.WriteFile(filePath, []byte(env), 0644))
 }
 
 func buildConfig(pkg, projectDir, content string) (*config, error) {
@@ -181,10 +178,7 @@ func createDir(path string) error {
 	if path == "" {
 		return nil
 	}
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(os.MkdirAll(path, 0755))
 }
 
 func createSymlink(root, filePath string) error {
@@ -202,10 +196,7 @@ func createSymlink(root, filePath string) error {
 		}
 	}
 
-	if err := os.Symlink(filePath, newname); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
 func (m *Manager) shouldCreateFile(filePath string) bool {

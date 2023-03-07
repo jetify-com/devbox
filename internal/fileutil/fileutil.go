@@ -4,8 +4,7 @@ import (
 	"os"
 )
 
-// TODO: publish as it's own shared package that other binaries
-// can use.
+// TODO: publish as it's own shared package that other binaries can use.
 
 // IsDir returns true if the path exists *and* it is pointing to a directory.
 //

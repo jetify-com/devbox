@@ -13,11 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
 
-func PrintReadme(
-	pkg, projectDir string,
-	w io.Writer,
-	markdown bool,
-) error {
+func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
 	cfg, err := getConfigIfAny(pkg, projectDir)
 
 	if err != nil {
@@ -46,11 +42,7 @@ func PrintReadme(
 		return err
 	}
 
-	if err = printInfoInstructions(pkg, w); err != nil {
-		return err
-	}
-
-	return err
+	return printInfoInstructions(pkg, w)
 }
 
 func printReadme(cfg *config, w io.Writer, markdown bool) error {

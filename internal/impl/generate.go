@@ -100,7 +100,6 @@ var templateFuncs = template.FuncMap{
 }
 
 func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
-
 	if featureflag.Flakes.Disabled() {
 		return nil
 	}
@@ -139,28 +138,23 @@ func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
-	err = cmd.Run()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(cmd.Run())
 }
 
 func isProjectInGitRepo(dir string) bool {
-
 	for dir != "/" {
 		// Look for a .git directory in `dir`
-		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+		_, err := os.Stat(filepath.Join(dir, ".git"))
+		if err == nil {
 			// Found a .git
 			return true
-		} else if !os.IsNotExist(err) {
+		}
+		if !os.IsNotExist(err) {
 			// An error means we will not find a git repo so return false
 			return false
-		} else {
-			// No .git directory found, so loop again into the parent dir
-			dir = filepath.Dir(dir)
-			continue
 		}
+		// No .git directory found, so loop again into the parent dir
+		dir = filepath.Dir(dir)
 	}
 	// We reached the fs-root dir, climbed the highest mountain and
 	// we still haven't found what we're looking for.

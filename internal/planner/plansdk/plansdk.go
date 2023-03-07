@@ -26,7 +26,7 @@ type PlanError struct {
 // (1) can be solved by using a WithOption pattern, (e.g. NewPlan(..., WithWelcomeMessage(...)))
 // (2) can be solved by using a custom JSON marshaler.
 
-// Plan tells devbox how to start shell projects.
+// ShellPlan tells devbox how to start shell projects.
 type ShellPlan struct {
 	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
