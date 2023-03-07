@@ -470,6 +470,13 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 	}
 	currentEnvPath := env["PATH"]
 	debug.Log("current environment PATH is: %s", currentEnvPath)
+	// Use the original path, if available. If not available, set it for future calls.
+	// See https://github.com/jetpack-io/devbox/issues/687
+	originalPath, ok := env["DEVBOX_OG_PATH"]
+	if !ok {
+		env["DEVBOX_OG_PATH"] = currentEnvPath
+		originalPath = currentEnvPath
+	}
 
 	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
@@ -535,7 +542,7 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 	pluginVirtenvPath := d.pluginVirtenvPath()
 	debug.Log("plugin virtual environment PATH is: %s", pluginVirtenvPath)
 
-	env["PATH"] = JoinPathLists(pluginVirtenvPath, nixEnvPath, currentEnvPath)
+	env["PATH"] = JoinPathLists(pluginVirtenvPath, nixEnvPath, originalPath)
 	debug.Log("computed unified environment PATH is: %s", env["PATH"])
 
 	return env, nil
