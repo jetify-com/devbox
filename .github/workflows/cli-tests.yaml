@@ -127,5 +127,6 @@ jobs:
         run: go install ./cmd/devbox
       - name: Install nix and devbox packages
         run: |
-          NIX_INSTALLER_NO_CHANNEL_ADD=1
+          export NIX_INSTALLER_NO_CHANNEL_ADD=1
+          export DEVBOX_DEBUG=1
           devbox run echo "Installing packages..."
