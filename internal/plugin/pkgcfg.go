@@ -124,14 +124,6 @@ func Env(pkgs []string, projectDir string) (map[string]string, error) {
 	return env, nil
 }
 
-func getEnvFilePathIfExist(pkg, projectDir string) string {
-	filePath := filepath.Join(projectDir, VirtenvPath, pkg, "/env")
-	if _, err := os.Stat(filePath); err != nil {
-		return ""
-	}
-	return filePath
-}
-
 func createEnvFile(pkg, projectDir string) error {
 	envVars, err := Env([]string{pkg}, projectDir)
 	if err != nil {

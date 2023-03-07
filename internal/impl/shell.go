@@ -263,23 +263,6 @@ func fishConfig() string {
 }
 
 func (s *DevboxShell) Run() error {
-	// Copy the current PATH into nix-shell, but clean and remove some
-	// directories that are incompatible.
-	parentPath := JoinPathLists(os.Getenv("PATH"))
-
-	env := append(s.env, os.Environ()...)
-	// TODO: remove this, as it is redundant.
-	env = append(
-		env,
-		"PARENT_PATH="+parentPath,
-
-		// Prevent the user's shellrc from re-sourcing nix-daemon.sh
-		// inside the devbox shell.
-		"__ETC_PROFILE_NIX_SOURCED=1",
-		// Always allow unfree packages.
-		"NIXPKGS_ALLOW_UNFREE=1",
-	)
-
 	var cmd *exec.Cmd
 	shellrc, err := s.writeDevboxShellrc()
 	if err != nil {
@@ -290,6 +273,7 @@ func (s *DevboxShell) Run() error {
 		debug.Log("Failed to write devbox shellrc: %s", err)
 		return errors.WithStack(err)
 	}
+
 	// Link other files that affect the shell settings and environments.
 	s.linkShellStartupFiles(filepath.Dir(shellrc))
 	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
@@ -297,11 +281,11 @@ func (s *DevboxShell) Run() error {
 	cmd = exec.Command(s.binPath)
 	cmd.Env = append(s.env, extraEnv...)
 	cmd.Args = append(cmd.Args, extraArgs...)
-	debug.Log("Executing shell %s with args: %v", s.binPath, cmd.Args)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	debug.Log("Executing shell %s with args: %v", s.binPath, cmd.Args)
 	err = cmd.Run()
 
 	// If the error is an ExitError, this means the shell started up fine but there was
