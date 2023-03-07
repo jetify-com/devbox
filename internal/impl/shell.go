@@ -1,7 +1,7 @@
 // Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package nix
+package impl
 
 import (
 	"bytes"
@@ -21,6 +21,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -47,8 +48,7 @@ const (
 var ErrNoRecognizableShellFound = errors.New(
 	"SHELL in undefined, and couldn't find any common shells in PATH")
 
-// TODO move to `impl` package. This is no longer a pure nix shell.
-// Also consider splitting this struct's functionality so that there is a simpler
+// TODO consider splitting this struct's functionality so that there is a simpler
 // `nix.Shell` that can produce a raw nix shell once again.
 //
 // DevboxShell configures a user's shell to run in Devbox. Its zero value is a
@@ -117,9 +117,9 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 	if featureflag.Flakes.Enabled() {
 		cmd := exec.Command(
 			"nix", "eval", "--raw",
-			fmt.Sprintf("%s#bash", FlakeNixpkgs(nixpkgsCommitHash)),
+			fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash)),
 		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 		out, err := cmd.Output()
 		if err != nil {
 			return "", errors.WithStack(err)
