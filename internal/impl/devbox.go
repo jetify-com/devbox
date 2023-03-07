@@ -233,14 +233,7 @@ func (d *Devbox) PrintEnv() (string, error) {
 		return "", err
 	}
 
-	script := ""
-	for k, v := range envs {
-		// %q is for escaping quotes in env variables that
-		// have quotes in them e.g., shellHook
-		script += fmt.Sprintf("export %s=%q\n", k, v)
-	}
-
-	return script, nil
+	return exportify(envs), nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
