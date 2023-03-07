@@ -129,4 +129,10 @@ jobs:
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
           export DEVBOX_DEBUG=1
+          
+          # Setup github authentication to ensure Github's rate limits are not hit.
+          # If this works, we can consider refactoring this into a reusable github action helper.
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+          
           devbox run echo "Installing packages..."
