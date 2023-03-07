@@ -25,28 +25,32 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
       # Nixpkgs instantiated for supported system types.
-      nixpkgsFor = forAllSystems (system: import nixpkgs { 
-        inherit system; 
-        overlays = [ gomod2nix.overlays.default ];});
+      nixpkgsFor = forAllSystems (system: import nixpkgs {
+        inherit system;
+        overlays = [ gomod2nix.overlays.default ];
+      });
 
-      commit = if builtins.hasAttr "shortRev" self 
-      then
-        builtins.substring 0 7 self.shortRev
-      else
-        "precommit-${lastModifiedDate}";
-        
+      commit =
+        if builtins.hasAttr "shortRev" self
+        then
+          builtins.substring 0 7 self.shortRev
+        else
+          "precommit-${lastModifiedDate}";
+
       semver = "0.4.2";
-    in {
+    in
+    {
 
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
-        let 
+        let
           pkgs = nixpkgsFor.${system};
           version = "${semver}.${commit}";
           pname = "devbox";
           name = "devbox-${version}";
 
-        in {
+        in
+        {
           devbox = pkgs.buildGoApplication {
             inherit pname;
             inherit name;
@@ -79,7 +83,8 @@
       # Add dependencies that are only needed for development
       devShells = forAllSystems (system:
         let pkgs = nixpkgsFor.${system};
-        in {
+        in
+        {
           default = pkgs.mkShell {
             buildInputs = with pkgs; [
               go_1_19
@@ -92,9 +97,6 @@
           };
         });
 
-      # The default package for 'nix build'. This makes sense if the
-      # flake provides only one package or there is a clear "main"
-      # package.
       defaultPackage = forAllSystems (system: self.packages.${system}.devbox);
     };
 }
