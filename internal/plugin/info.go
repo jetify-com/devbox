@@ -3,14 +3,10 @@ package plugin
 import (
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
 
 func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
@@ -127,33 +123,10 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 }
 
 func PrintEnvUpdateMessage(pkgs []string, projectDir string, w io.Writer) error {
-	if featureflag.UnifiedEnv.Enabled() {
-		color.New(color.FgYellow).Fprint(
-			w,
-			"\nTo update your shell and ensure your new packages are usable, "+
-				"please run:\n\neval $(devbox shellenv)\n\n\n",
-		)
-		return nil
-	}
-	commands := []string{"hash -r"}
-	for _, pkg := range pkgs {
-		if path := getEnvFilePathIfExist(pkg, projectDir); path != "" {
-			wd, err := os.Getwd()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			relPath, err := filepath.Rel(wd, path)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			commands = append(commands, fmt.Sprintf("source %s", relPath))
-		}
-	}
-	color.New(color.FgYellow).
-		Fprintf(
-			w,
-			"Run `%s` to ensure your shell is updated.\n\n",
-			strings.Join(commands, " && "),
-		)
+	color.New(color.FgYellow).Fprint(
+		w,
+		"\nTo update your shell and ensure your new packages are usable, "+
+			"please run:\n\neval $(devbox shellenv)\n\n\n",
+	)
 	return nil
 }

@@ -153,17 +153,9 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	var env map[string]string
-	if featureflag.UnifiedEnv.Enabled() {
-		env, err = d.computeNixEnv()
-		if err != nil {
-			return err
-		}
-	} else {
-		env, err = plugin.Env(d.packages(), d.projectDir)
-		if err != nil {
-			return err
-		}
+	env, err := d.computeNixEnv()
+	if err != nil {
+		return err
 	}
 
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
@@ -187,14 +179,10 @@ func (d *Devbox) Shell() error {
 	}
 
 	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
+	return shell.Run()
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	if featureflag.UnifiedEnv.Disabled() {
-		return d.RunScriptInNewNixShell(cmdName)
-	}
-
 	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
 		return err
 	}
@@ -229,83 +217,6 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
-// RunScriptInNewNixShell implements `devbox run` (from outside a devbox shell) using a nix shell.
-// Deprecated: RunScript should be used instead.
-func (d *Devbox) RunScriptInNewNixShell(scriptName string) error {
-	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
-		return err
-	}
-	fmt.Fprintln(d.writer, "Starting a devbox shell...")
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
-	script := d.cfg.Shell.Scripts[scriptName]
-	if script == nil {
-		return usererr.New("unable to find a script with name %s", scriptName)
-	}
-
-	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
-	env, err := plugin.Env(d.packages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
-	opts := []ShellOption{
-		WithPluginInitHook(strings.Join(pluginHooks, "\n")),
-		WithProfile(profileDir),
-		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		WithUserScript(scriptName, script.String()),
-		WithProjectDir(d.projectDir),
-		WithEnvVariables(env),
-		WithPKGConfigDir(d.pluginVirtenvPath()),
-	}
-
-	shell, err := NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
-
-	if err != nil {
-		fmt.Fprint(d.writer, err)
-		return err
-	}
-
-	shell.UserInitHook = d.cfg.Shell.InitHook.String()
-	return shell.Run(d.nixShellFilePath(), d.nixFlakesFilePath())
-}
-
-// TODO: deprecate in favor of RunScript().
-func (d *Devbox) RunScriptInShell(scriptName string) error {
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
-	script := d.cfg.Shell.Scripts[scriptName]
-	if script == nil {
-		return usererr.New("unable to find a script with name %s", scriptName)
-	}
-
-	shell, err := NewDevboxShell(
-		d.cfg.Nixpkgs.Commit,
-		WithProfile(profileDir),
-		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
-		WithUserScript(scriptName, script.String()),
-		WithProjectDir(d.projectDir),
-	)
-
-	if err != nil {
-		fmt.Fprint(d.writer, err)
-		return err
-	}
-
-	return shell.RunInShell()
-}
-
 func (d *Devbox) ListScripts() []string {
 	keys := make([]string, len(d.cfg.Shell.Scripts))
 	i := 0
@@ -316,58 +227,13 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-// TODO: deprecate in favor of RunScript().
-func (d *Devbox) ExecWithShell(cmds ...string) error {
-	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
-		return err
-	}
-
-	profileBinPath, err := d.profileBinPath()
-	if err != nil {
-		return err
-	}
-
-	env, err := plugin.Env(d.packages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
-	virtenvBinPath := filepath.Join(d.projectDir, plugin.VirtenvBinPath) + ":"
-
-	pathWithProfileBin := fmt.Sprintf("PATH=%s%s:$PATH", virtenvBinPath, profileBinPath)
-	cmds = append([]string{pathWithProfileBin}, cmds...)
-
-	return nix.Exec(d.nixShellFilePath(), cmds, env)
-}
-
-// TODO: deprecate in favor of RunScript().
-func (d *Devbox) Exec(cmds ...string) error {
-	if featureflag.UnifiedEnv.Disabled() {
-		return d.ExecWithShell(cmds...)
-	}
-	if len(cmds) > 0 {
-		return d.RunScript(cmds[0], cmds[1:])
-	}
-	return errors.Errorf("cannot execute empty command: %v", cmds)
-}
-
 func (d *Devbox) PrintEnv() (string, error) {
-	script := ""
-	if featureflag.UnifiedEnv.Disabled() {
-		envs, err := plugin.Env(d.packages(), d.projectDir)
-		if err != nil {
-			return "", err
-		}
-		for k, v := range envs {
-			script += fmt.Sprintf("export %s=%s\n", k, v)
-		}
-		return script, nil
-	}
 	envs, err := d.computeNixEnv()
 	if err != nil {
 		return "", err
 	}
 
+	script := ""
 	for k, v := range envs {
 		// %q is for escaping quotes in env variables that
 		// have quotes in them e.g., shellHook
@@ -514,7 +380,7 @@ func (d *Devbox) Services() (plugin.Services, error) {
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec(append([]string{"devbox", "services", "start"}, serviceNames...)...)
+		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 	return services.Start(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
 }
@@ -542,7 +408,7 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 		}
 	}
 	if !IsDevboxShellEnabled() {
-		return d.Exec("devbox", "services", "manager")
+		return d.RunScript("devbox", []string{"services", "manager"})
 	}
 
 	return services.StartProcessManager(ctx, processComposePath, svcs)
@@ -550,7 +416,7 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.Exec(append([]string{"devbox", "services", "stop"}, serviceNames...)...)
+		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
 	}
 	return services.Stop(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
 }

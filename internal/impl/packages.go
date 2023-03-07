@@ -252,14 +252,6 @@ func (d *Devbox) profilePath() (string, error) {
 	return absPath, nil
 }
 
-func (d *Devbox) profileBinPath() (string, error) {
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(profileDir, "bin"), nil
-}
-
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
 // are missing from the nix profile, and then installs each package individually into the
 // nix profile.
