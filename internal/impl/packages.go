@@ -21,6 +21,7 @@ import (
 
 // packages.go has functions for adding, removing and getting info about nix packages
 
+// Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
 func (d *Devbox) Add(pkgs ...string) error {
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
@@ -73,7 +74,9 @@ func (d *Devbox) Add(pkgs ...string) error {
 	return d.printPackageUpdateMessage(install, pkgs)
 }
 
+// Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
 func (d *Devbox) Remove(pkgs ...string) error {
+
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
 	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
 
@@ -104,6 +107,135 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	return d.printPackageUpdateMessage(uninstall, uninstalledPackages)
+}
+
+// installMode is an enum for helping with ensurePackagesAreInstalled implementation
+type installMode string
+
+const (
+	install   installMode = "install"
+	uninstall installMode = "uninstall"
+	ensure    installMode = "ensure"
+)
+
+// ensurePackagesAreInstalled ensures that the nix profile has the packages specified
+// in the config (devbox.json). The `mode` is used for user messaging to explain
+// what operations are happening, because this function may take time to execute.
+func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
+	if err := d.generateShellFiles(); err != nil {
+		return err
+	}
+	if mode == ensure {
+		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
+	}
+
+	if featureflag.Flakes.Enabled() {
+		if err := d.addPackagesToProfile(mode); err != nil {
+			return err
+		}
+
+	} else {
+		if mode == install || mode == uninstall {
+			installingVerb := "Installing"
+			if mode == uninstall {
+				installingVerb = "Uninstalling"
+			}
+			_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
+		}
+
+		// We need to re-install the packages
+		if err := d.installNixProfile(); err != nil {
+			fmt.Fprintln(d.writer)
+			return errors.Wrap(err, "apply Nix derivation")
+		}
+	}
+
+	return plugin.RemoveInvalidSymlinks(d.projectDir)
+}
+
+func (d *Devbox) printPackageUpdateMessage(
+	mode installMode,
+	pkgs []string,
+) error {
+	verb := "installed"
+	var infos []*nix.Info
+	for _, pkg := range pkgs {
+		info, _ := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
+		infos = append(infos, info)
+	}
+	if mode == uninstall {
+		verb = "removed"
+	}
+
+	if len(pkgs) > 0 {
+
+		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
+		if len(pkgs) > 1 {
+			pkgsWithVersion := []string{}
+			for idx, pkg := range pkgs {
+				pkgsWithVersion = append(
+					pkgsWithVersion,
+					fmt.Sprintf("%s (%s)", pkg, infos[idx]),
+				)
+			}
+			successMsg = fmt.Sprintf(
+				"%s are now %s.\n",
+				strings.Join(pkgsWithVersion, ", "),
+				verb,
+			)
+		}
+		fmt.Fprint(d.writer, successMsg)
+
+		// (Only when in devbox shell) Prompt the user to run hash -r
+		// to ensure we refresh the shell hash and load the proper environment.
+		if IsDevboxShellEnabled() {
+			if err := plugin.PrintEnvUpdateMessage(
+				lo.Ternary(mode == install, pkgs, []string{}),
+				d.projectDir,
+				d.writer,
+			); err != nil {
+				return err
+			}
+		}
+	} else {
+		fmt.Fprintf(d.writer, "No packages %s.\n", verb)
+	}
+	return nil
+}
+
+// installNixProfile installs or uninstalls packages to or from this
+// devbox's Nix profile so that it matches what's in development.nix
+func (d *Devbox) installNixProfile() (err error) {
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(
+		"nix-env",
+		"--profile", profileDir,
+		"--install",
+		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
+	)
+
+	cmd.Env = nix.DefaultEnv()
+	cmd.Stdout = &nix.PackageInstallWriter{Writer: d.writer}
+
+	cmd.Stderr = cmd.Stdout
+
+	err = cmd.Run()
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return errors.Errorf(
+			"running command %s: exit status %d with command stderr: %s",
+			cmd, exitErr.ExitCode(), string(exitErr.Stderr),
+		)
+	}
+	if err != nil {
+		return errors.Errorf("running command %s: %v", cmd, err)
+	}
+	return nil
 }
 
 func (d *Devbox) profilePath() (string, error) {
@@ -275,115 +407,6 @@ func (d *Devbox) getPackagePriority(pkg string) string {
 		}
 	}
 	return "6" // Anything higher than 5 (default) would be correct
-}
-
-func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) error {
-	verb := "installed"
-	var infos []*nix.Info
-	for _, pkg := range pkgs {
-		info, _ := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
-		infos = append(infos, info)
-	}
-	if mode == uninstall {
-		verb = "removed"
-	}
-
-	if len(pkgs) > 0 {
-		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
-		if len(pkgs) > 1 {
-			pkgsWithVersion := []string{}
-			for idx, pkg := range pkgs {
-				pkgsWithVersion = append(
-					pkgsWithVersion,
-					fmt.Sprintf("%s (%s)", pkg, infos[idx]),
-				)
-			}
-			successMsg = fmt.Sprintf(
-				"%s are now %s.\n",
-				strings.Join(pkgsWithVersion, ", "),
-				verb,
-			)
-		}
-		fmt.Fprint(d.writer, successMsg)
-
-		// (Only when in devbox shell) Prompt the user to run hash -r
-		// to ensure we refresh the shell hash and load the proper environment.
-		if IsDevboxShellEnabled() {
-			if err := plugin.PrintEnvUpdateMessage(
-				lo.Ternary(mode == install, pkgs, []string{}),
-				d.projectDir,
-				d.writer,
-			); err != nil {
-				return err
-			}
-		}
-	} else {
-		fmt.Fprintf(d.writer, "No packages %s.\n", verb)
-	}
-	return nil
-}
-
-// installNixProfile installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix
-func (d *Devbox) installNixProfile() error {
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command(
-		"nix-env",
-		"--profile", profileDir,
-		"--install",
-		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-	)
-
-	cmd.Env = nix.DefaultEnv()
-	cmd.Stdout = &nix.PackageInstallWriter{Writer: d.writer}
-	cmd.Stderr = cmd.Stdout
-
-	err = cmd.Run()
-
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return errors.Errorf("running command %s: exit status %d with command stderr: %s",
-			cmd, exitErr.ExitCode(), string(exitErr.Stderr))
-	}
-	if err != nil {
-		return errors.Errorf("running command %s: %v", cmd, err)
-	}
-	return nil
-}
-
-func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
-	if err := d.generateShellFiles(); err != nil {
-		return err
-	}
-	if mode == ensure {
-		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
-	}
-
-	if featureflag.Flakes.Enabled() {
-		if err := d.addPackagesToProfile(mode); err != nil {
-			return err
-		}
-	} else {
-		if mode == install || mode == uninstall {
-			installingVerb := "Installing"
-			if mode == uninstall {
-				installingVerb = "Uninstalling"
-			}
-			_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
-		}
-
-		// We need to re-install the packages
-		if err := d.installNixProfile(); err != nil {
-			fmt.Fprintln(d.writer)
-			return errors.Wrap(err, "apply Nix derivation")
-		}
-	}
-
-	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
 
 var resetCheckDone = false

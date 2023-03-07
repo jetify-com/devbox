@@ -1,4 +1,4 @@
-package nix
+package impl
 
 import (
 	"errors"
