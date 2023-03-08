@@ -5,37 +5,26 @@ import (
 	"path/filepath"
 )
 
-func DataDir() string {
-	return resolveDir("XDG_DATA_HOME", ".local/share")
-}
-
 func DataSubpath(subpath string) string {
-	return filepath.Join(DataDir(), subpath)
-}
-
-func ConfigDir() string {
-	return resolveDir("XDG_CONFIG_HOME", ".config")
+	return filepath.Join(dataDir(), subpath)
 }
 
 func ConfigSubpath(subpath string) string {
-	return filepath.Join(ConfigDir(), subpath)
-}
-
-func CacheDir() string {
-	return resolveDir("XDG_CACHE_HOME", ".cache")
+	return filepath.Join(configDir(), subpath)
 }
 
 func CacheSubpath(subpath string) string {
-	return filepath.Join(CacheDir(), subpath)
-}
-
-func StateDir() string {
-	return resolveDir("XDG_STATE_HOME", ".local/state")
+	return filepath.Join(cacheDir(), subpath)
 }
 
 func StateSubpath(subpath string) string {
-	return filepath.Join(StateDir(), subpath)
+	return filepath.Join(stateDir(), subpath)
 }
+
+func dataDir() string   { return resolveDir("XDG_DATA_HOME", ".local/share") }
+func configDir() string { return resolveDir("XDG_CONFIG_HOME", ".config") }
+func cacheDir() string  { return resolveDir("XDG_CACHE_HOME", ".cache") }
+func stateDir() string  { return resolveDir("XDG_STATE_HOME", ".local/state") }
 
 func resolveDir(envvar string, defaultPath string) string {
 	dir := os.Getenv(envvar)

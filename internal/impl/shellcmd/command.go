@@ -33,7 +33,7 @@ func (c CmdFormat) String() string {
 	}
 }
 
-// ConfigShellCmds marshals and unmarshals shell commands from a devbox config
+// Commands marshals and unmarshals shell commands from a devbox config
 // as either a single string or an array of strings. It preserves the original
 // value such that:
 //
