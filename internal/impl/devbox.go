@@ -561,19 +561,22 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hooks := strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
+	hooks := "if [ -n \"$DEVBOX_HOOK_RAN\" ]; then return; fi\n\n"
+	hooks += strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
+	hooks += "\n\n"
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
-		hooks += fmt.Sprintf("\nalias %s=%s", name, d.scriptFilename(name))
 		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
+		hooks += fmt.Sprintf("\nalias %s=%s", name, d.scriptPath(d.scriptFilename(name)))
 		written[d.scriptFilename(name)] = struct{}{}
 	}
+	hooks += "\n\nexport DEVBOX_HOOK_RAN=1\n"
+
 	// Always write it, even if there are no hooks, because scripts will source it.
-	// TODO: add guard to prevent hook from running multiple times and wreaking havoc
 	err = d.writeScriptFile(hooksFilename, hooks)
 	if err != nil {
 		return errors.WithStack(err)
