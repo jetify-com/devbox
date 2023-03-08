@@ -33,11 +33,11 @@ func TestWriteDevboxShellrcWithUnifiedEnv(t *testing.T) {
 }
 
 func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
-	// Load up all the necessary data from each testdata/shellrc directory
+	// Load up all the necessary data from each internal/nix/testdata/shellrc directory
 	// into a slice of tests cases.
 	tests := make([]struct {
 		name            string
-		env             []string
+		env             map[string]string
 		hook            string
 		shellrcPath     string
 		goldShellrcPath string
@@ -48,7 +48,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 		test := &tests[i]
 		test.name = filepath.Base(path)
 		if b, err := os.ReadFile(filepath.Join(path, "env")); err == nil {
-			test.env = strings.Split(string(b), "\n")
+			test.env = pairsToMap(strings.Split(string(b), "\n"))
 		}
 		if b, err := os.ReadFile(filepath.Join(path, "hook")); err == nil {
 			test.hook = string(b)

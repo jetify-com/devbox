@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"text/template"
 
@@ -58,7 +57,7 @@ type DevboxShell struct {
 	binPath         string
 	projectDir      string // path to where devbox.json config resides
 	pkgConfigDir    string
-	env             []string
+	env             map[string]string
 	userShellrcPath string
 	pluginInitHook  string
 
@@ -218,15 +217,7 @@ func WithHistoryFile(historyFile string) ShellOption {
 // via wrapper scripts.
 func WithEnvVariables(envVariables map[string]string) ShellOption {
 	return func(s *DevboxShell) {
-		keys := make([]string, 0, len(envVariables))
-		for k := range envVariables {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, k := range keys {
-			s.env = append(s.env, fmt.Sprintf("%s=%s", k, envVariables[k]))
-		}
+		s.env = envVariables
 	}
 }
 
@@ -277,9 +268,13 @@ func (s *DevboxShell) Run() error {
 	// Link other files that affect the shell settings and environments.
 	s.linkShellStartupFiles(filepath.Dir(shellrc))
 	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
+	env := s.env
+	for k, v := range extraEnv {
+		env[k] = v
+	}
 
 	cmd = exec.Command(s.binPath)
-	cmd.Env = append(s.env, extraEnv...)
+	cmd.Env = mapToPairs(env)
 	cmd.Args = append(cmd.Args, extraArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -309,16 +304,16 @@ func (s *DevboxShell) Run() error {
 	return errors.WithStack(err)
 }
 
-func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv []string, extraArgs []string) {
+func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]string, extraArgs []string) {
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set when launching the shell.
 	switch s.name {
 	case shBash:
 		extraArgs = []string{"--rcfile", shellescape.Quote(shellrc)}
 	case shZsh:
-		extraEnv = []string{fmt.Sprintf(`ZDOTDIR=%s`, shellescape.Quote(filepath.Dir(shellrc)))}
+		extraEnv = map[string]string{"ZDOTDIR": shellescape.Quote(filepath.Dir(shellrc))}
 	case shKsh, shPosix:
-		extraEnv = []string{fmt.Sprintf(`ENV=%s`, shellescape.Quote(shellrc))}
+		extraEnv = map[string]string{"ENV": shellescape.Quote(shellrc)}
 	case shFish:
 		extraArgs = []string{"-C", ". " + shellrc}
 	}
@@ -369,29 +364,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		tmpl = fishrcTmpl
 	}
 
-	exportEnv := ""
-	strb := strings.Builder{}
-	for _, kv := range s.env {
-		k, v, ok := strings.Cut(kv, "=")
-		if !ok {
-			continue
-		}
-		strb.WriteString("export ")
-		strb.WriteString(k)
-		strb.WriteString(`="`)
-		for _, r := range v {
-			switch r {
-			// Special characters inside double quotes:
-			// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-			case '$', '`', '"', '\\', '\n':
-				strb.WriteRune('\\')
-			}
-			strb.WriteRune(r)
-		}
-		strb.WriteString("\"\n")
-	}
-	exportEnv = strings.TrimSpace(strb.String())
-
 	err = tmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		OriginalInit     string
@@ -413,7 +385,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
-		ExportEnv:        exportEnv,
+		ExportEnv:        exportify(s.env),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
