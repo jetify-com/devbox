@@ -106,15 +106,15 @@ func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 }
 
 func nixpkgsMirrorURL(commitHash string) string {
-	// Use DEVBOX_REGION as a hint to see if we're in Devbox Cloud.
-	if os.Getenv("DEVBOX_REGION") == "" {
+	baseURL := os.Getenv("DEVBOX_CACHE")
+	if baseURL == "" {
 		return ""
 	}
 
 	// Check that the mirror is responsive and has the tar file. We can't
 	// leave this up to Nix because fetchTarball will retry indefinitely.
 	client := &http.Client{Timeout: 3 * time.Second}
-	mirrorURL := fmt.Sprintf("http://[fdaa:0:a780:0:1::2]:8081/nixos/nixpkgs/archive/%s.tar.gz", commitHash)
+	mirrorURL := fmt.Sprintf("%s/nixos/nixpkgs/archive/%s.tar.gz", baseURL, commitHash)
 	resp, err := client.Head(mirrorURL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return ""
