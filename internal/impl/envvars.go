@@ -14,6 +14,18 @@ func mapToPairs(m map[string]string) []string {
 	return pairs
 }
 
+func pairsToMap(pairs []string) map[string]string {
+	vars := map[string]string{}
+	for _, p := range pairs {
+		k, v, ok := strings.Cut(p, "=")
+		if !ok {
+			continue
+		}
+		vars[k] = v
+	}
+	return vars
+}
+
 // exportify takes an array of strings of the form VAR=VAL and returns a bash script
 // that exports all the vars after properly escaping them.
 func exportify(vars map[string]string) string {
