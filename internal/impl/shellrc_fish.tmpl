@@ -27,8 +27,6 @@ makes fish do exactly what we want and behave in the same way as other shells.
 */ -}}
 {{ with .ExportEnv }}
 {{ . }}
-{{- else }}
-export PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
 {{- /*
@@ -83,20 +81,3 @@ cd "$workingDir" || exit
 # log that the shell is interactive now!
 devbox log shell-interactive {{ .ShellStartTime }}
 {{ end }}
-
-# Begin Script command
-
-{{- if .ScriptCommand }}
-
-function run_script
-    set workingDir "$(pwd)"
-    cd "{{ .ProjectDir }}" || exit
-
-    {{  .ScriptCommand }}
-
-    cd "$workingDir" || exit
-end
-
-# End Script command
-
-{{- end }}

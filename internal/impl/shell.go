@@ -18,7 +18,6 @@ import (
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -63,9 +62,6 @@ type DevboxShell struct {
 
 	// UserInitHook contains commands that will run at shell startup.
 	UserInitHook string
-
-	ScriptName    string
-	ScriptCommand string
 
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
@@ -289,17 +285,10 @@ func (s *DevboxShell) Run() error {
 	// This could be from one of the generated shellrc commands, but more likely is from
 	// a user's command or script. So, we want to return nil for this.
 	if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-
-		// The exception to the previous comment is if we are executing a shell script
-		// via `devbox run` or the deprecated `devbox shell -- <command>`. In this case,
-		// we do want to return the exit code of the script that was run.
-		if s.ScriptCommand != "" {
-			return usererr.NewExecError(err)
-		}
 		return nil
 	}
 
-	// This means that there was a error from devbox's code or nix's code. Not a user
+	// This means that there was an error from devbox's code or nix's code. Not a user
 	// error and so we do return it.
 	return errors.WithStack(err)
 }
@@ -354,11 +343,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		}
 	}()
 
-	pathPrepend := s.profileDir + "/bin"
-	if s.pkgConfigDir != "" {
-		pathPrepend = s.pkgConfigDir + ":" + pathPrepend
-	}
-
 	tmpl := shellrcTmpl
 	if s.name == shFish {
 		tmpl = fishrcTmpl
@@ -370,8 +354,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath string
 		UserHook         string
 		PluginInitHook   string
-		PathPrepend      string
-		ScriptCommand    string
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
@@ -381,8 +363,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath: s.userShellrcPath,
 		UserHook:         strings.TrimSpace(s.UserInitHook),
 		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
-		PathPrepend:      pathPrepend,
-		ScriptCommand:    strings.TrimSpace(s.ScriptCommand),
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		ExportEnv:        exportify(s.env),
