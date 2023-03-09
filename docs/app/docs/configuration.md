@@ -39,7 +39,7 @@ For example, you could set variable `$FOO` to `bar` by adding the following to y
 }
 ```
 
-Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values will environment variables will not be expanded when starting your shell. 
+Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell. 
 
 
 ### Shell
