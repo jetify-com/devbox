@@ -1,5 +1,5 @@
 // The module 'vscode' contains the VS Code extensibility API
-import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
+import { workspace, window, commands, Uri, UriHandler, ExtensionContext } from 'vscode';
 import { posix } from 'path';
 
 // This method is called when your extension is activated
@@ -30,6 +30,22 @@ export function activate(context: ExtensionContext) {
 			&& context.workspaceState.get("configFileExists")
 		) {
 			await runInTerminal('devbox shell', true);
+		}
+	});
+
+	const handleVSCodeUri = window.registerUriHandler({
+		handleUri: (uri: Uri) => {
+			const queryParams = new URLSearchParams(uri.query);
+
+			if (queryParams.has('vm_id')) {
+				const vmId = queryParams.get('vm_id');
+				const host = `${vmId}`;
+				const pathToFile = '/home/mohsenari/';
+				const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
+				const uriToOpen = Uri.parse(workspaceURI);
+				window.showInformationMessage(uriToOpen.toString());
+				commands.executeCommand("vscode.openFolder", uriToOpen, false);
+			}
 		}
 	});
 
@@ -85,6 +101,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxShell);
 	context.subscriptions.push(setupDevcontainer);
 	context.subscriptions.push(generateDockerfile);
+	context.subscriptions.push(handleVSCodeUri);
 }
 
 async function initialCheckDevboxJSON(context: ExtensionContext) {
