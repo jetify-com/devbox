@@ -2,9 +2,11 @@ package impl
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -291,19 +293,48 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 
+		priority := d.getPackagePriority(pkg)
+
+	invokeinstall:
+		writer := AddPackageWriter{Writer: d.writer, sb: &strings.Builder{}}
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
-			ExtraFlags:        []string{"--priority", d.getPackagePriority(pkg)},
+			ExtraFlags:        []string{"--priority", strconv.Itoa(priority)},
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
-			Writer:            d.writer,
+			Writer:            writer,
 		}); err != nil {
-			return err
+			if !strings.Contains(writer.sb.String(), "conflicting packages") || priority == 0 {
+				return err
+			}
+
+			// The error was about conflicting packages AND priority > 0:
+			ux.Fwarning(d.writer, "Detected a conflict installing %s. Adding a higher priority and trying again.\n",
+				pkg)
+			priority = priority - 1
+			goto invokeinstall
 		}
 	}
 
 	return nil
+}
+
+type AddPackageWriter struct {
+	io.Writer
+
+	// The string builder is used to collect the output that the writer would print
+	// for us to analyze. We require it to be a pointer because the io.Writer
+	// interface applies to the struct (and not struct-pointers). So, each invocation
+	// of a caller seems to make a struct copy such that a new strings.Builder would be
+	// used if this was not a pointer.
+	sb *strings.Builder
+}
+
+// Write will save a copy of the output string in the sb (string builder) for later analysis.
+func (w AddPackageWriter) Write(p []byte) (n int, err error) {
+	w.sb.WriteString(string(p))
+	return w.Writer.Write(p)
 }
 
 func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
@@ -392,13 +423,13 @@ func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
 // This sets the priority of non-devbox.json packages to be slightly lower (higher number)
 // than devbox.json packages. This matters for profile installs, but doesn't matter
 // much for the flakes.nix file. There we rely on the order of packages (local ahead of global)
-func (d *Devbox) getPackagePriority(pkg string) string {
+func (d *Devbox) getPackagePriority(pkg string) int {
 	for _, p := range d.cfg.RawPackages {
 		if p == pkg {
-			return "5"
+			return 5
 		}
 	}
-	return "6" // Anything higher than 5 (default) would be correct
+	return 6 // Anything higher than 5 (default) would be correct
 }
 
 var resetCheckDone = false
