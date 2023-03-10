@@ -57,6 +57,7 @@ func (c *Config) Packages(w io.Writer) []string {
 	dataPath, err := GlobalDataPath()
 	if err != nil {
 		ux.Ferror(w, "unable to get devbox global data path: %s\n", err)
+		return c.RawPackages
 	}
 	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
 	if err != nil {
