@@ -27,8 +27,6 @@ content readable.
 
 {{ with .ExportEnv -}}
 {{ . }}
-{{- else -}}
-PATH="{{ .PathPrepend }}:$PATH"
 {{- end }}
 
 {{- /*
@@ -79,20 +77,3 @@ cd "$working_dir" || exit
 # log that the shell is interactive now!
 devbox log shell-interactive {{ .ShellStartTime }}
 {{ end }}
-
-{{- if .ScriptCommand }}
-
-# Begin Script Command
-
-run_script() {
-	working_dir="$(pwd)"
-	cd "{{ .ProjectDir }}" || exit
-
-	{{ .ScriptCommand }}
-
-	cd "$working_dir" || exit
-}
-
-# End Script Command
-
-{{- end }}
