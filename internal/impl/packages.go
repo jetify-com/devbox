@@ -23,6 +23,7 @@ import (
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
 func (d *Devbox) Add(pkgs ...string) error {
+
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
