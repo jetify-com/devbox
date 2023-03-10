@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
 )
 
 // ProfileListItems returns a list of the installed packages
@@ -186,6 +187,7 @@ func (item *NixProfileListItem) String() string {
 
 type ProfileInstallArgs struct {
 	CustomStepMessage string
+	Priority          string
 	ExtraFlags        []string
 	NixpkgsCommit     string
 	Package           string
@@ -206,32 +208,91 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	cmd := exec.Command("nix", "profile", "install",
+	err := profileInstall(args)
+	if err != nil {
+		if errors.Is(err, ErrPackageNotFound) {
+			return err
+		}
+
+		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
+		return err
+	}
+
+	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
+
+	return nil
+}
+
+func profileInstall(args *ProfileInstallArgs) error {
+
+	cmd := exec.Command(
+		"nix", "profile", "install",
 		"--profile", args.ProfilePath,
 		"--impure", // Needed to allow flags from environment to be used.
 		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
 	)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	if args.Priority != "" {
+		cmd.Args = append(cmd.Args, "--priority", args.Priority)
+	}
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
 
 	cmd.Env = DefaultEnv()
-	cmd.Stdout = &PackageInstallWriter{args.Writer}
-	var stderr bytes.Buffer
-	cmd.Stderr = io.MultiWriter(&stderr, cmd.Stdout)
+	writer := &PackageInstallWriter{args.Writer}
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = io.MultiWriter(&stdout, writer)
+	cmd.Stderr = io.MultiWriter(&stderr, writer)
 
 	if err := cmd.Run(); err != nil {
 		if strings.Contains(stderr.String(), "does not provide attribute") {
 			return ErrPackageNotFound
 		}
 
-		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
+		// If two packages being installed seek to install two nix packages (could be themselves,
+		// or could be a dependency) that have the same binary name,
+		// then `nix profile install` will fail with `conflicting packages` error (as of nix version 2.14.0)
+		//
+		// An example error message looks like the following:
+		// error: files '/nix/store/spgr12gk13af8flz7akbs18fj4whqss2-bundler-2.4.5/bin/bundle' and
+		// '/nix/store/l4wmx8lfn6hlcfmbyhmksm024f8hixm1-ruby-3.1.2/bin/bundle' have the same priority 5;
+		// use 'nix-env --set-flag priority NUMBER INSTALLED_PKGNAME' or type 'nix profile install --help'
+		// if using 'nix profile' to find out howto change the priority of one of the conflicting packages
+		// (0 being the highest priority)
+		//
+		// However, for the purposes of starting a shell with these packages, nix flakes will give
+		// precedence to the later package. We enable similar functionality by increasing the priority
+		// of any package being installed and conflicting with a previously installed package: the
+		// package being installed later "wins".
+		isConflictingPackagesError := strings.Contains(stdout.String(), "conflicting packages") ||
+			strings.Contains(stderr.String(), "conflicting packages")
+		if isConflictingPackagesError && args.Priority != "0" {
+
+			priority := args.Priority
+			if priority == "" {
+				priority = "5" // 5 is the default priority in `nix profile`
+			}
+
+			intPriority, strconvErr := strconv.Atoi(priority)
+			if strconvErr != nil {
+				debug.Log(
+					"Error: falling back to regular error handling logic due to strconv.Atoi error: %s",
+					strconvErr)
+				// fallthrough to the regular error handling logic
+			} else {
+				// to give higher priority, we need to assign a lower priority number
+				args.Priority = strconv.Itoa(intPriority - 1)
+				debug.Log("Re-trying nix profile install with priority %s for package %s\n",
+					args.Priority,
+					args.Package,
+				)
+				return profileInstall(args)
+			}
+		}
+
 		return errors.Wrapf(err, "Command: %s", cmd)
 	}
-
-	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
-
 	return nil
 }
 

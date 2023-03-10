@@ -3,11 +3,16 @@ package nix
 import (
 	"io"
 	"strings"
+
+	"go.jetpack.io/devbox/internal/debug"
 )
 
-var packageInstallIgnore = []string{
-	`replacing old 'devbox-development'`,
-	`installing 'devbox-development'`,
+// packageInstallIgnore will skip lines that have the strings in the keys of this map.
+// The boolean values inform the writer whether to log the line to debug.Log.
+var packageInstallIgnore = map[string]bool{
+	`replacing old 'devbox-development'`: false,
+	`installing 'devbox-development'`:    false,
+	`conflicting packages`:               true,
 }
 
 type PackageInstallWriter struct {
@@ -28,8 +33,11 @@ func (fw *PackageInstallWriter) Write(p []byte) (n int, err error) {
 }
 
 func (*PackageInstallWriter) ignore(line string) bool {
-	for _, filter := range packageInstallIgnore {
+	for filter, shouldLog := range packageInstallIgnore {
 		if strings.Contains(line, filter) {
+			if shouldLog {
+				debug.Log("Hiding output for user: %s", line)
+			}
 			return true
 		}
 	}
