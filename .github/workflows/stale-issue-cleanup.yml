@@ -1,4 +1,4 @@
-name: 'Close stale issues and PRs'
+name: close-stale-issues
 # Marks issues and PRs as stale after 30 days, then closes them if marked stale for 5 days
 on:
   schedule:
@@ -14,6 +14,6 @@ jobs:
           stale-pr-message: 'This PR is stale because it has been open 30 days with no activity. Remove the `stale` label or add a comment, otherwise this PR will be closed in 5 days.'
           exempt-issue-labels: 'future'
           exempt-pr-labels: 'awaiting-approval, work-in-progress'
-          days-before-stale: 30
+          days-before-stale: 45
           days-before-close: 5
-          debug-only: true
+          operations: 100
