@@ -253,7 +253,7 @@ func WithShellStartTime(time string) ShellOption {
 func rcfilePath(basename string) string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "~"
+		return ""
 	}
 	return filepath.Join(home, basename)
 }
