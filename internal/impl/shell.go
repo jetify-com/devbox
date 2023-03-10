@@ -246,7 +246,7 @@ func rcfilePath(basename string) string {
 }
 
 func fishConfig() string {
-	return filepath.Join(xdg.ConfigDir(), "fish", "config.fish")
+	return xdg.ConfigSubpath("fish/config.fish")
 }
 
 func (s *DevboxShell) Run() error {
