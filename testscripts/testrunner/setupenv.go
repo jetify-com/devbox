@@ -12,7 +12,11 @@ import (
 func setupTestEnv(env *testscript.Env) error {
 	setupPATH(env)
 
-	err := setupCacheHome(env)
+	if err := setupXDGHomes(env); err != nil {
+		return err
+	}
+
+	err := setupSharedCacheDirectories(env)
 	if err != nil {
 		return err
 	}
@@ -34,30 +38,56 @@ func setupPATH(env *testscript.Env) {
 	env.Setenv("PATH", newPath)
 }
 
-func setupCacheHome(env *testscript.Env) error {
-	// Both devbox itself and nix occasionally create some files in
-	// XDG_CACHE_HOME (which defaults to ~/.cache). For purposes of this
-	// test set it to a location within the test's working directory:
-	cacheHome := filepath.Join(env.WorkDir, ".cache")
-	env.Setenv("XDG_CACHE_HOME", cacheHome)
-	err := os.MkdirAll(cacheHome, 0755) // Ensure dir exists.
-	if err != nil {
-		return err
-	}
-
+func setupSharedCacheDirectories(env *testscript.Env) error {
 	// There is one directory we do want to share across tests: nix's cache.
 	// Without it tests are very slow, and nix would end up re-downloading
 	// nixpkgs every time.
 	// Here we create a shared location for nix's cache, and symlink from
 	// the test's working directory.
-	err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0755) // Ensure dir exists.
+	err := os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0755) // Ensure dir exists.
 	if err != nil {
 		return err
 	}
+
+	cacheHome := xdgHomePath(env, "XDG_CACHE_HOME")
 	err = os.Symlink(xdg.CacheSubpath("devbox-tests/nix"), filepath.Join(cacheHome, "nix"))
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+var xdgHomes = map[string]string{
+	"XDG_CACHE_HOME":  ".cache",
+	"XDG_CONFIG_HOME": ".config",
+	"XDG_DATA_HOME":   ".share",
+	"XDG_STATE_HOME":  ".state",
+}
+
+func setupXDGHomes(env *testscript.Env) error {
+	for envKey := range xdgHomes {
+		if err := setupXDGHome(env, envKey); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setupXDGHome enables testscripts to use particular XDG directories.
+//
+// Both devbox itself and nix occasionally create some files in
+// XDG folders. For testscripts, set the XDG folders
+// to a location within the test's working directory.
+func setupXDGHome(env *testscript.Env, envKey string) error {
+	path := xdgHomePath(env, envKey)
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+	env.Setenv(envKey, path)
+	return nil
+}
+
+func xdgHomePath(env *testscript.Env, envKey string) string {
+	return filepath.Join(env.WorkDir, xdgHomes[envKey])
 }
