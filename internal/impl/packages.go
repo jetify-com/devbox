@@ -305,7 +305,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 			ProfilePath:       profileDir,
 			Writer:            writer,
 		}); err != nil {
-			if !strings.Contains(writer.sb.String(), "conflicting packages") || priority == 0 {
+			if !strings.Contains(writer.sb.String(), conflictingPackagesErrorMsg) || priority == 0 {
 				return err
 			}
 
@@ -331,10 +331,23 @@ type AddPackageWriter struct {
 	sb *strings.Builder
 }
 
+const conflictingPackagesErrorMsg = "conflicting packages"
+
 // Write will save a copy of the output string in the sb (string builder) for later analysis.
-func (w AddPackageWriter) Write(p []byte) (n int, err error) {
-	w.sb.WriteString(string(p))
-	return w.Writer.Write(p)
+func (w AddPackageWriter) Write(contents []byte) (n int, err error) {
+	strContent := string(contents)
+	w.sb.WriteString(strContent)
+	if strings.Contains(strContent, conflictingPackagesErrorMsg) {
+		// Lets not write the "conflicting packages error", but print it to debug.Log
+		// so we can see it happens if we need to debug any issue.
+		debug.Log(
+			"Received conflicting-packages error. Not printing for user. Error message is:\n%s\n",
+			strContent,
+		)
+		return
+	}
+
+	return w.Writer.Write(contents)
 }
 
 func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
