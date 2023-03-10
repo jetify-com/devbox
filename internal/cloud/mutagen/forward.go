@@ -38,10 +38,5 @@ func ForwardList(env map[string]string, labels map[string]string) ([]Forward, er
 	}
 
 	list := []Forward{}
-
-	if err := json.Unmarshal(out, &list); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
 	return list, errors.WithStack(json.Unmarshal(out, &list))
 }

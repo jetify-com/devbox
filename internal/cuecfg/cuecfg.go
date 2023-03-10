@@ -35,29 +35,13 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 func Unmarshal(data []byte, extension string, valuePtr any) error {
 	switch extension {
 	case ".json":
-		err := unmarshalJSON(data, valuePtr)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		return nil
+		return errors.WithStack(unmarshalJSON(data, valuePtr))
 	case ".yml", ".yaml":
-		err := unmarshalYaml(data, valuePtr)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		return nil
+		return errors.WithStack(unmarshalYaml(data, valuePtr))
 	case ".toml":
-		err := unmarshalToml(data, valuePtr)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		return nil
+		return errors.WithStack(unmarshalToml(data, valuePtr))
 	case ".xml":
-		err := unmarshalXML(data, valuePtr)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		return nil
+		return errors.WithStack(unmarshalXML(data, valuePtr))
 	}
 	return errors.Errorf("Unsupported file format '%s' for config file", extension)
 }
@@ -98,11 +82,7 @@ func WriteFile(path string, value any) error {
 		return errors.WithStack(err)
 	}
 
-	err = os.WriteFile(path, data, 0644)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(os.WriteFile(path, data, 0644))
 }
 
 func IsSupportedExtension(ext string) bool {

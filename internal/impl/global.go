@@ -147,10 +147,7 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 
 func GlobalDataPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return "", errors.WithStack(err)
-	}
-	return path, nil
+	return path, errors.WithStack(os.MkdirAll(path, 0755))
 }
 
 func GlobalNixProfilePath() (string, error) {

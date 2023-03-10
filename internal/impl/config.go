@@ -75,11 +75,7 @@ func (c *Config) Packages(w io.Writer) []string {
 
 func readConfig(path string) (*Config, error) {
 	cfg := &Config{}
-	err := cuecfg.ParseFile(path, cfg)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return cfg, nil
+	return cfg, errors.WithStack(cuecfg.ParseFile(path, cfg))
 }
 
 // ReadConfig reads a devbox config file, and validates it.
@@ -88,10 +84,7 @@ func ReadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := validateConfig(cfg); err != nil {
-		return nil, err
-	}
-	return cfg, err
+	return cfg, validateConfig(cfg)
 }
 
 func readConfigFromURL(url *url.URL) (*Config, error) {
@@ -175,7 +168,6 @@ func findProjectDirAtPath(absPath string) (string, error) {
 }
 
 func findProjectDirFromParentDirSearch(root string, absPath string) (string, error) {
-
 	cur := absPath
 	// Search parent directories for a devbox.json
 	for cur != root {
@@ -192,7 +184,6 @@ func findProjectDirFromParentDirSearch(root string, absPath string) (string, err
 }
 
 func missingConfigError(path string, didCheckParents bool) error {
-
 	var workingDir string
 	wd, err := os.Getwd()
 	if err == nil {

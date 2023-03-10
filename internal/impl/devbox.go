@@ -132,10 +132,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 }
 
 func (d *Devbox) Generate() error {
-	if err := d.generateShellFiles(); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(d.generateShellFiles())
 }
 
 func (d *Devbox) Shell() error {

@@ -72,7 +72,6 @@ func checkActiveVMWithRetries(vmAddr string) (bool, error) {
 }
 
 func checkActiveVM(vmAddr string) (bool, error) {
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "ssh", vmAddr, "echo 'alive'")

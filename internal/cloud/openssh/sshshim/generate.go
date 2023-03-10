@@ -33,23 +33,17 @@ func Setup() error {
 
 	// create scp symlink
 	scpSymlink := filepath.Join(shimDir, "scp")
-	if err := makeSymlink(scpSymlink, devboxExecutablePath); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return errors.WithStack(makeSymlink(scpSymlink, devboxExecutablePath))
 }
 
 func makeSymlink(from string, target string) error {
-
 	if err := os.Remove(from); err != nil && !os.IsNotExist(err) {
 		return errors.WithStack(err)
 	}
 
-	if err := os.Symlink(target, from); err != nil {
-		if !os.IsExist(err) {
-			return errors.WithStack(err)
-		}
+	err := os.Symlink(target, from)
+	if os.IsExist(err) {
+		err = nil
 	}
-	return nil
+	return errors.WithStack(err)
 }

@@ -162,10 +162,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
 
-func (d *Devbox) printPackageUpdateMessage(
-	mode installMode,
-	pkgs []string,
-) error {
+func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) error {
 	verb := "installed"
 	var infos []*nix.Info
 	for _, pkg := range pkgs {
@@ -177,7 +174,6 @@ func (d *Devbox) printPackageUpdateMessage(
 	}
 
 	if len(pkgs) > 0 {
-
 		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
 		if len(pkgs) > 1 {
 			pkgsWithVersion := []string{}
@@ -255,11 +251,7 @@ func (d *Devbox) profilePath() (string, error) {
 		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return absPath, nil
+	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0755))
 }
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
