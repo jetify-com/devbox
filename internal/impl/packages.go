@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -272,6 +273,17 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return nil
 	}
 
+	// Packages with higher priority number i.e. lower actual priority
+	// are to be installed first, so that any conflicts are resolved in favor
+	// of later packages (having lower priority number i.e. higher actual priority)
+	//
+	// We use stable sort so that users can manually change the order of packages
+	// in their configs, if they have particular opinions about which package should
+	// win any conflicts.
+	sort.SliceStable(pkgs, func(i, j int) bool {
+		return d.getPackagePriority(pkgs[i]) > d.getPackagePriority(pkgs[j])
+	})
+
 	var msg string
 	if len(pkgs) == 1 {
 		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
@@ -293,7 +305,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
-			ExtraFlags:        []string{"--priority", d.getPackagePriority(pkg)},
+			Priority:          d.getPackagePriority(pkg),
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
