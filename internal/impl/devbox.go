@@ -562,7 +562,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 		return errors.WithStack(err)
 	}
 	hooks := "if [ -n \"$DEVBOX_HOOK_RAN\" ]; then return; fi\n\n"
-	hooks += strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
+	hooks += strings.Join(append(pluginHooks, d.cfg.Shell.InitHook.String()), "\n\n")
 	hooks += "\n\n"
 
 	// Write scripts to files.
@@ -571,7 +571,8 @@ func (d *Devbox) writeScriptsToFiles() error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		hooks += fmt.Sprintf("\nalias %s=%s", name, d.scriptPath(d.scriptFilename(name)))
+		//hooks += fmt.Sprintf("\nalias %s=%s", name, d.scriptPath(d.scriptFilename(name)))
+		hooks += fmt.Sprintf("\nfunction %s() {\n  %s\n}", name, d.scriptPath(d.scriptFilename(name)))
 		written[d.scriptFilename(name)] = struct{}{}
 	}
 	hooks += "\n\nexport DEVBOX_HOOK_RAN=1\n"
@@ -624,7 +625,7 @@ func (d *Devbox) scriptFilename(scriptName string) string {
 }
 
 func (d *Devbox) scriptBody(body string) string {
-	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+	return fmt.Sprintf(". %s\n\n%s\n", d.scriptPath(d.scriptFilename(hooksFilename)), body)
 }
 
 func (d *Devbox) nixShellFilePath() string {
