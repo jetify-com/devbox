@@ -37,14 +37,18 @@ export function activate(context: ExtensionContext) {
 		handleUri: (uri: Uri) => {
 			const queryParams = new URLSearchParams(uri.query);
 
-			if (queryParams.has('vm_id')) {
+			if (queryParams.has('vm_id') && queryParams.has('gh_user')) {
 				const vmId = queryParams.get('vm_id');
-				const host = `${vmId}`;
-				const pathToFile = '/home/mohsenari/';
+				const host = `${vmId}.vm.devbox-vms.internal`;
+				const ghUser = queryParams.get('gh_user');
+				const pathToFile = `/home/${ghUser}/`;
+
 				const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
 				const uriToOpen = Uri.parse(workspaceURI);
 				window.showInformationMessage(uriToOpen.toString());
 				commands.executeCommand("vscode.openFolder", uriToOpen, false);
+			} else {
+				window.showErrorMessage('Error parsing information for remote environment.');
 			}
 		}
 	});
