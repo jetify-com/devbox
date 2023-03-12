@@ -1,0 +1,48 @@
+{
+  description = "A devbox shell";
+
+  inputs = {
+    nixpkgs.url = "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = (import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        });
+        php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ blackfire ]));
+        php81Packages.composer = php.packages.composer;
+      in
+      {
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            php
+            php81Packages.composer
+            php81Extensions.blackfire
+            flyctl
+            postgresql
+            tree
+            git
+            zsh
+            openssh
+            vim
+            sqlite
+            jq
+            delve
+            ripgrep
+            shellcheck
+            terraform
+            xz
+            zstd
+            gnupg
+            go_1_20
+            python3
+            graphviz
+          ];
+        };
+      }
+    );
+}

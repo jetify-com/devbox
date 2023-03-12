@@ -76,7 +76,6 @@ func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 }
 
 func pkgInfo(cmd *exec.Cmd, pkg string) (*Info, bool) {
-	cmd.Env = DefaultEnv()
 	cmd.Stderr = os.Stderr
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
@@ -110,10 +109,6 @@ func parseInfo(pkg string, data []byte) *Info {
 	return nil
 }
 
-func DefaultEnv() []string {
-	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
-}
-
 type varsAndFuncs struct {
 	Functions map[string]string   // the key is the name, the value is the body.
 	Variables map[string]variable // the key is the name.
@@ -133,9 +128,8 @@ func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, err
 		cmd.Args = append(cmd.Args, "-f", nixShellFilePath)
 	}
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Args = append(cmd.Args, "--impure", "--json")
+	cmd.Args = append(cmd.Args, "--json")
 	debug.Log("Running print-dev-env cmd: %s\n", cmd)
-	cmd.Env = DefaultEnv()
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Command: %s", cmd)

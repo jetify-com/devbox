@@ -4,8 +4,10 @@
 package impl
 
 import (
+	"bytes"
 	"embed"
-	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,7 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
-//go:embed tmpl/* tmpl/.*
+//go:embed tmpl/*
 var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
@@ -62,26 +64,81 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 	return nil
 }
 
-func writeFromTemplate(path string, plan interface{}, tmplName string) error {
-	embeddedPath := fmt.Sprintf("tmpl/%s.tmpl", tmplName)
+// Cache and buffers for generating templated files.
+var (
+	tmplCache = map[string]*template.Template{}
 
-	// Should we clear the directory so we start "fresh"?
-	outPath := filepath.Join(path, tmplName)
-	outDir := filepath.Dir(outPath)
-	err := os.MkdirAll(outDir, 0755) // Ensure directory exists.
-	if err != nil {
+	// Most generated files are < 4KiB.
+	tmplNewBuf = bytes.NewBuffer(make([]byte, 0, 4096))
+	tmplOldBuf = bytes.NewBuffer(make([]byte, 0, 4096))
+)
+
+func writeFromTemplate(path string, plan any, tmplName string) error {
+	tmplKey := tmplName + ".tmpl"
+	tmpl := tmplCache[tmplKey]
+	if tmpl == nil {
+		tmpl = template.New(tmplKey)
+		tmpl.Funcs(templateFuncs)
+
+		var err error
+		tmpl, err = tmpl.ParseFS(tmplFS, "tmpl/"+tmplKey)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		tmplCache[tmplKey] = tmpl
+	}
+	tmplNewBuf.Reset()
+	if err := tmpl.Execute(tmplNewBuf, plan); err != nil {
 		return errors.WithStack(err)
 	}
 
-	f, err := os.Create(outPath)
-	defer func() {
-		_ = f.Close()
-	}()
+	// In some circumstances, Nix looks at the mod time of a file when
+	// caching, so we only want to update the file if something has
+	// changed. Blindly overwriting the file could invalidate Nix's cache
+	// every time, slowing down evaluation considerably.
+	var (
+		outPath = filepath.Join(path, tmplName)
+		flag    = os.O_RDWR | os.O_CREATE
+		perm    = fs.FileMode(0644)
+	)
+	outFile, err := os.OpenFile(outPath, flag, perm)
+	if errors.Is(err, os.ErrNotExist) {
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return errors.WithStack(err)
+		}
+		outFile, err = os.OpenFile(outPath, flag, perm)
+	}
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	t := template.Must(template.New(tmplName+".tmpl").Funcs(templateFuncs).ParseFS(tmplFS, embeddedPath))
-	return errors.WithStack(t.Execute(f, plan))
+	defer outFile.Close()
+
+	// Only read len(tmplWriteBuf) + 1 from the existing file so we can
+	// check if the lengths are different without reading the whole thing.
+	tmplOldBuf.Reset()
+	tmplOldBuf.Grow(tmplNewBuf.Len() + 1)
+	_, err = io.Copy(tmplOldBuf, io.LimitReader(outFile, int64(tmplNewBuf.Len())+1))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if bytes.Equal(tmplNewBuf.Bytes(), tmplOldBuf.Bytes()) {
+		return nil
+	}
+
+	// Replace the existing file contents.
+	if _, err := outFile.Seek(0, io.SeekStart); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := outFile.Truncate(int64(tmplNewBuf.Len())); err != nil {
+		return errors.WithStack(err)
+	}
+	if _, err := io.Copy(outFile, tmplNewBuf); err != nil {
+		return errors.WithStack(err)
+	}
+	if err := outFile.Close(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func toJSON(a any) string {
