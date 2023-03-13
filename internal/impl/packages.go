@@ -15,7 +15,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
@@ -444,22 +443,31 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}()
 
 	dir, err := filepath.EvalSymlinks(profileDir)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	needsReset := false
 	if featureflag.Flakes.Enabled() {
 		// older nix profiles have a manifest.nix file present
-		needsReset = fileutil.Exists(filepath.Join(dir, "manifest.nix"))
+		_, err := os.Stat(filepath.Join(dir, "manifest.nix"))
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	} else {
 		// newer flake nix profiles have a manifest.json file present
-		needsReset = fileutil.Exists(filepath.Join(dir, "manifest.json"))
+		_, err := os.Stat(filepath.Join(dir, "manifest.json"))
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
-
-	if !needsReset {
-		return nil
-	}
-
 	return errors.WithStack(os.Remove(profileDir))
 }
