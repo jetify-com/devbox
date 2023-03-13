@@ -1,0 +1,11 @@
+# Test ensures that we can add and remove "unfree" nix packages
+
+exec devbox init
+
+# we could test with slack and/or vscode. Using slack since it is lighter.
+exec devbox add slack
+stderr 'Installing package: slack.'
+stderr 'is now installed.'
+
+exec devbox rm slack
+stderr 'is now removed.'
