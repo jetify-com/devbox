@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/trace"
 	"strings"
 	"time"
 
@@ -55,13 +56,19 @@ func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
 
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = telemetry.CommandStartTime()
-	if !m.disabled {
-		sentry := telemetry.NewSentry(m.opts.SentryDSN)
-		sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
+
+	ctx := cmd.Context()
+	defer trace.StartRegion(ctx, "telemetryPreRun").End()
+	if m.disabled {
+		trace.Log(ctx, "telemetry", "telemetry is disabled")
+		return
 	}
+	sentry := telemetry.NewSentry(m.opts.SentryDSN)
+	sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
 }
 
 func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+	defer trace.StartRegion(cmd.Context(), "telemetryPostRun").End()
 	if m.disabled {
 		return
 	}

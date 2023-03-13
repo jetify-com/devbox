@@ -15,7 +15,10 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-var debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
+var (
+	debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
+	traceMiddleware *midcobra.TraceMiddleware = &midcobra.TraceMiddleware{}
+)
 
 type rootCmdFlags struct {
 	quiet bool
@@ -58,6 +61,7 @@ func RootCmd() *cobra.Command {
 	command.PersistentFlags().BoolVarP(
 		&flags.quiet, "quiet", "q", false, "suppresses logs")
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
+	traceMiddleware.AttachToFlag(command.PersistentFlags(), "trace")
 
 	return command
 }
@@ -65,6 +69,7 @@ func RootCmd() *cobra.Command {
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	exe := midcobra.New(RootCmd())
+	exe.AddMiddleware(traceMiddleware)
 	exe.AddMiddleware(midcobra.Telemetry())
 	exe.AddMiddleware(debugMiddleware)
 	return exe.Execute(ctx, args)
