@@ -41,7 +41,9 @@ func (t *TraceMiddleware) preRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic("error enabling tracing: " + err.Error())
 	}
-	trace.Start(t.tracef)
+	if err := trace.Start(t.tracef); err != nil {
+		panic("error enabling tracing: " + err.Error())
+	}
 
 	var ctx context.Context
 	ctx, t.task = trace.NewTask(cmd.Context(), "cliCommand")

@@ -56,7 +56,7 @@ func (ex *midcobraExecutable) AddMiddleware(mids ...Middleware) {
 func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	// Ensure cobra uses the same arguments
 	ex.cmd.SetContext(ctx)
-	ex.cmd.ParseFlags(args)
+	_ = ex.cmd.ParseFlags(args)
 
 	// Run the 'pre' hooks
 	for _, m := range ex.middlewares {
