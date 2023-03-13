@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/trace"
 	"strconv"
 	"strings"
 
@@ -138,7 +139,10 @@ func (d *Devbox) Generate() error {
 }
 
 func (d *Devbox) Shell() error {
-	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
+	ctx, task := trace.NewTask(context.Background(), "devboxShell")
+	defer task.End()
+
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -153,7 +157,7 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	env, err := d.computeNixEnv()
+	env, err := d.computeNixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -183,7 +187,10 @@ func (d *Devbox) Shell() error {
 }
 
 func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	if err := d.ensurePackagesAreInstalled(ensure); err != nil {
+	ctx, task := trace.NewTask(context.Background(), "devboxRun")
+	defer task.End()
+
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -191,7 +198,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	env, err := d.computeNixEnv()
+	env, err := d.computeNixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -228,7 +235,10 @@ func (d *Devbox) ListScripts() []string {
 }
 
 func (d *Devbox) PrintEnv() (string, error) {
-	envs, err := d.computeNixEnv()
+	ctx, task := trace.NewTask(context.Background(), "devboxPrintEnv")
+	defer task.End()
+
+	envs, err := d.computeNixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -448,7 +458,9 @@ func (d *Devbox) generateShellFiles() error {
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv() (map[string]string, error) {
+func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
+	defer trace.StartRegion(ctx, "computeNixEnv").End()
+
 	currentEnv := os.Environ()
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
@@ -471,7 +483,7 @@ func (d *Devbox) computeNixEnv() (map[string]string, error) {
 		originalPath = currentEnvPath
 	}
 
-	vaf, err := nix.PrintDevEnv(d.nixShellFilePath(), d.nixFlakesFilePath())
+	vaf, err := nix.PrintDevEnv(ctx, d.nixShellFilePath(), d.nixFlakesFilePath())
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,9 @@
 package planner
 
 import (
+	"context"
+	"runtime/trace"
+
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/planner/languages/php"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -16,6 +19,8 @@ var PLANNERS = []plansdk.Planner{
 // Return a merged shell plan from shell planners if user defined packages
 // contain one or more dev packages from a shell planner.
 func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
+	defer trace.StartRegion(context.Background(), "getShellPlan").End()
+
 	result := &plansdk.ShellPlan{}
 	planners := getRelevantPlanners(srcDir, userPkgs)
 	for _, p := range planners {

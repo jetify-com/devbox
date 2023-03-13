@@ -1,10 +1,12 @@
 package impl
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/trace"
 	"sort"
 	"strings"
 
@@ -24,6 +26,9 @@ import (
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
 func (d *Devbox) Add(pkgs ...string) error {
+	ctx, task := trace.NewTask(context.Background(), "devboxAdd")
+	defer task.End()
+
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
@@ -45,7 +50,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
-	if err := d.ensurePackagesAreInstalled(install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
 		// if error installing, revert devbox.json
 		// This is not perfect because there may be more than 1 package being
 		// installed and we don't know which one failed. But it's better than
@@ -77,6 +82,8 @@ func (d *Devbox) Add(pkgs ...string) error {
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
 func (d *Devbox) Remove(pkgs ...string) error {
+	ctx, task := trace.NewTask(context.Background(), "devboxRemove")
+	defer task.End()
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
 	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
@@ -99,11 +106,11 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	if err := d.removePackagesFromProfile(uninstalledPackages); err != nil {
+	if err := d.removePackagesFromProfile(ctx, uninstalledPackages); err != nil {
 		return err
 	}
 
-	if err := d.ensurePackagesAreInstalled(uninstall); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
 		return err
 	}
 
@@ -122,7 +129,9 @@ const (
 // ensurePackagesAreInstalled ensures that the nix profile has the packages specified
 // in the config (devbox.json). The `mode` is used for user messaging to explain
 // what operations are happening, because this function may take time to execute.
-func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
+func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
+	defer trace.StartRegion(ctx, "ensurePackages").End()
+
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
@@ -131,7 +140,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 	}
 
 	if featureflag.Flakes.Enabled() {
-		if err := d.addPackagesToProfile(mode); err != nil {
+		if err := d.addPackagesToProfile(ctx, mode); err != nil {
 			return err
 		}
 
@@ -145,7 +154,7 @@ func (d *Devbox) ensurePackagesAreInstalled(mode installMode) error {
 		}
 
 		// We need to re-install the packages
-		if err := d.installNixProfile(); err != nil {
+		if err := d.installNixProfile(ctx); err != nil {
 			fmt.Fprintln(d.writer)
 			return errors.Wrap(err, "apply Nix derivation")
 		}
@@ -206,7 +215,9 @@ func (d *Devbox) printPackageUpdateMessage(
 
 // installNixProfile installs or uninstalls packages to or from this
 // devbox's Nix profile so that it matches what's in development.nix
-func (d *Devbox) installNixProfile() (err error) {
+func (d *Devbox) installNixProfile(ctx context.Context) (err error) {
+	defer trace.StartRegion(ctx, "installNixProfile").End()
+
 	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
@@ -255,7 +266,9 @@ func (d *Devbox) profilePath() (string, error) {
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
 // are missing from the nix profile, and then installs each package individually into the
 // nix profile.
-func (d *Devbox) addPackagesToProfile(mode installMode) error {
+func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) error {
+	defer trace.StartRegion(ctx, "addNixProfilePkgs").End()
+
 	if featureflag.Flakes.Disabled() {
 		return nil
 	}
@@ -263,7 +276,7 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 		return nil
 	}
 
-	pkgs, err := d.pendingPackagesForInstallation()
+	pkgs, err := d.pendingPackagesForInstallation(ctx)
 	if err != nil {
 		return err
 	}
@@ -317,7 +330,9 @@ func (d *Devbox) addPackagesToProfile(mode installMode) error {
 	return nil
 }
 
-func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
+func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) error {
+	defer trace.StartRegion(ctx, "removeNixProfilePkgs").End()
+
 	if !featureflag.Flakes.Enabled() {
 		return nil
 	}
@@ -367,7 +382,9 @@ func (d *Devbox) removePackagesFromProfile(pkgs []string) error {
 	return nil
 }
 
-func (d *Devbox) pendingPackagesForInstallation() ([]string, error) {
+func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, error) {
+	defer trace.StartRegion(ctx, "pendingPackages").End()
+
 	if featureflag.Flakes.Disabled() {
 		return nil, errors.New("Not implemented for legacy non-flakes devbox")
 	}

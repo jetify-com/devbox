@@ -4,10 +4,12 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime/trace"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -120,8 +122,10 @@ type variable struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
-	cmd := exec.Command("nix", "print-dev-env")
+func PrintDevEnv(ctx context.Context, nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
+	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
+
+	cmd := exec.CommandContext(ctx, "nix", "print-dev-env")
 	if featureflag.Flakes.Enabled() {
 		cmd.Args = append(cmd.Args, nixFlakesFilePath)
 	} else {
