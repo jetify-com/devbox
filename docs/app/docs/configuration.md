@@ -8,6 +8,7 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
 ```json
 {
     "packages": [],
+    "env": {},
     "shell": {
         "init_hook": "...",
         "scripts": {}
@@ -24,6 +25,23 @@ This is a list of Nix packages that should be installed in your Devbox shell and
 
 You can add packages to your devbox.json using `devbox add <package_name>`, and remove them using `devbox rm <package_name>`
 
+### Env
+
+This is a a map of key-value pairs that should be set as Environment Variables when activating `devbox shell`, running a script with `devbox run`, or starting a service. These variables will only be set in your Devbox shell, and will have precedence over any environment variables set in your local machine or by [Devbox Plugins](guides/plugins.md).
+
+For example, you could set variable `$FOO` to `bar` by adding the following to your `devbox.json`:
+
+```json
+{
+    "env": {
+        "FOO": "bar"
+    }
+}
+```
+
+Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell. 
+
+
 ### Shell
 
 The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: *init_hooks*, which run a set of commands every time you start a devbox shell, and *scripts*, which are commands that can be run using `devbox run`
@@ -39,7 +57,10 @@ This is an example `devbox.json` that customizes the prompt and prints a welcome
 ```json
 {
     "shell": {
-        "init_hook": "export PS1='📦 devbox> '\necho 'Welcome! See CONTRIBUTING.md for tips on contributing to devbox.'"
+        "init_hook": [
+            "export PS1='📦 devbox> '",
+            "echo 'Welcome! See CONTRIBUTING.md for tips on contributing to devbox.'"
+        ]
     }
 }
 ```
