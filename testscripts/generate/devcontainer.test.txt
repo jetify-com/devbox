@@ -1,0 +1,4 @@
+exec devbox init
+exec devbox generate devcontainer
+exists .devcontainer/Dockerfile
+exists .devcontainer/devcontainer.json

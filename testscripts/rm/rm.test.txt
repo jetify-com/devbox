@@ -1,0 +1,16 @@
+exec devbox init
+
+exec devbox add hello vim
+exec devbox run hello
+stdout 'Hello, world!'
+
+exec devbox rm hello
+! exec devbox run hello
+! stdout 'Hello, world!'
+
+json.superset devbox.json expected.json
+
+-- expected.json --
+{
+  "packages": ["vim"]
+}
