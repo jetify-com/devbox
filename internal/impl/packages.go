@@ -219,7 +219,6 @@ func (d *Devbox) installNixProfile() (err error) {
 		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
 	)
 
-	cmd.Env = nix.DefaultEnv()
 	cmd.Stdout = &nix.PackageInstallWriter{Writer: d.writer}
 
 	cmd.Stderr = cmd.Stdout

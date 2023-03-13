@@ -38,7 +38,6 @@ func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
 		FlakeNixpkgs(commit),
 	)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Env = DefaultEnv()
 	cmd.Stdout = w
 	cmd.Stderr = cmd.Stdout
 	if err := cmd.Run(); err != nil {

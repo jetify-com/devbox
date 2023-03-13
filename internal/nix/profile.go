@@ -230,7 +230,6 @@ func profileInstall(args *ProfileInstallArgs) error {
 	cmd := exec.Command(
 		"nix", "profile", "install",
 		"--profile", args.ProfilePath,
-		"--impure", // Needed to allow flags from environment to be used.
 		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
 	)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
@@ -238,8 +237,6 @@ func profileInstall(args *ProfileInstallArgs) error {
 		cmd.Args = append(cmd.Args, "--priority", args.Priority)
 	}
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
-
-	cmd.Env = DefaultEnv()
 	writer := &PackageInstallWriter{args.Writer}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = io.MultiWriter(&stdout, writer)
@@ -306,7 +303,6 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 		info.attributeKey,
 	)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Env = DefaultEnv()
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not match any packages")) {
 		return ErrPackageNotInstalled

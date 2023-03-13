@@ -2,7 +2,7 @@
   description = "A devbox shell";
 
   inputs = {
-    nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+    nixpkgs.url = "";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -13,16 +13,10 @@
           inherit system;
           config.allowUnfree = true;
         });
-        {{- range .Definitions}}
-        {{.}}
-        {{- end }}
       in
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            {{- range .DevPackages}}
-            {{.}}
-            {{- end}}
           ];
         };
       }
