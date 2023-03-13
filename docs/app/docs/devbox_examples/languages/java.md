@@ -36,26 +36,35 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below: 
 
-1. Create a dummy folder: `dummy/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
+1. Create a project folder: `my-project/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
     - Replace `jdk` with the version of JDK you want. Get the exact nix-pkg name from `search.nixos.org`.
-1. Then do `devbox shell` to get a shell with that `jdk` nix pkg.
-1. Then do: `gradle init`
+2. Then do `devbox shell` to get a shell with that `jdk` nix pkg.
+3. Then do: `gradle init`
     - In the generated `build.gradle` file, put the following text block:
         ```gradle
+        /* build.gradle */
         apply plugin: 'java'
         apply plugin: 'application'
+        /* Change these versions to the JDK version you have installed */
         sourceCompatibility = 17
         targetCompatibility = 17
         mainClassName = 'hello.HelloWorld'
         jar {
             manifest {
+              /* assuming main class is in src/main/hello/HelloWorld.java */
                 attributes 'Main-Class': 'hello.HelloWorld'
             }
         }
         ```
-1. `gradle build` should compile the package and create a `build/` directory that contains an executable jar file.
-1. `gradle run` should print "Hello World!".
-1. Add `build/` to `.gitignore`.
+    - While in devbox shell, run `echo $JAVA_HOME` and take note of its value.
+    - Create a `gradle.properties` file like below and put value of `$JAVA_HOME` instead of <JAVA_HOME_VALUE> in the file.
+      ```gradle
+      /* gradle.properties */
+      org.gradle.java.home=<JAVA_HOME_VALUE>
+      ```
+4. `gradle build` should compile the package and create a `build/` directory that contains an executable jar file.
+5. `gradle run` should print "Hello World!".
+6. Add `build/` to `.gitignore`.
 
 
 An example `devbox.json` would look like the following:
