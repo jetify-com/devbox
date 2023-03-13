@@ -6,6 +6,9 @@ exists devbox.json
 
 json.superset devbox.json expected.json
 
+# Second init should be a no-op.
+exec devbox init
+
 -- expected.json --
 {
   "packages": []

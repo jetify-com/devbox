@@ -1,0 +1,7 @@
+exec devbox init
+exec devbox info hello
+stdout hello-.
+
+exec devbox init
+exec devbox info notapackage
+stdout 'Package notapackage not found'
