@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -31,11 +32,6 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 	// to ensure error output is not mingled with the stdout output
 	// that we need to parse.
 	cmd.Stderr = writer
-
-	//out, err := cmd.Output()
-	//if err != nil {
-	//	return nil, errors.WithStack(err)
-	//}
 
 	// The `out` output is of the form:
 	// <index> <UnlockedReference> <LockedReference> <NixStorePath>
@@ -230,8 +226,10 @@ func profileInstall(args *ProfileInstallArgs) error {
 	cmd := exec.Command(
 		"nix", "profile", "install",
 		"--profile", args.ProfilePath,
+		"--impure", // for NIXPKGS_ALLOW_UNFREE
 		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
 	)
+	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	if args.Priority != "" {
 		cmd.Args = append(cmd.Args, "--priority", args.Priority)
@@ -300,8 +298,10 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	}
 	cmd := exec.Command("nix", "profile", "remove",
 		"--profile", profilePath,
+		"--impure", // for NIXPKGS_ALLOW_UNFREE
 		info.attributeKey,
 	)
+	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not match any packages")) {
@@ -309,4 +309,8 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	}
 
 	return errors.Wrap(err, string(out))
+}
+
+func AllowUnfreeEnv() []string {
+	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
 }
