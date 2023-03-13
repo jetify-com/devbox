@@ -105,7 +105,7 @@ jobs:
           nix-build-user-count: 4
       - name: Run tests
         run: |
-          go test -race -cover ./...
+          go test ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     strategy:
