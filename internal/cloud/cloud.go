@@ -29,7 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string, interactive bool) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
@@ -106,25 +106,29 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
 
-	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
-	err = syncFiles(username, vmHostname, projectDir)
-	if err != nil {
-		color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
-		return err
+	if interactive {
+		color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
+		err = syncFiles(username, vmHostname, projectDir)
+		if err != nil {
+			color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
+			return err
+		}
+		color.New(color.FgGreen).Fprintln(w, "File syncing started")
+
+		s3 := stepper.Start(w, "Connecting to virtual machine...")
+		time.Sleep(1 * time.Second)
+		s3.Stop("Connecting to virtual machine")
+		fmt.Fprint(w, "\n")
+
+		hostID := strings.Split(vmHostname, ".")[0]
+		if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
+			return err
+		}
+
+		return shell(username, vmHostname, projectDir, telemetryShellStartTime)
 	}
-	color.New(color.FgGreen).Fprintln(w, "File syncing started")
-
-	s3 := stepper.Start(w, "Connecting to virtual machine...")
-	time.Sleep(1 * time.Second)
-	s3.Stop("Connecting to virtual machine")
-	fmt.Fprint(w, "\n")
-
-	hostID := strings.Split(vmHostname, ".")[0]
-	if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
-		return err
-	}
-
-	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
+	color.New(color.FgGreen).Fprintf(w, "This Devbox Cloud's machine with address is: %s\n", vmHostname)
+	return nil
 }
 
 func PortForward(local, remote string) (string, error) {
