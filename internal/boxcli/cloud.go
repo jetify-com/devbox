@@ -18,6 +18,7 @@ type cloudShellCmdFlags struct {
 	config configFlags
 
 	githubUsername string
+	interactive    bool
 }
 
 func CloudCmd() *cobra.Command {
@@ -50,6 +51,9 @@ func cloudShellCmd() *cobra.Command {
 	flags.config.register(command)
 	command.Flags().StringVarP(
 		&flags.githubUsername, "username", "u", "", "Github username to use for ssh",
+	)
+	command.Flags().BoolVarP(
+		&flags.interactive, "interactive", "i", true, "Start an interactive shell after creating a cloud instance",
 	)
 	return command
 }
@@ -125,5 +129,5 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.Shell(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	return cloud.Shell(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername, flags.interactive)
 }
