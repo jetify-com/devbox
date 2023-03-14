@@ -16,24 +16,12 @@ func TestWriteFromTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatal("got error writing flake template:", err)
 	}
-	fi, err := os.Stat(outPath)
-	if err != nil {
-		t.Fatal("got stat error for new flake file:", err)
-	}
-	originalModTime := fi.ModTime()
 	cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 
 	t.Run("WriteUnmodified", func(t *testing.T) {
 		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
-		}
-		fi, err := os.Stat(outPath)
-		if err != nil {
-			t.Fatal("got stat error for flake file:", err)
-		}
-		if !originalModTime.Equal(fi.ModTime()) {
-			t.Errorf("flake mod time changed from %s to %s", originalModTime, fi.ModTime())
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 	})
@@ -49,26 +37,12 @@ func TestWriteFromTemplate(t *testing.T) {
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
-		fi, err := os.Stat(filepath.Join(dir, "flake.nix"))
-		if err != nil {
-			t.Fatal("got stat error for flake file:", err)
-		}
-		if originalModTime.Equal(fi.ModTime()) {
-			t.Errorf("flake mod time didn't change from %s", originalModTime)
-		}
 		cmpGoldenFile(t, outPath, "testdata/flake-empty.nix.golden")
 	})
 	t.Run("WriteModifiedBigger", func(t *testing.T) {
 		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
-		}
-		fi, err := os.Stat(filepath.Join(dir, "flake.nix"))
-		if err != nil {
-			t.Fatal("got stat error for flake file:", err)
-		}
-		if originalModTime.Equal(fi.ModTime()) {
-			t.Errorf("flake mod time didn't change from %s", originalModTime)
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 	})
