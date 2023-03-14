@@ -39,8 +39,7 @@ type Devbox interface {
 	RemoveGlobal(pkgs ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
 	Services() (plugin.Services, error)
-	// Shell generates the devbox environment and launches nix-shell as a child
-	// process.
+	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell() error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
@@ -55,8 +54,7 @@ func Open(dir string, writer io.Writer) (Devbox, error) {
 	return impl.Open(dir, writer)
 }
 
-// InitConfig creates a default devbox config file if one doesn't already
-// exist.
+// InitConfig creates a default devbox config file if one doesn't already exist.
 func InitConfig(dir string, writer io.Writer) (bool, error) {
 	return impl.InitConfig(dir, writer)
 }

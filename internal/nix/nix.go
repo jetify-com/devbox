@@ -140,11 +140,7 @@ func PrintDevEnv(ctx context.Context, nixShellFilePath, nixFlakesFilePath string
 	}
 
 	var vaf varsAndFuncs
-	err = json.Unmarshal(out, &vaf)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return &vaf, nil
+	return &vaf, errors.WithStack(json.Unmarshal(out, &vaf))
 }
 
 // FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.

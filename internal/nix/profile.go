@@ -62,10 +62,7 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 		items = append(items, item)
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return items, nil
+	return items, errors.WithStack(cmd.Wait())
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`

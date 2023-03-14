@@ -62,8 +62,5 @@ func createAndGetDataDir() (string, error) {
 	}
 
 	path := filepath.Join(home, dataDirPath)
-	if err := os.MkdirAll(path, 0700); err != nil {
-		return "", errors.WithStack(err)
-	}
-	return path, nil
+	return path, errors.WithStack(os.MkdirAll(path, 0700))
 }

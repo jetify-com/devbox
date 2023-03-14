@@ -59,11 +59,8 @@ func (r *Recommender) Packages() []string {
 	if err != nil {
 		return nil
 	}
-	devPackages, err := r.devPackages(builderTool)
-	if err != nil {
-		return nil
-	}
-
+	devPackages, _ := r.devPackages(builderTool)
+	// if err is not nil, devPackages will be nil
 	return devPackages
 }
 

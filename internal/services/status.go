@@ -86,16 +86,11 @@ func initCloudDir(projectDir, hostID string) error {
 	cloudDirPath := cloudFilePath(projectDir)
 	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0755)
 	gitignorePath := filepath.Join(cloudDirPath, ".gitignore")
-	if _, err := os.Stat(gitignorePath); os.IsNotExist(err) {
-		if err := os.WriteFile(
-			gitignorePath,
-			[]byte("*"),
-			0644,
-		); err != nil {
-			return errors.WithStack(err)
-		}
+	_, err := os.Stat(gitignorePath)
+	if !os.IsNotExist(err) {
+		return nil
 	}
-	return nil
+	return errors.WithStack(os.WriteFile(gitignorePath, []byte("*"), 0644))
 }
 
 type ServiceStatus struct {
@@ -111,10 +106,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 		return errors.WithStack(err)
 	}
 	_ = os.MkdirAll(filepath.Dir(path), 0755) // create path, ignore error
-	if err := os.WriteFile(path, content, 0644); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(os.WriteFile(path, content, 0644))
 }
 
 func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {

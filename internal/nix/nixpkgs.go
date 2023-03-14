@@ -63,10 +63,7 @@ func nixpkgsCommitFileContents() (map[string]string, error) {
 	}
 
 	commitToLocation := map[string]string{}
-	if err := json.Unmarshal(contents, &commitToLocation); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return commitToLocation, nil
+	return commitToLocation, errors.WithStack(json.Unmarshal(contents, &commitToLocation))
 }
 
 func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) error {
@@ -101,8 +98,7 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 		return errors.WithStack(err)
 	}
 
-	err = os.WriteFile(path, serialized, 0644)
-	return errors.WithStack(err)
+	return errors.WithStack(os.WriteFile(path, serialized, 0644))
 }
 
 func nixpkgsCommitFilePath() string {

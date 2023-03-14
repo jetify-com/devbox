@@ -160,10 +160,8 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	if err = json.Unmarshal(buf.Bytes(), cfg); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return cfg, nil
+
+	return cfg, errors.WithStack(json.Unmarshal(buf.Bytes(), cfg))
 }
 
 func createDir(path string) error {

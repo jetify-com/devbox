@@ -31,8 +31,7 @@ func SaveGithubUsernameToLocalFile(username string) error {
 		return errors.WithStack(err)
 	}
 
-	err = os.WriteFile(filePath, []byte(username), 0600)
-	return errors.WithStack(err)
+	return errors.WithStack(os.WriteFile(filePath, []byte(username), 0600))
 }
 
 func usernameFilePath() (string, error) {

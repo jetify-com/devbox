@@ -45,11 +45,7 @@ func CreateDockerfile(tmplFS embed.FS, path string) error {
 	tmplName := "devcontainerDockerfile.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	err = t.Execute(file, nil)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(t.Execute(file, nil))
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
@@ -67,10 +63,7 @@ func CreateDevcontainer(path string, pkgs []string) error {
 	}
 	// writing devcontainer's content into json file
 	_, err = file.Write(devcontainerFileBytes)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(err)
 }
 
 func CreateEnvrc(tmplFS embed.FS, path string) error {
@@ -83,11 +76,7 @@ func CreateEnvrc(tmplFS embed.FS, path string) error {
 	tmplName := "envrc.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	err = t.Execute(file, nil)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(t.Execute(file, nil))
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
