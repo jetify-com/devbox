@@ -110,7 +110,7 @@ When Devbox detects a plugin for an installed package, it automatically applies 
 
 If your package can run as a daemon or background service, Devbox can configure and manage that service for you with `devbox services`.
 
-To learn more, visit our page on Devbox Services
+To learn more, visit our page on [Devbox Services](services.md).
 
 ### Environment Variables 
 Devbox stores default environment variables for your package in `.devbox/virtenv/<package_name>/.env` in your project directory. Devbox automatically updates these environment variables whenever you run `devbox shell` or `devbox run` to match your current project, and developers should not check these `.env` files into source control.
