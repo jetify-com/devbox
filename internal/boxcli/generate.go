@@ -101,10 +101,11 @@ func direnvCmd() *cobra.Command {
 func sshConfigCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 	command := &cobra.Command{
-		Use:   "ssh-config",
-		Short: "Generates ssh config to connect to devbox cloud",
-		Long:  "Checks ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
-		Args:  cobra.MaximumNArgs(0),
+		Use:    "ssh-config",
+		Hidden: true,
+		Short:  "Generates ssh config to connect to devbox cloud",
+		Long:   "Checks ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
+		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGenerateCmd(cmd, args, flags)
 		},
