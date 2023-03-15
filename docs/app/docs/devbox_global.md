@@ -96,7 +96,7 @@ devbox global shellenv | source
 
 ## Sharing Your Global Config
 
-Your global `devbox.json` will be stored in $XDG_DATA_HOME/devbox/global/devbox.json. If $XDG_DATA_HOME is not set, it will default to `~/.local/share/devbox/global/devbox.json`. 
+Your global `devbox.json` will be stored in `$XDG_DATA_HOME/devbox/global/default/devbox.json`. If `$XDG_DATA_HOME` is not set, it will default to `~/.local/share/devbox/global/default/devbox.json`. 
 
 If you want to share your configuration with across machines or with other users, you can copy this file to a git repository or host it online.  You can then download and set the config as your global profile using `devbox global pull <path> | <url>`.
 
