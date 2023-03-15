@@ -9,11 +9,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/cloud"
 )
 
 type generateCmdFlags struct {
-	config configFlags
-	force  bool
+	config         configFlags
+	force          bool
+	githubUsername string
 }
 
 func GenerateCmd() *cobra.Command {
@@ -27,6 +29,7 @@ func GenerateCmd() *cobra.Command {
 	command.AddCommand(dockerfileCmd())
 	command.AddCommand(debugCmd())
 	command.AddCommand(direnvCmd())
+	command.AddCommand(sshConfigCmd())
 	flags.config.register(command)
 
 	return command
@@ -95,6 +98,24 @@ func direnvCmd() *cobra.Command {
 	return command
 }
 
+func sshConfigCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+	command := &cobra.Command{
+		Use:   "ssh-config",
+		Short: "Generates ssh config to connect to devbox cloud",
+		Long:  "Checks ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
+		Args:  cobra.MaximumNArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runGenerateCmd(cmd, args, flags)
+		},
+	}
+	command.Flags().StringVarP(
+		&flags.githubUsername, "username", "u", "", "Github username to use for ssh",
+	)
+	flags.config.register(command)
+	return command
+}
+
 func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) error {
 	path, err := configPathFromUser(args, &flags.config)
 	if err != nil {
@@ -115,6 +136,11 @@ func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) 
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
 		return box.GenerateEnvrc(flags.force, "generate")
+	case "ssh-config":
+		_, err := cloud.SSHSetup(flags.githubUsername)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

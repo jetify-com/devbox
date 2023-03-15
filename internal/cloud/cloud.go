@@ -29,7 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func sshSetup(username string) (*openssh.Cmd, error) {
+func SSHSetup(username string) (*openssh.Cmd, error) {
 	sshCmd := &openssh.Cmd{
 		Username:        username,
 		DestinationAddr: "gateway.devbox.sh",
@@ -108,7 +108,7 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	debug.Log("username: %s", username)
 
 	// setup ssh config
-	sshCmd, err := sshSetup(username)
+	sshCmd, err := SSHSetup(username)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func InitShell(ctx context.Context, w io.Writer, projectDir string, githubUserna
 	debug.Log("username: %s", username)
 
 	// setup ssh config
-	sshCmd, err := sshSetup(username)
+	sshCmd, err := SSHSetup(username)
 	if err != nil {
 		return err
 	}
