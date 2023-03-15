@@ -12,7 +12,6 @@ import (
 var packageInstallIgnore = map[string]bool{
 	`replacing old 'devbox-development'`: false,
 	`installing 'devbox-development'`:    false,
-	`conflicting packages`:               true,
 }
 
 type PackageInstallWriter struct {

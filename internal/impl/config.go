@@ -53,6 +53,8 @@ type Stage struct {
 
 var commitMismatchWarningShown = false
 
+// Packages returns the list of packages to install, including global packages.
+// It returns higher priority packages first.
 func (c *Config) Packages(w io.Writer) []string {
 	dataPath, err := GlobalDataPath()
 	if err != nil {
