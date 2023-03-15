@@ -29,11 +29,65 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string, interactive bool) error {
+func sshSetup(username string) (*openssh.Cmd, error) {
+	sshCmd := &openssh.Cmd{
+		Username:        username,
+		DestinationAddr: "gateway.devbox.sh",
+	}
+	// When developing we can use this env variable to point
+	// to a different gateway
+	var err error
+	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
+		sshCmd.DestinationAddr = envGateway
+		err = openssh.SetupInsecureDebug(envGateway)
+	} else {
+		err = openssh.SetupDevbox()
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := sshshim.Setup(); err != nil {
+		return nil, err
+	}
+	return sshCmd, nil
+}
+
+func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *openssh.Cmd) (string, error) {
+	if vmHostname == "" {
+		color.New(color.FgGreen).Fprintln(w, "Creating a virtual machine on the cloud...")
+		// Inspect the ssh ControlPath to check for existing connections
+		vmHostname = vmHostnameFromSSHControlPath()
+		if vmHostname != "" {
+			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
+			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
+		} else {
+			var region, vmUser string
+			vmUser, hostname, region, err := getVirtualMachine(sshCmd)
+			if err != nil {
+				return "", err
+			}
+			if vmUser != "" {
+				username = vmUser
+			}
+			vmHostname = hostname
+			color.New(color.FgGreen).Fprintf(w, "Created a virtual machine in %s\n", fly.RegionName(region))
+
+			// We save the username to local file only after we get a successful response
+			// from the gateway, because the gateway will verify that the user's SSH keys
+			// match their claimed username from github.
+			err = openssh.SaveGithubUsernameToLocalFile(username)
+			if err != nil {
+				debug.Log("Failed to save username: %v", err)
+			}
+		}
+	}
+	return vmHostname, nil
+}
+
+func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
-
 	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
 		return err
 	}
@@ -53,81 +107,80 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	}
 	debug.Log("username: %s", username)
 
+	// setup ssh config
+	sshCmd, err := sshSetup(username)
+	if err != nil {
+		return err
+	}
 	// Record the start time for telemetry, now that we are done with prompting
 	// for GitHub username.
 	telemetryShellStartTime := time.Now()
 
-	sshCmd := &openssh.Cmd{
-		Username:        username,
-		DestinationAddr: "gateway.devbox.sh",
-	}
-	// When developing we can use this env variable to point
-	// to a different gateway
-	var err error
-	if envGateway := os.Getenv("DEVBOX_GATEWAY"); envGateway != "" {
-		sshCmd.DestinationAddr = envGateway
-		err = openssh.SetupInsecureDebug(envGateway)
-	} else {
-		err = openssh.SetupDevbox()
-	}
+	// creating vm for user if it doesn't exist
+	vmHostname, err = ensureVMForUser(vmHostname, w, username, sshCmd)
 	if err != nil {
 		return err
 	}
-	if err := sshshim.Setup(); err != nil {
+	debug.Log("vm_hostname: %s", vmHostname)
+
+	// file sync and shell
+	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
+	err = syncFiles(username, vmHostname, projectDir)
+	if err != nil {
+		color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
+		return err
+	}
+	color.New(color.FgGreen).Fprintln(w, "File syncing started")
+
+	s3 := stepper.Start(w, "Connecting to virtual machine...")
+	time.Sleep(1 * time.Second)
+	s3.Stop("Connecting to virtual machine")
+	fmt.Fprint(w, "\n")
+
+	hostID := strings.Split(vmHostname, ".")[0]
+	if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
 		return err
 	}
 
-	if vmHostname == "" {
-		color.New(color.FgGreen).Fprintln(w, "Creating a virtual machine on the cloud...")
-		// Inspect the ssh ControlPath to check for existing connections
-		vmHostname = vmHostnameFromSSHControlPath()
-		if vmHostname != "" {
-			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
-			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
-		} else {
-			var region, vmUser string
-			vmUser, vmHostname, region, err = getVirtualMachine(sshCmd)
-			if err != nil {
-				return err
-			}
-			if vmUser != "" {
-				username = vmUser
-			}
-			color.New(color.FgGreen).Fprintf(w, "Created a virtual machine in %s\n", fly.RegionName(region))
+	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
+}
 
-			// We save the username to local file only after we get a successful response
-			// from the gateway, because the gateway will verify that the user's SSH keys
-			// match their claimed username from github.
-			err = openssh.SaveGithubUsernameToLocalFile(username)
-			if err != nil {
-				debug.Log("Failed to save username: %v", err)
-			}
+// Temporary function to create a vm and print vmHostname to be used by devbox extension
+func InitShell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
+		return err
+	}
+
+	username, vmHostname := parseVMEnvVar()
+	// The flag for githubUsername overrides any env-var, since flags are a more
+	// explicit action compared to an env-var which could be latently present.
+	if githubUsername != "" {
+		username = githubUsername
+	}
+	if username == "" {
+		var err error
+		username, err = getGithubUsername()
+		if err != nil {
+			return err
 		}
+	}
+	debug.Log("username: %s", username)
+
+	// setup ssh config
+	sshCmd, err := sshSetup(username)
+	if err != nil {
+		return err
+	}
+
+	// creating vm for user if it doesn't exist
+	vmHostname, err = ensureVMForUser(vmHostname, w, username, sshCmd)
+	if err != nil {
+		return err
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
-
-	if interactive {
-		color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
-		err = syncFiles(username, vmHostname, projectDir)
-		if err != nil {
-			color.New(color.FgRed).Fprintln(w, "Starting file syncing [FAILED]")
-			return err
-		}
-		color.New(color.FgGreen).Fprintln(w, "File syncing started")
-
-		s3 := stepper.Start(w, "Connecting to virtual machine...")
-		time.Sleep(1 * time.Second)
-		s3.Stop("Connecting to virtual machine")
-		fmt.Fprint(w, "\n")
-
-		hostID := strings.Split(vmHostname, ".")[0]
-		if err = AutoPortForward(ctx, w, projectDir, hostID); err != nil {
-			return err
-		}
-
-		return shell(username, vmHostname, projectDir, telemetryShellStartTime)
-	}
-	color.New(color.FgGreen).Fprintf(w, "This Devbox Cloud's machine with address is: %s\n", vmHostname)
+	// printing vmHostname so that the output of devbox cloud init can be read by
+	// devbox extension
+	fmt.Fprintln(w, vmHostname)
 	return nil
 }
 
