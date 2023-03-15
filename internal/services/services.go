@@ -101,6 +101,10 @@ func toggleServices(
 		<-c
 	}
 
+	if action == startService {
+		return printProxyURL(w)
+	}
+
 	return nil
 }
 
@@ -146,4 +150,23 @@ func listenToAutoPortForwardingChangesOnRemote(
 			},
 		},
 	)
+}
+
+func printProxyURL(w io.Writer) error {
+
+	if os.Getenv("DEVBOX_REGION") == "" {
+		return nil
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	color.New(color.FgHiGreen).Fprintf(
+		w,
+		"To access services on this vm use: %s-<port>.svc.devbox.sh\n",
+		hostname,
+	)
+	return nil
 }
