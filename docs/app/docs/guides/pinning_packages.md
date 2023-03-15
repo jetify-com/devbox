@@ -33,5 +33,5 @@ However, there is an unofficial search tool at [https://lazamar.co.uk/nix-versio
 1. Select `nixpkgs-unstable` in the dropdown
 2. Enter the name of the package you want to search, and hit Search
 3. In the search results, find the version you want in the Version Column
-4. Copy the Commit hash in the Revision column
+4. Copy the commit hash in the Revision column
 5. Add the commit hash to your `devbox.json`
