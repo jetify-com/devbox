@@ -36,11 +36,28 @@ func RunCmd() *cobra.Command {
 
 	flags.config.register(command)
 
+	command.ValidArgs = listScripts(command, flags)
+
 	return command
 }
 
-func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
+	path, err := configPathFromUser([]string{}, &flags.config)
+	if err != nil {
+		debug.Log("failed to get config path from user: %v", err)
+		return nil
+	}
 
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	if err != nil {
+		debug.Log("failed to open devbox: %v", err)
+		return nil
+	}
+
+	return box.ListScripts()
+}
+
+func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	path, script, scriptArgs, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return err
