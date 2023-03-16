@@ -639,6 +639,9 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
+// packages returns the list of packages to be installed in the nix shell as
+// specified by config and globals. It maintains the order of packages
+// as specified by Config.Packages() (higher priority first)
 func (d *Devbox) packages() []string {
 	return d.cfg.Packages(d.writer)
 }

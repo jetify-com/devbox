@@ -3,18 +3,21 @@ package nix
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/debug"
 )
+
+const DefaultPriority = 5
 
 // ProfileListItems returns a list of the installed packages
 func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
@@ -180,7 +183,6 @@ func (item *NixProfileListItem) String() string {
 
 type ProfileInstallArgs struct {
 	CustomStepMessage string
-	Priority          string
 	ExtraFlags        []string
 	NixpkgsCommit     string
 	Package           string
@@ -201,90 +203,32 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	err := profileInstall(args)
-	if err != nil {
-		if errors.Is(err, ErrPackageNotFound) {
-			return err
-		}
-
-		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
-		return err
-	}
-
-	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
-
-	return nil
-}
-
-func profileInstall(args *ProfileInstallArgs) error {
-
 	cmd := exec.Command(
 		"nix", "profile", "install",
 		"--profile", args.ProfilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
+		// Using an arbitrary priority to avoid conflicts with other packages.
+		// Note that this is not really the priority we care about, since we
+		// use the flake.nix to specify the priority.
+		"--priority", nextPriority(args.ProfilePath),
 		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
 	)
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	if args.Priority != "" {
-		cmd.Args = append(cmd.Args, "--priority", args.Priority)
-	}
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
-	writer := &PackageInstallWriter{args.Writer}
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = io.MultiWriter(&stdout, writer)
-	cmd.Stderr = io.MultiWriter(&stderr, writer)
+	cmd.Stdout = &PackageInstallWriter{args.Writer}
+	var stderr bytes.Buffer
+	cmd.Stderr = io.MultiWriter(&stderr, cmd.Stdout)
 
 	if err := cmd.Run(); err != nil {
 		if strings.Contains(stderr.String(), "does not provide attribute") {
 			return ErrPackageNotFound
 		}
-
-		// If two packages being installed seek to install two nix packages (could be themselves,
-		// or could be a dependency) that have the same binary name,
-		// then `nix profile install` will fail with `conflicting packages` error (as of nix version 2.14.0)
-		//
-		// An example error message looks like the following:
-		// error: files '/nix/store/spgr12gk13af8flz7akbs18fj4whqss2-bundler-2.4.5/bin/bundle' and
-		// '/nix/store/l4wmx8lfn6hlcfmbyhmksm024f8hixm1-ruby-3.1.2/bin/bundle' have the same priority 5;
-		// use 'nix-env --set-flag priority NUMBER INSTALLED_PKGNAME' or type 'nix profile install --help'
-		// if using 'nix profile' to find out howto change the priority of one of the conflicting packages
-		// (0 being the highest priority)
-		//
-		// However, for the purposes of starting a shell with these packages, nix flakes will give
-		// precedence to the later package. We enable similar functionality by increasing the priority
-		// of any package being installed and conflicting with a previously installed package: the
-		// package being installed later "wins".
-		isConflictingPackagesError := strings.Contains(stdout.String(), "conflicting packages") ||
-			strings.Contains(stderr.String(), "conflicting packages")
-		if isConflictingPackagesError && args.Priority != "0" {
-
-			priority := args.Priority
-			if priority == "" {
-				priority = "5" // 5 is the default priority in `nix profile`
-			}
-
-			intPriority, strconvErr := strconv.Atoi(priority)
-			if strconvErr != nil {
-				debug.Log(
-					"Error: falling back to regular error handling logic due to strconv.Atoi error: %s",
-					strconvErr)
-				// fallthrough to the regular error handling logic
-			} else {
-				// to give higher priority, we need to assign a lower priority number
-				args.Priority = strconv.Itoa(intPriority - 1)
-				debug.Log("Re-trying nix profile install with priority %s for package %s\n",
-					args.Priority,
-					args.Package,
-				)
-				return profileInstall(args)
-			}
-		}
-
 		return errors.Wrapf(err, "Command: %s", cmd)
 	}
+
+	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
 	return nil
 }
 
@@ -310,4 +254,36 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 
 func AllowUnfreeEnv() []string {
 	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
+}
+
+type manifest struct {
+	Elements []struct {
+		Priority int `json:"priority"`
+	} `json:"elements"`
+}
+
+func readManifest(profilePath string) (manifest, error) {
+	data, err := os.ReadFile(filepath.Join(profilePath, "manifest.json"))
+	if os.IsNotExist(err) {
+		return manifest{}, nil
+	} else if err != nil {
+		return manifest{}, err
+	}
+
+	var m manifest
+	return m, json.Unmarshal(data, &m)
+}
+
+func nextPriority(profilePath string) string {
+	// error is ignored because it's ok if the file doesn't exist
+	m, _ := readManifest(profilePath)
+	max := DefaultPriority
+	for _, e := range m.Elements {
+		if e.Priority > max {
+			max = e.Priority
+		}
+	}
+	// Each subsequent package gets a lower priority. This matches how flake.nix
+	// behaves
+	return fmt.Sprintf("%d", max+1)
 }

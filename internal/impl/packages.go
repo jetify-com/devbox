@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
-	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -276,17 +275,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return nil
 	}
 
-	// Packages with higher priority number i.e. lower actual priority
-	// are to be installed first, so that any conflicts are resolved in favor
-	// of later packages (having lower priority number i.e. higher actual priority)
-	//
-	// We use stable sort so that users can manually change the order of packages
-	// in their configs, if they have particular opinions about which package should
-	// win any conflicts.
-	sort.SliceStable(pkgs, func(i, j int) bool {
-		return d.getPackagePriority(pkgs[i]) > d.getPackagePriority(pkgs[j])
-	})
-
 	var msg string
 	if len(pkgs) == 1 {
 		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
@@ -308,7 +296,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
-			Priority:          d.getPackagePriority(pkg),
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
@@ -373,6 +360,9 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 	return nil
 }
 
+// pendingPackagesForInstallation returns a list of packages that are in devbox.json
+// but are not yet installed in the nix profile. It maintains the order of packages
+// as specified by Devbox.packages() (higher priority first)
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
@@ -406,18 +396,6 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 		}
 	}
 	return pending, nil
-}
-
-// This sets the priority of non-devbox.json packages to be slightly lower (higher number)
-// than devbox.json packages. This matters for profile installs, but doesn't matter
-// much for the flakes.nix file. There we rely on the order of packages (local ahead of global)
-func (d *Devbox) getPackagePriority(pkg string) string {
-	for _, p := range d.cfg.RawPackages {
-		if p == pkg {
-			return "5"
-		}
-	}
-	return "6" // Anything higher than 5 (default) would be correct
 }
 
 var resetCheckDone = false
