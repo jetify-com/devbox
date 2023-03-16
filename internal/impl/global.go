@@ -33,7 +33,7 @@ const currentGlobalProfile = "default"
 func (d *Devbox) AddGlobal(pkgs ...string) error {
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
-		if !nix.FlakesPkgExists(plansdk.DefaultNixpkgsCommit, pkg) {
+		if !nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg) {
 			return nix.ErrPackageNotFound
 		}
 	}

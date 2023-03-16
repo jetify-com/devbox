@@ -12,7 +12,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -153,64 +152,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
-	if featureflag.Flakes.Enabled() {
-		if err := d.addPackagesToProfile(ctx, mode); err != nil {
-			return err
-		}
-
-	} else {
-		if mode == install || mode == uninstall {
-			installingVerb := "Installing"
-			if mode == uninstall {
-				installingVerb = "Uninstalling"
-			}
-			_, _ = fmt.Fprintf(d.writer, "%s nix packages.\n", installingVerb)
-		}
-
-		// We need to re-install the packages
-		if err := d.installNixProfile(ctx); err != nil {
-			fmt.Fprintln(d.writer)
-			return errors.Wrap(err, "apply Nix derivation")
-		}
-	}
-
-	return plugin.RemoveInvalidSymlinks(d.projectDir)
-}
-
-// installNixProfile installs or uninstalls packages to or from this
-// devbox's Nix profile so that it matches what's in development.nix
-func (d *Devbox) installNixProfile(ctx context.Context) (err error) {
-	defer trace.StartRegion(ctx, "installNixProfile").End()
-
-	profileDir, err := d.profilePath()
-	if err != nil {
+	if err := d.addPackagesToProfile(ctx, mode); err != nil {
 		return err
 	}
 
-	cmd := exec.Command(
-		"nix-env",
-		"--profile", profileDir,
-		"--install",
-		"-f", filepath.Join(d.projectDir, ".devbox/gen/development.nix"),
-	)
-
-	cmd.Stdout = &nix.PackageInstallWriter{Writer: d.writer}
-
-	cmd.Stderr = cmd.Stdout
-
-	err = cmd.Run()
-
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return errors.Errorf(
-			"running command %s: exit status %d with command stderr: %s",
-			cmd, exitErr.ExitCode(), string(exitErr.Stderr),
-		)
-	}
-	if err != nil {
-		return errors.Errorf("running command %s: %v", cmd, err)
-	}
-	return nil
+	return plugin.RemoveInvalidSymlinks(d.projectDir)
 }
 
 func (d *Devbox) profilePath() (string, error) {
@@ -229,9 +175,6 @@ func (d *Devbox) profilePath() (string, error) {
 func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "addNixProfilePkgs").End()
 
-	if featureflag.Flakes.Disabled() {
-		return nil
-	}
 	if mode == uninstall {
 		return nil
 	}
@@ -280,10 +223,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) error {
 	defer trace.StartRegion(ctx, "removeNixProfilePkgs").End()
-
-	if !featureflag.Flakes.Enabled() {
-		return nil
-	}
 
 	profileDir, err := d.profilePath()
 	if err != nil {
@@ -336,10 +275,6 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
-	if featureflag.Flakes.Disabled() {
-		return nil, errors.New("Not implemented for legacy non-flakes devbox")
-	}
-
 	profileDir, err := d.profilePath()
 	if err != nil {
 		return nil, err
@@ -390,24 +325,14 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 		return errors.WithStack(err)
 	}
 
-	if featureflag.Flakes.Enabled() {
-		// older nix profiles have a manifest.nix file present
-		_, err := os.Stat(filepath.Join(dir, "manifest.nix"))
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
-		// newer flake nix profiles have a manifest.json file present
-		_, err := os.Stat(filepath.Join(dir, "manifest.json"))
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	// older nix profiles have a manifest.nix file present
+	_, err = os.Stat(filepath.Join(dir, "manifest.nix"))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	return errors.WithStack(os.Remove(profileDir))
 }
