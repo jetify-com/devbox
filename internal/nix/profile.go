@@ -279,7 +279,7 @@ func nextPriority(profilePath string) string {
 	m, _ := readManifest(profilePath)
 	max := DefaultPriority
 	for _, e := range m.Elements {
-		if e.Priority < max {
+		if e.Priority > max {
 			max = e.Priority
 		}
 	}
