@@ -8,12 +8,14 @@ import (
 	"runtime/trace"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/planner/languages/haskell"
 	"go.jetpack.io/devbox/internal/planner/languages/php"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 var PLANNERS = []plansdk.Planner{
 	&php.V2Planner{},
+	&haskell.V2Planner{},
 }
 
 // Return a merged shell plan from shell planners if user defined packages
