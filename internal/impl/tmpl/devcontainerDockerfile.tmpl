@@ -25,6 +25,6 @@ ENV PATH="/home/${DEVBOX_USER}/.nix-profile/bin:/home/${DEVBOX_USER}/.devbox/nix
 WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
 COPY devbox.json devbox.json
-RUN devbox shell -- echo "Installing packages"
+RUN devbox run -- echo "Installing packages"
 CMD ["devbox", "shell"]
 
