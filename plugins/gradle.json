@@ -1,0 +1,11 @@
+{
+    "name": "gradle",
+    "version": "0.0.1",
+    "match": "^(gradle|gradle_[0-9])$",
+    "readme": "You can customize which JDK gradle will use by specifying the value of `org.gradle.java.home` in gradle.properties file",
+    "shell": {
+        "init_hook": [
+            "[ -s gradle.properties ] || echo org.gradle.java.home=$JAVA_HOME >> gradle.properties"
+        ]
+    }
+}

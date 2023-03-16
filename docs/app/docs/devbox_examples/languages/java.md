@@ -51,7 +51,7 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
         mainClassName = 'hello.HelloWorld'
         jar {
             manifest {
-              /* assuming main class is in src/main/hello/HelloWorld.java */
+              /* assuming main class is in src/main/java/hello/HelloWorld.java */
                 attributes 'Main-Class': 'hello.HelloWorld'
             }
         }
