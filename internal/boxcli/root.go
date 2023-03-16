@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
-	traceMiddleware *midcobra.TraceMiddleware = &midcobra.TraceMiddleware{}
+	debugMiddleware = &midcobra.DebugMiddleware{}
+	traceMiddleware = &midcobra.TraceMiddleware{}
 )
 
 type rootCmdFlags struct {

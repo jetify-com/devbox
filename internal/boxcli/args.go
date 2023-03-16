@@ -15,7 +15,6 @@ import (
 // If args empty, defaults to the current directory
 // Otherwise grabs the path from the first argument
 func configPathFromUser(args []string, flags *configFlags) (string, error) {
-
 	if flags.path != "" && len(args) > 0 {
 		return "", usererr.New(
 			"Cannot specify devbox.json's path via both --config and the command arguments. " +

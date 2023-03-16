@@ -11,7 +11,7 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-// Analyzers help understand the source code present in a given directory
+// Analyzer helps understand the source code present in a given directory
 // Handy when implementing new Planners that need to analyze files in order
 // to determine what to do.
 type Analyzer struct {

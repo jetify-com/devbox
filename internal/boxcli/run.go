@@ -36,11 +36,32 @@ func RunCmd() *cobra.Command {
 
 	flags.config.register(command)
 
+	if err := addScriptsToCommand(command, flags); err != nil {
+		debug.Log("failed to add scripts to devbox run command: %s", err)
+	}
+
 	return command
 }
 
-func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+func addScriptsToCommand(root *cobra.Command, flags runCmdFlags) error {
+	box, err := devbox.Open(flags.config.path, root.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
+	scripts := box.ListScripts()
+	for _, script := range scripts {
+		root.AddCommand(&cobra.Command{
+			Use: script,
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return runScriptCmd(cmd.Parent(), append([]string{cmd.Use}, args...), flags)
+			},
+		})
+	}
+	return nil
+}
+
+func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	path, script, scriptArgs, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return err
@@ -63,15 +84,11 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 		return "", "", nil, err
 	}
 
-	script := ""
-	var scriptArgs []string
-	if len(args) >= 1 {
-		script = args[0]
-		scriptArgs = args[1:]
-	} else {
+	if len(args) == 0 {
 		// this should never happen because cobra should prevent it, but it's better to be defensive.
 		return "", "", nil, usererr.New("no command or script provided")
 	}
+	script, scriptArgs := args[0], args[1:]
 
 	return path, script, scriptArgs, nil
 }
