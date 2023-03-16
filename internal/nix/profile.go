@@ -225,6 +225,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	cmd.Stderr = args.Writer
 
 	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
 		return errors.Wrapf(err, "Command: %s", cmd)
 	}
 

@@ -173,22 +173,6 @@ func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) erro
 	}
 
 	if len(pkgs) > 0 {
-		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
-		if len(pkgs) > 1 {
-			pkgsWithVersion := []string{}
-			for idx, pkg := range pkgs {
-				pkgsWithVersion = append(
-					pkgsWithVersion,
-					fmt.Sprintf("%s (%s)", pkg, infos[idx]),
-				)
-			}
-			successMsg = fmt.Sprintf(
-				"%s are now %s.\n",
-				strings.Join(pkgsWithVersion, ", "),
-				verb,
-			)
-		}
-		fmt.Fprint(d.writer, successMsg)
 
 		// (Only when in devbox shell) Prompt the user to run hash -r
 		// to ensure we refresh the shell hash and load the proper environment.

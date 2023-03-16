@@ -57,7 +57,6 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		if err != nil {
 			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
 		} else {
-			fmt.Fprintf(d.writer, "%s is now installed\n", pkg)
 			added = append(added, pkg)
 		}
 	}
