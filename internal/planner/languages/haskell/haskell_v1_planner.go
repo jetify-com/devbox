@@ -24,11 +24,10 @@ type V2Planner struct {
 	userPackages []string
 }
 
-// PHPV2Planner implements interface PlannerForPackages (compile-time check)
 var _ plansdk.PlannerForPackages = (*V2Planner)(nil)
 
 func (p *V2Planner) Name() string {
-	return "php.v2.Planner"
+	return "haskell.v2.Planner"
 }
 
 func (p *V2Planner) IsRelevant(srcDir string) bool {
