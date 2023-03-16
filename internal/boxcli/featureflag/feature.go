@@ -46,3 +46,7 @@ func (f *feature) Enabled() bool {
 	}
 	return f.enabled
 }
+
+func (f *feature) Disabled() bool {
+	return !f.Enabled()
+}
