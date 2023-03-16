@@ -15,7 +15,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -156,9 +155,6 @@ var templateFuncs = template.FuncMap{
 }
 
 func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
-	if featureflag.Flakes.Disabled() {
-		return nil
-	}
 
 	flakeDir := filepath.Join(outPath, "flake")
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")

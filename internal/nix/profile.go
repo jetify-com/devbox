@@ -14,16 +14,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 )
 
 const DefaultPriority = 5
 
 // ProfileListItems returns a list of the installed packages
 func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
-	if featureflag.Flakes.Disabled() {
-		return nil, errors.New("Not supported for legacy non-flakes implementation")
-	}
 
 	cmd := exec.Command(
 		"nix", "profile", "list",
@@ -236,7 +232,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 }
 
 func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
-	info, found := flakesPkgInfo(nixpkgsCommit, pkg)
+	info, found := PkgInfo(nixpkgsCommit, pkg)
 	if !found {
 		return ErrPackageNotFound
 	}

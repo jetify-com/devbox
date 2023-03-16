@@ -12,9 +12,7 @@ import (
 	"runtime/trace"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
@@ -27,13 +25,6 @@ var ErrPackageNotInstalled = errors.New("package not installed")
 
 func PkgExists(nixpkgsCommit, pkg string) bool {
 	_, found := PkgInfo(nixpkgsCommit, pkg)
-	return found
-}
-
-// FlakesPkgExists returns true if the package exists in the nixpkgs commit
-// using flakes. This can be removed once flakes are the default.
-func FlakesPkgExists(nixpkgsCommit, pkg string) bool {
-	_, found := flakesPkgInfo(nixpkgsCommit, pkg)
 	return found
 }
 
@@ -51,22 +42,6 @@ func (i *Info) String() string {
 }
 
 func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
-	if featureflag.Flakes.Enabled() {
-		return flakesPkgInfo(nixpkgsCommit, pkg)
-	}
-	return legacyPkgInfo(nixpkgsCommit, pkg)
-}
-
-func legacyPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
-	info, err := plansdk.GetNixpkgsInfo(nixpkgsCommit)
-	if err != nil {
-		return nil, false
-	}
-	cmd := exec.Command("nix-env", "-qa", "-A", pkg, "-f", info.URL, "--json")
-	return pkgInfo(cmd, pkg)
-}
-
-func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
 	if nixpkgsCommit == "" {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
@@ -74,10 +49,6 @@ func flakesPkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
 
 	cmd := exec.Command("nix", "search", "--json", exactPackage)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	return pkgInfo(cmd, pkg)
-}
-
-func pkgInfo(cmd *exec.Cmd, pkg string) (*Info, bool) {
 	cmd.Stderr = os.Stderr
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
@@ -125,12 +96,7 @@ type variable struct {
 func PrintDevEnv(ctx context.Context, nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
-	cmd := exec.CommandContext(ctx, "nix", "print-dev-env")
-	if featureflag.Flakes.Enabled() {
-		cmd.Args = append(cmd.Args, nixFlakesFilePath)
-	} else {
-		cmd.Args = append(cmd.Args, "-f", nixShellFilePath)
-	}
+	cmd := exec.CommandContext(ctx, "nix", "print-dev-env", nixFlakesFilePath)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Args = append(cmd.Args, "--json")
 	debug.Log("Running print-dev-env cmd: %s\n", cmd)
