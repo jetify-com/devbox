@@ -122,7 +122,7 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 	return errors.WithStack(err)
 }
 
-func PrintEnvUpdateMessage(pkgs []string, projectDir string, w io.Writer) error {
+func PrintEnvUpdateMessage(projectDir string, w io.Writer) error {
 	color.New(color.FgYellow).Fprint(
 		w,
 		"\nTo update your shell and ensure your new packages are usable, "+

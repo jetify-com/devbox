@@ -216,14 +216,17 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
-	cmd.Stdout = &PackageInstallWriter{args.Writer}
-	var stderr bytes.Buffer
-	cmd.Stderr = io.MultiWriter(&stderr, cmd.Stdout)
+
+	// If nix profile install runs as tty, the output is much nicer. If we ever
+	// need to change this to our own writers, consider that you may need
+	// to implement your own nicer output. --print-build-logs flag may be useful.
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = args.Writer
+	cmd.Stderr = args.Writer
 
 	if err := cmd.Run(); err != nil {
-		if strings.Contains(stderr.String(), "does not provide attribute") {
-			return ErrPackageNotFound
-		}
+		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
 		return errors.Wrapf(err, "Command: %s", cmd)
 	}
 

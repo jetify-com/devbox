@@ -47,18 +47,21 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
+		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
 			Writer:            d.writer,
-		}); err != nil {
+		})
+		if err != nil {
 			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
 		} else {
-			fmt.Fprintf(d.writer, "%s is now installed\n", pkg)
 			added = append(added, pkg)
 		}
+	}
+	if len(added) == 0 && err != nil {
+		return err
 	}
 	d.cfg.RawPackages = lo.Uniq(append(d.cfg.RawPackages, added...))
 	if err := d.saveCfg(); err != nil {
@@ -82,7 +85,11 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	}
 	for _, pkg := range lo.Intersect(d.cfg.RawPackages, pkgs) {
 		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
-			fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
+			if errors.Is(err, nix.ErrPackageNotInstalled) {
+				removed = append(removed, pkg)
+			} else {
+				fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
+			}
 		} else {
 			fmt.Fprintf(d.writer, "%s was removed\n", pkg)
 			removed = append(removed, pkg)

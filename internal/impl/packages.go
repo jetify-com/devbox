@@ -75,7 +75,15 @@ func (d *Devbox) Add(pkgs ...string) error {
 		}
 	}
 
-	return d.printPackageUpdateMessage(install, pkgs)
+	if IsDevboxShellEnabled() {
+		if err := plugin.PrintEnvUpdateMessage(
+			d.projectDir,
+			d.writer,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
@@ -112,7 +120,15 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	return d.printPackageUpdateMessage(uninstall, uninstalledPackages)
+	if IsDevboxShellEnabled() {
+		if err := plugin.PrintEnvUpdateMessage(
+			d.projectDir,
+			d.writer,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
@@ -159,52 +175,6 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	return plugin.RemoveInvalidSymlinks(d.projectDir)
-}
-
-func (d *Devbox) printPackageUpdateMessage(mode installMode, pkgs []string) error {
-	verb := "installed"
-	var infos []*nix.Info
-	for _, pkg := range pkgs {
-		info, _ := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
-		infos = append(infos, info)
-	}
-	if mode == uninstall {
-		verb = "removed"
-	}
-
-	if len(pkgs) > 0 {
-		successMsg := fmt.Sprintf("%s (%s) is now %s.\n", pkgs[0], infos[0], verb)
-		if len(pkgs) > 1 {
-			pkgsWithVersion := []string{}
-			for idx, pkg := range pkgs {
-				pkgsWithVersion = append(
-					pkgsWithVersion,
-					fmt.Sprintf("%s (%s)", pkg, infos[idx]),
-				)
-			}
-			successMsg = fmt.Sprintf(
-				"%s are now %s.\n",
-				strings.Join(pkgsWithVersion, ", "),
-				verb,
-			)
-		}
-		fmt.Fprint(d.writer, successMsg)
-
-		// (Only when in devbox shell) Prompt the user to run hash -r
-		// to ensure we refresh the shell hash and load the proper environment.
-		if IsDevboxShellEnabled() {
-			if err := plugin.PrintEnvUpdateMessage(
-				lo.Ternary(mode == install, pkgs, []string{}),
-				d.projectDir,
-				d.writer,
-			); err != nil {
-				return err
-			}
-		}
-	} else {
-		fmt.Fprintf(d.writer, "No packages %s.\n", verb)
-	}
-	return nil
 }
 
 // installNixProfile installs or uninstalls packages to or from this
