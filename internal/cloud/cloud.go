@@ -88,41 +88,13 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
-	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
-		return err
-	}
-
-	username, vmHostname := parseVMEnvVar()
-	// The flag for githubUsername overrides any env-var, since flags are a more
-	// explicit action compared to an env-var which could be latently present.
-	if githubUsername != "" {
-		username = githubUsername
-	}
-	if username == "" {
-		var err error
-		username, err = getGithubUsername()
-		if err != nil {
-			return err
-		}
-	}
-	debug.Log("username: %s", username)
-
-	// setup ssh config
-	sshCmd, err := SSHSetup(username)
-	if err != nil {
-		return err
-	}
 	// Record the start time for telemetry, now that we are done with prompting
 	// for GitHub username.
 	telemetryShellStartTime := time.Now()
-
-	// creating vm for user if it doesn't exist
-	vmHostname, err = ensureVMForUser(vmHostname, w, username, sshCmd)
+	username, vmHostname, err := InitVM(ctx, w, projectDir, githubUsername)
 	if err != nil {
 		return err
 	}
-	debug.Log("vm_hostname: %s", vmHostname)
-
 	// file sync and shell
 	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
@@ -146,9 +118,14 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 }
 
 // Temporary function to create a vm and print vmHostname to be used by devbox extension
-func InitShell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+func InitVM(
+	ctx context.Context,
+	w io.Writer,
+	projectDir string,
+	githubUsername string,
+) (string, string, error) {
 	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
-		return err
+		return "", "", err
 	}
 
 	username, vmHostname := parseVMEnvVar()
@@ -161,7 +138,7 @@ func InitShell(ctx context.Context, w io.Writer, projectDir string, githubUserna
 		var err error
 		username, err = getGithubUsername()
 		if err != nil {
-			return err
+			return "", "", err
 		}
 	}
 	debug.Log("username: %s", username)
@@ -169,19 +146,17 @@ func InitShell(ctx context.Context, w io.Writer, projectDir string, githubUserna
 	// setup ssh config
 	sshCmd, err := SSHSetup(username)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	// creating vm for user if it doesn't exist
 	vmHostname, err = ensureVMForUser(vmHostname, w, username, sshCmd)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	debug.Log("vm_hostname: %s", vmHostname)
-	// printing vmHostname so that the output of devbox cloud init can be read by
-	// devbox extension
-	fmt.Fprintln(w, vmHostname)
-	return nil
+
+	return username, vmHostname, nil
 }
 
 func PortForward(local, remote string) (string, error) {
