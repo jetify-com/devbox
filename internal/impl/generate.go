@@ -134,10 +134,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 	if _, err := io.Copy(outFile, tmplNewBuf); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := outFile.Close(); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(outFile.Close())
 }
 
 func toJSON(a any) string {
