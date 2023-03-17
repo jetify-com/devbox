@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -37,6 +39,29 @@ func RunCmd() *cobra.Command {
 	flags.config.register(command)
 
 	command.ValidArgs = listScripts(command, flags)
+
+	return command
+}
+func InstallCmd() *cobra.Command {
+	flags := runCmdFlags{}
+	command := &cobra.Command{
+		Use:   "install",
+		Short: "Installs all packages mentioned in devbox.json",
+		Long: "Starts a new shell and installs all packages mentioned in devbox.json or a json file" +
+			"specified via --config. \n\n Then exits the shell when packages are done installing.\n\n ",
+		Args:    cobra.MaximumNArgs(0),
+		PreRunE: ensureNixInstalled,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := runScriptCmd(cmd, []string{":"}, flags)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
+			return nil
+		},
+	}
+
+	flags.config.register(command)
 
 	return command
 }
