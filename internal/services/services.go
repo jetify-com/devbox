@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
@@ -102,7 +103,7 @@ func toggleServices(
 	}
 
 	if action == startService {
-		return printProxyURL(w)
+		return printProxyURL(w, lo.PickByKeys(services, serviceNames))
 	}
 
 	return nil
@@ -117,9 +118,10 @@ func listenToAutoPortForwardingChangesOnRemote(
 	cancel context.CancelFunc,
 ) error {
 
-	if os.Getenv("DEVBOX_REGION") == "" {
+	if !envir.IsCLICloudShell() {
 		return nil
 	}
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		return errors.WithStack(err)
@@ -152,9 +154,9 @@ func listenToAutoPortForwardingChangesOnRemote(
 	)
 }
 
-func printProxyURL(w io.Writer) error {
+func printProxyURL(w io.Writer, services plugin.Services) error {
 
-	if os.Getenv("DEVBOX_REGION") == "" {
+	if !envir.IsDevboxCloud() {
 		return nil
 	}
 
@@ -163,10 +165,27 @@ func printProxyURL(w io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	color.New(color.FgHiGreen).Fprintf(
-		w,
-		"To access services on this vm use: %s-<port>.svc.devbox.sh\n",
-		hostname,
-	)
+	printGeneric := false
+	for _, service := range services {
+		if port, _ := service.Port(); port != "" {
+			color.New(color.FgHiGreen).Fprintf(
+				w,
+				"To access %s on this vm use: %s-%s.svc.devbox.sh\n",
+				service.Name,
+				hostname,
+				port,
+			)
+		} else {
+			printGeneric = true
+		}
+	}
+
+	if printGeneric {
+		color.New(color.FgHiGreen).Fprintf(
+			w,
+			"To access other services on this vm use: %s-<port>.svc.devbox.sh\n",
+			hostname,
+		)
+	}
 	return nil
 }

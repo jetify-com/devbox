@@ -10,6 +10,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating
@@ -110,7 +111,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 }
 
 func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
-	if os.Getenv("DEVBOX_REGION") == "" {
+	if !envir.IsDevboxCloud() {
 		return nil
 	}
 	host, err := os.Hostname()
