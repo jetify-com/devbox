@@ -154,7 +154,7 @@ func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	_, vmhostname, err := cloud.InitVM(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	_, vmhostname, _, err := cloud.InitVM(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
 	if err != nil {
 		return err
 	}
