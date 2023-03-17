@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -32,7 +33,22 @@ func CloudCmd() *cobra.Command {
 		},
 	}
 	command.AddCommand(cloudShellCmd())
+	command.AddCommand(cloudInitCmd())
 	command.AddCommand(cloudPortForwardCmd())
+	return command
+}
+
+func cloudInitCmd() *cobra.Command {
+	flags := cloudShellCmdFlags{}
+	command := &cobra.Command{
+		Use:    "init",
+		Hidden: true,
+		Short:  "Create a Cloud VM without connecting to its shell",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCloudInit(cmd, &flags)
+		},
+	}
+	flags.config.register(command)
 	return command
 }
 
@@ -126,4 +142,24 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 		return errors.WithStack(err)
 	}
 	return cloud.Shell(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+}
+
+func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
+	// calling `devbox cloud init` when already in the VM is not allowed.
+	if region := os.Getenv("DEVBOX_REGION"); region != "" {
+		return shellInceptionErrorMsg("devbox cloud init")
+	}
+
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, vmhostname, _, err := cloud.InitVM(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	if err != nil {
+		return err
+	}
+	// printing vmHostname so that the output of devbox cloud init can be read by
+	// devbox extension
+	fmt.Fprintln(cmd.ErrOrStderr(), vmhostname)
+	return nil
 }

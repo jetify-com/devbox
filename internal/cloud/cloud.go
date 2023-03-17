@@ -29,34 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
-func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
-	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
-	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
-	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
-
-	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
-		return err
-	}
-
-	username, vmHostname := parseVMEnvVar()
-	// The flag for githubUsername overrides any env-var, since flags are a more
-	// explicit action compared to an env-var which could be latently present.
-	if githubUsername != "" {
-		username = githubUsername
-	}
-	if username == "" {
-		var err error
-		username, err = getGithubUsername()
-		if err != nil {
-			return err
-		}
-	}
-	debug.Log("username: %s", username)
-
-	// Record the start time for telemetry, now that we are done with prompting
-	// for GitHub username.
-	telemetryShellStartTime := time.Now()
-
+func SSHSetup(username string) (*openssh.Cmd, error) {
 	sshCmd := &openssh.Cmd{
 		Username:        username,
 		DestinationAddr: "gateway.devbox.sh",
@@ -71,12 +44,15 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 		err = openssh.SetupDevbox()
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := sshshim.Setup(); err != nil {
-		return err
+		return nil, err
 	}
+	return sshCmd, nil
+}
 
+func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *openssh.Cmd) (string, error) {
 	if vmHostname == "" {
 		color.New(color.FgGreen).Fprintln(w, "Creating a virtual machine on the cloud...")
 		// Inspect the ssh ControlPath to check for existing connections
@@ -86,13 +62,14 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
 		} else {
 			var region, vmUser string
-			vmUser, vmHostname, region, err = getVirtualMachine(sshCmd)
+			vmUser, hostname, region, err := getVirtualMachine(sshCmd)
 			if err != nil {
-				return err
+				return "", err
 			}
 			if vmUser != "" {
 				username = vmUser
 			}
+			vmHostname = hostname
 			color.New(color.FgGreen).Fprintf(w, "Created a virtual machine in %s\n", fly.RegionName(region))
 
 			// We save the username to local file only after we get a successful response
@@ -104,8 +81,19 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 			}
 		}
 	}
-	debug.Log("vm_hostname: %s", vmHostname)
+	return vmHostname, nil
+}
 
+func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
+	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
+	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
+
+	username, vmHostname, telemetryShellStartTime, err := InitVM(ctx, w, projectDir, githubUsername)
+	if err != nil {
+		return err
+	}
+	// file sync and shell
 	color.New(color.FgGreen).Fprintln(w, "Starting file syncing...")
 	err = syncFiles(username, vmHostname, projectDir)
 	if err != nil {
@@ -125,6 +113,51 @@ func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername s
 	}
 
 	return shell(username, vmHostname, projectDir, telemetryShellStartTime)
+}
+
+// Temporary function to create a vm and print vmHostname to be used by devbox extension
+func InitVM(
+	ctx context.Context,
+	w io.Writer,
+	projectDir string,
+	githubUsername string,
+) (string, string, time.Time, error) {
+	var nilTime time.Time
+	if err := ensureProjectDirIsNotSensitive(projectDir); err != nil {
+		return "", "", nilTime, err
+	}
+	username, vmHostname := parseVMEnvVar()
+	// The flag for githubUsername overrides any env-var, since flags are a more
+	// explicit action compared to an env-var which could be latently present.
+	if githubUsername != "" {
+		username = githubUsername
+	}
+	if username == "" {
+		var err error
+		username, err = getGithubUsername()
+		if err != nil {
+			return "", "", nilTime, err
+		}
+	}
+	debug.Log("username: %s", username)
+
+	// Record the start time for telemetry, now that we are done with prompting
+	// for GitHub username.
+	telemetryShellStartTime := time.Now()
+	// setup ssh config
+	sshCmd, err := SSHSetup(username)
+	if err != nil {
+		return "", "", nilTime, err
+	}
+
+	// creating vm for user if it doesn't exist
+	vmHostname, err = ensureVMForUser(vmHostname, w, username, sshCmd)
+	if err != nil {
+		return "", "", nilTime, err
+	}
+	debug.Log("vm_hostname: %s", vmHostname)
+
+	return username, vmHostname, telemetryShellStartTime, nil
 }
 
 func PortForward(local, remote string) (string, error) {
