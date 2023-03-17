@@ -1,8 +1,11 @@
-. "testdata/shellrc/nohook/shellrc"
+. "testdata/shellrc/basic/shellrc"
 
 # Begin Devbox Post-init Hook
 
-PATH="./.devbox/profile/bin:$PATH"
+export quote="they said, \"lasers\""
+export simple="value"
+export space="quote me"
+export special="\$\`\"\\"
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
@@ -18,5 +21,11 @@ cd "path/to/projectDir" || exit
 echo "Welcome to the devbox!"
 
 # End Plugin Init Hook
+
+# Begin Devbox User Hook
+
+echo "Hello from a devbox shell hook!"
+
+# End Devbox User Hook
 
 cd "$working_dir" || exit

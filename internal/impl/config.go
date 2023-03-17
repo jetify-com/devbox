@@ -46,7 +46,7 @@ type NixpkgsConfig struct {
 	Commit string `json:"commit,omitempty"`
 }
 
-// This contains a subset of fields from plansdk.Stage
+// Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
@@ -215,8 +215,7 @@ func missingConfigError(path string, didCheckParents bool) error {
 }
 
 func validateConfig(cfg *Config) error {
-
-	fns := [](func(cfg *Config) error){
+	fns := []func(cfg *Config) error{
 		validateNixpkg,
 		validateScripts,
 	}
