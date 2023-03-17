@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -153,5 +154,12 @@ func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cloud.InitShell(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	_, vmhostname, err := cloud.InitVM(cmd.Context(), cmd.ErrOrStderr(), box.ProjectDir(), flags.githubUsername)
+	if err != nil {
+		return err
+	}
+	// printing vmHostname so that the output of devbox cloud init can be read by
+	// devbox extension
+	fmt.Fprintln(cmd.ErrOrStderr(), vmhostname)
+	return nil
 }
