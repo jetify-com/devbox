@@ -3,7 +3,6 @@ package plugin
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -11,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/nix"
@@ -100,14 +99,17 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			}
 		}
 	}
-	return createEnvFile(pkg, projectDir)
-
+	return nil
 }
 
 // Env returns the environment variables for the given plugins.
 // TODO: We should associate the env variables with the individual plugin
 // binaries via wrappers instead of adding to the environment everywhere.
-func Env(pkgs []string, projectDir string) (map[string]string, error) {
+func Env(
+	pkgs []string,
+	projectDir string,
+	computedEnv map[string]string,
+) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
 		cfg, err := getConfigIfAny(pkg, projectDir)
@@ -121,27 +123,7 @@ func Env(pkgs []string, projectDir string) (map[string]string, error) {
 			env[k] = v
 		}
 	}
-	return env, nil
-}
-
-func createEnvFile(pkg, projectDir string) error {
-	envVars, err := Env([]string{pkg}, projectDir)
-	if err != nil {
-		return err
-	}
-	env := ""
-	for key, val := range envVars {
-		escaped, err := cuecfg.MarshalJSON(val)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		env += fmt.Sprintf("export %s=%s\n", key, escaped)
-	}
-	filePath := filepath.Join(projectDir, VirtenvPath, pkg, "/env")
-	if err = createDir(filepath.Dir(filePath)); err != nil {
-		return err
-	}
-	return errors.WithStack(os.WriteFile(filePath, []byte(env), 0644))
+	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
 }
 
 func buildConfig(pkg, projectDir, content string) (*config, error) {

@@ -104,8 +104,9 @@ func globalShellenvCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "shellenv",
 		Short: "Print shell commands that add global Devbox packages to your PATH",
-		Run: func(*cobra.Command, []string) {
-			fmt.Print(impl.GenerateShellEnv())
+		Run: func(cmd *cobra.Command, _ []string) {
+			fmt.Fprintln(cmd.OutOrStdout(), impl.GenerateShellEnv())
+			fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
 		},
 	}
 }

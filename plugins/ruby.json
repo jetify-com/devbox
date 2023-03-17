@@ -5,11 +5,7 @@
   "env": {
     "RUBY_CONFDIR": "{{ .Virtenv }}",
     "GEMRC": "{{ .Virtenv }}/.gemrc",
-    "GEM_HOME": "{{ .Virtenv }}"
-  },
-  "shell": {
-    "init_hook": [
-      "export PATH=\"{{ .Virtenv }}/bin:$PATH\""
-    ]
+    "GEM_HOME": "{{ .Virtenv }}",
+    "PATH": "{{ .Virtenv }}/bin:$PATH"
   }
 }

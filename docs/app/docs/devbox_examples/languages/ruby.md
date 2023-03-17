@@ -38,12 +38,5 @@ These environment variables configure Gem to install your gems locally, and set 
 RUBY_CONFDIR={PROJECT_DIR}/.devbox/virtenv/ruby
 GEMRC={PROJECT_DIR}/.devbox/virtenv/ruby/.gemrc
 GEM_HOME={PROJECT_DIR}/.devbox/virtenv/ruby
-```
-
-### Init Hook
-
-This hook ensures that your locally installed Gems are in your PATH while running `devbox shell`
-
-```bash
-"export PATH=\"{{ .Virtenv }}/bin:$PATH\""
+PATH={PROJECT_DIR}/.devbox/virtenv/ruby/bin:$PATH
 ```
