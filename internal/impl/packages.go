@@ -75,12 +75,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 	}
 
 	if IsDevboxShellEnabled() {
-		if err := plugin.PrintEnvUpdateMessage(
-			d.projectDir,
-			d.writer,
-		); err != nil {
-			return err
-		}
+		plugin.PrintEnvUpdateMessage(d.projectDir, d.writer)
 	}
 	return nil
 }
@@ -120,12 +115,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 	}
 
 	if IsDevboxShellEnabled() {
-		if err := plugin.PrintEnvUpdateMessage(
-			d.projectDir,
-			d.writer,
-		); err != nil {
-			return err
-		}
+		plugin.PrintEnvUpdateMessage(d.projectDir, d.writer)
 	}
 	return nil
 }
@@ -269,9 +259,10 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 	return nil
 }
 
-// pendingPackagesForInstallation returns a list of packages that are in devbox.json
-// but are not yet installed in the nix profile. It maintains the order of packages
-// as specified by Devbox.packages() (higher priority first)
+// pendingPackagesForInstallation returns a list of packages that are in
+// devbox.json or global devbox.json but are not yet installed in the nix
+// profile. It maintains the order of packages as specified by
+// Devbox.packages() (higher priority first)
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 

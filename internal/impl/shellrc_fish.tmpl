@@ -81,3 +81,9 @@ cd "$workingDir" || exit
 # log that the shell is interactive now!
 devbox log shell-interactive {{ .ShellStartTime }}
 {{ end }}
+
+# Add refresh alias (only if it doesn't already exist)
+if not type refresh >/dev/null 2>&1
+    alias refresh='eval $(devbox shellenv)'
+    export DEVBOX_REFRESH_ALIAS="refresh"
+end

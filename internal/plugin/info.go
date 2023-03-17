@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -122,11 +123,15 @@ func printInfoInstructions(pkg string, w io.Writer) error {
 	return errors.WithStack(err)
 }
 
-func PrintEnvUpdateMessage(projectDir string, w io.Writer) error {
-	color.New(color.FgYellow).Fprint(
-		w,
-		"\nTo update your shell and ensure your new packages are usable, "+
-			"please run:\n\neval $(devbox shellenv)\n\n\n",
-	)
-	return nil
+func PrintEnvUpdateMessage(projectDir string, w io.Writer) {
+	msg := "\nTo update your shell and ensure your new packages are usable, " +
+		"please run:\n\neval $(devbox shellenv)\n\n\n"
+	if refreshAlias := os.Getenv("DEVBOX_REFRESH_ALIAS"); refreshAlias != "" {
+		msg = fmt.Sprintf(
+			"\nTo update your shell and ensure your new packages are usable, "+
+				"please run: %q\n",
+			refreshAlias,
+		)
+	}
+	color.New(color.FgYellow).Fprint(w, msg)
 }
