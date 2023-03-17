@@ -23,15 +23,6 @@ func TestWriteDevboxShellrc(t *testing.T) {
 	testWriteDevboxShellrc(t, testdirs)
 }
 
-func TestWriteDevboxShellrcWithUnifiedEnv(t *testing.T) {
-	t.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "1")
-	testdirs, err := filepath.Glob("testdata/shellrc_unifiedenv/*")
-	if err != nil {
-		t.Fatal("Error globbing testdata:", err)
-	}
-	testWriteDevboxShellrc(t, testdirs)
-}
-
 func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 	// Load up all the necessary data from each internal/nix/testdata/shellrc directory
 	// into a slice of tests cases.
