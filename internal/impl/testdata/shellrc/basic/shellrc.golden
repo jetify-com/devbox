@@ -29,3 +29,9 @@ echo "Hello from a devbox shell hook!"
 # End Devbox User Hook
 
 cd "$working_dir" || exit
+
+# Add refresh alias (only if it doesn't already exist)
+if ! type refresh >/dev/null 2>&1; then
+  alias refresh='eval $(devbox shellenv)'
+  export DEVBOX_REFRESH_ALIAS="refresh"
+fi
