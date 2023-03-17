@@ -76,7 +76,7 @@ If you are unable to install or use Devbox, you can manually replicate the envir
 * Build Devbox:
 
     ```bash
-    go build -o ./devbox cmd/devbox/main.go
+    go build -o ./dist/devbox cmd/devbox/main.go
     ```
 
     This will build an executable file.
