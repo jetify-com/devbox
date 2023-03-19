@@ -121,7 +121,7 @@ func (d *Devbox) Config() *Config {
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.packages()
 	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
-	shellPlan.DevPackages = userDefinedPkgs
+	//shellPlan.DevPackages = userDefinedPkgs
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	if err != nil {
