@@ -44,7 +44,7 @@ type Devbox interface {
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
 	ShellPlan() (*plansdk.ShellPlan, error)
-	StartProcessManager(ctx context.Context) error
+	StartProcessManager(ctx context.Context, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, services ...string) error
 }
