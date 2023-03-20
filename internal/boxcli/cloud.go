@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 )
 
 type cloudShellCmdFlags struct {
@@ -133,7 +134,7 @@ func cloudPortForwardList() *cobra.Command {
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud shell` when already in the VM is not allowed.
-	if region := os.Getenv("DEVBOX_REGION"); region != "" {
+	if region := envir.GetRegion(); region != "" {
 		return shellInceptionErrorMsg("devbox cloud shell")
 	}
 

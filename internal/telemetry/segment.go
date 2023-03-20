@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 )
 
@@ -79,7 +80,7 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		AnonymousID: DeviceID(),
 		AppName:     opts.AppName,
 		AppVersion:  opts.AppVersion,
-		CloudRegion: os.Getenv("DEVBOX_REGION"),
+		CloudRegion: envir.GetRegion(),
 		Duration:    time.Since(start),
 		OsName:      OS(),
 		UserID:      UserIDFromGithubUsername(),
@@ -156,7 +157,7 @@ func UnixTimestampFromTime(t time.Time) string {
 
 func shellAccess() shellAccessKind {
 	// Check if running in devbox cloud
-	if os.Getenv("DEVBOX_REGION") != "" {
+	if envir.IsDevboxCloud() {
 		// Check if running via ssh tty (i.e. ssh shell)
 		if os.Getenv("SSH_TTY") != "" {
 			return ssh

@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -128,7 +129,7 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			AnonymousID: telemetry.DeviceID(),
 			AppName:     m.opts.AppName,
 			AppVersion:  m.opts.AppVersion,
-			CloudRegion: os.Getenv("DEVBOX_REGION"),
+			CloudRegion: envir.GetRegion(),
 			Duration:    time.Since(m.startTime),
 			OsName:      telemetry.OS(),
 			UserID:      userID,
