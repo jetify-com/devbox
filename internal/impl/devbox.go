@@ -521,11 +521,14 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
 	env["DEVBOX_SHELL_ENABLED"] = "1"      // Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 
+	debug.Log("nix environment PATH is: %s", env)
+
 	// Add any vars defined in plugins.
 	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
+
 	for k, v := range pluginEnv {
 		env[k] = v
 	}
@@ -538,10 +541,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	}
 
 	nixEnvPath := env["PATH"]
-	debug.Log("nix environment PATH is: %s", nixEnvPath)
+	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
 	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
-	debug.Log("computed unified environment PATH is: %s", env["PATH"])
+	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	return env, nil
 }
