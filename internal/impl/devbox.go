@@ -22,6 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -170,7 +171,6 @@ func (d *Devbox) Shell() error {
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(env),
-		WithPKGConfigDir(d.pluginVirtenvPath()),
 		WithShellStartTime(shellStartTime),
 	}
 
@@ -515,37 +515,36 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 
 		env[key] = val.Value.(string)
 	}
-	nixEnvPath := env["PATH"]
-	debug.Log("nix environment PATH is: %s", nixEnvPath)
 
 	// These variables are only needed for shell, but we include them here in the computed env
 	// for both shell and run in order to be as identical as possible.
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
 	env["DEVBOX_SHELL_ENABLED"] = "1"      // Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 
+	debug.Log("nix environment PATH is: %s", env)
+
 	// Add any vars defined in plugins.
-	pluginEnv, err := plugin.Env(d.packages(), d.projectDir)
+	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
+
 	for k, v := range pluginEnv {
 		env[k] = v
 	}
 
 	// Include env variables in devbox.json
 	if featureflag.EnvConfig.Enabled() {
-		// TODO: if the uer defines PATH here, how should it be handled?
 		for k, v := range d.configEnvs(env) {
 			env[k] = v
 		}
 	}
 
-	// TODO: consider removing this; not being used?
-	pluginVirtenvPath := d.pluginVirtenvPath()
-	debug.Log("plugin virtual environment PATH is: %s", pluginVirtenvPath)
+	nixEnvPath := env["PATH"]
+	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
-	env["PATH"] = JoinPathLists(pluginVirtenvPath, nixEnvPath, originalPath)
-	debug.Log("computed unified environment PATH is: %s", env["PATH"])
+	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
+	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	return env, nil
 }
@@ -646,10 +645,6 @@ func (d *Devbox) packages() []string {
 	return d.cfg.Packages(d.writer)
 }
 
-func (d *Devbox) pluginVirtenvPath() string {
-	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
-}
-
 // configEnvs takes the computed env variables (nix + plugin) and adds env
 // variables defined in Config. It also parses variables in config
 // that are referenced by $VAR or ${VAR} and replaces them with
@@ -657,26 +652,7 @@ func (d *Devbox) pluginVirtenvPath() string {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
-	mapperfunc := func(value string) string {
-		// Special variables that should return correct value
-		switch value {
-		case "PWD":
-			return d.ProjectDir()
-		}
-		// check if referenced variables exists in computed environment
-		if v, ok := computedEnv[value]; ok {
-			return v
-		}
-		return ""
-	}
-	configEnvs := map[string]string{}
-	// Include env variables in config
-	for key, value := range d.cfg.Env {
-		// parse values for "$VAR" or "${VAR}"
-		parsedValue := os.Expand(value, mapperfunc)
-		configEnvs[key] = parsedValue
-	}
-	return configEnvs
+	return conf.OSExpandEnvMap(d.cfg.Env, d.ProjectDir(), computedEnv)
 }
 
 // Move to a utility package?

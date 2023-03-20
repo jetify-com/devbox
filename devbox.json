@@ -3,10 +3,12 @@
     "go_1_19",
     "golangci-lint"
   ],
+  "env": {
+    "PATH": "$PWD/dist:$PATH"
+  },
   "shell": {
     "init_hook": [
-      "export \"GOROOT=$(go env GOROOT)\"",
-      "export \"PATH=$(pwd)/dist:$PATH\""
+      "export \"GOROOT=$(go env GOROOT)\""
     ],
     "scripts": {
       "build": "go build -o dist/devbox cmd/devbox/main.go",

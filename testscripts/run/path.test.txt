@@ -12,13 +12,10 @@ exec devbox run echo '$PATH'
 ! stdout '/some//dirty/../clean/path'
 stdout '/some/clean/path'
 
-# Path contains plugin virtual env path
-stdout '.devbox/virtenv/bin'
-
 # Path contains path to installed nix packages
 stdout '-which-'
 
 # Verify PATH is set in correct order: virtual env path nix packages, host path.
-path.order '.devbox/virtenv/bin' '-which-' 'some/clean/path'
+path.order '-which-' 'some/clean/path'
 
 # TODO: verify that bashrc file prepends do not prepend before nix paths.
