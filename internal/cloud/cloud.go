@@ -86,7 +86,8 @@ func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *op
 
 func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
-	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
+	fmt.Fprint(w, "Remote development environments powered by Nix\n")
+	fmt.Fprint(w, "This virtual environment will exit after 8 hours of inactivity\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
 
 	username, vmHostname, telemetryShellStartTime, err := InitVM(ctx, w, projectDir, githubUsername)
