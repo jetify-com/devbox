@@ -1,8 +1,0 @@
-{
-  "name": "nodejs-18",
-  "main": "index.js",
-  "dependencies": {},
-  "engines": {
-    "node": ">=18"
-  }
-}

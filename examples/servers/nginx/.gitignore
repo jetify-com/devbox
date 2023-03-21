@@ -1,0 +1,4 @@
+conf/mysql/data
+*.log
+*.pid
+*.sock

@@ -1,0 +1,17 @@
+# Drupal editor configuration normalization
+# @see http://editorconfig.org/
+
+# This is the top-most .editorconfig file; do not search in parent directories.
+root = true
+
+# All files.
+[*]
+end_of_line = LF
+indent_style = space
+indent_size = 2
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[composer.{json,lock}]
+indent_size = 4

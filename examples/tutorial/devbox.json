@@ -1,0 +1,18 @@
+{
+    "packages": [
+        "vim",
+        "gh",
+        "glow"
+    ],
+    "shell": {
+        "init_hook": [
+            "clear && PAGER=cat glow README.md"
+        ],
+        "scripts": {
+            "readme": "clear && PAGER=cat glow README.md"
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

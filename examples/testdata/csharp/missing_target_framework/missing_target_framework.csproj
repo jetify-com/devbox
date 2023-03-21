@@ -1,8 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>dotnet_missing_target_framework</RootNamespace>
-  </PropertyGroup>
-
-</Project>

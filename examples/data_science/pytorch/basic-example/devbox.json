@@ -1,0 +1,21 @@
+{
+    "packages": [
+        "python310",
+        "poetry",
+        "stdenv.cc.cc.lib",
+        "cudatoolkit"
+    ],
+    "env": {
+        "LD_LIBRARY_PATH": "$PWD/.devbox/nix/profile/default/lib:/usr/lib/wsl/lib"
+    },
+    "shell": {
+        "init_hook": [],
+        "scripts": {
+            "install": "poetry install",
+            "main": "poetry run python main.py"
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

@@ -1,7 +1,0 @@
-{
-    "dev_packages": [
-        "maven",
-        "jdk17_headless",
-        "binutils"
-    ]
-}

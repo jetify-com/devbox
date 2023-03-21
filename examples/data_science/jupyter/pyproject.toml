@@ -1,0 +1,15 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "John Lago", email = "750845+Lagoja@users.noreply.github.com"},
+]
+dependencies = [
+    "jupyter>=1.0.0",
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+
+[tool.pdm]

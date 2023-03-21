@@ -1,9 +1,0 @@
-{
-  "dev_packages": [
-    "libiconv",
-    "libffi",
-    "binutils",
-    "ghc",
-    "stack"
-  ]
-}

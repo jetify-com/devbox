@@ -1,0 +1,3 @@
+{
+  "extends": "./core/.eslintrc.json"
+}

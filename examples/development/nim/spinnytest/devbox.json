@@ -1,0 +1,16 @@
+{
+    "packages": [
+        "nim",
+        "nimble-unwrapped",
+        "openssl_1_1"
+    ],
+    "shell": {
+        "init_hook": null,
+        "scripts": {
+            "nim-build": "nimble build --threads:on"
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}
