@@ -4,9 +4,9 @@ title: Caddy
 
 Caddy can be configured automatically using Devbox's built in Caddy plugin. This plugin will activate automatically when you install Caddy using `devbox add caddy`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/servers/caddy)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/servers/caddy)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=servers/caddy)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/servers/caddy)
 
 ### Adding Caddy to your Shell
 
