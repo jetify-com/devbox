@@ -1,6 +1,11 @@
 // The module 'vscode' contains the VS Code extensibility API
-import { workspace, window, commands, Uri, UriHandler, ExtensionContext } from 'vscode';
+import { workspace, window, commands, Uri, ExtensionContext, FileSystem } from 'vscode';
 import { posix } from 'path';
+import fetch from 'node-fetch';
+import FormData = require('form-data');
+import { exec } from 'child_process';
+import { open, writeFile } from 'fs/promises';
+
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -34,14 +39,52 @@ export function activate(context: ExtensionContext) {
 	});
 
 	const handleVSCodeUri = window.registerUriHandler({
-		handleUri: (uri: Uri) => {
+		handleUri: async (uri: Uri) => {
 			const queryParams = new URLSearchParams(uri.query);
 
-			if (queryParams.has('vm_id') && queryParams.has('gh_user')) {
+			if (queryParams.has('vm_id') && queryParams.has('token')) {
+				window.showInformationMessage("TTTTTTTT");
 				const vmId = queryParams.get('vm_id');
 				const host = `${vmId}.vm.devbox-vms.internal`;
-				const ghUser = queryParams.get('gh_user');
-				const pathToFile = `/home/${ghUser}/`;
+				const gatewayHost = 'https://api.devbox.sh/g/vm_info';
+				const token = queryParams.get('token');
+				const data = new FormData();
+				data.append("vm_id", "91857266c16283");
+				// send post request to https://api.web.devbox.sh/g/vm_info
+				// authorization header: Bearer {token}
+				// body: vm_id={vm_id}
+				const response = await fetch(gatewayHost, {
+					method: 'post',
+					body: data,
+					headers: {
+						'Authorization': `Bearer ${token}`
+					}
+				});
+				const res = await response.json();
+				console.log("data:\n");
+				console.log(res);
+				// set ssh config
+				exec('./devbox generate ssh-config --config=./', (error, stdout, stderr) => {
+					if (error) {
+						console.error(`exec error: ${error}`);
+						return;
+					}
+					console.log(`stdout: ${stdout}`);
+					console.log(`stderr: ${stderr}`);
+				});
+				// save private key 
+				const prkeyPath = `${process.env['HOME']}/.config/devbox/ssh/keys/${res['vm_id']}.vm.devbox-vms.internal`;
+				try {
+
+					const data = new Uint8Array(Buffer.from(res['private_key']));
+					const fileHandler = await open(prkeyPath, 'w');
+					await writeFile(fileHandler, data, { flag: 'w' });
+					await fileHandler.close();
+				} catch (err) {
+					// When a request is aborted - err is an AbortError
+					console.error(err);
+				}
+				const pathToFile = `/home/${res['username']}/`;
 
 				const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
 				const uriToOpen = Uri.parse(workspaceURI);
