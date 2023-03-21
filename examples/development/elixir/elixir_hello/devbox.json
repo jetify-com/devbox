@@ -1,0 +1,25 @@
+{
+    "packages": [
+        "elixir"
+    ],
+    "env": {
+        "MIX_HOME": ".nix-mix",
+        "HEX_HOME": ".nix-hex",
+        "ERL_AFLAGS": "-kernel shell_history enabled"
+    },
+    "shell": {
+        "init_hook": [
+            "mkdir -p .nix-mix",
+            "mkdir -p .nix-hex",
+            "mix local.hex --force",
+            "mix local.rebar --force",
+            "mix deps.get"
+        ],
+        "scripts": {
+            "run_test": "mix run"
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

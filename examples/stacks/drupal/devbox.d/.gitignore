@@ -1,0 +1,6 @@
+mysql/data
+nginx/temp
+*.log
+*.pid
+*.sock
+*.swp

@@ -1,0 +1,17 @@
+{
+    "packages": [
+        "zig"
+    ],
+    "shell": {
+        "init_hook": null,
+        "scripts": {
+            "run_test": [
+                "zig build install",
+                "zig build run"
+            ]
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

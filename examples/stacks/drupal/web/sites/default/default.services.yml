@@ -1,0 +1,206 @@
+parameters:
+  session.storage.options:
+    # Default ini options for sessions.
+    #
+    # Some distributions of Linux (most notably Debian) ship their PHP
+    # installations with garbage collection (gc) disabled. Since Drupal depends
+    # on PHP's garbage collection for clearing sessions, ensure that garbage
+    # collection occurs by using the most common settings.
+    # @default 1
+    gc_probability: 1
+    # @default 100
+    gc_divisor: 100
+    #
+    # Set session lifetime (in seconds), i.e. the grace period for session
+    # data. Sessions are deleted by the session garbage collector after one
+    # session lifetime has elapsed since the user's last visit. When a session
+    # is deleted, authenticated users are logged out, and the contents of the
+    # user's session is discarded.
+    # @default 200000
+    gc_maxlifetime: 200000
+    #
+    # Set session cookie lifetime (in seconds), i.e. the time from the session
+    # is created to the cookie expires, i.e. when the browser is expected to
+    # discard the cookie. The value 0 means "until the browser is closed".
+    # @default 2000000
+    cookie_lifetime: 2000000
+    #
+    # Drupal automatically generates a unique session cookie name based on the
+    # full domain name used to access the site. This mechanism is sufficient
+    # for most use-cases, including multi-site deployments. However, if it is
+    # desired that a session can be reused across different subdomains, the
+    # cookie domain needs to be set to the shared base domain. Doing so assures
+    # that users remain logged in as they cross between various subdomains.
+    # To maximize compatibility and normalize the behavior across user agents,
+    # the cookie domain should start with a dot.
+    #
+    # @default none
+    # cookie_domain: '.example.com'
+    #
+    # Set the session ID string length. The length can be between 22 to 256. The
+    # PHP recommended value is 48. See
+    # https://www.php.net/manual/session.security.ini.php for more information.
+    # This value should be kept in sync with
+    # \Drupal\Core\Session\SessionConfiguration::__construct()
+    # @default 48
+    sid_length: 48
+    #
+    # Set the number of bits in encoded session ID character. The possible
+    # values are '4' (0-9, a-f), '5' (0-9, a-v), and '6' (0-9, a-z, A-Z, "-",
+    # ","). The PHP recommended value is 6. See
+    # https://www.php.net/manual/session.security.ini.php for more information.
+    # This value should be kept in sync with
+    # \Drupal\Core\Session\SessionConfiguration::__construct()
+    # @default 6
+    sid_bits_per_character: 6
+  twig.config:
+    # Twig debugging:
+    #
+    # When debugging is enabled:
+    # - The markup of each Twig template is surrounded by HTML comments that
+    #   contain theming information, such as template file name suggestions.
+    # - Note that this debugging markup will cause automated tests that directly
+    #   check rendered HTML to fail. When running automated tests, 'debug'
+    #   should be set to FALSE.
+    # - The dump() function can be used in Twig templates to output information
+    #   about template variables.
+    # - Twig templates are automatically recompiled whenever the source code
+    #   changes (see auto_reload below).
+    #
+    # For more information about debugging Twig templates, see
+    # https://www.drupal.org/node/1906392.
+    #
+    # Enabling Twig debugging is not recommended in production environments.
+    # @default false
+    debug: false
+    # Twig auto-reload:
+    #
+    # Automatically recompile Twig templates whenever the source code changes.
+    # If you don't provide a value for auto_reload, it will be determined
+    # based on the value of debug.
+    #
+    # Enabling auto-reload is not recommended in production environments.
+    # @default null
+    auto_reload: null
+    # Twig cache:
+    #
+    # By default, Twig templates will be compiled and stored in the filesystem
+    # to increase performance. Disabling the Twig cache will recompile the
+    # templates from source each time they are used. In most cases the
+    # auto_reload setting above should be enabled rather than disabling the
+    # Twig cache.
+    #
+    # Disabling the Twig cache is not recommended in production environments.
+    # @default true
+    cache: true
+    # File extensions:
+    #
+    # List of file extensions the Twig system is allowed to load via the
+    # twig.loader.filesystem service. Files with other extensions will not be
+    # loaded unless they are added here. For example, to allow a file named
+    # 'example.partial' to be loaded, add 'partial' to this list. To load files
+    # with no extension, add an empty string '' to the list.
+    #
+    # @default ['css', 'html', 'js', 'svg', 'twig']
+    allowed_file_extensions:
+      - css
+      - html
+      - js
+      - svg
+      - twig
+  renderer.config:
+    # Renderer required cache contexts:
+    #
+    # The Renderer will automatically associate these cache contexts with every
+    # render array, hence varying every render array by these cache contexts.
+    #
+    # @default ['languages:language_interface', 'theme', 'user.permissions']
+    required_cache_contexts: ['languages:language_interface', 'theme', 'user.permissions']
+    # Renderer automatic placeholdering conditions:
+    #
+    # Drupal allows portions of the page to be automatically deferred when
+    # rendering to improve cache performance. That is especially helpful for
+    # cache contexts that vary widely, such as the active user. On some sites
+    # those may be different, however, such as sites with only a handful of
+    # users. If you know what the high-cardinality cache contexts are for your
+    # site, specify those here. If you're not sure, the defaults are fairly safe
+    # in general.
+    #
+    # For more information about rendering optimizations see
+    # https://www.drupal.org/developing/api/8/render/arrays/cacheability#optimizing
+    auto_placeholder_conditions:
+      # Max-age at or below which caching is not considered worthwhile.
+      #
+      # Disable by setting to -1.
+      #
+      # @default 0
+      max-age: 0
+      # Cache contexts with a high cardinality.
+      #
+      # Disable by setting to [].
+      #
+      # @default ['session', 'user']
+      contexts: ['session', 'user']
+      # Tags with a high invalidation frequency.
+      #
+      # Disable by setting to [].
+      #
+      # @default []
+      tags: []
+  # Cacheability debugging:
+  #
+  # Responses with cacheability metadata (CacheableResponseInterface instances)
+  # get X-Drupal-Cache-Tags, X-Drupal-Cache-Contexts and X-Drupal-Cache-Max-Age
+  # headers.
+  #
+  # For more information about debugging cacheable responses, see
+  # https://www.drupal.org/developing/api/8/response/cacheable-response-interface
+  #
+  # Enabling cacheability debugging is not recommended in production
+  # environments.
+  # @default false
+  http.response.debug_cacheability_headers: false
+  factory.keyvalue: {}
+    # Default key/value storage service to use.
+    # @default keyvalue.database
+    # default: keyvalue.database
+    # Collection-specific overrides.
+    # state: keyvalue.database
+  factory.keyvalue.expirable: {}
+    # Default key/value expirable storage service to use.
+    # @default keyvalue.database.expirable
+    # default: keyvalue.database.expirable
+  # Allowed protocols for URL generation.
+  filter_protocols:
+    - http
+    - https
+    - ftp
+    - news
+    - nntp
+    - tel
+    - telnet
+    - mailto
+    - irc
+    - ssh
+    - sftp
+    - webcal
+    - rtsp
+
+  # Configure Cross-Site HTTP requests (CORS).
+  # Read https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
+  # for more information about the topic in general.
+  # Note: By default the configuration is disabled.
+  cors.config:
+    enabled: false
+    # Specify allowed headers, like 'x-allowed-header'.
+    allowedHeaders: []
+    # Specify allowed request methods, specify ['*'] to allow all possible ones.
+    allowedMethods: []
+    # Configure requests allowed from specific origins.
+    allowedOrigins: ['*']
+    # Sets the Access-Control-Expose-Headers header.
+    exposedHeaders: false
+    # Sets the Access-Control-Max-Age header.
+    maxAge: false
+    # Sets the Access-Control-Allow-Credentials header.
+    supportsCredentials: false

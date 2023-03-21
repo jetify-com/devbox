@@ -1,9 +1,0 @@
-{
-  "name": "nodejs",
-  "version": "1.0.0",
-  "description": "Devbox NodeJS example",
-  "main": "index.js",
-  "dependencies": {
-    "express": "^4.18.1"
-  }
-}

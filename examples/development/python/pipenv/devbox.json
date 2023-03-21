@@ -1,0 +1,17 @@
+{
+    "packages": [
+        "pipenv",
+        "python310"
+    ],
+    "shell": {
+        "init_hook": [
+            "pipenv install --dev"
+        ],
+        "scripts": {
+            "run_test": "pipenv run python main.py"
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

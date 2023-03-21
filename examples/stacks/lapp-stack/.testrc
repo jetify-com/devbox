@@ -1,0 +1,4 @@
+export foo=bar
+export foo2="This is a test"
+alias devbox=~/devbox/devbox
+

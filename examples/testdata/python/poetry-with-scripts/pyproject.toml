@@ -1,5 +1,0 @@
-[tool.poetry]
-name = "poetry-with-scripts"
-
-[tool.poetry.scripts]
-script = "poetry_with_scripts:script"

@@ -1,0 +1,32 @@
+{
+    "packages": [
+        "bundler",
+        "ruby_3_1",
+        "libffi"
+    ],
+    "shell": {
+        "init_hook": [],
+        "scripts": {
+            "generate": [
+                "gem install jekyll --version \"~> 3.9.2\" --no-document",
+                "cd myblog",
+                "bundle update",
+                "bundle lock",
+                "bundle package",
+                "rm -rf vendor"
+            ],
+            "serve": [
+                "cd myblog",
+                "bundler exec $GEM_HOME/bin/jekyll serve --trace"
+            ],
+            "run_test": [
+                "cd myblog",
+                "devbox run generate",
+                "bundler exec $GEM_HOME/bin/jekyll build --trace"
+            ]
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

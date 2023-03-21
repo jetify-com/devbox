@@ -1,7 +1,0 @@
-{
-  "dev_packages": [
-    "gradle",
-    "jdk",
-    "binutils"
-  ]
-}

@@ -1,2 +1,0 @@
-def script():
-  pass

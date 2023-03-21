@@ -1,0 +1,28 @@
+{
+    "packages": [
+        "postgresql",
+        "php81",
+        "php81Extensions.pgsql",
+        "apacheHttpd"
+    ],
+    "shell": {
+        "scripts": {
+            "init_db": "initdb",
+            "create_db": [
+                "dropdb --if-exists devbox_lapp",
+                "createdb devbox_lapp",
+                "psql devbox_lapp < setup_postgres_db.sql"
+            ],
+            "run_test": [
+                "initdb",
+                "devbox services start",
+                "devbox run create_db",
+                "curl localhost:$HTTPD_PORT",
+                "devbox services stop"
+            ]
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

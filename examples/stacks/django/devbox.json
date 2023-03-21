@@ -1,0 +1,39 @@
+{
+    "packages": [
+        "python310",
+        "openssl",
+        "python310Packages.pip",
+        "postgresql"
+    ],
+    "shell": {
+        "init_hook": [
+            "source $VENV_DIR/bin/activate",
+            "pip install -r requirements.txt"
+        ],
+        "scripts": {
+            "create_db": [
+                "echo \"Creating DB\"",
+                "devbox services restart postgresql",
+                "dropdb --if-exists todo_db",
+                "createdb todo_db",
+                "psql todo_db -c \"CREATE USER todo_user WITH PASSWORD 'secretpassword';\"",
+                "python todo_project/manage.py makemigrations",
+                "python todo_project/manage.py migrate"
+            ],
+            "initdb": [
+                "initdb"
+            ],
+            "server": [
+                "python todo_project/manage.py runserver"
+            ],
+            "run_test": [
+                "initdb",
+                "devbox run create_db",
+                "python todo_project/manage.py test"
+            ]
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

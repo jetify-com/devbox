@@ -1,0 +1,34 @@
+{
+    "packages": [
+        "minikube",
+        "kubectl",
+        "argo",
+        "docker"
+    ],
+    "env": {
+        "MINIKUBE_HOME": "$PWD/home/.minikube",
+        "KUBECONFIG": "$PWD/home/.kube/config"
+    },
+    "shell": {
+        "init_hook": [],
+        "scripts": {
+            "argo-install": [
+                "kubectl create namespace argo",
+                "kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.4.5/install.yaml",
+                "bash argo-patch.sh"
+            ],
+            "argo-port-forward": [
+                "kubectl -n argo port-forward deployment/argo-server 2746:2746"
+            ],
+            "minikube": [
+                "finish() { minikube -p argo-test stop; }",
+                "trap finish SIGTERM SIGINT EXIT",
+                "minikube start -p argo-test",
+                "minikube -p argo-test logs -f"
+            ]
+        }
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Create a Todo</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center my-5">Create Todo</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title">Todo Title </label>
+                <input type="text" name="title" class="form-control">
+            </div>
+            <input type="submit" value="Create" class="btn btn-primary">
+        </form>
+    </div>
+</body>
+
+</html>

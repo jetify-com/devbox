@@ -1,0 +1,21 @@
+{
+    "packages": [
+        "mariadb"
+    ],
+    "env": {
+        "MYSQL_HOME": "$PWD/conf/mysql",
+        "MYSQL_DATADIR": "$PWD/conf/mysql/data",
+        "MYSQL_UNIX_PORT": "$PWD/conf/mysql/mysql.sock",
+        "MYSQL_PID_FILE": "$PWD/conf/mysql/mysql.pid"
+    },
+    "shell": {
+        "init_hook": [
+            "source conf/set-env.sh",
+            "conf/mysql/mysql.sh",
+            "source conf/set-exit.sh"
+        ]
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
+}
