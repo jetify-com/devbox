@@ -13,8 +13,25 @@ type servicesCmdFlags struct {
 	config configFlags
 }
 
+type serviceManagerCmdFlag struct {
+	configFlags
+	processComposeFile string
+}
+
+func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
+	flags.configFlags.register(cmd)
+	cmd.Flags().StringVar(
+		&flags.processComposeFile,
+		"process-compose-file",
+		"",
+		"path to process compose file or directory containing process "+
+			"compose-file.yaml|yml. Default is directory containing devbox.json",
+	)
+}
+
 func ServicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
+	managerFlags := serviceManagerCmdFlag{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
 		Short: "Interact with devbox services",
@@ -57,11 +74,12 @@ func ServicesCmd() *cobra.Command {
 		Use:   "manager",
 		Short: "Starts process manager with all supported services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startProcessManager(cmd, flags)
+			return startProcessManager(cmd, managerFlags)
 		},
 	}
 
 	flags.config.register(servicesCommand)
+	managerFlags.register(processManagerCommand)
 	servicesCommand.AddCommand(lsCommand)
 	servicesCommand.AddCommand(processManagerCommand)
 	servicesCommand.AddCommand(restartCommand)
@@ -142,10 +160,10 @@ func restartServices(
 	return startServices(cmd, services, flags)
 }
 
-func startProcessManager(cmd *cobra.Command, flags servicesCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+func startProcessManager(cmd *cobra.Command, flags serviceManagerCmdFlag) error {
+	box, err := devbox.Open(flags.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StartProcessManager(cmd.Context())
+	return box.StartProcessManager(cmd.Context(), flags.processComposeFile)
 }

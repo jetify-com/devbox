@@ -385,12 +385,16 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return services.Start(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
 }
 
-func (d *Devbox) StartProcessManager(ctx context.Context) error {
+func (d *Devbox) StartProcessManager(
+	ctx context.Context,
+	processComposeFileOrDir string,
+) error {
 	svcs, err := d.Services()
 	if err != nil {
 		return err
 	}
-	hasServiceWithProcessCompose := false
+	processCompose := services.LookupProcessCompose(d.projectDir, processComposeFileOrDir)
+	hasServiceWithProcessCompose := processCompose != ""
 	for _, s := range svcs {
 		if _, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
 			hasServiceWithProcessCompose = true
@@ -408,10 +412,14 @@ func (d *Devbox) StartProcessManager(ctx context.Context) error {
 		}
 	}
 	if !IsDevboxShellEnabled() {
-		return d.RunScript("devbox", []string{"services", "manager"})
+		args := []string{"services", "manager"}
+		if processComposeFileOrDir != "" {
+			args = append(args, "--process-compose-file", processComposeFileOrDir)
+		}
+		return d.RunScript("devbox", args)
 	}
 
-	return services.StartProcessManager(ctx, processComposePath, svcs)
+	return services.StartProcessManager(ctx, processComposePath, svcs, processCompose)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
