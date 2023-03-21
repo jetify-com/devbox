@@ -15,7 +15,7 @@
             "./bin/rails db:prepare"
         ],
         "scripts": {
-            "run-test": ["cd blog && ./bin/rails serve&",
+            "run_test": ["cd blog && ./bin/rails serve&",
                 "curl localhost:3000"
             ]
         }

@@ -19,7 +19,7 @@
                 "cd myblog",
                 "bundler exec $GEM_HOME/bin/jekyll serve --trace"
             ],
-            "run-test": [
+            "run_test": [
                 "cd myblog",
                 "devbox run generate",
                 "bundler exec $GEM_HOME/bin/jekyll build --trace"

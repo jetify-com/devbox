@@ -19,7 +19,7 @@
                 "devbox services stop",
                 "mysqladmin -u root --socket=$MYSQL_UNIX_PORT shutdown"
             ],
-            "run-test": [
+            "run_test": [
                 "devbox.d/mysql/mysql.sh",
                 "devbox services start",
                 "./install-drupal.sh",

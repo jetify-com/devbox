@@ -26,7 +26,7 @@
             "server": [
                 "python todo_project/manage.py runserver"
             ],
-            "run-test": [
+            "run_test": [
                 "initdb",
                 "devbox run create_db",
                 "python todo_project/manage.py test"
