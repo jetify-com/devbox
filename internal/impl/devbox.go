@@ -546,6 +546,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
+	d.setCommonHelperEnvVars(env)
+
 	return env, nil
 }
 
@@ -708,4 +710,11 @@ var ignoreDevEnvVar = map[string]bool{
 	"TMPDIR":             true,
 	"TZ":                 true,
 	"UID":                true,
+}
+
+// setCommonHelperEnvVars sets environment variables that are required by some
+// common setups (e.g. gradio, rust)
+func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
+	env["LD_LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LD_LIBRARY_PATH"]
+	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
 }
