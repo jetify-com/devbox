@@ -4,9 +4,9 @@ title: NodeJS
 
 Most NodeJS Projects will install their dependencies locally using NPM or Yarn, and thus can work with Devbox with minimal additional configuration. Per project packages can be managed via NPM or Yarn.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/nodejs)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/nodejs/nodejs-npm)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/nodejs/nodejs-npm)
 
 
 ## Adding NodeJS to your Shell
@@ -27,9 +27,9 @@ Other versions available include:
 
 ## Adding Yarn as your Package Manager
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/nodejs/nodejs-yarn)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-yarn)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/nodejs/nodejs-yarn)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/nodejs/nodejs-yarn)
 
 `devbox add yarn`, or in your `devbox.json` add: 
 ```json

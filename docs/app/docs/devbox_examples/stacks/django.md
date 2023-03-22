@@ -2,9 +2,9 @@
 
 This example demonstrates how to configure and run a Django app using Devbox. It installs Python, PostgreSQL, and uses `pip` to install your Python dependencies in a virtual environment.
 
-[Example Repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/django)
+[Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/django)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/django)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/stacks/django)
 
 ## How to Use
 

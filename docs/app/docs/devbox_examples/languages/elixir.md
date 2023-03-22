@@ -4,9 +4,9 @@ title: Elixir
 
 Elixir can be configured to install Hex and Rebar dependencies in a local directory. This will keep Elixir from trying to install in your immutable Nix Store: 
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/elixir/elixir_hello)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/elixir/elixir_hello)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/elixir/elixir_hello)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/elixir/elixir_hello)
 
 
 ## Adding Elixir to your project

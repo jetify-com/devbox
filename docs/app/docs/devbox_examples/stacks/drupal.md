@@ -4,9 +4,9 @@ title: Drupal
 
 This example shows how to run a Drupal application in Devbox. It makes use of the PHP and Apache Plugins, while demonstrating how to configure a MariaDB instance to work with Devbox Cloud.
 
-[Example Repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/drupal)
+[Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/drupal)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/drupal)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/stacks/drupal)
 
 ## How to Run 
 

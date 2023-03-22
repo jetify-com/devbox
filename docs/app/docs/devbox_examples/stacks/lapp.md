@@ -4,9 +4,9 @@ title: LAPP (Linux, Apache, PHP, Postgres)
 
 This example shows how to build a simple application using Apache, PHP, and PostgreSQL. It uses Devbox Plugins for all 3 packages to simplify configuration
 
-[Example Repo](https://github.com/jetpack-io/devbox-examples/tree/main/stacks/lapp-stack)
+[Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/lapp-stack)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/lapp-stack)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/stacks/lapp-stack)
 
 ## How to Run
 

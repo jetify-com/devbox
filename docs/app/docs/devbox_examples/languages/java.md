@@ -6,7 +6,7 @@ In addition to installing the JDK, you'll need to install either the Maven or Gr
 
 In both cases, you'll want to first activate `devbox shell` before generating your Maven or Gradle projects, so that the tools use the right version of the JDK for creating your project. 
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/java)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java)
 
 ## Adding the JDK to your project
 
@@ -30,9 +30,9 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 ## Gradle
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/java/gradle/hello-world)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java/gradle/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/java/gradle/hello-world)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/java/gradle/hello-world)
 
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below: 
 
@@ -83,9 +83,9 @@ An example `devbox.json` would look like the following:
 
 ## Maven
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/development/java/maven/hello-world)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java/maven/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/java/maven/hello-world)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/java/maven/hello-world)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 
