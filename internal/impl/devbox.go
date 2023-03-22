@@ -121,7 +121,11 @@ func (d *Devbox) Config() *Config {
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.packages()
 	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
-	//shellPlan.DevPackages = userDefinedPkgs
+
+	// If the DevPackages are empty, set them to userDefinedPkgs.
+	if len(shellPlan.DevPackages) == 0 {
+		shellPlan.DevPackages = userDefinedPkgs
+	}
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	if err != nil {
