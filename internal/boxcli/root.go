@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/vercheck"
 )
 
 var (
@@ -30,6 +31,7 @@ func RootCmd() *cobra.Command {
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			vercheck.CheckLauncherVersion(cmd.ErrOrStderr())
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
 			}
@@ -52,6 +54,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(PlanCmd())
 	command.AddCommand(RemoveCmd())
 	command.AddCommand(RunCmd())
+	command.AddCommand(selfUpdateCmd())
 	command.AddCommand(ServicesCmd())
 	command.AddCommand(SetupCmd())
 	command.AddCommand(ShellCmd())
