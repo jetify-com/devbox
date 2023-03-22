@@ -51,8 +51,6 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
-var commitMismatchWarningShown = false
-
 // Packages returns the list of packages to install, including global packages.
 // It returns higher priority packages first.
 func (c *Config) Packages(w io.Writer) []string {
@@ -65,13 +63,7 @@ func (c *Config) Packages(w io.Writer) []string {
 	if err != nil {
 		return c.RawPackages
 	}
-	if c.Nixpkgs.Commit != global.Nixpkgs.Commit && !commitMismatchWarningShown {
-		commitMismatchWarningShown = true
-		ux.Fwarning(w,
-			"local and global devbox.json have different nixpkgs commits. "+
-				"Will use the local version. This may lead to version mismatch and "+
-				"nix store bloat.\n")
-	}
+
 	return lo.Uniq(append(c.RawPackages, global.RawPackages...))
 }
 

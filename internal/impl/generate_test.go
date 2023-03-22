@@ -30,8 +30,12 @@ func TestWriteFromTemplate(t *testing.T) {
 			NixpkgsInfo struct {
 				URL string
 			}
-			Definitions []string
-			DevPackages []string
+			GlobalNixpkgsInfo *struct {
+				URL string
+			}
+			Definitions    []string
+			DevPackages    []string
+			GlobalPackages []string
 		}{}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
 		if err != nil {
@@ -81,8 +85,12 @@ var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
 	}
-	Definitions []string
-	DevPackages []string
+	GlobalNixpkgsInfo *struct {
+		URL string
+	}
+	Definitions    []string
+	DevPackages    []string
+	GlobalPackages []string
 }{
 	NixpkgsInfo: struct {
 		URL string

@@ -12,9 +12,10 @@ import (
 func TestMergeShellPlans(t *testing.T) {
 	plan1 := &ShellPlan{}
 	plan2 := &ShellPlan{
-		DevPackages:   []string{},
-		Definitions:   []string{"a"},
-		ShellInitHook: []string{"a", "b"},
+		DevPackages:    []string{},
+		GlobalPackages: []string{},
+		Definitions:    []string{"a"},
+		ShellInitHook:  []string{"a", "b"},
 		GeneratedFiles: map[string]string{
 			"a": "b",
 		},
@@ -34,9 +35,10 @@ func TestMergeShellPlans(t *testing.T) {
 		ShellInitHook: []string{"a", "b"},
 	}
 	expected = &ShellPlan{
-		DevPackages:   []string{},
-		Definitions:   []string{"a"},
-		ShellInitHook: []string{"c", "a", "b"},
+		DevPackages:    []string{},
+		GlobalPackages: []string{},
+		Definitions:    []string{"a"},
+		ShellInitHook:  []string{"c", "a", "b"},
 	}
 	actual, err = MergeShellPlans(plan1, plan2)
 	assert.NoError(t, err)
@@ -57,9 +59,10 @@ func TestMergeShellPlans(t *testing.T) {
 		},
 	}
 	expected = &ShellPlan{
-		DevPackages:   []string{},
-		Definitions:   []string{},
-		ShellInitHook: []string{},
+		DevPackages:    []string{},
+		GlobalPackages: []string{},
+		Definitions:    []string{},
+		ShellInitHook:  []string{},
 		GeneratedFiles: map[string]string{
 			"a": "b",
 			"b": "c",
