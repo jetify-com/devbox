@@ -35,6 +35,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 
+	// open in vscode URI handler
 	const handleVSCodeUri = window.registerUriHandler({ handleUri: handleOpenInVSCode });
 
 	const devboxAdd = commands.registerCommand('devbox.add', async () => {

@@ -14,7 +14,7 @@ export async function handleOpenInVSCode(uri: Uri) {
         const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
         const res = await response.json();
         // TODO: remove debug
-        console.log("data:\n");
+        console.log("data:");
         console.log(res);
         // set ssh config
         await setupSSHConfig(res['vm_id'], res['private_key']);
@@ -42,7 +42,8 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
 }
 
 async function setupSSHConfig(vmId: string, prKey: string) {
-    exec('./devbox generate ssh-config --config=./', (error, stdout, stderr) => {
+    // TODO: change this back before to devbox generate ssh-config
+    exec('/Users/mohsenansari/code/jetpack/go.jetpack.io/direnvexamples/sample1/devbox generate ssh-config --config=/Users/mohsenansari/code/jetpack/go.jetpack.io/direnvexamples/sample1/', (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             return;
