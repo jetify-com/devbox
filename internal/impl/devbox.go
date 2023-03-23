@@ -123,8 +123,6 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	userDefinedPkgs := d.packages()
 	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
 
-	// set shellPlan.DevPackages equal to the union of userDefinedPkgs and shellPlan.DevPackages
-
 	shellPlan.DevPackages = pkgslice.Unique(append(shellPlan.DevPackages, userDefinedPkgs...))
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
