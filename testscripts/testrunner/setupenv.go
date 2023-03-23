@@ -60,12 +60,5 @@ func setupCacheHome(env *testscript.Env) error {
 		return err
 	}
 
-	// Golang caches build outputs for reuse in future builds in GOCACHE
-	goBuildCache := filepath.Join(cacheHome, "go-build")
-	env.Setenv("GOCACHE", goBuildCache)
-	if err = os.MkdirAll(goBuildCache, 0755); err != nil {
-		return err
-	}
-
 	return nil
 }
