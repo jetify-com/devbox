@@ -36,6 +36,12 @@ func RunTestscripts(t *testing.T, testscriptsDir string) {
 	// Loop through all the directories and run all tests scripts (files ending
 	// in .test.txt)
 	for _, dir := range dirs {
+		// The testrunner dir has the testscript we use for projects in examples/ directory.
+		// We should skip that one since it is run separately (see RunExamplesTestscripts).
+		if filepath.Base(dir) == "testrunner" {
+			continue
+		}
+
 		testscript.Run(t, getTestscriptParams(dir))
 	}
 }
