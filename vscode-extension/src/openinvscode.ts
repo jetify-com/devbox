@@ -1,7 +1,7 @@
 import { Uri, commands, window } from 'vscode';
 import fetch from 'node-fetch';
 import { exec } from 'child_process';
-import FormData = require('form-data');
+import * as FormData from 'form-data';
 import { chmod, open, writeFile } from 'fs/promises';
 
 export async function handleOpenInVSCode(uri: Uri) {
@@ -11,17 +11,24 @@ export async function handleOpenInVSCode(uri: Uri) {
         window.showInformationMessage('Setting up devbox');
 
         // getting ssh keys
+        type VmInfo = {
+            /* eslint-disable @typescript-eslint/naming-convention */
+            vm_id: string;
+            private_key: string;
+            username: string;
+            /* eslint-enable @typescript-eslint/naming-convention */
+        };
         const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
-        const res = await response.json();
-        // TODO: remove debug
-        console.log("data:");
-        console.log(res);
+        const res = await response.json() as VmInfo;
+        console.debug("data:");
+        console.debug(res);
         // set ssh config
-        await setupSSHConfig(res['vm_id'], res['private_key']);
+        await setupSSHConfig(res.vm_id, res.private_key);
         // connect to remote vm
-        connectToRemote(res['username'], res['vm_id']);
+        connectToRemote(res.username, res.vm_id);
     } else {
         window.showErrorMessage('Error parsing information for remote environment.');
+        console.debug(queryParams.toString());
     };
 }
 
@@ -34,8 +41,7 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
         method: 'post',
         body: data,
         headers: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            'Authorization': `Bearer ${token}`
+            authorization: `Bearer ${token}`
         }
     });
     return response;
@@ -50,8 +56,8 @@ async function setupSSHConfig(vmId: string, prKey: string) {
             console.error(`exec error: ${error}`);
             return;
         }
-        console.log(`stdout: ${stdout}`);
-        console.log(`stderr: ${stderr}`);
+        console.debug(`stdout: ${stdout}`);
+        console.debug(`stderr: ${stderr}`);
     });
     // save private key to file
     const prkeyPath = `${process.env['HOME']}/.config/devbox/ssh/keys/${vmId}.vm.devbox-vms.internal`;
@@ -72,6 +78,6 @@ function connectToRemote(username: string, vmId: string) {
     const host = `${username}@${vmId}.vm.devbox-vms.internal`;
     const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
     const uriToOpen = Uri.parse(workspaceURI);
-    window.showInformationMessage(uriToOpen.toString());
+    console.debug("uriToOpen: ", uriToOpen.toString());
     commands.executeCommand("vscode.openFolder", uriToOpen, false);
 }

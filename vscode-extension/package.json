@@ -21,6 +21,9 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
+  "extensionDependencies": [
+    "ms-vscode-remote.remote-ssh"
+  ],
   "contributes": {
     "commands": [
       {
@@ -115,6 +118,6 @@
   },
   "dependencies": {
     "form-data": "^4.0.0",
-    "node-fetch": "2"
+    "node-fetch": "^2"
   }
 }
