@@ -7,13 +7,14 @@ import (
 	"context"
 	"runtime/trace"
 
-	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/planner/languages/haskell"
 	"go.jetpack.io/devbox/internal/planner/languages/php"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 var PLANNERS = []plansdk.Planner{
 	&php.V2Planner{},
+	&haskell.V2Planner{},
 }
 
 // Return a merged shell plan from shell planners if user defined packages
@@ -24,13 +25,7 @@ func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 	result := &plansdk.ShellPlan{}
 	planners := getRelevantPlanners(srcDir, userPkgs)
 	for _, p := range planners {
-		pkgs := p.GetShellPlan(srcDir).DevPackages
-		mutualPkgs := lo.Intersect(userPkgs, pkgs)
-		// Only apply shell plan if user packages list all the packages from shell plan.
-		if len(mutualPkgs) == len(pkgs) {
-			// if merge fails, we return no errors for now.
-			result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
-		}
+		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
 	}
 	return result
 }
