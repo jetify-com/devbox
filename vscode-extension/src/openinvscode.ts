@@ -16,6 +16,7 @@ export async function handleOpenInVSCode(uri: Uri) {
             vm_id: string;
             private_key: string;
             username: string;
+            working_directory: string;
             /* eslint-enable @typescript-eslint/naming-convention */
         };
         const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
@@ -25,7 +26,7 @@ export async function handleOpenInVSCode(uri: Uri) {
         // set ssh config
         await setupSSHConfig(res.vm_id, res.private_key);
         // connect to remote vm
-        connectToRemote(res.username, res.vm_id);
+        connectToRemote(res.username, res.vm_id, res.working_directory);
     } else {
         window.showErrorMessage('Error parsing information for remote environment.');
         console.debug(queryParams.toString());
@@ -73,10 +74,9 @@ async function setupSSHConfig(vmId: string, prKey: string) {
     }
 }
 
-function connectToRemote(username: string, vmId: string) {
-    const pathToFile = `/home/${username}/`;
+function connectToRemote(username: string, vmId: string, workDir: string) {
     const host = `${username}@${vmId}.vm.devbox-vms.internal`;
-    const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
+    const workspaceURI = `vscode-remote://ssh-remote+${host}${workDir}`;
     const uriToOpen = Uri.parse(workspaceURI);
     console.debug("uriToOpen: ", uriToOpen.toString());
     commands.executeCommand("vscode.openFolder", uriToOpen, false);
