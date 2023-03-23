@@ -1,0 +1,94 @@
+---
+title: Installing Devbox
+sidebar_position: 2
+---
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem';
+
+## Install Devbox
+
+Select your OS below for the steps to install Devbox.
+
+<Tabs>
+<TabItem value="linux" label="Linux">
+
+Run the following install script as a *non-root user* to install the latest version of Devbox:
+
+```bash
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If Nix is not detected when running a command, Devbox will install it for you in single-user mode for Linux. Don't worry: You can use Devbox without needing to learn the Nix Language.
+
+If you would like to install Nix yourself, we recommend the [Determinate Nix Installer](https://determinate.systems/posts/determinate-nix-installer).
+
+</TabItem>
+<TabItem value="macos" label="MacOS">
+
+Run the following install script to install the latest version of Devbox:
+
+```bash
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If Nix is not detected when running a command, Devbox will install it in multi-user mode for macOS. Don't worry: You can use Devbox without needing to learn the Nix Language.
+
+If you would like to install Nix yourself, we recommend the [Determinate Nix Installer](https://determinate.systems/posts/determinate-nix-installer).
+
+</TabItem>
+
+<TabItem value="wsl" label="Windows/WSL2">
+
+You can use Devbox on a Windows machine using [**Windows Subsystem for Linux 2**](https://learn.microsoft.com/en-us/windows/wsl/install). 
+
+<details>
+<summary>Installing WSL2</summary>
+
+To install WSL2 with the default Ubuntu distribution, open Powershell or Windows Command Prompt as an administrator, and run:
+
+```bash
+wsl --install
+```
+
+If WSL2 is already installed, you can install Ubuntu by running
+
+```bash
+wsl --install -d Ubuntu
+```
+If you are running an older version of Windows, you may need to follow the [manual installation steps](https://learn.microsoft.com/en-us/windows/wsl/install-manual) to enable virtualization and WSL2 on your system. See the [official docs](https://learn.microsoft.com/en-us/windows/wsl/install) for more details
+
+</details>
+
+Run the following script in your WSL2 terminal as a *non-root user* to install Devbox.
+
+```bash
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If Nix is not detected on your machine when running a command, Devbox will automatically install it in single user mode for WSL2. Don't worry: You can use Devbox without needing to learn the Nix Language.
+
+</TabItem>
+
+<TabItem value="nix" label="NixOS/Nixpkg">
+
+Devbox is available through the [**Nix Package Manager**](https://search.nixos.org/packages?channel=unstable&show=devbox&from=0&size=50&sort=relevance&type=packages&query=devbox). 
+
+To install on NixOS:
+
+```bash
+nix-env -iA nixos.devbox
+```
+
+To install on a non NixOS:
+
+```bash
+nix-env -iA nixpkg.devbox
+```
+
+</TabItem>
+</Tabs>
+
+## Next Steps
+
+* **[Getting Started](quickstart.mdx):** Learn how to create a dev environment with Devbox
+* **[Devbox Global](devbox_global.md):** Learn how to use the devbox as a global package manager
