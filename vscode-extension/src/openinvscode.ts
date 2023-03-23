@@ -2,7 +2,7 @@ import { Uri, commands, window } from 'vscode';
 import fetch from 'node-fetch';
 import { exec } from 'child_process';
 import FormData = require('form-data');
-import { open, writeFile } from 'fs/promises';
+import { chmod, open, writeFile } from 'fs/promises';
 
 export async function handleOpenInVSCode(uri: Uri) {
     const queryParams = new URLSearchParams(uri.query);
@@ -57,6 +57,7 @@ async function setupSSHConfig(vmId: string, prKey: string) {
         const prKeydata = new Uint8Array(Buffer.from(prKey));
         const fileHandler = await open(prkeyPath, 'w');
         await writeFile(fileHandler, prKeydata, { flag: 'w' });
+        await chmod(prkeyPath, 0o600);
         await fileHandler.close();
     } catch (err) {
         // When a request is aborted - err is an AbortError
@@ -66,7 +67,7 @@ async function setupSSHConfig(vmId: string, prKey: string) {
 
 function connectToRemote(username: string, vmId: string) {
     const pathToFile = `/home/${username}/`;
-    const host = `${vmId}.vm.devbox-vms.internal`;
+    const host = `${username}@${vmId}.vm.devbox-vms.internal`;
     const workspaceURI = `vscode-remote://ssh-remote+${host}${pathToFile}`;
     const uriToOpen = Uri.parse(workspaceURI);
     window.showInformationMessage(uriToOpen.toString());
