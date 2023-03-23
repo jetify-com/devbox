@@ -1,26 +1,7 @@
 {
   "packages": [
-    "asciinema",
-    "vim",
-    "emacs",
-    "direnv",
-    "yq",
-    "watch",
-    "openssl",
-    "dive",
-    "tree",
-    "tmux",
     "yarn",
-    "httpie",
-    "git",
-    "ripgrep",
-    "glow",
-    "gifsicle",
-    "epr",
-    "nixfmt",
-    "pulumi-bin",
-    "rnix-lsp",
-    "graphviz"
+    "nodejs"
   ],
   "shell": {
     "init_hook": null
