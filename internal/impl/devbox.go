@@ -28,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -121,7 +122,7 @@ func (d *Devbox) Config() *Config {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
-	shellPlan.DevPackages = d.localPackages()
+	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.GlobalPackages = d.globalPackages()
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
