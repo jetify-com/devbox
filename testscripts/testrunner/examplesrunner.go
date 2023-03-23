@@ -17,13 +17,7 @@ import (
 
 // RunExamplesTestscripts generates testscripts for each example devbox-project.
 func RunExamplesTestscripts(t *testing.T, examplesDir string) {
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Error(err)
-	}
-
-	examplesDir = filepath.Join(wd, examplesDir)
-	err = filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -32,20 +26,16 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			return nil
 		}
 
-		// skip directories that do not have a devbox.json defined
 		configPath := filepath.Join(path, "devbox.json")
-		if _, err := os.Stat(configPath); err != nil {
+		config, err := impl.ReadConfig(configPath)
+		if err != nil {
+			// skip directories that do not have a devbox.json defined
 			if errors.Is(err, fs.ErrNotExist) {
 				return nil
 			}
 			return err
 		}
-
 		// skip configs that do not have a run_test defined
-		config, err := impl.ReadConfig(configPath)
-		if err != nil {
-			return err
-		}
 		if _, ok := config.Shell.Scripts["run_test"]; !ok {
 			t.Logf("skipping config due to missing run_test at: %s\n", path)
 			return nil
@@ -77,11 +67,10 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 }
 
 func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
-	testscriptDir, err := generateTestscript(examplesDir, projectDir)
+	testscriptDir, err := generateTestscript(t, examplesDir, projectDir)
 	if err != nil {
 		t.Error(err)
 	}
-	t.Cleanup(func() { _ = os.RemoveAll(testscriptDir) })
 
 	params := getTestscriptParams(testscriptDir)
 
@@ -111,15 +100,8 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 
 // generateTestscript will create a temp-directory and place the generic
 // testscript file (.test.txt) for all examples devbox-projects in it.
-// Unless there was an error, it returns the directory containing the testscript file
-// and the caller is responsible for cleaning up the directory.
-func generateTestscript(examplesDir, projectDir string) (testscriptDir string, err error) {
-	defer func() {
-		// cleanup the temp-dir if there was any error
-		if err != nil {
-			os.RemoveAll(testscriptDir)
-		}
-	}()
+// It returns the directory containing the testscript file.
+func generateTestscript(t *testing.T, examplesDir, projectDir string) (string, error) {
 
 	testPath, err := filepath.Rel(examplesDir, projectDir)
 	if err != nil {
@@ -139,18 +121,10 @@ func generateTestscript(examplesDir, projectDir string) (testscriptDir string, e
 	)
 
 	// create a temp-dir to place the testscript file
-	testscriptDir, err = os.MkdirTemp("", "example")
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return testscriptDir, errors.WithStack(err)
-	}
+	testscriptDir := t.TempDir()
 
 	// Copy the testscript file to the temp-dir
-	runTestScriptPath := filepath.Join(wd, "testrunner", scriptName)
+	runTestScriptPath := filepath.Join("testrunner", scriptName)
 	debug.Log("copying run_test.test.txt from %s to %s\n", runTestScriptPath, testscriptDir)
 	// Using os's cp command for expediency.
 	err = exec.Command("cp", runTestScriptPath, testscriptDir+"/"+scriptNameForProject).Run()
