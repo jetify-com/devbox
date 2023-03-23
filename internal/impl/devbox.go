@@ -34,6 +34,7 @@ import (
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 const (
@@ -120,16 +121,25 @@ func (d *Devbox) Config() *Config {
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
-	userDefinedPkgs := d.packages()
-	shellPlan := planner.GetShellPlan(d.projectDir, userDefinedPkgs)
-
-	shellPlan.DevPackages = pkgslice.Unique(append(shellPlan.DevPackages, userDefinedPkgs...))
+	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
+	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
+	shellPlan.GlobalPackages = d.globalPackages()
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	if err != nil {
 		return nil, err
 	}
 	shellPlan.NixpkgsInfo = nixpkgsInfo
+
+	if len(shellPlan.GlobalPackages) > 0 {
+		if globalHash := d.globalCommitHash(); globalHash != "" {
+			globalNixpkgsInfo, err := plansdk.GetNixpkgsInfo(globalHash)
+			if err != nil {
+				return nil, err
+			}
+			shellPlan.GlobalNixpkgsInfo = globalNixpkgsInfo
+		}
+	}
 
 	return shellPlan, nil
 }
@@ -152,7 +162,7 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.mergedPackages(), d.projectDir)
 	if err != nil {
 		return err
 	}
@@ -290,7 +300,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			return errors.WithStack(err)
 		}
 		// generate devcontainer.json
-		err = generate.CreateDevcontainer(devContainerPath, d.packages())
+		err = generate.CreateDevcontainer(devContainerPath, d.mergedPackages())
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -377,14 +387,14 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (plugin.Services, error) {
-	return plugin.GetServices(d.packages(), d.projectDir)
+	return plugin.GetServices(d.mergedPackages(), d.projectDir)
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
-	return services.Start(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
+	return services.Start(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) StartProcessManager(
@@ -428,7 +438,7 @@ func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error
 	if !IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
 	}
-	return services.Stop(ctx, d.packages(), serviceNames, d.projectDir, d.writer)
+	return services.Stop(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) generateShellFiles() error {
@@ -534,7 +544,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	debug.Log("nix environment PATH is: %s", env)
 
 	// Add any vars defined in plugins.
-	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
+	pluginEnv, err := plugin.Env(d.mergedPackages(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
@@ -577,7 +587,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.mergedPackages(), d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -650,11 +660,41 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// packages returns the list of packages to be installed in the nix shell as
-// specified by config and globals. It maintains the order of packages
+// mergedPackages returns the list of packages to be installed in the nix shell as
+// specified by config and globals. It maintains the order of mergedPackages
 // as specified by Config.Packages() (higher priority first)
-func (d *Devbox) packages() []string {
+func (d *Devbox) mergedPackages() []string {
 	return d.cfg.Packages(d.writer)
+}
+
+func (d *Devbox) localPackages() []string {
+	return d.cfg.RawPackages
+}
+
+func (d *Devbox) globalPackages() []string {
+	dataPath, err := GlobalDataPath()
+	if err != nil {
+		ux.Ferror(d.writer, "unable to get devbox global data path: %s\n", err)
+		return []string{}
+	}
+	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
+	if err != nil {
+		return []string{}
+	}
+	return global.RawPackages
+}
+
+func (d *Devbox) globalCommitHash() string {
+	dataPath, err := GlobalDataPath()
+	if err != nil {
+		ux.Ferror(d.writer, "unable to get devbox global data path: %s\n", err)
+		return ""
+	}
+	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
+	if err != nil {
+		return ""
+	}
+	return global.Nixpkgs.Commit
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env
