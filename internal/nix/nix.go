@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime/trace"
 
 	"github.com/pkg/errors"
@@ -19,6 +20,8 @@ import (
 // or `nix profile install --profile ProfilePath <package...>`
 // Instead of using directory, prefer using the devbox.ProfileDir() function that ensures the directory exists.
 const ProfilePath = ".devbox/nix/profile/default"
+
+var ProfileBinPath = filepath.Join(ProfilePath, "bin")
 
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")

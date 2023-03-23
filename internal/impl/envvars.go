@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const devboxSetPrefix = "__DEVBOX_SET_"
+
 func mapToPairs(m map[string]string) []string {
 	pairs := []string{}
 	for k, v := range m {
@@ -52,4 +54,13 @@ func exportify(vars map[string]string) string {
 		strb.WriteString("\"\n")
 	}
 	return strings.TrimSpace(strb.String())
+}
+
+func addEnvOnce(existing, new map[string]string) {
+	for k, v := range new {
+		if _, alreadySet := existing[devboxSetPrefix+k]; !alreadySet {
+			existing[k] = v
+			existing[devboxSetPrefix+k] = "1"
+		}
+	}
 }

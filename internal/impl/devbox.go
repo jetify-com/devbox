@@ -33,6 +33,7 @@ import (
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 const (
@@ -532,20 +533,27 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	debug.Log("nix environment PATH is: %s", env)
 
 	// Add any vars defined in plugins.
+	// TODO: Now that we have bin wrappers, this may can eventually be removed.
+	// We still need to be able to add env variables to non-service binaries
+	// (e.g. ruby). This would involve understanding what binaries are associated
+	// to a given plugin.
 	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
 
-	for k, v := range pluginEnv {
-		env[k] = v
+	addEnvOnce(env, pluginEnv)
+
+	if err = wrapnix.CreateWrappers(d); err != nil {
+		return nil, err
 	}
+
+	// Prepend virtenv bin path first so user can override it if needed
+	env["PATH"] = JoinPathLists(d.virtenvBinPath(), env["PATH"])
 
 	// Include env variables in devbox.json
 	if featureflag.EnvConfig.Enabled() {
-		for k, v := range d.configEnvs(env) {
-			env[k] = v
-		}
+		addEnvOnce(env, d.configEnvs(env))
 	}
 
 	nixEnvPath := env["PATH"]
@@ -725,4 +733,8 @@ var ignoreDevEnvVar = map[string]bool{
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LD_LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LD_LIBRARY_PATH"]
 	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
+}
+
+func (d *Devbox) virtenvBinPath() string {
+	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }

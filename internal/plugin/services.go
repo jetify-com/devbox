@@ -11,10 +11,11 @@ type Services map[string]service
 
 type service struct {
 	config  *config
-	Name    string `json:"name"`
-	RawPort string `json:"port"`
-	Start   string `json:"start"`
-	Stop    string `json:"stop"`
+	Env     map[string]string `json:"-"`
+	Name    string            `json:"name"`
+	RawPort string            `json:"port"`
+	Start   string            `json:"start"`
+	Stop    string            `json:"stop"`
 }
 
 func (s *service) Port() (string, error) {
@@ -46,6 +47,7 @@ func GetServices(pkgs []string, projectDir string) (Services, error) {
 		for name, svc := range c.Services {
 			svc.Name = name
 			svc.config = c
+			svc.Env = c.Env
 			services[name] = svc
 		}
 	}

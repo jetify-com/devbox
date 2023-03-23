@@ -16,6 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/wrapnix"
 	"golang.org/x/exp/slices"
 )
 
@@ -74,10 +75,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 		}
 	}
 
-	if IsDevboxShellEnabled() {
-		plugin.PrintEnvUpdateMessage(d.projectDir, d.writer)
-	}
-	return nil
+	return wrapnix.CreateWrappers(d)
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
@@ -114,10 +112,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	if IsDevboxShellEnabled() {
-		plugin.PrintEnvUpdateMessage(d.projectDir, d.writer)
-	}
-	return nil
+	return wrapnix.CreateWrappers(d)
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
