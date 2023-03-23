@@ -43,12 +43,18 @@ func TestWriteFromTemplate(t *testing.T) {
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake-empty.nix.golden")
 	})
-	t.Run("WriteModifiedBigger", func(t *testing.T) {
+
+	t.Run("TestWithGlobal", func(t *testing.T) {
+		plan := testFlakeTmplPlan
+		plan.GlobalNixpkgsInfo = &struct{ URL string }{
+			URL: "https://github.com/nixos/nixpkgs/archive/somehash.tar.gz",
+		}
+		plan.GlobalPackages = []string{"curl", "hello"}
 		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
-		cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
+		cmpGoldenFile(t, outPath, "testdata/flake-with-global.nix.golden")
 	})
 }
 
