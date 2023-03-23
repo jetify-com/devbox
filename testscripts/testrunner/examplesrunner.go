@@ -51,6 +51,9 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			//         update it with "mix deps.update ranch" or clean it with "mix deps.clean ranch"
 			"elixir",
 
+			// failing: https://github.com/jetpack-io/devbox/actions/runs/4504377069/jobs/7928774568
+			"haskell",
+
 			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"pip",
 
