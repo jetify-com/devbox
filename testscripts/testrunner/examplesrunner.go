@@ -52,7 +52,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			"elixir",
 
 			// failing: https://github.com/jetpack-io/devbox/actions/runs/4504377069/jobs/7928774568
-			"haskell",
+			//"haskell",
 
 			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"pip",

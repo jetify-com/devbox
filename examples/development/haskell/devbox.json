@@ -1,10 +1,15 @@
 {
     "packages": [
+        "gcc",
+        "gmp",
         "stack",
         "cabal-install",
         "zlib",
         "hpack"
     ],
+    "env": {
+        "LD_LIBRARY_PATH": "$PWD/.devbox/nix/profile/default/lib:/usr/lib/wsl/lib"
+    },
     "shell": {
         "init_hook": null,
         "scripts": {
