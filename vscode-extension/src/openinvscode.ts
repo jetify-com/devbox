@@ -43,7 +43,9 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
 
 async function setupSSHConfig(vmId: string, prKey: string) {
     // TODO: change this back before to devbox generate ssh-config
-    exec('/Users/mohsenansari/code/jetpack/go.jetpack.io/direnvexamples/sample1/devbox generate ssh-config --config=/Users/mohsenansari/code/jetpack/go.jetpack.io/direnvexamples/sample1/', (error, stdout, stderr) => {
+    // This requires a release for devbox that has generate ssh-config included in it
+    // For testing change devbox to path to a compiled devbox binary or add --config
+    exec('devbox generate ssh-config', (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             return;
