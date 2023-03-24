@@ -123,6 +123,14 @@ func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) 
 		return err
 	}
 
+	// ssh-config command is exception and it should run without a config file present
+	if cmd.Use == "ssh-config" {
+		_, err := cloud.SSHSetup(flags.githubUsername)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	// Check the directory exists.
 	box, err := devbox.Open(path, os.Stdout)
 	if err != nil {
@@ -137,11 +145,6 @@ func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) 
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
 		return box.GenerateEnvrc(flags.force, "generate")
-	case "ssh-config":
-		_, err := cloud.SSHSetup(flags.githubUsername)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
