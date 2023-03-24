@@ -591,7 +591,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hooks := strings.Join(append([]string{d.cfg.Shell.InitHook.String()}, pluginHooks...), "\n\n")
+	hooks := strings.Join(append(pluginHooks, d.cfg.Shell.InitHook.String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
 	err = d.writeScriptFile(hooksFilename, hooks)
 	if err != nil {
