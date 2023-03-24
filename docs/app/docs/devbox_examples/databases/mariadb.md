@@ -3,9 +3,9 @@ title: MariaDB
 ---
 To use a local MariaDB for development with Devbox and Nix, you will need to configure MariaDB to install and manage the configuration locally. This can be done using Environment variables to create the data directory, pidfile, and unix sock locally.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox-examples/tree/main/databases/mariadb)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/mariadb)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=databases/mariadb)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/databases/mariadb)
 
 ## Adding MariaDB to your Shell
 

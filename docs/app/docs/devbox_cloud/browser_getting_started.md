@@ -32,7 +32,7 @@ For example: https://devbox.sh/github.com/org/repo?branch=staging would clone th
 
 You can start your Devbox Cloud Shell in a subfolder of your project, using the `folder` query parameter. This can be useful when working with a monorepo where your project's `devbox.json` lives in a subfolder. 
 
-For example: https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=development/ruby will start your terminal in the Ruby example in the Devbox Examples repo, load the configuration from the `devbox.json` in that folder, and then start a Devbox Shell.
+For example: https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/ruby will start your terminal in the Ruby example in the Devbox repo, load the configuration from the `devbox.json` in that folder, and then start a Devbox Shell.
 
 
 ### Open in Devbox Badge

@@ -286,7 +286,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	}
 
 	pending := []string{}
-	for _, pkg := range d.packages() {
+	for _, pkg := range d.mergedPackages() {
 		if _, ok := installed[pkg]; !ok {
 			pending = append(pending, pkg)
 		}

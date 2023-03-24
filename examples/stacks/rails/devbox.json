@@ -10,14 +10,11 @@
     "shell": {
         "init_hook": [
             "gem install rails",
-            "cd blog",
-            "./bin/bundle install",
-            "./bin/rails db:prepare"
+            "./blog/bin/bundle install",
+            "./blog/bin/rails -f ./blog/Rakefile db:prepare"
         ],
         "scripts": {
-            "run_test": ["cd blog && ./bin/rails serve&",
-                "curl localhost:3000"
-            ]
+            "run_test": ["./blog/bin/rails test"]
         }
     },
     "nixpkgs": {

@@ -2,6 +2,8 @@
 import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import { posix } from 'path';
 
+import { handleOpenInVSCode } from './openinvscode';
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
@@ -32,6 +34,9 @@ export function activate(context: ExtensionContext) {
 			await runInTerminal('devbox shell', true);
 		}
 	});
+
+	// open in vscode URI handler
+	const handleVSCodeUri = window.registerUriHandler({ handleUri: handleOpenInVSCode });
 
 	const devboxAdd = commands.registerCommand('devbox.add', async () => {
 		const result = await window.showInputBox({
@@ -85,6 +90,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxShell);
 	context.subscriptions.push(setupDevcontainer);
 	context.subscriptions.push(generateDockerfile);
+	context.subscriptions.push(handleVSCodeUri);
 }
 
 async function initialCheckDevboxJSON(context: ExtensionContext) {
