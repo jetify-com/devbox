@@ -28,7 +28,7 @@ func CheckLauncherVersion(w io.Writer) {
 		ux.Fwarning(
 			w,
 			"newer launcher version %s is available (current = v%s), please update "+
-				"using `devbox self-update`\n",
+				"using `devbox version update`\n",
 			expectedLauncherVersion,
 			os.Getenv("LAUNCHER_VERSION"),
 		)
