@@ -217,7 +217,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	if err = wrapnix.CreateWrappers(context.TODO(), d); err != nil {
+	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
