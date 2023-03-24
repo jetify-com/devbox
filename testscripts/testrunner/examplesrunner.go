@@ -43,13 +43,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 
 		// TODO savil. Resolve these.
 		skipList := []string{
-			// elixir:
-			//         ** (Mix) Could not compile dependency :ranch,
-			//         ".nix-mix/elixir/1-14/rebar3 bare compile --paths $WORK/_build/dev/lib/*/ebin"
-			//         command failed. Errors may have been logged above.
-			//         You can recompile this dependency with "mix deps.compile ranch",
-			//         update it with "mix deps.update ranch" or clean it with "mix deps.clean ranch"
-			"elixir",
 
 			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"pip",
