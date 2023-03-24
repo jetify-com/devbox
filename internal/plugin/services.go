@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/a8m/envsubst"
@@ -11,10 +12,11 @@ type Services map[string]service
 
 type service struct {
 	config  *config
-	Name    string `json:"name"`
-	RawPort string `json:"port"`
-	Start   string `json:"start"`
-	Stop    string `json:"stop"`
+	Env     map[string]string `json:"-"`
+	Name    string            `json:"name"`
+	RawPort string            `json:"port"`
+	Start   string            `json:"start"`
+	Stop    string            `json:"stop"`
 }
 
 func (s *service) Port() (string, error) {
@@ -33,6 +35,14 @@ func (s *service) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
+func (s *service) StartName() string {
+	return fmt.Sprintf("%s-service-start", s.Name)
+}
+
+func (s *service) StopName() string {
+	return fmt.Sprintf("%s-service-stop", s.Name)
+}
+
 func GetServices(pkgs []string, projectDir string) (Services, error) {
 	services := map[string]service{}
 	for _, pkg := range pkgs {
@@ -46,6 +56,7 @@ func GetServices(pkgs []string, projectDir string) (Services, error) {
 		for name, svc := range c.Services {
 			svc.Name = name
 			svc.config = c
+			svc.Env = c.Env
 			services[name] = svc
 		}
 	}

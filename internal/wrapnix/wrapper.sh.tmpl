@@ -1,0 +1,17 @@
+#!/bin/bash
+
+{{/* 
+# If env variable has never been set by devbox we set it, but also
+# default to env value set by user. This means plugin env variables behave a bit
+# differently than devbox.json env variables which are always set once.
+*/ -}}
+
+{{ range $k, $v := .Env }}
+if [[ -z "$__DEVBOX_SET_{{ $k }}" ]]; then 
+  export {{ $k }}="${ {{- $k }}:-{{ $v }}}"
+  export __DEVBOX_SET_{{ $k }}="1"
+fi
+{{- end }}
+
+{{ .ShellEnv }}
+{{ .Command }} "$@"

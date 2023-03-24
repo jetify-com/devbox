@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
@@ -49,11 +50,13 @@ func toggleServices(
 		if !found {
 			return usererr.New("Service not found")
 		}
-		cmd := exec.Command(
-			"sh",
-			"-c",
-			lo.Ternary(action == startService, service.Start, service.Stop),
+
+		serviceBinPath := filepath.Join(
+			projectDir,
+			plugin.VirtenvBinPath,
+			fmt.Sprintf("%s-service-%s", name, lo.Ternary(action == startService, "start", "stop")),
 		)
+		cmd := exec.Command(serviceBinPath)
 		cmd.Stdout = w
 		cmd.Stderr = w
 		if err = cmd.Run(); err != nil {

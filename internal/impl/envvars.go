@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const devboxSetPrefix = "__DEVBOX_SET_"
+
 func mapToPairs(m map[string]string) []string {
 	pairs := []string{}
 	for k, v := range m {
@@ -52,4 +54,26 @@ func exportify(vars map[string]string) string {
 		strb.WriteString("\"\n")
 	}
 	return strings.TrimSpace(strb.String())
+}
+
+// addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,
+// but only if the key was not previously set by devbox
+// Caveat, this won't mark the values as set by devbox automatically. Instead,
+// you need to call markEnvAsSetByDevbox when you are done setting variables.
+// This is so you can add variables from multiple sources (e.g. plugin, devbox.json)
+// that may build on each other (e.g. PATH=$PATH:...)
+func addEnvIfNotPreviouslySetByDevbox(existing, new map[string]string) {
+	for k, v := range new {
+		if _, alreadySet := existing[devboxSetPrefix+k]; !alreadySet {
+			existing[k] = v
+		}
+	}
+}
+
+func markEnvsAsSetByDevbox(envs ...map[string]string) {
+	for _, env := range envs {
+		for key := range env {
+			env[devboxSetPrefix+key] = "1"
+		}
+	}
 }
