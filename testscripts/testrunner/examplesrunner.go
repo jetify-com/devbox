@@ -44,12 +44,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		// TODO savil. Resolve these.
 		skipList := []string{
 
-			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
-			"pip",
-
-			// django: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
-			"django",
-
 			// drupal:
 			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
 			"drupal",
