@@ -45,7 +45,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		skipList := []string{
 
 			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
-			"pip",
+			//"pip",
 
 			// django: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"django",
