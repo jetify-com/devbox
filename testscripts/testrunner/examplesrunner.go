@@ -50,14 +50,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			// django: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"django",
 
-			// drupal:
-			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
-			"drupal",
-
-			// rails:
-			//         $WORK/.devbox/gen/scripts/run_test.sh: line 3: cd: blog: No such file or directory
-			//        curl: (7) Failed to connect to localhost port 3000 after 0 ms: Couldn't connect to server
-
 			// jekyll passes but opens up a dialog for "approving httpd to accept incoming network connections"
 			"jekyll",
 
@@ -105,6 +97,11 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 		// We deliberately set this for examplesrunner since we are dealing with
 		// language stacks, and not for the testrunner which has devbox unit tests.
 		env.Setenv("HOME", t.TempDir())
+
+		// We add /bin/bash so that plugin code can operate.
+		// Ideally, we'd add the path of the shell from impl.shellPath (SHELL, or nix-store bash)
+		pathEnv := env.Getenv("PATH")
+		env.Setenv("PATH", fmt.Sprintf("%s:%s", pathEnv, "/bin/bash"))
 
 		// copy all the files and folders of the devbox-project being tested to the workdir
 		debug.Log("copying projectDir: %s to env.WorkDir: %s\n", projectDir, env.WorkDir)
