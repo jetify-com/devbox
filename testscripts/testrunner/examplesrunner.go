@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package testrunner
 
 import (
@@ -14,6 +17,11 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl"
 )
+
+// TestExamples runs testscripts on the devbox-projects in the examples folder.
+func TestExamples(t *testing.T) {
+	RunExamplesTestscripts(t, "../examples")
+}
 
 // RunExamplesTestscripts generates testscripts for each example devbox-project.
 func RunExamplesTestscripts(t *testing.T, examplesDir string) {
