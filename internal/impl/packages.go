@@ -75,7 +75,7 @@ func (d *Devbox) Add(pkgs ...string) error {
 		}
 	}
 
-	return wrapnix.CreateWrappers(d)
+	return wrapnix.CreateWrappers(d, "" /*shellenv*/)
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
@@ -112,7 +112,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(d)
+	return wrapnix.CreateWrappers(d, "" /*shellenv*/)
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation

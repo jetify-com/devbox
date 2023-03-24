@@ -15,6 +15,7 @@ import (
 )
 
 type devbox interface {
+	PrintEnv() (string, error)
 	ProjectDir() string
 	Services() (plugin.Services, error)
 }
@@ -23,7 +24,17 @@ type devbox interface {
 var wrapper string
 var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
-func CreateWrappers(d devbox) error {
+// CreateWrappers creates wrappers for all the executables in the profile bin directory
+// devbox struct could provide PrintEnv, but for performance, we pass it in instead
+// since it's been computed already
+func CreateWrappers(d devbox, shellEnv string) error {
+	var err error
+	if shellEnv == "" {
+		shellEnv, err = d.PrintEnv()
+		if err != nil {
+			return err
+		}
+	}
 	services, err := d.Services()
 	if err != nil {
 		return err
@@ -36,15 +47,17 @@ func CreateWrappers(d devbox) error {
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
 			Command:  service.Start,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-start", service.Name)),
 			Env:      service.Env,
+			ShellEnv: shellEnv,
+			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-start", service.Name)),
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
 			Command:  service.Stop,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-stop", service.Name)),
 			Env:      service.Env,
+			ShellEnv: shellEnv,
+			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-stop", service.Name)),
 		}); err != nil {
 			return err
 		}
@@ -58,6 +71,7 @@ func CreateWrappers(d devbox) error {
 			if !e.IsDir() {
 				if err = createWrapper(&createWrapperArgs{
 					Command:  path,
+					ShellEnv: shellEnv,
 					destPath: filepath.Join(destPath, filepath.Base(path)),
 				}); err != nil {
 					return errors.WithStack(err)
@@ -70,8 +84,10 @@ func CreateWrappers(d devbox) error {
 
 type createWrapperArgs struct {
 	Command  string
-	destPath string
 	Env      map[string]string
+	ShellEnv string
+
+	destPath string
 }
 
 func createWrapper(args *createWrapperArgs) error {

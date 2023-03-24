@@ -13,5 +13,5 @@ if [[ -z "$__DEVBOX_SET_{{ $k }}" ]]; then
 fi
 {{- end }}
 
-eval "$(devbox shellenv)"
+{{ .ShellEnv }}
 {{ .Command }} "$@"

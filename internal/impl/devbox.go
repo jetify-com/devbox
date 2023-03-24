@@ -173,6 +173,10 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
+	if err := wrapnix.CreateWrappers(d, nixEnvToString(env)); err != nil {
+		return err
+	}
+
 	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
 	if shellStartTime == "" {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
@@ -210,6 +214,10 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 
 	env, err := d.computeNixEnv(ctx)
 	if err != nil {
+		return err
+	}
+
+	if err = wrapnix.CreateWrappers(d, nixEnvToString(env)); err != nil {
 		return err
 	}
 
@@ -253,7 +261,7 @@ func (d *Devbox) PrintEnv() (string, error) {
 		return "", err
 	}
 
-	return exportify(envs), nil
+	return nixEnvToString(envs), nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
@@ -556,11 +564,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 
 	addEnvOnce(env, pluginEnv)
 
-	if err = wrapnix.CreateWrappers(d); err != nil {
-		return nil, err
-	}
-
-	// Prepend virtenv bin path first so user can override it if needed
+	// Prepend virtenv bin path first so user can override it if needed. Virtenv
+	// is where the bin wrappers live
 	env["PATH"] = JoinPathLists(d.virtenvBinPath(), env["PATH"])
 
 	// Include env variables in devbox.json
@@ -779,4 +784,8 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 
 func (d *Devbox) virtenvBinPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
+}
+
+func nixEnvToString(env map[string]string) string {
+	return exportify(env)
 }
