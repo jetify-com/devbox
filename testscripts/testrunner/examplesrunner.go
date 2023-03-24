@@ -48,13 +48,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
 			"drupal",
 
-			// rails:
-			//         $WORK/.devbox/gen/scripts/run_test.sh: line 3: cd: blog: No such file or directory
-			//        curl: (7) Failed to connect to localhost port 3000 after 0 ms: Couldn't connect to server
-
-			// jekyll passes but opens up a dialog for "approving httpd to accept incoming network connections"
-			"jekyll",
-
 			// pipenv takes too long: 350 seconds
 			"pipenv",
 		}
