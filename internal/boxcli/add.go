@@ -54,5 +54,5 @@ func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Add(args...)
+	return box.Add(cmd.Context(), args...)
 }

@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
-	"go.jetpack.io/devbox/internal/ux"
 )
 
 // Config defines a devbox environment as JSON.
@@ -56,7 +55,6 @@ type Stage struct {
 func (c *Config) Packages(w io.Writer) []string {
 	dataPath, err := GlobalDataPath()
 	if err != nil {
-		ux.Ferror(w, "unable to get devbox global data path: %s\n", err)
 		return c.RawPackages
 	}
 	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))

@@ -27,7 +27,6 @@ func shellEnvCmd() *cobra.Command {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), s)
-			fmt.Fprintln(cmd.OutOrStdout(), ";hash -r")
 			return nil
 		},
 	}
