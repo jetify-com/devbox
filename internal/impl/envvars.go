@@ -60,7 +60,7 @@ func exportify(vars map[string]string) string {
 // but only if the key was not previously set by devbox
 // Caveat, this won't mark the values as set by devbox automatically. Instead,
 // you need to call markEnvAsSetByDevbox when you are done setting variables.
-// This is so you can add variables from multiple sources (.e.g plugin, devbox.json)
+// This is so you can add variables from multiple sources (e.g. plugin, devbox.json)
 // that may build on each other (e.g. PATH=$PATH:...)
 func addEnvIfNotPreviouslySetByDevbox(existing, new map[string]string) {
 	for k, v := range new {
