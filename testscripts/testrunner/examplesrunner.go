@@ -96,11 +96,17 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 		// implementation detail: the period at the end of the projectDir/.
 		// is important to ensure this works for both mac and linux.
 		// Ref.https://dev.to/ackshaey/macos-vs-linux-the-cp-command-will-trip-you-up-2p00
-		err = exec.Command("cp", "-r", projectDir+"/.", env.WorkDir).Run()
+
+		cmd := exec.Command("rm", "-rf", projectDir+"/.devbox")
+		err = cmd.Run()
 		if err != nil {
+			debug.Log("failed %s before doing cp", cmd)
 			return errors.WithStack(err)
 		}
 
+		cmd = exec.Command("cp", "-r", projectDir+"/.", env.WorkDir)
+		debug.Log("Running cmd: %s\n", cmd)
+		err = cmd.Run()
 		return errors.WithStack(err)
 	}
 
