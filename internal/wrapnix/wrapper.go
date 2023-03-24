@@ -3,7 +3,6 @@ package wrapnix
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
-type devbox interface {
+type devboxer interface {
 	PrintEnv() (string, error)
 	ProjectDir() string
 	Services() (plugin.Services, error)
@@ -26,21 +25,21 @@ var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
 // CreateWrappers creates wrappers for all the executables in the profile bin directory
 // devbox struct could provide PrintEnv, but for performance, we pass it in instead
-// since it's been computed already
-func CreateWrappers(d devbox, shellEnv string) error {
+// since if it's been computed already. In case it has not, we compute it here.
+func CreateWrappers(devbox devboxer, shellEnv string) error {
 	var err error
 	if shellEnv == "" {
-		shellEnv, err = d.PrintEnv()
+		shellEnv, err = devbox.PrintEnv()
 		if err != nil {
 			return err
 		}
 	}
-	services, err := d.Services()
+	services, err := devbox.Services()
 	if err != nil {
 		return err
 	}
-	srcPath := profileBinPath(d.ProjectDir())
-	destPath := virtenvBinPath(d.ProjectDir())
+	srcPath := profileBinPath(devbox.ProjectDir())
+	destPath := virtenvBinPath(devbox.ProjectDir())
 	_ = os.RemoveAll(destPath)
 	_ = os.MkdirAll(destPath, 0755)
 
@@ -49,7 +48,7 @@ func CreateWrappers(d devbox, shellEnv string) error {
 			Command:  service.Start,
 			Env:      service.Env,
 			ShellEnv: shellEnv,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-start", service.Name)),
+			destPath: filepath.Join(destPath, service.StartName()),
 		}); err != nil {
 			return err
 		}
@@ -57,7 +56,7 @@ func CreateWrappers(d devbox, shellEnv string) error {
 			Command:  service.Stop,
 			Env:      service.Env,
 			ShellEnv: shellEnv,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-stop", service.Name)),
+			destPath: filepath.Join(destPath, service.StopName()),
 		}); err != nil {
 			return err
 		}

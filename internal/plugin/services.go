@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/a8m/envsubst"
@@ -32,6 +33,14 @@ func (s *service) ProcessComposeYaml() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (s *service) StartName() string {
+	return fmt.Sprintf("%s-service-start", s.Name)
+}
+
+func (s *service) StopName() string {
+	return fmt.Sprintf("%s-service-stop", s.Name)
 }
 
 func GetServices(pkgs []string, projectDir string) (Services, error) {
