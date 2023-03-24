@@ -18,6 +18,9 @@ on:
       run-mac-tests:
         type: boolean
   workflow_dispatch:
+    inputs:
+      run-example-tests:
+        type: boolean
 
 permissions:
   contents: read
@@ -104,6 +107,8 @@ jobs:
           logger: pretty
           nix-build-user-count: 4
       - name: Run tests
+        env:
+          DEVBOX_EXAMPLE_TESTS: "${{ (github.ref == 'refs/heads/main' || inputs.run-example-tests) && 1 || 0 }}"
         run: |
           go test ./...
 
