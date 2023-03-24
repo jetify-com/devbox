@@ -28,9 +28,11 @@ type PlanError struct {
 
 // ShellPlan tells devbox how to start shell projects.
 type ShellPlan struct {
-	NixpkgsInfo *NixpkgsInfo
+	NixpkgsInfo       *NixpkgsInfo
+	GlobalNixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
-	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
+	DevPackages    []string `cue:"[...string]" json:"dev_packages,omitempty"`
+	GlobalPackages []string `cue:"[...string]" json:"global_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
 	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
 	// Nix expressions. Currently, PHP needs it for shell.
@@ -64,6 +66,7 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	}
 
 	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
+	shellPlan.GlobalPackages = pkgslice.Unique(shellPlan.GlobalPackages)
 	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
 	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
 

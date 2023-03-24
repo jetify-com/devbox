@@ -33,18 +33,18 @@ func CreateWrappers(d devbox) error {
 	_ = os.RemoveAll(destPath)
 	_ = os.MkdirAll(destPath, 0755)
 
-	for _, s := range services {
+	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
-			Command:  s.Start,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-start", s.Name)),
-			Env:      s.Env,
+			Command:  service.Start,
+			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-start", service.Name)),
+			Env:      service.Env,
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
-			Command:  s.Stop,
-			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-stop", s.Name)),
-			Env:      s.Env,
+			Command:  service.Stop,
+			destPath: filepath.Join(destPath, fmt.Sprintf("%s-service-stop", service.Name)),
+			Env:      service.Env,
 		}); err != nil {
 			return err
 		}
