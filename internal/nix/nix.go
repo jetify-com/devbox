@@ -18,7 +18,7 @@ import (
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
 // or `nix profile install --profile ProfilePath <package...>`
 // Instead of using directory, prefer using the devbox.ProfileDir() function that ensures the directory exists.
-// Warning: don't use the bins in default/bin, they wont' always match bins
+// Warning: don't use the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 const ProfilePath = ".devbox/nix/profile/default"
 
