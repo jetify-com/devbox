@@ -17,10 +17,7 @@ func setupTestEnv(env *testscript.Env) error {
 		return err
 	}
 
-	// Enable new `devbox run` so we can use it in tests. This is temporary,
-	// and should be removed once we enable this feature flag.
-	env.Setenv("DEVBOX_FEATURE_UNIFIED_ENV", "1")
-	env.Setenv("DEVBOX_DEBUG", "1")
+	env.Setenv("DEVBOX_DEBUG", os.Getenv("DEVBOX_DEBUG"))
 	return nil
 }
 
