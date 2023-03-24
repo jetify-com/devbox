@@ -1,5 +1,6 @@
 {
     "packages": [
+        "gmp",
         "stack",
         "cabal-install",
         "zlib",

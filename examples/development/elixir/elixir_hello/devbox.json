@@ -3,8 +3,8 @@
         "elixir"
     ],
     "env": {
-        "MIX_HOME": ".nix-mix",
-        "HEX_HOME": ".nix-hex",
+        "MIX_HOME": "$PWD/.nix-mix",
+        "HEX_HOME": "$PWD/.nix-hex",
         "ERL_AFLAGS": "-kernel shell_history enabled"
     },
     "shell": {
