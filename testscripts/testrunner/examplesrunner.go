@@ -43,27 +43,8 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 
 		// TODO savil. Resolve these.
 		skipList := []string{
-			// elixir:
-			//         ** (Mix) Could not compile dependency :ranch,
-			//         ".nix-mix/elixir/1-14/rebar3 bare compile --paths $WORK/_build/dev/lib/*/ebin"
-			//         command failed. Errors may have been logged above.
-			//         You can recompile this dependency with "mix deps.compile ranch",
-			//         update it with "mix deps.update ranch" or clean it with "mix deps.clean ranch"
-			"elixir",
-
-			// pip: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
-			"pip",
-
-			// django: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
-			"django",
-
 			// drupal:
-			//       sh: line 1: pkill: command not found
-			//        Service "php-fpm" failed to stop. Error = exit status 127
-			//        sh: line 1: pkill: command not found
-			//        Service "nginx" failed to stop. Error = exit status 127
-			//        mysqladmin: connect to server at 'localhost' failed
-			//        error: 'Can't create UNIX socket (2)'
+			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
 			"drupal",
 
 			// rails:
