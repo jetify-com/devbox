@@ -66,7 +66,6 @@ func addEnvIfNotPreviouslySetByDevbox(existing, new map[string]string) {
 	for k, v := range new {
 		if _, alreadySet := existing[devboxSetPrefix+k]; !alreadySet {
 			existing[k] = v
-			// existing[devboxSetPrefix+k] = "1"
 		}
 	}
 }
