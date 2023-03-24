@@ -44,12 +44,11 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		// TODO savil. Resolve these.
 		skipList := []string{
 
+			// pipenv: is enabled since it passes but it is slow, and we should examine why.
+
 			// drupal:
 			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
 			"drupal",
-
-			// pipenv takes too long: 350 seconds
-			"pipenv",
 		}
 		for _, toSkip := range skipList {
 			if strings.Contains(path, toSkip) {
@@ -58,7 +57,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			}
 		}
 
-		// TODO run in parallel
 		t.Logf("running testscript for example: %s\n", path)
 		runSingleExampleTestscript(t, examplesDir, path)
 		return nil
