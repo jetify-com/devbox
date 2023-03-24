@@ -800,7 +800,7 @@ func (d *Devbox) virtenvBinPath() string {
 
 // nix bins returns the paths to all the nix binaries that are installed by
 // the flake. If there are conflicts, it returns the first one it finds of a
-// give name. This matches have nix flakes behaves if there are conflicts in
+// give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	env, err := d.cachedComputeNixEnv(ctx)
