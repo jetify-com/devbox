@@ -149,8 +149,8 @@ func (d *Devbox) Generate() error {
 	return errors.WithStack(d.generateShellFiles())
 }
 
-func (d *Devbox) Shell() error {
-	ctx, task := trace.NewTask(context.Background(), "devboxShell")
+func (d *Devbox) Shell(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
@@ -168,12 +168,12 @@ func (d *Devbox) Shell() error {
 		return err
 	}
 
-	env, err := d.computeNixEnv(ctx)
+	env, err := d.cachedComputeNixEnv(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err := wrapnix.CreateWrappers(d, nixEnvToString(env)); err != nil {
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
@@ -212,12 +212,12 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	env, err := d.computeNixEnv(ctx)
+	env, err := d.cachedComputeNixEnv(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = wrapnix.CreateWrappers(d, nixEnvToString(env)); err != nil {
+	if err = wrapnix.CreateWrappers(context.TODO(), d); err != nil {
 		return err
 	}
 
@@ -256,12 +256,12 @@ func (d *Devbox) PrintEnv() (string, error) {
 	ctx, task := trace.NewTask(context.Background(), "devboxPrintEnv")
 	defer task.End()
 
-	envs, err := d.computeNixEnv(ctx)
+	envs, err := d.cachedComputeNixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	return nixEnvToString(envs), nil
+	return exportify(envs), nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
@@ -562,16 +562,17 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 		return nil, err
 	}
 
-	addEnvOnce(env, pluginEnv)
+	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
 	// Prepend virtenv bin path first so user can override it if needed. Virtenv
 	// is where the bin wrappers live
 	env["PATH"] = JoinPathLists(d.virtenvBinPath(), env["PATH"])
 
 	// Include env variables in devbox.json
-	if featureflag.EnvConfig.Enabled() {
-		addEnvOnce(env, d.configEnvs(env))
-	}
+	configEnv := d.configEnvs(env)
+	addEnvIfNotPreviouslySetByDevbox(env, configEnv)
+
+	markEnvsAsSetByDevbox(pluginEnv, configEnv)
 
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
@@ -582,6 +583,17 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	d.setCommonHelperEnvVars(env)
 
 	return env, nil
+}
+
+var nixEnvCache map[string]string
+
+// cachedComputeNixEnv is a wrapper around computeNixEnv that caches the result.
+func (d *Devbox) cachedComputeNixEnv(ctx context.Context) (map[string]string, error) {
+	var err error
+	if nixEnvCache == nil {
+		nixEnvCache, err = d.computeNixEnv(ctx)
+	}
+	return nixEnvCache, err
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -786,6 +798,32 @@ func (d *Devbox) virtenvBinPath() string {
 	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }
 
-func nixEnvToString(env map[string]string) string {
-	return exportify(env)
+// nix bins returns the paths to all the nix binaries that are installed by
+// the flake. If there are conflicts, it returns the first one it finds of a
+// give name. This matches have nix flakes behaves if there are conflicts in
+// buildInputs
+func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
+	env, err := d.cachedComputeNixEnv(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+	dirs := strings.Split(env["buildInputs"], " ")
+	bins := map[string]string{}
+	for _, dir := range dirs {
+		binPath := filepath.Join(dir, "bin")
+		if _, err = os.Stat(binPath); os.IsNotExist(err) {
+			continue
+		}
+		files, err := os.ReadDir(binPath)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		for _, file := range files {
+			if _, alreadySet := bins[file.Name()]; !alreadySet {
+				bins[file.Name()] = filepath.Join(binPath, file.Name())
+			}
+		}
+	}
+	return lo.Values(bins), nil
 }

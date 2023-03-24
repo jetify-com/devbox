@@ -18,7 +18,7 @@ type Devbox interface {
 	// Add adds a Nix package to the config so that it's available in the devbox
 	// environment. It validates that the Nix package exists, but doesn't install
 	// it. Adding a duplicate package is a no-op.
-	Add(pkgs ...string) error
+	Add(ctx context.Context, pkgs ...string) error
 	AddGlobal(pkgs ...string) error
 	Config() *impl.Config
 	ProjectDir() string
@@ -35,12 +35,12 @@ type Devbox interface {
 	PullGlobal(path string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
-	Remove(pkgs ...string) error
+	Remove(ctx context.Context, pkgs ...string) error
 	RemoveGlobal(pkgs ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
 	Services() (plugin.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
-	Shell() error
+	Shell(ctx context.Context) error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
 	ShellPlan() (*plansdk.ShellPlan, error)

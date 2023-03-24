@@ -2,18 +2,18 @@ package wrapnix
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
 type devboxer interface {
+	NixBins(ctx context.Context) ([]string, error)
 	PrintEnv() (string, error)
 	ProjectDir() string
 	Services() (plugin.Services, error)
@@ -23,22 +23,18 @@ type devboxer interface {
 var wrapper string
 var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
-// CreateWrappers creates wrappers for all the executables in the profile bin directory
-// devbox struct could provide PrintEnv, but for performance, we pass it in instead
-// since if it's been computed already. In case it has not, we compute it here.
-func CreateWrappers(devbox devboxer, shellEnv string) error {
-	var err error
-	if shellEnv == "" {
-		shellEnv, err = devbox.PrintEnv()
-		if err != nil {
-			return err
-		}
+// CreateWrappers creates wrappers for all the executables in nix paths
+func CreateWrappers(ctx context.Context, devbox devboxer) error {
+	shellEnv, err := devbox.PrintEnv()
+	if err != nil {
+		return err
 	}
+
 	services, err := devbox.Services()
 	if err != nil {
 		return err
 	}
-	srcPath := profileBinPath(devbox.ProjectDir())
+
 	destPath := virtenvBinPath(devbox.ProjectDir())
 	_ = os.RemoveAll(destPath)
 	_ = os.MkdirAll(destPath, 0755)
@@ -61,24 +57,23 @@ func CreateWrappers(devbox devboxer, shellEnv string) error {
 			return err
 		}
 	}
-	return filepath.WalkDir(
-		srcPath,
-		func(path string, e fs.DirEntry, err error) error {
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if !e.IsDir() {
-				if err = createWrapper(&createWrapperArgs{
-					Command:  path,
-					ShellEnv: shellEnv,
-					destPath: filepath.Join(destPath, filepath.Base(path)),
-				}); err != nil {
-					return errors.WithStack(err)
-				}
-			}
-			return nil
-		},
-	)
+
+	bins, err := devbox.NixBins(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, bin := range bins {
+		if err = createWrapper(&createWrapperArgs{
+			Command:  bin,
+			ShellEnv: shellEnv,
+			destPath: filepath.Join(destPath, filepath.Base(bin)),
+		}); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
 }
 
 type createWrapperArgs struct {
@@ -101,8 +96,4 @@ func createWrapper(args *createWrapperArgs) error {
 
 func virtenvBinPath(projectDir string) string {
 	return filepath.Join(projectDir, plugin.VirtenvBinPath)
-}
-
-func profileBinPath(projectDir string) string {
-	return filepath.Join(projectDir, nix.ProfileBinPath)
 }

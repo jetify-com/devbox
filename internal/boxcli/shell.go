@@ -66,7 +66,7 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell()
+	return box.Shell(cmd.Context())
 }
 
 func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (string, []string, error) {

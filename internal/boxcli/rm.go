@@ -35,5 +35,5 @@ func runRemoveCmd(cmd *cobra.Command, args []string, flags removeCmdFlags) error
 		return errors.WithStack(err)
 	}
 
-	return box.Remove(args...)
+	return box.Remove(cmd.Context(), args...)
 }

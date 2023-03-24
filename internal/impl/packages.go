@@ -23,8 +23,8 @@ import (
 // packages.go has functions for adding, removing and getting info about nix packages
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
-func (d *Devbox) Add(pkgs ...string) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxAdd")
+func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
+	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
 	original := d.cfg.RawPackages
@@ -75,12 +75,12 @@ func (d *Devbox) Add(pkgs ...string) error {
 		}
 	}
 
-	return wrapnix.CreateWrappers(d, "" /*shellenv*/)
+	return wrapnix.CreateWrappers(ctx, d)
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
-func (d *Devbox) Remove(pkgs ...string) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxRemove")
+func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
+	ctx, task := trace.NewTask(ctx, "devboxRemove")
 	defer task.End()
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
@@ -112,7 +112,7 @@ func (d *Devbox) Remove(pkgs ...string) error {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(d, "" /*shellenv*/)
+	return wrapnix.CreateWrappers(ctx, d)
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
