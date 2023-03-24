@@ -50,10 +50,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			// django: $WORK/.devbox/virtenv/python310Packages.pip/.venv/bin/activate: No such file or directory
 			"django",
 
-			// drupal:
-			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
-			"drupal",
-
 			// rails:
 			//         $WORK/.devbox/gen/scripts/run_test.sh: line 3: cd: blog: No such file or directory
 			//        curl: (7) Failed to connect to localhost port 3000 after 0 ms: Couldn't connect to server
