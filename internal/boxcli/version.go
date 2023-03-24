@@ -40,7 +40,7 @@ func selfUpdateCmd() *cobra.Command {
 		Short: "Update devbox launcher and binary",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return vercheck.SelfUpdate(cmd.ErrOrStderr())
+			return vercheck.SelfUpdate(cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 	}
 
