@@ -256,6 +256,11 @@ func (d *Devbox) PrintEnv() (string, error) {
 	ctx, task := trace.NewTask(context.Background(), "devboxPrintEnv")
 	defer task.End()
 
+	// generate in case user has old .devbox dir and is missing any files.
+	if err := d.Generate(); err != nil {
+		return "", err
+	}
+
 	envs, err := d.cachedComputeNixEnv(ctx)
 	if err != nil {
 		return "", err
