@@ -77,17 +77,17 @@ jobs:
   test:
     strategy:
       matrix:
+        is-main: [${{ github.ref == 'refs/heads/main' }}]
         os: [ubuntu-latest, macos-latest]
         # This is an optimization that runs tests twice, with and without
         # the examples. We can require non-example tests to complete before
         # merging, while keeping the others as an additional non-required signal
-        run-example-tests: [true]
+        run-example-tests: [true, false]
         exclude:
-          # This expression basically says run mac tests if on main branch or
-          # if this job is triggered by another workflow with "with: run-mac-tests: true"
-          - os: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 'dummy' || 'macos-latest' }}
-        include:
-          - run-example-tests: ${{ github.ref == 'refs/heads/main' }}
+          - is-main: false
+            os: macos-latest
+          - is-main: true
+            run-example-tests: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 20 || 10 }}
     steps:
