@@ -8,7 +8,8 @@
         "REDIS_CONF": "{{ .DevboxDir }}/redis.conf"
     },
     "create_files": {
-        "{{ .DevboxDir }}/redis.conf": "redis/redis.conf"
+        "{{ .DevboxDir }}/redis.conf": "redis/redis.conf",
+        "{{ .Virtenv }}/process-compose.yaml": "redis/process-compose.yaml"
     },
     "services": {
         "redis": {

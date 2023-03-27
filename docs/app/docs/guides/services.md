@@ -6,12 +6,6 @@ When working on an application, you often want some services or dependencies run
 
 With Devbox, you can manage these services from the CLI using `devbox services`. 
 
-:::note
-
-Currently, Devbox Services are only available via [Plugins](plugins.md). Future releases of Devbox will make it possible to configure your own services in your `devbox.json`
-
-:::
-
 ## Plugins that Support Services
 
 The following plugins provide a service that can be managed with `devbox services`: 
@@ -72,6 +66,31 @@ waiting for server to shut down.... done
 server stopped
 Service "postgresql" stopped
 ```
+
+## Managing Services With Process Compose
+
+Devbox supports using [process-compose](https://github.com/F1bonacc1/process-compose) to configure background services and processes. Services can be started and monitored in the process compose TUI using `devbox services manage`. 
+
+## Running your Own Background Service
+
+Devbox will by default look for a `process-compose.yaml` or `process-compose.yml` file in your project's root directory 
+
+### Example: Django Server
+
+The following `process-compose.yaml` can be used to manage a [Django](../devbox_examples/stacks/django.md) development server:
+
+```yaml
+version: "0.5**
+
+processes:
+  django:
+   command: python todo_project/manage.py runserver
+   availability:
+    restart: "always"
+```
+
+When you run `devbox services manager` in your project directory, this will start the Django server, and restart it in the event that it fails.
+
 
 ## Further Reading
 

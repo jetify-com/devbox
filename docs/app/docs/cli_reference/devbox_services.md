@@ -17,6 +17,7 @@ devbox services <ls|restart|start|stop> [flags]
 ## Subcommands
 
 * [devbox services ls](devbox_services_ls.md)	 - List available services
+* [devbox services manage](devbox_services_manage.md)	 - List available services
 * [devbox services restart](devbox_services_restart.md)	 - Restarts service. If no service is specified, restarts all services
 * [devbox services start](devbox_services_start.md)	 - Starts service. If no service is specified, starts all services
 * [devbox services stop](devbox_services_stop.md)	 - Stops service. If no service is specified, stops all services
