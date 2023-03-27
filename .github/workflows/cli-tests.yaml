@@ -77,7 +77,8 @@ jobs:
   test:
     strategy:
       matrix:
-        is-main: [${{ github.ref == 'refs/heads/main' }}]
+        is-main:
+          - ${{ github.ref == 'refs/heads/main' }}
         os: [ubuntu-latest, macos-latest]
         # This is an optimization that runs tests twice, with and without
         # the examples. We can require non-example tests to complete before
