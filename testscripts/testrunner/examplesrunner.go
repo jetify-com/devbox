@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -41,20 +43,23 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			return nil
 		}
 
-		// TODO savil. Resolve these.
-		skipList := []string{
+		if strings.Contains(path, "pipenv") {
+			// pipenv takes 1100 seconds on CICD
 
-			// pipenv: is enabled since it passes but it is slow, and we should examine why.
-
-			// drupal:
-			// https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
-			"drupal",
-		}
-		for _, toSkip := range skipList {
-			if strings.Contains(path, toSkip) {
-				t.Logf("skipping due to skipList (%s), config at: %s\n", toSkip, path)
+			// CI env var is always true in Github Actions
+			// https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+			ciEnv, err := strconv.ParseBool(os.Getenv("CI"))
+			isInCI := ciEnv && err == nil
+			if isInCI && runtime.GOOS == "darwin" {
+				t.Logf("skipping pipenv on darwin in CI. config at: %s\n", path)
 				return nil
 			}
+		}
+
+		if strings.Contains(path, "drupal") {
+			// drupal has errors like: https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
+			t.Logf("skipping drupal, config at: %s\n", path)
+			return nil
 		}
 
 		t.Logf("running testscript for example: %s\n", path)
