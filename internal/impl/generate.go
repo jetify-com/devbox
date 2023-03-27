@@ -61,7 +61,11 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 		}
 	}
 
-	return os.WriteFile(".devbox/version", []byte(build.Version), 0644)
+	return os.WriteFile(
+		filepath.Join(rootPath, ".devbox/version"),
+		[]byte(build.Version),
+		0644,
+	)
 }
 
 // Cache and buffers for generating templated files.
