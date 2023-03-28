@@ -21,6 +21,8 @@ on:
     inputs:
       run-example-tests:
         type: boolean
+      run-mac-tests:
+        type: boolean
 
 permissions:
   contents: read
@@ -49,7 +51,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
@@ -86,11 +88,11 @@ jobs:
         run-example-tests: [true, false]
         exclude:
           - is-main: false
-            os: macos-latest
+            os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
           - is-main: true
             run-example-tests: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 20 || 10 }}
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 25 || 10 }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
@@ -116,8 +118,10 @@ jobs:
       - name: Run tests
         env:
           DEVBOX_EXAMPLE_TESTS: ${{ matrix.run-example-tests }}
+          # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
+          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '25m' || '10m' }}"
         run: |
-          go test ./...
+          go test -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     strategy:

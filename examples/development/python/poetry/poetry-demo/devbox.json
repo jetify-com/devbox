@@ -11,8 +11,5 @@
             "run_test": "poetry run python -m poetry_demo",
             "test": "poetry run pytest"
         }
-    },
-    "nixpkgs": {
-        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
     }
 }
