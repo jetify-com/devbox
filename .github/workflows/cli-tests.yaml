@@ -121,7 +121,7 @@ jobs:
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
           DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '25m' || '10m' }}"
         run: |
-          go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          go test -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     strategy:
