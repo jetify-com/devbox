@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 	"golang.org/x/mod/semver"
@@ -38,6 +39,9 @@ func CheckLauncherVersion(w io.Writer) {
 // SelfUpdate updates the devbox launcher and binary. It ignores and deletes the
 // version cache
 func SelfUpdate(stdOut, stdErr io.Writer) error {
+	if _, err := exec.LookPath("curl"); err != nil {
+		return usererr.New("Curl is required to update devbox. Please install curl and try again.")
+	}
 	// Delete version cache. Keep this in-sync with whatever logic is in launch.sh
 	cacheDir := xdg.CacheSubpath("devbox")
 	versionCacheFile := filepath.Join(cacheDir, "latest-version")
