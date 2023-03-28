@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 	"golang.org/x/mod/semver"
@@ -20,8 +21,8 @@ const expectedLauncherVersion = "v0.1.0"
 
 func CheckLauncherVersion(w io.Writer) {
 	launcherVersion := os.Getenv("LAUNCHER_VERSION")
-	if launcherVersion == "" {
-		return // Launcher version will not be set in dev.
+	if launcherVersion == "" || envir.IsDevboxCloud() {
+		return
 	}
 
 	// If launcherVersion is invalid, this will return 0 and we won't print a warning
