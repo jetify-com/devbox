@@ -1,7 +1,8 @@
 {
   "packages": [
     "go_1_19",
-    "golangci-lint"
+    "golangci-lint",
+    "actionlint"
   ],
   "env": {
     "PATH": "$PATH:$PWD/dist"
