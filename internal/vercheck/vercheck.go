@@ -40,15 +40,20 @@ func CheckLauncherVersion(w io.Writer) {
 // SelfUpdate updates the devbox launcher and binary. It ignores and deletes the
 // version cache
 func SelfUpdate(stdOut, stdErr io.Writer) error {
-	if _, err := exec.LookPath("curl"); err != nil {
-		return usererr.New("Curl is required to update devbox. Please install curl and try again.")
+	installScript := ""
+	if _, err := exec.LookPath("curl"); err == nil {
+		installScript = "curl -fsSL https://get.jetpack.io/devbox | bash"
+	} else if _, err := exec.LookPath("wget"); err == nil {
+		installScript = "wget -qO- https://get.jetpack.io/devbox | bash"
+	} else {
+		return usererr.New("curl or wget is required to update devbox. Please install either and try again.")
 	}
+
 	// Delete version cache. Keep this in-sync with whatever logic is in launch.sh
 	cacheDir := xdg.CacheSubpath("devbox")
 	versionCacheFile := filepath.Join(cacheDir, "latest-version")
 	_ = os.Remove(versionCacheFile)
 
-	installScript := "curl -fsSL https://get.jetpack.io/devbox | bash"
 	cmd := exec.Command("sh", "-c", installScript)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
