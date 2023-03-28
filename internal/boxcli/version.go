@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/vercheck"
 )
 
 type versionFlags struct {
@@ -29,6 +30,20 @@ func VersionCmd() *cobra.Command {
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value
 		"displays additional version information",
 	)
+	command.AddCommand(selfUpdateCmd())
+	return command
+}
+
+func selfUpdateCmd() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "update",
+		Short: "Update devbox launcher and binary",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return vercheck.SelfUpdate(cmd.OutOrStdout(), cmd.ErrOrStderr())
+		},
+	}
+
 	return command
 }
 
