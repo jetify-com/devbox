@@ -1,5 +1,6 @@
 import { Uri, commands, window } from 'vscode';
 import fetch from 'node-fetch';
+import * as os from 'os';
 import { exec } from 'child_process';
 import * as FormData from 'form-data';
 import { chmod, open, writeFile } from 'fs/promises';
@@ -17,17 +18,21 @@ export async function handleOpenInVSCode(uri: Uri) {
     const queryParams = new URLSearchParams(uri.query);
 
     if (queryParams.has('vm_id') && queryParams.has('token')) {
-        window.showInformationMessage('Setting up devbox');
-
-        // getting ssh keys
-        const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
-        const res = await response.json() as VmInfo;
-        console.debug("data:");
-        console.debug(res);
-        // set ssh config
-        await setupSSHConfig(res.vm_id, res.private_key);
-        // connect to remote vm
-        connectToRemote(res.username, res.vm_id, res.working_directory);
+        //Not yet supported for windows + WSL - will be added in future
+        if (os.platform() !== 'win32') {
+            window.showInformationMessage('Setting up devbox');
+            // getting ssh keys
+            const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
+            const res = await response.json() as VmInfo;
+            console.debug("data:");
+            console.debug(res);
+            // set ssh config
+            await setupSSHConfig(res.vm_id, res.private_key);
+            // connect to remote vm
+            connectToRemote(res.username, res.vm_id, res.working_directory);
+        } else {
+            window.showErrorMessage('This function is not yet supported in Windows operating system.');
+        }
     } else {
         window.showErrorMessage('Error parsing information for remote environment.');
         console.debug(queryParams.toString());
@@ -49,13 +54,34 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
     return response;
 }
 
+async function setupDevboxLauncher(): Promise<any> {
+    // download devbox launcher script
+    const gatewayHost = 'https://releases.jetpack.io/devbox';
+    const response = await fetch(gatewayHost, {
+        method: 'get',
+    });
+    const launcherPath = `${process.env['HOME']}/.config/devbox/launcher.sh`;
+
+    try {
+        const launcherScript = await response.text();
+        const launcherData = new Uint8Array(Buffer.from(launcherScript));
+        const fileHandler = await open(launcherPath, 'w');
+        await writeFile(fileHandler, launcherData, { flag: 'w' });
+        await chmod(launcherPath, 0o711);
+        await fileHandler.close();
+    } catch (err) {
+        console.error(err);
+    }
+    return launcherPath;
+}
+
 async function setupSSHConfig(vmId: string, prKey: string) {
-    // TODO: change this back before to devbox generate ssh-config
-    // This requires a release for devbox that has generate ssh-config included in it
+    const launcherPath = await setupDevboxLauncher();
     // For testing change devbox to path to a compiled devbox binary or add --config
-    exec('devbox generate ssh-config', (error, stdout, stderr) => {
+    exec(`${launcherPath} generate ssh-config`, (error, stdout, stderr) => {
         if (error) {
-            console.error(`exec error: ${error}`);
+            window.showErrorMessage('Failed to setup ssh config. Run VSCode in debug mode to see logs.');
+            console.error(`Failed to setup ssh config: ${error}`);
             return;
         }
         console.debug(`stdout: ${stdout}`);
@@ -71,6 +97,7 @@ async function setupSSHConfig(vmId: string, prKey: string) {
         await fileHandler.close();
     } catch (err) {
         // When a request is aborted - err is an AbortError
+        window.showErrorMessage('Failed to setup ssh config. Run VSCode in debug mode to see logs.');
         console.error(err);
     }
 }
