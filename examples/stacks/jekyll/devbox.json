@@ -25,8 +25,5 @@
                 "bundler exec $GEM_HOME/bin/jekyll build --trace"
             ]
         }
-    },
-    "nixpkgs": {
-        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
     }
 }
