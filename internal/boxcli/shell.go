@@ -22,10 +22,8 @@ func ShellCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "shell",
 		Short: "Start a new shell with access to your packages",
-		Long: "Start a new shell or run a command with access to your packages.\n\n" +
-			"If invoked without `cmd`, devbox will start an interactive shell.\n" +
-			"If invoked with a `cmd`, devbox will run the command in a shell and then exit.\n" +
-			"In both cases, the shell will be started using the devbox.json found in the --config flag directory. " +
+		Long: "Start a new shell with access to your packages.\n\n" +
+			"If the --config flag is set, the shell will be started using the devbox.json found in the --config flag directory. " +
 			"If --config isn't set, then devbox recursively searches the current directory and its parents.",
 		Args:    cobra.NoArgs,
 		PreRunE: ensureNixInstalled,

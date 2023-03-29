@@ -1,11 +1,18 @@
 # devbox run
 
-Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`
+Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`.
+
+You can also run arbitrary commands in your devbox shell by passing them as arguments to `devbox run`. For example: 
+
+```bash
+  devbox run echo "Hello World"
+```
+Will print `Hello World` to the console from within your devbox shell. 
 
 For more details, read our [scripts guide](../guides/scripts.md)
 
 ```bash
-  devbox run <script> [flags]
+  devbox run <script | command> [flags]
 ```
 
 ## Options
