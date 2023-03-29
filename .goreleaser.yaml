@@ -5,13 +5,16 @@ before:
 builds:
   - main: ./cmd/devbox/main.go
     binary: devbox
+    flags:
+      - -trimpath
     mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
     ldflags:
-      - -s -w -X go.jetpack.io/devbox/internal/build.Version={{.Version}}
-      - -s -w -X go.jetpack.io/devbox/internal/build.Commit={{.Commit}}
-      - -s -w -X go.jetpack.io/devbox/internal/build.CommitDate={{.CommitDate}}
-      - -s -w -X go.jetpack.io/devbox/internal/build.SentryDSN={{ .Env.SENTRY_DSN }}
-      - -s -w -X go.jetpack.io/devbox/internal/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
+      - -s -w
+      - -X go.jetpack.io/devbox/internal/build.Version={{.Version}}
+      - -X go.jetpack.io/devbox/internal/build.Commit={{.Commit}}
+      - -X go.jetpack.io/devbox/internal/build.CommitDate={{.CommitDate}}
+      - -X go.jetpack.io/devbox/internal/build.SentryDSN={{ .Env.SENTRY_DSN }}
+      - -X go.jetpack.io/devbox/internal/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -53,7 +56,7 @@ announce:
       Updating:
       If you installed devbox via our recommended installer
       (`curl -fsSL https://get.jetpack.io/devbox | bash`) you will get the new version
-      _automatically_, the next time you run `devbox` 
+      _automatically_, the next time you run `devbox`
 
       Thanks,
       jetpack.io
