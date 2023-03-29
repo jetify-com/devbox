@@ -1,42 +1,48 @@
-# devbox run
+## devbox run
 
-Starts a new interactive shell and runs your target script in it. The shell will exit once your target script is completed or when it is terminated via CTRL-C. Scripts can be defined in your `devbox.json`.
+Run a script or command in a shell with access to your packages
 
-You can also run arbitrary commands in your devbox shell by passing them as arguments to `devbox run`. For example: 
+### Synopsis
 
-```bash
-  devbox run echo "Hello World"
+Start a new shell and runs your script or command in it, exiting when done.
+
+The script must be defined in `devbox.json`, or else it will be interpreted as an arbitrary command. You can pass arguments to your script or command. Everything after `--` will be passed verbatim into your command (see examples).
+
+
+
 ```
-Will print `Hello World` to the console from within your devbox shell. 
-
-For more details, read our [scripts guide](../guides/scripts.md)
-
-```bash
-  devbox run <script | command> [flags]
+devbox run [<script> | <cmd>] [flags]
 ```
 
+### Examples
 
-## Examples
+```
 
-```bash
-# Run a command directly:
+Run a command directly:
+
   devbox add cowsay
   devbox run cowsay hello
   devbox run -- cowsay -d hello
 
-#Run a script (defined as `"moo": "cowsay moo"`) in your devbox.json:
+Run a script (defined as `"moo": "cowsay moo"`) in your devbox.json:
+
   devbox run moo
 ```
 
-## Options
+### Options
 
-```text
+```
   -c, --config string   path to directory containing a devbox.json config file
   -h, --help            help for run
-  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 

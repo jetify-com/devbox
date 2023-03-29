@@ -1,18 +1,24 @@
-# devbox global rm
+## devbox global rm
 
-Removes a package from your global config
+Remove a global package
 
-```bash
-devbox global rm <pkg> [flags]
+```
+devbox global rm <pkg>... [flags]
 ```
 
-## Options
+### Options
 
-```bash
+```
   -h, --help   help for rm
-  -q, --quiet  suppresses logs
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox global](devbox_global.md)	 - Manages global Devbox packages
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox global](devbox_global.md)	 - Manage global devbox packages
+

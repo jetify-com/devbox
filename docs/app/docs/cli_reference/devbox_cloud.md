@@ -1,28 +1,30 @@
-# devbox cloud
+## devbox cloud
 
-Commands for managing remote development environments with Devbox Cloud. 
+[Preview] Remote development environments on the cloud
 
-:::note
-Devbox Cloud is currently available as an Open Beta and under active development. If you encounter any issues, please report them at https://github.com/jetpack-io/devbox/issues
-:::
+### Synopsis
 
-```bash
-devbox cloud [subcommand] [flags]
+Remote development environments on the cloud. All cloud commands are currently in developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues
+
+```
+devbox cloud [flags]
 ```
 
-## Options
+### Options
 
-```bash
-  -h, --help            help for generate
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+  -h, --help   help for cloud
 ```
 
-## Subcommands
+### Options inherited from parent commands
 
-* [devbox cloud forward](devbox_cloud_forward.md)	 - [Preview] Port forwards a local port to a remote devbox cloud port
-* [devbox cloud shell](devbox_cloud_shell.md)	 - [Preview] Shell into a cloud environment that matches your local devbox environment
+```
+  -q, --quiet   suppresses logs
+```
 
-## SEE ALSO
+### SEE ALSO
 
 * [devbox](devbox.md)	 - Instant, easy, predictable development environments
+* [devbox cloud forward](devbox_cloud_forward.md)	 - [Preview] Port forwards a local port to a remote devbox cloud port
+* [devbox cloud shell](devbox_cloud_shell.md)	 - [Preview] Shell into a cloud environment that matches your local devbox environment
 

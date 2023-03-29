@@ -1,26 +1,24 @@
-# devbox global shellenv
+## devbox global shellenv
 
 Print shell commands that add global Devbox packages to your PATH
 
-- To add the global packages to the PATH of your current shell, run the following command: 
-    
-    ```bash
-    . <(devbox global shellenv)
-    ```
-    
-- To add the global packages to the PATH of all new shells, add the following line to your shell's config file (e.g. `~/.bashrc` or `~/.zshrc`):
-    
-    ```bash
-    eval "$(devbox global shellenv)"
-    ```
-
-## Options
-
-```bash
-  -h, --help   help for shellenv
-  -q, --quiet  suppresses logs
+```
+devbox global shellenv [flags]
 ```
 
-## SEE ALSO
+### Options
 
-* [devbox global](devbox_global.md)	 - Manages global Devbox packages
+```
+  -h, --help   help for shellenv
+```
+
+### Options inherited from parent commands
+
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox global](devbox_global.md)	 - Manage global devbox packages
+

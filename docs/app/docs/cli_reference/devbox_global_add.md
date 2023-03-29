@@ -1,18 +1,24 @@
-# devbox global add
+## devbox global add
 
-Add a new global package.
+Add a new global package
 
-```bash
+```
 devbox global add <pkg>... [flags]
 ```
 
-## Options
+### Options
 
-```bash
+```
   -h, --help   help for add
-  -q, --quiet  suppresses logs
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox global](devbox_global.md)	 - Manages global Devbox packages
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox global](devbox_global.md)	 - Manage global devbox packages
+

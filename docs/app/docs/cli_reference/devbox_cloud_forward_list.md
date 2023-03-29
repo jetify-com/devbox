@@ -1,15 +1,20 @@
-# devbox cloud forward list
+## devbox cloud forward list
 
 Lists all port forwards managed by devbox
 
-```bash
+```
 devbox cloud forward list [flags]
 ```
 
-## Options
+### Options
 
-```text
+```
   -h, --help   help for list
+```
+
+### Options inherited from parent commands
+
+```
   -q, --quiet   suppresses logs
 ```
 

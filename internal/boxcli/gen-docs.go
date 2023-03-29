@@ -15,13 +15,12 @@ import (
 func genDocsCmd() *cobra.Command {
 	var genDocsCmd = &cobra.Command{
 		Use:   "gen-docs <path>",
-		Short: "[internal] generate documentation for the CLI",
-		Long: "[internal] generates the documentation for the CLI's Cobra commands. " +
+		Short: "[Internal] Generate documentation for the CLI",
+		Long: "[Internal] Generate the documentation for the CLI's Cobra commands. " +
 			"Docs are placed in the directory specified by <path>.",
 		Hidden: true,
 		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			wd, err := os.Getwd()
 			if err != nil {
 				return errors.WithStack(err)

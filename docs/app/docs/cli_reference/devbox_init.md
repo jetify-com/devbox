@@ -1,23 +1,28 @@
-# devbox init
+## devbox init
 
 Initialize a directory as a devbox project
 
-## Synopsis
+### Synopsis
 
 Initialize a directory as a devbox project. This will create an empty devbox.json in the current directory. You can then add packages using `devbox add`
 
-```bash
+```
 devbox init [<dir>] [flags]
 ```
 
-## Options
+### Options
 
-```text
-  -h, --help   help for init   
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+  -h, --help   help for init
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 

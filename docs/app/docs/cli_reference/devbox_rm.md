@@ -1,19 +1,25 @@
-# devbox rm
+## devbox rm
 
 Remove a package from your devbox
 
-```bash
+```
 devbox rm <pkg>... [flags]
 ```
 
-## Options
+### Options
 
-```text
-  -h, --help   help for rm
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+  -c, --config string   path to directory containing a devbox.json config file
+  -h, --help            help for rm
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 

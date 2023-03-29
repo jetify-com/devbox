@@ -1,21 +1,24 @@
-# devbox global list
+## devbox global list
 
-Lists all the packages you have installed globally
+List global packages
 
-```bash
-devbox global list <pkg>... [flags]
 ```
-## Aliases
+devbox global list [flags]
+```
 
-list, ls
+### Options
 
-## Options
-
-```bash
+```
   -h, --help   help for list
-  -q, --quiet  suppresses logs
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox global](devbox_global.md)	 - Manages global Devbox packages
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox global](devbox_global.md)	 - Manage global devbox packages
+

@@ -1,20 +1,26 @@
-# devbox version
+## devbox version
 
 Print version information
 
-```bash
+```
 devbox version [flags]
 ```
 
-## Options
+### Options
 
-```text
+```
   -h, --help      help for version
-  -v, --verbose   Verbose: displays additional version information
-  -q, --quiet   Quiet mode: Suppresses logs.
+  -v, --verbose   displays additional version information
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
+* [devbox version update](devbox_version_update.md)	 - Update devbox launcher and binary
 

@@ -1,16 +1,21 @@
-# devbox services ls
+## devbox services ls
 
 List available services
 
-```bash
+```
 devbox services ls [flags]
 ```
 
-## Options
+### Options
 
-```bash
+```
   -h, --help   help for ls
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+
+### Options inherited from parent commands
+
+```
+  -q, --quiet   suppresses logs
 ```
 
 ### SEE ALSO

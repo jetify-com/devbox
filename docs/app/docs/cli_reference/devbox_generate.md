@@ -1,26 +1,24 @@
-# devbox generate
+## devbox generate
 
-Top level command for generating Devcontainer and Dockerfiles for your Devbox Project. 
+Generate supporting files for your project
 
-```bash
-devbox generate <devcontainer|dockerfile> [flags]
+### Options
+
 ```
-
-## Options
-
-```bash
   -c, --config string   path to directory containing a devbox.json config file
   -h, --help            help for generate
-  -q, --quiet   Quiet mode: Suppresses logs.
 ```
 
-## Subcommands
+### Options inherited from parent commands
 
-* [devbox generate devcontainer](devbox_generate_devcontainer.md)	 - Generate Dockerfile and devcontainer.json files under .devcontainer/ directory
-* [devbox generate dockerfile](devbox_generate_dockerfile.md)	 - Generate a Dockerfile that replicates devbox shell
-* [devbox generate direnv](devbox_generate_direnv.md)  - Generate a .envrc file to use with direnv
+```
+  -q, --quiet   suppresses logs
+```
 
-## SEE ALSO
+### SEE ALSO
 
 * [devbox](devbox.md)	 - Instant, easy, predictable development environments
+* [devbox generate devcontainer](devbox_generate_devcontainer.md)	 - Generate Dockerfile and devcontainer.json files under .devcontainer/ directory
+* [devbox generate direnv](devbox_generate_direnv.md)	 - Generate a .envrc file that integrates direnv with this devbox project
+* [devbox generate dockerfile](devbox_generate_dockerfile.md)	 - Generate a Dockerfile that replicates devbox shell
 

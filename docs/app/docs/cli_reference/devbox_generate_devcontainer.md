@@ -1,24 +1,29 @@
-# devbox generate devcontainer
+## devbox generate devcontainer
 
 Generate Dockerfile and devcontainer.json files under .devcontainer/ directory
 
-## Synopsis
+### Synopsis
 
 Generate Dockerfile and devcontainer.json files necessary to run VSCode in remote container environments.
 
-```bash
+```
 devbox generate devcontainer [flags]
 ```
 
 ### Options
 
-```bash
+```
   -f, --force   force overwrite on existing files
   -h, --help    help for devcontainer
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+
+### Options inherited from parent commands
+
+```
+  -q, --quiet   suppresses logs
 ```
 
 ### SEE ALSO
 
-* [devbox generate](devbox_generate.md)	 - 
+* [devbox generate](devbox_generate.md)	 - Generate supporting files for your project
 

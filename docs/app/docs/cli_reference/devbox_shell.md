@@ -1,24 +1,32 @@
-# devbox shell
+## devbox shell
 
-Start a new shell or run a command with access to your packages
+Start a new shell with access to your packages
 
-## Synopsis
+### Synopsis
 
-Start a new shell or run a command with access to your packages. The interactive shell will use the devbox.json in your current directory, or the directory provided with `dir`. 
+Start a new shell with access to your packages.
 
-```bash
-devbox shell [<dir>] [flags]
+If the --config flag is set, the shell will be started using the devbox.json found in the --config flag directory. If --config isn't set, then devbox recursively searches the current directory and its parents.
+
+```
+devbox shell [flags]
 ```
 
-## Options
+### Options
 
-```text
-  --print-env  Print a script to setup a devbox shell environment
-  -h, --help   help for shell
-  -q, --quiet   Quiet mode: Suppresses logs.
+```
+  -c, --config string   path to directory containing a devbox.json config file
+  -h, --help            help for shell
+      --print-env       print script to setup shell environment
 ```
 
-## SEE ALSO
+### Options inherited from parent commands
 
-* [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
+```
+  -q, --quiet   suppresses logs
+```
+
+### SEE ALSO
+
+* [devbox](devbox.md)	 - Instant, easy, predictable development environments
 
