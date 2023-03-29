@@ -1,25 +1,20 @@
 package sshshim
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"go.jetpack.io/devbox/internal/boxcli/midcobra"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
-func Execute(ctx context.Context, args []string) int {
+func Execute(args []string) int {
 	defer debug.Recover()
-	sentry := initSentry()
+	telemetry.Start(telemetry.AppSSHShim)
+	defer telemetry.Stop()
 
-	err := execute(args)
-
-	sentry.CaptureException(err)
-
-	if err != nil {
+	if err := execute(args); err != nil {
+		telemetry.Error(err, telemetry.Metadata{})
 		return 1
 	}
 	return 0
@@ -43,12 +38,4 @@ func execute(args []string) error {
 		return err
 	}
 	return nil
-}
-
-func initSentry() *telemetry.Sentry {
-	const appName = "devbox-sshshim"
-	s := telemetry.NewSentry(build.SentryDSN)
-	s.Init(appName, build.Version, midcobra.ExecutionID())
-
-	return s
 }

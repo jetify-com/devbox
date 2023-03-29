@@ -13,10 +13,9 @@ import (
 )
 
 type TraceMiddleware struct {
-	executionID string // uuid
-	tracef      *os.File
-	flag        *pflag.Flag
-	task        *trace.Task
+	tracef *os.File
+	flag   *pflag.Flag
+	task   *trace.Task
 }
 
 var _ Middleware = (*DebugMiddleware)(nil)
@@ -59,9 +58,4 @@ func (t *TraceMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if err := t.tracef.Close(); err != nil {
 		panic("error closing trace file: " + err.Error())
 	}
-}
-
-func (t *TraceMiddleware) withExecutionID(execID string) Middleware {
-	t.executionID = execID
-	return t
 }
