@@ -49,6 +49,8 @@ const (
 	scriptsDir           = ".devbox/gen/scripts"
 	hooksFilename        = ".hooks"
 	arbitraryCmdFilename = ".cmd"
+
+	processComposePidfile = ".devbox/compose.pid"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -415,7 +417,6 @@ func (d *Devbox) StartProcessManager(
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-	fmt.Fprintln(d.writer, "Starting process manager...")
 	svcs, err := d.Services()
 	if err != nil {
 		return err
@@ -446,17 +447,20 @@ func (d *Devbox) StartProcessManager(
 		if background {
 			args = append(args, "--background")
 		}
-		fmt.Printf("Starting process manager with args %v\n", args)
 		return d.RunScript("devbox", args)
 	}
 
 	// Start the process manager
-	return services.StartProcessManager(ctx, processComposePath, svcs, processCompose, background)
+	fmt.Fprintln(d.writer, "Starting process manager...")
+	return services.StartProcessManager(ctx, d.writer, processComposePath, svcs, processCompose, processComposePidfile, background)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
+	}
+	if len(serviceNames) == 0 {
+		return services.StopProcessManager(ctx, d.writer, processComposePidfile)
 	}
 	return services.Stop(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
 }

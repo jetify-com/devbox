@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -136,10 +134,6 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 		if err != nil {
 			return err
 		}
-		if len(services) == 0 {
-			cmd.Println("No services to stop")
-			return nil
-		}
 	}
 	return box.StopServices(cmd.Context(), services...)
 }
@@ -170,6 +164,5 @@ func startProcessManager(cmd *cobra.Command, flags serviceUpFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	fmt.Printf("Background Flag in startProcessManager: %v\n", flags.background)
 	return box.StartProcessManager(cmd.Context(), flags.background, flags.processComposeFile)
 }
