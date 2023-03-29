@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -13,12 +15,13 @@ type servicesCmdFlags struct {
 	config configFlags
 }
 
-type serviceManagerCmdFlag struct {
+type serviceUpFlags struct {
 	configFlags
+	background         bool
 	processComposeFile string
 }
 
-func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
+func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	flags.configFlags.register(cmd)
 	cmd.Flags().StringVar(
 		&flags.processComposeFile,
@@ -27,11 +30,13 @@ func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
 		"path to process compose file or directory containing process "+
 			"compose-file.yaml|yml. Default is directory containing devbox.json",
 	)
+	cmd.Flags().BoolVarP(
+		&flags.background, "background", "b", false, "Run service in background")
 }
 
 func servicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
-	managerFlags := serviceManagerCmdFlag{}
+	serviceUpFlags := serviceUpFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
 		Short: "Interact with devbox services",
@@ -70,18 +75,18 @@ func servicesCmd() *cobra.Command {
 		},
 	}
 
-	processManagerCommand := &cobra.Command{
-		Use:   "manager",
-		Short: "Start process manager with all supported services",
+	upCommand := &cobra.Command{
+		Use:   "up",
+		Short: "Starts process manager with all supported services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startProcessManager(cmd, managerFlags)
+			return startProcessManager(cmd, serviceUpFlags)
 		},
 	}
 
 	flags.config.register(servicesCommand)
-	managerFlags.register(processManagerCommand)
+	serviceUpFlags.register(upCommand)
 	servicesCommand.AddCommand(lsCommand)
-	servicesCommand.AddCommand(processManagerCommand)
+	servicesCommand.AddCommand(upCommand)
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
@@ -160,10 +165,11 @@ func restartServices(
 	return startServices(cmd, services, flags)
 }
 
-func startProcessManager(cmd *cobra.Command, flags serviceManagerCmdFlag) error {
+func startProcessManager(cmd *cobra.Command, flags serviceUpFlags) error {
 	box, err := devbox.Open(flags.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StartProcessManager(cmd.Context(), flags.processComposeFile)
+	fmt.Printf("Background Flag in startProcessManager: %v\n", flags.background)
+	return box.StartProcessManager(cmd.Context(), flags.background, flags.processComposeFile)
 }

@@ -412,8 +412,10 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
+	background bool,
 	processComposeFileOrDir string,
 ) error {
+	fmt.Fprintln(d.writer, "Starting process manager...")
 	svcs, err := d.Services()
 	if err != nil {
 		return err
@@ -437,14 +439,19 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 	if !IsDevboxShellEnabled() {
-		args := []string{"services", "manager"}
+		args := []string{"services", "up"}
 		if processComposeFileOrDir != "" {
 			args = append(args, "--process-compose-file", processComposeFileOrDir)
 		}
+		if background {
+			args = append(args, "--background")
+		}
+		fmt.Printf("Starting process manager with args %v\n", args)
 		return d.RunScript("devbox", args)
 	}
 
-	return services.StartProcessManager(ctx, processComposePath, svcs, processCompose)
+	// Start the process manager
+	return services.StartProcessManager(ctx, processComposePath, svcs, processCompose, background)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
