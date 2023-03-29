@@ -15,6 +15,19 @@ For more details, read our [scripts guide](../guides/scripts.md)
   devbox run <script | command> [flags]
 ```
 
+
+## Examples
+
+```bash
+# Run a command directly:
+  devbox add cowsay
+  devbox run cowsay hello
+  devbox run -- cowsay -d hello
+
+#Run a script (defined as `"moo": "cowsay moo"`) in your devbox.json:
+  devbox run moo
+```
+
 ## Options
 
 ```text
