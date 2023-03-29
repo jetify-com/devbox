@@ -1,8 +1,9 @@
-import { Uri, commands, window } from 'vscode';
-import fetch from 'node-fetch';
 import * as os from 'os';
+import * as which from 'which';
+import fetch from 'node-fetch';
 import { exec } from 'child_process';
 import * as FormData from 'form-data';
+import { Uri, commands, window } from 'vscode';
 import { chmod, open, writeFile } from 'fs/promises';
 
 type VmInfo = {
@@ -76,9 +77,14 @@ async function setupDevboxLauncher(): Promise<any> {
 }
 
 async function setupSSHConfig(vmId: string, prKey: string) {
-    const launcherPath = await setupDevboxLauncher();
+
+    const devboxBinary = await which('devbox', { nothrow: true });
+    let devboxPath = 'devbox';
+    if (devboxBinary === null) {
+        devboxPath = await setupDevboxLauncher();
+    }
     // For testing change devbox to path to a compiled devbox binary or add --config
-    exec(`${launcherPath} generate ssh-config`, (error, stdout, stderr) => {
+    exec(`${devboxPath} generate ssh-config`, (error, stdout, stderr) => {
         if (error) {
             window.showErrorMessage('Failed to setup ssh config. Run VSCode in debug mode to see logs.');
             console.error(`Failed to setup ssh config: ${error}`);
