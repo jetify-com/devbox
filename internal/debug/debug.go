@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
@@ -51,29 +52,18 @@ func Recover() {
 	fmt.Println("Error:", r)
 }
 
-func EarliestStackTrace(err error) errors.StackTrace {
-	type stackTracer interface {
-		StackTrace() errors.StackTrace
-	}
+func EarliestStackTrace(err error) error {
+	type pkgErrorsStackTracer interface{ StackTrace() errors.StackTrace }
+	type redactStackTracer interface{ StackTrace() []runtime.Frame }
 
-	type causer interface {
-		Cause() error
-	}
-
-	var st stackTracer
-	var earliestStackTrace errors.StackTrace
-
+	var stErr error
 	for err != nil {
-		if errors.As(err, &st) {
-			earliestStackTrace = st.StackTrace()
+		//nolint:errorlint
+		switch err.(type) {
+		case redactStackTracer, pkgErrorsStackTracer:
+			stErr = err
 		}
-
-		var c causer
-		if !errors.As(err, &c) {
-			break
-		}
-		err = c.Cause()
+		err = errors.Unwrap(err)
 	}
-
-	return earliestStackTrace
+	return stErr
 }
