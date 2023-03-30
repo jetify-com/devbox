@@ -1,3 +1,4 @@
+//nolint:errorlint
 package redact
 
 import (

@@ -40,11 +40,13 @@ linters-settings:
   varnamelen:
     max-distance: 10
     ignore-decls:
+      - a []any
       - c echo.Context
       - const C
       - e error
       - e watch.Event
       - f *foo.Bar
+      - f fmt.State
       - i int
       - id string
       - m map[string]any
@@ -54,6 +56,7 @@ linters-settings:
       - r *http.Request
       - r io.Reader
       - r *os.File
+      - re *regexp.Regexp
       - sh *Shell
       - sh *shell
       - sh *shell.Shell

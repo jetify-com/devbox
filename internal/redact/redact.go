@@ -32,7 +32,7 @@
 //		err := &userErr{name: "Alex"}
 //		fmt.Println(err)
 //		// user Alex not found
-
+//
 //		fmt.Println(Error(err))
 //		// user db74c940d447e877d119df613edd2700c4a84cd1cf08beb7cbc319bcfaeab97a not found
 //	}
@@ -51,6 +51,8 @@
 //
 //	fmt.Println(Error(err))
 //	// error getting user <redacted string> with ID 5
+//
+//nolint:errorlint
 package redact
 
 import (
