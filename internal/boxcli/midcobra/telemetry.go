@@ -59,7 +59,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
-		CloudRegion:  os.Getenv("DEVBOX_REGION"),
+		CloudRegion:  envir.GetRegion(),
 		CloudCache:   os.Getenv("DEVBOX_CACHE"),
 	}
 
@@ -73,7 +73,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
 	meta.InShell, _ = strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
 	meta.InBrowser, _ = strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
-	meta.InCloud = meta.CloudRegion != ""
+	meta.InCloud = envir.IsDevboxCloud()
 	telemetry.Error(runErr, meta)
 
 	evt := m.newEventIfValid(cmd, args, runErr)
