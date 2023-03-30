@@ -26,7 +26,7 @@ func StartProcessManager(
 ) error {
 	// Check if process-compose is already running
 
-	if ProcessManagerIsRunning(processComposePidfile) {
+	if processManagerIsRunning(processComposePidfile) {
 		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}
 
@@ -57,13 +57,13 @@ func StartProcessManager(
 
 	//run cmd in the background
 	if processComposeBackground {
-		return RunProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
+		return runProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
 	}
 
 	return cmd.Run()
 }
 
-func RunProcessManagerInBackground(
+func runProcessManagerInBackground(
 	cmd *exec.Cmd,
 	processComposePidfile,
 	processComposeLogfile string,
@@ -115,7 +115,7 @@ func StopProcessManager(
 	return nil
 }
 
-func ProcessManagerIsRunning(processComposePidfile string) bool {
+func processManagerIsRunning(processComposePidfile string) bool {
 	pid, err := os.ReadFile(processComposePidfile)
 	if err != nil {
 		return false
