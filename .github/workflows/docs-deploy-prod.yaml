@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Generate docs from current commands
+        run: devbox gen-docs docs/app/docs/cli_reference/
       - uses: dorny/paths-filter@v2
         id: filter
         with:
