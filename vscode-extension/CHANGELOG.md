@@ -4,6 +4,13 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.5]
+
+- Added handling `Open In VSCode` button with `vscode://` style links.
+- Added ability for connecting to Devbox Cloud workspace.
+- Fixed a bug where devbox extension would run `devbox shell` when opening
+a new terminal in vscode even if there was no devbox.json present in the workspace.
+
 ## [0.0.4]
 
 - Added `Generate a Dockerfile from devbox.json` to the command palette
