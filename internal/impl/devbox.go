@@ -51,6 +51,7 @@ const (
 	arbitraryCmdFilename = ".cmd"
 
 	processComposePidfile = ".devbox/compose.pid"
+	processComposeLogfile = ".devbox/compose.log"
 )
 
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
@@ -414,6 +415,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
+	requestedServices []string,
 	background bool,
 	processComposeFileOrDir string,
 ) error {
@@ -441,6 +443,7 @@ func (d *Devbox) StartProcessManager(
 	}
 	if !IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
+		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
 			args = append(args, "--process-compose-file", processComposeFileOrDir)
 		}
@@ -451,8 +454,8 @@ func (d *Devbox) StartProcessManager(
 	}
 
 	// Start the process manager
-	fmt.Fprintln(d.writer, "Starting process manager...")
-	return services.StartProcessManager(ctx, d.writer, processComposePath, svcs, processCompose, processComposePidfile, background)
+	fmt.Fprintln(d.writer, "Starting process manager with requested Services: ", requestedServices)
+	return services.StartProcessManager(ctx, d.writer, requestedServices, processComposePath, svcs, processCompose, processComposePidfile, processComposeLogfile, background)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {

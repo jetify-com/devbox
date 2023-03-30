@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"syscall"
 
 	"go.jetpack.io/devbox/internal/plugin"
 )
@@ -15,50 +16,74 @@ import (
 func StartProcessManager(
 	ctx context.Context,
 	w io.Writer,
+	requestedServices []string,
 	processComposePath string,
 	services plugin.Services,
 	processComposeFilePath string,
 	processComposePidfile string,
+	processComposeLogfile string,
 	processComposeBackground bool,
 ) error {
-	//Open the pidfile
-	if pid, err := os.ReadFile(processComposePidfile); err == nil {
-		// If the pidfile exists, check if the process is running
-		if _, err := os.FindProcess(int(pid[0])); err == nil {
-			return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
-		}
+	// Check if process-compose is already running
+
+	if ProcessManagerIsRunning(processComposePidfile) {
+		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}
 
 	flags := []string{"-p", "8280"}
+	upCommand := []string{"up"}
+
+	if len(requestedServices) > 0 {
+		// append requested services and flags to 'up'
+		flags = append(requestedServices, flags...)
+		flags = append(upCommand, flags...)
+	}
+
 	for _, s := range services {
 		if file, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
 			flags = append(flags, "-f", file)
 		}
 	}
+
 	if processComposeFilePath != "" {
 		flags = append(flags, "-f", processComposeFilePath)
 	}
+
 	if processComposeBackground {
 		flags = append(flags, "-t=false")
 	}
-	// run the exec.Command in the background
+
 	cmd := exec.Command(processComposePath, flags...)
-	// Route stdout to /dev/null
-	cmd.Stdout = nil
-	cmd.Stderr = nil
+
 	//run cmd in the background
 	if processComposeBackground {
-		if err := cmd.Start(); err != nil {
-			return err
-		}
-		pid := cmd.Process.Pid
-		if err := os.WriteFile(processComposePidfile, []byte(fmt.Sprintf("%v", pid)), 0644); err != nil {
-			return err
-		}
-		fmt.Fprintf(w, "Services started in the background. To stop them, run `devbox services stop`.\n")
-		return nil
+		return RunProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
 	}
+
 	return cmd.Run()
+}
+
+func RunProcessManagerInBackground(
+	cmd *exec.Cmd,
+	processComposePidfile,
+	processComposeLogfile string,
+) error {
+	outfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+
+	if err != nil {
+		return fmt.Errorf("failed to open process-compose log file: %w", err)
+	}
+
+	cmd.Stdout = outfile
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start process-compose: %w", err)
+	}
+
+	if err := os.WriteFile(processComposePidfile, []byte(strconv.Itoa(cmd.Process.Pid)), 0666); err != nil {
+		return fmt.Errorf("failed to write pidfile: %w", err)
+	}
+
+	return nil
 }
 
 func StopProcessManager(
@@ -80,18 +105,32 @@ func StopProcessManager(
 		return fmt.Errorf("invalid pid, removing pidfile")
 	}
 
-	pid, err = os.FindProcess(pidInt)
+	pid, _ = os.FindProcess(pidInt)
+	err = pid.Signal(os.Interrupt)
 	if err != nil {
 		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
 	}
 
-	err = pid.Signal(os.Interrupt)
-	if err != nil {
-		return fmt.Errorf("unable to stop process, please run `pkill process-compose` to terminate it manually with error: %v", err)
-	}
-
 	fmt.Fprintf(w, "Process-compose stopped successfully.\n")
 	return nil
+}
+
+func ProcessManagerIsRunning(processComposePidfile string) bool {
+	pid, err := os.ReadFile(processComposePidfile)
+	if err != nil {
+		return false
+	}
+
+	process, err := os.FindProcess(int(pid[0]))
+	if err != nil {
+		return false
+	}
+
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func LookupProcessCompose(projectDir, path string) string {

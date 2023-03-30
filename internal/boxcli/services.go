@@ -77,7 +77,7 @@ func servicesCmd() *cobra.Command {
 		Use:   "up",
 		Short: "Starts process manager with all supported services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startProcessManager(cmd, serviceUpFlags)
+			return startProcessManager(cmd, args, serviceUpFlags)
 		},
 	}
 
@@ -159,10 +159,11 @@ func restartServices(
 	return startServices(cmd, services, flags)
 }
 
-func startProcessManager(cmd *cobra.Command, flags serviceUpFlags) error {
+func startProcessManager(cmd *cobra.Command, args []string, flags serviceUpFlags) error {
 	box, err := devbox.Open(flags.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StartProcessManager(cmd.Context(), flags.background, flags.processComposeFile)
+
+	return box.StartProcessManager(cmd.Context(), args, flags.background, flags.processComposeFile)
 }
