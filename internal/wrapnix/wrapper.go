@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
@@ -73,7 +74,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		}
 	}
 
-	return nil
+	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
 
 type createWrapperArgs struct {
@@ -96,4 +97,31 @@ func createWrapper(args *createWrapperArgs) error {
 
 func virtenvBinPath(projectDir string) string {
 	return filepath.Join(projectDir, plugin.VirtenvBinPath)
+}
+
+// createSymlinksForSupportDirs creates symlinks for the support dirs
+// (etc, lib, share) in the virtenv. Some tools (like mariadb) expect
+// these to be in a dir relative to the bin.
+//
+// TODO: this is not perfect. using the profile path will not take into account
+// any special stuff we do in flake.nix. We should use the nix store directly,
+// but that is a bit more complicated. Nix merges any support directories
+// recursively, so we need to do the same.
+// e.g. if go_1_19 and go_1_20 are installed, .devbox/nix/profile/default/share/go/api
+// will contain the union of both. We need to do the same.
+func createSymlinksForSupportDirs(projectDir string) error {
+	for _, dir := range []string{"etc", "lib", "share"} {
+		oldname := filepath.Join(projectDir, nix.ProfilePath, dir)
+		newname := filepath.Join(projectDir, plugin.VirtenvPath, dir)
+
+		_ = os.Remove(newname)
+		if _, err := os.Stat(oldname); os.IsNotExist(err) {
+			continue
+		}
+
+		if err := os.Symlink(oldname, newname); err != nil {
+			return err
+		}
+	}
+	return nil
 }
