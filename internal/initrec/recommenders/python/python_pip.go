@@ -20,7 +20,6 @@ func (r *RecommenderPip) IsRelevant() bool {
 	return plansdk.FileExists(filepath.Join(r.SrcDir, "requirements.txt"))
 }
 func (r *RecommenderPip) Packages() []string {
-
 	return []string{
 		"python3",
 	}

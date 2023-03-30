@@ -57,7 +57,6 @@ func TestNixProfileListItem(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-
 		t.Run(name, func(t *testing.T) {
 			testItem(t, testCase.line, testCase.expected)
 		})
@@ -65,7 +64,6 @@ func TestNixProfileListItem(t *testing.T) {
 }
 
 func testItem(t *testing.T, line string, expected expectedTestData) {
-
 	item, err := parseNixProfileListItem(line)
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)

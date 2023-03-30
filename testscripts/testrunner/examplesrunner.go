@@ -69,7 +69,6 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 	if err != nil {
 		t.Error(err)
 	}
-
 }
 
 func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
@@ -122,7 +121,6 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 // testscript file (.test.txt) for all examples devbox-projects in it.
 // It returns the directory containing the testscript file.
 func generateTestscript(t *testing.T, examplesDir, projectDir string) (string, error) {
-
 	testPath, err := filepath.Rel(examplesDir, projectDir)
 	if err != nil {
 		return "", errors.WithStack(err)

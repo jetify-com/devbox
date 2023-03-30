@@ -25,7 +25,6 @@ func GithubUsernameFromLocalFile() (string, error) {
 }
 
 func SaveGithubUsernameToLocalFile(username string) error {
-
 	filePath, err := usernameFilePath()
 	if err != nil {
 		return errors.WithStack(err)

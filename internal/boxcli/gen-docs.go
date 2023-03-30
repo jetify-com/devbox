@@ -21,7 +21,6 @@ func genDocsCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			wd, err := os.Getwd()
 			if err != nil {
 				return errors.WithStack(err)

@@ -51,7 +51,6 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-
 		if !m.shouldCreateFile(filePath) {
 			continue
 		}

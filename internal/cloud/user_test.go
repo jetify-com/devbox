@@ -5,7 +5,6 @@ import (
 )
 
 func TestParseUsernameFromErrorMessage(t *testing.T) {
-
 	testCases := []struct {
 		name       string
 		errMessage string

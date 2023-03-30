@@ -7,7 +7,6 @@ import (
 )
 
 func LogCmd() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:    "log <event-name> [<event-specific-args>]",
 		Hidden: true,

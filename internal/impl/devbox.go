@@ -303,30 +303,25 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 
 	// check if devcontainer.json or Dockerfile exist
 	filesExist := plansdk.FileExists(devContainerJSONPath) || plansdk.FileExists(dockerfilePath)
-
-	if force || !filesExist {
-		// create directory
-		err := os.MkdirAll(devContainerPath, os.ModePerm)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		// generate dockerfile
-		err = generate.CreateDockerfile(tmplFS, devContainerPath)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		// generate devcontainer.json
-		err = generate.CreateDevcontainer(devContainerPath, d.mergedPackages())
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
+	if !force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
 				"Remove the files or use --force to overwrite them.",
 		)
 	}
-	return nil
+
+	// create directory
+	err := os.MkdirAll(devContainerPath, os.ModePerm)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// generate dockerfile
+	err = generate.CreateDockerfile(tmplFS, devContainerPath)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// generate devcontainer.json
+	return errors.WithStack(generate.CreateDevcontainer(devContainerPath, d.mergedPackages()))
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
@@ -334,63 +329,57 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := plansdk.FileExists(dockerfilePath)
-	if force || !filesExist {
-		// generate dockerfile
-		err := generate.CreateDockerfile(tmplFS, d.projectDir)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
+	if !force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
 	}
 
-	return nil
+	// generate dockerfile
+	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir))
 }
 
 // GenerateEnvrc generates a .envrc file that makes direnv integration convenient
 func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
-	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if force || !filesExist {
-		if commandExists("direnv") {
-			// prompt for direnv allow
-			var result string
-			prompt := &survey.Input{
-				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
-			}
-			err := survey.AskOne(prompt, &result)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			if strings.ToLower(result) == "y" {
-				// .envrc file creation
-				err := generate.CreateEnvrc(tmplFS, d.projectDir)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-				cmd := exec.Command("direnv", "allow")
-				err = cmd.Run()
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			} else if source == "generate" {
-				// .envrc file creation
-				err := generate.CreateEnvrc(tmplFS, d.projectDir)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-			}
-		}
-	} else {
+	if !force && filesExist {
 		return usererr.New(
 			"A .envrc is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
+	}
+	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
+	if commandExists("direnv") {
+		// prompt for direnv allow
+		var result string
+		prompt := &survey.Input{
+			Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
+		}
+		err := survey.AskOne(prompt, &result)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if strings.ToLower(result) == "y" {
+			// .envrc file creation
+			err := generate.CreateEnvrc(tmplFS, d.projectDir)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			cmd := exec.Command("direnv", "allow")
+			err = cmd.Run()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		} else if source == "generate" {
+			// .envrc file creation
+			err := generate.CreateEnvrc(tmplFS, d.projectDir)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
 	}
 
 	return nil

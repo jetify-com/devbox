@@ -80,15 +80,13 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 		return "", "", nil, err
 	}
 
-	script := ""
-	var scriptArgs []string
-	if len(args) >= 1 {
-		script = args[0]
-		scriptArgs = args[1:]
-	} else {
+	if len(args) == 0 {
 		// this should never happen because cobra should prevent it, but it's better to be defensive.
 		return "", "", nil, usererr.New("no command or script provided")
 	}
+
+	script := args[0]
+	scriptArgs := args[1:]
 
 	return path, script, scriptArgs, nil
 }

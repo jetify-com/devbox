@@ -95,7 +95,6 @@ func createWrapper(args *createWrapperArgs) error {
 	}
 
 	return errors.WithStack(os.WriteFile(args.destPath, buf.Bytes(), 0755))
-
 }
 
 // createSymlinksForSupportDirs creates symlinks for the support dirs

@@ -74,7 +74,7 @@ func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *op
 
 			// We save the username to local file only after we get a successful response
 			// from the gateway, because the gateway will verify that the user's SSH keys
-			// match their claimed username from github.
+			// match their claimed username from GitHub.
 			err = openssh.SaveGithubUsernameToLocalFile(username)
 			if err != nil {
 				debug.Log("Failed to save username: %v", err)
@@ -502,13 +502,13 @@ func parseVMEnvVar() (username string, vmHostname string) {
 	// DEVBOX_VM = <hostname>
 	if len(parts) == 1 {
 		vmHostname = parts[0]
-		return
+		return username, vmHostname
 	}
 
 	// DEVBOX_VM = <username>@<hostname>
 	username = parts[0]
 	vmHostname = parts[1]
-	return
+	return username, vmHostname
 }
 
 // Proof of concept: look for a gitignore file in the current directory.

@@ -35,8 +35,25 @@ linters-settings:
   errorlint:
     errorf: false
   revive:
-    rules:
+    rules: # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
+      - name: atomic
+      - name: bare-return
+      - name: bool-literal-in-expr
+      - name: cognitive-complexity
+        arguments:
+          - 36 # TODO: gradually reduce it
+      - name: datarace
+      - name: duplicated-imports
+      - name: early-return
+      - name: error-return
+      - name: error-strings
+      - name: if-return
       - name: indent-error-flow
+      - name: range-val-address
+      - name: receiver-naming
+      - name: time-naming
+      - name: var-naming
+      - name: unreachable-code
   varnamelen:
     max-distance: 10
     ignore-decls:

@@ -118,7 +118,6 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 // If not authenticated, or there's an error, then an empty string is returned, which segment
 // would treat as logged-out or anonymous user.
 func UserIDFromGithubUsername() string {
-
 	username, err := openssh.GithubUsernameFromLocalFile()
 	if err != nil || username == "" {
 		return ""
@@ -137,7 +136,6 @@ func UserIDFromGithubUsername() string {
 //
 // See UnixTimestampFromTime for the inverse function.
 func timeFromUnixTimestamp(timestamp string) (time.Time, error) {
-
 	i, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
 		return time.Time{}, errors.WithStack(err)

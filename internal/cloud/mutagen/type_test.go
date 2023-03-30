@@ -7,7 +7,6 @@ import (
 )
 
 func TestSanitizeSessionName(t *testing.T) {
-
 	testCases := []struct {
 		input     string
 		sanitized string
