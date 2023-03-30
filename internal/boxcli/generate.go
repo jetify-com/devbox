@@ -18,12 +18,13 @@ type generateCmdFlags struct {
 	githubUsername string
 }
 
-func GenerateCmd() *cobra.Command {
+func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
 	command := &cobra.Command{
-		Use:  "generate",
-		Args: cobra.MaximumNArgs(0),
+		Use:   "generate",
+		Short: "Generate supporting files for your project",
+		Args:  cobra.MaximumNArgs(0),
 	}
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
@@ -104,8 +105,8 @@ func sshConfigCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:    "ssh-config",
 		Hidden: true,
-		Short:  "Generates ssh config to connect to devbox cloud",
-		Long:   "Checks ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
+		Short:  "Generate ssh config to connect to devbox cloud",
+		Long:   "Check ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
 		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGenerateCmd(cmd, args, flags)

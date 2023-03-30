@@ -18,7 +18,7 @@ import (
 
 const nixDaemonFlag = "daemon"
 
-func SetupCmd() *cobra.Command {
+func setupCmd() *cobra.Command {
 	setupCommand := &cobra.Command{
 		Use:    "setup",
 		Short:  "Setup devbox dependencies",
@@ -27,7 +27,7 @@ func SetupCmd() *cobra.Command {
 
 	installNixCommand := &cobra.Command{
 		Use:   "nix",
-		Short: "Installs Nix",
+		Short: "Install Nix",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInstallNixCmd(cmd)
 		},

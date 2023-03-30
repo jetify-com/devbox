@@ -15,7 +15,7 @@ type planCmdFlags struct {
 	config configFlags
 }
 
-func PlanCmd() *cobra.Command {
+func planCmd() *cobra.Command {
 	flags := planCmdFlags{}
 
 	command := &cobra.Command{

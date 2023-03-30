@@ -15,12 +15,12 @@ type runCmdFlags struct {
 	config configFlags
 }
 
-func RunCmd() *cobra.Command {
+func runCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:   "run [<script> | <cmd>]",
-		Short: "Runs a script or command in a shell with access to your packages",
-		Long: "Starts a new shell and runs your script or command in it, exiting when done.\n\n" +
+		Short: "Run a script or command in a shell with access to your packages",
+		Long: "Start a new shell and runs your script or command in it, exiting when done.\n\n" +
 			"The script must be defined in `devbox.json`, or else it will be interpreted as an " +
 			"arbitrary command. You can pass arguments to your script or command. Everything " +
 			"after `--` will be passed verbatim into your command (see examples).\n\n",

@@ -14,7 +14,7 @@ type infoCmdFlags struct {
 	markdown bool
 }
 
-func InfoCmd() *cobra.Command {
+func infoCmd() *cobra.Command {
 	flags := infoCmdFlags{}
 	command := &cobra.Command{
 		Use:     "info <pkg>",

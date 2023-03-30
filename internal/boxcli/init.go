@@ -9,7 +9,7 @@ import (
 	"go.jetpack.io/devbox"
 )
 
-func InitCmd() *cobra.Command {
+func initCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "init [<dir>]",
 		Short: "Initialize a directory as a devbox project",

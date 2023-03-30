@@ -16,7 +16,7 @@ type versionFlags struct {
 	verbose bool
 }
 
-func VersionCmd() *cobra.Command {
+func versionCmd() *cobra.Command {
 	flags := versionFlags{}
 	command := &cobra.Command{
 		Use:   "version",

@@ -6,7 +6,7 @@ import (
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
-func LogCmd() *cobra.Command {
+func logCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "log <event-name> [<event-specific-args>]",
 		Hidden: true,

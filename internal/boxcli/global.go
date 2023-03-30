@@ -92,8 +92,8 @@ func globalListCmd() *cobra.Command {
 func globalPullCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "pull <file> | <url>",
-		Short:   "Pulls a global config from a file or URL",
-		Long:    "Pulls a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
+		Short:   "Pull a global config from a file or URL",
+		Long:    "Pull a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
 		RunE:    pullGlobalCmdFunc,
 		Args:    cobra.ExactArgs(1),

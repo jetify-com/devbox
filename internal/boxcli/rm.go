@@ -13,7 +13,7 @@ type removeCmdFlags struct {
 	config configFlags
 }
 
-func RemoveCmd() *cobra.Command {
+func removeCmd() *cobra.Command {
 	flags := removeCmdFlags{}
 	command := &cobra.Command{
 		Use:     "rm <pkg>...",

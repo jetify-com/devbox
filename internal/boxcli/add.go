@@ -19,7 +19,7 @@ type addCmdFlags struct {
 	config configFlags
 }
 
-func AddCmd() *cobra.Command {
+func addCmd() *cobra.Command {
 	flags := addCmdFlags{}
 
 	command := &cobra.Command{
