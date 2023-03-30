@@ -70,8 +70,10 @@ func Error(err error) error {
 	}
 
 	switch t := err.(type) {
-	case *safeError:
-		return t.redacted
+	case *redactedError:
+		// Don't redact an already redacted error, otherwise its redacted message
+		// will be replaced with a placeholder.
+		return err
 	case redactor:
 		return &redactedError{
 			msg:     t.Redact(),
@@ -176,6 +178,7 @@ type safeError struct {
 func (e *safeError) Error() string  { return e.err.Error() }
 func (e *safeError) Redact() string { return e.redacted.Error() }
 func (e *safeError) Unwrap() error  { return e.err }
+
 func (e *safeError) StackTrace() []runtime.Frame {
 	if len(e.callers) == 0 {
 		return nil
@@ -192,8 +195,23 @@ func (e *safeError) StackTrace() []runtime.Frame {
 	return frames
 }
 
+func (e *safeError) Format(f fmt.State, verb rune) {
+	switch verb {
+	case 'v', 's':
+		f.Write([]byte(e.Error()))
+		if f.Flag('+') {
+			for _, fr := range e.StackTrace() {
+				fmt.Fprintf(f, "\n%s\n\t%s:%d", fr.Function, fr.File, fr.Line)
+			}
+			return
+		}
+	default:
+		fmt.Fprintf(f, fmt.FormatString(f, verb), e.Error())
+	}
+}
+
 // redactedError is an error containing a redacted message. It is usually the
-// result of calling safeError.Redact.
+// result of calling Error(safeError).
 type redactedError struct {
 	msg     string
 	wrapped error

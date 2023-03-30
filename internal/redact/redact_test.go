@@ -3,6 +3,7 @@ package redact
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -134,6 +135,9 @@ func TestErrorf(t *testing.T) {
 	)
 	checkUnredactedError(t, err, `quoted = "sensitive", quotedSafe = "safe", int = 123, intSafe = 789`)
 	checkRedactedError(t, err, `quoted = <redacted string>, quotedSafe = "safe", int = <redacted int>, intSafe = 789`)
+
+	// Redact again to check that we don't wipe out the already-redacted message.
+	checkRedactedError(t, Error(err), `quoted = <redacted string>, quotedSafe = "safe", int = <redacted int>, intSafe = 789`)
 }
 
 func TestErrorfWrapErrorf(t *testing.T) {
@@ -173,6 +177,48 @@ func TestErrorfRedactableArg(t *testing.T) {
 	err := Errorf("%d", redactableInt(123))
 	checkUnredactedError(t, err, "123")
 	checkRedactedError(t, err, "0")
+}
+
+func TestErrorFormat(t *testing.T) {
+	// Capture the first line of output as the error message and all following
+	// lines as the stack trace.
+	re := regexp.MustCompile(`(.+)?((?s)
+.+/redact.TestErrorFormat
+	.+/redact/redact_test.go:\d+
+.*
+runtime.goexit
+	.+:\d+.*)?`)
+
+	cases := []struct {
+		format    string
+		err       error
+		wantMsg   string
+		wantStack bool
+	}{
+		{"%v", Errorf("error %%v"), "error %v", false},
+		{"%+v", Errorf("error %%+v"), "error %+v", true},
+		{"%s", Errorf("error %%s"), "error %s", false},
+		{"%+s", Errorf("error %%+s"), "error %+s", true},
+		{"%q", Errorf("error %%q"), `"error %q"`, false},
+	}
+	for _, test := range cases {
+		t.Run(test.format, func(t *testing.T) {
+			got := fmt.Sprintf(test.format, test.err)
+			groups := re.FindStringSubmatch(got)
+			if groups == nil {
+				t.Fatal("formatted error doesn't match regexp")
+			}
+			t.Logf("got formatted stack trace:\n%q", got)
+			if got := groups[1]; got != test.wantMsg {
+				t.Errorf("got error message %q, want %q", got, test.wantMsg)
+			}
+			if test.wantStack && (len(groups) < 3 || groups[2] == "") {
+				t.Error("got formatted error without stack trace, wanted with stack trace")
+			} else if !test.wantStack && len(groups) > 2 && groups[2] != "" {
+				t.Error("got formatted error with stack trace, wanted without stack trace")
+			}
+		})
+	}
 }
 
 func TestStackTrace(t *testing.T) {
