@@ -58,6 +58,7 @@ func EarliestStackTrace(err error) error {
 
 	var stErr error
 	for err != nil {
+		//nolint:errorlint
 		switch err.(type) {
 		case redactStackTracer, pkgErrorsStackTracer:
 			stErr = err

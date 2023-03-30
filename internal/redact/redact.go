@@ -207,8 +207,8 @@ func (e *safeError) Format(f fmt.State, verb rune) {
 			}
 			return
 		}
-	default:
-		fmt.Fprintf(f, fmt.FormatString(f, verb), e.Error())
+	case 'q':
+		fmt.Fprintf(f, "%q", e.Error())
 	}
 }
 
