@@ -27,7 +27,7 @@ func (t *TraceMiddleware) AttachToFlag(flags *pflag.FlagSet, flagName string) {
 	t.flag.NoOptDefVal = "trace.out"
 }
 
-func (t *TraceMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (t *TraceMiddleware) preRun(cmd *cobra.Command, _ []string) {
 	if t == nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (t *TraceMiddleware) preRun(cmd *cobra.Command, args []string) {
 	cmd.SetContext(ctx)
 }
 
-func (t *TraceMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (t *TraceMiddleware) postRun(*cobra.Command, []string, error) {
 	if t.tracef == nil {
 		return
 	}

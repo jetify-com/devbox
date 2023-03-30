@@ -26,7 +26,7 @@ func init() {
 	// Generate event UUIDs the same way the Sentry SDK does:
 	// https://github.com/getsentry/sentry-go/blob/d9ce5344e7e1819921ea4901dd31e47a200de7e0/util.go#L15
 	id := make([]byte, 16)
-	rand.Read(id)
+	_, _ = rand.Read(id)
 	id[6] &= 0x0F
 	id[6] |= 0x40
 	id[8] &= 0x3F
@@ -128,20 +128,20 @@ func (m *Metadata) featureContext() map[string]any {
 	return sentryCtx
 }
 
-func (meta *Metadata) pkgContext() map[string]any {
-	if len(meta.Packages) == 0 {
+func (m *Metadata) pkgContext() map[string]any {
+	if len(m.Packages) == 0 {
 		return nil
 	}
 
 	// Every package currently has the same commit hash as its version, but this
 	// format will allow us to use individual package versions in the future.
 	pkgVersion := "nixpkgs"
-	if meta.NixpkgsHash != "" {
-		pkgVersion += "/" + meta.NixpkgsHash
+	if m.NixpkgsHash != "" {
+		pkgVersion += "/" + m.NixpkgsHash
 	}
 	pkgVersion += "#"
-	pkgContext := make(map[string]any, len(meta.Packages))
-	for _, pkg := range meta.Packages {
+	pkgContext := make(map[string]any, len(m.Packages))
+	for _, pkg := range m.Packages {
 		pkgContext[pkg] = pkgVersion + pkg
 	}
 	return pkgContext
@@ -208,6 +208,7 @@ func newSentryException(err error) []sentry.Exception {
 			errType = t
 		}
 
+		//nolint:errorlint
 		switch stackErr := err.(type) {
 		// If the error implements the StackTrace method in the redact package, then
 		// prefer that. The Sentry SDK gets some things wrong when guessing how
