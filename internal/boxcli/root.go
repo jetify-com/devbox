@@ -43,7 +43,6 @@ func RootCmd() *cobra.Command {
 		SilenceUsage:  true,
 	}
 	command.AddCommand(AddCmd())
-	command.AddCommand(BuildCmd())
 	command.AddCommand(CloudCmd())
 	command.AddCommand(GenerateCmd())
 	command.AddCommand(globalCmd())
