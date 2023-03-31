@@ -54,7 +54,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
       - name: Get current time
@@ -95,7 +95,7 @@ jobs:
     timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 30 || 15 }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: true
@@ -130,7 +130,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3.5.0
+      - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: true
