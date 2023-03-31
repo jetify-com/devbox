@@ -53,12 +53,14 @@ func GetServices(pkgs []string, projectDir string) (Services, error) {
 		if c == nil {
 			continue
 		}
-		for name, svc := range c.Services {
-			svc.Name = name
+
+		if _, hasProcessComposeYaml := c.ProcessComposeYaml(); hasProcessComposeYaml {
+			var svc service
+			svc.Name = c.Name
 			svc.config = c
-			svc.Env = c.Env
-			services[name] = svc
+			services[svc.Name] = svc
 		}
+
 	}
 	return services, nil
 }

@@ -40,6 +40,15 @@ type config struct {
 	} `json:"shell,omitempty"`
 }
 
+func (c *config) ProcessComposeYaml() (string, bool) {
+	for file := range c.CreateFiles {
+		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
+			return file, true
+		}
+	}
+	return "", false
+}
+
 func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {

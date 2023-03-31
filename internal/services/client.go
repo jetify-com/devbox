@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func StartServices(ctx context.Context, serviceNames []string, projectDir string, w io.Writer) error {
+func StartServices(ctx context.Context, w io.Writer, serviceNames []string, projectDir string) error {
 	return clientRequest("start", serviceNames)
 }
 

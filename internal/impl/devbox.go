@@ -410,7 +410,21 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	if !IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
-	return services.Start(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
+	pluginServices, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
+	if err != nil {
+		return err
+	}
+
+	// Check for processes that are defined in the process-compose.yaml file
+	userServices, err := services.GetUserServices(d.projectDir)
+	if err != nil {
+		return err
+	}
+
+	//merge pluginServices with userServices
+	mergedServices := 
+
+	return services.StartServices(ctx, d.mergedPackages(), mergedServices, requestedServices, d.projectDir, d.writer)
 }
 
 func (d *Devbox) StartProcessManager(

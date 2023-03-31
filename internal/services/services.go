@@ -41,6 +41,7 @@ func toggleServices(
 	action serviceAction,
 ) error {
 	services, err := plugin.GetServices(pkgs, projectDir)
+	fmt.Fprintf(w, "Services: %v\n", services)
 	if err != nil {
 		return err
 	}

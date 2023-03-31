@@ -10,8 +10,31 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/plugin"
 )
+
+type Process struct {
+	Command  string `yaml:"command"`
+	IsDaemon bool   `yaml:"is_daemon",omitempty`
+	Shutdown struct {
+		Command        string `yaml:"command",omitempty`
+		TimeoutSeconds int    `yaml:"timeout_seconds",omitempty`
+		Signal         int    `yaml:"signal",omitempty`
+	} `yaml:"shutdown",omitempty`
+	DependsOn map[string]struct {
+		Condition string `yaml:"condition",omitempty`
+	} `yaml:"depends_on",omitempty`
+	Availability struct {
+		Restart string `yaml:"restart",omitempty`
+	} `yaml:"availability",omitempty`
+}
+
+type ProcessComposeYaml struct {
+	Version   string             `yaml:"version"`
+	Processes map[string]Process `yaml:"processes"`
+}
 
 func StartProcessManager(
 	ctx context.Context,
@@ -131,6 +154,23 @@ func processManagerIsRunning(processComposePidfile string) bool {
 		return false
 	}
 	return true
+}
+
+func ReadProcessCompose(path string) (plugin.Services, error) {
+	//open the yaml at processComposePath
+	processCompose := &ProcessComposeYaml{}
+	errors := errors.WithStack(cuecfg.ParseFile(path, processCompose))
+	if errors != nil {
+		return nil, errors
+	}
+
+	services := make(plugin.Services, len(processCompose.Processes))
+	for name, process := range processCompose.Processes {
+		var svc service
+		svc.Name = name
+		services[name] = svc
+	}
+
 }
 
 func LookupProcessCompose(projectDir, path string) string {
