@@ -110,6 +110,10 @@ func createWrapper(args *createWrapperArgs) error {
 // will contain the union of both. We need to do the same.
 func createSymlinksForSupportDirs(projectDir string) error {
 	profilePath := filepath.Join(projectDir, nix.ProfilePath)
+	if _, err := os.Stat(profilePath); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
 	supportDirs, err := os.ReadDir(profilePath)
 	if err != nil {
 		return err
