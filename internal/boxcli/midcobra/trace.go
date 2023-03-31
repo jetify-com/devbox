@@ -13,10 +13,9 @@ import (
 )
 
 type TraceMiddleware struct {
-	executionID string // uuid
-	tracef      *os.File
-	flag        *pflag.Flag
-	task        *trace.Task
+	tracef *os.File
+	flag   *pflag.Flag
+	task   *trace.Task
 }
 
 var _ Middleware = (*DebugMiddleware)(nil)
@@ -28,7 +27,7 @@ func (t *TraceMiddleware) AttachToFlag(flags *pflag.FlagSet, flagName string) {
 	t.flag.NoOptDefVal = "trace.out"
 }
 
-func (t *TraceMiddleware) preRun(cmd *cobra.Command, args []string) {
+func (t *TraceMiddleware) preRun(cmd *cobra.Command, _ []string) {
 	if t == nil {
 		return
 	}
@@ -50,7 +49,7 @@ func (t *TraceMiddleware) preRun(cmd *cobra.Command, args []string) {
 	cmd.SetContext(ctx)
 }
 
-func (t *TraceMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
+func (t *TraceMiddleware) postRun(*cobra.Command, []string, error) {
 	if t.tracef == nil {
 		return
 	}
@@ -59,9 +58,4 @@ func (t *TraceMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if err := t.tracef.Close(); err != nil {
 		panic("error closing trace file: " + err.Error())
 	}
-}
-
-func (t *TraceMiddleware) withExecutionID(execID string) Middleware {
-	t.executionID = execID
-	return t
 }

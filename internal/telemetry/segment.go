@@ -65,9 +65,7 @@ func CommandStartTime() time.Time {
 // LogShellDurationEvent logs the duration from start of the command
 // till the shell was ready to be interactive.
 func LogShellDurationEvent(eventName string, startTime string) error {
-	opts := InitOpts()
-	if IsDisabled(opts) {
-		// disabled
+	if !Enabled() {
 		return nil
 	}
 
@@ -77,12 +75,12 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 	}
 
 	evt := Event{
-		AnonymousID: DeviceID(),
-		AppName:     opts.AppName,
-		AppVersion:  opts.AppVersion,
+		AnonymousID: DeviceID,
+		AppName:     AppDevbox,
+		AppVersion:  build.Version,
 		CloudRegion: envir.GetRegion(),
 		Duration:    time.Since(start),
-		OsName:      OS(),
+		OsName:      build.OS(),
 		UserID:      UserIDFromGithubUsername(),
 	}
 

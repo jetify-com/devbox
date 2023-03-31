@@ -14,12 +14,12 @@ import (
 	"github.com/spf13/pflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
 type DebugMiddleware struct {
-	executionID string // uuid
-	flag        *pflag.Flag
+	flag *pflag.Flag
 }
 
 var _ Middleware = (*DebugMiddleware)(nil)
@@ -69,10 +69,5 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if errors.As(runErr, &exitErr) {
 		debug.Log("Command stderr: %s\n", exitErr.Stderr)
 	}
-	debug.Log("\nExecutionID:%s\n%+v\n", d.executionID, st)
-}
-
-func (d *DebugMiddleware) withExecutionID(execID string) Middleware {
-	d.executionID = execID
-	return d
+	debug.Log("\nExecutionID:%s\n%+v\n", telemetry.ExecutionID, st)
 }

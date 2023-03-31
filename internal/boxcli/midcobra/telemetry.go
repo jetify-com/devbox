@@ -8,14 +8,17 @@ import (
 	"io"
 	"os"
 	"runtime/trace"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
@@ -27,60 +30,56 @@ import (
 // 2. Data is only stored in SOC 2 compliant systems, and we are SOC 2 compliant ourselves.
 // 3. Users should always have the ability to opt-out.
 func Telemetry() Middleware {
-
-	opts := telemetry.InitOpts()
-
-	return &telemetryMiddleware{
-		opts:     *opts,
-		disabled: telemetry.IsDisabled(opts),
-	}
+	return &telemetryMiddleware{}
 }
 
 type telemetryMiddleware struct {
-	// Setup:
-	opts     telemetry.Opts
-	disabled bool
-
 	// Used during execution:
 	startTime time.Time
-
-	executionID string
 }
 
 // telemetryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*telemetryMiddleware)(nil)
 
-func (m *telemetryMiddleware) withExecutionID(execID string) Middleware {
-	m.executionID = execID
-	return m
-}
-
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	m.startTime = telemetry.CommandStartTime()
 
+	telemetry.Start(telemetry.AppDevbox)
 	ctx := cmd.Context()
 	defer trace.StartRegion(ctx, "telemetryPreRun").End()
-	if m.disabled {
+	if !telemetry.Enabled() {
 		trace.Log(ctx, "telemetry", "telemetry is disabled")
 		return
 	}
-	sentry := telemetry.NewSentry(m.opts.SentryDSN)
-	sentry.Init(m.opts.AppName, m.opts.AppVersion, m.executionID)
 }
 
 func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
 	defer trace.StartRegion(cmd.Context(), "telemetryPostRun").End()
-	if m.disabled {
+	defer telemetry.Stop()
+
+	meta := telemetry.Metadata{
+		FeatureFlags: featureflag.All(),
+		CloudRegion:  envir.GetRegion(),
+		CloudCache:   os.Getenv("DEVBOX_CACHE"),
+	}
+
+	subcmd, flags, err := getSubcommand(cmd, args)
+	if err != nil {
+		// Ignore invalid commands/flags.
 		return
 	}
+	meta.Command = subcmd.CommandPath()
+	meta.CommandFlags = flags
+	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
+	meta.InShell, _ = strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
+	meta.InBrowser, _ = strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
+	meta.InCloud = envir.IsDevboxCloud()
+	telemetry.Error(runErr, meta)
 
 	evt := m.newEventIfValid(cmd, args, runErr)
 	if evt == nil {
 		return
 	}
-
-	m.trackError(evt) // Sentry
-
 	m.trackEvent(evt) // Segment
 }
 
@@ -105,7 +104,7 @@ type event struct {
 // a valid event.
 func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string, runErr error) *event {
 
-	subcmd, subargs, parseErr := getSubcommand(cmd, args)
+	subcmd, flags, parseErr := getSubcommand(cmd, args)
 	if parseErr != nil {
 		// Ignore invalid commands
 		return nil
@@ -126,16 +125,16 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 
 	return &event{
 		Event: telemetry.Event{
-			AnonymousID: telemetry.DeviceID(),
-			AppName:     m.opts.AppName,
-			AppVersion:  m.opts.AppVersion,
+			AnonymousID: telemetry.DeviceID,
+			AppName:     telemetry.AppDevbox,
+			AppVersion:  build.Version,
 			CloudRegion: envir.GetRegion(),
 			Duration:    time.Since(m.startTime),
-			OsName:      telemetry.OS(),
+			OsName:      build.OS(),
 			UserID:      userID,
 		},
 		Command:      subcmd.CommandPath(),
-		CommandArgs:  subargs,
+		CommandArgs:  flags,
 		CommandError: runErr,
 		// The command is hidden if either the top-level command is hidden or
 		// the specific sub-command that was executed is hidden.
@@ -149,38 +148,15 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 	}
 }
 
-func (m *telemetryMiddleware) trackError(evt *event) {
-	// Ensure error is not nil and not a non-loggable user error
-	if evt == nil || !usererr.ShouldLogError(evt.CommandError) {
-		return
-	}
-
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("command", evt.Command)
-		scope.SetContext("command", map[string]interface{}{
-			"command":      evt.Command,
-			"command args": evt.CommandArgs,
-			"packages":     evt.Packages,
-			"nixpkgs hash": evt.CommitHash,
-			"in shell":     evt.InDevboxShell,
-		})
-		scope.SetContext("devbox env", evt.DevboxEnv)
-	})
-	sentry.CaptureException(evt.CommandError)
-}
-
 func (m *telemetryMiddleware) trackEvent(evt *event) {
 	if evt == nil || evt.CommandHidden {
 		return
 	}
 
 	if evt.CommandError != nil {
-		// verified with manual testing that the sentryID returned by CaptureException
-		// is the same as m.ExecutionID, since we set EventID = m.ExecutionID in sentry.Init
-		evt.SentryEventID = m.executionID
+		evt.SentryEventID = telemetry.ExecutionID
 	}
-
-	segmentClient := telemetry.NewSegmentClient(m.opts.TelemetryKey)
+	segmentClient := telemetry.NewSegmentClient(build.TelemetryKey)
 	defer func() {
 		_ = segmentClient.Close()
 	}()
@@ -219,13 +195,18 @@ func (m *telemetryMiddleware) trackEvent(evt *event) {
 	})
 }
 
-func getSubcommand(c *cobra.Command, args []string) (subcmd *cobra.Command, subargs []string, err error) {
-	if c.TraverseChildren {
-		subcmd, subargs, err = c.Traverse(args)
+func getSubcommand(cmd *cobra.Command, args []string) (subcmd *cobra.Command, flags []string, err error) {
+	if cmd.TraverseChildren {
+		subcmd, _, err = cmd.Traverse(args)
 	} else {
-		subcmd, subargs, err = c.Find(args)
+		subcmd, _, err = cmd.Find(args)
 	}
-	return subcmd, subargs, err
+
+	subcmd.Flags().Visit(func(f *pflag.Flag) {
+		flags = append(flags, "--"+f.Name)
+	})
+	sort.Strings(flags)
+	return subcmd, flags, err
 }
 
 func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {

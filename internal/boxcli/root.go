@@ -81,7 +81,7 @@ func Execute(ctx context.Context, args []string) int {
 func Main() {
 	if strings.HasSuffix(os.Args[0], "ssh") ||
 		strings.HasSuffix(os.Args[0], "scp") {
-		code := sshshim.Execute(context.Background(), os.Args)
+		code := sshshim.Execute(os.Args)
 		os.Exit(code)
 	}
 	code := Execute(context.Background(), os.Args[1:])

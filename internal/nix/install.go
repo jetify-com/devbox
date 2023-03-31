@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/build"
 )
 
 const rootError = "warning: installing Nix as root is not supported by this script!"
@@ -20,7 +20,7 @@ const rootError = "warning: installing Nix as root is not supported by this scri
 // Install runs the install script for Nix. daemon has 3 states
 // nil is unset. false is --no-daemon. true is --daemon.
 func Install(writer io.Writer, daemon *bool) error {
-	if isRoot() && telemetry.IsWSL() {
+	if isRoot() && build.OS() == build.OSWSL {
 		return usererr.New("Nix cannot be installed as root on WSL. Please run as a normal user with sudo access.")
 	}
 	r, w, err := os.Pipe()
