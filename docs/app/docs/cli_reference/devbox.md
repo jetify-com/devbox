@@ -21,6 +21,7 @@ devbox [flags]
 * [devbox global](./devbox_global.md)	 - Manages global Devbox packages
 * [devbox info](devbox_info.md)  - Display package and plugin info
 * [devbox init](./devbox_init.md)	 - Initialize a directory as a devbox project
+* [devbox install](./devbox_install.md)	 - Install your project's packages
 * [devbox rm](./devbox_rm.md)	 - Remove a package from your devbox
 * [devbox run](devbox_run.md)	 - Starts a new devbox shell and runs the target script
 * [devbox services](devbox_services.md)  - Interact with Devbox Services

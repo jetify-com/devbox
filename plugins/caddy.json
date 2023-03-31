@@ -9,7 +9,8 @@
     },
     "create_files": {
         "{{ .DevboxDir }}/Caddyfile": "caddy/Caddyfile",
-        "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
+        "{{ .DevboxDirRoot }}/web/index.html": "web/index.html",
+        "{{ .Virtenv }}/process-compose.yaml": "caddy/process-compose.yaml"
     },
     "services": {
         "caddy": {
