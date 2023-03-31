@@ -53,7 +53,7 @@ func toggleServices(
 
 		serviceBinPath := filepath.Join(
 			projectDir,
-			plugin.VirtenvBinPath,
+			plugin.WrapperBinPath,
 			fmt.Sprintf("%s-service-%s", name, lo.Ternary(action == startService, "start", "stop")),
 		)
 		cmd := exec.Command(serviceBinPath)

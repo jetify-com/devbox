@@ -573,7 +573,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 
 	// Prepend virtenv bin path first so user can override it if needed. Virtenv
 	// is where the bin wrappers live
-	env["PATH"] = JoinPathLists(d.virtenvBinPath(), env["PATH"])
+	env["PATH"] = JoinPathLists(filepath.Join(d.projectDir, plugin.WrapperBinPath), env["PATH"])
 
 	// Include env variables in devbox.json
 	configEnv := d.configEnvs(env)
@@ -799,10 +799,6 @@ var ignoreDevEnvVar = map[string]bool{
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LD_LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LD_LIBRARY_PATH"]
 	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
-}
-
-func (d *Devbox) virtenvBinPath() string {
-	return filepath.Join(d.projectDir, plugin.VirtenvBinPath)
 }
 
 // nix bins returns the paths to all the nix binaries that are installed by

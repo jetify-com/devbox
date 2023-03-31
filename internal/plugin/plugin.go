@@ -19,9 +19,11 @@ import (
 const (
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
-	VirtenvBinPath      = ".devbox/virtenv/bin"
 	VirtenvPath         = ".devbox/virtenv"
 )
+
+var WrapperPath = filepath.Join(VirtenvPath, ".wrappers")
+var WrapperBinPath = filepath.Join(WrapperPath, "bin")
 
 type config struct {
 	Name        string            `json:"name"`
