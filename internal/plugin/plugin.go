@@ -22,7 +22,7 @@ const (
 	VirtenvPath         = ".devbox/virtenv"
 )
 
-var WrapperPath = filepath.Join(VirtenvPath, "devbox-wrappers")
+var WrapperPath = filepath.Join(VirtenvPath, ".wrappers")
 var WrapperBinPath = filepath.Join(WrapperPath, "bin")
 
 type config struct {
