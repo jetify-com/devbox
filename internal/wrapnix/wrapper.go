@@ -36,8 +36,11 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	destPath := virtenvBinPath(devbox.ProjectDir())
-	_ = os.RemoveAll(destPath)
+	// Remove all old wrappers
+	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
+
+	// Recreate the bin wrapper directory
+	destPath := filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
 	_ = os.MkdirAll(destPath, 0755)
 
 	for _, service := range services {
@@ -95,10 +98,6 @@ func createWrapper(args *createWrapperArgs) error {
 
 }
 
-func virtenvBinPath(projectDir string) string {
-	return filepath.Join(projectDir, plugin.VirtenvBinPath)
-}
-
 // createSymlinksForSupportDirs creates symlinks for the support dirs
 // (etc, lib, share) in the virtenv. Some tools (like mariadb) expect
 // these to be in a dir relative to the bin.
@@ -110,14 +109,20 @@ func virtenvBinPath(projectDir string) string {
 // e.g. if go_1_19 and go_1_20 are installed, .devbox/nix/profile/default/share/go/api
 // will contain the union of both. We need to do the same.
 func createSymlinksForSupportDirs(projectDir string) error {
-	for _, dir := range []string{"etc", "lib", "share"} {
-		oldname := filepath.Join(projectDir, nix.ProfilePath, dir)
-		newname := filepath.Join(projectDir, plugin.VirtenvPath, dir)
+	profilePath := filepath.Join(projectDir, nix.ProfilePath)
+	supportDirs, err := os.ReadDir(profilePath)
+	if err != nil {
+		return err
+	}
 
-		_ = os.Remove(newname)
-		if _, err := os.Stat(oldname); os.IsNotExist(err) {
+	for _, dir := range supportDirs {
+		// bin has wrappers and is not a symlink
+		if dir.Name() == "bin" {
 			continue
 		}
+
+		oldname := filepath.Join(projectDir, nix.ProfilePath, dir.Name())
+		newname := filepath.Join(projectDir, plugin.WrapperPath, dir.Name())
 
 		if err := os.Symlink(oldname, newname); err != nil {
 			return err

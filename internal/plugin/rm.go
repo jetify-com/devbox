@@ -17,7 +17,7 @@ func Remove(projectDir string, pkgs []string) error {
 }
 
 func RemoveInvalidSymlinks(projectDir string) error {
-	binPath := filepath.Join(projectDir, VirtenvBinPath)
+	binPath := filepath.Join(projectDir, WrapperBinPath)
 	if _, err := os.Stat(binPath); errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
