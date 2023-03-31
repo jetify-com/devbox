@@ -40,7 +40,7 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, redact.Errorf("create stdout pipe: %w", redact.Safe(err))
+		return nil, redact.Errorf("error creating stdout pipe: %w", redact.Safe(err))
 	}
 	if err := cmd.Start(); err != nil {
 		return nil, redact.Errorf("error starting \"nix profile list\" command: %w", err)
