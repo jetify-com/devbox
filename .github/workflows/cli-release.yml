@@ -59,6 +59,15 @@ jobs:
         run: |
           TAG=$(ls dist/*_linux_386.tar.gz | cut -d '_' -f 2 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-dev')
           echo "release_tag=$TAG" >> $GITHUB_ENV
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: development
+          version: ${{ env.release_tag }}
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
@@ -84,6 +93,15 @@ jobs:
         with:
           go-version-file: ./go.mod
           cache: false
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.ref }}
       - name: Release with goreleaser
         uses: goreleaser/goreleaser-action@v3
         with:
