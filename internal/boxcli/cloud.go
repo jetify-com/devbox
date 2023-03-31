@@ -22,7 +22,7 @@ type cloudShellCmdFlags struct {
 	githubUsername string
 }
 
-func CloudCmd() *cobra.Command {
+func cloudCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "cloud",
 		Short: "[Preview] Remote development environments on the cloud",
@@ -74,8 +74,8 @@ func cloudShellCmd() *cobra.Command {
 func cloudPortForwardCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "forward <local-port>:<remote-port> | :<remote-port> | stop | list",
-		Short: "[Preview] Port forwards a local port to a remote devbox cloud port",
-		Long: "Port forwards a local port to a remote devbox cloud port. If 0 or " +
+		Short: "[Preview] Port forward a local port to a remote devbox cloud port",
+		Long: "Port forward a local port to a remote devbox cloud port. If 0 or " +
 			"no local port is specified, we find a suitable local port. Use 'stop' " +
 			"to stop all port forwards.",
 		Args: cobra.ExactArgs(1),
@@ -105,7 +105,7 @@ func cloudPortForwardCmd() *cobra.Command {
 func cloudPortForwardStopCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "stop",
-		Short: "Stops all port forwards managed by devbox",
+		Short: "Stop all port forwards managed by devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cloud.PortForwardTerminateAll()
@@ -117,7 +117,7 @@ func cloudPortForwardList() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "Lists all port forwards managed by devbox",
+		Short:   "List all port forwards managed by devbox",
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			l, err := cloud.PortForwardList()

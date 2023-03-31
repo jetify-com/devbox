@@ -43,22 +43,25 @@ func RootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	command.AddCommand(AddCmd())
-	command.AddCommand(CloudCmd())
-	command.AddCommand(GenerateCmd())
+	// Stable commands
+	command.AddCommand(addCmd())
+	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
-	command.AddCommand(InfoCmd())
-	command.AddCommand(InitCmd())
-	command.AddCommand(InstallCmd())
-	command.AddCommand(LogCmd())
-	command.AddCommand(PlanCmd())
-	command.AddCommand(RemoveCmd())
-	command.AddCommand(RunCmd())
-	command.AddCommand(ServicesCmd())
-	command.AddCommand(SetupCmd())
-	command.AddCommand(ShellCmd())
+	command.AddCommand(infoCmd())
+	command.AddCommand(initCmd())
+	command.AddCommand(installCmd())
+	command.AddCommand(logCmd())
+	command.AddCommand(planCmd())
+	command.AddCommand(removeCmd())
+	command.AddCommand(runCmd())
+	command.AddCommand(servicesCmd())
+	command.AddCommand(setupCmd())
+	command.AddCommand(shellCmd())
 	command.AddCommand(shellEnvCmd())
-	command.AddCommand(VersionCmd())
+	command.AddCommand(versionCmd())
+	// Preview commands
+	command.AddCommand(cloudCmd())
+	// Internal commands
 	command.AddCommand(genDocsCmd())
 
 	command.PersistentFlags().BoolVarP(

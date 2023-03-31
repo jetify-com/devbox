@@ -29,7 +29,7 @@ func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
 	)
 }
 
-func ServicesCmd() *cobra.Command {
+func servicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
 	managerFlags := serviceManagerCmdFlag{}
 	servicesCommand := &cobra.Command{
@@ -48,7 +48,7 @@ func ServicesCmd() *cobra.Command {
 
 	startCommand := &cobra.Command{
 		Use:   "start [service]...",
-		Short: "Starts service. If no service is specified, starts all services",
+		Short: "Start service. If no service is specified, starts all services",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return startServices(cmd, args, flags)
 		},
@@ -56,7 +56,7 @@ func ServicesCmd() *cobra.Command {
 
 	stopCommand := &cobra.Command{
 		Use:   "stop [service]...",
-		Short: "Stops service. If no service is specified, stops all services",
+		Short: "Stop service. If no service is specified, stops all services",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return stopServices(cmd, args, flags)
 		},
@@ -64,7 +64,7 @@ func ServicesCmd() *cobra.Command {
 
 	restartCommand := &cobra.Command{
 		Use:   "restart [service]...",
-		Short: "Restarts service. If no service is specified, restarts all services",
+		Short: "Restart service. If no service is specified, restarts all services",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return restartServices(cmd, args, flags)
 		},
@@ -72,7 +72,7 @@ func ServicesCmd() *cobra.Command {
 
 	processManagerCommand := &cobra.Command{
 		Use:   "manager",
-		Short: "Starts process manager with all supported services",
+		Short: "Start process manager with all supported services",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return startProcessManager(cmd, managerFlags)
 		},

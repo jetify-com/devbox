@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func InstallCmd() *cobra.Command {
+func installCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:   "install",
-		Short: "Installs all packages mentioned in devbox.json",
-		Long: "Starts a new devbox shell and installs all packages mentioned in devbox.json in current directory or" +
+		Short: "Install all packages mentioned in devbox.json",
+		Long: "Start a new devbox shell and installs all packages mentioned in devbox.json in current directory or" +
 			"a directory specified via --config. \n\n Then exits the shell when packages are done installing.\n\n ",
 		Args:    cobra.MaximumNArgs(0),
 		PreRunE: ensureNixInstalled,

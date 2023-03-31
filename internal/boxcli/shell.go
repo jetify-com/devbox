@@ -17,7 +17,7 @@ type shellCmdFlags struct {
 	PrintEnv bool
 }
 
-func ShellCmd() *cobra.Command {
+func shellCmd() *cobra.Command {
 	flags := shellCmdFlags{}
 	command := &cobra.Command{
 		Use:   "shell",
