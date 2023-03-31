@@ -52,7 +52,7 @@ devbox log shell-ready {{ .ShellStartTime }}
 # End Devbox Post-init Hook
 
 # Switch to the directory where devbox.json config is
-set workingDir "$(pwd)"
+set workingDir (pwd)
 cd "{{ .ProjectDir }}" || exit
 
 {{- if .PluginInitHook }}
@@ -84,6 +84,6 @@ devbox log shell-interactive {{ .ShellStartTime }}
 
 # Add refresh alias (only if it doesn't already exist)
 if not type refresh >/dev/null 2>&1
-    alias refresh='eval $(devbox shellenv)'
+    alias refresh='eval (devbox shellenv | string collect)'
     export DEVBOX_REFRESH_ALIAS="refresh"
 end
