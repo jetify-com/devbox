@@ -1,6 +1,6 @@
 {
   "packages": [
-    "go_1_19",
+    "go_1_20",
     "golangci-lint",
     "actionlint"
   ],
@@ -21,6 +21,6 @@
     }
   },
   "nixpkgs": {
-    "commit": "3954218cf613eba8e0dcefa9abe337d26bc48fd0"
+    "commit": "3364b5b117f65fe1ce65a3cdd5612a078a3b31e3"
   }
 }

@@ -41,7 +41,7 @@ jobs:
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: true
@@ -80,7 +80,7 @@ jobs:
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: false

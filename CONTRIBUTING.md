@@ -54,7 +54,7 @@ devbox run code
 If you are unable to install or use Devbox, you can manually replicate the environment by following the steps below
 
 * Install [Nix Package Manager](https://nixos.org/download.html).
-* Install [Golang](https://go.dev/doc/install) (current version: 1.19)
+* Install [Golang](https://go.dev/doc/install) (current version: 1.20)
 * Clone this repository:
 
     ```bash
@@ -95,10 +95,10 @@ If you are unable to install or use Devbox, you can manually replicate the envir
 
 3. Ensure any binary file as a result of build (e.g., `./devbox`) are removed and/or excluded from tracking in git.
 
-4. Update the [README.md](README.md) and/or docs with details of changes to the interface, this includes new environment 
+4. Update the [README.md](README.md) and/or docs with details of changes to the interface, this includes new environment
    variables, new commands, new flags, and useful file locations.
 
-5. You may merge the Pull Request in once you have the sign-off of developers/maintainers, or if you 
+5. You may merge the Pull Request in once you have the sign-off of developers/maintainers, or if you
    do not have permission to do that, you may request the maintainers to merge it for you.
 
 ## Developer Certificate of Origin
