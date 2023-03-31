@@ -32,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
@@ -313,15 +314,22 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 	// create directory
 	err := os.MkdirAll(devContainerPath, os.ModePerm)
 	if err != nil {
-		return errors.WithStack(err)
+		return redact.Errorf("error creating dev container directory in <project>/%s: %w",
+			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
 	err = generate.CreateDockerfile(tmplFS, devContainerPath)
 	if err != nil {
-		return errors.WithStack(err)
+		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
+			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	return errors.WithStack(generate.CreateDevcontainer(devContainerPath, d.mergedPackages()))
+	err = generate.CreateDevcontainer(devContainerPath, d.mergedPackages())
+	if err != nil {
+		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
+			redact.Safe(filepath.Base(devContainerPath)), err)
+	}
+	return nil
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell

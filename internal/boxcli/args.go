@@ -40,7 +40,8 @@ func pathArg(args []string) string {
 	if len(args) > 0 {
 		p, err := filepath.Abs(args[0])
 		if err != nil {
-			panic(errors.WithStack(err)) // What even triggers this?
+			// Can occur when the current working directory cannot be determined.
+			panic(errors.WithStack(err))
 		}
 		return p
 	}
