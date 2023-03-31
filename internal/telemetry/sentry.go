@@ -3,13 +3,17 @@ package telemetry
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -18,6 +22,7 @@ import (
 	pkgerrors "github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 var ExecutionID string
@@ -34,15 +39,71 @@ func init() {
 	ExecutionID = hex.EncodeToString(id)
 }
 
+var needsFlush atomic.Bool
 var started bool
 
 // Start enables telemetry for the current program.
 func Start(appName string) {
+	if started || DoNotTrack() {
+		return
+	}
+	started = initSentry(appName)
+}
+
+// Stop stops gathering telemetry and flushes buffered events to disk.
+func Stop() {
+	if !started || !needsFlush.Load() {
+		return
+	}
+
+	// Report errors in a separate process so we don't block exiting.
+	exe, err := os.Executable()
+	if err == nil {
+		_ = exec.Command(exe, "bug").Start()
+	}
+	started = false
+}
+
+var errorBufferDir = xdg.StateSubpath(filepath.FromSlash("devbox/sentry"))
+
+func ReportErrors() {
+	if !initSentry(AppDevbox) {
+		return
+	}
+
+	dirEntries, err := os.ReadDir(errorBufferDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range dirEntries {
+		if !entry.Type().IsRegular() || filepath.Ext(entry.Name()) != ".json" {
+			continue
+		}
+
+		path := filepath.Join(errorBufferDir, entry.Name())
+		data, err := os.ReadFile(path)
+		// Always delete the file so we don't end up with an infinitely growing
+		// backlog of errors.
+		_ = os.Remove(path)
+		if err != nil {
+			continue
+		}
+
+		event := &sentry.Event{}
+		if err := json.Unmarshal(data, event); err != nil {
+			continue
+		}
+		sentry.CaptureEvent(event)
+	}
+	sentry.Flush(3 * time.Second)
+}
+
+func initSentry(appName string) bool {
 	if appName == "" {
 		panic("telemetry.Start: app name is empty")
 	}
-	if started || DoNotTrack() {
-		return
+	if build.SentryDSN == "" {
+		return false
 	}
 
 	transport := sentry.NewHTTPTransport()
@@ -51,27 +112,19 @@ func Start(appName string) {
 	if build.IsDev {
 		environment = "development"
 	}
-	_ = sentry.Init(sentry.ClientOptions{
+	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              build.SentryDSN,
 		Environment:      environment,
 		Release:          appName + "@" + build.Version,
 		Transport:        transport,
 		TracesSampleRate: 1,
 		BeforeSend: func(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
-			event.ServerName = "" // redact the hostname, which the SDK automatically adds
+			// redact the hostname, which the SDK automatically adds
+			event.ServerName = ""
 			return event
 		},
 	})
-	started = true
-}
-
-// Stop stops gathering telemetry and flushes buffered events to the server.
-func Stop() {
-	if !started {
-		return
-	}
-	sentry.Flush(2 * time.Second)
-	started = false
+	return err == nil
 }
 
 type Metadata struct {
@@ -186,7 +239,29 @@ func Error(err error, meta Metadata) {
 	if sentryCtx := meta.pkgContext(); len(sentryCtx) > 0 {
 		event.Contexts["Devbox Packages"] = sentryCtx
 	}
-	sentry.CaptureEvent(event)
+	bufferEvent(event)
+}
+
+// bufferEvent buffers a Sentry event to disk so that ReportErrors can upload
+// it later.
+func bufferEvent(event *sentry.Event) {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return
+	}
+
+	file := filepath.Join(errorBufferDir, string(event.EventID)+".json")
+	err = os.WriteFile(file, data, 0600)
+	if errors.Is(err, os.ErrNotExist) {
+		// XDG specifies perms 0700.
+		if err := os.MkdirAll(errorBufferDir, 0700); err != nil {
+			return
+		}
+		err = os.WriteFile(file, data, 0600)
+	}
+	if err == nil {
+		needsFlush.Store(true)
+	}
 }
 
 func newSentryException(err error) []sentry.Exception {
