@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/denisbrodbeck/machineid"
+	"go.jetpack.io/devbox/internal/build"
 )
 
 var DeviceID string
@@ -15,8 +16,9 @@ const (
 )
 
 func init() {
-
-	if DoNotTrack() {
+	// TODO(gcurtis): clean this up so that Sentry and Segment use the same
+	// start/stop functions.
+	if DoNotTrack() || build.TelemetryKey == "" {
 		return
 	}
 	enabled = true

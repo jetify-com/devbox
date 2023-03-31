@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/vercheck"
 )
 
@@ -82,6 +83,10 @@ func Main() {
 		strings.HasSuffix(os.Args[0], "scp") {
 		code := sshshim.Execute(os.Args)
 		os.Exit(code)
+	}
+	if len(os.Args) > 1 && os.Args[1] == "bug" {
+		telemetry.ReportErrors()
+		return
 	}
 	code := Execute(context.Background(), os.Args[1:])
 	os.Exit(code)
