@@ -1,5 +1,6 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package zig
 
 import (
@@ -15,7 +16,6 @@ type Recommender struct {
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
-
 	a, err := plansdk.NewAnalyzer(r.SrcDir)
 	if err != nil {
 		// We should log that an error has occurred.

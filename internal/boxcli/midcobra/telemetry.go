@@ -103,7 +103,6 @@ type event struct {
 // newEventIfValid creates a new telemetry event, but returns nil if we cannot construct
 // a valid event.
 func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string, runErr error) *event {
-
 	subcmd, flags, parseErr := getSubcommand(cmd, args)
 	if parseErr != nil {
 		// Ignore invalid commands

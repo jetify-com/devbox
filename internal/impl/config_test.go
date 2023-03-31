@@ -68,7 +68,6 @@ func TestFindProjectDirFromParentDirSearch(t *testing.T) {
 }
 
 func TestFindParentDirAtPath(t *testing.T) {
-
 	testCases := []struct {
 		name        string
 		allDirs     string

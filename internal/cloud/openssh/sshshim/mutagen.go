@@ -102,7 +102,6 @@ func checkActiveVM(vmAddr string) (bool, error) {
 // vmAddressIfAny will seek to find the devbox-vm hostname if it exists
 // in the sshArgs. If not, it returns an empty string.
 func vmAddressIfAny(sshArgs []string) string {
-
 	const devboxVMAddressSuffix = "devbox-vms.internal"
 	for _, sshArg := range sshArgs {
 		if strings.HasSuffix(sshArg, devboxVMAddressSuffix) {

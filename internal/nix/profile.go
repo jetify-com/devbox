@@ -20,7 +20,6 @@ const DefaultPriority = 5
 
 // ProfileListItems returns a list of the installed packages
 func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
-
 	cmd := exec.Command(
 		"nix", "profile", "list",
 		"--profile", profileDir,
@@ -84,12 +83,11 @@ type NixProfileListItem struct {
 // parseNixProfileListItem reads each line of output (from `nix profile list`) and converts
 // into a golang struct. Refer to NixProfileListItem struct definition for explanation of each field.
 func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
-
 	scanner := bufio.NewScanner(strings.NewReader(line))
 	scanner.Split(bufio.ScanWords)
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected index.")
+		return nil, errors.New("incomplete nix profile list line. Expected index")
 	}
 	index, err := strconv.Atoi(scanner.Text())
 	if err != nil {
@@ -97,7 +95,7 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	}
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected unlockedReference.")
+		return nil, errors.New("incomplete nix profile list line. Expected unlockedReference")
 	}
 	unlockedReference := scanner.Text()
 
@@ -107,7 +105,7 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	lockedReference := scanner.Text()
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected nixStorePath.")
+		return nil, errors.New("incomplete nix profile list line. Expected nixStorePath")
 	}
 	nixStorePath := scanner.Text()
 
@@ -125,7 +123,6 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 // if NixProfileListItem.lockedReference = github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
 func (item *NixProfileListItem) AttributePath() (string, error) {
-
 	// lockedReference example:
 	// github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 

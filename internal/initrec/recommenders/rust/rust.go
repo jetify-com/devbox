@@ -34,7 +34,6 @@ func (r *Recommender) Packages() []string {
 // NOTE: `cargo build` succeeded with lowercase cargo.toml, but `cargo build --release`
 // will insist on `Cargo.toml`. We are lenient and tolerate both.
 func cargoTomlPath(srcDir string) string {
-
 	cargoTomlPath := filepath.Join(srcDir, cargoToml)
 	if plansdk.FileExists(cargoTomlPath) {
 		return cargoTomlPath

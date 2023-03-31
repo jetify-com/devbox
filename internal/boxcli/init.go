@@ -13,8 +13,10 @@ func InitCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "init [<dir>]",
 		Short: "Initialize a directory as a devbox project",
-		Long:  "Initialize a directory as a devbox project. This will create an empty devbox.json in the current directory. You can then add packages using `devbox add`",
-		Args:  cobra.MaximumNArgs(1),
+		Long: "Initialize a directory as a devbox project. " +
+			"This will create an empty devbox.json in the current directory. " +
+			"You can then add packages using `devbox add`",
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInitCmd(cmd, args)
 		},

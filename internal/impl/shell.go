@@ -130,7 +130,6 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 // initShellBinaryFields initializes the fields specific to the shell binary that will be used
 // for the devbox shell.
 func initShellBinaryFields(path string) *DevboxShell {
-
 	shell := &DevboxShell{binPath: path}
 	base := filepath.Base(path)
 	// Login shell
@@ -286,7 +285,6 @@ func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]stri
 }
 
 func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
-
 	// We need a temp dir (as opposed to a temp file) because zsh uses
 	// ZDOTDIR to point to a new directory containing the .zshrc.
 	tmp, err := os.MkdirTemp("", "devbox")
@@ -357,7 +355,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 //
 // We do not link the .{shell}rc files, since devbox modifies them. See writeDevboxShellrc
 func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
-
 	// For now, we only need to do this for zsh shell
 	if s.name == shZsh {
 		// Useful explanation of zsh startup files: https://zsh.sourceforge.io/FAQ/zshfaq03.html#l20

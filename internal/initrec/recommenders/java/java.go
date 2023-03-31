@@ -72,7 +72,7 @@ func (r *Recommender) packageManager() (string, error) {
 	} else if plansdk.FileExists(buildGradlePath) {
 		return GradleType, nil
 	} else {
-		return "", errors.New("Could not locate a Maven or Gradle file.")
+		return "", errors.New("could not locate a Maven or Gradle file")
 	}
 }
 

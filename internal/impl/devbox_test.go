@@ -28,7 +28,6 @@ func TestDevbox(t *testing.T) {
 	}
 }
 func testShellPlan(t *testing.T, testPath string) {
-
 	currentDir, err := os.Getwd()
 	require.New(t).NoError(err)
 

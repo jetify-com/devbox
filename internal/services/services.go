@@ -110,7 +110,6 @@ func listenToAutoPortForwardingChangesOnRemote(
 	action serviceAction,
 	cancel context.CancelFunc,
 ) error {
-
 	if !envir.IsCLICloudShell() {
 		return nil
 	}
@@ -148,7 +147,6 @@ func listenToAutoPortForwardingChangesOnRemote(
 }
 
 func printProxyURL(w io.Writer, services plugin.Services) error {
-
 	if !envir.IsDevboxCloud() {
 		return nil
 	}
