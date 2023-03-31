@@ -49,6 +49,11 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 		return nil
 	}
 
+	// Always cerate this dir because some plugins depend on it.
+	if err = createDir(filepath.Join(projectDir, VirtenvPath, pkg)); err != nil {
+		return err
+	}
+
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
 
