@@ -1,50 +1,11 @@
 package plugin
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
-
-	"github.com/a8m/envsubst"
+	"go.jetpack.io/devbox/internal/services"
 )
 
-type Services map[string]service
-
-type service struct {
-	config  *config
-	Env     map[string]string `json:"-"`
-	Name    string            `json:"name"`
-	RawPort string            `json:"port"`
-	Start   string            `json:"start"`
-	Stop    string            `json:"stop"`
-}
-
-func (s *service) Port() (string, error) {
-	if s.RawPort == "" {
-		return "", nil
-	}
-	return envsubst.String(s.RawPort)
-}
-
-func (s *service) ProcessComposeYaml() (string, bool) {
-	for file := range s.config.CreateFiles {
-		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
-			return file, true
-		}
-	}
-	return "", false
-}
-
-func (s *service) StartName() string {
-	return fmt.Sprintf("%s-service-start", s.Name)
-}
-
-func (s *service) StopName() string {
-	return fmt.Sprintf("%s-service-stop", s.Name)
-}
-
-func GetServices(pkgs []string, projectDir string) (Services, error) {
-	services := map[string]service{}
+func GetServices(pkgs []string, projectDir string) (services.Services, error) {
+	svcs := services.Services{}
 	for _, pkg := range pkgs {
 		c, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
@@ -54,26 +15,15 @@ func GetServices(pkgs []string, projectDir string) (Services, error) {
 			continue
 		}
 
-		if _, hasProcessComposeYaml := c.ProcessComposeYaml(); hasProcessComposeYaml {
-			var svc service
-			svc.Name = c.Name
-			svc.config = c
-			services[svc.Name] = svc
+		if file, hasProcessComposeYaml := c.ProcessComposeYaml(); hasProcessComposeYaml {
+			svc := services.Service{
+				Name:               c.Name,
+				Env:                c.Env,
+				ProcessComposePath: file,
+			}
+			svcs[c.Name] = svc
 		}
 
 	}
-	return services, nil
-}
-
-func (s *Services) UnmarshalJSON(b []byte) error {
-	var m map[string]service
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-	*s = make(Services)
-	for name, svc := range m {
-		svc.Name = name
-		(*s)[name] = svc
-	}
-	return nil
+	return svcs, nil
 }

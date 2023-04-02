@@ -402,29 +402,91 @@ func (d *Devbox) saveCfg() error {
 	return cuecfg.WriteFile(cfgPath, d.cfg)
 }
 
-func (d *Devbox) Services() (plugin.Services, error) {
-	return plugin.GetServices(d.mergedPackages(), d.projectDir)
+func (d *Devbox) Services() (services.Services, error) {
+	svcSet := services.Services{}
+	pluginSvcs := services.Services{}
+	pluginSvcs, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
+	if err != nil {
+		return svcSet, err
+	}
+
+	for _, s := range pluginSvcs {
+		svcSet[s.Name] = s
+	}
+
+	if processComposeYaml := services.LookupProcessCompose(d.projectDir, ""); processComposeYaml != "" {
+		userSvcs, err := services.ReadProcessCompose(processComposeYaml)
+		if err != nil {
+			return svcSet, err
+		}
+		for _, s := range userSvcs {
+			svcSet[s.Name] = s
+		}
+	}
+
+	return svcSet, nil
+
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
+	processComposePaths := map[string]struct{}{}
 	if !IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
-	pluginServices, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
+
+	if !services.ProcessManagerIsRunning(processComposePidfile) {
+		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+	}
+
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
 
-	// Check for processes that are defined in the process-compose.yaml file
-	userServices, err := services.GetUserServices(d.projectDir)
+	if len(svcSet) == 0 {
+		return usererr.New("No services found in your project")
+	}
+
+	for _, s := range serviceNames {
+		if _, ok := svcSet[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		} else {
+			if svcSet[s].ProcessComposePath != "" {
+				processComposePaths[svcSet[s].ProcessComposePath] = struct{}{}
+			}
+		}
+	}
+
+	fmt.Printf("Services available: %s \n", svcSet)
+	fmt.Printf("Services requested: %s \n", serviceNames)
+	return services.StartServices(ctx, d.writer, serviceNames, d.projectDir)
+}
+
+func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
+	if !IsDevboxShellEnabled() {
+		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
+	}
+
+	if !services.ProcessManagerIsRunning(processComposePidfile) {
+		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+	}
+
+	if len(serviceNames) == 0 {
+		return services.StopProcessManager(ctx, d.writer, processComposePidfile)
+	}
+
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
 
-	//merge pluginServices with userServices
-	mergedServices := 
+	for _, s := range serviceNames {
+		if _, ok := svcSet[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		}
+	}
 
-	return services.StartServices(ctx, d.mergedPackages(), mergedServices, requestedServices, d.projectDir, d.writer)
+	return services.StopServices(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
 }
 
 func (d *Devbox) StartProcessManager(
@@ -437,17 +499,13 @@ func (d *Devbox) StartProcessManager(
 	if err != nil {
 		return err
 	}
+
+	if len(svcs) == 0 {
+		return usererr.New("No services found in your project")
+	}
+
 	processCompose := services.LookupProcessCompose(d.projectDir, processComposeFileOrDir)
-	hasServiceWithProcessCompose := processCompose != ""
-	for _, s := range svcs {
-		if _, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
-			hasServiceWithProcessCompose = true
-			break
-		}
-	}
-	if !hasServiceWithProcessCompose {
-		return usererr.New("No services with process-compose.yaml found")
-	}
+
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.writer, "Installing process-compose. This may take a minute but will only happen once.")
@@ -469,17 +527,8 @@ func (d *Devbox) StartProcessManager(
 
 	// Start the process manager
 	fmt.Fprintln(d.writer, "Starting process manager with requested Services: ", requestedServices)
-	return services.StartProcessManager(ctx, d.writer, requestedServices, processComposePath, svcs, processCompose, processComposePidfile, processComposeLogfile, background)
-}
 
-func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
-	}
-	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.writer, processComposePidfile)
-	}
-	return services.Stop(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
+	return services.StartProcessManager(ctx, d.writer, requestedServices, processComposePath, svcs, processCompose, processComposePidfile, processComposeLogfile, background)
 }
 
 func (d *Devbox) generateShellFiles() error {

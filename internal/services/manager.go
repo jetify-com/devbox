@@ -6,42 +6,16 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"syscall"
-
-	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/plugin"
 )
-
-type Process struct {
-	Command  string `yaml:"command"`
-	IsDaemon bool   `yaml:"is_daemon",omitempty`
-	Shutdown struct {
-		Command        string `yaml:"command",omitempty`
-		TimeoutSeconds int    `yaml:"timeout_seconds",omitempty`
-		Signal         int    `yaml:"signal",omitempty`
-	} `yaml:"shutdown",omitempty`
-	DependsOn map[string]struct {
-		Condition string `yaml:"condition",omitempty`
-	} `yaml:"depends_on",omitempty`
-	Availability struct {
-		Restart string `yaml:"restart",omitempty`
-	} `yaml:"availability",omitempty`
-}
-
-type ProcessComposeYaml struct {
-	Version   string             `yaml:"version"`
-	Processes map[string]Process `yaml:"processes"`
-}
 
 func StartProcessManager(
 	ctx context.Context,
 	w io.Writer,
 	requestedServices []string,
 	processComposePath string,
-	services plugin.Services,
+	services Services,
 	processComposeFilePath string,
 	processComposePidfile string,
 	processComposeLogfile string,
@@ -49,7 +23,7 @@ func StartProcessManager(
 ) error {
 	// Check if process-compose is already running
 
-	if processManagerIsRunning(processComposePidfile) {
+	if ProcessManagerIsRunning(processComposePidfile) {
 		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}
 
@@ -118,6 +92,7 @@ func StopProcessManager(
 	var pid *os.Process
 
 	pidfile, err := os.ReadFile(processComposePidfile)
+	fmt.Println(string(pidfile))
 	if err != nil {
 		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
 	}
@@ -131,6 +106,7 @@ func StopProcessManager(
 	pid, _ = os.FindProcess(pidInt)
 	err = pid.Signal(os.Interrupt)
 	if err != nil {
+		fmt.Println(string(pidfile))
 		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
 	}
 
@@ -138,13 +114,14 @@ func StopProcessManager(
 	return nil
 }
 
-func processManagerIsRunning(processComposePidfile string) bool {
+func ProcessManagerIsRunning(processComposePidfile string) bool {
 	pid, err := os.ReadFile(processComposePidfile)
 	if err != nil {
 		return false
 	}
 
-	process, err := os.FindProcess(int(pid[0]))
+	pidToInt, _ := strconv.Atoi(string(pid))
+	process, err := os.FindProcess(pidToInt)
 	if err != nil {
 		return false
 	}
@@ -154,44 +131,4 @@ func processManagerIsRunning(processComposePidfile string) bool {
 		return false
 	}
 	return true
-}
-
-func ReadProcessCompose(path string) (plugin.Services, error) {
-	//open the yaml at processComposePath
-	processCompose := &ProcessComposeYaml{}
-	errors := errors.WithStack(cuecfg.ParseFile(path, processCompose))
-	if errors != nil {
-		return nil, errors
-	}
-
-	services := make(plugin.Services, len(processCompose.Processes))
-	for name, process := range processCompose.Processes {
-		var svc service
-		svc.Name = name
-		services[name] = svc
-	}
-
-}
-
-func LookupProcessCompose(projectDir, path string) string {
-	if path == "" {
-		path = projectDir
-	}
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(projectDir, path)
-	}
-
-	pathsToCheck := []string{
-		path,
-		filepath.Join(path, "process-compose.yaml"),
-		filepath.Join(path, "process-compose.yml"),
-	}
-
-	for _, p := range pathsToCheck {
-		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
-			return p
-		}
-	}
-
-	return ""
 }

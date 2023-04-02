@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 const (
@@ -22,17 +23,14 @@ const (
 	VirtenvPath         = ".devbox/virtenv"
 )
 
-var WrapperPath = filepath.Join(VirtenvPath, ".wrappers")
-var WrapperBinPath = filepath.Join(WrapperPath, "bin")
-
-type config struct {
+type Config struct {
 	Name        string            `json:"name"`
 	Version     string            `json:"version"`
 	Match       string            `json:"match"`
 	CreateFiles map[string]string `json:"create_files"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
-	Services    Services          `json:"services"`
+	Services    services.Services `json:"services"`
 
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
@@ -40,7 +38,7 @@ type config struct {
 	} `json:"shell,omitempty"`
 }
 
-func (c *config) ProcessComposeYaml() (string, bool) {
+func (c *Config) ProcessComposeYaml() (string, bool) {
 	for file := range c.CreateFiles {
 		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
 			return file, true
@@ -141,8 +139,8 @@ func Env(
 	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*config, error) {
-	cfg := &config{}
+func buildConfig(pkg, projectDir, content string) (*Config, error) {
+	cfg := &Config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)

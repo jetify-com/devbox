@@ -5,6 +5,11 @@ processes:
     command: "echo \"Apache starting on port $HTTPD_PORT\ http://localhost:$HTTPD_PORT\" && apachectl start -f $HTTPD_CONFDIR/httpd.conf -D FOREGROUND"
     availability:
       restart: "always"
+    depends_on:
+      apache-error:
+        condition: process_started
+      apache-access:
+        condition: process_started
   apache-error:
     command: "tail -f $HTTPD_ERROR_LOG_FILE"
     availability:

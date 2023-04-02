@@ -111,16 +111,16 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(services) == 0 {
-		services, err = serviceNames(box)
-		if err != nil {
-			return err
-		}
-		if len(services) == 0 {
-			cmd.Println("No services to start")
-			return nil
-		}
-	}
+	// if len(services) == 0 {
+	// 	services, err = serviceNames(box)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if len(services) == 0 {
+	// 		cmd.Println("No services to start")
+	// 		return nil
+	// 	}
+	// }
 	return box.StartServices(cmd.Context(), services...)
 }
 
@@ -129,12 +129,12 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(services) == 0 {
-		services, err = serviceNames(box)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(services) == 0 {
+	// 	services, err = serviceNames(box)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 	return box.StopServices(cmd.Context(), services...)
 }
 

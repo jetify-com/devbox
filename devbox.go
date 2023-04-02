@@ -10,7 +10,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/impl"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
-	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 // Devbox provides an isolated development environment.
@@ -38,7 +38,7 @@ type Devbox interface {
 	Remove(ctx context.Context, pkgs ...string) error
 	RemoveGlobal(pkgs ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
-	Services() (plugin.Services, error)
+	Services() (services.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell(ctx context.Context) error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
