@@ -435,7 +435,9 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	}
 
 	if !services.ProcessManagerIsRunning(processComposePidfile) {
-		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+		fmt.Println("Process-compose is not running. Starting it now...")
+		fmt.Println("\nTip: We recommend using `devbox services up` to start process-compose and your services")
+		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
 	svcSet, err := d.Services()
@@ -457,8 +459,6 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		}
 	}
 
-	// fmt.Printf("Services available: %s \n", svcSet)
-	// fmt.Printf("Services requested: %s \n", serviceNames)
 	for _, s := range serviceNames {
 		err := services.StartServices(ctx, d.writer, s, d.projectDir)
 		if err != nil {
@@ -503,7 +503,9 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 	}
 
 	if !services.ProcessManagerIsRunning(processComposePidfile) {
-		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+		fmt.Println("Process-compose is not running. Starting it now...")
+		fmt.Println("\nTip: We recommend using `devbox services up` to start process-compose and your services")
+		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -517,7 +519,12 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
 		}
-		services.RestartServices(ctx, s, d.projectDir, d.writer)
+		err := services.RestartServices(ctx, s, d.projectDir, d.writer)
+		if err != nil {
+			fmt.Printf("Error restarting service %s: %s", s, err)
+		} else {
+			fmt.Printf("Service %s restarted", s)
+		}
 	}
 	return nil
 }
@@ -559,7 +566,6 @@ func (d *Devbox) StartProcessManager(
 	}
 
 	// Start the process manager
-	fmt.Fprintln(d.writer, "Starting process manager with requested Services: ", requestedServices)
 
 	return services.StartProcessManager(ctx, d.writer, requestedServices, processComposePath, svcs, processCompose, processComposePidfile, processComposeLogfile, background)
 }
