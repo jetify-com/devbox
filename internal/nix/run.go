@@ -1,11 +1,11 @@
 package nix
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -33,10 +33,6 @@ func RunScript(projectDir string, cmdWithArgs string, env map[string]string) err
 	cmd.Stderr = os.Stderr
 
 	debug.Log("Executing: %v", cmd.Args)
-	err = cmd.Run()
-	if err != nil {
-		// Report error as exec error when executing scripts.
-		err = usererr.NewExecError(err)
-	}
-	return errors.WithStack(err)
+	// Report error as exec error when executing scripts.
+	return usererr.NewExecError(cmd.Run())
 }

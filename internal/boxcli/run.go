@@ -4,11 +4,11 @@
 package boxcli
 
 import (
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/redact"
 )
 
 type runCmdFlags struct {
@@ -60,7 +60,7 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	path, script, scriptArgs, err := parseScriptArgs(args, flags)
 	if err != nil {
-		return err
+		return redact.Errorf("error parsing script arguments: %w", err)
 	}
 	debug.Log("script: %s", script)
 	debug.Log("script args: %v", scriptArgs)
@@ -68,10 +68,13 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
-		return errors.WithStack(err)
+		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
-	return box.RunScript(script, scriptArgs)
+	if err := box.RunScript(script, scriptArgs); err != nil {
+		return redact.Errorf("error running command in Devbox: %w", err)
+	}
+	return nil
 }
 
 func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string, error) {

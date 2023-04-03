@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -39,13 +38,14 @@ func CreateDockerfile(tmplFS embed.FS, path string) error {
 	// create dockerfile
 	file, err := os.Create(filepath.Join(path, "Dockerfile"))
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
+	defer file.Close()
 	// get dockerfile content
 	tmplName := "devcontainerDockerfile.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	return errors.WithStack(t.Execute(file, nil))
+	return t.Execute(file, nil)
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
@@ -53,30 +53,32 @@ func CreateDevcontainer(path string, pkgs []string) error {
 	// create devcontainer.json file
 	file, err := os.Create(filepath.Join(path, "devcontainer.json"))
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
+	defer file.Close()
 	// get devcontainer.json's content
 	devcontainerContent := getDevcontainerContent(pkgs)
 	devcontainerFileBytes, err := json.MarshalIndent(devcontainerContent, "", "  ")
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	// writing devcontainer's content into json file
 	_, err = file.Write(devcontainerFileBytes)
-	return errors.WithStack(err)
+	return err
 }
 
 func CreateEnvrc(tmplFS embed.FS, path string) error {
 	// create .envrc file
 	file, err := os.Create(filepath.Join(path, ".envrc"))
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
+	defer file.Close()
 	// get .envrc content
 	tmplName := "envrc.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	return errors.WithStack(t.Execute(file, nil))
+	return t.Execute(file, nil)
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {

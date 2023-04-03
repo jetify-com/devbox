@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/redact"
 )
 
 const DefaultPriority = 5
@@ -40,10 +40,10 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, redact.Errorf("error creating stdout pipe: %w", redact.Safe(err))
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, redact.Errorf("error starting \"nix profile list\" command: %w", err)
 	}
 
 	items := []*NixProfileListItem{}
@@ -60,7 +60,10 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 		items = append(items, item)
 	}
 
-	return items, errors.WithStack(cmd.Wait())
+	if err := cmd.Wait(); err != nil {
+		return items, redact.Errorf("error running \"nix profile list\": %w", err)
+	}
+	return items, nil
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
@@ -87,25 +90,25 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	scanner.Split(bufio.ScanWords)
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected index")
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing index: %s", line)
 	}
 	index, err := strconv.Atoi(scanner.Text())
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: %w: %s", line)
 	}
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected unlockedReference")
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing unlockedReference: %s", line)
 	}
 	unlockedReference := scanner.Text()
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected lockedReference")
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing lockedReference: %s", line)
 	}
 	lockedReference := scanner.Text()
 
 	if !scanner.Scan() {
-		return nil, errors.New("incomplete nix profile list line. Expected nixStorePath")
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing nixStorePath: %s", line)
 	}
 	nixStorePath := scanner.Text()
 
@@ -130,10 +133,10 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	// legacyPackages.x86_64.go_1_19
 	_ /*nixpkgs*/, attrPath, found := strings.Cut(item.lockedReference, "#")
 	if !found {
-		return "", errors.Errorf(
+		return "", redact.Errorf(
 			"expected to find # in lockedReference: %s from NixProfileListItem: %s",
-			item.lockedReference,
-			item.String(),
+			redact.Safe(item.lockedReference),
+			item,
 		)
 	}
 	return attrPath, nil
@@ -153,10 +156,10 @@ func (item *NixProfileListItem) PackageName() (string, error) {
 
 	parts := strings.Split(attrPath, ".")
 	if len(parts) < 2 {
-		return "", errors.Errorf(
-			"Expected >= 2 parts for AttributePath in nix profile list, but got %d parts. AttributePath: %s",
-			len(parts),
-			attrPath,
+		return "", redact.Errorf(
+			"expected >= 2 parts for AttributePath in \"nix profile list\" output, but got %d parts: %s",
+			redact.Safe(len(parts)),
+			redact.Safe(attrPath),
 		)
 	}
 
@@ -220,7 +223,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
-		return errors.Wrapf(err, "Command: %s", cmd)
+		return redact.Errorf("error running \"nix profile install\": %w", err)
 	}
 
 	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
@@ -244,8 +247,10 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	if bytes.Contains(out, []byte("does not match any packages")) {
 		return ErrPackageNotInstalled
 	}
-
-	return errors.Wrap(err, string(out))
+	if err != nil {
+		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
+	}
+	return nil
 }
 
 func AllowUnfreeEnv() []string {

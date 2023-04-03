@@ -20,6 +20,8 @@ func installCmd() *cobra.Command {
 			// So essentially, this command is running devbox run noop
 			err := runScriptCmd(cmd, []string{":"}, flags)
 			if err != nil {
+				// BUG(gcurtis): if this fails it will be reported as a usererr.ExitError
+				// and not sent to Sentry.
 				return err
 			}
 			fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
