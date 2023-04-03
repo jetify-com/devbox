@@ -65,7 +65,6 @@ func StartProcessManager(
 
 	err := cmd.Wait()
 	// Cleanup
-	fmt.Print(processComposePidfile)
 	os.Remove(processComposePidfile)
 	return err
 }
@@ -102,7 +101,6 @@ func StopProcessManager(
 	var pid *os.Process
 
 	pidfile, err := os.ReadFile(processComposePidfile)
-	fmt.Println(string(pidfile))
 	if err != nil {
 		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
 	}

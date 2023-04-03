@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -31,7 +30,6 @@ type ProcessComposeYaml struct {
 }
 
 func ReadProcessCompose(path string) (Services, error) {
-	fmt.Printf("Reading process-compose file: %s", path)
 	processCompose := &ProcessComposeYaml{}
 	services := Services{}
 	errors := errors.WithStack(cuecfg.ParseFile(path, processCompose))

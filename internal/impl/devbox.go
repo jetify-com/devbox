@@ -457,8 +457,8 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		}
 	}
 
-	fmt.Printf("Services available: %s \n", svcSet)
-	fmt.Printf("Services requested: %s \n", serviceNames)
+	// fmt.Printf("Services available: %s \n", svcSet)
+	// fmt.Printf("Services requested: %s \n", serviceNames)
 	for _, s := range serviceNames {
 		err := services.StartServices(ctx, d.writer, s, d.projectDir)
 		if err != nil {
