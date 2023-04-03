@@ -46,18 +46,28 @@ func StartProcessManager(
 		flags = append(flags, "-f", processComposeFilePath)
 	}
 
+	//run cmd in the background
 	if processComposeBackground {
 		flags = append(flags, "-t=false")
+		cmd := exec.Command(processComposePath, flags...)
+		return runProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
 	}
 
 	cmd := exec.Command(processComposePath, flags...)
 
-	//run cmd in the background
-	if processComposeBackground {
-		return runProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
 
-	return cmd.Run()
+	if err := os.WriteFile(processComposePidfile, []byte(strconv.Itoa(cmd.Process.Pid)), 0666); err != nil {
+		return fmt.Errorf("failed to write pidfile: %w", err)
+	}
+
+	err := cmd.Wait()
+	// Cleanup
+	fmt.Print(processComposePidfile)
+	os.Remove(processComposePidfile)
+	return err
 }
 
 func runProcessManagerInBackground(
@@ -65,13 +75,13 @@ func runProcessManagerInBackground(
 	processComposePidfile,
 	processComposeLogfile string,
 ) error {
-	outfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 
+	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return fmt.Errorf("failed to open process-compose log file: %w", err)
 	}
 
-	cmd.Stdout = outfile
+	cmd.Stdout = logfile
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
@@ -123,11 +133,13 @@ func ProcessManagerIsRunning(processComposePidfile string) bool {
 	pidToInt, _ := strconv.Atoi(string(pid))
 	process, err := os.FindProcess(pidToInt)
 	if err != nil {
+		fmt.Printf("Error: %s \n", err)
 		return false
 	}
 
 	err = process.Signal(syscall.Signal(0))
 	if err != nil {
+		fmt.Printf("Error: %s \n", err)
 		return false
 	}
 	return true

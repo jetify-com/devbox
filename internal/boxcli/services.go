@@ -111,16 +111,7 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// if len(services) == 0 {
-	// 	services, err = serviceNames(box)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if len(services) == 0 {
-	// 		cmd.Println("No services to start")
-	// 		return nil
-	// 	}
-	// }
+
 	return box.StartServices(cmd.Context(), services...)
 }
 
@@ -138,25 +129,17 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 	return box.StopServices(cmd.Context(), services...)
 }
 
-func serviceNames(box devbox.Devbox) ([]string, error) {
-	services, err := box.Services()
-	if err != nil {
-		return nil, err
-	}
-	names := []string{}
-	for _, service := range services {
-		names = append(names, service.Name)
-	}
-	return names, nil
-}
-
 func restartServices(
 	cmd *cobra.Command,
 	services []string,
 	flags servicesCmdFlags,
 ) error {
-	_ = stopServices(cmd, services, flags)
-	return startServices(cmd, services, flags)
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.RestartServices(cmd.Context(), services...)
 }
 
 func startProcessManager(cmd *cobra.Command, args []string, flags serviceUpFlags) error {

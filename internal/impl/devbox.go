@@ -459,7 +459,15 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 
 	fmt.Printf("Services available: %s \n", svcSet)
 	fmt.Printf("Services requested: %s \n", serviceNames)
-	return services.StartServices(ctx, d.writer, serviceNames, d.projectDir)
+	for _, s := range serviceNames {
+		err := services.StartServices(ctx, d.writer, s, d.projectDir)
+		if err != nil {
+			fmt.Printf("Error starting service %s: %s", s, err)
+		} else {
+			fmt.Printf("Service %s started successfully", s)
+		}
+	}
+	return nil
 }
 
 func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
@@ -484,9 +492,34 @@ func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
 		}
+		services.StopServices(ctx, s, d.projectDir, d.writer)
+	}
+	return nil
+}
+
+func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
+	if !IsDevboxShellEnabled() {
+		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
-	return services.StopServices(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
+	if !services.ProcessManagerIsRunning(processComposePidfile) {
+		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+	}
+
+	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
+
+	svcSet, err := d.Services()
+	if err != nil {
+		return err
+	}
+
+	for _, s := range serviceNames {
+		if _, ok := svcSet[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		}
+		services.RestartServices(ctx, s, d.projectDir, d.writer)
+	}
+	return nil
 }
 
 func (d *Devbox) StartProcessManager(
