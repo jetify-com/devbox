@@ -534,6 +534,13 @@ func (d *Devbox) StartProcessManager(
 		if err = d.addDevboxUtilityPackage("process-compose"); err != nil {
 			return err
 		}
+
+		// re-lookup the path to process-compose
+		processComposePath, err = utilityLookPath("process-compose")
+		if err != nil {
+			fmt.Fprintln(d.writer, "failed to find process-compose after installing it.")
+			return err
+		}
 	}
 	if !IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
