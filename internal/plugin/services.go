@@ -7,21 +7,21 @@ import (
 func GetServices(pkgs []string, projectDir string) (services.Services, error) {
 	svcs := services.Services{}
 	for _, pkg := range pkgs {
-		c, err := getConfigIfAny(pkg, projectDir)
+		conf, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err
 		}
-		if c == nil {
+		if conf == nil {
 			continue
 		}
 
-		if file, hasProcessComposeYaml := c.ProcessComposeYaml(); hasProcessComposeYaml {
+		if file, hasProcessComposeYaml := conf.ProcessComposeYaml(); hasProcessComposeYaml {
 			svc := services.Service{
-				Name:               c.Name,
-				Env:                c.Env,
+				Name:               conf.Name,
+				Env:                conf.Env,
 				ProcessComposePath: file,
 			}
-			svcs[c.Name] = svc
+			svcs[conf.Name] = svc
 		}
 
 	}

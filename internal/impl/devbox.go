@@ -406,7 +406,7 @@ func (d *Devbox) Services() (services.Services, error) {
 		return svcSet, err
 	}
 
-	userSvcs, err := services.FromProcessComposeYaml(d.projectDir)
+	userSvcs := services.FromProcessComposeYaml(d.projectDir)
 
 	return lo.Assign(pluginSvcs, userSvcs), nil
 
@@ -419,7 +419,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 
 	if !services.ProcessManagerIsRunning() {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
-		fmt.Fprintln(d.writer, "\nNOTE: We reccommend using `devbox services up` to start process-compose and your services")
+		fmt.Fprintln(d.writer, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
@@ -471,7 +471,10 @@ func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
 		}
-		services.StopServices(ctx, s, d.projectDir, d.writer)
+		err := services.StopServices(ctx, s, d.projectDir, d.writer)
+		if err != nil {
+			fmt.Fprintf(d.writer, "Error stopping service %s: %s", s, err)
+		}
 	}
 	return nil
 }

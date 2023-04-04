@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -9,17 +10,17 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-func FromProcessComposeYaml(projectDir string) (Services, error) {
+func FromProcessComposeYaml(projectDir string) Services {
 	// TODO need to handle if a filepath is passed in
 	if processComposeYaml := lookupProcessCompose(projectDir, ""); processComposeYaml != "" {
 		userSvcs, err := readProcessCompose(processComposeYaml)
 		if err != nil {
-			return nil, err
-		} else {
-			return userSvcs, nil
+			fmt.Fprintf(os.Stderr, "error reading process-compose.yaml: %s, skipping", err)
+			return nil
 		}
+		return userSvcs
 	}
-	return Services{}, nil
+	return Services{}
 }
 
 func readProcessCompose(path string) (Services, error) {

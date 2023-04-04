@@ -24,7 +24,7 @@ func StartServices(ctx context.Context, w io.Writer, serviceName string, project
 		fmt.Fprintf(w, "Service %s started.\n", serviceName)
 		return nil
 	default:
-		return fmt.Errorf("Error starting service %s: %s", serviceName, body)
+		return fmt.Errorf("error starting service %s: %s", serviceName, body)
 	}
 
 }
@@ -43,7 +43,7 @@ func StopServices(ctx context.Context, serviceName string, projectDir string, w 
 		fmt.Fprintf(w, "Service %s stopped.\n", serviceName)
 		return nil
 	default:
-		return fmt.Errorf("Error stopping service %s: %s", serviceName, body)
+		return fmt.Errorf("error stopping service %s: %s", serviceName, body)
 	}
 }
 
@@ -61,7 +61,7 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 		fmt.Fprintf(w, "Service %s restarted.\n", serviceName)
 		return nil
 	default:
-		return fmt.Errorf("Error restarting service %s: %s", serviceName, body)
+		return fmt.Errorf("error restarting service %s: %s", serviceName, body)
 	}
 }
 
@@ -78,7 +78,7 @@ func ListServices(ctx context.Context, serviceName string, projectDir string, w 
 	case http.StatusOK:
 		return body, nil
 	default:
-		return body, fmt.Errorf("Unable to list services: %s", body)
+		return body, fmt.Errorf("unable to list services: %s", body)
 	}
 }
 
@@ -97,7 +97,10 @@ func clientRequest(path string, method string) (string, int, error) {
 
 	defer resp.Body.Close()
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	_, err = buf.ReadFrom(resp.Body)
+	if err != nil {
+		return "", 0, err
+	}
 	body := buf.String()
 	status := resp.StatusCode
 

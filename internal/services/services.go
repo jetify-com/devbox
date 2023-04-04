@@ -1,3 +1,4 @@
+//lint:file-ignore U1000 Ignore unused function temporarily for debugging
 package services
 
 import (
@@ -14,13 +15,6 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/envir"
 )
 
-// func Start(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-// 	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, startService)
-// }
-
-//	func Stop(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-//		return toggleServices(ctx, pkgs, serviceNames, projectDir, w, stopService)
-//	}
 const (
 	processComposePidfile = ".devbox/compose.pid"
 	processComposeLogfile = ".devbox/compose.log"
@@ -37,14 +31,14 @@ type Service struct {
 	ProcessComposePath string
 }
 
+// TODO: (john) Since moving to process-compose, our services no longer use the old `toggleServices` function. We'll need to clean a lot of this up in a later PR.
+
 type serviceAction int
 
 const (
 	startService serviceAction = iota
 	stopService
 )
-
-// TODO: (john) Since moving to process-compose, our services no longer use the old `toggleServices` function. We'll need to clean a lot of this up in a later PR.
 
 func listenToAutoPortForwardingChangesOnRemote(
 	ctx context.Context,
