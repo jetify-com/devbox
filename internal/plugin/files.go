@@ -8,7 +8,7 @@ import (
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg, projectDir string) (*Config, error) {
+func getConfigIfAny(pkg, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)

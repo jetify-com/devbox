@@ -23,7 +23,7 @@ const (
 	VirtenvPath         = ".devbox/virtenv"
 )
 
-type Config struct {
+type config struct {
 	Name        string            `json:"name"`
 	Version     string            `json:"version"`
 	Match       string            `json:"match"`
@@ -38,7 +38,7 @@ type Config struct {
 	} `json:"shell,omitempty"`
 }
 
-func (c *Config) ProcessComposeYaml() (string, bool) {
+func (c *config) ProcessComposeYaml() (string, bool) {
 	for file := range c.CreateFiles {
 		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
 			return file, true
@@ -139,8 +139,8 @@ func Env(
 	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*Config, error) {
-	cfg := &Config{}
+func buildConfig(pkg, projectDir, content string) (*config, error) {
+	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)

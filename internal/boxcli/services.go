@@ -120,12 +120,6 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// if len(services) == 0 {
-	// 	services, err = serviceNames(box)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 	return box.StopServices(cmd.Context(), services...)
 }
 

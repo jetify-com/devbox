@@ -18,9 +18,13 @@ import (
 // 	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, startService)
 // }
 
-// func Stop(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-// 	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, stopService)
-// }
+//	func Stop(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
+//		return toggleServices(ctx, pkgs, serviceNames, projectDir, w, stopService)
+//	}
+const (
+	processComposePidfile = ".devbox/compose.pid"
+	processComposeLogfile = ".devbox/compose.log"
+)
 
 type Services map[string]Service
 
@@ -39,6 +43,8 @@ const (
 	startService serviceAction = iota
 	stopService
 )
+
+// TODO: (john) Since moving to process-compose, our services no longer use the old `toggleServices` function. We'll need to clean a lot of this up in a later PR.
 
 func listenToAutoPortForwardingChangesOnRemote(
 	ctx context.Context,

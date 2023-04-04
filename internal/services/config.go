@@ -4,33 +4,26 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/f1bonacc1/process-compose/src/types"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-type Process struct {
-	Command  string `yaml:"command"`
-	IsDaemon bool   `yaml:"is_daemon,omitempty"`
-	Shutdown struct {
-		Command        string `yaml:"command,omitempty"`
-		TimeoutSeconds int    `yaml:"timeout_seconds,omitempty"`
-		Signal         int    `yaml:"signal,omitempty"`
-	} `yaml:"shutdown,omitempty"`
-	DependsOn map[string]struct {
-		Condition string `yaml:"condition,omitempty"`
-	} `yaml:"depends_on,omitempty"`
-	Availability struct {
-		Restart string `yaml:"restart,omitempty"`
-	} `yaml:"availability,omitempty"`
+func FromProcessComposeYaml(projectDir string) (Services, error) {
+	// TODO need to handle if a filepath is passed in
+	if processComposeYaml := lookupProcessCompose(projectDir, ""); processComposeYaml != "" {
+		userSvcs, err := readProcessCompose(processComposeYaml)
+		if err != nil {
+			return nil, err
+		} else {
+			return userSvcs, nil
+		}
+	}
+	return Services{}, nil
 }
 
-type ProcessComposeYaml struct {
-	Version   string             `yaml:"version"`
-	Processes map[string]Process `yaml:"processes"`
-}
-
-func ReadProcessCompose(path string) (Services, error) {
-	processCompose := &ProcessComposeYaml{}
+func readProcessCompose(path string) (Services, error) {
+	processCompose := &types.Project{}
 	services := Services{}
 	errors := errors.WithStack(cuecfg.ParseFile(path, processCompose))
 	if errors != nil {
@@ -48,7 +41,7 @@ func ReadProcessCompose(path string) (Services, error) {
 	return services, nil
 }
 
-func LookupProcessCompose(projectDir, path string) string {
+func lookupProcessCompose(projectDir, path string) string {
 	if path == "" {
 		path = projectDir
 	}

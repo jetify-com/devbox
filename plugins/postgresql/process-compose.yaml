@@ -7,4 +7,5 @@ processes:
     shutdown: 
       command: "pg_ctl stop -m fast"
     availability:
-      restart: "always"
+      restart: "on_failure"
+      max_restarts: 5

@@ -1,14 +1,8 @@
-version: "0.5"
+version: "0.6"
 
 processes:
   caddy:
-    command: "caddy start -conf $CADDY_CONF -log $CADDY_LOG"
-    isDaemon: true
-    shutdown:
-      command: "caddy stop -conf $CADDY_CONF -log $CADDY_LOG"
+    command: "caddy run --config=$CADDY_CONF"
     availability:
-      restart: "always"
-  caddy-logs:
-    command: "tail -f $CADDY_LOG" 
-    availability:
-      restart: "always"
+      restart: on_failure
+      max_restarts: 5

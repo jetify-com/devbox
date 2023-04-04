@@ -40,7 +40,7 @@ func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
 	return printInfoInstructions(pkg, w)
 }
 
-func printReadme(cfg *Config, w io.Writer, markdown bool) error {
+func printReadme(cfg *config, w io.Writer, markdown bool) error {
 	if cfg.Readme == "" {
 		return nil
 	}
@@ -54,7 +54,7 @@ func printReadme(cfg *Config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printServices(cfg *Config, w io.Writer, markdown bool) error {
+func printServices(cfg *config, w io.Writer, markdown bool) error {
 	if len(cfg.Services) == 0 {
 		return nil
 	}
@@ -72,7 +72,7 @@ func printServices(cfg *Config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printCreateFiles(cfg *Config, w io.Writer, markdown bool) error {
+func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
 	if len(cfg.CreateFiles) == 0 {
 		return nil
 	}
@@ -93,7 +93,7 @@ func printCreateFiles(cfg *Config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printEnv(cfg *Config, w io.Writer, markdown bool) error {
+func printEnv(cfg *config, w io.Writer, markdown bool) error {
 	if len(cfg.Env) == 0 {
 		return nil
 	}

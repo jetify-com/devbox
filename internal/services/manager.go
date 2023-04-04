@@ -12,18 +12,16 @@ import (
 
 func StartProcessManager(
 	ctx context.Context,
-	w io.Writer,
 	requestedServices []string,
-	processComposePath string,
 	services Services,
+	projectDir string,
+	processComposePath string,
 	processComposeFilePath string,
-	processComposePidfile string,
-	processComposeLogfile string,
 	processComposeBackground bool,
 ) error {
 	// Check if process-compose is already running
 
-	if ProcessManagerIsRunning(processComposePidfile) {
+	if ProcessManagerIsRunning() {
 		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}
 
@@ -42,8 +40,9 @@ func StartProcessManager(
 		}
 	}
 
-	if processComposeFilePath != "" {
-		flags = append(flags, "-f", processComposeFilePath)
+	file := lookupProcessCompose(projectDir, processComposeFilePath)
+	if file != "" {
+		flags = append(flags, "-f", file)
 	}
 
 	//run cmd in the background
@@ -53,6 +52,10 @@ func StartProcessManager(
 		return runProcessManagerInBackground(cmd, processComposePidfile, processComposeLogfile)
 	}
 
+	return runProcessManagerInForeground(processComposePath, flags, processComposePidfile)
+}
+
+func runProcessManagerInForeground(processComposePath string, flags []string, processComposePidfile string) error {
 	cmd := exec.Command(processComposePath, flags...)
 
 	if err := cmd.Start(); err != nil {
@@ -64,7 +67,7 @@ func StartProcessManager(
 	}
 
 	err := cmd.Wait()
-	// Cleanup
+
 	os.Remove(processComposePidfile)
 	return err
 }
@@ -81,6 +84,7 @@ func runProcessManagerInBackground(
 	}
 
 	cmd.Stdout = logfile
+	cmd.Stderr = logfile
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
@@ -95,14 +99,13 @@ func runProcessManagerInBackground(
 func StopProcessManager(
 	ctx context.Context,
 	w io.Writer,
-	processComposePidfile string,
 ) error {
 	var pidfile []byte
 	var pid *os.Process
 
 	pidfile, err := os.ReadFile(processComposePidfile)
 	if err != nil {
-		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
+		return fmt.Errorf("process-compose is not running or it's pidfile is missing. To start it, run `devbox services up`")
 	}
 
 	os.Remove(processComposePidfile)
@@ -114,15 +117,14 @@ func StopProcessManager(
 	pid, _ = os.FindProcess(pidInt)
 	err = pid.Signal(os.Interrupt)
 	if err != nil {
-		fmt.Println(string(pidfile))
-		return fmt.Errorf("process-compose is not running. To start it, run `devbox services start`")
+		return fmt.Errorf("process-compose is not running. To start it, run `devbox services up`")
 	}
 
 	fmt.Fprintf(w, "Process-compose stopped successfully.\n")
 	return nil
 }
 
-func ProcessManagerIsRunning(processComposePidfile string) bool {
+func ProcessManagerIsRunning() bool {
 	pid, err := os.ReadFile(processComposePidfile)
 	if err != nil {
 		return false
