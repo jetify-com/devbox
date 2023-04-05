@@ -82,7 +82,12 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			continue
 		}
 
-		debug.Log("Creating file %q", filePath)
+		virtenvPathForPackage, err := ensureVirtenvPathForPackage(projectDir, pkg)
+		if err != nil {
+			return err
+		}
+
+		debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
 		content, err := getFileContent(contentPath)
 		if err != nil {
 			return errors.WithStack(err)
@@ -97,7 +102,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
+			"Virtenv":              virtenvPathForPackage,
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -142,7 +147,13 @@ func Env(
 	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*config, error) {
+func buildConfig(pkg, projectDir, virtenvXdgRuntimePath, content string) (*config, error) {
+
+	virtenvPathForPackage, err := ensureVirtenvPathForPackage(projectDir, pkg)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
@@ -154,7 +165,8 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
+		"Virtenv":              virtenvPathForPackage,
+		"VirtenvRuntimePath":   filepath.Join(virtenvXdgRuntimePath, pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -200,4 +212,24 @@ func (m *Manager) shouldCreateFile(filePath string) bool {
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
 	return os.IsNotExist(err)
+}
+
+func ensureVirtenvPath(projectDir string) (string, error) {
+	path := filepath.Join(projectDir, VirtenvPath)
+	if err := createDir(path); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func ensureVirtenvPathForPackage(projectDir, pkg string) (string, error) {
+	virtenvPath, err := ensureVirtenvPath(projectDir)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(virtenvPath, pkg)
+	if err := createDir(path); err != nil {
+		return "", err
+	}
+	return path, nil
 }

@@ -5,6 +5,9 @@
         "python310Packages.pip",
         "postgresql"
     ],
+    "env": {
+        "PGPORT": "5434"
+    },
     "shell": {
         "init_hook": [
             ". $VENV_DIR/bin/activate",

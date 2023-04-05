@@ -5,7 +5,7 @@
     "readme": "To initialize the database run `initdb`.",
     "env": {
         "PGDATA": "{{ .Virtenv }}/data",
-        "PGHOST": "{{ .Virtenv }}"
+        "PGHOST": "{{ .VirtenvRuntimePath }}"
     },
     "create_files": {
         "{{ .Virtenv }}/data": "",
