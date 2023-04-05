@@ -363,8 +363,8 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	if commandExists("direnv") {
 		// prompt for direnv allow
 		var result string
-
-		if isatty.IsTerminal(os.Stdin.Fd()) {
+		isInteractiveMode := isatty.IsTerminal(os.Stdin.Fd())
+		if isInteractiveMode {
 			prompt := &survey.Input{
 				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
 			}
@@ -374,7 +374,7 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 			}
 		}
 
-		if strings.ToLower(result) == "y" || !isatty.IsTerminal(os.Stdin.Fd()) {
+		if strings.ToLower(result) == "y" || !isInteractiveMode {
 			// .envrc file creation
 			err := generate.CreateEnvrc(tmplFS, d.projectDir)
 			if err != nil {
