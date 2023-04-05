@@ -66,10 +66,8 @@ func runProcessManagerInForeground(processComposePath string, flags []string, pr
 		return fmt.Errorf("failed to write pidfile: %w", err)
 	}
 
-	err := cmd.Wait()
-
-	os.Remove(processComposePidfile)
-	return err
+	defer os.Remove(processComposePidfile)
+	return cmd.Wait()
 }
 
 func runProcessManagerInBackground(
