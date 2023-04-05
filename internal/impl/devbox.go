@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -478,6 +479,49 @@ func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error
 		}
 	}
 	return nil
+}
+
+func (d *Devbox) ListServices(ctx context.Context) error {
+	if !IsDevboxShellEnabled() {
+		return d.RunScript("devbox", []string{"services", "ls"})
+	}
+
+	svcSet, err := d.Services()
+	if err != nil {
+		return err
+	}
+
+	if len(svcSet) == 0 {
+		fmt.Fprintln(d.writer, "No services found in your project")
+		return nil
+	}
+
+	if !services.ProcessManagerIsRunning() {
+		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them.")
+	} else {
+		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.writer)
+		if err != nil {
+			fmt.Fprintln(d.writer, "Error listing services: ", err)
+		} else {
+			fmt.Fprintln(d.writer, "Services running in process-compose:")
+			for _, s := range pcSvcs {
+				fmt.Fprintf(d.writer, "  %s (%s) \n", s.Name, s.Status)
+			}
+		}
+	}
+
+	fmt.Fprintln(d.writer, "\nServices available in your project:")
+	keys := make([]string, 0, len(svcSet))
+	for k := range svcSet {
+		keys = append(keys, k)
+	}
+	sort.StringSlice(keys).Sort()
+	for _, k := range keys {
+		fmt.Fprintf(d.writer, "  %s\n", svcSet[k].Name)
+	}
+
+	return nil
+
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
