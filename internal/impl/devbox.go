@@ -17,6 +17,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
@@ -363,15 +364,18 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 	if commandExists("direnv") {
 		// prompt for direnv allow
 		var result string
-		prompt := &survey.Input{
-			Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
-		}
-		err := survey.AskOne(prompt, &result)
-		if err != nil {
-			return errors.WithStack(err)
+		isInteractiveMode := isatty.IsTerminal(os.Stdin.Fd())
+		if isInteractiveMode {
+			prompt := &survey.Input{
+				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
+			}
+			err := survey.AskOne(prompt, &result)
+			if err != nil {
+				return errors.WithStack(err)
+			}
 		}
 
-		if strings.ToLower(result) == "y" {
+		if strings.ToLower(result) == "y" || !isInteractiveMode {
 			// .envrc file creation
 			err := generate.CreateEnvrc(tmplFS, d.projectDir)
 			if err != nil {
