@@ -13,7 +13,6 @@
             "build-docs": "cargo doc",
             "start": "cargo run",
             "run_test": [
-                "set -e",
                 "cargo test -- --show-output"
             ]
         }

@@ -18,7 +18,6 @@
                 "psql devbox_lapp < setup_postgres_db.sql"
             ],
             "run_test": [
-                "set -e",
                 "initdb",
                 "devbox services start",
                 "devbox run create_db",
