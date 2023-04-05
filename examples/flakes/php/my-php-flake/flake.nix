@@ -1,5 +1,5 @@
 {
-  description = "A flake to install PHP 8.2 with memcached and ds extension";
+  description = "A flake that outputs PHP with memcached and ds extension and hello pkg.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,13 +13,14 @@
       in
       {
         packages = {
+          # Flakes can export multiple packages. To include specific packages in
+          # devbox.json you can use url fragments (e.g. path:my-flake#my-package)
           php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
           hello = pkgs.hello;
+
+          # If you only want to export a single package, you can name it default which allows
+          # installation without using url fragment (.e.g. "path:my-flake")
           default = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
-        };
-        legacyPackages = {
-          php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
-          hello = pkgs.hello;
         };
       });
 }
