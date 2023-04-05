@@ -1,0 +1,8 @@
+version: "0.6"
+
+processes:
+  caddy:
+    command: "caddy run --config=$CADDY_CONF"
+    availability:
+      restart: on_failure
+      max_restarts: 5

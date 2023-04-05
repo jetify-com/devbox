@@ -13,12 +13,13 @@ type servicesCmdFlags struct {
 	config configFlags
 }
 
-type serviceManagerCmdFlag struct {
+type serviceUpFlags struct {
 	configFlags
+	background         bool
 	processComposeFile string
 }
 
-func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
+func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	flags.configFlags.register(cmd)
 	cmd.Flags().StringVar(
 		&flags.processComposeFile,
@@ -27,11 +28,13 @@ func (flags *serviceManagerCmdFlag) register(cmd *cobra.Command) {
 		"path to process compose file or directory containing process "+
 			"compose-file.yaml|yml. Default is directory containing devbox.json",
 	)
+	cmd.Flags().BoolVarP(
+		&flags.background, "background", "b", false, "Run service in background")
 }
 
 func servicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
-	managerFlags := serviceManagerCmdFlag{}
+	serviceUpFlags := serviceUpFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
 		Short: "Interact with devbox services",
@@ -70,18 +73,18 @@ func servicesCmd() *cobra.Command {
 		},
 	}
 
-	processManagerCommand := &cobra.Command{
-		Use:   "manager",
-		Short: "Start process manager with all supported services",
+	upCommand := &cobra.Command{
+		Use:   "up",
+		Short: "Starts process manager with all supported services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startProcessManager(cmd, managerFlags)
+			return startProcessManager(cmd, args, serviceUpFlags)
 		},
 	}
 
 	flags.config.register(servicesCommand)
-	managerFlags.register(processManagerCommand)
+	serviceUpFlags.register(upCommand)
 	servicesCommand.AddCommand(lsCommand)
-	servicesCommand.AddCommand(processManagerCommand)
+	servicesCommand.AddCommand(upCommand)
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
@@ -108,16 +111,7 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(services) == 0 {
-		services, err = serviceNames(box)
-		if err != nil {
-			return err
-		}
-		if len(services) == 0 {
-			cmd.Println("No services to start")
-			return nil
-		}
-	}
+
 	return box.StartServices(cmd.Context(), services...)
 }
 
@@ -126,29 +120,7 @@ func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(services) == 0 {
-		services, err = serviceNames(box)
-		if err != nil {
-			return err
-		}
-		if len(services) == 0 {
-			cmd.Println("No services to stop")
-			return nil
-		}
-	}
 	return box.StopServices(cmd.Context(), services...)
-}
-
-func serviceNames(box devbox.Devbox) ([]string, error) {
-	services, err := box.Services()
-	if err != nil {
-		return nil, err
-	}
-	names := []string{}
-	for _, service := range services {
-		names = append(names, service.Name)
-	}
-	return names, nil
 }
 
 func restartServices(
@@ -156,14 +128,19 @@ func restartServices(
 	services []string,
 	flags servicesCmdFlags,
 ) error {
-	_ = stopServices(cmd, services, flags)
-	return startServices(cmd, services, flags)
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.RestartServices(cmd.Context(), services...)
 }
 
-func startProcessManager(cmd *cobra.Command, flags serviceManagerCmdFlag) error {
+func startProcessManager(cmd *cobra.Command, args []string, flags serviceUpFlags) error {
 	box, err := devbox.Open(flags.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StartProcessManager(cmd.Context(), flags.processComposeFile)
+
+	return box.StartProcessManager(cmd.Context(), args, flags.background, flags.processComposeFile)
 }

@@ -11,13 +11,14 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 type devboxer interface {
 	NixBins(ctx context.Context) ([]string, error)
 	PrintEnv() (string, error)
 	ProjectDir() string
-	Services() (plugin.Services, error)
+	Services() (services.Services, error)
 }
 
 //go:embed wrapper.sh.tmpl

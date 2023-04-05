@@ -4,7 +4,8 @@ processes:
   nginx:
     command: "nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR -e error.log -g \"pid nginx.pid;daemon off;\""
     availability:
-      restart: "always"
+      restart: on_failure
+      max_restarts: 5
   nginx-error:
     command: "tail -f $NGINX_PATH_PREFIX/error.log"
     availability:

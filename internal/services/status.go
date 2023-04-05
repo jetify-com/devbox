@@ -1,3 +1,5 @@
+//lint:ignore U1000 Ignore unused function temporarily for debugging
+
 package services
 
 import (
@@ -110,6 +112,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 	return errors.WithStack(os.WriteFile(path, content, 0644))
 }
 
+//lint:ignore U1000 Ignore unused function temporarily for debugging
 func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
 	if !envir.IsDevboxCloud() {
 		return nil

@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 const (
@@ -32,12 +33,21 @@ type config struct {
 	CreateFiles map[string]string `json:"create_files"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
-	Services    Services          `json:"services"`
+	Services    services.Services `json:"services"`
 
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
 		InitHook shellcmd.Commands `json:"init_hook,omitempty"`
 	} `json:"shell,omitempty"`
+}
+
+func (c *config) ProcessComposeYaml() (string, bool) {
+	for file := range c.CreateFiles {
+		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
+			return file, true
+		}
+	}
+	return "", false
 }
 
 func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {

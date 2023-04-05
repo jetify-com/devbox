@@ -1,0 +1,8 @@
+# Process compose for starting django
+version: "0.5"
+
+processes:
+  django:
+   command: python todo_project/manage.py runserver
+   availability:
+    restart: "always"

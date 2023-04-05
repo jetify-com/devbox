@@ -116,7 +116,6 @@ func (p *V2Planner) getHaskellPackages(ghcPackage GHCPackage) []string {
 			}
 		case Versioned:
 			if matches := haskellPackageVersionRegex.FindAllStringSubmatch(pkg, -1); matches != nil {
-				fmt.Println(matches)
 				if matches[0][1] == ghcPackage.pkg {
 					haskellPackages = append(haskellPackages, matches[0][2])
 				}

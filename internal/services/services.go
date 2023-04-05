@@ -1,29 +1,37 @@
+//lint:file-ignore U1000 Ignore unused function temporarily for debugging
 package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
 
+	"github.com/a8m/envsubst"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
+
 	"go.jetpack.io/devbox/internal/cloud/envir"
-	"go.jetpack.io/devbox/internal/plugin"
 )
 
-func Start(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, startService)
+const (
+	processComposePidfile = ".devbox/compose.pid"
+	processComposeLogfile = ".devbox/compose.log"
+)
+
+type Services map[string]Service
+
+type Service struct {
+	Name               string            `json:"name"`
+	Env                map[string]string `json:"-"`
+	RawPort            string            `json:"port"`
+	Start              string            `json:"start"`
+	Stop               string            `json:"stop"`
+	ProcessComposePath string
 }
 
-func Stop(ctx context.Context, pkgs, serviceNames []string, projectDir string, w io.Writer) error {
-	return toggleServices(ctx, pkgs, serviceNames, projectDir, w, stopService)
-}
+// TODO: (john) Since moving to process-compose, our services no longer use the old `toggleServices` function. We'll need to clean a lot of this up in a later PR.
 
 type serviceAction int
 
@@ -31,76 +39,6 @@ const (
 	startService serviceAction = iota
 	stopService
 )
-
-func toggleServices(
-	ctx context.Context,
-	pkgs,
-	serviceNames []string,
-	projectDir string,
-	w io.Writer,
-	action serviceAction,
-) error {
-	services, err := plugin.GetServices(pkgs, projectDir)
-	if err != nil {
-		return err
-	}
-	contextChannels := []<-chan struct{}{}
-	for _, name := range serviceNames {
-		service, found := services[name]
-		if !found {
-			return usererr.New("Service not found")
-		}
-
-		serviceBinPath := filepath.Join(
-			projectDir,
-			plugin.WrapperBinPath,
-			fmt.Sprintf("%s-service-%s", name, lo.Ternary(action == startService, "start", "stop")),
-		)
-		cmd := exec.Command(serviceBinPath)
-		cmd.Stdout = w
-		cmd.Stderr = w
-		if err = cmd.Run(); err != nil {
-			actionString := lo.Ternary(action == startService, "start", "stop")
-			if len(serviceNames) == 1 {
-				return usererr.WithUserMessage(err, "Service %q failed to %s", name, actionString)
-			}
-			fmt.Fprintf(w, "Service %q failed to %s. Error = %s\n", name, actionString, err)
-		} else {
-			actionStringPast := lo.Ternary(action == startService, "started", "stopped")
-			fmt.Fprintf(w, "Service %q %s\n", name, actionStringPast)
-			port, err := service.Port()
-			if err != nil {
-				fmt.Fprintf(w, "Error getting port: %s\n", err)
-			}
-			if port != "" {
-				// Wait 5 seconds for each port forwarding to start. The function may
-				// cancel the context earlier if it detects it already started
-				childCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-				contextChannels = append(contextChannels, childCtx.Done())
-				if err := listenToAutoPortForwardingChangesOnRemote(childCtx, name, w, projectDir, action, cancel); err != nil {
-					fmt.Fprintf(w, "Error listening to port forwarding changes: %s\n", err)
-				}
-			}
-			if err := updateServiceStatusOnRemote(projectDir, &ServiceStatus{
-				Name:    name,
-				Port:    port,
-				Running: action == startService,
-			}); err != nil {
-				fmt.Fprintf(w, "Error updating status file: %s\n", err)
-			}
-		}
-	}
-
-	for _, c := range contextChannels {
-		<-c
-	}
-
-	if action == startService {
-		return printProxyURL(w, lo.PickByKeys(services, serviceNames))
-	}
-
-	return nil
-}
 
 func listenToAutoPortForwardingChangesOnRemote(
 	ctx context.Context,
@@ -146,7 +84,8 @@ func listenToAutoPortForwardingChangesOnRemote(
 	)
 }
 
-func printProxyURL(w io.Writer, services plugin.Services) error {
+func printProxyURL(w io.Writer, services Services) error {
+
 	if !envir.IsDevboxCloud() {
 		return nil
 	}
@@ -177,6 +116,38 @@ func printProxyURL(w io.Writer, services plugin.Services) error {
 			"To access other services on this vm use: %s-<port>.svc.devbox.sh\n",
 			hostname,
 		)
+	}
+	return nil
+}
+
+func (s *Service) Port() (string, error) {
+	if s.RawPort == "" {
+		return "", nil
+	}
+	return envsubst.String(s.RawPort)
+}
+
+func (s *Service) ProcessComposeYaml() (string, bool) {
+	return s.ProcessComposePath, true
+}
+
+func (s *Service) StartName() string {
+	return fmt.Sprintf("%s-service-start", s.Name)
+}
+
+func (s *Service) StopName() string {
+	return fmt.Sprintf("%s-service-stop", s.Name)
+}
+
+func (s *Services) UnmarshalJSON(b []byte) error {
+	var m map[string]Service
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	*s = make(Services)
+	for name, svc := range m {
+		svc.Name = name
+		(*s)[name] = svc
 	}
 	return nil
 }
