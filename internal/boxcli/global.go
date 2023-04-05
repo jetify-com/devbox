@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/impl"
@@ -112,13 +113,11 @@ func globalShellenvCmd() *cobra.Command {
 }
 
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalDataPath()
+	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
-		return err
-	}
-	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
+
 	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
@@ -128,13 +127,11 @@ func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalDataPath()
+	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
-		return err
-	}
-	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
+
 	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
@@ -144,13 +141,11 @@ func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalDataPath()
+	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
-		return err
-	}
-	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
+
 	box, err := devbox.Open(path, cmd.OutOrStdout())
 	if err != nil {
 		return errors.WithStack(err)
@@ -159,16 +154,23 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 }
 
 func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := devbox.GlobalDataPath()
+	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
-		return err
-	}
-	if _, err := devbox.InitConfig(path, cmd.ErrOrStderr()); err != nil {
 		return errors.WithStack(err)
 	}
+
 	box, err := devbox.Open(path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	return box.PullGlobal(args[0])
+}
+
+func ensureGlobalConfig(cmd *cobra.Command) (string, error) {
+	path, err := devbox.GlobalDataPath()
+	if err != nil {
+		return "", err
+	}
+	_, err = devbox.InitConfig(path, cmd.ErrOrStderr())
+	return path, err
 }

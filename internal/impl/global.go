@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
