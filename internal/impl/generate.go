@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
-	"go.jetpack.io/devbox/internal/plugin"
 )
 
 //go:embed tmpl/*
@@ -27,8 +26,14 @@ var tmplFS embed.FS
 
 var shellFiles = []string{"development.nix", "shell.nix"}
 
-func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *plugin.Manager) error {
-	outPath := filepath.Join(rootPath, ".devbox/gen")
+func (d *Devbox) generateShellFiles() error {
+
+	plan, err := d.ShellPlan()
+	if err != nil {
+		return err
+	}
+
+	outPath := filepath.Join(d.projectDir, ".devbox/gen")
 
 	for _, file := range shellFiles {
 		err := writeFromTemplate(outPath, plan, file)
@@ -38,7 +43,7 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err := writeFromTemplate(filepath.Join(rootPath, ".devbox"), plan, ".gitignore")
+	err = writeFromTemplate(filepath.Join(d.projectDir, ".devbox"), plan, ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -56,13 +61,17 @@ func generateForShell(rootPath string, plan *plansdk.ShellPlan, pluginManager *p
 	}
 
 	for _, pkg := range plan.DevPackages {
-		if err := pluginManager.CreateFilesAndShowReadme(pkg, rootPath); err != nil {
+		if err := d.pluginManager.CreateFilesAndShowReadme(pkg, d.projectDir); err != nil {
 			return err
 		}
 	}
 
+	if err := d.writeScriptsToFiles(); err != nil {
+		return err
+	}
+
 	return os.WriteFile(
-		filepath.Join(rootPath, ".devbox/version"),
+		filepath.Join(d.projectDir, ".devbox/version"),
 		[]byte(build.Version),
 		0644,
 	)
