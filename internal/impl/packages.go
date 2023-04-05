@@ -197,6 +197,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
+			ProjectDir:        d.projectDir,
 			Writer:            d.writer,
 		}); err != nil {
 			return err

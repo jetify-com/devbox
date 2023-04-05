@@ -25,7 +25,7 @@ import (
 type Config struct {
 	// RawPackages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	// It's differentiated from Packages() which also includes global packages.
+	// If you want local packages and global packages use MergedPackages() instead.
 	RawPackages []string `cue:"[...string]" json:"packages"`
 
 	// Env allows specifying env variables
@@ -50,9 +50,9 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
-// Packages returns the list of packages to install, including global packages.
-// It returns higher priority packages first.
-func (c *Config) Packages(w io.Writer) []string {
+// MergedPackages returns the list of packages to install, including global
+// packages. It returns higher priority packages first.
+func (c *Config) MergedPackages(w io.Writer) []string {
 	dataPath, err := GlobalDataPath()
 	if err != nil {
 		return c.RawPackages

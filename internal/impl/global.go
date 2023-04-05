@@ -43,6 +43,11 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		return err
 	}
 
+	globalRoot, err := GlobalDataPath()
+	if err != nil {
+		return err
+	}
+
 	total := len(pkgs)
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1
@@ -52,6 +57,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
+			ProjectDir:        globalRoot,
 			Writer:            d.writer,
 		})
 		if err != nil {

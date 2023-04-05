@@ -149,6 +149,17 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
 // and then PackageName = go_1_19
 func (item *NixProfileListItem) PackageName() (string, error) {
+	input := Input(item.unlockedReference)
+	if input.IsFlake() {
+		// TODO(landau): this needs to be normalized so that we can compare
+		// packages.aarch64-darwin.hello and hello and determine that they are
+		// the same package.
+		return item.unlockedReference, nil
+	}
+
+	// TODO(landau/savil): Should we use unlocked reference instead?
+	// I'm not sure we gain anything by using the locked reference. since
+	// the user specifies only the package name when installing
 	attrPath, err := item.AttributePath()
 	if err != nil {
 		return "", err
@@ -183,6 +194,7 @@ type ProfileInstallArgs struct {
 	NixpkgsCommit     string
 	Package           string
 	ProfilePath       string
+	ProjectDir        string
 	Writer            io.Writer
 }
 
@@ -207,7 +219,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
-		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
+		flakePath(args),
 	)
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
@@ -287,4 +299,13 @@ func nextPriority(profilePath string) string {
 	// Each subsequent package gets a lower priority. This matches how flake.nix
 	// behaves
 	return fmt.Sprintf("%d", max+1)
+}
+
+func flakePath(args *ProfileInstallArgs) string {
+	input := Input(args.Package)
+	if input.IsFlake() {
+		return input.urlWithFragment(args.ProjectDir)
+	}
+
+	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package
 }

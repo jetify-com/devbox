@@ -228,5 +228,5 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		return []string{}, ""
 	}
 
-	return box.Config().Packages(io.Discard), box.Config().Nixpkgs.Commit
+	return box.Config().MergedPackages(io.Discard), box.Config().Nixpkgs.Commit
 }

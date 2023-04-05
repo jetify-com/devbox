@@ -7,9 +7,22 @@
     nixpkgs-global.url = "{{ .GlobalNixpkgsInfo.URL }}";
     {{- end }}
     flake-utils.url = "github:numtide/flake-utils";
+    {{- range .FlakeInputs }}
+    {{.Name}}.url = "{{.URL}}";
+    {{- end }}
   };
 
-  outputs = { self, nixpkgs, {{ if .GlobalNixpkgsInfo }}nixpkgs-global, {{ end }}flake-utils }:
+  outputs = { 
+    self,
+    nixpkgs,
+    {{- if .GlobalNixpkgsInfo }}
+    nixpkgs-global,
+    {{- end }}
+    {{- range .FlakeInputs }}
+    {{.Name}},
+    {{- end }}
+    flake-utils 
+  }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = (import nixpkgs {
@@ -35,6 +48,11 @@
             {{- range .GlobalPackages}}
             global-pkgs.{{.}}
             {{- end}}
+            {{- range $_, $flake := .FlakeInputs }}
+            {{- range $flake.Packages}}
+            {{ $flake.Name }}.packages.${system}.{{.}}
+            {{- end }}
+            {{- end }}
           ];
         };
       }
