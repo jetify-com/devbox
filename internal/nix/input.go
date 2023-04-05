@@ -3,74 +3,150 @@ package nix
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
+	"net/url"
+	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
+
+	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-type Input string
+type Input url.URL
 
-var pathRegex = regexp.MustCompile(`^path:([^#]*).*$`)
-var fragmentRegex = regexp.MustCompile(`^.*#(.*)$`)
-
-// isFlake returns true if the package descriptor has a protocol. For now
-// we only support the "path" protocol.
-func (i Input) IsFlake() bool {
-	return strings.HasPrefix(string(i), "path:")
-}
-
-func (i Input) Name() string {
-	return filepath.Base(i.path()) + "-" + i.hash()
-}
-
-func (i Input) URL(projectDir string) string {
-	match := pathRegex.FindStringSubmatch(string(i))
-	if len(match) == 0 {
-		return ""
+func InputFromString(s, projectDir string) *Input {
+	u, _ := url.Parse(s)
+	if u.Path == "" && u.Opaque != "" {
+		u.Path = filepath.Join(projectDir, u.Opaque)
+		u.Opaque = ""
 	}
-	path := match[1]
+	return lo.ToPtr(Input(*u))
+}
 
-	if !filepath.IsAbs(path) {
-		path = filepath.Join(projectDir, path)
+func (i *Input) String() string {
+	return (*url.URL)(i).String()
+}
+
+// isFlake returns true if the package descriptor has a scheme. For now
+// we only support the "path" scheme.
+func (i *Input) IsFlake() bool {
+	return i.Scheme == "path"
+	// return strings.HasPrefix(string(i), "path:")
+}
+
+func (i *Input) Name() string {
+	return filepath.Base(i.Path) + "-" + i.hash()
+}
+
+func (i *Input) URLWithoutFragment() string {
+	u := *(*url.URL)(i) // get copy
+	u.Fragment = ""
+	return u.String()
+}
+
+func (i *Input) Packages() []string {
+	if i.Fragment == "" {
+		return []string{"default"}
 	}
-
-	protocol := strings.Split(string(i), ":")[0]
-	return protocol + ":" + path
+	return strings.Split(i.Fragment, ",")
 }
 
-func (i Input) Packages() []string {
-	return strings.Split(i.fragment(), ",")
-}
-
-func (i Input) fragment() string {
-	fragment := fragmentRegex.FindStringSubmatch(string(i))
-	if len(fragment) == 0 {
-		return ""
-	}
-	return fragment[1]
-}
-
-func (i Input) urlWithFragment(projectDir string) string {
-	url := i.URL(projectDir)
-	fragment := i.fragment()
-	if fragment == "" {
-		return url
-	}
-	return url + "#" + fragment
-}
-
-func (i Input) path() string {
-	path := pathRegex.FindStringSubmatch(string(i))
-	if len(path) == 0 {
-		return ""
-	}
-	return path[1]
-}
-
-func (i Input) hash() string {
+func (i *Input) hash() string {
 	hasher := md5.New()
-	hasher.Write([]byte(i))
+	hasher.Write([]byte(i.String()))
 	hash := hasher.Sum(nil)
 	shortHash := hex.EncodeToString(hash)[:6]
 	return shortHash
+}
+
+func (i *Input) validateExists() (bool, error) {
+	system, err := currentSystem()
+	if err != nil {
+		return false, err
+	}
+
+	outputs, err := outputs(i.Path)
+	if err != nil {
+		return false, err
+	}
+
+	fragment := i.Fragment
+	if fragment == "" {
+		fragment = "default" // if no package is specified, check for default.
+	}
+
+	if _, exists := outputs.Packages[system][fragment]; exists {
+		return true, nil
+	}
+
+	if _, exists := outputs.LegacyPackages[system][fragment]; exists {
+		return true, nil
+	}
+
+	// Another way to specify a default package is to output it as
+	// defaultPackage.${system}
+	if _, exists := outputs.DefaultPackage[system]; exists && i.Fragment == "" {
+		return true, nil
+	}
+
+	return false, usererr.New(
+		"Flake \"%s\" was found but package \"%s\" was not found in flake. "+
+			"Ensure the flake has a packages output",
+		i.Path,
+		fragment,
+	)
+}
+
+func (i *Input) equals(o *Input) bool {
+	if i.String() == o.String() {
+		return true
+	}
+	return i.Scheme == o.Scheme &&
+		i.Path == o.Path &&
+		i.Opaque == o.Opaque &&
+		i.normalizedFragment() == o.normalizedFragment()
+}
+
+// normalizedFragment attempts to return the closest thing to a package name
+// from a fragment. A fragment could be:
+// * empty string -> default
+// * a single package -> package
+// * a qualified output (e.g. packages.aarch64-darwin.hello) -> hello
+func (i *Input) normalizedFragment() string {
+	if i.Fragment == "" {
+		return "default"
+	}
+	parts := strings.Split(i.Fragment, ".")
+	return parts[len(parts)-1]
+}
+
+func currentSystem() (string, error) {
+	cmd := exec.Command(
+		"nix", "eval",
+		"--impure", "--raw", "--expr",
+		"builtins.currentSystem",
+	)
+	o, err := cmd.Output()
+	return string(o), err
+}
+
+type output struct {
+	LegacyPackages map[string]map[string]any `json:"legacyPackages"`
+	Packages       map[string]map[string]any `json:"packages"`
+	DefaultPackage map[string]map[string]any `json:"defaultPackage"`
+}
+
+func outputs(path string) (*output, error) {
+	cmd := exec.Command(
+		"nix", "flake", "show",
+		path,
+		"--json", "--legacy",
+	)
+	commandOut, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	out := &output{}
+	return out, json.Unmarshal(commandOut, out)
 }

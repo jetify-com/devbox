@@ -15,6 +15,11 @@
         packages = {
           php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
           hello = pkgs.hello;
+          default = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
+        };
+        legacyPackages = {
+          php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
+          hello = pkgs.hello;
         };
       });
 }

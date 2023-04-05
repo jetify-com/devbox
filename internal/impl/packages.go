@@ -30,8 +30,10 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg)
-		if !ok {
+		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.projectDir)
+		if err != nil {
+			return err
+		} else if !ok {
 			return errors.WithMessage(nix.ErrPackageNotFound, pkg)
 		}
 	}
@@ -215,34 +217,21 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	items, err := nix.ProfileListItems(d.writer, profileDir)
-	if err != nil {
-		return err
-	}
-
-	nameToAttributePath := map[string]string{}
-	for _, item := range items {
-		attrPath, err := item.AttributePath()
-		if err != nil {
-			return err
-		}
-		name, err := item.PackageName()
-		if err != nil {
-			return err
-		}
-		nameToAttributePath[name] = attrPath
-	}
-
 	for _, pkg := range pkgs {
-		attrPath, ok := nameToAttributePath[pkg]
-		if !ok {
-			return errors.Errorf("Did not find AttributePath for package: %s", pkg)
+		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+			Writer:     d.writer,
+			Pkg:        pkg,
+			ProjectDir: d.projectDir,
+			ProfileDir: profileDir,
+		})
+		if err != nil {
+			ux.Ferror(d.writer, "Package %s not found in profile. Skipping.\n", pkg)
 		}
 
 		// TODO: unify this with nix.ProfileRemove
 		cmd := exec.Command("nix", "profile", "remove",
 			"--profile", profileDir,
-			attrPath,
+			fmt.Sprintf("%d", index),
 		)
 		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 		cmd.Stdout = d.writer
@@ -267,23 +256,15 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 		return nil, err
 	}
 
-	items, err := nix.ProfileListItems(d.writer, profileDir)
-	if err != nil {
-		return nil, err
-	}
-
-	installed := map[string]bool{}
-	for _, item := range items {
-		packageName, err := item.PackageName()
-		if err != nil {
-			return nil, err
-		}
-		installed[packageName] = true
-	}
-
 	pending := []string{}
 	for _, pkg := range d.mergedPackages() {
-		if _, ok := installed[pkg]; !ok {
+		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+			Writer:     d.writer,
+			Pkg:        pkg,
+			ProjectDir: d.projectDir,
+			ProfileDir: profileDir,
+		})
+		if err != nil {
 			pending = append(pending, pkg)
 		}
 	}

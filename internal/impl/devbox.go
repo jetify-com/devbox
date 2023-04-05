@@ -701,7 +701,7 @@ func (d *Devbox) mergedPackages() []string {
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
 	return lo.Filter(d.cfg.RawPackages, func(pkg string, _ int) bool {
-		return !nix.Input(pkg).IsFlake()
+		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
 }
 
@@ -716,7 +716,7 @@ func (d *Devbox) globalPackages() []string {
 		return []string{}
 	}
 	return lo.Filter(global.RawPackages, func(pkg string, _ int) bool {
-		return !nix.Input(pkg).IsFlake()
+		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
 }
 

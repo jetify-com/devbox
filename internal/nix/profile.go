@@ -18,8 +18,8 @@ import (
 
 const DefaultPriority = 5
 
-// ProfileListItems returns a list of the installed packages
-func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
+// profileListItems returns a list of the installed packages
+func profileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
 	cmd := exec.Command(
 		"nix", "profile", "list",
 		"--profile", profileDir,
@@ -64,6 +64,35 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 		return items, redact.Errorf("error running \"nix profile list\": %w", err)
 	}
 	return items, nil
+}
+
+type ProfileListIndexArgs struct {
+	Writer     io.Writer
+	Pkg        string
+	ProjectDir string
+	ProfileDir string
+}
+
+func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
+	items, err := profileListItems(args.Writer, args.ProfileDir)
+	if err != nil {
+		return -1, err
+	}
+	input := InputFromString(args.Pkg, args.ProjectDir)
+
+	for _, item := range items {
+		name, err := item.packageName()
+		if err != nil {
+			return -1, err
+		}
+
+		existing := InputFromString(name, args.ProjectDir)
+
+		if input.equals(existing) {
+			return item.index, nil
+		}
+	}
+	return -1, ErrPackageNotFound
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
@@ -142,14 +171,15 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	return attrPath, nil
 }
 
-// PackageName parses the package name from the NixProfileListItem.lockedReference
+// packageName parses the package name from the NixProfileListItem.lockedReference
 //
 // For example:
 // if NixProfileListItem.lockedReference = github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
-// and then PackageName = go_1_19
-func (item *NixProfileListItem) PackageName() (string, error) {
-	input := Input(item.unlockedReference)
+// and then packageName = go_1_19
+func (item *NixProfileListItem) packageName() (string, error) {
+	// Since unlocked references should already have absolute paths, projectDir is not needed
+	input := InputFromString(item.unlockedReference, "" /*projectDir*/)
 	if input.IsFlake() {
 		// TODO(landau): this needs to be normalized so that we can compare
 		// packages.aarch64-darwin.hello and hello and determine that they are
@@ -174,8 +204,7 @@ func (item *NixProfileListItem) PackageName() (string, error) {
 		)
 	}
 
-	packageName := strings.Join(parts[2:], ".")
-	return packageName, nil
+	return strings.Join(parts[2:], "."), nil
 }
 
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
@@ -302,9 +331,9 @@ func nextPriority(profilePath string) string {
 }
 
 func flakePath(args *ProfileInstallArgs) string {
-	input := Input(args.Package)
+	input := InputFromString(args.Package, args.ProjectDir)
 	if input.IsFlake() {
-		return input.urlWithFragment(args.ProjectDir)
+		return input.String()
 	}
 
 	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package
