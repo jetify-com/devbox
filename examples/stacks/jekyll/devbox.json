@@ -15,14 +15,14 @@
                 "bundle package",
                 "rm -rf vendor"
             ],
-            "serve": [
-                "cd myblog",
-                "bundler exec $GEM_HOME/bin/jekyll serve --trace"
-            ],
             "run_test": [
                 "cd myblog",
                 "devbox run generate",
                 "bundler exec $GEM_HOME/bin/jekyll build --trace"
+            ],
+            "serve": [
+                "cd myblog",
+                "bundler exec $GEM_HOME/bin/jekyll serve --trace"
             ]
         }
     }

@@ -1,6 +1,6 @@
 # devbox install
 
-Start a new devbox shell and installs all packages mentioned in devbox.json in current directory ora directory specified via --config. 
+Starts a new devbox shell and installs all packages mentioned in devbox.json in current directory or a directory specified via --config. 
 
 Then exits the shell when packages are done installing.
 

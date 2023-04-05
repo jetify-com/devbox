@@ -1,0 +1,8 @@
+# Process compose for starting django
+version: "0.5"
+
+processes:
+  jekyll:
+   command: cd myblog && bundler exec $GEM_HOME/bin/jekyll serve
+   availability:
+    restart: "always"

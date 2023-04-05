@@ -1,0 +1,8 @@
+version: "0.5"
+
+processes:
+  redis:
+    command: "redis-server $REDIS_CONF --port $REDIS_PORT"
+    availability:
+      restart: on_failure
+      max_restarts: 5

@@ -5,9 +5,7 @@
         "stdenv.cc.cc.lib",
         "cudatoolkit"
     ],
-    "env": {
-        "LD_LIBRARY_PATH": "$PWD/.devbox/nix/profile/default/lib:/usr/lib/wsl/lib"
-    },
+    "env": {},
     "shell": {
         "init_hook": [],
         "scripts": {
