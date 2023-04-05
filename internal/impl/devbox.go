@@ -454,14 +454,6 @@ func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error
 	return services.Stop(ctx, d.mergedPackages(), serviceNames, d.projectDir, d.writer)
 }
 
-func (d *Devbox) generateShellFiles() error {
-	plan, err := d.ShellPlan()
-	if err != nil {
-		return err
-	}
-	return generateForShell(d.projectDir, plan, d.pluginManager)
-}
-
 // computeNixEnv computes the set of environment variables that define a Devbox
 // environment. The "devbox run" and "devbox shell" commands source these
 // variables into a shell before executing a command or showing an interactive
@@ -665,6 +657,7 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
 }
