@@ -1,7 +1,7 @@
 <picture>
-	<source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
-	<source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
-	<img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
+ <source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
+ <source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
+ <img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
 </picture>
 
 # Devbox
@@ -20,13 +20,23 @@ Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is i
 
 ## Demo
 
-You can try out Devbox in your browser using the button below: 
+You can try out Devbox in your browser using the button below:
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=tutorial)
 
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
+
+## Installing Devbox
+
+Use the following install script to get the latest version of Devbox:
+
+```sh
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
 
 ## Benefits
 
@@ -50,21 +60,12 @@ Are you working on multiple projects, all of which need different versions of th
 
 Devbox's dev environments are _portable_. We make it possible to declare your
 environment exactly once, and use that single definition in several different ways, including:
+
 + A local shell created through `devbox shell`
 + A devcontainer you can use with VSCode
 + A Dockerfile so you can build a production image with the exact same tools you
   used for development.
 + A remote development environment in the cloud that mirrors your local environment.
-
-## Installing Devbox
-
-Use the following install script to get the latest version of Devbox:
-
-```sh
-curl -fsSL https://get.jetpack.io/devbox | bash
-```
-
-Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
 
 ## Quickstart: Fast, Deterministic Shell
 
@@ -134,9 +135,9 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/devbox/
 
 ## Join our Developer Community
 
-- Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/jetpack-io) – we have a #devbox channel dedicated to this project.
-- File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
-- Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
++ Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/jetpack-io) – we have a #devbox channel dedicated to this project.
++ File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
++ Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
 
 ## Contributing
 
@@ -148,7 +149,7 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## Translation
 
-- [Chinese](./docs/translation/README-zh-CN.md)
++ [Chinese](./docs/translation/README-zh-CN.md)
 
 ## License
 
