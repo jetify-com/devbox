@@ -18,8 +18,10 @@ import (
 
 const DefaultPriority = 5
 
-// profileListItems returns a list of the installed packages
-func profileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
+type NixProfileList []*NixProfileListItem
+
+// ProfileListItems returns a list of the installed packages
+func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, error) {
 	cmd := exec.Command(
 		"nix", "profile", "list",
 		"--profile", profileDir,
@@ -67,6 +69,9 @@ func profileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 }
 
 type ProfileListIndexArgs struct {
+	// For performance you can reuse the same list in multiple operations if you
+	// are confident index has not changed.
+	List       NixProfileList
 	Writer     io.Writer
 	Pkg        string
 	ProjectDir string
@@ -74,13 +79,18 @@ type ProfileListIndexArgs struct {
 }
 
 func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
-	items, err := profileListItems(args.Writer, args.ProfileDir)
-	if err != nil {
-		return -1, err
+	var err error
+	list := args.List
+	if list == nil {
+		list, err = ProfileListItems(args.Writer, args.ProfileDir)
+		if err != nil {
+			return -1, err
+		}
 	}
+
 	input := InputFromString(args.Pkg, args.ProjectDir)
 
-	for _, item := range items {
+	for _, item := range list {
 		name, err := item.packageName()
 		if err != nil {
 			return -1, err

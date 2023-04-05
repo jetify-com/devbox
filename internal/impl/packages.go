@@ -257,8 +257,13 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	}
 
 	pending := []string{}
+	list, err := nix.ProfileListItems(d.writer, profileDir)
+	if err != nil {
+		return nil, err
+	}
 	for _, pkg := range d.mergedPackages() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+			List:       list,
 			Writer:     d.writer,
 			Pkg:        pkg,
 			ProjectDir: d.projectDir,
