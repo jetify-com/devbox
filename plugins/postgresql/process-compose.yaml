@@ -2,10 +2,9 @@ version: "0.5"
 
 processes:
   postgresql:
-    command: "pg_ctl start -l $PGHOST/logfile -o \"-k $PGHOST\""
-    isDaemon: true
+    command: "pg_ctl start -o \"-k $PGHOST\""
+    is_daemon: true
     shutdown: 
       command: "pg_ctl stop -m fast"
     availability:
-      restart: "on_failure"
-      max_restarts: 5
+      restart: "always"
