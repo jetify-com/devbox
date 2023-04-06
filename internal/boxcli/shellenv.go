@@ -28,10 +28,6 @@ func shellEnvCmd() *cobra.Command {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), s)
-
-			if flags.runInitHook {
-				fmt.Fprintln(cmd.OutOrStdout(), shellEnvInitHookFunc(cmd, flags))
-			}
 			return nil
 		},
 	}
@@ -49,14 +45,15 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	return box.PrintEnv()
-}
-
-func shellEnvInitHookFunc(cmd *cobra.Command, flags shellEnvCmdFlags) string {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	envStr, err := box.PrintEnv()
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return box.Config().Shell.InitHook.String()
+	if flags.runInitHook {
+		initHookStr := box.Config().Shell.InitHook.String()
+		return fmt.Sprintf("%s\n%s", envStr, initHookStr), nil
+	}
+
+	return envStr, nil
 }
