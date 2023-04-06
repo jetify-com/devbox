@@ -1,0 +1,12 @@
+{
+  "name": "devbox-nodejs-repro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "run_test": "less-watch-compiler less-src less-out --run-once"
+  },
+  "devDependencies": {
+    "less": "^4.1.3",
+    "less-watch-compiler": "^1.16.3"
+  }
+}
