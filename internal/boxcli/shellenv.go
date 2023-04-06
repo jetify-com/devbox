@@ -11,7 +11,8 @@ import (
 )
 
 type shellEnvCmdFlags struct {
-	config configFlags
+	config      configFlags
+	runInitHook bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -31,6 +32,9 @@ func shellEnvCmd() *cobra.Command {
 		},
 	}
 
+	command.Flags().BoolVar(
+		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
+
 	flags.config.register(command)
 	return command
 }
@@ -41,5 +45,15 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	return box.PrintEnv()
+	envStr, err := box.PrintEnv()
+	if err != nil {
+		return "", err
+	}
+
+	if flags.runInitHook {
+		initHookStr := box.Config().Shell.InitHook.String()
+		return fmt.Sprintf("%s\n%s", envStr, initHookStr), nil
+	}
+
+	return envStr, nil
 }
