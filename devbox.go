@@ -48,6 +48,7 @@ type Devbox interface {
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, services ...string) error
+	ListServices(ctx context.Context) error
 }
 
 // Open opens a devbox by reading the config file in dir.
