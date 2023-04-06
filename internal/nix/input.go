@@ -17,7 +17,7 @@ type Input url.URL
 
 func InputFromString(s, projectDir string) *Input {
 	u, _ := url.Parse(s)
-	if u.Path == "" && u.Opaque != "" {
+	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		u.Path = filepath.Join(projectDir, u.Opaque)
 		u.Opaque = ""
 	}
@@ -31,13 +31,27 @@ func (i *Input) String() string {
 // isFlake returns true if the package descriptor has a scheme. For now
 // we only support the "path" scheme.
 func (i *Input) IsFlake() bool {
-	// Technically flakes allows omitting the scheme for absolute paths, but
+	return i.IsLocal() || i.IsGithub()
+}
+
+func (i *Input) IsLocal() bool {
+	// Technically flakes allows omitting the scheme for local absolute paths, but
 	// we don't support that (yet).
 	return i.Scheme == "path"
 }
 
+func (i *Input) IsGithub() bool {
+	return i.Scheme == "github"
+}
+
 func (i *Input) Name() string {
-	return filepath.Base(i.Path) + "-" + i.hash()
+	if i.IsLocal() {
+		return filepath.Base(i.Path) + "-" + i.hash()
+	}
+	if i.IsGithub() {
+		return strings.Join(strings.Split(i.Opaque, "/")[:2], "-")
+	}
+	return i.hash()
 }
 
 func (i *Input) URLWithoutFragment() string {
@@ -143,6 +157,7 @@ type output struct {
 	DefaultPackage map[string]map[string]any `json:"defaultPackage"`
 }
 
+// TODO(landau): use nix search instead!
 func outputs(path string) (*output, error) {
 	cmd := exec.Command(
 		"nix", "flake", "show",
