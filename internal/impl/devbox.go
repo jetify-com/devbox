@@ -12,14 +12,15 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
-	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
@@ -402,15 +403,26 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	svcSet := services.Services{}
+	result := services.Services{}
 	pluginSvcs, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
 	if err != nil {
-		return svcSet, err
+		return result, err
 	}
 
 	userSvcs := services.FromProcessComposeYaml(d.projectDir)
 
-	return lo.Assign(pluginSvcs, userSvcs), nil
+	svcSet, err := lo.Assign(pluginSvcs, userSvcs), nil
+
+	keys := make([]string, 0, len(svcSet))
+	for k := range svcSet {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	for _, k := range keys {
+		result[k] = svcSet[k]
+	}
+
+	return result, nil
 
 }
 
@@ -497,31 +509,26 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 	}
 
 	if !services.ProcessManagerIsRunning() {
-		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them.")
-	} else {
-		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.writer)
-		if err != nil {
-			fmt.Fprintln(d.writer, "Error listing services: ", err)
-		} else {
-			fmt.Fprintln(d.writer, "Services running in process-compose:")
-			for _, s := range pcSvcs {
-				fmt.Fprintf(d.writer, "  %s (%s) \n", s.Name, s.Status)
-			}
+		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them:")
+		fmt.Fprintln(d.writer, "")
+		for _, s := range svcSet {
+			fmt.Fprintf(d.writer, "  %s\n", s.Name)
 		}
+		return nil
 	}
-
-	fmt.Fprintln(d.writer, "\nServices available in your project:")
-	keys := make([]string, 0, len(svcSet))
-	for k := range svcSet {
-		keys = append(keys, k)
+	tw := tabwriter.NewWriter(d.writer, 3, 2, 8, ' ', tabwriter.TabIndent)
+	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.writer)
+	if err != nil {
+		fmt.Fprintln(d.writer, "Error listing services: ", err)
+	} else {
+		fmt.Fprintln(d.writer, "Services running in process-compose:")
+		fmt.Fprintln(tw, "NAME\tSTATUS\tEXIT CODE")
+		for _, s := range pcSvcs {
+			fmt.Fprintf(tw, "%s\t%s\t%d\n", s.Name, s.Status, s.ExitCode)
+		}
+		tw.Flush()
 	}
-	sort.StringSlice(keys).Sort()
-	for _, k := range keys {
-		fmt.Fprintf(d.writer, "  %s\n", svcSet[k].Name)
-	}
-
 	return nil
-
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {

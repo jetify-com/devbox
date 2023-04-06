@@ -77,7 +77,7 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]ProcessSummary, error) {
 	path := "/processes"
 	method := "GET"
-	var results = []ProcessSummary{}
+	results := []ProcessSummary{}
 
 	body, status, err := clientRequest(path, method)
 	if err != nil {
