@@ -106,8 +106,13 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 }
 
 func clientRequest(path string, method string) (string, int, error) {
-	port := "8280"
-	req, err := http.NewRequest(method, fmt.Sprintf("http://localhost:%s%s", port, path), nil)
+	port, err := GetProcessManagerPort()
+	if err != nil {
+		err := fmt.Errorf("unable to connect to process-compose server: %s", err.Error())
+		return "", 0, err
+	}
+
+	req, err := http.NewRequest(method, fmt.Sprintf("http://localhost:%d%s", port, path), nil)
 	if err != nil {
 		return "", 0, err
 	}
