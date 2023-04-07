@@ -16,7 +16,6 @@
         "scripts": {
             "create_db": [
                 "echo \"Creating DB\"",
-                "devbox services restart postgresql",
                 "dropdb --if-exists todo_db",
                 "createdb todo_db",
                 "psql todo_db -c \"CREATE USER todo_user WITH PASSWORD 'secretpassword';\"",
@@ -30,9 +29,12 @@
                 "python todo_project/manage.py runserver"
             ],
             "run_test": [
+                "set -e",
                 "initdb",
+                "devbox services start",
                 "devbox run create_db",
-                "python todo_project/manage.py test"
+                "python todo_project/manage.py test",
+                "devbox services stop"
             ]
         }
     }
