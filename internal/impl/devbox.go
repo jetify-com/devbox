@@ -130,6 +130,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
 	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.GlobalPackages = d.globalPackages()
+	shellPlan.FlakeInputs = d.flakeInputs()
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	if err != nil {
@@ -847,11 +848,15 @@ func (d *Devbox) nixFlakesFilePath() string {
 // specified by config and globals. It maintains the order of mergedPackages
 // as specified by Config.Packages() (higher priority first)
 func (d *Devbox) mergedPackages() []string {
-	return d.cfg.Packages(d.writer)
+	return d.cfg.MergedPackages(d.writer)
 }
 
+// TODO(landau): localPackages, globalPackages, and flakeInput packages could
+// be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
-	return d.cfg.RawPackages
+	return lo.Filter(d.cfg.RawPackages, func(pkg string, _ int) bool {
+		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
+	})
 }
 
 func (d *Devbox) globalPackages() []string {
@@ -864,7 +869,9 @@ func (d *Devbox) globalPackages() []string {
 	if err != nil {
 		return []string{}
 	}
-	return global.RawPackages
+	return lo.Filter(global.RawPackages, func(pkg string, _ int) bool {
+		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
+	})
 }
 
 func (d *Devbox) globalCommitHash() string {

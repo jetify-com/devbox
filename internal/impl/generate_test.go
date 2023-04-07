@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 func TestWriteFromTemplate(t *testing.T) {
@@ -36,6 +37,7 @@ func TestWriteFromTemplate(t *testing.T) {
 			Definitions    []string
 			DevPackages    []string
 			GlobalPackages []string
+			FlakeInputs    []plansdk.FlakeInput
 		}{}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
 		if err != nil {
@@ -97,6 +99,7 @@ var testFlakeTmplPlan = &struct {
 	Definitions    []string
 	DevPackages    []string
 	GlobalPackages []string
+	FlakeInputs    []plansdk.FlakeInput
 }{
 	NixpkgsInfo: struct {
 		URL string

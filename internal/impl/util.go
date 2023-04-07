@@ -22,10 +22,17 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 	if err != nil {
 		return err
 	}
+
+	utilityRoot, err := utilityDataPath()
+	if err != nil {
+		return err
+	}
+
 	return nix.ProfileInstall(&nix.ProfileInstallArgs{
 		NixpkgsCommit: nixpkgsUtilityCommit,
 		Package:       pkg,
 		ProfilePath:   profilePath,
+		ProjectDir:    utilityRoot,
 		Writer:        d.writer,
 	})
 }

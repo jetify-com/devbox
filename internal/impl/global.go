@@ -32,9 +32,18 @@ and restart your shell to fix this:
 const currentGlobalProfile = "default"
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
+	pkgs = lo.Uniq(pkgs)
+	globalRoot, err := GlobalDataPath()
+	if err != nil {
+		return err
+	}
+
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
-		if !nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg) {
+		found, err := nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg, globalRoot)
+		if err != nil {
+			return err
+		} else if !found {
 			return nix.ErrPackageNotFound
 		}
 	}
@@ -53,6 +62,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
+			ProjectDir:        globalRoot,
 			Writer:            d.writer,
 		})
 		if err != nil {
@@ -72,6 +82,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
+	pkgs = lo.Uniq(pkgs)
 	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
 		ux.Fwarning(
 			d.writer,
