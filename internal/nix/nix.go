@@ -84,56 +84,72 @@ func parseInfo(pkg string, data []byte) *Info {
 	return nil
 }
 
-type varsAndFuncs struct {
-	Functions map[string]string   // the key is the name, the value is the body.
+type printDevEnvOut struct {
 	Variables map[string]variable // the key is the name.
 }
+
 type variable struct {
 	Type  string // valid types are var, exported, and array.
 	Value any    // can be a string or an array of strings (iff type is array).
 }
 
 type PrintDevEnvArgs struct {
-	NixFlakesFilePath       string
-	NixPrintDevEnvCachePath string
-	UsePrintDevEnvCache     bool
+	FlakesFilePath       string
+	PrintDevEnvCachePath string
+	UsePrintDevEnvCache  bool
 }
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*varsAndFuncs, error) {
+func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, error) {
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
-	var out []byte
+	var data []byte
+	var err error
+	var out printDevEnvOut
+
 	if args.UsePrintDevEnvCache {
-		if _, err := os.Stat(args.NixPrintDevEnvCachePath); err == nil {
-			out, err = os.ReadFile(args.NixPrintDevEnvCachePath)
+		if _, err := os.Stat(args.PrintDevEnvCachePath); err == nil {
+			data, err = os.ReadFile(args.PrintDevEnvCachePath)
 			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			if err := json.Unmarshal(data, &out); err != nil {
 				return nil, errors.WithStack(err)
 			}
 		}
 	}
 
-	var err error
-	if len(out) == 0 {
-		cmd := exec.CommandContext(ctx, "nix", "print-dev-env", args.NixFlakesFilePath)
+	if len(data) == 0 {
+		cmd := exec.CommandContext(ctx, "nix", "print-dev-env", args.FlakesFilePath)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
-		out, err = cmd.Output()
+		data, err = cmd.Output()
 		if err != nil {
 			return nil, errors.Wrapf(err, "Command: %s", cmd)
 		}
 
-		_ = os.WriteFile(
-			args.NixPrintDevEnvCachePath,
-			out,
-			0644,
-		)
+		if err := json.Unmarshal(data, &out); err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		if savePrintDevEnvCache(args.PrintDevEnvCachePath, out); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 
-	var vaf varsAndFuncs
-	return &vaf, errors.WithStack(json.Unmarshal(out, &vaf))
+	return &out, nil
+}
+
+func savePrintDevEnvCache(path string, out printDevEnvOut) error {
+	data, err := json.Marshal(out)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	_ = os.WriteFile(path, data, 0644)
+	return nil
 }
 
 // FlakeNixpkgs returns a flakes-compatible reference to the nixpkgs registry.

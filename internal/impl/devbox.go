@@ -687,9 +687,9 @@ func (d *Devbox) computeNixEnv(
 	}
 
 	vaf, err := nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
-		NixFlakesFilePath:       d.nixFlakesFilePath(),
-		NixPrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
-		UsePrintDevEnvCache:     usePrintDevEnvCache,
+		FlakesFilePath:       d.nixFlakesFilePath(),
+		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
+		UsePrintDevEnvCache:  usePrintDevEnvCache,
 	})
 	if err != nil {
 		return nil, err
