@@ -88,7 +88,6 @@ func writeGlobalProcessComposeConfig(config globalProcessComposeConfig) error {
 		return fmt.Errorf("failed to get config path: %w", err)
 	}
 
-	fmt.Println(path)
 	path = filepath.Join(path, "process-compose.json")
 
 	if err = os.WriteFile(path, json, 0666); err != nil {
@@ -109,6 +108,7 @@ func cleanupProject(globalProcessComposeConfig globalProcessComposeConfig, runID
 
 func StartProcessManager(
 	ctx context.Context,
+	w io.Writer,
 	requestedServices []string,
 	services Services,
 	projectDir string,
@@ -157,10 +157,10 @@ func StartProcessManager(
 	}
 
 	cmd := exec.Command(processComposePath, flags...)
-	return runProcessManagerInForeground(cmd, port)
+	return runProcessManagerInForeground(cmd, port, w)
 }
 
-func runProcessManagerInForeground(cmd *exec.Cmd, port int) error {
+func runProcessManagerInForeground(cmd *exec.Cmd, port int, w io.Writer) error {
 	runID := uuid.New().String()
 
 	if err := cmd.Start(); err != nil {
@@ -186,7 +186,12 @@ func runProcessManagerInForeground(cmd *exec.Cmd, port int) error {
 	}
 
 	defer cleanupProject(globalProcessComposeConfig, runID)
-	return cmd.Wait()
+	err = cmd.Wait()
+	if err.Error() == "exit status 1" {
+		fmt.Fprintln(w, "Process-compose was terminated remotely")
+		return nil
+	}
+	return err
 }
 
 func runProcessManagerInBackground(cmd *exec.Cmd, port int) error {
@@ -250,6 +255,27 @@ func StopProcessManager(
 	}
 
 	fmt.Fprintf(w, "Process-compose stopped successfully.\n")
+	return nil
+}
+
+func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
+	globalProcessComposeConfig := readGlobalProcessComposeConfig()
+
+	for _, project := range globalProcessComposeConfig.Instances {
+		pid, _ := os.FindProcess(project.Pid)
+		err := pid.Signal(os.Interrupt)
+		if err != nil {
+			fmt.Printf("process-compose is not running. To start it, run `devbox services up`")
+		}
+	}
+
+	globalProcessComposeConfig.Instances = make(map[string]projectConfig)
+
+	err := writeGlobalProcessComposeConfig(globalProcessComposeConfig)
+	if err != nil {
+		return fmt.Errorf("failed to write global process-compose config: %w", err)
+	}
+
 	return nil
 }
 

@@ -467,9 +467,18 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
+func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
+		args := []string{"services", "stop"}
+		args = append(args, serviceNames...)
+		if allProjects {
+			args = append(args, "--all-projects")
+		}
+		return d.RunScript("devbox", args)
+	}
+
+	if allProjects {
+		return services.StopAllProcessManagers(ctx, d.writer)
 	}
 
 	if !services.ProcessManagerIsRunning() {
@@ -582,8 +591,6 @@ func (d *Devbox) StartProcessManager(
 		return usererr.New("No services found in your project")
 	}
 
-	// processCompose := services.LookupProcessCompose(d.projectDir, processComposeFileOrDir)
-
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.writer, "Installing process-compose. This may take a minute but will only happen once.")
@@ -612,7 +619,15 @@ func (d *Devbox) StartProcessManager(
 
 	// Start the process manager
 
-	return services.StartProcessManager(ctx, requestedServices, svcs, d.projectDir, processComposePath, processComposeFileOrDir, background)
+	return services.StartProcessManager(
+		ctx,
+		d.writer,
+		requestedServices,
+		svcs,
+		d.projectDir,
+		processComposePath, processComposeFileOrDir,
+		background,
+	)
 }
 
 // computeNixEnv computes the set of environment variables that define a Devbox
