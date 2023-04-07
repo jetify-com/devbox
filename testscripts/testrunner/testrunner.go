@@ -42,7 +42,7 @@ func RunTestscripts(t *testing.T, testscriptsDir string) {
 			continue
 		}
 
-		testscript.Run(t, getTestscriptParams(dir))
+		testscript.Run(t, getTestscriptParams(t, dir))
 	}
 }
 
@@ -67,12 +67,12 @@ func globDirs(pattern string) []string {
 	return directories
 }
 
-func getTestscriptParams(dir string) testscript.Params {
+func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
 		RequireExplicitExec: true,
 		TestWork:            false, // Set to true if you're trying to debug a test.
-		Setup:               setupTestEnv,
+		Setup:               func(env *testscript.Env) error { return setupTestEnv(t, env) },
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
 			"env.path.len":  assertPathLength,
 			"json.superset": assertJSONSuperset,

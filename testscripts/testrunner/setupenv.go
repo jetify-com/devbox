@@ -4,13 +4,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/rogpeppe/go-internal/testscript"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-func setupTestEnv(env *testscript.Env) error {
+func setupTestEnv(t *testing.T, env *testscript.Env) error {
 	setupPATH(env)
+
+	setupHome(t, env)
 
 	err := setupCacheHome(env)
 	if err != nil {
@@ -19,6 +22,15 @@ func setupTestEnv(env *testscript.Env) error {
 
 	env.Setenv("DEVBOX_DEBUG", os.Getenv("DEVBOX_DEBUG"))
 	return nil
+}
+
+func setupHome(t *testing.T, env *testscript.Env) {
+
+	// We set a HOME env-var because:
+	// 1. testscripts overrides it to /no-home, presumably to improve isolation
+	// 2. but many language tools rely on a $HOME being set, and break due to 1.
+	//    examples include ~/.dotnet folder and GOCACHE=$HOME/Library/Caches/go-build
+	env.Setenv("HOME", t.TempDir())
 }
 
 func setupPATH(env *testscript.Env) {

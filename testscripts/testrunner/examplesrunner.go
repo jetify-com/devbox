@@ -77,7 +77,7 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 		t.Error(err)
 	}
 
-	params := getTestscriptParams(testscriptDir)
+	params := getTestscriptParams(t, testscriptDir)
 
 	// save a reference to the original params.Setup so that we can wrap it below
 	setup := params.Setup
@@ -86,14 +86,6 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 		if err := setup(env); err != nil {
 			return errors.WithStack(err)
 		}
-
-		// We set a HOME env-var because:
-		// 1. testscripts overrides it to /no-home, presumably to improve isolation
-		// 2. but many language tools rely on a $HOME being set, and break due to 1.
-		//    examples include ~/.dotnet folder and GOCACHE=$HOME/Library/Caches/go-build
-		// We deliberately set this for examplesrunner since we are dealing with
-		// language stacks, and not for the testrunner which has devbox unit tests.
-		env.Setenv("HOME", t.TempDir())
 
 		// copy all the files and folders of the devbox-project being tested to the workdir
 		debug.Log("copying projectDir: %s to env.WorkDir: %s\n", projectDir, env.WorkDir)
