@@ -31,8 +31,9 @@ func (i *Input) String() string {
 // isFlake returns true if the package descriptor has a scheme. For now
 // we only support the "path" scheme.
 func (i *Input) IsFlake() bool {
+	// Technically flakes allows omitting the scheme for absolute paths, but
+	// we don't support that (yet).
 	return i.Scheme == "path"
-	// return strings.HasPrefix(string(i), "path:")
 }
 
 func (i *Input) Name() string {
@@ -42,10 +43,14 @@ func (i *Input) Name() string {
 func (i *Input) URLWithoutFragment() string {
 	u := *(*url.URL)(i) // get copy
 	u.Fragment = ""
+	// This will produce urls with extra slashes after the scheme, but that's ok
 	return u.String()
 }
 
 func (i *Input) Packages() []string {
+	if !i.IsFlake() {
+		return []string{i.String()}
+	}
 	if i.Fragment == "" {
 		return []string{"default"}
 	}
