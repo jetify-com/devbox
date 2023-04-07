@@ -49,6 +49,8 @@ Disallow: /user/register
 Disallow: /user/password
 Disallow: /user/login
 Disallow: /user/logout
+Disallow: /media/oembed
+Disallow: /*/media/oembed
 # Paths (no clean URLs)
 Disallow: /index.php/admin/
 Disallow: /index.php/comment/reply/
@@ -59,3 +61,5 @@ Disallow: /index.php/user/password
 Disallow: /index.php/user/register
 Disallow: /index.php/user/login
 Disallow: /index.php/user/logout
+Disallow: /index.php/media/oembed
+Disallow: /index.php/*/media/oembed
