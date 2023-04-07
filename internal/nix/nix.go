@@ -134,7 +134,7 @@ func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, e
 			return nil, errors.WithStack(err)
 		}
 
-		if savePrintDevEnvCache(args.PrintDevEnvCachePath, out); err != nil {
+		if err = savePrintDevEnvCache(args.PrintDevEnvCachePath, out); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	}
