@@ -187,7 +187,7 @@ func runProcessManagerInForeground(cmd *exec.Cmd, port int, w io.Writer) error {
 
 	defer cleanupProject(globalProcessComposeConfig, runID)
 	err = cmd.Wait()
-	if err.Error() == "exit status 1" {
+	if err != nil && err.Error() == "exit status 1" {
 		fmt.Fprintln(w, "Process-compose was terminated remotely")
 		return nil
 	}
