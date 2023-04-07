@@ -10,7 +10,7 @@ If a Devbox Cloud instance (from [devbox.sh](https://devbox.sh)) has an `Open In
 
 ### Auto Shell on a devbox project
 
-When VScode Terminal is opened on a devbox project, this extension detects `devbox.json` and runs `devbox shell` so terminal is automatically in devbox shell environment. Can be turned off in settings.
+When VSCode Terminal is opened on a devbox project, this extension detects `devbox.json` and runs `devbox shell` so terminal is automatically in devbox shell environment. Can be turned off in settings.
 
 ### Run devbox commands from command palette
 
@@ -21,7 +21,7 @@ When VScode Terminal is opened on a devbox project, this extension detects `devb
 - **Remove:** Removes a package from devbox.json
 - **Shell:** Opens a terminal and runs devbox shell
 - **Run:** Runs a script from devbox.json if specified
-- **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or Github Codespaces.
+- **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or GitHub Codespaces.
 - **Generate a Dockerfile from devbox.json:** Generates a Dockerfile a project's root directory. This allows for running the devbox project in a container.
 
 ---
