@@ -27,6 +27,8 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
+	pkgs = lo.Uniq(pkgs)
+
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
@@ -84,6 +86,8 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRemove")
 	defer task.End()
+
+	pkgs = lo.Uniq(pkgs)
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
 	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)

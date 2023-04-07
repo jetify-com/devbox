@@ -32,6 +32,7 @@ and restart your shell to fix this:
 const currentGlobalProfile = "default"
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
+	pkgs = lo.Uniq(pkgs)
 	globalRoot, err := GlobalDataPath()
 	if err != nil {
 		return err
@@ -81,6 +82,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
+	pkgs = lo.Uniq(pkgs)
 	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
 		ux.Fwarning(
 			d.writer,
