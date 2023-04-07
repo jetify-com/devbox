@@ -93,18 +93,43 @@ type variable struct {
 	Value any    // can be a string or an array of strings (iff type is array).
 }
 
+type PrintDevEnvArgs struct {
+	NixFlakesFilePath       string
+	NixPrintDevEnvCachePath string
+	UsePrintDevEnvCache     bool
+}
+
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(ctx context.Context, nixShellFilePath, nixFlakesFilePath string) (*varsAndFuncs, error) {
+func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*varsAndFuncs, error) {
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
-	cmd := exec.CommandContext(ctx, "nix", "print-dev-env", nixFlakesFilePath)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Args = append(cmd.Args, "--json")
-	debug.Log("Running print-dev-env cmd: %s\n", cmd)
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, errors.Wrapf(err, "Command: %s", cmd)
+	var out []byte
+	if args.UsePrintDevEnvCache {
+		if _, err := os.Stat(args.NixPrintDevEnvCachePath); err == nil {
+			out, err = os.ReadFile(args.NixPrintDevEnvCachePath)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+		}
+	}
+
+	var err error
+	if len(out) == 0 {
+		cmd := exec.CommandContext(ctx, "nix", "print-dev-env", args.NixFlakesFilePath)
+		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		cmd.Args = append(cmd.Args, "--json")
+		debug.Log("Running print-dev-env cmd: %s\n", cmd)
+		out, err = cmd.Output()
+		if err != nil {
+			return nil, errors.Wrapf(err, "Command: %s", cmd)
+		}
+
+		_ = os.WriteFile(
+			args.NixPrintDevEnvCachePath,
+			out,
+			0644,
+		)
 	}
 
 	var vaf varsAndFuncs
