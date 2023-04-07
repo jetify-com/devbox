@@ -132,6 +132,7 @@ func currentSystem() (string, error) {
 		"--impure", "--raw", "--expr",
 		"builtins.currentSystem",
 	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	o, err := cmd.Output()
 	return string(o), err
 }
@@ -148,6 +149,7 @@ func outputs(path string) (*output, error) {
 		path,
 		"--json", "--legacy",
 	)
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	commandOut, err := cmd.Output()
 	if err != nil {
 		return nil, err

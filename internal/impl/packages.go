@@ -226,6 +226,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		})
 		if err != nil {
 			ux.Ferror(d.writer, "Package %s not found in profile. Skipping.\n", pkg)
+			continue
 		}
 
 		// TODO: unify this with nix.ProfileRemove

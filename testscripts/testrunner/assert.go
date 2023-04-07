@@ -55,6 +55,9 @@ func assertJSONSuperset(script *testscript.TestScript, neg bool, args []string) 
 
 	for expectedKey, expectedValue := range tree2 {
 		if actualValue, ok := tree1[expectedKey]; ok {
+			sortIfPossible(actualValue)
+			sortIfPossible(expectedValue)
+
 			if !reflect.DeepEqual(actualValue, expectedValue) {
 				script.Fatalf("key '%s': expected '%v', got '%v'", expectedKey, expectedValue, actualValue)
 			}
@@ -108,4 +111,35 @@ outer:
 	}
 
 	return true // if we're here, we found everything
+}
+
+func sortIfPossible(v any) {
+	if slice, ok := v.([]any); ok {
+		for i := 0; i < len(slice); i++ {
+			for j := i + 1; j < len(slice); j++ {
+				if compare(slice[i], slice[j]) > 0 {
+					slice[i], slice[j] = slice[j], slice[i]
+				}
+			}
+		}
+	}
+}
+
+func compare(one, two any) int {
+	aType, bType := reflect.TypeOf(one), reflect.TypeOf(two)
+
+	if aType.Kind() == bType.Kind() {
+		switch aType.Kind() {
+		case reflect.Int:
+			aInt := one.(int)
+			bInt := two.(int)
+			return aInt - bInt
+		case reflect.String:
+			aStr := one.(string)
+			bStr := two.(string)
+			return strings.Compare(aStr, bStr)
+		}
+	}
+
+	return 0
 }

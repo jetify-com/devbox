@@ -1,0 +1,31 @@
+! exec devbox run hello
+exec devbox add path:my-flake
+
+exec devbox run hello
+
+-- devbox.json --
+{
+  "packages": [
+  ]
+}
+
+-- my-flake/flake.nix --
+{
+  description = "Test";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        packages = {
+          default = pkgs.hello;
+        };
+      });
+}

@@ -25,6 +25,13 @@ func TestInput(t *testing.T) {
 			packages:           []string{"my-package"},
 		},
 		{
+			pkg:                "path:.#my-package",
+			isFlake:            true,
+			name:               "my-project-744eaa",
+			urlWithoutFragment: "path://" + projectDir,
+			packages:           []string{"my-package"},
+		},
+		{
 			pkg:                "path:/tmp/my-project/path/to/my-flake#my-package",
 			isFlake:            true,
 			name:               "my-flake-773986",

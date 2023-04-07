@@ -1,0 +1,29 @@
+exec devbox init
+
+exec devbox add hello vim cowsay
+json.superset devbox.json all.json
+
+exec devbox rm vim hello
+json.superset devbox.json cowsay.json
+
+exec devbox add vim hello vim hello vim hello vim hello cowsay
+json.superset devbox.json all.json
+
+exec devbox rm vim hello cowsay cowsay
+json.superset devbox.json empty.json
+
+-- all.json --
+{
+  "packages": ["hello", "vim", "cowsay"]
+}
+
+-- cowsay.json --
+{
+  "packages": ["cowsay"]
+}
+
+
+-- empty.json --
+{
+  "packages": []
+}
