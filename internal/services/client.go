@@ -3,12 +3,21 @@ package services
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/f1bonacc1/process-compose/src/types"
 )
 
-type SubCommand int
+type processStates = types.ProcessStates
+
+type ProcessSummary struct {
+	Name     string
+	Status   string
+	ExitCode int
+}
 
 func StartServices(ctx context.Context, w io.Writer, serviceName string, projectDir string) error {
 	path := fmt.Sprintf("/process/start/%s", serviceName)
@@ -65,20 +74,34 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 	}
 }
 
-func ListServices(ctx context.Context, serviceName string, projectDir string, w io.Writer) (string, error) {
+func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]ProcessSummary, error) {
 	path := "/processes"
 	method := "GET"
+	results := []ProcessSummary{}
 
 	body, status, err := clientRequest(path, method)
 	if err != nil {
-		return "", err
+		return results, err
 	}
 
 	switch status {
 	case http.StatusOK:
-		return body, nil
+		var processes processStates
+		err := json.Unmarshal([]byte(body), &processes)
+		if err != nil {
+			return results, err
+		}
+		for _, process := range processes.States {
+			results = append(results, ProcessSummary{
+				Name:     process.Name,
+				Status:   process.Status,
+				ExitCode: process.ExitCode,
+			})
+		}
+		return results, nil
+
 	default:
-		return body, fmt.Errorf("unable to list services: %s", body)
+		return results, fmt.Errorf("unable to list services: %s", body)
 	}
 }
 

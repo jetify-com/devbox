@@ -3,7 +3,9 @@ package wrapnix
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	_ "embed"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -87,6 +89,11 @@ type createWrapperArgs struct {
 	ShellEnv string
 
 	destPath string
+}
+
+func (c *createWrapperArgs) ShellEnvHash() string {
+	hash := md5.Sum([]byte(c.ShellEnv))
+	return hex.EncodeToString(hash[:])
 }
 
 func createWrapper(args *createWrapperArgs) error {

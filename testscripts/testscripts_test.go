@@ -27,3 +27,12 @@ func TestExamples(t *testing.T) {
 
 	testrunner.RunExamplesTestscripts(t, "../examples")
 }
+
+func TestScriptsWithDevboxJSON(t *testing.T) {
+	isOn, err := strconv.ParseBool(os.Getenv(exampleTestsEnvName))
+	if err != nil || !isOn {
+		t.Skipf("Skipping TestExamples. To enable, set %s=1.", exampleTestsEnvName)
+	}
+
+	testrunner.RunExamplesTestscripts(t, ".")
+}

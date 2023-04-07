@@ -96,14 +96,9 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	services, err := box.Services()
-	if err != nil {
-		return err
-	}
-	for _, service := range services {
-		cmd.Println(service.Name)
-	}
-	return nil
+
+	return box.ListServices(cmd.Context())
+
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {

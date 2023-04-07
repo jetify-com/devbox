@@ -13,5 +13,15 @@ if [[ -z "$__DEVBOX_SET_{{ $k }}" ]]; then
 fi
 {{- end }}
 
+{{/*
+We use __DEVBOX_SHELLENV_HASH to avoid re-sourcing shellenv. Since wrappers
+call other wrappers and potentially modify the environment, we don't want the
+environment to get re-written.
+*/ -}}
+
+if [[ "$__DEVBOX_SHELLENV_HASH" != "{{ .ShellEnvHash }}" ]]; then
 {{ .ShellEnv }}
+export __DEVBOX_SHELLENV_HASH="{{ .ShellEnvHash }}"
+fi
+
 {{ .Command }} "$@"
