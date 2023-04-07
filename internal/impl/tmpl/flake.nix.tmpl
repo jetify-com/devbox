@@ -50,7 +50,7 @@
             {{- end}}
             {{- range $_, $flake := .FlakeInputs }}
             {{- range $flake.Packages}}
-            {{ $flake.Name }}.packages.${system}.{{.}}
+            {{ $flake.Name }}.legacyPackages.${system}.{{.}}
             {{- end }}
             {{- end }}
           ];
