@@ -46,8 +46,10 @@ type projectConfig struct {
 	Port int `json:"port"`
 }
 
+type projectMap = map[string]projectConfig
+
 type globalProcessComposeConfig struct {
-	Instances map[string]projectConfig `json:"instances"`
+	Instances projectMap `json:"instances"`
 }
 
 func globalProcessComposeConfigPath() (string, error) {
@@ -91,7 +93,7 @@ func writeGlobalProcessComposeConfig(config globalProcessComposeConfig) error {
 	path = filepath.Join(path, "process-compose.json")
 
 	if err = os.WriteFile(path, json, 0666); err != nil {
-		return fmt.Errorf("failed to open process-compose log file: %w", err)
+		return fmt.Errorf("failed to write global config file: %w", err)
 	}
 
 	return nil
