@@ -14,15 +14,20 @@ import (
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg, projectDir string) (*config, error) {
+func getConfigIfAny(pkg, projectDir, xdgRuntimePath string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	xdgRuntimePath, err := setupXdgRuntimePath(projectDir)
-	if err != nil {
-		return nil, err
+	if xdgRuntimePath == "" {
+		// TODO savil. Calculate this once for this devbox-project, and reuse.
+		// It is currently hard to do since there is no Init() method for plugins
+		// in which we can do this.
+		xdgRuntimePath, err = setupXdgRuntimePath(projectDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Try to find perfect match first
@@ -61,36 +66,29 @@ func getFileContent(contentPath string) ([]byte, error) {
 //
 // The symlink enables the path to be short so that unix sockets can be placed
 // in this directory. Unix sockets have legacy ~100 char limits for their paths.
-//
-// TODO savil. Calculate this once for each plugin, and reuse.
-// It is currently hard to do since there is no Init() method for plugins
-// in which we can do this.
 func setupXdgRuntimePath(projectDir string) (string, error) {
 
 	virtenvXdgRuntimePath, err := virtenvRuntimeLinkPath(projectDir)
 	if err != nil {
 		return "", err
 	}
-	virtenvPath, err := ensureVirtenvPath(projectDir)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
+	virtenvPath := filepath.Join(projectDir, VirtenvPath)
 	if err := os.Symlink(virtenvPath, virtenvXdgRuntimePath); err != nil && !errors.Is(err, os.ErrExist) {
 		return "", errors.WithStack(err)
 	}
 	return virtenvXdgRuntimePath, nil
 }
 
-// virtenvPathHashLength is the length of the hash used in the virtenv-<hash> in virtualenvRuntimeLinkPath.
+// virtenvPathHashLength is the length of the hash used in the v-<hash> in virtualenvRuntimeLinkPath.
 // The <hash> is derived from the projectDir
-const virtenvPathHashLength = 10
+const virtenvPathHashLength = 5
 
 // virtenvRuntimeLinkPath returns a path for the given project's virtenv's Runtime resources to live in.
 // It strives to be XDG compliant, but will diverge if needed to be short enough to be used in unix sockets.
 func virtenvRuntimeLinkPath(projectDir string) (string, error) {
 
 	// deriveLinkName returns the name of the link to be used.
-	// It is of the form virtenv-<hash> where <hash> is a short non-crypto hash of the projectDir.
+	// It is of the form v-<hash> where <hash> is a short non-crypto hash of the projectDir.
 	// This disambiguates devbox/virtenv directories for different projects.
 	deriveLinkName := func(projectDir string) (string, error) {
 		h := fnv.New32a()
@@ -99,10 +97,10 @@ func virtenvRuntimeLinkPath(projectDir string) (string, error) {
 			return "", errors.WithStack(err)
 		}
 		hashed := strconv.FormatUint(uint64(h.Sum32()), 10)
-		if len(hashed) > virtenvPathHashLength { // the length is expected to be 10 but being defensive.
+		if len(hashed) > virtenvPathHashLength { // the length is expected to be 10 but 5 is sufficient.
 			hashed = hashed[:virtenvPathHashLength]
 		}
-		linkName := fmt.Sprintf("virtenv-%s", hashed)
+		linkName := fmt.Sprintf("v-%s", hashed)
 		return linkName, nil
 	}
 
@@ -125,10 +123,6 @@ func virtenvRuntimeLinkPath(projectDir string) (string, error) {
 			return xdgRuntimeDir, nil
 		}
 
-		// TODO hook up to correct io.writer
-		//ux.Fwarning("xdgRuntimeDir is too long for unix-socket paths, "+
-		//	"falling back to /tmp/user-<uid>. xdgRuntime: %s\n", xdgRuntimeDir)
-
 		// Fallback to /tmp/user-<uid>/devbox/ dir
 		// We do not use os.TempDir() since it can be pretty long in MacOS.
 		// /tmp is posix-compliant and expected to exist, and is short.
@@ -137,10 +131,7 @@ func virtenvRuntimeLinkPath(projectDir string) (string, error) {
 			return "", errors.WithStack(err)
 		}
 
-		//if len([]byte(dir)) > maxDirLen {
-		// TODO savil: hook up to correct io.writer
-		// ux.Fwarning(writer,"XdgRuntimeDir fallback %s is too long for unix-socket paths, " dir)
-		//}
+		// TODO savil. Print warning if dir is too long. Needs io.Writer.
 		return dir, nil
 	}
 

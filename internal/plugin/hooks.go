@@ -3,7 +3,7 @@ package plugin
 func InitHooks(pkgs []string, projectDir string) ([]string, error) {
 	hooks := []string{}
 	for _, pkg := range pkgs {
-		c, err := getConfigIfAny(pkg, projectDir)
+		c, err := getConfigIfAny(pkg, projectDir, "" /* xdgRuntimePath */)
 		if err != nil {
 			return nil, err
 		}

@@ -51,7 +51,12 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 }
 
 func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
-	cfg, err := getConfigIfAny(pkg, projectDir)
+	xdgRuntimePath, err := setupXdgRuntimePath(projectDir)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := getConfigIfAny(pkg, projectDir, xdgRuntimePath)
 	if err != nil {
 		return err
 	}
@@ -82,11 +87,6 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			continue
 		}
 
-		virtenvPathForPackage, err := ensureVirtenvPathForPackage(projectDir, pkg)
-		if err != nil {
-			return err
-		}
-
 		debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
 		content, err := getFileContent(contentPath)
 		if err != nil {
@@ -102,7 +102,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              virtenvPathForPackage,
+			"Virtenv":              filepath.Join(xdgRuntimePath, pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -133,7 +133,7 @@ func Env(
 ) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := getConfigIfAny(pkg, projectDir)
+		cfg, err := getConfigIfAny(pkg, projectDir, "" /* xdgRuntimePath */)
 		if err != nil {
 			return nil, err
 		}
@@ -149,11 +149,6 @@ func Env(
 
 func buildConfig(pkg, projectDir, virtenvXdgRuntimePath, content string) (*config, error) {
 
-	virtenvPathForPackage, err := ensureVirtenvPathForPackage(projectDir, pkg)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
@@ -165,8 +160,7 @@ func buildConfig(pkg, projectDir, virtenvXdgRuntimePath, content string) (*confi
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              virtenvPathForPackage,
-		"VirtenvRuntimePath":   filepath.Join(virtenvXdgRuntimePath, pkg),
+		"Virtenv":              filepath.Join(virtenvXdgRuntimePath, pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -212,24 +206,4 @@ func (m *Manager) shouldCreateFile(filePath string) bool {
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
 	return os.IsNotExist(err)
-}
-
-func ensureVirtenvPath(projectDir string) (string, error) {
-	path := filepath.Join(projectDir, VirtenvPath)
-	if err := createDir(path); err != nil {
-		return "", err
-	}
-	return path, nil
-}
-
-func ensureVirtenvPathForPackage(projectDir, pkg string) (string, error) {
-	virtenvPath, err := ensureVirtenvPath(projectDir)
-	if err != nil {
-		return "", err
-	}
-	path := filepath.Join(virtenvPath, pkg)
-	if err := createDir(path); err != nil {
-		return "", err
-	}
-	return path, nil
 }

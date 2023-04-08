@@ -34,20 +34,20 @@ func TestVirtenvRuntimeLinkPath(t *testing.T) {
 		// Basic directory
 		{
 			projectDir:      "/home/user/project",
-			runtimeLinkPath: "/tmp/devbox-virt-run-test/devbox/virtenv-1824266503",
+			runtimeLinkPath: "/tmp/devbox-virt-run-test/devbox/v-18242",
 		},
 		// A slightly different directory to ensure the hashing works
 		{
 			projectDir:      "/home/user/project/foo",
-			runtimeLinkPath: "/tmp/devbox-virt-run-test/devbox/virtenv-196483680",
+			runtimeLinkPath: "/tmp/devbox-virt-run-test/devbox/v-19648",
 		},
 		// An XDG Runtime directory that is very long, so that runtimeLinkPath is calculated by
-		// falling back to /tmp/user-<uid>/devbox/virtenv-<hash>
+		// falling back to /tmp/user-<uid>/devbox/v-<hash>
 		{
 			projectDir:        "/home/user/project",
 			longXdgRuntimeDir: longXdgRuntimeDir,
 			runtimeLinkPath: filepath.Join("/tmp", fmt.Sprintf("user-%d", os.Getuid()),
-				"devbox/virtenv-1824266503"),
+				"devbox/v-18242"),
 		},
 	}
 

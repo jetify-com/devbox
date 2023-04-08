@@ -7,7 +7,7 @@ import (
 func GetServices(pkgs []string, projectDir string) (services.Services, error) {
 	svcs := services.Services{}
 	for _, pkg := range pkgs {
-		conf, err := getConfigIfAny(pkg, projectDir)
+		conf, err := getConfigIfAny(pkg, projectDir, "" /* xdgRuntimePath */)
 		if err != nil {
 			return nil, err
 		}
