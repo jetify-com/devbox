@@ -129,7 +129,7 @@ func stopServices(cmd *cobra.Command, services []string, flags serviceStopFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(services) >= 0 && flags.allProjects {
+	if len(services) > 0 && flags.allProjects {
 		return errors.New("cannot both specify services and --all-projects")
 	}
 	return box.StopServices(cmd.Context(), flags.allProjects, services...)
