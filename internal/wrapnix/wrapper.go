@@ -3,9 +3,7 @@ package wrapnix
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	_ "embed"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -18,7 +16,7 @@ import (
 
 type devboxer interface {
 	NixBins(ctx context.Context) ([]string, error)
-	PrintEnv() (string, error)
+	ShellEnvHash(ctx context.Context) (string, error)
 	ProjectDir() string
 	Services() (services.Services, error)
 }
@@ -29,7 +27,7 @@ var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
 // CreateWrappers creates wrappers for all the executables in nix paths
 func CreateWrappers(ctx context.Context, devbox devboxer) error {
-	shellEnv, err := devbox.PrintEnv()
+	shellEnvHash, err := devbox.ShellEnvHash(ctx)
 	if err != nil {
 		return err
 	}
@@ -48,18 +46,18 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
-			Command:  service.Start,
-			Env:      service.Env,
-			ShellEnv: shellEnv,
-			destPath: filepath.Join(destPath, service.StartName()),
+			Command:      service.Start,
+			Env:          service.Env,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, service.StartName()),
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
-			Command:  service.Stop,
-			Env:      service.Env,
-			ShellEnv: shellEnv,
-			destPath: filepath.Join(destPath, service.StopName()),
+			Command:      service.Stop,
+			Env:          service.Env,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, service.StopName()),
 		}); err != nil {
 			return err
 		}
@@ -72,9 +70,9 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
-			Command:  bin,
-			ShellEnv: shellEnv,
-			destPath: filepath.Join(destPath, filepath.Base(bin)),
+			Command:      bin,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -84,16 +82,11 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 }
 
 type createWrapperArgs struct {
-	Command  string
-	Env      map[string]string
-	ShellEnv string
+	Command      string
+	Env          map[string]string
+	ShellEnvHash string
 
 	destPath string
-}
-
-func (c *createWrapperArgs) ShellEnvHash() string {
-	hash := md5.Sum([]byte(c.ShellEnv))
-	return hex.EncodeToString(hash[:])
 }
 
 func createWrapper(args *createWrapperArgs) error {
