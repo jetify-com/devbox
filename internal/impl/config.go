@@ -99,9 +99,9 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
-	if dontUprade, _ := strconv.ParseBool(
+	if dontUpgrade, _ := strconv.ParseBool(
 		os.Getenv("DEVBOX_DONT_UPGRADE_CONFIG"),
-	); dontUprade {
+	); dontUpgrade {
 		return nil
 	}
 	if cfg.Nixpkgs.Commit == "" {
