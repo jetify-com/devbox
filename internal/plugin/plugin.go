@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -50,13 +51,13 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
-	xdgRuntimePath, err := setupXdgRuntimePath(projectDir)
+func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) error {
+	virtenvPath, err := createVirtenvSymlink(w, projectDir)
 	if err != nil {
 		return err
 	}
 
-	cfg, err := getConfigIfAny(pkg, projectDir, xdgRuntimePath)
+	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(xdgRuntimePath, pkg),
+			"Virtenv":              filepath.Join(virtenvPath, pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -133,7 +134,7 @@ func Env(
 ) (map[string]string, error) {
 	env := map[string]string{}
 	for _, pkg := range pkgs {
-		cfg, err := getConfigIfAny(pkg, projectDir, "" /* xdgRuntimePath */)
+		cfg, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +148,12 @@ func Env(
 	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
 }
 
-func buildConfig(pkg, projectDir, virtenvXdgRuntimePath, content string) (*config, error) {
+func buildConfig(pkg, projectDir, content string) (*config, error) {
+
+	virtenvPath, err := virtenvSymlinkPath(projectDir)
+	if err != nil {
+		return nil, err
+	}
 
 	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
@@ -160,7 +166,7 @@ func buildConfig(pkg, projectDir, virtenvXdgRuntimePath, content string) (*confi
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvXdgRuntimePath, pkg),
+		"Virtenv":              filepath.Join(virtenvPath, pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}

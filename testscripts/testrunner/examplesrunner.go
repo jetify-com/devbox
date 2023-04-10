@@ -17,8 +17,20 @@ import (
 	"go.jetpack.io/devbox/internal/impl"
 )
 
+// xdgStateHomeDir is the home directory for devbox state. We store symlinks to
+// virtenvs of devbox plugins in this directory. We need to use a custom
+// path that is intentionally short, since some plugins store unix sockets in
+// their virtenv and unix sockets require their paths to be short.
+const xdgStateHomeDir = "/tmp/devbox-example-testscripts"
+
 // RunExamplesTestscripts generates testscripts for each example devbox-project.
 func RunExamplesTestscripts(t *testing.T, examplesDir string) {
+
+	// ensure the state home dir for devbox exists
+	if err := os.MkdirAll(xdgStateHomeDir, 0700); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		t.Error(err)
+	}
+
 	err := filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -82,6 +94,11 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 	// save a reference to the original params.Setup so that we can wrap it below
 	setup := params.Setup
 	params.Setup = func(env *testscript.Env) error {
+
+		// We set a custom XDG_STATE_HOME to an intentionally short path.
+		// Reason: devbox plugins like postgres store unix socket files in their state dir.
+		env.Setenv("XDG_STATE_HOME", xdgStateHomeDir)
+
 		// setup the devbox testscript environment
 		if err := setup(env); err != nil {
 			return errors.WithStack(err)
