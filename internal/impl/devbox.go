@@ -763,8 +763,9 @@ func (d *Devbox) computeNixEnv(
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
+	addHashToEnv(env)
 
-	return addHashToEnv(env), nil
+	return env, nil
 }
 
 var nixEnvCache map[string]string
@@ -788,7 +789,7 @@ func (d *Devbox) nixEnvWithPrintDevEnvCache(
 
 	// minor optimization. If we've already computed the non-cache version, use
 	// that instead.
-	if nixEnvCache == nil {
+	if nixEnvCache != nil {
 		nixEnvWithPrintDevEnvCache = nixEnvCache
 	}
 
@@ -1036,13 +1037,11 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	return lo.Values(bins), nil
 }
 
-func addHashToEnv(env map[string]string) map[string]string {
-	data := []byte{}
+func addHashToEnv(env map[string]string) {
+	h := md5.New()
 	for k, v := range env {
-		data = append(data, []byte(k)...)
-		data = append(data, []byte(v)...)
+		h.Write([]byte(k))
+		h.Write([]byte(v))
 	}
-	hash := md5.Sum(data)
-	env[devboxShellEnvHashVarName] = hex.EncodeToString(hash[:])
-	return env
+	env[devboxShellEnvHashVarName] = hex.EncodeToString(h.Sum(nil)[:])
 }

@@ -113,14 +113,13 @@ func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, e
 	var out printDevEnvOut
 
 	if args.UsePrintDevEnvCache {
-		if _, err := os.Stat(args.PrintDevEnvCachePath); err == nil {
-			data, err = os.ReadFile(args.PrintDevEnvCachePath)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
+		data, err = os.ReadFile(args.PrintDevEnvCachePath)
+		if err == nil {
 			if err := json.Unmarshal(data, &out); err != nil {
 				return nil, errors.WithStack(err)
 			}
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return nil, errors.WithStack(err)
 		}
 	}
 
