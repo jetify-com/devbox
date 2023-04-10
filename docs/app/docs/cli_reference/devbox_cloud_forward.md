@@ -29,10 +29,11 @@ $ devbox cloud forward stop
 
 ## Options
 
-```text
-  -h, --help   help for forward
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for forward |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

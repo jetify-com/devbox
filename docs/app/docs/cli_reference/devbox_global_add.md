@@ -8,10 +8,11 @@ devbox global add <pkg>... [flags]
 
 ## Options
 
-```bash
-  -h, --help   help for add
-  -q, --quiet  suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for add |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

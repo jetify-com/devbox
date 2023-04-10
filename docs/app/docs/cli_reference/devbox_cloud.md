@@ -12,10 +12,11 @@ devbox cloud [subcommand] [flags]
 
 ## Options
 
-```bash
-  -h, --help            help for generate
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table with Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for generate |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## Subcommands
 

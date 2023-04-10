@@ -12,11 +12,12 @@ devbox shell [<dir>] [flags]
 
 ## Options
 
-```text
-  --print-env  Print a script to setup a devbox shell environment
-  -h, --help   help for shell
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `--print-env` | Print a script to setup a devbox shell environment |
+| `-h, --help` | help for shell |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 
