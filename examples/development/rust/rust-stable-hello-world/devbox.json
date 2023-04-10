@@ -5,11 +5,6 @@
     ],
     "shell": {
         "init_hook": [
-            "projectDir=$(dirname $(readlink -f \"$0\"))",
-            "rustupHomeDir=\"$projectDir\"/.rustup",
-            "mkdir -p $rustupHomeDir",
-            "export RUSTUP_HOME=$rustupHomeDir",
-            "export LIBRARY_PATH=$LIBRARY_PATH:\"$projectDir/nix/profile/default/lib\"",
             ". conf/set-env.sh",
             "rustup default stable",
             "cargo fetch"
