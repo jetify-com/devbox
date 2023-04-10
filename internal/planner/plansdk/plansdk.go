@@ -18,6 +18,12 @@ type PlanError struct {
 	error
 }
 
+type FlakeInput struct {
+	Name     string
+	Packages []string
+	URL      string
+}
+
 // TODO: Plan currently has a bunch of fields that it should not export.
 // Two reasons why we need this right now:
 // 1/ So that individual planners can use the fields
@@ -40,6 +46,8 @@ type ShellPlan struct {
 	// GeneratedFiles is a map of name => content for files that should be generated
 	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
 	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
+
+	FlakeInputs []FlakeInput
 }
 
 type Planner interface {

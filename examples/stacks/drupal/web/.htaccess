@@ -3,7 +3,7 @@
 #
 
 # Protect files and directories from prying eyes.
-<FilesMatch "\.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\.(?!well-known).*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock)|web\.config)$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$">
+<FilesMatch "\.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\.(?!well-known).*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock)|web\.config|yarn\.lock|package\.json)$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -42,7 +42,7 @@ AddEncoding gzip svgz
   # Enable expirations.
   ExpiresActive On
 
-  # Cache all files for 2 weeks after access (A).
+  # Cache all files and redirects for 2 weeks after access (A).
   ExpiresDefault A1209600
 
   <FilesMatch \.php$>
@@ -158,12 +158,12 @@ AddEncoding gzip svgz
     # Serve gzip compressed CSS files if they exist and the client accepts gzip.
     RewriteCond %{HTTP:Accept-encoding} gzip
     RewriteCond %{REQUEST_FILENAME}\.gz -s
-    RewriteRule ^(.*)\.css $1\.css\.gz [QSA]
+    RewriteRule ^(.*css_[a-zA-Z0-9-_])\.css$ $1\.css\.gz [QSA]
 
     # Serve gzip compressed JS files if they exist and the client accepts gzip.
     RewriteCond %{HTTP:Accept-encoding} gzip
     RewriteCond %{REQUEST_FILENAME}\.gz -s
-    RewriteRule ^(.*)\.js $1\.js\.gz [QSA]
+    RewriteRule ^(.*js_[a-zA-Z0-9-_])\.js$ $1\.js\.gz [QSA]
 
     # Serve correct content types, and prevent double compression.
     RewriteRule \.css\.gz$ - [T=text/css,E=no-gzip:1,E=no-brotli:1]

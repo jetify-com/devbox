@@ -18,8 +18,10 @@ import (
 
 const DefaultPriority = 5
 
+type NixProfileList []*NixProfileListItem
+
 // ProfileListItems returns a list of the installed packages
-func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListItem, error) {
+func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, error) {
 	cmd := exec.Command(
 		"nix", "profile", "list",
 		"--profile", profileDir,
@@ -64,6 +66,43 @@ func ProfileListItems(writer io.Writer, profileDir string) ([]*NixProfileListIte
 		return items, redact.Errorf("error running \"nix profile list\": %w", err)
 	}
 	return items, nil
+}
+
+type ProfileListIndexArgs struct {
+	// For performance you can reuse the same list in multiple operations if you
+	// are confident index has not changed.
+	List       NixProfileList
+	Writer     io.Writer
+	Pkg        string
+	ProjectDir string
+	ProfileDir string
+}
+
+func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
+	var err error
+	list := args.List
+	if list == nil {
+		list, err = ProfileListItems(args.Writer, args.ProfileDir)
+		if err != nil {
+			return -1, err
+		}
+	}
+
+	input := InputFromString(args.Pkg, args.ProjectDir)
+
+	for _, item := range list {
+		name, err := item.packageName()
+		if err != nil {
+			return -1, err
+		}
+
+		existing := InputFromString(name, args.ProjectDir)
+
+		if input.equals(existing) {
+			return item.index, nil
+		}
+	}
+	return -1, ErrPackageNotFound
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
@@ -142,13 +181,25 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	return attrPath, nil
 }
 
-// PackageName parses the package name from the NixProfileListItem.lockedReference
+// packageName parses the package name from the NixProfileListItem.lockedReference
 //
 // For example:
 // if NixProfileListItem.lockedReference = github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
-// and then PackageName = go_1_19
-func (item *NixProfileListItem) PackageName() (string, error) {
+// and then packageName = go_1_19
+func (item *NixProfileListItem) packageName() (string, error) {
+	// Since unlocked references should already have absolute paths, projectDir is not needed
+	input := InputFromString(item.unlockedReference, "" /*projectDir*/)
+	if input.IsFlake() {
+		// TODO(landau): this needs to be normalized so that we can compare
+		// packages.aarch64-darwin.hello and hello and determine that they are
+		// the same package.
+		return item.unlockedReference, nil
+	}
+
+	// TODO(landau/savil): Should we use unlocked reference instead?
+	// I'm not sure we gain anything by using the locked reference. since
+	// the user specifies only the package name when installing
 	attrPath, err := item.AttributePath()
 	if err != nil {
 		return "", err
@@ -163,8 +214,7 @@ func (item *NixProfileListItem) PackageName() (string, error) {
 		)
 	}
 
-	packageName := strings.Join(parts[2:], ".")
-	return packageName, nil
+	return strings.Join(parts[2:], "."), nil
 }
 
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
@@ -183,6 +233,7 @@ type ProfileInstallArgs struct {
 	NixpkgsCommit     string
 	Package           string
 	ProfilePath       string
+	ProjectDir        string
 	Writer            io.Writer
 }
 
@@ -207,7 +258,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
-		FlakeNixpkgs(args.NixpkgsCommit)+"#"+args.Package,
+		flakePath(args),
 	)
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
@@ -287,4 +338,13 @@ func nextPriority(profilePath string) string {
 	// Each subsequent package gets a lower priority. This matches how flake.nix
 	// behaves
 	return fmt.Sprintf("%d", max+1)
+}
+
+func flakePath(args *ProfileInstallArgs) string {
+	input := InputFromString(args.Package, args.ProjectDir)
+	if input.IsFlake() {
+		return input.String()
+	}
+
+	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package
 }

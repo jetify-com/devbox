@@ -1,15 +1,15 @@
 {
-    "packages": [
-        "python310",
-        "poetry"
+  "packages": [
+    "python310",
+    "poetry"
+  ],
+  "shell": {
+    "init_hook": [
+      "poetry install"
     ],
-    "shell": {
-        "init_hook": [
-            "poetry install"
-        ],
-        "scripts": {
-            "run_test": "poetry run python -m poetry_demo",
-            "test": "poetry run pytest"
-        }
+    "scripts": {
+      "run_test": "poetry run python -m poetry_demo",
+      "test": "poetry run pytest"
     }
+  }
 }

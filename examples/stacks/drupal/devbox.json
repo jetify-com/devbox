@@ -1,32 +1,32 @@
 {
-    "packages": [
-        "mariadb",
-        "git",
-        "php81",
-        "php81Packages.composer",
-        "nginx"
+  "packages": [
+    "mariadb",
+    "git",
+    "php81",
+    "php81Packages.composer",
+    "nginx"
+  ],
+  "shell": {
+    "init_hook": [
+      "source devbox.d/mysql/set-env.sh"
     ],
-    "shell": {
-        "init_hook": [
-            "source devbox.d/mysql/set-env.sh"
-        ],
-        "scripts": {
-            "start_services": [
-                "devbox.d/mysql/mysql.sh",
-                "devbox services start"
-            ],
-            "stop_services": [
-                "devbox services stop",
-                "mysqladmin -u root --socket=$MYSQL_UNIX_PORT shutdown"
-            ],
-            "run_test": [
-                "devbox.d/mysql/mysql.sh",
-                "devbox services start",
-                "./install-drupal.sh",
-                "curl localhost:8000",
-                "devbox services stop",
-                "mysqladmin -u root --socket=$MYSQL_UNIX_PORT shutdown"
-            ]
-        }
+    "scripts": {
+      "run_test": [
+        "devbox.d/mysql/mysql.sh",
+        "devbox services start",
+        "./install-drupal.sh",
+        "curl localhost:8000",
+        "devbox services stop",
+        "mysqladmin -u root --socket=$MYSQL_UNIX_PORT shutdown"
+      ],
+      "start_services": [
+        "devbox.d/mysql/mysql.sh",
+        "devbox services start"
+      ],
+      "stop_services": [
+        "devbox services stop",
+        "mysqladmin -u root --socket=$MYSQL_UNIX_PORT shutdown"
+      ]
     }
+  }
 }

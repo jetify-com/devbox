@@ -7,7 +7,12 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-global, flake-utils }:
+  outputs = { 
+    self,
+    nixpkgs,
+    nixpkgs-global,
+    flake-utils 
+  }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = (import nixpkgs {
