@@ -11,6 +11,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/briandowns/spinner v1.23.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
+	github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184
 	github.com/creekorful/mvnparser v1.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.15.0
