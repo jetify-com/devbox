@@ -52,6 +52,15 @@ type globalProcessComposeConfig struct {
 	FileRef    *os.File `json:"-"`
 }
 
+func (c *globalProcessComposeConfig) updateFromFile(path string) {
+	// read the config from file
+	config := readGlobalProcessComposeConfig(path)
+
+	// update the config
+	c.Instances = config.Instances
+	c.GlobalPath = config.GlobalPath
+}
+
 func globalProcessComposeConfigPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global/"))
 	return filepath.Join(path, "process-compose.json"), errors.WithStack(os.MkdirAll(path, 0755))
@@ -195,7 +204,7 @@ func runProcessManagerInForeground(cmd *exec.Cmd, port int, config globalProcess
 
 	unlockFile(config.FileRef.Fd())
 	err = cmd.Wait()
-	config = readGlobalProcessComposeConfig(config.GlobalPath)
+	config.updateFromFile(config.GlobalPath)
 	if err != nil && err.Error() == "exit status 1" {
 		fmt.Fprintln(w, "Process-compose was terminated remotely")
 		return nil
