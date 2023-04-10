@@ -6,6 +6,8 @@ package impl
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -174,7 +176,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	env, err := d.cachedComputeNixEnv(ctx)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -218,7 +220,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	env, err := d.cachedComputeNixEnv(ctx)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -258,8 +260,8 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv() (string, error) {
-	ctx, task := trace.NewTask(context.Background(), "devboxPrintEnv")
+func (d *Devbox) PrintEnv(ctx context.Context, useCache bool) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
 	// generate in case user has old .devbox dir and is missing any files.
@@ -269,12 +271,27 @@ func (d *Devbox) PrintEnv() (string, error) {
 		}
 	}
 
-	envs, err := d.cachedComputeNixEnv(ctx)
+	var envs map[string]string
+	var err error
+	if useCache {
+		envs, err = d.nixEnvWithPrintDevEnvCache(ctx)
+	} else {
+		envs, err = d.nixEnv(ctx)
+	}
 	if err != nil {
 		return "", err
 	}
 
 	return exportify(envs), nil
+}
+
+func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
+	envs, err := d.nixEnv(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return envs[devboxShellEnvHashVarName], nil
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
@@ -642,7 +659,10 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
+func (d *Devbox) computeNixEnv(
+	ctx context.Context,
+	usePrintDevEnvCache bool,
+) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
 	currentEnv := os.Environ()
@@ -667,7 +687,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 		originalPath = currentEnvPath
 	}
 
-	vaf, err := nix.PrintDevEnv(ctx, d.nixShellFilePath(), d.nixFlakesFilePath())
+	vaf, err := nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
+		FlakesFilePath:       d.nixFlakesFilePath(),
+		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
+		UsePrintDevEnvCache:  usePrintDevEnvCache,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -751,19 +775,43 @@ func (d *Devbox) computeNixEnv(ctx context.Context) (map[string]string, error) {
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
+	addHashToEnv(env)
 
 	return env, nil
 }
 
 var nixEnvCache map[string]string
+var nixEnvWithPrintDevEnvCache map[string]string
 
-// cachedComputeNixEnv is a wrapper around computeNixEnv that caches the result.
-func (d *Devbox) cachedComputeNixEnv(ctx context.Context) (map[string]string, error) {
+// nixEnv is a wrapper around computeNixEnv that caches the result.
+// Note that this is in-memory cache of the final environment, and not the same
+// as the nix print-dev-env cache which is stored in a file.
+func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	var err error
 	if nixEnvCache == nil {
-		nixEnvCache, err = d.computeNixEnv(ctx)
+		nixEnvCache, err = d.computeNixEnv(ctx, false /*usePrintDevEnvCache*/)
 	}
 	return nixEnvCache, err
+}
+
+func (d *Devbox) nixEnvWithPrintDevEnvCache(
+	ctx context.Context,
+) (map[string]string, error) {
+	var err error
+
+	// minor optimization. If we've already computed the non-cache version, use
+	// that instead.
+	if nixEnvCache != nil {
+		nixEnvWithPrintDevEnvCache = nixEnvCache
+	}
+
+	if nixEnvWithPrintDevEnvCache == nil {
+		nixEnvWithPrintDevEnvCache, err = d.computeNixEnv(
+			ctx,
+			true, /*usePrintDevEnvCache*/
+		)
+	}
+	return nixEnvWithPrintDevEnvCache, err
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -848,8 +896,8 @@ func (d *Devbox) scriptBody(body string) string {
 	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
 }
 
-func (d *Devbox) nixShellFilePath() string {
-	return filepath.Join(d.projectDir, ".devbox/gen/shell.nix")
+func (d *Devbox) nixPrintDevEnvCachePath() string {
+	return filepath.Join(d.projectDir, ".devbox/.nix-print-dev-env-cache")
 }
 
 func (d *Devbox) nixFlakesFilePath() string {
@@ -976,7 +1024,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.cachedComputeNixEnv(ctx)
+	env, err := d.nixEnv(ctx)
 
 	if err != nil {
 		return nil, err
@@ -999,4 +1047,13 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 		}
 	}
 	return lo.Values(bins), nil
+}
+
+func addHashToEnv(env map[string]string) {
+	h := md5.New()
+	for k, v := range env {
+		h.Write([]byte(k))
+		h.Write([]byte(v))
+	}
+	env[devboxShellEnvHashVarName] = hex.EncodeToString(h.Sum(nil)[:])
 }

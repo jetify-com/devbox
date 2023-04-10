@@ -17,11 +17,12 @@ fi
 We use __DEVBOX_SHELLENV_HASH to avoid re-sourcing shellenv. Since wrappers
 call other wrappers and potentially modify the environment, we don't want the
 environment to get re-written.
+
+DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
 
 if [[ "$__DEVBOX_SHELLENV_HASH" != "{{ .ShellEnvHash }}" ]]; then
-{{ .ShellEnv }}
-export __DEVBOX_SHELLENV_HASH="{{ .ShellEnvHash }}"
+eval "$(DO_NOT_TRACK=1 devbox shellenv --use-cached-print-dev-env)"
 fi
 
 {{ .Command }} "$@"

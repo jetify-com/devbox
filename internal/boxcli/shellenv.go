@@ -11,8 +11,9 @@ import (
 )
 
 type shellEnvCmdFlags struct {
-	config      configFlags
-	runInitHook bool
+	config               configFlags
+	runInitHook          bool
+	useCachedPrintDevEnv bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -35,6 +36,14 @@ func shellEnvCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
 
+	command.Flags().BoolVar(
+		&flags.useCachedPrintDevEnv,
+		"use-cached-print-dev-env",
+		false,
+		"[internal - not meant for general usage] Use the cached nix print-dev-env environment instead of the current environment",
+	)
+	// This is used by bin wrappers and not meant for end users.
+	command.Flag("use-cached-print-dev-env").Hidden = true
 	flags.config.register(command)
 	return command
 }
@@ -45,7 +54,7 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	envStr, err := box.PrintEnv()
+	envStr, err := box.PrintEnv(cmd.Context(), flags.useCachedPrintDevEnv)
 	if err != nil {
 		return "", err
 	}
