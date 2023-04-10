@@ -159,7 +159,7 @@ let
         derivationHash = if tryDerivationHash.success then tryDerivationHash.value else null;
         pkgInfo = appendAttrPath (allPkgs.${derivationHash} or (getPkgInfo attrValue)) attrValuePath;
 
-        # Rely on the behavior where attributes are automaticaly omitted from a
+        # Rely on the behavior where attributes are automatically omitted from a
         # set when their name is null. That makes this update a no-op when
         # derivationHash failed to evaluate or wasn't a derivation.
         updatedAllPkgs = allPkgs // { ${derivationHash} = pkgInfo; };
