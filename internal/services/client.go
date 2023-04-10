@@ -23,7 +23,7 @@ func StartServices(ctx context.Context, w io.Writer, serviceName string, project
 	path := fmt.Sprintf("/process/start/%s", serviceName)
 	method := "POST"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func StopServices(ctx context.Context, serviceName string, projectDir string, w 
 	path := fmt.Sprintf("/process/stop/%s", serviceName)
 	method := "PATCH"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 	path := fmt.Sprintf("/process/restart/%s", serviceName)
 	method := "POST"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 	method := "GET"
 	results := []ProcessSummary{}
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return results, err
 	}
@@ -105,8 +105,8 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 	}
 }
 
-func clientRequest(path string, method string) (string, int, error) {
-	port, err := GetProcessManagerPort()
+func clientRequest(path string, method string, projectDir string) (string, int, error) {
+	port, err := GetProcessManagerPort(projectDir)
 	if err != nil {
 		err := fmt.Errorf("unable to connect to process-compose server: %s", err.Error())
 		return "", 0, err

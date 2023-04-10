@@ -435,7 +435,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
@@ -481,12 +481,12 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		return services.StopAllProcessManagers(ctx, d.writer)
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
 	}
 
 	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.writer)
+		return services.StopProcessManager(ctx, d.projectDir, d.writer)
 	}
 
 	svcSet, err := d.Services()
@@ -521,7 +521,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 		return nil
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them:")
 		fmt.Fprintln(d.writer, "")
 		for _, s := range svcSet {
@@ -549,7 +549,7 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
