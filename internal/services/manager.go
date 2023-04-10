@@ -97,11 +97,7 @@ func writeGlobalProcessComposeConfig(config globalProcessComposeConfig) error {
 	return nil
 }
 
-func cleanupProject(config globalProcessComposeConfig, projectDir string) {
-	fmt.Printf("Cleaning up project with FD: %d", config.FileRef.Fd())
-	lockFile(config.FileRef.Fd())
-	defer unlockFile(config.FileRef.Fd())
-
+func removeInstance(config globalProcessComposeConfig, projectDir string) {
 	delete(config.Instances, projectDir)
 	err := writeGlobalProcessComposeConfig(config)
 	if err != nil {
@@ -152,7 +148,7 @@ func StartProcessManager(
 		return fmt.Errorf("no available ports to start process-compose. You should run `devbox services stop` in your projects to free up ports")
 	}
 
-	// Now we have everything we need, let's start building the process-compose command
+	// Start building the process-compose command
 	flags := []string{"-p", strconv.Itoa(port)}
 	upCommand := []string{"up"}
 
@@ -204,12 +200,14 @@ func runProcessManagerInForeground(cmd *exec.Cmd, port int, config globalProcess
 
 	unlockFile(config.FileRef.Fd())
 	err = cmd.Wait()
+	lockFile(config.FileRef.Fd())
+	defer unlockFile(config.FileRef.Fd())
 	config.updateFromFile(config.GlobalPath)
 	if err != nil && err.Error() == "exit status 1" {
 		fmt.Fprintln(w, "Process-compose was terminated remotely")
 		return nil
 	}
-	cleanupProject(config, projectDir)
+	removeInstance(config, projectDir)
 	return err
 }
 
@@ -271,7 +269,7 @@ func StopProcessManager(
 		return fmt.Errorf("process-compose is not running or it's config is missing. To start it, run `devbox services up`")
 	}
 
-	defer cleanupProject(config, projectDir)
+	defer removeInstance(config, projectDir)
 
 	pid, _ := os.FindProcess(project.Pid)
 	err = pid.Signal(os.Interrupt)

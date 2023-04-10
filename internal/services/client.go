@@ -13,7 +13,7 @@ import (
 
 type processStates = types.ProcessStates
 
-type ProcessSummary struct {
+type Process struct {
 	Name     string
 	Status   string
 	ExitCode int
@@ -74,10 +74,10 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 	}
 }
 
-func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]ProcessSummary, error) {
+func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Process, error) {
 	path := "/processes"
 	method := "GET"
-	results := []ProcessSummary{}
+	results := []Process{}
 
 	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
@@ -92,7 +92,7 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 			return results, err
 		}
 		for _, process := range processes.States {
-			results = append(results, ProcessSummary{
+			results = append(results, Process{
 				Name:     process.Name,
 				Status:   process.Status,
 				ExitCode: process.ExitCode,
