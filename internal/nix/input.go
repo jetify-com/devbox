@@ -12,19 +12,18 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-type Input url.URL
+type Input struct {
+	url.URL
+}
 
 func InputFromString(s, projectDir string) *Input {
+	fmt.Println("projectDir", projectDir)
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		u.Path = filepath.Join(projectDir, u.Opaque)
 		u.Opaque = ""
 	}
-	return lo.ToPtr(Input(*u))
-}
-
-func (i *Input) String() string {
-	return (*url.URL)(i).String()
+	return &Input{*u}
 }
 
 // isFlake returns true if the package descriptor has a scheme. For now
@@ -54,7 +53,7 @@ func (i *Input) Name() string {
 }
 
 func (i *Input) URLWithoutFragment() string {
-	u := *(*url.URL)(i) // get copy
+	u := i.URL // get copy
 	u.Fragment = ""
 	// This will produce urls with extra slashes after the scheme, but that's ok
 	return u.String()
