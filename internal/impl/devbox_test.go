@@ -15,6 +15,7 @@ import (
 
 func TestDevbox(t *testing.T) {
 	t.Setenv("TMPDIR", "/tmp")
+	t.Setenv("DEVBOX_DONT_UPGRADE_CONFIG", "1")
 	testPaths, err := doublestar.FilepathGlob("../../examples/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 
