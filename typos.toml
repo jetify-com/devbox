@@ -2,4 +2,4 @@
 AKE = "AKE"
 
 [files]
-extend-exclude=["*.svg"]
+extend-exclude=["*.svg", "**/testdata/**"]
