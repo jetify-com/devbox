@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os/exec"
 	"path/filepath"
@@ -49,9 +50,9 @@ func (i *Input) Name() string {
 		return filepath.Base(i.Path) + "-" + i.hash()
 	}
 	if i.IsGithub() {
-		return strings.Join(strings.Split(i.Opaque, "/")[:2], "-")
+		return "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
 	}
-	return i.hash()
+	return i.String() + "-" + i.hash()
 }
 
 func (i *Input) URLWithoutFragment() string {
@@ -61,14 +62,49 @@ func (i *Input) URLWithoutFragment() string {
 	return u.String()
 }
 
-func (i *Input) Packages() []string {
+// Package returns just the name for non-flakes. For flake references is returns
+// the full path to the package in the flake.
+func (i *Input) Package() string {
 	if !i.IsFlake() {
-		return []string{i.String()}
+		return i.String()
 	}
-	if i.Fragment == "" {
-		return []string{"default"}
+	p, _ := i.outputPath()
+	return p
+}
+
+func (i *Input) outputPath() (string, error) {
+	infos := search(i.String())
+	if len(infos) == 0 {
+		return "", ErrPackageNotFound
 	}
-	return strings.Split(i.Fragment, ",")
+
+	system, err := currentSystem()
+	if err != nil {
+		return "", err
+	}
+
+	key := fmt.Sprintf("packages.%s.%s", system, i.normalizedFragment())
+	if _, exists := infos[key]; exists {
+		return key, nil
+	}
+
+	key = fmt.Sprintf("legacyPackages.%s.%s", system, i.normalizedFragment())
+	if _, exists := infos[key]; exists {
+		return key, nil
+	}
+
+	if hasDefault, err := i.hasDefaultPackage(); err != nil {
+		return "", err
+	} else if hasDefault {
+		return "defaultPackage." + system, nil
+	}
+
+	return "", usererr.New(
+		"Flake \"%s\" was found but package \"%s\" was not found in flake. "+
+			"Ensure the flake has a packages output",
+		i.Path,
+		i.normalizedFragment(),
+	)
 }
 
 func (i *Input) hash() string {
@@ -80,41 +116,8 @@ func (i *Input) hash() string {
 }
 
 func (i *Input) validateExists() (bool, error) {
-	system, err := currentSystem()
-	if err != nil {
-		return false, err
-	}
-
-	outputs, err := outputs(i.Path)
-	if err != nil {
-		return false, err
-	}
-
-	fragment := i.Fragment
-	if fragment == "" {
-		fragment = "default" // if no package is specified, check for default.
-	}
-
-	if _, exists := outputs.Packages[system][fragment]; exists {
-		return true, nil
-	}
-
-	if _, exists := outputs.LegacyPackages[system][fragment]; exists {
-		return true, nil
-	}
-
-	// Another way to specify a default package is to output it as
-	// defaultPackage.${system}
-	if _, exists := outputs.DefaultPackage[system]; exists && i.Fragment == "" {
-		return true, nil
-	}
-
-	return false, usererr.New(
-		"Flake \"%s\" was found but package \"%s\" was not found in flake. "+
-			"Ensure the flake has a packages output",
-		i.Path,
-		fragment,
-	)
+	o, err := i.outputPath()
+	return o != "", err
 }
 
 func (i *Input) equals(o *Input) bool {
@@ -140,35 +143,57 @@ func (i *Input) normalizedFragment() string {
 	return parts[len(parts)-1]
 }
 
+var currentSystemCache string
+
 func currentSystem() (string, error) {
-	cmd := exec.Command(
-		"nix", "eval",
-		"--impure", "--raw", "--expr",
-		"builtins.currentSystem",
-	)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	o, err := cmd.Output()
-	return string(o), err
+	if currentSystemCache == "" {
+		cmd := exec.Command(
+			"nix", "eval",
+			"--impure", "--raw", "--expr",
+			"builtins.currentSystem",
+		)
+		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		o, err := cmd.Output()
+		if err != nil {
+			return "", err
+		}
+		currentSystemCache = strings.TrimSpace(string(o))
+	}
+	return currentSystemCache, nil
 }
 
 type output struct {
-	LegacyPackages map[string]map[string]any `json:"legacyPackages"`
-	Packages       map[string]map[string]any `json:"packages"`
 	DefaultPackage map[string]map[string]any `json:"defaultPackage"`
 }
 
-// TODO(landau): use nix search instead!
-func outputs(path string) (*output, error) {
+// hasDefaultPackage returns true if the flake has a defaultPackage output.
+// Landau: I'm not sure if this is a standard way of exposing default packages,
+// but process-compose does this and we want to support it.
+func (i *Input) hasDefaultPackage() (bool, error) {
 	cmd := exec.Command(
 		"nix", "flake", "show",
-		path,
-		"--json", "--legacy",
+		i.URLWithoutFragment(),
+		"--json",
 	)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	commandOut, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	out := &output{}
-	return out, json.Unmarshal(commandOut, out)
+	if err = json.Unmarshal(commandOut, out); err != nil {
+		return false, err
+	}
+
+	if len(out.DefaultPackage) == 0 {
+		return false, nil
+	}
+
+	system, err := currentSystem()
+	if err != nil {
+		return false, err
+	}
+
+	_, exists := out.DefaultPackage[system]
+	return exists, nil
 }

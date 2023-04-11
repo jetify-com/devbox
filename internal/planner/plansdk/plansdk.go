@@ -47,7 +47,7 @@ type ShellPlan struct {
 	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
 	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
 
-	FlakeInputs []FlakeInput
+	FlakeInputs []*FlakeInput
 }
 
 type Planner interface {

@@ -20,14 +20,14 @@ func TestNixProfileListItem(t *testing.T) {
 			line: fmt.Sprintf(
 				"%d %s %s %s",
 				0,
-				"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
+				"flake:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 				"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 				"/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3",
 			),
 			expected: expectedTestData{
 				item: &NixProfileListItem{
 					index:             0,
-					unlockedReference: "github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
+					unlockedReference: "flake:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 					lockedReference:   "github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 					nixStorePath:      "/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3",
 				},

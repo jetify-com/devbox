@@ -283,8 +283,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 }
 
 func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
-	info, found := PkgInfo(nixpkgsCommit, pkg)
-	if !found {
+	info := PkgInfo(nixpkgsCommit, pkg)
+	if info == nil {
 		return ErrPackageNotFound
 	}
 	cmd := exec.Command("nix", "profile", "remove",
