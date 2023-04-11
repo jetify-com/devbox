@@ -86,12 +86,12 @@ func (i *Input) PackageAttributePath() (string, error) {
 
 	// If ambiguous, try to find a default output
 	if len(infos) > 1 && i.Fragment == "" {
-		for key, _ := range infos {
+		for key := range infos {
 			if strings.HasSuffix(key, ".default") {
 				return key, nil
 			}
 		}
-		for key, _ := range infos {
+		for key := range infos {
 			if strings.HasPrefix(key, "defaultPackage.") {
 				return key, nil
 			}
