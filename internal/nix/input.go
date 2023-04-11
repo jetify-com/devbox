@@ -3,6 +3,7 @@ package nix
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -78,10 +79,15 @@ func (i *Input) PackageAttributePath() (string, error) {
 	if len(infos) == 0 {
 		return "", usererr.New("Flake \"%s\" was found", i.String())
 	} else if len(infos) > 1 {
+		outputs := fmt.Sprintf("It has %d possible outputs", len(infos))
+		if len(infos) < 10 {
+			outputs = "It has the following possible outputs: \n" +
+				strings.Join(lo.Keys(infos), ", ")
+		}
 		return "", usererr.New(
-			"Flake \"%s\" is ambiguous. It has multiple packages outputs: %s",
+			"Flake \"%s\" is ambiguous. %s",
 			i.String(),
-			lo.Keys(infos),
+			outputs,
 		)
 	}
 
