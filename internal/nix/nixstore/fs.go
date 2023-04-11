@@ -65,7 +65,7 @@ func (s3 *S3BucketFS) doRequest(method, filename string) (info *S3FileInfo, body
 		// Consume the body if we're not returning it so that the
 		// http.Client can reuse the underlying connection.
 		if body == nil {
-			io.Copy(io.Discard, resp.Body)
+			io.Copy(io.Discard, resp.Body) //nolint:errcheck
 			resp.Body.Close()
 		}
 
@@ -129,7 +129,7 @@ func (f *S3File) Stat() (fs.FileInfo, error) {
 // Read reads the file's contents from S3.
 func (f *S3File) Read(p []byte) (n int, err error) {
 	n, err = f.respBody.Read(p)
-	if err == io.EOF {
+	if err == io.EOF { //nolint:errorlint
 		// Don't wrap io.EOF per io.Writer.
 		return n, err
 	}
@@ -138,7 +138,7 @@ func (f *S3File) Read(p []byte) (n int, err error) {
 
 // Close closes the file and frees any underlying network connections.
 func (f *S3File) Close() error {
-	io.Copy(io.Discard, f.respBody)
+	io.Copy(io.Discard, f.respBody) //nolint:errcheck
 	return f.respBody.Close()
 }
 
@@ -200,6 +200,8 @@ func (fi *S3FileInfo) ModTime() time.Time {
 // tryUnmarshalS3Error unmarshals the body of an S3 error response into a Go
 // error. If there's an error reading or unmarshaling the body,
 // tryUnmarshalS3Error returns nil.
+//
+//nolint:nilerr
 func tryUnmarshalS3Error(r io.Reader) error {
 	s3Err := struct {
 		Code     string

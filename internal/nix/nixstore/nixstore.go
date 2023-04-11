@@ -160,6 +160,8 @@ entries:
 }
 
 // resolveDeps populates the direct dependencies of pkg.
+//
+//nolint:revive
 func (r *Root) resolveDeps(pkg *Package) error {
 	if pkg.DirectDependencies != nil {
 		// Already resolved.
