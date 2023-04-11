@@ -52,7 +52,9 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir           = ".devbox/gen/scripts"
+	scriptsDir = ".devbox/gen/scripts"
+
+	// hooksFilename is the name of the file that contains the project's init-hooks and plugin hooks
 	hooksFilename        = ".hooks"
 	arbitraryCmdFilename = ".cmd"
 )
@@ -171,11 +173,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.mergedPackages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
 	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
@@ -191,7 +188,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	}
 
 	opts := []ShellOption{
-		WithPluginInitHook(strings.Join(pluginHooks, "\n")),
+		WithHooksFilePath(d.scriptPath(d.scriptFilename(hooksFilename))),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
@@ -204,7 +201,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.Run()
 }
 

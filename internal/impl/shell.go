@@ -55,10 +55,8 @@ type DevboxShell struct {
 	pkgConfigDir    string
 	env             map[string]string
 	userShellrcPath string
-	pluginInitHook  string
 
-	// UserInitHook contains commands that will run at shell startup.
-	UserInitHook string
+	hooksFilePath string
 
 	// profileDir is the absolute path to the directory storing the nix-profile
 	profileDir  string
@@ -164,14 +162,6 @@ func initShellBinaryFields(path string) *DevboxShell {
 	return shell
 }
 
-// If/once we end up making plugins the same as devbox.json we probably want
-// to merge all init hooks into single field
-func WithPluginInitHook(hook string) ShellOption {
-	return func(s *DevboxShell) {
-		s.pluginInitHook = hook
-	}
-}
-
 func WithProfile(profileDir string) ShellOption {
 	return func(s *DevboxShell) {
 		s.profileDir = profileDir
@@ -184,17 +174,17 @@ func WithHistoryFile(historyFile string) ShellOption {
 	}
 }
 
+func WithHooksFilePath(hooksFilePath string) ShellOption {
+	return func(s *DevboxShell) {
+		s.hooksFilePath = hooksFilePath
+	}
+}
+
 // TODO: Consider removing this once plugins add env vars directly to binaries
 // via wrapper scripts.
 func WithEnvVariables(envVariables map[string]string) ShellOption {
 	return func(s *DevboxShell) {
 		s.env = envVariables
-	}
-}
-
-func WithPKGConfigDir(pkgConfigDir string) ShellOption {
-	return func(s *DevboxShell) {
-		s.pkgConfigDir = pkgConfigDir
 	}
 }
 
@@ -326,8 +316,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ProjectDir       string
 		OriginalInit     string
 		OriginalInitPath string
-		UserHook         string
-		PluginInitHook   string
+		HooksFilePath    string
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
@@ -335,8 +324,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ProjectDir:       s.projectDir,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath: s.userShellrcPath,
-		UserHook:         strings.TrimSpace(s.UserInitHook),
-		PluginInitHook:   strings.TrimSpace(s.pluginInitHook),
+		HooksFilePath:    s.hooksFilePath,
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		ExportEnv:        exportify(s.env),
