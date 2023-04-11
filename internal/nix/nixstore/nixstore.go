@@ -238,9 +238,9 @@ func (p Package) String() string {
 	return p.StoreName
 }
 
-// topologicalSort resolves the dependency tree for a package and returns it as
+// TopologicalSort resolves the dependency tree for a package and returns it as
 // a slice of packages in topological order.
-func topologicalSort(pkg *Package) []*Package {
+func TopologicalSort(pkg *Package) []*Package {
 	pkgs := make([]*Package, 0, len(pkg.DirectDependencies))
 	seen := make(map[*Package]bool, len(pkg.DirectDependencies))
 	return tsort(pkgs, seen, pkg)

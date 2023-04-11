@@ -45,11 +45,10 @@ func checkDependencies(t *testing.T, got *Package, nixPathInfos map[string][]str
 		return got.DirectDependencies[i].StoreName < got.DirectDependencies[j].StoreName
 	})
 	for i, dep := range got.DirectDependencies {
-		if dep.StoreName == want[i] {
-			continue
+		if dep.StoreName != want[i] {
+			t.Fatalf("package %s has unwanted dependency %s:\ngot:  %v\nwant: %v",
+				got, dep, got.DirectDependencies, want)
 		}
-		t.Fatalf("package %s has unwanted dependency %s:\ngot:  %v\nwant: %v",
-			got, dep, got.DirectDependencies, want)
 		checkDependencies(t, dep, nixPathInfos)
 	}
 }
