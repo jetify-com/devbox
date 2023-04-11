@@ -28,7 +28,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 	tests := make([]struct {
 		name            string
 		env             map[string]string
-		hook            string
+		hooksFilePath   string
 		shellrcPath     string
 		goldShellrcPath string
 		goldShellrc     []byte
@@ -41,7 +41,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 			test.env = pairsToMap(strings.Split(string(b), "\n"))
 		}
 		if b, err := os.ReadFile(filepath.Join(path, "hook")); err == nil {
-			test.hook = string(b)
+			test.hooksFilePath = string(b)
 		}
 		test.shellrcPath = filepath.Join(path, "shellrc")
 		if _, err := os.Stat(test.shellrcPath); errors.Is(err, os.ErrNotExist) {
@@ -60,8 +60,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 				env:             test.env,
 				projectDir:      "path/to/projectDir",
 				userShellrcPath: test.shellrcPath,
-				UserInitHook:    test.hook,
-				pluginInitHook:  `echo "Welcome to the devbox!"`,
+				hooksFilePath:   test.hooksFilePath,
 				profileDir:      "./.devbox/profile",
 			}
 			gotPath, err := s.writeDevboxShellrc()
