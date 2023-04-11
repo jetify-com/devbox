@@ -18,12 +18,26 @@ func TestLocalStorePackage(t *testing.T) {
 	if _, err := os.Stat("/nix/store/mil5crms7gfpv03vjj094zz1igvapv6i-go-1.20.2"); err != nil {
 		t.Skip(`run "nix copy --from https://cache.nixos.org /nix/store/mil5crms7gfpv03vjj094zz1igvapv6i-go-1.20.2" to run this test`)
 	}
+
 	storePath := "/nix/store"
 	local, err := Local(storePath)
 	if err != nil {
 		t.Fatalf("got error for local Nix store %s: %v", storePath, err)
 	}
 	pkg, err := local.Package("mil5crms7gfpv03vjj094zz1igvapv6i-go-1.20.2")
+	if err != nil {
+		t.Fatalf("got error querying package %s: %v", pkg, err)
+	}
+	checkDependencies(t, pkg, unmarshalNixPathInfoOutput(t, pkg))
+}
+
+func TestRemote(t *testing.T) {
+	storeURL := "https://cache.nixos.org"
+	store, err := Remote(storeURL)
+	if err != nil {
+		t.Fatalf("got error for remote Nix store %s: %v", storeURL, err)
+	}
+	pkg, err := store.Package("mil5crms7gfpv03vjj094zz1igvapv6i-go-1.20.2")
 	if err != nil {
 		t.Fatalf("got error querying package %s: %v", pkg, err)
 	}

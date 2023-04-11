@@ -23,6 +23,7 @@ require (
 	github.com/imdario/mergo v0.3.15
 	github.com/mattn/go-isatty v0.0.18
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
+	github.com/nix-community/go-nix v0.0.0-20230226174119-1f9567c0a1e5
 	github.com/pelletier/go-toml/v2 v2.0.7
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.10.0
@@ -35,6 +36,17 @@ require (
 	golang.org/x/mod v0.9.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/minio/sha256-simd v1.0.0 // indirect
+	github.com/mr-tron/base58 v1.2.0 // indirect
+	github.com/multiformats/go-multihash v0.2.1 // indirect
+	github.com/multiformats/go-varint v0.0.6 // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
+	lukechampine.com/blake3 v1.1.6 // indirect
 )
 
 require (

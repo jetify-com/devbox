@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"path"
 	"strings"
+
+	"github.com/nix-community/go-nix/pkg/narinfo"
 )
 
 // Root is the top-level directory of a Nix store. It maintains an index of
@@ -34,7 +36,20 @@ type Root struct {
 
 // Local returns a local file system Nix store, which is typically /nix/store.
 func Local(path string) (*Root, error) {
-	return &Root{FS: newReadLinkFS(path)}, nil
+	root := &Root{FS: newReadLinkFS(path)}
+	return root, root.buildIndex()
+}
+
+// Remote returns a remote Nix store, such as a binary cache.
+func Remote(url string) (*Root, error) {
+	fsys, err := NewS3BucketFS(url)
+	if err != nil {
+		return nil, err
+	}
+	return &Root{
+		FS:        fsys,
+		pkgByHash: make(map[string]*Package),
+	}, nil
 }
 
 // Package retrieves a package by its name within the store. The name must be
@@ -50,16 +65,9 @@ func (r *Root) Package(name string) (*Package, error) {
 	if !fs.ValidPath(name) {
 		return nil, fmt.Errorf("invalid package name %q", name)
 	}
-
-	pkg := r.pkgByHash[name[:32]]
-	if pkg == nil {
-		if err := r.buildIndex(); err != nil {
-			return nil, err
-		}
-		pkg = r.pkgByHash[name[:32]]
-		if pkg == nil {
-			return nil, fmt.Errorf("package not found: %s", name)
-		}
+	pkg, err := r.indexPkg(name)
+	if err != nil {
+		return nil, err
 	}
 	return pkg, r.resolveDeps(pkg)
 }
@@ -158,10 +166,38 @@ func (r *Root) resolveDeps(pkg *Package) error {
 		return nil
 	}
 
+	// If there's a narinfo available for this package then we don't need to scan
+	// for dependencies.
+	narinfoPath := pkg.Hash + ".narinfo"
+	f, err := r.Open(narinfoPath)
+	if err == nil {
+		defer f.Close()
+		ni, err := narinfo.Parse(f)
+		if err != nil {
+			return err
+		}
+		pkg.narPath = ni.URL
+		for _, ref := range ni.References {
+			dep, err := r.indexPkg(ref)
+			if err != nil {
+				return err
+			}
+			if dep == pkg {
+				// Skip self-references.
+				continue
+			}
+			if err := r.resolveDeps(dep); err != nil {
+				return err
+			}
+			pkg.DirectDependencies = append(pkg.DirectDependencies, dep)
+		}
+		return nil
+	}
+
 	// Find dependencies by looking at every file in the package to see if it
 	// references another package's hash.
 	foundDeps := map[*Package]struct{}{}
-	err := fs.WalkDir(pkg, ".", func(entryPath string, entry fs.DirEntry, err error) error {
+	err = fs.WalkDir(pkg, ".", func(entryPath string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -232,6 +268,11 @@ type Package struct {
 	// DirectDependencies are the other packages in the store that this
 	// package depends on. It does not contain transitive dependencies.
 	DirectDependencies []*Package
+
+	// narPath is the path to a nar file containing this package when one
+	// is available. If the store doesn't have a nar for this package then narPath
+	// will be empty.
+	narPath string
 }
 
 func (p Package) String() string {
