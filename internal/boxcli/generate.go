@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/cloud"
 )
@@ -43,7 +44,7 @@ func debugCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, flags)
 		},
 	}
 	return command
@@ -57,7 +58,7 @@ func devcontainerCmd() *cobra.Command {
 		Long:  "Generate Dockerfile and devcontainer.json files necessary to run VSCode in remote container environments.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -73,7 +74,7 @@ func dockerfileCmd() *cobra.Command {
 		Long:  "Generate a Dockerfile that replicates devbox shell. Can be used to run devbox shell environment in an OCI container.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -91,7 +92,7 @@ func direnvCmd() *cobra.Command {
 			"Requires direnv to be installed.",
 		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -109,7 +110,7 @@ func sshConfigCmd() *cobra.Command {
 		Long:   "Check ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
 		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, args, flags)
+			return runGenerateCmd(cmd, flags)
 		},
 	}
 	command.Flags().StringVarP(
@@ -119,7 +120,7 @@ func sshConfigCmd() *cobra.Command {
 	return command
 }
 
-func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) error {
+func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// ssh-config command is exception and it should run without a config file present
 	if cmd.Use == "ssh-config" {
 		_, err := cloud.SSHSetup(flags.githubUsername)
@@ -129,12 +130,8 @@ func runGenerateCmd(cmd *cobra.Command, args []string, flags *generateCmdFlags) 
 		return nil
 	}
 
-	path, err := configPathFromUser(args, &flags.config)
-	if err != nil {
-		return err
-	}
 	// Check the directory exists.
-	box, err := devbox.Open(path, os.Stdout)
+	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
 		return errors.WithStack(err)
 	}

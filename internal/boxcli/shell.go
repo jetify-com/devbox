@@ -8,6 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
@@ -28,7 +29,7 @@ func shellCmd() *cobra.Command {
 		Args:    cobra.NoArgs,
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runShellCmd(cmd, args, flags)
+			return runShellCmd(cmd, flags)
 		},
 	}
 
@@ -39,13 +40,9 @@ func shellCmd() *cobra.Command {
 	return command
 }
 
-func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
-	path, _, err := parseShellArgs(cmd, args, flags)
-	if err != nil {
-		return err
-	}
+func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -65,26 +62,6 @@ func runShellCmd(cmd *cobra.Command, args []string, flags shellCmdFlags) error {
 	}
 
 	return box.Shell(cmd.Context())
-}
-
-func parseShellArgs(cmd *cobra.Command, args []string, flags shellCmdFlags) (string, []string, error) {
-	// TODO: remove code that takes config path from an arguments.
-	index := cmd.ArgsLenAtDash()
-	if index < 0 {
-		configPath, err := configPathFromUser(args, &flags.config)
-		if err != nil {
-			return "", nil, err
-		}
-		return configPath, []string{}, nil
-	}
-
-	path, err := configPathFromUser(args[:index], &flags.config)
-	if err != nil {
-		return "", nil, err
-	}
-	cmds := args[index:]
-
-	return path, cmds, nil
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {

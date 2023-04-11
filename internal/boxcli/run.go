@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -42,13 +43,7 @@ func runCmd() *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
-	path, err := configPathFromUser([]string{}, &flags.config)
-	if err != nil {
-		debug.Log("failed to get config path from user: %v", err)
-		return nil
-	}
-
-	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		debug.Log("failed to open devbox: %v", err)
 		return nil
@@ -78,11 +73,6 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 }
 
 func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string, error) {
-	path, err := configPathFromUser([]string{}, &flags.config)
-	if err != nil {
-		return "", "", nil, err
-	}
-
 	if len(args) == 0 {
 		// this should never happen because cobra should prevent it, but it's better to be defensive.
 		return "", "", nil, usererr.New("no command or script provided")
@@ -91,5 +81,5 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 	script := args[0]
 	scriptArgs := args[1:]
 
-	return path, script, scriptArgs, nil
+	return flags.config.path, script, scriptArgs, nil
 }
