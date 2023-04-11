@@ -17,7 +17,6 @@ type Input struct {
 }
 
 func InputFromString(s, projectDir string) *Input {
-	fmt.Println("projectDir", projectDir)
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		u.Path = filepath.Join(projectDir, u.Opaque)
@@ -75,9 +74,27 @@ func (i *Input) PackageAttributePath() (string, error) {
 		return i.String(), nil
 	}
 	infos := search(i.String())
-	if len(infos) == 0 {
-		return "", usererr.New("Flake \"%s\" was found", i.String())
-	} else if len(infos) > 1 {
+
+	if len(infos) == 1 {
+		return lo.Keys(infos)[0], nil
+	}
+
+	// If ambiguous, try to find a default output
+	if len(infos) > 1 && i.Fragment == "" {
+		for key, _ := range infos {
+			if strings.HasSuffix(key, ".default") {
+				return key, nil
+			}
+		}
+		for key, _ := range infos {
+			if strings.HasPrefix(key, "defaultPackage.") {
+				return key, nil
+			}
+		}
+	}
+
+	// Still ambiguous, return error
+	if len(infos) > 1 {
 		outputs := fmt.Sprintf("It has %d possible outputs", len(infos))
 		if len(infos) < 10 {
 			outputs = "It has the following possible outputs: \n" +
@@ -90,7 +107,7 @@ func (i *Input) PackageAttributePath() (string, error) {
 		)
 	}
 
-	return lo.Keys(infos)[0], nil
+	return "", usererr.New("Flake \"%s\" was found", i.String())
 }
 
 func (i *Input) hash() string {
@@ -110,12 +127,6 @@ func (i *Input) equals(other *Input) bool {
 	if i.String() == other.String() {
 		return true
 	}
-	if i.Scheme == other.Scheme &&
-		i.Path == other.Path &&
-		i.Opaque == other.Opaque &&
-		i.normalizedFragment() == other.normalizedFragment() {
-		return true
-	}
 
 	// check inputs without fragments as optimization. Next step is expensive
 	if i.URLWithoutFragment() != other.URLWithoutFragment() {
@@ -131,17 +142,4 @@ func (i *Input) equals(other *Input) bool {
 		return false
 	}
 	return name == otherName
-}
-
-// normalizedFragment attempts to return the closest thing to a package name
-// from a fragment. A fragment could be:
-// * empty string -> default
-// * a single package -> package
-// * a qualified output (e.g. packages.aarch64-darwin.hello) -> hello
-func (i *Input) normalizedFragment() string {
-	if i.Fragment == "" {
-		return "default"
-	}
-	parts := strings.Split(i.Fragment, ".")
-	return parts[len(parts)-1]
 }

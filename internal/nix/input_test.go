@@ -98,7 +98,10 @@ func testInputFromString(s, projectDir string) *testInput {
 
 func (i *testInput) Package() string {
 	if i.IsFlake() {
-		return fmt.Sprintf("packages.x86_64-darwin.%s", i.normalizedFragment())
+		return fmt.Sprintf(
+			"packages.x86_64-darwin.%s",
+			lo.Ternary(i.Fragment != "", i.Fragment, "default"),
+		)
 	}
 	return i.String()
 }
