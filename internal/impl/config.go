@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -98,6 +99,11 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
+	if dontUpgrade, _ := strconv.ParseBool(
+		os.Getenv("DEVBOX_DONT_UPGRADE_CONFIG"),
+	); dontUpgrade {
+		return nil
+	}
 	if cfg.Nixpkgs.Commit == "" {
 		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s",
 			plansdk.DefaultNixpkgsCommit)
