@@ -1,12 +1,12 @@
 package plugin
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
-	"hash/fnv"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/ux"
@@ -61,14 +61,15 @@ const virtenvPathHashLength = 5
 // virtenvSymlinkPath returns a path for a project's virtenv resources to live in.
 func virtenvSymlinkPath(projectDir string) (string, error) {
 
-	// hashProjectDir returns a fast, non-crypto hash of the projectDir, of length maxLen.
+	// hashProjectDir returns a hash of the projectDir, of length maxLen.
 	hashProjectDir := func(projectDir string, maxLen int) (string, error) {
-		h := fnv.New32a()
+
+		h := md5.New()
 		_, err := h.Write([]byte(projectDir))
 		if err != nil {
 			return "", errors.WithStack(err)
 		}
-		hashed := strconv.FormatUint(uint64(h.Sum32()), 10)
+		hashed := hex.EncodeToString(h.Sum(nil)[:])
 		if len(hashed) > maxLen {
 			hashed = hashed[:maxLen]
 		}

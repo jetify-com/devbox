@@ -19,7 +19,6 @@
             ],
             "run_test": [
                 "set -e",
-                "rm -rf $PGDATA",
                 "initdb",
                 "devbox services start",
                 "devbox run create_db",
