@@ -52,7 +52,6 @@ type DevboxShell struct {
 	name            name
 	binPath         string
 	projectDir      string // path to where devbox.json config resides
-	pkgConfigDir    string
 	env             map[string]string
 	userShellrcPath string
 
