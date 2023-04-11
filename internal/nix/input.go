@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/samber/lo"
@@ -41,14 +42,18 @@ func (i *Input) IsGithub() bool {
 	return i.Scheme == "github"
 }
 
+var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
+
 func (i *Input) Name() string {
+	result := ""
 	if i.IsLocal() {
-		return filepath.Base(i.Path) + "-" + i.hash()
+		result = filepath.Base(i.Path) + "-" + i.hash()
+	} else if i.IsGithub() {
+		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
+	} else {
+		result = i.String() + "-" + i.hash()
 	}
-	if i.IsGithub() {
-		return "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
-	}
-	return i.String() + "-" + i.hash()
+	return inputNameRegex.ReplaceAllString(result, "-")
 }
 
 func (i *Input) URLWithoutFragment() string {
@@ -107,7 +112,7 @@ func (i *Input) PackageAttributePath() (string, error) {
 		)
 	}
 
-	return "", usererr.New("Flake \"%s\" was found", i.String())
+	return "", usererr.New("Flake \"%s\" was not found", i.String())
 }
 
 func (i *Input) hash() string {
