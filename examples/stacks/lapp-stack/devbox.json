@@ -1,10 +1,14 @@
 {
     "packages": [
+        "curl",
         "postgresql",
         "php81",
         "php81Extensions.pgsql",
         "apacheHttpd"
     ],
+    "env": {
+      "PGPORT": "5432"
+    },
     "shell": {
         "scripts": {
             "init_db": "initdb",
@@ -14,6 +18,7 @@
                 "psql devbox_lapp < setup_postgres_db.sql"
             ],
             "run_test": [
+                "set -e",
                 "initdb",
                 "devbox services start",
                 "devbox run create_db",

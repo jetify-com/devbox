@@ -51,7 +51,7 @@ func (d *Devbox) generateShellFiles() error {
 	}
 
 	for _, pkg := range plan.DevPackages {
-		if err := d.pluginManager.CreateFilesAndShowReadme(pkg, d.projectDir); err != nil {
+		if err := d.pluginManager.CreateFilesAndShowReadme(d.writer, pkg, d.projectDir); err != nil {
 			return err
 		}
 	}

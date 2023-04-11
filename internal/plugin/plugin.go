@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -50,7 +51,12 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
+func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) error {
+	virtenvPath, err := createVirtenvSymlink(w, projectDir)
+	if err != nil {
+		return err
+	}
+
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err
@@ -82,7 +88,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			continue
 		}
 
-		debug.Log("Creating file %q", filePath)
+		debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
 		content, err := getFileContent(contentPath)
 		if err != nil {
 			return errors.WithStack(err)
@@ -97,7 +103,7 @@ func (m *Manager) CreateFilesAndShowReadme(pkg, projectDir string) error {
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
+			"Virtenv":              filepath.Join(virtenvPath, pkg),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -143,6 +149,12 @@ func Env(
 }
 
 func buildConfig(pkg, projectDir, content string) (*config, error) {
+
+	virtenvPath, err := virtenvSymlinkPath(projectDir)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &config{}
 	t, err := template.New(pkg + "-template").Parse(content)
 	if err != nil {
@@ -154,7 +166,7 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(projectDir, devboxHiddenDirName, "virtenv", pkg),
+		"Virtenv":              filepath.Join(virtenvPath, pkg),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}

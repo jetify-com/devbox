@@ -1,10 +1,14 @@
 {
     "packages": [
+        "curl",
         "postgresql",
         "php81",
         "nginx",
         "php81Extensions.pgsql"
     ],
+    "env": {
+      "PGPORT": "5433"
+    },
     "shell": {
         "scripts": {
             "init_db": "initdb",
@@ -14,10 +18,11 @@
                 "psql devbox_lepp < setup_postgres_db.sql"
             ],
             "run_test": [
+                "set -e",
                 "initdb",
                 "devbox services start",
                 "devbox run create_db",
-                "curl localhost:80",
+                "curl localhost:8089",
                 "devbox services stop"
             ]
         }
