@@ -49,8 +49,8 @@
             global-pkgs.{{.}}
             {{- end}}
             {{- range $_, $flake := .FlakeInputs }}
-            {{- range $flake.Packages}}
-            {{ $flake.Name }}.packages.${system}.{{.}}
+            {{- range $flake.Packages }}
+            {{ $flake.Name }}.{{.}}
             {{- end }}
             {{- end }}
           ];

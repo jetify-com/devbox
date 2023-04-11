@@ -13,6 +13,7 @@ import (
 	"runtime/trace"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -29,62 +30,64 @@ func PkgExists(nixpkgsCommit, pkg, projectDir string) (bool, error) {
 	if input.IsFlake() {
 		return input.validateExists()
 	}
-	_, found := PkgInfo(nixpkgsCommit, pkg)
-	return found, nil
+	return PkgInfo(nixpkgsCommit, pkg) != nil, nil
 }
 
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
 	attributeKey string
-	NixName      string
-	Name         string
+	PName        string
 	Version      string
 }
 
 func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s", i.Name, i.Version)
+	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
-func PkgInfo(nixpkgsCommit, pkg string) (*Info, bool) {
+func PkgInfo(nixpkgsCommit, pkg string) *Info {
 	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
 	if nixpkgsCommit == "" {
 		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
 	}
 
-	cmd := exec.Command("nix", "search", "--json", exactPackage)
+	results := search(exactPackage)
+	if len(results) == 0 {
+		return nil
+	}
+	// we should only have one result
+	return lo.Values(results)[0]
+}
+
+func search(url string) map[string]*Info {
+	cmd := exec.Command("nix", "search", "--json", url)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Stderr = os.Stderr
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		// for now, assume all errors are invalid packages.
-		return nil, false /* not found */
+		return nil
 	}
-	pkgInfo := parseInfo(pkg, out)
-	if pkgInfo == nil {
-		return nil, false /* not found */
-	}
-	return pkgInfo, true /* found */
+	return parseSearchResults(out)
 }
 
-func parseInfo(pkg string, data []byte) *Info {
+func parseSearchResults(data []byte) map[string]*Info {
 	var results map[string]map[string]any
 	err := json.Unmarshal(data, &results)
 	if err != nil {
 		panic(err)
 	}
+	infos := map[string]*Info{}
 	for key, result := range results {
-		pkgInfo := &Info{
+		infos[key] = &Info{
 			attributeKey: key,
-			NixName:      pkg,
-			Name:         result["pname"].(string),
+			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
 		}
 
-		return pkgInfo
 	}
-	return nil
+	return infos
 }
 
 type printDevEnvOut struct {

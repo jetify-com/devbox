@@ -250,6 +250,11 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
+	path, err := flakePath(args)
+	if err != nil {
+		return err
+	}
+
 	cmd := exec.Command(
 		"nix", "profile", "install",
 		"--profile", args.ProfilePath,
@@ -258,7 +263,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
-		flakePath(args),
+		path,
 	)
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
@@ -283,8 +288,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 }
 
 func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
-	info, found := PkgInfo(nixpkgsCommit, pkg)
-	if !found {
+	info := PkgInfo(nixpkgsCommit, pkg)
+	if info == nil {
 		return ErrPackageNotFound
 	}
 	cmd := exec.Command("nix", "profile", "remove",
@@ -340,11 +345,11 @@ func nextPriority(profilePath string) string {
 	return fmt.Sprintf("%d", max+1)
 }
 
-func flakePath(args *ProfileInstallArgs) string {
+func flakePath(args *ProfileInstallArgs) (string, error) {
 	input := InputFromString(args.Package, args.ProjectDir)
 	if input.IsFlake() {
-		return input.String()
+		return input.NormalizedName()
 	}
 
-	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package
+	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package, nil
 }

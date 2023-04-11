@@ -10,7 +10,6 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -29,9 +28,6 @@ func TestDevbox(t *testing.T) {
 	}
 }
 func testShellPlan(t *testing.T, testPath string) {
-	currentDir, err := os.Getwd()
-	require.New(t).NoError(err)
-
 	baseDir := filepath.Dir(testPath)
 	testName := fmt.Sprintf("%s_shell_plan", filepath.Base(baseDir))
 	t.Run(testName, func(t *testing.T) {
@@ -42,12 +38,6 @@ func testShellPlan(t *testing.T, testPath string) {
 
 		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
-
-		// Just for tests, we make projectDir be a relative path so that the paths in plan.json
-		// of various test cases have relative paths. Absolute paths are a no-go because they'd
-		// be of the form `/Users/savil/...`, which are not generalized and cannot be checked in.
-		box.projectDir, err = filepath.Rel(currentDir, box.projectDir)
-		assert.NoErrorf(err, "expect to construct relative path from %s relative to base %s", box.projectDir, currentDir)
 
 		shellPlan, err := box.ShellPlan()
 		assert.NoError(err, "devbox shell plan should not fail")
