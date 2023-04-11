@@ -198,7 +198,7 @@ func (fi *S3FileInfo) ModTime() time.Time {
 }
 
 // tryUnmarshalS3Error unmarshals the body of an S3 error response into a Go
-// error. If there's an error reading or unmarshaling the body,
+// error. If there's an error reading or unmarshalling the body,
 // tryUnmarshalS3Error returns nil.
 //
 //nolint:nilerr
@@ -219,7 +219,7 @@ func tryUnmarshalS3Error(r io.Reader) error {
 		s3Err.Code, s3Err.Resource, s3Err.Message)
 }
 
-// readLinkFS is an [os.DirFS] that supports reading symlinks. It satisifies
+// readLinkFS is an [os.DirFS] that supports reading symlinks. It satisfies
 // the interface discussed in the [accepted Go proposal for fs.ReadLinkFS].
 // If differs from the proposed implementation in that it allows absolute
 // symlinks by translating them to relative paths.
