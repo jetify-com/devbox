@@ -23,14 +23,22 @@ export async function handleOpenInVSCode(uri: Uri) {
         if (os.platform() !== 'win32') {
             window.showInformationMessage('Setting up devbox');
             // getting ssh keys
-            const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
-            const res = await response.json() as VmInfo;
-            console.debug("data:");
-            console.debug(res);
-            // set ssh config
-            await setupSSHConfig(res.vm_id, res.private_key);
-            // connect to remote vm
-            connectToRemote(res.username, res.vm_id, res.working_directory);
+            try {
+                console.debug('Calling getVMInfo...');
+                const response = await getVMInfo(queryParams.get('token'), queryParams.get('vm_id'));
+                const res = await response.json() as VmInfo;
+                console.debug('getVMInfo response: ' + res);
+                // set ssh config
+                console.debug('Calling setupSSHConfig...');
+                await setupSSHConfig(res.vm_id, res.private_key);
+
+                // connect to remote vm
+                console.debug('Calling connectToRemote...');
+                connectToRemote(res.username, res.vm_id, res.working_directory);
+            } catch (err: any) {
+                console.error(err);
+                window.showInformationMessage('Failed to setup devbox remote connection.');
+            }
         } else {
             window.showErrorMessage('This function is not yet supported in Windows operating system.');
         }
@@ -45,6 +53,7 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
     const gatewayHost = 'https://api.devbox.sh/g/vm_info';
     const data = new FormData();
     data.append("vm_id", vmId);
+    console.debug("calling devbox to get vm_info...");
     const response = await fetch(gatewayHost, {
         method: 'post',
         body: data,
@@ -52,6 +61,7 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
             authorization: `Bearer ${token}`
         }
     });
+    console.debug("API Call to api.devbox.sh response: " + response);
     return response;
 }
 
@@ -70,8 +80,9 @@ async function setupDevboxLauncher(): Promise<any> {
         await writeFile(fileHandler, launcherData, { flag: 'w' });
         await chmod(launcherPath, 0o711);
         await fileHandler.close();
-    } catch (err) {
-        console.error(err);
+    } catch (err: any) {
+        console.error("error setting up launcher script" + err);
+        throw (err);
     }
     return launcherPath;
 }
@@ -101,17 +112,21 @@ async function setupSSHConfig(vmId: string, prKey: string) {
         await writeFile(fileHandler, prKeydata, { flag: 'w' });
         await chmod(prkeyPath, 0o600);
         await fileHandler.close();
-    } catch (err) {
+    } catch (err: any) {
         // When a request is aborted - err is an AbortError
-        window.showErrorMessage('Failed to setup ssh config. Run VSCode in debug mode to see logs.');
-        console.error(err);
+        console.error('Failed to setup ssh config: ' + err);
+        throw (err);
     }
 }
 
 function connectToRemote(username: string, vmId: string, workDir: string) {
-    const host = `${username}@${vmId}.vm.devbox-vms.internal`;
-    const workspaceURI = `vscode-remote://ssh-remote+${host}${workDir}`;
-    const uriToOpen = Uri.parse(workspaceURI);
-    console.debug("uriToOpen: ", uriToOpen.toString());
-    commands.executeCommand("vscode.openFolder", uriToOpen, false);
+    try {
+        const host = `${username}@${vmId}.vm.devbox-vms.internal`;
+        const workspaceURI = `vscode-remote://ssh-remote+${host}${workDir}`;
+        const uriToOpen = Uri.parse(workspaceURI);
+        console.debug("uriToOpen: ", uriToOpen.toString());
+        commands.executeCommand("vscode.openFolder", uriToOpen, false);
+    } catch (err: any) {
+        console.error('failed to connect to remote: ' + err);
+    }
 }
