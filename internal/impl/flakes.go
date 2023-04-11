@@ -11,15 +11,19 @@ func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
 	for _, p := range d.cfg.MergedPackages(d.writer) {
 		pkg := nix.InputFromString(p, d.projectDir)
 		if pkg.IsFlake() {
+			AttributePath, err := pkg.PackageAttributePath()
+			if err != nil {
+				panic(err)
+			}
 			if input, ok := inputs[pkg.URLWithoutFragment()]; !ok {
 				inputs[pkg.URLWithoutFragment()] = &plansdk.FlakeInput{
 					Name:     pkg.Name(),
 					URL:      pkg.URLWithoutFragment(),
-					Packages: []string{pkg.Package()},
+					Packages: []string{AttributePath},
 				}
 			} else {
 				input.Packages = lo.Uniq(
-					append(inputs[pkg.URLWithoutFragment()].Packages, pkg.Package()),
+					append(inputs[pkg.URLWithoutFragment()].Packages, AttributePath),
 				)
 			}
 		}

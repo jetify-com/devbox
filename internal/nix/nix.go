@@ -37,12 +37,12 @@ type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
 	attributeKey string
-	Name         string
+	PName        string
 	Version      string
 }
 
 func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s", i.Name, i.Version)
+	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
 func PkgInfo(nixpkgsCommit, pkg string) *Info {
@@ -82,7 +82,7 @@ func parseSearchResults(data []byte) map[string]*Info {
 	for key, result := range results {
 		infos[key] = &Info{
 			attributeKey: key,
-			Name:         result["pname"].(string),
+			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
 		}
 
