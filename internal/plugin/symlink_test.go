@@ -27,12 +27,12 @@ func TestVirtenvSymlinkPath(t *testing.T) {
 		// Basic directory
 		{
 			projectDir:  "/home/user/project",
-			symlinkPath: "/tmp/devbox-virt-run-test/devbox/v-18242",
+			symlinkPath: "/tmp/devbox-virt-run-test/devbox/v-90722",
 		},
 		// A slightly different directory to ensure the hashing works
 		{
 			projectDir:  "/home/user/project/foo",
-			symlinkPath: "/tmp/devbox-virt-run-test/devbox/v-19648",
+			symlinkPath: "/tmp/devbox-virt-run-test/devbox/v-5d0d3",
 		},
 	}
 
