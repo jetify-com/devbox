@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -64,6 +65,17 @@ func RootCmd() *cobra.Command {
 	// Internal commands
 	command.AddCommand(genDocsCmd())
 
+	// Register the "all" command to list all commands, including hidden ones.
+	// This makes debugging easier.
+	command.AddCommand(&cobra.Command{
+		Use:    "all",
+		Short:  "List all commands, including hidden ones",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			listAllCommands(command, "")
+		},
+	})
+
 	command.PersistentFlags().BoolVarP(
 		&flags.quiet, "quiet", "q", false, "suppresses logs")
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
@@ -93,4 +105,14 @@ func Main() {
 	}
 	code := Execute(context.Background(), os.Args[1:])
 	os.Exit(code)
+}
+
+func listAllCommands(cmd *cobra.Command, indent string) {
+	// Print this command's name and description in table format with indentation
+	fmt.Printf("%s%-20s%s\n", indent, cmd.Use, cmd.Short)
+
+	// Recursively list child commands with increased indentation
+	for _, childCmd := range cmd.Commands() {
+		listAllCommands(childCmd, indent+"\t")
+	}
 }
