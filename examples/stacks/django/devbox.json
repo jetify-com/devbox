@@ -29,7 +29,6 @@
                 "python todo_project/manage.py runserver"
             ],
             "run_test": [
-                "set -e",
                 "initdb",
                 "devbox services start",
                 "devbox run create_db",

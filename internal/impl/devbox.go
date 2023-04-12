@@ -880,6 +880,9 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 		return errors.WithStack(err)
 	}
 
+	if featureflag.ScriptExitOnError.Enabled() {
+		body = fmt.Sprintf("set -e\n\n%s", body)
+	}
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
 }
