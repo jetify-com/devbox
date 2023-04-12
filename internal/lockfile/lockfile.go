@@ -29,24 +29,19 @@ func (l *lockFile) IsUpToDate() (bool, error) {
 	return l.equals(newLock), nil
 }
 
-type devboxProject interface {
-	ConfigHash() (string, error)
-	ProjectDir() string
-}
-
-func Update(proj devboxProject) error {
-	newLock, err := forProject(proj)
+func (l *lockFile) Update() error {
+	newLock, err := forProject(l.project)
 	if err != nil {
 		return err
 	}
+	*l = *newLock
 
-	if lock, err := Get(proj); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	} else if lock != nil && lock.equals(newLock) {
-		return nil
-	}
+	return cuecfg.WriteFile(lockFilePath(l.project), l)
+}
 
-	return cuecfg.WriteFile(lockFilePath(proj), newLock)
+type devboxProject interface {
+	ConfigHash() (string, error)
+	ProjectDir() string
 }
 
 func Get(project devboxProject) (*lockFile, error) {

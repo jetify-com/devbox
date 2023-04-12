@@ -159,7 +159,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if err := lockfile.Update(d); err != nil {
+	if err := lock.Update(); err != nil {
 		return err
 	}
 
