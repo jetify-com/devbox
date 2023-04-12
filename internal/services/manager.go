@@ -9,31 +9,32 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 const (
-	processComposeLogfile = string(".devbox/compose.log")
+	processComposeLogfile = ".devbox/compose.log"
+	startingPort          = 8260
+	maxPortTries          = 10
+	fileLockTimeout       = 5 * time.Second
 )
 
-func defaultPorts() [10]int {
-	return [10]int{8260, 8261, 8262, 8263, 8264, 8265, 8266, 8267, 8268, 8269}
-}
-
-func getAvailablePort(config globalProcessComposeConfig) (int, bool) {
-	ports := defaultPorts()
-	for _, p := range ports {
+func getAvailablePort(config *globalProcessComposeConfig) (int, bool) {
+	for i := 0; i < maxPortTries; i++ {
+		port := startingPort + i
 		available := true
 		for _, instance := range config.Instances {
-			if instance.Port == p {
+			if instance.Port == port {
 				available = false
 			}
 		}
 		if available {
-			return p, true
+			return port, true
 		}
 	}
 	return 0, false
@@ -52,96 +53,62 @@ type globalProcessComposeConfig struct {
 	File      *os.File `json:"-"`
 }
 
+func newGlobalProcessComposeConfig() *globalProcessComposeConfig {
+	return &globalProcessComposeConfig{Instances: map[string]instance{}}
+}
+
 func globalProcessComposeJSONPath() (string, error) {
-	path := xdg.DataSubpath(filepath.Join("devbox/global/"))
+	path := xdg.DataSubpath(filepath.Join("devbox", "global"))
 	return filepath.Join(path, "process-compose.json"), errors.WithStack(os.MkdirAll(path, 0755))
 }
 
-func readGlobalProcessComposeJSON(configPath string) globalProcessComposeConfig {
-	config := globalProcessComposeConfig{Instances: map[string]instance{}}
+func readGlobalProcessComposeJSON(file *os.File) *globalProcessComposeConfig {
+	config := newGlobalProcessComposeConfig()
 
-	err := errors.WithStack(cuecfg.ParseFile(configPath, &config.Instances))
+	err := errors.WithStack(cuecfg.ParseFile(file.Name(), &config.Instances))
 	if err != nil {
 		return config
 	}
-	config.Path = configPath
+	config.Path = file.Name()
 	return config
 }
 
-func writeGlobalProcessComposeJSON(config globalProcessComposeConfig) error {
+func writeGlobalProcessComposeJSON(config *globalProcessComposeConfig, file *os.File) error {
 	// convert config to json using cue
 	json, err := cuecfg.MarshalJSON(config.Instances)
 	if err != nil {
 		return fmt.Errorf("failed to convert config to json: %w", err)
 	}
 
-	// write json to file
-	path, err := globalProcessComposeJSONPath()
-	if err != nil {
-		return fmt.Errorf("failed to get config path: %w", err)
+	if err := file.Truncate(0); err != nil {
+		return fmt.Errorf("failed to truncate global config file: %w", err)
 	}
 
-	if err := os.WriteFile(path, json, 0666); err != nil {
+	if _, err := file.Write(json); err != nil {
 		return fmt.Errorf("failed to write global config file: %w", err)
 	}
 
 	return nil
 }
 
-func getGlobalConfig() (globalProcessComposeConfig, error) {
+func openGlobalConfigFile() (*os.File, error) {
 
 	configPath, err := globalProcessComposeJSONPath()
 	if err != nil {
-		return globalProcessComposeConfig{}, fmt.Errorf("failed to get config path: %w", err)
+		return nil, fmt.Errorf("failed to get config path: %w", err)
 	}
 
-	globalConfigFile, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE, 0666)
+	globalConfigFile, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0664)
 	if err != nil {
-		return globalProcessComposeConfig{}, fmt.Errorf("failed to open config file: %w", err)
+		return globalConfigFile, fmt.Errorf("failed to open config file: %w", err)
 	}
-	lockFile(globalConfigFile.Fd())
-	defer unlockFile(globalConfigFile.Fd())
 
-	config := readGlobalProcessComposeJSON(configPath)
-	config.File = globalConfigFile
-	return config, nil
-}
-
-func addInstance(projectDir string, projectConfig instance) error {
-	config, err := getGlobalConfig()
+	err = lockFile(globalConfigFile)
 	if err != nil {
-		return err
+		return globalConfigFile, err
 	}
 
-	lockFile(config.File.Fd())
-	defer unlockFile(config.File.Fd())
-
-	config.Instances[projectDir] = projectConfig
-	err = writeGlobalProcessComposeJSON(config)
-	if err != nil {
-		return fmt.Errorf("failed to write global process-compose config")
-	}
-
-	return nil
-}
-
-func removeInstance(projectDir string) error {
-	config, err := getGlobalConfig()
-	if err != nil {
-		return err
-	}
-
-	lockFile(config.File.Fd())
-	defer config.File.Close()
-	defer unlockFile(config.File.Fd())
-
-	delete(config.Instances, projectDir)
-	err = writeGlobalProcessComposeJSON(config)
-	if err != nil {
-		fmt.Println("failed to write global process-compose config")
-	}
-
-	return nil
+	return globalConfigFile, nil
 }
 
 func StartProcessManager(
@@ -160,10 +127,19 @@ func StartProcessManager(
 		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}
 
-	config, err := getGlobalConfig()
+	// Get the file and lock it right at the start
+
+	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return err
 	}
+
+	defer configFile.Close()
+
+	// Read the global config file
+	fmt.Printf("Reading global config file: %s", configFile.Name())
+	config := readGlobalProcessComposeJSON(configFile)
+	config.File = configFile
 
 	// Get the port to use for this project
 	port, available := getAvailablePort(config)
@@ -194,14 +170,14 @@ func StartProcessManager(
 	if processComposeBackground {
 		flags = append(flags, "-t=false")
 		cmd := exec.Command(processComposeBinPath, flags...)
-		return runProcessManagerInBackground(cmd, port, config, projectDir)
+		return runProcessManagerInBackground(cmd, config, port, projectDir)
 	}
 
 	cmd := exec.Command(processComposeBinPath, flags...)
-	return runProcessManagerInForeground(cmd, port, projectDir, w)
+	return runProcessManagerInForeground(cmd, config, port, projectDir, w)
 }
 
-func runProcessManagerInForeground(cmd *exec.Cmd, port int, projectDir string, w io.Writer) error {
+func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string, w io.Writer) error {
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
@@ -212,24 +188,39 @@ func runProcessManagerInForeground(cmd *exec.Cmd, port int, projectDir string, w
 		Port: port,
 	}
 
-	err := addInstance(projectDir, projectConfig)
+	config.Instances[projectDir] = projectConfig
+
+	err := writeGlobalProcessComposeJSON(config, config.File)
 	if err != nil {
-		return fmt.Errorf("failed to add instance to global config: %w", err)
+		return err
 	}
 
+	// We're waiting now, so we can unlock the file
+	config.File.Close()
+
 	err = cmd.Wait()
+
 	if err != nil && err.Error() == "exit status 1" {
 		fmt.Fprintln(w, "Process-compose was terminated remotely")
 		return nil
 	} else if err != nil {
 		return err
 	}
-	return removeInstance(projectDir)
+
+	configFile, err := openGlobalConfigFile()
+	if err != nil {
+		return err
+	}
+
+	config = readGlobalProcessComposeJSON(configFile)
+
+	delete(config.Instances, projectDir)
+	return writeGlobalProcessComposeJSON(config, configFile)
 }
 
-func runProcessManagerInBackground(cmd *exec.Cmd, port int, config globalProcessComposeConfig, projectDir string) error {
+func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string) error {
 
-	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0666)
+	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0664)
 	if err != nil {
 		return fmt.Errorf("failed to open process-compose log file: %w", err)
 	}
@@ -248,9 +239,9 @@ func runProcessManagerInBackground(cmd *exec.Cmd, port int, config globalProcess
 
 	config.Instances[projectDir] = projectConfig
 
-	err = writeGlobalProcessComposeJSON(config)
+	err = writeGlobalProcessComposeJSON(config, config.File)
 	if err != nil {
-		return fmt.Errorf("failed to write global process-compose config: %w", err)
+		return fmt.Errorf("failed to write global process-compose config")
 	}
 
 	return nil
@@ -262,11 +253,14 @@ func StopProcessManager(
 	w io.Writer,
 ) error {
 
-	config, err := getGlobalConfig()
+	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return err
 	}
-	defer config.File.Close()
+
+	defer configFile.Close()
+
+	config := readGlobalProcessComposeJSON(configFile)
 
 	project, ok := config.Instances[projectDir]
 	if !ok {
@@ -274,7 +268,8 @@ func StopProcessManager(
 	}
 
 	defer func() {
-		err = removeInstance(projectDir)
+		delete(config.Instances, projectDir)
+		err = writeGlobalProcessComposeJSON(config, configFile)
 	}()
 
 	pid, _ := os.FindProcess(project.Pid)
@@ -288,23 +283,15 @@ func StopProcessManager(
 }
 
 func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
-	configPath, err := globalProcessComposeJSONPath()
+	configFile, err := openGlobalConfigFile()
 	if err != nil {
-		return fmt.Errorf("failed to get config path: %w", err)
+		return err
 	}
 
-	// Open the config file, defer closing to the end of the scope
-	globalConfigFile, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		return fmt.Errorf("failed to open config file: %w", err)
-	}
-	defer globalConfigFile.Close()
+	defer configFile.Close()
 
+	config := readGlobalProcessComposeJSON(configFile)
 	// Lock the config file, defer unlocking to the end of the scope
-
-	lockFile(globalConfigFile.Fd())
-	defer unlockFile(globalConfigFile.Fd())
-	config := readGlobalProcessComposeJSON(configPath)
 
 	for _, project := range config.Instances {
 		pid, _ := os.FindProcess(project.Pid)
@@ -316,7 +303,7 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 
 	config.Instances = make(map[string]instance)
 
-	err = writeGlobalProcessComposeJSON(config)
+	err = writeGlobalProcessComposeJSON(config, configFile)
 	if err != nil {
 		return fmt.Errorf("failed to write global process-compose config: %w", err)
 	}
@@ -326,12 +313,14 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 
 func ProcessManagerIsRunning(projectDir string) bool {
 
-	configPath, err := globalProcessComposeJSONPath()
+	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return false
 	}
 
-	config := readGlobalProcessComposeJSON(configPath)
+	defer configFile.Close()
+
+	config := readGlobalProcessComposeJSON(configFile)
 
 	project, ok := config.Instances[projectDir]
 	if !ok {
@@ -342,53 +331,48 @@ func ProcessManagerIsRunning(projectDir string) bool {
 
 	err = process.Signal(syscall.Signal(0))
 	if err != nil {
-		fmt.Printf("Error: %s \n", err)
 		delete(config.Instances, projectDir)
-		_ = writeGlobalProcessComposeJSON(config)
+		_ = writeGlobalProcessComposeJSON(config, configFile)
 		return false
 	}
-
 	return true
 }
 
 func GetProcessManagerPort(projectDir string) (int, error) {
-	path, err := globalProcessComposeJSONPath()
+	configFile, err := openGlobalConfigFile()
 	if err != nil {
-		return 0, fmt.Errorf("process-compose is not running or it's config is missing. To start it, run `devbox services up`")
+		return 0, err
 	}
 
-	config := readGlobalProcessComposeJSON(path)
+	config := readGlobalProcessComposeJSON(configFile)
 
 	project, ok := config.Instances[projectDir]
 	if !ok {
-		return 0, fmt.Errorf("process-compose is not running or it's config is missing. To start it, run `devbox services up`")
+		return 0, usererr.WithUserMessage(fmt.Errorf("failed to find projectDir %s in config.Instances", projectDir), "process-compose is not running or it's config is missing. To start it, run `devbox services up`")
 	}
 
 	return project.Port, nil
 }
 
-func lockFile(fd uintptr) {
+func lockFile(file *os.File) error {
 
-	lock := syscall.Flock_t{
-		Type:   syscall.F_WRLCK,
-		Whence: int16(io.SeekStart),
-		Start:  0,
-		Len:    0,
-	}
+	lockResult := make(chan error)
 
-	if err := syscall.FcntlFlock(fd, syscall.F_SETLK, &lock); err != nil {
-		fmt.Printf("Error acquiring lock: %s \n", err)
-	}
-}
+	go func() {
+		err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX)
+		lockResult <- err
+	}()
 
-func unlockFile(fd uintptr) {
-	lock := syscall.Flock_t{
-		Type:   syscall.F_UNLCK,
-		Whence: int16(io.SeekStart),
-		Start:  0,
-		Len:    0,
-	}
-	if err := syscall.FcntlFlock(fd, syscall.F_SETLK, &lock); err != nil {
-		fmt.Printf("Error unlocking file: %s\n", err)
+	select {
+	case err := <-lockResult:
+		if err != nil {
+			file.Close()
+			return fmt.Errorf("failed to lock file: %w", err)
+		}
+		return nil
+
+	case <-time.After(fileLockTimeout):
+		file.Close()
+		return fmt.Errorf("process-compose file lock timed out after %d seconds", fileLockTimeout/time.Second)
 	}
 }

@@ -40,7 +40,7 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 	flags.configFlags.register(cmd)
 	cmd.Flags().BoolVar(
-		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used with the [service] argument")
+		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
 }
 
 func servicesCmd() *cobra.Command {
@@ -130,7 +130,7 @@ func stopServices(cmd *cobra.Command, services []string, flags serviceStopFlags)
 		return errors.WithStack(err)
 	}
 	if len(services) > 0 && flags.allProjects {
-		return errors.New("cannot both specify services and --all-projects")
+		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
 	return box.StopServices(cmd.Context(), flags.allProjects, services...)
 }
