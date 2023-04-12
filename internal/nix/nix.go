@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -145,6 +146,12 @@ func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, e
 	}
 
 	return &out, nil
+}
+
+func PrintDevEnvCacheHash(profileDir string) (string, error) {
+	return cuecfg.FileHash(
+		filepath.Join(profileDir, ".devbox", ".nix-print-dev-env-cache"),
+	)
 }
 
 func savePrintDevEnvCache(path string, out printDevEnvOut) error {

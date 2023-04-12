@@ -3,8 +3,6 @@ package nix
 import (
 	"bufio"
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -334,13 +333,7 @@ func readManifest(profilePath string) (manifest, error) {
 }
 
 func ManifestHash(profileDir string) (string, error) {
-	path := filepath.Join(profileDir, ProfilePath, "manifest.json")
-	data, err := os.ReadFile(path)
-	if err != nil && !os.IsNotExist(err) {
-		return "", err
-	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:]), nil
+	return cuecfg.FileHash(filepath.Join(profileDir, ProfilePath, "manifest.json"))
 }
 
 func nextPriority(profilePath string) string {

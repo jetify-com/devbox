@@ -6,8 +6,6 @@ package impl
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -797,9 +795,8 @@ func (d *Devbox) computeNixEnv(
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
-	addHashToEnv(env)
 
-	return env, nil
+	return env, addHashToEnv(env)
 }
 
 var nixEnvCache map[string]string
@@ -1087,11 +1084,11 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	return lo.Values(bins), nil
 }
 
-func addHashToEnv(env map[string]string) {
-	h := md5.New()
-	for k, v := range env {
-		h.Write([]byte(k))
-		h.Write([]byte(v))
+func addHashToEnv(env map[string]string) error {
+	hash, err := cuecfg.Hash(env)
+	if err == nil {
+		env[devboxShellEnvHashVarName] = hash
+
 	}
-	env[devboxShellEnvHashVarName] = hex.EncodeToString(h.Sum(nil)[:])
+	return err
 }
