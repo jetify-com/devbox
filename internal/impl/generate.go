@@ -24,11 +24,22 @@ import (
 //go:embed tmpl/*
 var tmplFS embed.FS
 
+var shellFiles = []string{"shell.nix"}
+
 func (d *Devbox) generateShellFiles() error {
 
 	plan, err := d.ShellPlan()
 	if err != nil {
 		return err
+	}
+
+	outPath := filepath.Join(d.projectDir, ".devbox/gen")
+
+	for _, file := range shellFiles {
+		err := writeFromTemplate(outPath, plan, file)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	// Gitignore file is added to the .devbox directory
@@ -37,7 +48,6 @@ func (d *Devbox) generateShellFiles() error {
 		return errors.WithStack(err)
 	}
 
-	outPath := filepath.Join(d.projectDir, ".devbox/gen")
 	err = makeFlakeFile(outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
