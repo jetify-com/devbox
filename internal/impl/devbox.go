@@ -33,6 +33,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
+	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
@@ -793,7 +794,20 @@ var nixEnvWithPrintDevEnvCache map[string]string
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	var err error
 	if nixEnvCache == nil {
-		nixEnvCache, err = d.computeNixEnv(ctx, false /*usePrintDevEnvCache*/)
+		usePrintDevEnvCache := false
+
+		// If lockfile is up-to-date, we can use the print-dev-env cache.
+		if lock, err := lockfile.Get(d); err != nil {
+			return nil, err
+		} else {
+			upToDate, err := lock.IsUpToDate()
+			if err != nil {
+				return nil, err
+			}
+			usePrintDevEnvCache = upToDate
+		}
+
+		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
 	}
 	return nixEnvCache, err
 }

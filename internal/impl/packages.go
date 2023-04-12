@@ -163,6 +163,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	// Force print-dev-env cache to be recomputed. Another option could be to
+	// save has(print-dev-env) in the lockfile, but I'm not 100% sure that works
+	// across machines.
+	_, _ = d.computeNixEnv(ctx, false /*use cache*/)
+
 	return lock.Update()
 }
 
