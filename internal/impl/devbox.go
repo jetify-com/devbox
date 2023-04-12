@@ -6,8 +6,6 @@ package impl
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -33,6 +31,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
+	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
@@ -796,9 +795,8 @@ func (d *Devbox) computeNixEnv(
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
-	addHashToEnv(env)
 
-	return env, nil
+	return env, addHashToEnv(env)
 }
 
 var nixEnvCache map[string]string
@@ -810,7 +808,18 @@ var nixEnvWithPrintDevEnvCache map[string]string
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	var err error
 	if nixEnvCache == nil {
-		nixEnvCache, err = d.computeNixEnv(ctx, false /*usePrintDevEnvCache*/)
+		usePrintDevEnvCache := false
+
+		// If lockfile is up-to-date, we can use the print-dev-env cache.
+		if lock, err := lockfile.Local(d); err != nil {
+			return nil, err
+		} else if upToDate, err := lock.IsUpToDate(); err != nil {
+			return nil, err
+		} else if upToDate {
+			usePrintDevEnvCache = true
+		}
+
+		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
 	}
 	return nixEnvCache, err
 }
@@ -1075,11 +1084,11 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	return lo.Values(bins), nil
 }
 
-func addHashToEnv(env map[string]string) {
-	h := md5.New()
-	for k, v := range env {
-		h.Write([]byte(k))
-		h.Write([]byte(v))
+func addHashToEnv(env map[string]string) error {
+	hash, err := cuecfg.Hash(env)
+	if err == nil {
+		env[devboxShellEnvHashVarName] = hash
+
 	}
-	env[devboxShellEnvHashVarName] = hex.EncodeToString(h.Sum(nil)[:])
+	return err
 }

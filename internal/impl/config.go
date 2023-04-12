@@ -4,8 +4,6 @@
 package impl
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"io"
 	"net/http"
 	"net/url"
@@ -69,12 +67,7 @@ func (c *Config) MergedPackages(w io.Writer) []string {
 }
 
 func (c *Config) Hash() (string, error) {
-	json, err := cuecfg.MarshalJSON(c)
-	if err != nil {
-		return "", err
-	}
-	hash := sha256.Sum256(json)
-	return hex.EncodeToString(hash[:]), nil
+	return cuecfg.Hash(c)
 }
 
 func readConfig(path string) (*Config, error) {

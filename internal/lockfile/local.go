@@ -18,11 +18,13 @@ type localLockFile struct {
 	project                devboxProject
 	ConfigHash             string `json:"config_hash"`
 	NixProfileManifestHash string `json:"nix_profile_manifest_hash"`
+	NixPrintDevEnvHash     string `json:"nix_print_dev_env_hash"`
 }
 
 func (l *localLockFile) equals(other *localLockFile) bool {
 	return l.ConfigHash == other.ConfigHash &&
-		l.NixProfileManifestHash == other.NixProfileManifestHash
+		l.NixProfileManifestHash == other.NixProfileManifestHash &&
+		l.NixPrintDevEnvHash == other.NixPrintDevEnvHash
 }
 
 func (l *localLockFile) IsUpToDate() (bool, error) {
@@ -71,10 +73,16 @@ func forProject(project devboxProject) (*localLockFile, error) {
 		return nil, err
 	}
 
+	printDevEnvCacheHash, err := nix.PrintDevEnvCacheHash(project.ProjectDir())
+	if err != nil {
+		return nil, err
+	}
+
 	newLock := &localLockFile{
 		project:                project,
 		ConfigHash:             configHash,
 		NixProfileManifestHash: nixHash,
+		NixPrintDevEnvHash:     printDevEnvCacheHash,
 	}
 
 	return newLock, nil
