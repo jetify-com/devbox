@@ -128,6 +128,10 @@ func (d *Devbox) Config() *Config {
 	return d.cfg
 }
 
+func (d *Devbox) ConfigHash() (string, error) {
+	return d.cfg.Hash()
+}
+
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
 	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
