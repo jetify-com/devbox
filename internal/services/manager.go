@@ -101,12 +101,12 @@ func openGlobalConfigFile() (*os.File, error) {
 
 	globalConfigFile, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0664)
 	if err != nil {
-		return globalConfigFile, fmt.Errorf("failed to open config file: %w", err)
+		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 
 	err = lockFile(globalConfigFile)
 	if err != nil {
-		return globalConfigFile, err
+		return nil, err
 	}
 
 	return globalConfigFile, nil
@@ -154,13 +154,13 @@ func StartProcessManager(
 	if len(requestedServices) > 0 {
 		flags = append(requestedServices, flags...)
 		flags = append(upCommand, flags...)
-		fmt.Fprintf(w, "Starting services: %s", strings.Join(requestedServices, ", "))
+		fmt.Fprintf(w, "Starting services: %s \n", strings.Join(requestedServices, ", "))
 	} else {
 		services := []string{}
 		for k := range availableServices {
 			services = append(services, k)
 		}
-		fmt.Fprintf(w, "Starting all services: %s", strings.Join(services, ", "))
+		fmt.Fprintf(w, "Starting all services: %s \n", strings.Join(services, ", "))
 	}
 
 	for _, s := range availableServices {
@@ -208,7 +208,7 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 	err = cmd.Wait()
 
 	if err != nil && err.Error() == "exit status 1" {
-		fmt.Fprintln(w, "Process-compose was terminated remotely")
+		fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", err.Error())
 		return nil
 	} else if err != nil {
 		return err
@@ -298,7 +298,6 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 	defer configFile.Close()
 
 	config := readGlobalProcessComposeJSON(configFile)
-	// Lock the config file, defer unlocking to the end of the scope
 
 	for _, project := range config.Instances {
 		pid, _ := os.FindProcess(project.Pid)

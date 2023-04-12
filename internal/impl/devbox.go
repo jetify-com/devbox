@@ -459,9 +459,9 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	for _, s := range serviceNames {
 		err := services.StartServices(ctx, d.writer, s, d.projectDir)
 		if err != nil {
-			fmt.Printf("Error starting service %s: %s", s, err)
+			fmt.Fprintf(d.writer, "Error starting service %s: %s", s, err)
 		} else {
-			fmt.Printf("Service %s started successfully", s)
+			fmt.Fprintf(d.writer, "Service %s started successfully", s)
 		}
 	}
 	return nil
@@ -589,6 +589,12 @@ func (d *Devbox) StartProcessManager(
 
 	if len(svcs) == 0 {
 		return usererr.New("No services found in your project")
+	}
+
+	for _, s := range requestedServices {
+		if _, ok := svcs[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		}
 	}
 
 	processComposePath, err := utilityLookPath("process-compose")
