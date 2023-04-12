@@ -24,7 +24,7 @@ import (
 //go:embed tmpl/*
 var tmplFS embed.FS
 
-var shellFiles = []string{"development.nix", "shell.nix"}
+var shellFiles = []string{"shell.nix"}
 
 func (d *Devbox) generateShellFiles() error {
 
