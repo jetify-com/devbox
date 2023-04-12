@@ -159,11 +159,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if err := lock.Update(); err != nil {
+	if err := plugin.RemoveInvalidSymlinks(d.projectDir); err != nil {
 		return err
 	}
 
-	return plugin.RemoveInvalidSymlinks(d.projectDir)
+	return lock.Update()
 }
 
 func (d *Devbox) profilePath() (string, error) {
