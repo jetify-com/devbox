@@ -11,17 +11,8 @@ export PS1="(devbox) $PS1"
 working_dir="$(pwd)"
 cd "path/to/projectDir" || exit
 
-# Begin Plugin Init Hook
-
-echo "Welcome to the devbox!"
-
-# End Plugin Init Hook
-
-# Begin Devbox User Hook
-
-echo "Hello from a devbox shell hook!"
-
-# End Devbox User Hook
+# Source the hooks file, which contains the project's init hooks and plugin hooks.
+. /path/to/projectDir/.devbox/gen/scripts/.hooks.sh
 
 cd "$working_dir" || exit
 

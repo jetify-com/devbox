@@ -23,12 +23,14 @@ func TestWriteDevboxShellrc(t *testing.T) {
 }
 
 func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
+	projectDir := "/path/to/projectDir"
+
 	// Load up all the necessary data from each internal/nix/testdata/shellrc directory
 	// into a slice of tests cases.
 	tests := make([]struct {
 		name            string
 		env             map[string]string
-		hook            string
+		hooksFilePath   string
 		shellrcPath     string
 		goldShellrcPath string
 		goldShellrc     []byte
@@ -40,9 +42,9 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 		if b, err := os.ReadFile(filepath.Join(path, "env")); err == nil {
 			test.env = pairsToMap(strings.Split(string(b), "\n"))
 		}
-		if b, err := os.ReadFile(filepath.Join(path, "hook")); err == nil {
-			test.hook = string(b)
-		}
+
+		test.hooksFilePath = scriptPath(projectDir, hooksFilename)
+
 		test.shellrcPath = filepath.Join(path, "shellrc")
 		if _, err := os.Stat(test.shellrcPath); errors.Is(err, os.ErrNotExist) {
 			test.shellrcPath = ""
@@ -60,8 +62,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 				env:             test.env,
 				projectDir:      "path/to/projectDir",
 				userShellrcPath: test.shellrcPath,
-				UserInitHook:    test.hook,
-				pluginInitHook:  `echo "Welcome to the devbox!"`,
+				hooksFilePath:   test.hooksFilePath,
 				profileDir:      "./.devbox/profile",
 			}
 			gotPath, err := s.writeDevboxShellrc()
