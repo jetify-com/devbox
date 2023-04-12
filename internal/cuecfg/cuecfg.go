@@ -20,7 +20,7 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 	}
 
 	switch extension {
-	case ".json":
+	case ".json", ".lock":
 		return MarshalJSON(valuePtr)
 	case ".yml", ".yaml":
 		return marshalYaml(valuePtr)
@@ -34,7 +34,7 @@ func Marshal(valuePtr any, extension string) ([]byte, error) {
 
 func Unmarshal(data []byte, extension string, valuePtr any) error {
 	switch extension {
-	case ".json":
+	case ".json", ".lock":
 		return errors.WithStack(unmarshalJSON(data, valuePtr))
 	case ".yml", ".yaml":
 		return errors.WithStack(unmarshalYaml(data, valuePtr))
@@ -87,7 +87,7 @@ func WriteFile(path string, value any) error {
 
 func IsSupportedExtension(ext string) bool {
 	switch ext {
-	case ".json", ".yml", ".yaml", ".toml", ".xml":
+	case ".json", ".lock", ".yml", ".yaml", ".toml", ".xml":
 		return true
 	default:
 		return false

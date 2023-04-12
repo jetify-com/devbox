@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
@@ -136,6 +137,17 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
+	lock, err := lockfile.Local(d)
+	if err != nil {
+		return err
+	}
+
+	if upToDate, err := lock.IsUpToDate(); err != nil {
+		return err
+	} else if upToDate {
+		return nil
+	}
+
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
@@ -147,7 +159,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	return plugin.RemoveInvalidSymlinks(d.projectDir)
+	if err := plugin.RemoveInvalidSymlinks(d.projectDir); err != nil {
+		return err
+	}
+
+	return lock.Update()
 }
 
 func (d *Devbox) profilePath() (string, error) {

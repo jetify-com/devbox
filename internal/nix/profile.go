@@ -3,6 +3,8 @@ package nix
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -329,6 +331,16 @@ func readManifest(profilePath string) (manifest, error) {
 
 	var m manifest
 	return m, json.Unmarshal(data, &m)
+}
+
+func ManifestHash(profileDir string) (string, error) {
+	path := filepath.Join(profileDir, ProfilePath, "manifest.json")
+	data, err := os.ReadFile(path)
+	if err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:]), nil
 }
 
 func nextPriority(profilePath string) string {
