@@ -188,7 +188,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	}
 
 	opts := []ShellOption{
-		WithHooksFilePath(d.scriptPath(d.scriptFilename(hooksFilename))),
+		WithHooksFilePath(d.scriptPath(hooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
@@ -228,7 +228,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
@@ -239,7 +239,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
+		cmdWithArgs = []string{d.scriptPath(arbitraryCmdFilename)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
@@ -836,7 +836,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	written[d.scriptFilename(hooksFilename)] = struct{}{}
+	written[d.scriptPath(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
@@ -844,7 +844,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		written[d.scriptFilename(name)] = struct{}{}
+		written[d.scriptPath(name)] = struct{}{}
 	}
 
 	// Delete any files that weren't written just now.
@@ -861,7 +861,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 }
 
 func (d *Devbox) writeScriptFile(name string, body string) (err error) {
-	script, err := os.Create(d.scriptPath(d.scriptFilename(name)))
+	script, err := os.Create(d.scriptPath(name))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -883,16 +883,18 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	return errors.WithStack(err)
 }
 
-func (d *Devbox) scriptPath(filename string) string {
-	return filepath.Join(d.projectDir, scriptsDir, filename)
+func (d *Devbox) scriptPath(scriptName string) string {
+	return scriptPath(d.projectDir, scriptName)
 }
 
-func (d *Devbox) scriptFilename(scriptName string) string {
-	return scriptName + ".sh"
+// scriptPath is a helper function, refactored out for use in tests.
+// use `d.scriptPath` instead for production code.
+func scriptPath(projectDir string, scriptName string) string {
+	return filepath.Join(projectDir, scriptsDir, scriptName+".sh")
 }
 
 func (d *Devbox) scriptBody(body string) string {
-	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {

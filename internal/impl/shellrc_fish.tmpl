@@ -55,12 +55,8 @@ devbox log shell-ready {{ .ShellStartTime }}
 set workingDir (pwd)
 cd "{{ .ProjectDir }}" || exit
 
-{{- if .HooksFilePath }}
-
 # Source the hooks file, which contains the project's init hooks and plugin hooks.
 source {{ .HooksFilePath }}
-
-{{- end }}
 
 cd "$workingDir" || exit
 
