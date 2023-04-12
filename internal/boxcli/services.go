@@ -19,6 +19,11 @@ type serviceUpFlags struct {
 	processComposeFile string
 }
 
+type serviceStopFlags struct {
+	configFlags
+	allProjects bool
+}
+
 func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	flags.configFlags.register(cmd)
 	cmd.Flags().StringVar(
@@ -32,9 +37,16 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 		&flags.background, "background", "b", false, "Run service in background")
 }
 
+func (flags *serviceStopFlags) register(cmd *cobra.Command) {
+	flags.configFlags.register(cmd)
+	cmd.Flags().BoolVar(
+		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
+}
+
 func servicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
 	serviceUpFlags := serviceUpFlags{}
+	serviceStopFlags := serviceStopFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
 		Short: "Interact with devbox services",
@@ -59,9 +71,10 @@ func servicesCmd() *cobra.Command {
 
 	stopCommand := &cobra.Command{
 		Use:   "stop [service]...",
-		Short: "Stop service. If no service is specified, stops all services",
+		Short: "Stop one or more services in the current project. If no service is specified, stops all services in the current project.",
+		Long:  `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return stopServices(cmd, args, flags)
+			return stopServices(cmd, args, serviceStopFlags)
 		},
 	}
 
@@ -83,6 +96,7 @@ func servicesCmd() *cobra.Command {
 
 	flags.config.register(servicesCommand)
 	serviceUpFlags.register(upCommand)
+	serviceStopFlags.register(stopCommand)
 	servicesCommand.AddCommand(lsCommand)
 	servicesCommand.AddCommand(upCommand)
 	servicesCommand.AddCommand(restartCommand)
@@ -110,12 +124,15 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 	return box.StartServices(cmd.Context(), services...)
 }
 
-func stopServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+func stopServices(cmd *cobra.Command, services []string, flags serviceStopFlags) error {
+	box, err := devbox.Open(flags.configFlags.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.StopServices(cmd.Context(), services...)
+	if len(services) > 0 && flags.allProjects {
+		return errors.New("cannot use both services and --all-projects arguments simultaneously")
+	}
+	return box.StopServices(cmd.Context(), flags.allProjects, services...)
 }
 
 func restartServices(

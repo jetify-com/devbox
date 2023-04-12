@@ -15,11 +15,6 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/envir"
 )
 
-const (
-	processComposePidfile = ".devbox/compose.pid"
-	processComposeLogfile = ".devbox/compose.log"
-)
-
 type Services map[string]Service
 
 type Service struct {

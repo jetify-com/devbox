@@ -13,7 +13,7 @@ import (
 
 type processStates = types.ProcessStates
 
-type ProcessSummary struct {
+type Process struct {
 	Name     string
 	Status   string
 	ExitCode int
@@ -23,7 +23,7 @@ func StartServices(ctx context.Context, w io.Writer, serviceName string, project
 	path := fmt.Sprintf("/process/start/%s", serviceName)
 	method := "POST"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func StopServices(ctx context.Context, serviceName string, projectDir string, w 
 	path := fmt.Sprintf("/process/stop/%s", serviceName)
 	method := "PATCH"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 	path := fmt.Sprintf("/process/restart/%s", serviceName)
 	method := "POST"
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return err
 	}
@@ -74,12 +74,12 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 	}
 }
 
-func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]ProcessSummary, error) {
+func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Process, error) {
 	path := "/processes"
 	method := "GET"
-	results := []ProcessSummary{}
+	results := []Process{}
 
-	body, status, err := clientRequest(path, method)
+	body, status, err := clientRequest(path, method, projectDir)
 	if err != nil {
 		return results, err
 	}
@@ -92,7 +92,7 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 			return results, err
 		}
 		for _, process := range processes.States {
-			results = append(results, ProcessSummary{
+			results = append(results, Process{
 				Name:     process.Name,
 				Status:   process.Status,
 				ExitCode: process.ExitCode,
@@ -105,9 +105,14 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 	}
 }
 
-func clientRequest(path string, method string) (string, int, error) {
-	port := "8280"
-	req, err := http.NewRequest(method, fmt.Sprintf("http://localhost:%s%s", port, path), nil)
+func clientRequest(path string, method string, projectDir string) (string, int, error) {
+	port, err := GetProcessManagerPort(projectDir)
+	if err != nil {
+		err := fmt.Errorf("unable to connect to process-compose server: %s", err.Error())
+		return "", 0, err
+	}
+
+	req, err := http.NewRequest(method, fmt.Sprintf("http://localhost:%d%s", port, path), nil)
 	if err != nil {
 		return "", 0, err
 	}
