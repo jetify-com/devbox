@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -137,7 +138,6 @@ func StartProcessManager(
 	defer configFile.Close()
 
 	// Read the global config file
-	fmt.Printf("Reading global config file: %s", configFile.Name())
 	config := readGlobalProcessComposeJSON(configFile)
 	config.File = configFile
 
@@ -154,6 +154,13 @@ func StartProcessManager(
 	if len(requestedServices) > 0 {
 		flags = append(requestedServices, flags...)
 		flags = append(upCommand, flags...)
+		fmt.Fprintf(w, "Starting services: %s", strings.Join(requestedServices, ", "))
+	} else {
+		services := []string{}
+		for k := range availableServices {
+			services = append(services, k)
+		}
+		fmt.Fprintf(w, "Starting all services: %s", strings.Join(services, ", "))
 	}
 
 	for _, s := range availableServices {
