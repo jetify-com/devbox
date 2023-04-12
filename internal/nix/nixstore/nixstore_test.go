@@ -55,7 +55,11 @@ func TestInstall(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error for remote Nix store %s: %v", storeURL, err)
 	}
-	pkg, err := remoteStore.Package("b1kk0rp0yw1742rd88ql4379c2cmcqh2-zig-0.10.1")
+	zigPkg, err := remoteStore.Package("b1kk0rp0yw1742rd88ql4379c2cmcqh2-zig-0.10.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	goPkg, err := remoteStore.PackageAttrPath("go_1_19")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +68,11 @@ func TestInstall(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error for local Nix store %s: %v", storePath, err)
 	}
-	err = localStore.Install(pkg)
+	err = localStore.Install(zigPkg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = localStore.Install(goPkg)
 	if err != nil {
 		t.Fatal(err)
 	}

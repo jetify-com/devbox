@@ -87,6 +87,21 @@ func (r *Root) Package(name string) (*Package, error) {
 	return pkg, r.resolveDeps(pkg)
 }
 
+func (r *Root) PackageAttrPath(attr string) (*Package, error) {
+	if pkgByAttrPath == nil {
+		buildSearchIndex()
+	}
+	storePath := pkgByAttrPath[attr].Out
+	if storePath == "" {
+		return nil, errors.New("package not found")
+	}
+
+	// The store path from the search index will be the absolute path
+	// with a /nix/store/ prefix. We need to get the base name for
+	// r.Package.
+	return r.Package(filepath.Base(storePath))
+}
+
 // indexPkg returns a [Package] with the given store name, adding it to the
 // index if necessary. It assumes that the name is valid and in <hash>-<name>
 // format.

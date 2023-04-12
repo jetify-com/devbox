@@ -105,6 +105,14 @@ let
     */
     paths = [ ];
 
+    /* The full store path of the package.
+
+       Examples:
+         /nix/store/mzd0lvp4lqs5pkds7vihn68hspq50859-go-1.20.1
+         /nix/store/b1kk0rp0yw1742rd88ql4379c2cmcqh2-zig-0.10.1
+    */
+    out = unsafeDiscardStringContext drv.outPath;
+
     # The remaining attributes are all optional.
     ${if drv ? meta.mainProgram then "program" else null} = drv.meta.mainProgram;
     ${if drv ? meta.description then "summary" else null} = drv.meta.description;
