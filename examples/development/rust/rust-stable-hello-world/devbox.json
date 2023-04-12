@@ -3,6 +3,9 @@
         "rustup",
         "libiconv"
     ],
+    "env": {
+      "PROJECT_DIR": "$PWD"
+    },
     "shell": {
         "init_hook": [
             ". conf/set-env.sh",

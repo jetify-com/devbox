@@ -47,7 +47,7 @@ type Devbox interface {
 	ShellPlan() (*plansdk.ShellPlan, error)
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
-	StopServices(ctx context.Context, services ...string) error
+	StopServices(ctx context.Context, allProjects bool, services ...string) error
 	ListServices(ctx context.Context) error
 }
 

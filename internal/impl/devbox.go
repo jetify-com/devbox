@@ -53,7 +53,9 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir           = ".devbox/gen/scripts"
+	scriptsDir = ".devbox/gen/scripts"
+
+	// hooksFilename is the name of the file that contains the project's init-hooks and plugin hooks
 	hooksFilename        = ".hooks"
 	arbitraryCmdFilename = ".cmd"
 )
@@ -176,11 +178,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	pluginHooks, err := plugin.InitHooks(d.mergedPackages(), d.projectDir)
-	if err != nil {
-		return err
-	}
-
 	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
@@ -196,7 +193,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	}
 
 	opts := []ShellOption{
-		WithPluginInitHook(strings.Join(pluginHooks, "\n")),
+		WithHooksFilePath(d.scriptPath(hooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
@@ -209,7 +206,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	shell.UserInitHook = d.cfg.Shell.InitHook.String()
 	return shell.Run()
 }
 
@@ -237,7 +233,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{d.scriptPath(d.scriptFilename(cmdName))}, cmdArgs...)
+		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
@@ -248,7 +244,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{d.scriptPath(d.scriptFilename(arbitraryCmdFilename))}
+		cmdWithArgs = []string{d.scriptPath(arbitraryCmdFilename)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
@@ -458,7 +454,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
@@ -482,25 +478,34 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	for _, s := range serviceNames {
 		err := services.StartServices(ctx, d.writer, s, d.projectDir)
 		if err != nil {
-			fmt.Printf("Error starting service %s: %s", s, err)
+			fmt.Fprintf(d.writer, "Error starting service %s: %s", s, err)
 		} else {
-			fmt.Printf("Service %s started successfully", s)
+			fmt.Fprintf(d.writer, "Service %s started successfully", s)
 		}
 	}
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
+func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
+		args := []string{"services", "stop"}
+		args = append(args, serviceNames...)
+		if allProjects {
+			args = append(args, "--all-projects")
+		}
+		return d.RunScript("devbox", args)
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if allProjects {
+		return services.StopAllProcessManagers(ctx, d.writer)
+	}
+
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
 	}
 
 	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.writer)
+		return services.StopProcessManager(ctx, d.projectDir, d.writer)
 	}
 
 	svcSet, err := d.Services()
@@ -535,7 +540,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 		return nil
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them:")
 		fmt.Fprintln(d.writer, "")
 		for _, s := range svcSet {
@@ -563,7 +568,7 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
@@ -605,7 +610,11 @@ func (d *Devbox) StartProcessManager(
 		return usererr.New("No services found in your project")
 	}
 
-	// processCompose := services.LookupProcessCompose(d.projectDir, processComposeFileOrDir)
+	for _, s := range requestedServices {
+		if _, ok := svcs[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		}
+	}
 
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
@@ -635,7 +644,15 @@ func (d *Devbox) StartProcessManager(
 
 	// Start the process manager
 
-	return services.StartProcessManager(ctx, requestedServices, svcs, d.projectDir, processComposePath, processComposeFileOrDir, background)
+	return services.StartProcessManager(
+		ctx,
+		d.writer,
+		requestedServices,
+		svcs,
+		d.projectDir,
+		processComposePath, processComposeFileOrDir,
+		background,
+	)
 }
 
 // computeNixEnv computes the set of environment variables that define a Devbox
@@ -797,7 +814,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		usePrintDevEnvCache := false
 
 		// If lockfile is up-to-date, we can use the print-dev-env cache.
-		if lock, err := lockfile.Get(d); err != nil {
+		if lock, err := lockfile.Local(d); err != nil {
 			return nil, err
 		} else {
 			upToDate, err := lock.IsUpToDate()
@@ -858,7 +875,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	written[d.scriptFilename(hooksFilename)] = struct{}{}
+	written[d.scriptPath(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range d.cfg.Shell.Scripts {
@@ -866,7 +883,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		written[d.scriptFilename(name)] = struct{}{}
+		written[d.scriptPath(name)] = struct{}{}
 	}
 
 	// Delete any files that weren't written just now.
@@ -883,7 +900,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 }
 
 func (d *Devbox) writeScriptFile(name string, body string) (err error) {
-	script, err := os.Create(d.scriptPath(d.scriptFilename(name)))
+	script, err := os.Create(d.scriptPath(name))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -905,16 +922,18 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 	return errors.WithStack(err)
 }
 
-func (d *Devbox) scriptPath(filename string) string {
-	return filepath.Join(d.projectDir, scriptsDir, filename)
+func (d *Devbox) scriptPath(scriptName string) string {
+	return scriptPath(d.projectDir, scriptName)
 }
 
-func (d *Devbox) scriptFilename(scriptName string) string {
-	return scriptName + ".sh"
+// scriptPath is a helper function, refactored out for use in tests.
+// use `d.scriptPath` instead for production code.
+func scriptPath(projectDir string, scriptName string) string {
+	return filepath.Join(projectDir, scriptsDir, scriptName+".sh")
 }
 
 func (d *Devbox) scriptBody(body string) string {
-	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(d.scriptFilename(hooksFilename)), body)
+	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {

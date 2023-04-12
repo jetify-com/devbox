@@ -137,7 +137,7 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
-	lock, err := lockfile.Get(d)
+	lock, err := lockfile.Local(d)
 	if err != nil {
 		return err
 	}
