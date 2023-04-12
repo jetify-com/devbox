@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"io"
-	"path"
 )
 
 //go:embed packages.json.gz
@@ -45,11 +44,4 @@ func buildSearchIndex() error {
 		}
 	}
 	return nil
-}
-
-func SearchExact(attrPath string) (string, error) {
-	if pkgByAttrPath == nil {
-		buildSearchIndex()
-	}
-	return path.Base(pkgByAttrPath[attrPath].Out), nil
 }

@@ -89,7 +89,9 @@ func (r *Root) Package(name string) (*Package, error) {
 
 func (r *Root) PackageAttrPath(attr string) (*Package, error) {
 	if pkgByAttrPath == nil {
-		buildSearchIndex()
+		if err := buildSearchIndex(); err != nil {
+			return nil, err
+		}
 	}
 	storePath := pkgByAttrPath[attr].Out
 	if storePath == "" {
