@@ -449,7 +449,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
@@ -473,25 +473,34 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	for _, s := range serviceNames {
 		err := services.StartServices(ctx, d.writer, s, d.projectDir)
 		if err != nil {
-			fmt.Printf("Error starting service %s: %s", s, err)
+			fmt.Fprintf(d.writer, "Error starting service %s: %s", s, err)
 		} else {
-			fmt.Printf("Service %s started successfully", s)
+			fmt.Fprintf(d.writer, "Service %s started successfully", s)
 		}
 	}
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, serviceNames ...string) error {
+func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
 	if !IsDevboxShellEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "stop"}, serviceNames...))
+		args := []string{"services", "stop"}
+		args = append(args, serviceNames...)
+		if allProjects {
+			args = append(args, "--all-projects")
+		}
+		return d.RunScript("devbox", args)
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if allProjects {
+		return services.StopAllProcessManagers(ctx, d.writer)
+	}
+
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
 	}
 
 	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.writer)
+		return services.StopProcessManager(ctx, d.projectDir, d.writer)
 	}
 
 	svcSet, err := d.Services()
@@ -526,7 +535,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 		return nil
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "No services currently running. Run `devbox services up` to start them:")
 		fmt.Fprintln(d.writer, "")
 		for _, s := range svcSet {
@@ -554,7 +563,7 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
-	if !services.ProcessManagerIsRunning() {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.writer, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.writer, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
@@ -596,7 +605,11 @@ func (d *Devbox) StartProcessManager(
 		return usererr.New("No services found in your project")
 	}
 
-	// processCompose := services.LookupProcessCompose(d.projectDir, processComposeFileOrDir)
+	for _, s := range requestedServices {
+		if _, ok := svcs[s]; !ok {
+			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+		}
+	}
 
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
@@ -626,7 +639,15 @@ func (d *Devbox) StartProcessManager(
 
 	// Start the process manager
 
-	return services.StartProcessManager(ctx, requestedServices, svcs, d.projectDir, processComposePath, processComposeFileOrDir, background)
+	return services.StartProcessManager(
+		ctx,
+		d.writer,
+		requestedServices,
+		svcs,
+		d.projectDir,
+		processComposePath, processComposeFileOrDir,
+		background,
+	)
 }
 
 // computeNixEnv computes the set of environment variables that define a Devbox
