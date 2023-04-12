@@ -6,7 +6,7 @@ This is the official VSCode extension for [devbox](https://github.com/jetpack-io
 
 ### Open In VSCode button
 
-If a Devbox Cloud instance (from [devbox.sh](https://devbox.sh)) has an `Open In VSCode` button, this extension will make VSCode to be able to connect its workspace to the instance.
+If a Devbox Cloud instance (from [devbox.sh](https://devbox.sh)) has an `Open In Desktop` button, this extension will make VSCode to be able to connect its workspace to the instance.
 
 ### Auto Shell on a devbox project
 

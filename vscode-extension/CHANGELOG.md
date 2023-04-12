@@ -4,6 +4,11 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.6]
+
+- Fixed a small bug connecting to a remote environment.
+- Added better error handling and messages if connecting to devbox cloud fails.
+
 ## [0.0.5]
 
 - Added handling `Open In VSCode` button with `vscode://` style links.
