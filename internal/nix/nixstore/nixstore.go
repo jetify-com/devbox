@@ -4,17 +4,29 @@ package nixstore
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/nix-community/go-nix/pkg/nar"
 	"github.com/nix-community/go-nix/pkg/narinfo"
+	"github.com/ulikunitz/xz"
+	"golang.org/x/sys/unix"
 )
 
 // Root is the top-level directory of a Nix store. It maintains an index of
 // packages for fast lookup and dependency resolution.
 type Root struct {
 	fs.FS
+
+	// osPath is the OS-specific path for local Nix stores (as opposed to fs
+	// paths). This path is necessary for write operations. Whenever possible
+	// prefer using the fs.FS.
+	osPath string
 
 	// pkgs holds package information for every indexed package in the store.
 	// Other fields point into this slice, so it should only be appended to and
@@ -36,7 +48,10 @@ type Root struct {
 
 // Local returns a local file system Nix store, which is typically /nix/store.
 func Local(path string) (*Root, error) {
-	root := &Root{FS: newReadLinkFS(path)}
+	root := &Root{
+		FS:     newReadLinkFS(path),
+		osPath: filepath.Clean(path),
+	}
 	return root, root.buildIndex()
 }
 
@@ -87,6 +102,7 @@ func (r *Root) indexPkg(name string) (*Package, error) {
 	r.pkgs = append(r.pkgs, Package{
 		StoreName: name,
 		Hash:      hash,
+		store:     r,
 	})
 	r.storeHashes = append(r.storeHashes, []byte(hash))
 	pkg := &r.pkgs[i]
@@ -179,6 +195,7 @@ func (r *Root) resolveDeps(pkg *Package) error {
 			return err
 		}
 		pkg.narPath = ni.URL
+		pkg.narCompression = ni.Compression
 		for _, ref := range ni.References {
 			dep, err := r.indexPkg(ref)
 			if err != nil {
@@ -257,6 +274,170 @@ func (r *Root) resolveDeps(pkg *Package) error {
 	return nil
 }
 
+func (r *Root) Install(pkg *Package) error {
+	for _, pkg := range topologicalSort(pkg) {
+		if local, err := r.Package(pkg.StoreName); err == nil {
+			if _, err := fs.Stat(local, "."); err == nil {
+				continue
+			}
+		}
+
+		var (
+			narFile io.ReadCloser
+			err     error
+		)
+		narFile, err = pkg.store.Open(pkg.narPath)
+		if err != nil {
+			return fmt.Errorf("unable to open nar file: %v", err)
+		}
+		defer narFile.Close()
+
+		if pkg.narCompression == "xz" {
+			xzr, err := xz.NewReader(narFile)
+			if err != nil {
+				return fmt.Errorf("nar file %s is not a valid xz archive: %v",
+					pkg.narPath, err)
+			}
+			narFile = io.NopCloser(xzr)
+		}
+		narr, err := nar.NewReader(narFile)
+		if err != nil {
+			return fmt.Errorf("nar file %s is invalid: %w", pkg.narPath, err)
+		}
+		defer narr.Close()
+
+		// First copy to a staging directory and then move it when done. This reduces
+		// the odds of ending up with a partial install if there's an error. Put the
+		// temp directory in the store so they're on the same volume and a copy won't
+		// be needed.
+		storeTemp := filepath.Join(r.osPath, ".devbox")
+		if err := os.MkdirAll(storeTemp, 0777); err != nil {
+			return fmt.Errorf("create .devbox staging dir: %v", err)
+		}
+		dir, err := os.MkdirTemp(storeTemp, pkg.StoreName+"-")
+		if err != nil {
+			return fmt.Errorf("create temp dir: %v", err)
+		}
+		err = extractNar(narr, dir)
+		if err != nil {
+			return err
+		}
+		storePath := filepath.Join(r.osPath, pkg.StoreName)
+		if err := os.Rename(dir, storePath); err != nil {
+			return err
+		}
+		fmt.Println("Installed", storePath)
+	}
+	return nil
+}
+
+// TODO(gcurtis): we're just using the default nixbld group ID.
+// Fix this to be smarter about getting the actual gid.
+const nixgid = 30000
+
+func extractNar(narr *nar.Reader, dir string) error {
+	for {
+		header, err := narr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("error reading next file in nar archive: %v", err)
+		}
+
+		dst := filepath.Join(dir, header.Path)
+		if dst == dir {
+			continue
+		}
+		switch header.Type {
+		case nar.TypeRegular:
+			err := extractFile(narr, dst, header.Size, header.Executable)
+			if err != nil {
+				return fmt.Errorf("extract regular file %s: %v", dst, err)
+			}
+		case nar.TypeDirectory:
+			err := extractDir(dst)
+			if err != nil {
+				return fmt.Errorf("extract directory %s: %v", dst, err)
+			}
+		case nar.TypeSymlink:
+			err := extractLink(header.LinkTarget, dst, header.Executable)
+			if err != nil {
+				return fmt.Errorf("extract symlink %s to target %s: %v",
+					header.LinkTarget, dst, err)
+			}
+		}
+	}
+	return nil
+}
+
+func extractFile(src io.Reader, dstPath string, size int64, exe bool) (err error) {
+	perm := fs.FileMode(0444)
+	if exe {
+		perm = 0555
+	}
+	dst, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, perm)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		closeErr := dst.Close()
+		if err != nil {
+			return
+		}
+		if closeErr != nil {
+			err = closeErr
+			return
+		}
+		timeErr := os.Chtimes(dstPath, time.UnixMilli(0), time.UnixMilli(0))
+		if timeErr != nil {
+			err = timeErr
+			return
+		}
+	}()
+
+	if err := dst.Truncate(size); err != nil {
+		return err
+	}
+	if _, err := io.Copy(dst, src); err != nil {
+		return err
+	}
+	if err := os.Chown(dstPath, os.Getuid(), nixgid); err != nil {
+		return err
+	}
+	return dst.Chmod(perm)
+}
+
+func extractDir(dstPath string) error {
+	err := os.Mkdir(dstPath, 0755)
+	if err != nil {
+		return err
+	}
+	if err := os.Chown(dstPath, os.Getuid(), nixgid); err != nil {
+		return err
+	}
+	return os.Chtimes(dstPath, time.UnixMilli(0), time.UnixMilli(0))
+}
+
+func extractLink(oldname, newname string, exe bool) error {
+	err := os.Symlink(oldname, newname)
+	if err != nil {
+		return err
+	}
+	if err := os.Lchown(newname, os.Getuid(), nixgid); err != nil {
+		return err
+	}
+
+	perm := uint32(0444)
+	if exe {
+		perm = 0555
+	}
+	if err := unix.Fchmodat(unix.AT_FDCWD, newname, perm, unix.AT_SYMLINK_NOFOLLOW); err != nil {
+		return err
+	}
+	return unix.Lutimes(newname, make([]unix.Timeval, 2))
+}
+
 // Package is a file system that contains a package's files and metadata.
 type Package struct {
 	fs.FS
@@ -274,16 +455,19 @@ type Package struct {
 	// narPath is the path to a nar file containing this package when one
 	// is available. If the store doesn't have a nar for this package then narPath
 	// will be empty.
-	narPath string
+	narPath        string
+	narCompression string
+
+	store *Root
 }
 
 func (p Package) String() string {
 	return p.StoreName
 }
 
-// TopologicalSort resolves the dependency tree for a package and returns it as
+// topologicalSort resolves the dependency tree for a package and returns it as
 // a slice of packages in topological order.
-func TopologicalSort(pkg *Package) []*Package {
+func topologicalSort(pkg *Package) []*Package {
 	pkgs := make([]*Package, 0, len(pkg.DirectDependencies))
 	seen := make(map[*Package]bool, len(pkg.DirectDependencies))
 	return tsort(pkgs, seen, pkg)

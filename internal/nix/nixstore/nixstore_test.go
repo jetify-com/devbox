@@ -44,6 +44,32 @@ func TestRemote(t *testing.T) {
 	checkDependencies(t, pkg, unmarshalNixPathInfoOutput(t, pkg))
 }
 
+func TestInstall(t *testing.T) {
+	storePath := os.Getenv("DEVBOX_TEST_NIX_STORE")
+	if storePath == "" {
+		t.Skip("set DEVBOX_TEST_NIX_STORE to a local Nix store path to run this test")
+	}
+
+	storeURL := "https://cache.nixos.org"
+	remoteStore, err := Remote(storeURL)
+	if err != nil {
+		t.Fatalf("got error for remote Nix store %s: %v", storeURL, err)
+	}
+	pkg, err := remoteStore.Package("b1kk0rp0yw1742rd88ql4379c2cmcqh2-zig-0.10.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	localStore, err := Local(storePath)
+	if err != nil {
+		t.Fatalf("got error for local Nix store %s: %v", storePath, err)
+	}
+	err = localStore.Install(pkg)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func checkDependencies(t *testing.T, got *Package, nixPathInfos map[string][]string) {
 	t.Helper()
 
