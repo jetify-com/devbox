@@ -9,18 +9,23 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-type lockFile struct {
+// localLockFile is a non-shared lock file that helps track the state of the
+// local devbox environment. It contains hashes that may not be the same across
+// machines (e.g. manifest hash).
+// When we do implement a shared lock file, it may contain some shared fields
+// with this one but not all.
+type localLockFile struct {
 	project                devboxProject
 	ConfigHash             string `json:"config_hash"`
 	NixProfileManifestHash string `json:"nix_profile_manifest_hash"`
 }
 
-func (l *lockFile) equals(other *lockFile) bool {
+func (l *localLockFile) equals(other *localLockFile) bool {
 	return l.ConfigHash == other.ConfigHash &&
 		l.NixProfileManifestHash == other.NixProfileManifestHash
 }
 
-func (l *lockFile) IsUpToDate() (bool, error) {
+func (l *localLockFile) IsUpToDate() (bool, error) {
 	newLock, err := forProject(l.project)
 	if err != nil {
 		return false, err
@@ -29,14 +34,14 @@ func (l *lockFile) IsUpToDate() (bool, error) {
 	return l.equals(newLock), nil
 }
 
-func (l *lockFile) Update() error {
+func (l *localLockFile) Update() error {
 	newLock, err := forProject(l.project)
 	if err != nil {
 		return err
 	}
 	*l = *newLock
 
-	return cuecfg.WriteFile(lockFilePath(l.project), l)
+	return cuecfg.WriteFile(localLockFilePath(l.project), l)
 }
 
 type devboxProject interface {
@@ -44,9 +49,9 @@ type devboxProject interface {
 	ProjectDir() string
 }
 
-func Get(project devboxProject) (*lockFile, error) {
-	lockFile := &lockFile{project: project}
-	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
+func Local(project devboxProject) (*localLockFile, error) {
+	lockFile := &localLockFile{project: project}
+	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
 	if errors.Is(err, os.ErrNotExist) {
 		return lockFile, nil
 	} else if err != nil {
@@ -55,7 +60,7 @@ func Get(project devboxProject) (*lockFile, error) {
 	return lockFile, nil
 }
 
-func forProject(project devboxProject) (*lockFile, error) {
+func forProject(project devboxProject) (*localLockFile, error) {
 	configHash, err := project.ConfigHash()
 	if err != nil {
 		return nil, err
@@ -66,7 +71,7 @@ func forProject(project devboxProject) (*lockFile, error) {
 		return nil, err
 	}
 
-	newLock := &lockFile{
+	newLock := &localLockFile{
 		project:                project,
 		ConfigHash:             configHash,
 		NixProfileManifestHash: nixHash,
@@ -75,6 +80,6 @@ func forProject(project devboxProject) (*lockFile, error) {
 	return newLock, nil
 }
 
-func lockFilePath(project devboxProject) string {
-	return filepath.Join(project.ProjectDir(), ".devbox", "devbox.lock")
+func localLockFilePath(project devboxProject) string {
+	return filepath.Join(project.ProjectDir(), ".devbox", "local.lock")
 }
