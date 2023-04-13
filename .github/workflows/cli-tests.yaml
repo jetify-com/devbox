@@ -94,6 +94,8 @@ jobs:
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
           - is-main: true
             run-example-tests: false
+          - run-example-tests: true
+            os: macos-latest
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 20 }}
     steps:
