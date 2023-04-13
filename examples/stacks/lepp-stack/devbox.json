@@ -18,8 +18,9 @@
                 "psql devbox_lepp < setup_postgres_db.sql"
             ],
             "run_test": [
-                "initdb",
+                "devbox run init_db",
                 "devbox services start",
+                "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
                 "devbox run create_db",
                 "curl localhost:8089",
                 "devbox services stop"
