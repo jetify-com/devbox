@@ -92,7 +92,7 @@ jobs:
           - is-main: true
             run-example-tests: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 30 || 15 }}
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 35 || 20 }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
