@@ -23,6 +23,9 @@ on:
         type: boolean
       run-mac-tests:
         type: boolean
+      # run the example tests with DEVBOX_DEBUG=1
+      example-debug:
+        type: boolean
 
 permissions:
   contents: read
@@ -117,11 +120,14 @@ jobs:
           nix-build-user-count: 4
       - name: Run tests
         env:
+          # For example tests, we default to non-debug mode since the debug output is less useful than for unit testscripts.
+          # But we allow overriding via inputs.example-debug
+          DEVBOX_DEBUG: ${{ (!matrix.run-example-tests || inputs.example-debug) && '1' || '0' }}
           DEVBOX_EXAMPLE_TESTS: ${{ matrix.run-example-tests }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
           DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '15m' }}"
         run: |
-          go test -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     strategy:
