@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
@@ -87,4 +88,44 @@ func DirExists() bool {
 
 func isRoot() bool {
 	return os.Geteuid() == 0
+}
+
+func EnsureNixInstalled(writer io.Writer, daemon *bool) error {
+	if BinaryInstalled() {
+		return nil
+	}
+	if DirExists() {
+		if err := SourceNixEnv(); err != nil {
+			return err
+		} else if BinaryInstalled() {
+			return nil
+		}
+
+		return usererr.New(
+			"We found a /nix directory but nix binary is not in your PATH and we " +
+				"were not able to find it in the usual locations. Your nix installation " +
+				"might be broken. If restarting your terminal or reinstalling nix " +
+				"doesn't work, please create an issue at " +
+				"https://github.com/jetpack-io/devbox/issues",
+		)
+	}
+
+	color.Yellow("\nNix is not installed. Devbox will attempt to install it.\n\n")
+
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		color.Yellow("Press enter to continue or ctrl-c to exit.\n")
+		fmt.Scanln()
+	}
+
+	if err := Install(writer, daemon); err != nil {
+		return err
+	}
+
+	// Source again
+	if err := SourceNixEnv(); err != nil {
+		return err
+	}
+
+	fmt.Fprintln(writer, "Nix installed successfully. Devbox is ready to use!")
+	return nil
 }
