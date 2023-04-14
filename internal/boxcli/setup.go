@@ -50,7 +50,7 @@ func runInstallNixCmd(cmd *cobra.Command) error {
 	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
-func ensureNixInstalled(cmd *cobra.Command, args []string) error {
+func ensureNixInstalled(cmd *cobra.Command, _args []string) error {
 	if nix.BinaryInstalled() {
 		return nil
 	}
