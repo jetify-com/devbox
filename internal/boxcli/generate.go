@@ -90,8 +90,7 @@ func direnvCmd() *cobra.Command {
 		Short: "Generate a .envrc file that integrates direnv with this devbox project",
 		Long: "Generate a .envrc file that integrates direnv with this devbox project. " +
 			"Requires direnv to be installed.",
-		Args:    cobra.MaximumNArgs(0),
-		PreRunE: ensureNixInstalled,
+		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGenerateCmd(cmd, flags)
 		},
