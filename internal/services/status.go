@@ -12,6 +12,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cloud/envir"
 )
 
@@ -44,40 +45,42 @@ func ListenToChanges(ctx context.Context, opts *ListenerOpts) error {
 	}()
 
 	// Start listening for events.
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-
-				// mutagen sync changes show up as create events
-				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-					status, err := readServiceStatus(event.Name)
-					if err != nil {
-						fmt.Fprintf(opts.Writer, "Error reading status file: %s\n", err)
-						continue
-					}
-
-					status, saveChanges := opts.UpdateFunc(status)
-					if saveChanges {
-						if err := writeServiceStatusFile(event.Name, status); err != nil {
-							fmt.Fprintf(opts.Writer, "Error updating status file: %s\n", err)
-						}
-					}
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				fmt.Fprintf(opts.Writer, "error: %s\n", err)
-			}
-		}
-	}()
+	go listenToEvents(watcher, opts)
 
 	// We only want events for the specific host.
 	return errors.WithStack(watcher.Add(filepath.Join(cloudFilePath(opts.ProjectDir), opts.HostID)))
+}
+
+func listenToEvents(watcher *fsnotify.Watcher, opts *ListenerOpts) {
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+
+			// mutagen sync changes show up as create events
+			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+				status, err := readServiceStatus(event.Name)
+				if err != nil {
+					fmt.Fprintf(opts.Writer, "Error reading status file: %s\n", err)
+					continue
+				}
+
+				status, saveChanges := opts.UpdateFunc(status)
+				if saveChanges {
+					if err := writeServiceStatusFile(event.Name, status); err != nil {
+						fmt.Fprintf(opts.Writer, "Error updating status file: %s\n", err)
+					}
+				}
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(opts.Writer, "error: %s\n", err)
+		}
+	}
 }
 
 func cloudFilePath(projectDir string) string {

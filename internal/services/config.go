@@ -7,28 +7,30 @@ import (
 
 	"github.com/f1bonacc1/process-compose/src/types"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
 func FromProcessComposeYaml(projectDir string) Services {
 	// TODO need to handle if a filepath is passed in
-	if processComposeYaml := lookupProcessCompose(projectDir, ""); processComposeYaml != "" {
-		userSvcs, err := readProcessCompose(processComposeYaml)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error reading process-compose.yaml: %s, skipping", err)
-			return nil
-		}
-		return userSvcs
+	processComposeYaml := lookupProcessCompose(projectDir, "")
+	if processComposeYaml == "" {
+		return nil
 	}
-	return Services{}
+	userSvcs, err := readProcessCompose(processComposeYaml)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error reading process-compose.yaml: %s, skipping", err)
+		return nil
+	}
+	return userSvcs
 }
 
 func readProcessCompose(path string) (Services, error) {
 	processCompose := &types.Project{}
 	services := Services{}
-	errors := errors.WithStack(cuecfg.ParseFile(path, processCompose))
-	if errors != nil {
-		return nil, errors
+	err := errors.WithStack(cuecfg.ParseFile(path, processCompose))
+	if err != nil {
+		return nil, err
 	}
 
 	for name := range processCompose.Processes {
