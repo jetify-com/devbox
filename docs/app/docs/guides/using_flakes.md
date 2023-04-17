@@ -20,7 +20,7 @@ Flakes are defined as a directory with a `flake.nix` and a `flake.lock` file. Yo
 You can add a Flake hosted on Github using the following string in your packages list: 
 
 ```json
-packages: [
+"packages": [
     "github:<org>/<repo>/<ref>#<optional_flake_attr>"
 ]
 ```
@@ -81,4 +81,10 @@ For example, if you have a local Flake in the `./my-flake` directory, you can us
 path:./my-flake#my-package
 ```
 
-You can also see an example of how to use local flakes in the Devbox repo.
+### Examples
+
+For more examples of using Nix Flakes with Devbox, check out the examples in our Devbox Repo:
+
+- [Using Nix Flakes from Github](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/remote)
+- [Using a Local Flake](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/php)
+- [Applying an Overlay with Nix Flakes](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/overlay)
