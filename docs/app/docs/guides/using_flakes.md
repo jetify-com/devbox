@@ -25,7 +25,7 @@ You can add a Flake hosted on Github using the following string in your packages
 ]
 ```
 
-The Ref and Flake Attribute is optional and will default to the main branch and `default|defaultPackage` attribute, respectively.
+The Ref and Flake Attribute is optional and will default to the main branch and `packages.default|defaultPackage` attribute, respectively.
 
 For example, to install [Process Compose](https://github.com/F1bbonac1/process-compose) from its repository using Nix Flakes, you can use the following string in your packages list. This will install the latest version of Process Compose from the `main` branch.
 
@@ -56,7 +56,7 @@ github:nix-community/fenix#stable.toolchain
 The Nixpkgs repo on Github also provides a Flake for installing packages. You can use the following flake reference to install packages from a specific Nixpkgs commit or reference:
 
 ```nix
-github:NixOS/nixpkgs/<ref>#<optional_flake_attr>
+github:NixOS/nixpkgs/<ref>#<package>
 ```
 
 For example, if you want to install the `hello` package from the `nixos-20.09` branch, you can use the following string in your packages list:
