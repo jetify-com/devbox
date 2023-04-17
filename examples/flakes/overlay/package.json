@@ -1,0 +1,11 @@
+{
+  "name": "nix-yarn-issue",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "echo 'it should run'"
+  },
+  "engines": {
+    "node": ">= 16"
+  }
+}
