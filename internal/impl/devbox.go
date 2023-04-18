@@ -285,7 +285,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, useCache bool, includeHooks bool)
 
 	if includeHooks {
 		hooksStr := ". " + d.scriptPath(hooksFilename)
-		envStr = fmt.Sprintf("%s\n%s", hooksStr, envStr)
+		envStr = fmt.Sprintf("%s\n%s", envStr, hooksStr)
 	}
 
 	return envStr, nil
