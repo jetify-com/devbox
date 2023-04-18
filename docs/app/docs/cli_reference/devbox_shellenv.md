@@ -8,11 +8,13 @@ devbox shellenv [flags]
 
 ## Options
 
-```text
-  -c, --config string   path to directory containing a devbox.json config file
-  -h, --help            help for shellen  
-  -q, --quiet   suppresses logs``
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-h, --help` | help for shellenv |
+| `-q, --quiet` | suppresses logs |
+
 
 ### SEE ALSO
 

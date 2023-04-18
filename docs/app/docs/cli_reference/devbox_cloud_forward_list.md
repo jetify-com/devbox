@@ -8,10 +8,11 @@ devbox cloud forward list [flags]
 
 ## Options
 
-```text
-  -h, --help   help for list
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown table of options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for list |
+| `-q, --quiet` | suppresses logs |
 
 ### SEE ALSO
 

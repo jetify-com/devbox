@@ -16,10 +16,11 @@ Print shell commands that add global Devbox packages to your PATH
 
 ## Options
 
-```bash
-  -h, --help   help for shellenv
-  -q, --quiet  suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for shellenv |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

@@ -8,10 +8,13 @@ devbox add <pkg>... [flags]
 
 ## Options
 
-```text
-  -h, --help   help for add
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-h, --help` | help for add |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
+
 
 ## SEE ALSO
 

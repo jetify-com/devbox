@@ -38,11 +38,12 @@ devbox completion zsh [flags]
 
 ## Options
 
-```text
-  -h, --help              help for zsh
-      --no-descriptions   disable completion descriptions
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for zsh |
+| `--no-descriptions` | disable completion descriptions |
+| `-q, --quiet` | suppresses logs |
 
 
 ## SEE ALSO

@@ -1,6 +1,6 @@
 # devbox services stop
 
-Stops service. If no service is specified, stops all services
+Stops a service. If no service is specified, stops all your running services and shuts down process-compose.
 
 ```bash
 devbox services stop [service]... [flags]
@@ -8,10 +8,11 @@ devbox services stop [service]... [flags]
 
 ## Options
 
-```bash
-  -h, --help   help for stop
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for stop |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 

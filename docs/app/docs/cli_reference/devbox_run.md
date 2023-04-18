@@ -30,11 +30,14 @@ For more details, read our [scripts guide](../guides/scripts.md)
 
 ## Options
 
-```text
-  -c, --config string   path to directory containing a devbox.json config file
-  -h, --help            help for run
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-h, --help` | help for run |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
+
+
 
 ## SEE ALSO
 

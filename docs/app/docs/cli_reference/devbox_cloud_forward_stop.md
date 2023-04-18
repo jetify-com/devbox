@@ -8,10 +8,11 @@ devbox cloud forward stop [flags]
 
 ## Options
 
-```text
-  -h, --help   help for stop
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown table of options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for stop |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

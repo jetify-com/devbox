@@ -87,8 +87,8 @@ func servicesCmd() *cobra.Command {
 	}
 
 	upCommand := &cobra.Command{
-		Use:   "up",
-		Short: "Starts process manager with all supported services",
+		Use:   "up [service]...",
+		Short: "Starts process manager with specified services. If no services are listed, starts the process manager with all the services in your project",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return startProcessManager(cmd, args, serviceUpFlags)
 		},

@@ -4,17 +4,39 @@ title: Running Background Services
 
 When working on an application, you often want some services or dependencies running in the background for testing. Take a web app as an example. While working on your application, you will want to test it against a running development server and database. Previously developers would manage these services via tools like Docker Compose or orchestrating them manually.
 
-With Devbox, you can manage these services from the CLI using `devbox services`. 
+With Devbox, you can manage these services from the CLI using `devbox services`. Devbox uses [process-compose](https://github.com/F1bonacc1/process-compose#-launcher) under the hood to start and manage your project's services. 
 
-:::note
+## Starting your Services
 
-Currently, Devbox Services are only available via [Plugins](plugins.md). Future releases of Devbox will make it possible to configure your own services in your `devbox.json`
+You can start all the services in your project by running `devbox services up`. This will start process-compose in the foreground, and start all the services associated with your project: 
 
-:::
+![Process Compose running in the foreground](../../static/img/process-compose-tui.png)
+
+You can also start a specific service by passing the name as an argument. For example, to start just `postgresql`, you can run `devbox services up postgresql`
+
+If you want to restart your services (for example, after changing your configuration), you can run `devbox services restart`
+
+## Defining your Own Services
+
+If you have a process or service that you want to run with your Devbox project, you can define it using a process-compose.yml in your project's root directory. For example, if you want to run a Django server, you could add the following yaml:
+
+```yaml
+# Process compose for starting django
+version: "0.5"
+
+processes:
+  django:
+   command: python todo_project/manage.py runserver
+   availability:
+    restart: "always"
+```
+
+This will now start your django service whenever you run `devbox services up`.
+
 
 ## Plugins that Support Services
 
-The following plugins provide a service that can be managed with `devbox services`: 
+The following plugins provide a pre-configured service that can be managed with `devbox services`: 
 
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
@@ -32,46 +54,28 @@ You can list all the services available to your current devbox project by runnin
 ```bash
 devbox services ls
 
-php-fpm
-apache
-postgresql
+No services currently running. Run `devbox services up` to start them:
+
+  django
+  postgresql
 ```
 
-## Starting your Services
+If process-compose is already running, `devbox services ls` will show you the list of services registered with process-compose and their current status
 
-You can start all the services in your project by running `devbox services start`:
-
-```bash
-devbox services start
-
-Installing nix packages. This may take a while... done.
-Starting a devbox shell...
-Service "php-fpm" started
-Service "apache" started
-waiting for server to start.... done
-server started
-Service "postgresql" started
+```text 
+Services running in process-compose:
+NAME              STATUS          EXIT CODE
+django            Running         0
+postgresql        Launched        0
 ```
-
-You can also start a specific service by passing the name as an argument. For example, to start just `postgresql`, you can run `devbox services start postgresql`
-
-If you want to restart your services (for example, after changing your configuration), you can run `devbox services restart`
 
 ## Stopping your services
 
-You can stop your services with `devbox services stop`. This will stop all the running services associated with your project: 
+You can stop your services with `devbox services stop`. This will stop process-compose, as well as all the running services associated with your project.
 
-```bash
-devbox services stop
+If you want to stop a specific service, you can pass the name as an argument. For example, to stop just `postgresql`, you can run `devbox services stop postgresql`
 
-Installing nix packages. This may take a while... done.
-Starting a devbox shell...
-Service "php-fpm" stopped
-Service "apache" stopped
-waiting for server to shut down.... done
-server stopped
-Service "postgresql" stopped
-```
+
 
 ## Further Reading
 
