@@ -441,21 +441,21 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	result := services.Services{}
 	pluginSvcs, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
 	userSvcs := services.FromProcessComposeYaml(d.projectDir)
 
-	svcSet, err := lo.Assign(pluginSvcs, userSvcs), nil
-
+	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
 	for k := range svcSet {
 		keys = append(keys, k)
 	}
 	slices.Sort(keys)
+
+	result := services.Services{}
 	for _, k := range keys {
 		result[k] = svcSet[k]
 	}

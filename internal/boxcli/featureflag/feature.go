@@ -14,7 +14,6 @@ type feature struct {
 
 var features = map[string]*feature{}
 
-// nolint:unparam
 func disabled(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
@@ -23,7 +22,6 @@ func disabled(name string) *feature {
 	return features[name]
 }
 
-// nolint:unparam
 func enabled(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
