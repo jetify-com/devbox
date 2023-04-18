@@ -1,6 +1,6 @@
 {
   description =
-    "A flake that outputs PHP with memcached and ds extension and hello pkg.";
+    "A flake that outputs PHP with a custom extension (skeleton.so) linked.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
