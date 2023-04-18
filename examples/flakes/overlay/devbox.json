@@ -1,0 +1,14 @@
+{
+  "packages": [
+    "fnm",
+    "path:yarn-overlay#yarn"
+  ],
+  "shell": {
+    "init_hook": [
+      "eval \"$(fnm env --use-on-cd)\""
+    ]
+  },
+  "nixpkgs": {
+    "commit": "eabc38219184cc3e04a974fe31857d8e0eac098d"
+  }
+}
