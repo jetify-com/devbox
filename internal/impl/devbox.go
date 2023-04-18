@@ -259,7 +259,7 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, useCache bool) (string, error) {
+func (d *Devbox) PrintEnv(ctx context.Context, useCache bool, includeHooks bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
@@ -281,7 +281,14 @@ func (d *Devbox) PrintEnv(ctx context.Context, useCache bool) (string, error) {
 		return "", err
 	}
 
-	return exportify(envs), nil
+	envStr := exportify(envs)
+
+	if includeHooks {
+		hooksStr := ". " + d.scriptPath(hooksFilename)
+		envStr = fmt.Sprintf("%s\n%s", envStr, hooksStr)
+	}
+
+	return envStr, nil
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {

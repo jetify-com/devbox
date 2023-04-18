@@ -54,14 +54,9 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	envStr, err := box.PrintEnv(cmd.Context(), flags.useCachedPrintDevEnv)
+	envStr, err := box.PrintEnv(cmd.Context(), flags.useCachedPrintDevEnv, flags.runInitHook)
 	if err != nil {
 		return "", err
-	}
-
-	if flags.runInitHook {
-		initHookStr := box.Config().Shell.InitHook.String()
-		return fmt.Sprintf("%s\n%s", envStr, initHookStr), nil
 	}
 
 	return envStr, nil

@@ -48,7 +48,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	}
 
 	if flags.PrintEnv {
-		script, err := box.PrintEnv(cmd.Context(), false /*useCachedPrintDevEnv*/)
+		script, err := box.PrintEnv(cmd.Context(), false /*useCachedPrintDevEnv*/, true /*includeHooks*/)
 		if err != nil {
 			return err
 		}
