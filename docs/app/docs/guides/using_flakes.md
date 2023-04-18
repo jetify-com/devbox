@@ -27,7 +27,7 @@ You can add a Flake hosted on Github using the following string in your packages
 
 The Ref and Flake Attribute is optional and will default to the main branch and `packages.default|defaultPackage` attribute, respectively.
 
-For example, to install [Process Compose](https://github.com/F1bbonac1/process-compose) from its repository using Nix Flakes, you can use the following string in your packages list. This will install the latest version of Process Compose from the `main` branch.
+For example, to install [Process Compose](https://github.com/F1bonacc1/process-compose) from its repository using Nix Flakes, you can use the following string in your packages list. This will install the latest version of Process Compose from the `main` branch.
 
 ```nix
 github:F1bonacc1/process-compose
