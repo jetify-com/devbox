@@ -11,10 +11,11 @@ list, ls
 
 ## Options
 
-```bash
-  -h, --help   help for list
-  -q, --quiet  suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for list |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

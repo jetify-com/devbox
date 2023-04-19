@@ -23,11 +23,12 @@ devbox completion fish [flags]
 
 ## Options
 
-```text
-  -h, --help              help for fish
-      --no-descriptions   disable completion descriptions
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for fish |
+| `--no-descriptions` | disable completion descriptions |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

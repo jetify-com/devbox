@@ -10,10 +10,11 @@ See each sub-command's help for details on how to use the generated script.
 
 ## Options
 
-```text
-  -h, --help   help for completion
-  -q, --quiet   suppresses logs-
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for completion |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

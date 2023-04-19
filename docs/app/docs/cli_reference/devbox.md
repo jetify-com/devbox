@@ -8,10 +8,11 @@ devbox [flags]
 
 ## Options
 
-```text
-  -h, --help   help for devbox
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for devbox |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 

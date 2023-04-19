@@ -16,6 +16,7 @@ import (
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/xdg"
@@ -40,12 +41,11 @@ const (
 	shPosix   name = "posix"
 )
 
-var ErrNoRecognizableShellFound = errors.New(
-	"SHELL in undefined, and couldn't find any common shells in PATH")
+var ErrNoRecognizableShellFound = errors.New("SHELL in undefined, and couldn't find any common shells in PATH")
 
 // TODO consider splitting this struct's functionality so that there is a simpler
 // `nix.Shell` that can produce a raw nix shell once again.
-//
+
 // DevboxShell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
 type DevboxShell struct {
@@ -179,8 +179,7 @@ func WithHooksFilePath(hooksFilePath string) ShellOption {
 	}
 }
 
-// TODO: Consider removing this once plugins add env vars directly to binaries
-// via wrapper scripts.
+// TODO: Consider removing this once plugins add env vars directly to binaries via wrapper scripts.
 func WithEnvVariables(envVariables map[string]string) ShellOption {
 	return func(s *DevboxShell) {
 		s.env = envVariables

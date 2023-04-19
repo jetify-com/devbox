@@ -25,6 +25,30 @@ This is a list of Nix packages that should be installed in your Devbox shell and
 
 You can add packages to your devbox.json using `devbox add <package_name>`, and remove them using `devbox rm <package_name>`
 
+#### Adding Packages from Flakes
+
+You can add packages from flakes by adding a reference to the  flake in the `packages` list in your `devbox.json`. We currently support installing Flakes from Github and local paths.
+
+```json
+{
+    "packages": [
+        // Add the default package from a github repository 
+        "github:numtide/flake-utils",
+        // Install a specific attribute or package from a Github hosted flake
+        "github:nix-community/fenix#stable.toolchain", 
+        // Install a package from a specific channel of Nixpkgs
+        "github:nixos/nixpkgs/21.05#hello",
+        // Install a package form a specific commit of Nixpkgs
+        "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
+        // Install a package from a local flake. This should point to a directory that contains a flake.nix file.
+        "path:../my-flake#my-package"
+    ]
+}
+```
+
+To learn more about using flakes, see the [Using Flakes](guides/using_flakes.md) guide.
+
+
 ### Env
 
 This is a a map of key-value pairs that should be set as Environment Variables when activating `devbox shell`, running a script with `devbox run`, or starting a service. These variables will only be set in your Devbox shell, and will have precedence over any environment variables set in your local machine or by [Devbox Plugins](guides/plugins.md).

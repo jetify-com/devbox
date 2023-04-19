@@ -1,17 +1,22 @@
 # devbox services restart
 
-Restarts service. If no service is specified, restarts all services
+Restarts service. If no service is specified, restarts all services and process-compose.
 
 ```bash
 devbox services restart [service]... [flags]
 ```
 
+:::info
+  Note: We recommend using `devbox services up` if you are starting all your services and process-compose. This command lets you specify your process-compose file and whether to run process-compose in the foreground or background.
+:::
+
 ## Options
 
-```bash
-  -h, --help   help for restart
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for restart |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 

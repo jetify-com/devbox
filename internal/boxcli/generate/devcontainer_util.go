@@ -33,7 +33,7 @@ type vscode struct {
 	Extensions []string `json:"extensions"`
 }
 
-// Creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
+// CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
 func CreateDockerfile(tmplFS embed.FS, path string) error {
 	// create dockerfile
 	file, err := os.Create(filepath.Join(path, "Dockerfile"))

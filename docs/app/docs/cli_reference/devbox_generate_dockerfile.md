@@ -12,12 +12,14 @@ devbox generate dockerfile [flags]
 
 ## Options
 
-```bash
-  -c, --config string   path to directory containing a devbox.json config file
-  -f, --force           force overwrite existing files
-  -h, --help            help for dockerfile
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-f, --force` | force overwrite existing files |
+| `-h, --help` | help for dockerfile |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
+
 
 ## SEE ALSO
 

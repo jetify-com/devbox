@@ -34,11 +34,12 @@ devbox completion bash
 
 ## Options
 
-```text
-  -h, --help              help for bash
-      --no-descriptions   disable completion descriptions
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for bash |
+| `--no-descriptions` | disable completion descriptions |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

@@ -8,10 +8,11 @@ devbox global pull <file> | <url> [flags]
 
 ## Options
 
-```bash
-  -h, --help   help for pull
-  -q, --quiet  suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for pull |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

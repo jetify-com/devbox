@@ -10,11 +10,12 @@ devbox install [flags]
 
 ## Options
 
-```text
-  -c, --config string   path to directory containing a devbox.json config file
-  -h, --help            help for install
-  -q, --quiet   suppresses logs
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-h, --help` | help for install |
+| `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
 

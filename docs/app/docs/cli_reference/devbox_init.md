@@ -12,10 +12,11 @@ devbox init [<dir>] [flags]
 
 ## Options
 
-```text
-  -h, --help   help for init   
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!--Markdown Table of Options  -->
+| Option | Description |
+| --- | --- |
+| `-h, --help` | help for init |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 

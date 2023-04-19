@@ -1,6 +1,6 @@
 # devbox services
 
-Interact with devbox services
+Interact with Devbox services via process-compose
 
 ```bash
 devbox services <ls|restart|start|stop> [flags]
@@ -8,11 +8,12 @@ devbox services <ls|restart|start|stop> [flags]
 
 ## Options
 
-```bash
-  -c, --config string   path to directory containing a devbox.json config file
-  -h, --help            help for services
-  -q, --quiet   Quiet mode: Suppresses logs.
-```
+<!-- Markdown Table of Options -->
+| Option | Description |
+| --- | --- |
+| `-c, --config string` | path to directory containing a devbox.json config file |
+| `-h, --help` | help for services |
+| `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## Subcommands
 
