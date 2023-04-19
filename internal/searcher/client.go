@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -27,7 +28,7 @@ func NewClient() *client {
 }
 
 func (c *client) Search(query string) (*SearchResult, error) {
-	response, err := http.Get(c.endpoint + "?q=" + query)
+	response, err := http.Get(c.endpoint + "?q=" + url.QueryEscape(query))
 	if err != nil {
 		return nil, err
 	}

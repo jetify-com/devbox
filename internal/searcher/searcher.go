@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/redact"
 )
 
 func SearchAndPrint(w io.Writer, query string) error {
 	c := NewClient()
 	result, err := c.Search(query)
 	if err != nil {
-		return err
+		return redact.Errorf("error getting search results: %v", redact.Safe(err))
 	}
 	if len(result.Results) == 0 {
 		fmt.Fprintf(w, "No results found for %q\n", query)
