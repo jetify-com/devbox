@@ -24,6 +24,7 @@ type Metadata struct {
 }
 
 type SearchResult struct {
-	Metadata Metadata `json:"metadata"`
-	Results  []Result `json:"results"`
+	Metadata    Metadata `json:"metadata"`
+	Results     []Result `json:"results"`
+	Suggestions []Result `json:"suggestions"`
 }
