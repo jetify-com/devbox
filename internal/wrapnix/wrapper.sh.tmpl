@@ -22,7 +22,7 @@ DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
 
 if [[ "$__DEVBOX_SHELLENV_HASH" != "{{ .ShellEnvHash }}" ]]; then
-eval "$(DO_NOT_TRACK=1 devbox shellenv --use-cached-print-dev-env)"
+eval "$(DO_NOT_TRACK=1 devbox shellenv)"
 fi
 
 {{ .Command }} "$@"

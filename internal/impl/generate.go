@@ -15,7 +15,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -66,15 +65,7 @@ func (d *Devbox) generateShellFiles() error {
 		}
 	}
 
-	if err := d.writeScriptsToFiles(); err != nil {
-		return err
-	}
-
-	return os.WriteFile(
-		filepath.Join(d.projectDir, ".devbox/version"),
-		[]byte(build.Version),
-		0644,
-	)
+	return d.writeScriptsToFiles()
 }
 
 // Cache and buffers for generating templated files.
@@ -221,13 +212,4 @@ func isProjectInGitRepo(dir string) bool {
 	// We reached the fs-root dir, climbed the highest mountain and
 	// we still haven't found what we're looking for.
 	return false
-}
-
-func (d *Devbox) isDotDevboxVersionCurrent() bool {
-	b, err := os.ReadFile(filepath.Join(d.projectDir, ".devbox/version"))
-	if err != nil {
-		return false
-	}
-
-	return strings.TrimSpace(string(b)) == build.Version
 }

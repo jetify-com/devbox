@@ -259,24 +259,21 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, useCache bool, includeHooks bool) (string, error) {
+func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	// generate in case user has old .devbox dir and is missing any files.
-	if !d.isDotDevboxVersionCurrent() {
+	if lock, err := lockfile.Local(d); err != nil {
+		return "", err
+	} else if upToDate, err := lock.IsUpToDate(); err != nil {
+		return "", err
+	} else if !upToDate {
 		if err := d.Generate(); err != nil {
 			return "", err
 		}
 	}
 
-	var envs map[string]string
-	var err error
-	if useCache {
-		envs, err = d.nixEnvWithPrintDevEnvCache(ctx)
-	} else {
-		envs, err = d.nixEnv(ctx)
-	}
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -817,7 +814,6 @@ func (d *Devbox) computeNixEnv(
 }
 
 var nixEnvCache map[string]string
-var nixEnvWithPrintDevEnvCache map[string]string
 
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
@@ -839,26 +835,6 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
 	}
 	return nixEnvCache, err
-}
-
-func (d *Devbox) nixEnvWithPrintDevEnvCache(
-	ctx context.Context,
-) (map[string]string, error) {
-	var err error
-
-	// minor optimization. If we've already computed the non-cache version, use
-	// that instead.
-	if nixEnvCache != nil {
-		nixEnvWithPrintDevEnvCache = nixEnvCache
-	}
-
-	if nixEnvWithPrintDevEnvCache == nil {
-		nixEnvWithPrintDevEnvCache, err = d.computeNixEnv(
-			ctx,
-			true, /*usePrintDevEnvCache*/
-		)
-	}
-	return nixEnvWithPrintDevEnvCache, err
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.

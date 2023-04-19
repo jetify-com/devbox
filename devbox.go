@@ -30,7 +30,7 @@ type Devbox interface {
 	GenerateEnvrc(force bool, source string) error
 	Info(pkg string, markdown bool) error
 	ListScripts() []string
-	PrintEnv(ctx context.Context, useCache bool, includeHooks bool) (string, error)
+	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintGlobalList() error
 	PullGlobal(path string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
