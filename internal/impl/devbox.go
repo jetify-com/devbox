@@ -263,6 +263,16 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
+	if lock, err := lockfile.Local(d); err != nil {
+		return "", err
+	} else if upToDate, err := lock.IsUpToDate(); err != nil {
+		return "", err
+	} else if !upToDate {
+		if err := d.Generate(); err != nil {
+			return "", err
+		}
+	}
+
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
