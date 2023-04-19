@@ -10,7 +10,6 @@ import (
 
 func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
 	cfg, err := getConfigIfAny(pkg, projectDir)
-
 	if err != nil {
 		return err
 	}
