@@ -265,7 +265,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 
 	if lock, err := lockfile.Local(d); err != nil {
 		return "", err
-	} else if upToDate, err := lock.IsUpToDate(); err != nil {
+	} else if upToDate, err := lock.IsDevboxVersionUpToDate(); err != nil {
 		return "", err
 	} else if !upToDate {
 		if err := d.Generate(); err != nil {
