@@ -26,7 +26,8 @@ type localLockFile struct {
 func (l *localLockFile) equals(other *localLockFile) bool {
 	return l.ConfigHash == other.ConfigHash &&
 		l.NixProfileManifestHash == other.NixProfileManifestHash &&
-		l.NixPrintDevEnvHash == other.NixPrintDevEnvHash
+		l.NixPrintDevEnvHash == other.NixPrintDevEnvHash &&
+		l.DevboxVersion == other.DevboxVersion
 }
 
 func (l *localLockFile) IsUpToDate() (bool, error) {
@@ -36,15 +37,6 @@ func (l *localLockFile) IsUpToDate() (bool, error) {
 	}
 
 	return l.equals(newLock), nil
-}
-
-func (l *localLockFile) IsDevboxVersionUpToDate() (bool, error) {
-	newLock, err := forProject(l.project)
-	if err != nil {
-		return false, err
-	}
-
-	return l.DevboxVersion == newLock.DevboxVersion, nil
 }
 
 func (l *localLockFile) Update() error {
