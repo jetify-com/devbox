@@ -36,6 +36,7 @@ func shellEnvCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
 
+	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
 		&flags.useCachedPrintDevEnv,
 		"use-cached-print-dev-env",
@@ -54,7 +55,7 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 
-	envStr, err := box.PrintEnv(cmd.Context(), flags.useCachedPrintDevEnv, flags.runInitHook)
+	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook)
 	if err != nil {
 		return "", err
 	}
