@@ -52,7 +52,7 @@ func exportify(vars map[string]string) string {
 			}
 			strb.WriteRune(r)
 		}
-		strb.WriteString("\"\n")
+		strb.WriteString("\";\n")
 	}
 	return strings.TrimSpace(strb.String())
 }

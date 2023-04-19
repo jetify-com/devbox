@@ -2,10 +2,10 @@
 
 # Begin Devbox Post-init Hook
 
-export quote="they said, \"lasers\""
-export simple="value"
-export space="quote me"
-export special="\$\`\"\\"
+export quote="they said, \"lasers\"";
+export simple="value";
+export space="quote me";
+export special="\$\`\"\\";
 
 # Prepend to the prompt to make it clear we're in a devbox shell.
 export PS1="(devbox) $PS1"
