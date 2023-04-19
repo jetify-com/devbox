@@ -15,7 +15,7 @@ import (
 
 func SearchAndPrint(w io.Writer, query string) error {
 	c := NewClient()
-	result, err := c.Search(query, "" /*version*/)
+	result, err := c.Search(query)
 	if err != nil {
 		return redact.Errorf("error getting search results: %v", redact.Safe(err))
 	}
@@ -42,10 +42,10 @@ func SearchAndPrint(w io.Writer, query string) error {
 
 func GenLockedReferences(pkgs []string) ([]string, error) {
 	c := NewClient()
-	references := []string{}
-	for _, pkg := range pkgs {
+	references := append([]string(nil), pkgs...) // copy
+	for i, pkg := range pkgs {
 		if name, version, found := strings.Cut(pkg, "@"); found {
-			result, err := c.Search(name, version)
+			result, err := c.SearchVersion(name, version)
 			if err != nil {
 				return nil, err
 			}
@@ -64,13 +64,11 @@ func GenLockedReferences(pkgs []string) ([]string, error) {
 				return nil, usererr.New(errorText + "\n")
 			}
 
-			references = append(references, fmt.Sprintf(
+			references[i] = fmt.Sprintf(
 				"github:NixOS/nixpkgs/%s#%s",
 				result.Results[0].Packages[0].NixpkgCommit,
 				result.Results[0].Packages[0].AttributePath,
-			))
-		} else {
-			references = append(references, pkg)
+			)
 		}
 	}
 	return references, nil
