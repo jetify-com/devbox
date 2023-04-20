@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
@@ -21,11 +22,15 @@ import (
 const (
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
-	VirtenvPath         = ".devbox/virtenv"
 )
 
-var WrapperPath = filepath.Join(VirtenvPath, ".wrappers")
-var WrapperBinPath = filepath.Join(WrapperPath, "bin")
+var (
+	VirtenvPath    = filepath.Join(devboxHiddenDirName, "virtenv")
+	VirtenvBinPath = filepath.Join(VirtenvPath, "bin")
+
+	WrapperPath    = filepath.Join(VirtenvPath, ".wrappers")
+	WrapperBinPath = filepath.Join(WrapperPath, "bin")
+)
 
 type config struct {
 	Name        string            `json:"name"`
@@ -183,10 +188,10 @@ func createDir(path string) error {
 
 func createSymlink(root, filePath string) error {
 	name := filepath.Base(filePath)
-	newname := filepath.Join(root, VirtenvPath, "bin", name)
+	newname := filepath.Join(root, VirtenvBinPath, name)
 
 	// Create bin path just in case it doesn't exist
-	if err := os.MkdirAll(filepath.Join(root, VirtenvPath, "/bin"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, VirtenvBinPath), 0755); err != nil {
 		return errors.WithStack(err)
 	}
 

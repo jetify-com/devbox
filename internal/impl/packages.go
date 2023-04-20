@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
+
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
@@ -19,7 +21,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
-	"golang.org/x/exp/slices"
 )
 
 // packages.go has functions for adding, removing and getting info about nix packages
@@ -98,10 +99,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
 	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
-
-	var missingPkgs []string
-	d.cfg.RawPackages, missingPkgs = lo.Difference(d.cfg.RawPackages, pkgs)
-
+	remainingPkgs, missingPkgs := lo.Difference(d.cfg.RawPackages, pkgs)
 	if len(missingPkgs) > 0 {
 		ux.Fwarning(
 			d.writer,
@@ -109,6 +107,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 			strings.Join(missingPkgs, ", "),
 		)
 	}
+	d.cfg.RawPackages = remainingPkgs
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
