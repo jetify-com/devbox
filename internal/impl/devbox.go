@@ -180,6 +180,8 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	env["DEVBOX_SHELL_ENABLED"] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
@@ -223,6 +225,8 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	if err != nil {
 		return err
 	}
+	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	env["DEVBOX_SHELL_ENABLED"] = "1"
 
 	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err

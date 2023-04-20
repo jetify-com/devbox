@@ -26,6 +26,3 @@ if ! type refresh >/dev/null 2>&1; then
   alias refresh='eval $(devbox shellenv)'
   export DEVBOX_REFRESH_ALIAS="refresh"
 fi
-
-# Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-export DEVBOX_SHELL_ENABLED=1
