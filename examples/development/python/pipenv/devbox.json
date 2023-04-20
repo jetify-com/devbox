@@ -1,7 +1,7 @@
 {
     "packages": [
         "pipenv",
-        "python310"
+        "python311"
     ],
     "shell": {
         "init_hook": [

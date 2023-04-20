@@ -1,6 +1,6 @@
 {
   "packages": [
-    "python310",
+    "python311",
     "poetry"
   ],
   "shell": {

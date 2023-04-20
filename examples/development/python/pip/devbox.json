@@ -1,7 +1,7 @@
 {
     "packages": [
-        "python310",
-        "python310Packages.pip"
+        "python311",
+        "python311Packages.pip"
     ],
     "shell": {
         "init_hook": [

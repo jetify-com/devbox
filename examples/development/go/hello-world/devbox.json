@@ -1,6 +1,6 @@
 {
     "packages": [
-        "go_1_19"
+        "go_1_20"
     ],
     "shell": {
         "init_hook": null,
