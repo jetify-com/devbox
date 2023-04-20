@@ -263,17 +263,8 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	if lock, err := lockfile.Local(d); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return "", err
-	} else if upToDate, err := lock.IsUpToDate(); err != nil {
-		return "", err
-	} else if !upToDate {
-		if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-			return "", err
-		}
-		if err := d.Generate(); err != nil {
-			return "", err
-		}
 	}
 
 	envs, err := d.nixEnv(ctx)
@@ -287,11 +278,6 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 		hooksStr := ". " + d.scriptPath(hooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
-
-	// This removes DEVBOX_SHELL_ENABLED=1 from the output. This is better than
-	// putting checks if user is already in a shell or if user is using devbox global.
-	// Overall, devbox shellenv should not set or modify DEVBOX_SHELL_ENABLED
-	envStr = strings.ReplaceAll(envStr, "export DEVBOX_SHELL_ENABLED=\"1\";", "")
 
 	return envStr, nil
 }
