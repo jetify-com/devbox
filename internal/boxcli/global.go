@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -178,11 +179,15 @@ func shellenvGlobalCmdFunc(cmd *cobra.Command, runInitHook bool) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	output, err := box.PrintEnv(cmd.Context(), runInitHook)
+	printEnvOutput, err := box.PrintEnv(cmd.Context(), runInitHook)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	fmt.Fprintln(cmd.OutOrStdout(), output)
+	// This removes DEVBOX_SHELL_ENABLED=1 from the output. This is better than
+	// putting checks if user is already in a shell or if user is using devbox global.
+	// Overall, devbox shellenv should not set or modify DEVBOX_SHELL_ENABLED
+	outputModified := strings.ReplaceAll(printEnvOutput, "export DEVBOX_SHELL_ENABLED=\"1\";", "")
+	fmt.Fprintln(cmd.OutOrStdout(), outputModified)
 	fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
 	return nil
 }

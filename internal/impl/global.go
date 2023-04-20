@@ -191,24 +191,6 @@ func globalBinPath() (string, error) {
 	return filepath.Join(currentPath, "bin"), nil
 }
 
-// GenerateShellEnv generates shell commands that configure the user's shell
-// environment to work with Devbox packages. Most notably, it adds Devbox
-// packages to the user's PATH. The commands are intended to be evaluated in
-// the user's shell rcfile. For example:
-//
-//	echo 'eval "$(devbox global shellenv)"' >> ~/.zshrc
-func GenerateShellEnv() string {
-	// If the user has "eval $(devbox global shellenv)" in their shell's
-	// rcfile, then running "devbox shell" will cause these commands to be
-	// evaluated twice (once by the "parent" shell and once by the devbox
-	// shell). Prevent this by making the eval a no-op when we're already
-	// inside a devbox shell.
-	if IsDevboxShellEnabled() {
-		return ""
-	}
-	return `export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/devbox/global/current/bin${PATH+:$PATH}";`
-}
-
 // Checks if the global profile is in the path
 func ensureGlobalProfileInPath() error {
 	binPath, err := globalBinPath()
