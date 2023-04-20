@@ -268,15 +268,12 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	} else if upToDate, err := lock.IsUpToDate(); err != nil {
 		return "", err
 	} else if !upToDate {
+		if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+			return "", err
+		}
 		if err := d.Generate(); err != nil {
 			return "", err
 		}
-	}
-	// this ensures shell files are generated in case if user runs
-	// shellenv without running devbox shell before or
-	// running devbox global shellenv --init-hook
-	if err := d.generateShellFiles(); err != nil {
-		return "", err
 	}
 
 	envs, err := d.nixEnv(ctx)
@@ -772,7 +769,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// These variables are only needed for shell, but we include them here in the computed env
 	// for both shell and run in order to be as identical as possible.
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
-	env["DEVBOX_SHELL_ENABLED"] = "1"      // Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 
 	debug.Log("nix environment PATH is: %s", env)
 
