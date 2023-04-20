@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
+
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
@@ -19,7 +21,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
-	"golang.org/x/exp/slices"
 )
 
 // packages.go has functions for adding, removing and getting info about nix packages
@@ -42,12 +43,13 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.projectDir)
 		if err != nil {
 			return err
-		} else if !ok {
+		}
+		if !ok {
 			return errors.WithMessage(nix.ErrPackageNotFound, pkg)
 		}
 	}
 
-	// Add to Packages to config only if it's not already there
+	// Add to Packages of the config only if it's not already there
 	for _, pkg := range pkgs {
 		if slices.Contains(d.cfg.RawPackages, pkg) {
 			continue
@@ -60,7 +62,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
-		// if error installing, revert devbox.json
+		// if installation fails, revert devbox.json
 		// This is not perfect because there may be more than 1 package being
 		// installed and we don't know which one failed. But it's better than
 		// blindly add all packages.
@@ -148,9 +150,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if upToDate, err := lock.IsUpToDate(); err != nil {
+	upToDate, err := lock.IsUpToDate()
+	if err != nil {
 		return err
-	} else if upToDate {
+	}
+	if upToDate {
 		return nil
 	}
 

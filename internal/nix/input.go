@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
@@ -26,7 +27,7 @@ func InputFromString(s, projectDir string) *Input {
 	return &Input{*u}
 }
 
-// isFlake returns true if the package descriptor has a scheme. For now
+// IsFlake returns true if the package descriptor has a scheme. For now
 // we only support the "path" scheme.
 func (i *Input) IsFlake() bool {
 	return i.IsLocal() || i.IsGithub()

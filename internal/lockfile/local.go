@@ -59,7 +59,8 @@ func Local(project devboxProject) (*localLockFile, error) {
 	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
 	if errors.Is(err, os.ErrNotExist) {
 		return lockFile, nil
-	} else if err != nil {
+	}
+	if err != nil {
 		return nil, err
 	}
 	return lockFile, nil

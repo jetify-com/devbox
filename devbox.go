@@ -15,9 +15,9 @@ import (
 
 // Devbox provides an isolated development environment.
 type Devbox interface {
-	// Add adds a Nix package to the config so that it's available in the devbox
-	// environment. It validates that the Nix package exists, but doesn't install
-	// it. Adding a duplicate package is a no-op.
+	// Add adds Nix packages to the config so that they're available in the devbox
+	// environment. It validates that the Nix packages exist, and install them.
+	// Adding duplicate packages is a no-op.
 	Add(ctx context.Context, pkgs ...string) error
 	AddGlobal(pkgs ...string) error
 	Config() *impl.Config
