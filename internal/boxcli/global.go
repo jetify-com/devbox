@@ -11,7 +11,6 @@ import (
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/impl"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -76,7 +75,6 @@ func globalRemoveCmd() *cobra.Command {
 			return removeGlobalCmdFunc(cmd, args)
 		},
 	}
-
 	return command
 }
 
@@ -102,14 +100,18 @@ func globalPullCmd() *cobra.Command {
 }
 
 func globalShellenvCmd() *cobra.Command {
-	return &cobra.Command{
+	flags := shellEnvCmdFlags{}
+	command := &cobra.Command{
 		Use:   "shellenv",
 		Short: "Print shell commands that add global Devbox packages to your PATH",
-		Run: func(cmd *cobra.Command, _ []string) {
-			fmt.Fprintln(cmd.OutOrStdout(), impl.GenerateShellEnv())
-			fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return shellenvGlobalCmdFunc(cmd, flags.runInitHook)
 		},
 	}
+	command.Flags().BoolVar(
+		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
+
+	return command
 }
 
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
@@ -164,6 +166,26 @@ func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 	return box.PullGlobal(args[0])
+}
+
+func shellenvGlobalCmdFunc(cmd *cobra.Command, runInitHook bool) error {
+	path, err := ensureGlobalConfig(cmd)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	output, err := box.PrintEnv(cmd.Context(), runInitHook)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	fmt.Fprintln(cmd.OutOrStdout(), output)
+	fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
+	return nil
 }
 
 func ensureGlobalConfig(cmd *cobra.Command) (string, error) {
