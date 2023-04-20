@@ -71,8 +71,9 @@ func dockerfileCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "dockerfile",
 		Short: "Generate a Dockerfile that replicates devbox shell",
-		Long:  "Generate a Dockerfile that replicates devbox shell. Can be used to run devbox shell environment in an OCI container.",
-		Args:  cobra.MaximumNArgs(0),
+		Long: "Generate a Dockerfile that replicates devbox shell. " +
+			"Can be used to run devbox shell environment in an OCI container.",
+		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runGenerateCmd(cmd, flags)
 		},
@@ -110,7 +111,9 @@ func sshConfigCmd() *cobra.Command {
 		Long:   "Check ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
 		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, flags)
+			// ssh-config command is exception and it should run without a config file present
+			_, err := cloud.SSHSetup(flags.githubUsername)
+			return errors.WithStack(err)
 		},
 	}
 	command.Flags().StringVarP(
@@ -121,15 +124,6 @@ func sshConfigCmd() *cobra.Command {
 }
 
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
-	// ssh-config command is exception and it should run without a config file present
-	if cmd.Use == "ssh-config" {
-		_, err := cloud.SSHSetup(flags.githubUsername)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	// Check the directory exists.
 	box, err := devbox.Open(flags.config.path, os.Stdout)
 	if err != nil {
