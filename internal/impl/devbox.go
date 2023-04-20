@@ -226,6 +226,8 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	// This is temporary because StartServices() needs it but should be replaced with
+	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
 	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
