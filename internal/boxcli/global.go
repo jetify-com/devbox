@@ -178,7 +178,7 @@ func shellenvGlobalCmdFunc(cmd *cobra.Command, runInitHook bool) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	output, err := box.PrintEnv(cmd.Context(), false, runInitHook)
+	output, err := box.PrintEnv(cmd.Context(), runInitHook)
 	if err != nil {
 		return errors.WithStack(err)
 	}
