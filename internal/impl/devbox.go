@@ -291,6 +291,11 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
+	// This removes DEVBOX_SHELL_ENABLED=1 from the output. This is better than
+	// putting checks if user is already in a shell or if user is using devbox global.
+	// Overall, devbox shellenv should not set or modify DEVBOX_SHELL_ENABLED
+	envStr = strings.ReplaceAll(envStr, "export DEVBOX_SHELL_ENABLED=\"1\";", "")
+
 	return envStr, nil
 }
 
