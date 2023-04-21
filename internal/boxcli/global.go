@@ -22,6 +22,7 @@ func globalCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(globalAddCmd())
+	cmd.AddCommand(globalInstallCmd())
 	cmd.AddCommand(globalListCmd())
 	cmd.AddCommand(globalPullCmd())
 	cmd.AddCommand(globalRemoveCmd())
@@ -114,6 +115,15 @@ func globalShellenvCmd() *cobra.Command {
 	return command
 }
 
+func globalInstallCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "install",
+		Short:   "Installs packages defined in global devbox.json",
+		PreRunE: ensureNixInstalled,
+		RunE:    installGlobalCmdFunc,
+	}
+}
+
 func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
@@ -126,6 +136,24 @@ func addGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	return box.AddGlobal(args...)
+}
+
+func installGlobalCmdFunc(cmd *cobra.Command, args []string) error {
+	path, err := ensureGlobalConfig(cmd)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = box.PrintEnv(cmd.Context(), false /* run init hooks */)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
+	return nil
 }
 
 func removeGlobalCmdFunc(cmd *cobra.Command, args []string) error {
