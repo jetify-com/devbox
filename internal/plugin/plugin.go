@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
@@ -145,7 +146,7 @@ func Env(
 			env[k] = v
 		}
 	}
-	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
+	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
 }
 
 func buildConfig(pkg, projectDir, content string) (*config, error) {

@@ -978,7 +978,7 @@ func (d *Devbox) globalCommitHash() string {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
-	return conf.OSExpandEnvMap(d.cfg.Env, d.ProjectDir(), computedEnv)
+	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
 }
 
 // Move to a utility package?

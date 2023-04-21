@@ -4,22 +4,19 @@ import (
 	"os"
 )
 
-func OSExpandEnvMap(
-	env map[string]string,
-	projectDir string,
-	existingEnv map[string]string,
-) map[string]string {
+func OSExpandEnvMap(env, existingEnv map[string]string, projectDir string) map[string]string {
 	mapperfunc := func(value string) string {
 		// Special variables that should return correct value
 		switch value {
 		case "PWD":
 			return projectDir
 		}
-		// check if referenced variables exists in computed environment
-		if v, ok := existingEnv[value]; ok {
-			return v
+
+		// in case existingEnv is nil
+		if existingEnv == nil {
+			return ""
 		}
-		return ""
+		return existingEnv[value]
 	}
 
 	res := map[string]string{}
