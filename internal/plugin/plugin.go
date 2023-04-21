@@ -150,7 +150,7 @@ func Env(
 			env[k] = v
 		}
 	}
-	return conf.OSExpandEnvMap(env, projectDir, computedEnv), nil
+	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
 }
 
 func buildConfig(pkg, projectDir, content string) (*config, error) {
