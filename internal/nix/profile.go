@@ -275,7 +275,14 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	// to implement your own nicer output. --print-build-logs flag may be useful.
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = args.Writer
-	cmd.Stderr = args.Writer
+
+	input := InputFromString(args.Package, args.ProjectDir)
+	// Temporary hack until devbox packages include lock file
+	if input.IsDevboxPackage() {
+		cmd.Args = append(cmd.Args, "--no-write-lock-file")
+	} else {
+		cmd.Stderr = args.Writer // This is noisy when --no-write-lock-file is set
+	}
 
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
@@ -353,7 +360,7 @@ func nextPriority(profilePath string) string {
 func flakePath(args *ProfileInstallArgs) (string, error) {
 	input := InputFromString(args.Package, args.ProjectDir)
 	if input.IsFlake() {
-		return input.NormalizedName()
+		return input.URLForInstall()
 	}
 
 	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package, nil

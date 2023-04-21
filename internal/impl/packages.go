@@ -18,7 +18,6 @@ import (
 	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
@@ -31,11 +30,6 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	defer task.End()
 
 	pkgs = lo.Uniq(pkgs)
-
-	pkgs, err := searcher.GenLockedReferences(pkgs)
-	if err != nil {
-		return err
-	}
 
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.

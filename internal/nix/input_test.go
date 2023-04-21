@@ -79,7 +79,7 @@ func TestInput(t *testing.T) {
 		if name := i.Name(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
-		if urlWithoutFragment := i.URLWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
+		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
 			t.Errorf("URLWithoutFragment() = %v, want %v", urlWithoutFragment, testCase.urlWithoutFragment)
 		}
 		if packages := i.Package(); !reflect.DeepEqual(testCase.packageName, packages) {

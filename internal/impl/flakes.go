@@ -15,15 +15,15 @@ func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
 			if err != nil {
 				panic(err)
 			}
-			if input, ok := inputs[pkg.URLWithoutFragment()]; !ok {
-				inputs[pkg.URLWithoutFragment()] = &plansdk.FlakeInput{
+			if input, ok := inputs[pkg.URLForInput()]; !ok {
+				inputs[pkg.URLForInput()] = &plansdk.FlakeInput{
 					Name:     pkg.Name(),
-					URL:      pkg.URLWithoutFragment(),
+					URL:      pkg.URLForInput(),
 					Packages: []string{AttributePath},
 				}
 			} else {
 				input.Packages = lo.Uniq(
-					append(inputs[pkg.URLWithoutFragment()].Packages, AttributePath),
+					append(inputs[pkg.URLForInput()].Packages, AttributePath),
 				)
 			}
 		}

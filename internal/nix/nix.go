@@ -64,7 +64,13 @@ func PkgInfo(nixpkgsCommit, pkg string) *Info {
 func search(url string) map[string]*Info {
 	cmd := exec.Command("nix", "search", "--json", url)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Stderr = os.Stderr
+	input := AbsoluteInputFromString(url)
+	// Temporary hack until devbox packages include lock file
+	if input.IsDevboxPackage() {
+		cmd.Args = append(cmd.Args, "--no-write-lock-file")
+	} else {
+		cmd.Stderr = os.Stderr // This is noisy when --no-write-lock-file is set
+	}
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
