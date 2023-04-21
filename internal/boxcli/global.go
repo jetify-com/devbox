@@ -152,6 +152,7 @@ func installGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
 	return nil
 }
 
