@@ -100,10 +100,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
 	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
-
-	var missingPkgs []string
-	d.cfg.RawPackages, missingPkgs = lo.Difference(d.cfg.RawPackages, pkgs)
-
+	remainingPkgs, missingPkgs := lo.Difference(d.cfg.RawPackages, pkgs)
 	if len(missingPkgs) > 0 {
 		ux.Fwarning(
 			d.writer,
@@ -111,6 +108,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 			strings.Join(missingPkgs, ", "),
 		)
 	}
+	d.cfg.RawPackages = remainingPkgs
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
