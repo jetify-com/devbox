@@ -4,7 +4,7 @@
 // Package pkgslice manipulates slices of devbox package names.
 package pkgslice
 
-func Unique(s []string) []string {
+func Unique(s []string) []string { // TODO: replace with lo.Uniq(s)?
 	deduped := make([]string, 0, len(s))
 	seen := make(map[string]bool, len(s))
 	for _, str := range s {

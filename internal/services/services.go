@@ -79,8 +79,7 @@ func listenToAutoPortForwardingChangesOnRemote(
 	)
 }
 
-func printProxyURL(w io.Writer, services Services) error {
-
+func printProxyURL(w io.Writer, services Services) error { // TODO: remove it?
 	if !envir.IsDevboxCloud() {
 		return nil
 	}

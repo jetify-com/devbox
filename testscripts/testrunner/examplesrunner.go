@@ -13,7 +13,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rogpeppe/go-internal/testscript"
+
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/impl"
 )
 
@@ -93,19 +95,19 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 
 	// save a reference to the original params.Setup so that we can wrap it below
 	setup := params.Setup
-	params.Setup = func(env *testscript.Env) error {
+	params.Setup = func(envs *testscript.Env) error {
 
 		// We set a custom XDG_STATE_HOME to an intentionally short path.
 		// Reason: devbox plugins like postgres store unix socket files in their state dir.
-		env.Setenv("XDG_STATE_HOME", xdgStateHomeDir)
+		envs.Setenv(env.XDGStateHome, xdgStateHomeDir)
 
 		// setup the devbox testscript environment
-		if err := setup(env); err != nil {
+		if err := setup(envs); err != nil {
 			return errors.WithStack(err)
 		}
 
 		// copy all the files and folders of the devbox-project being tested to the workdir
-		debug.Log("copying projectDir: %s to env.WorkDir: %s\n", projectDir, env.WorkDir)
+		debug.Log("copying projectDir: %s to env.WorkDir: %s\n", projectDir, envs.WorkDir)
 		// implementation detail: the period at the end of the projectDir/.
 		// is important to ensure this works for both mac and linux.
 		// Ref.https://dev.to/ackshaey/macos-vs-linux-the-cp-command-will-trip-you-up-2p00
@@ -117,7 +119,7 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 			return errors.WithStack(err)
 		}
 
-		cmd = exec.Command("cp", "-r", projectDir+"/.", env.WorkDir)
+		cmd = exec.Command("cp", "-r", projectDir+"/.", envs.WorkDir)
 		debug.Log("Running cmd: %s\n", cmd)
 		err = cmd.Run()
 		return errors.WithStack(err)

@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -94,7 +95,7 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 	}()
 
 	// First, check the SHELL environment variable.
-	path = os.Getenv("SHELL")
+	path = os.Getenv(env.Shell)
 	if path != "" {
 		debug.Log("Using SHELL env var for shell binary path: %s\n", path)
 		return path, nil
@@ -148,7 +149,7 @@ func initShellBinaryFields(path string) *DevboxShell {
 		shell.userShellrcPath = fishConfig()
 	case "dash", "ash", "shell":
 		shell.name = shPosix
-		shell.userShellrcPath = os.Getenv("ENV")
+		shell.userShellrcPath = os.Getenv(env.Env)
 
 		// Just make up a name if there isn't already an init file set
 		// so we have somewhere to put a new one.

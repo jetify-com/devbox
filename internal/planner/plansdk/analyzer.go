@@ -4,15 +4,15 @@
 package plansdk
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/bmatcuk/doublestar/v4"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
-// Analyzers help understand the source code present in a given directory
+// Analyzer helps understand the source code present in a given directory
 // Handy when implementing new Planners that need to analyze files in order
 // to determine what to do.
 type Analyzer struct {
@@ -58,9 +58,8 @@ func (a *Analyzer) GlobFiles(patterns ...string) []string {
 	return results
 }
 
-func (a *Analyzer) FileExists(relPath string) bool { // TODO: remove it?
-	_, err := os.Stat(a.AbsPath(relPath))
-	return err == nil
+func (a *Analyzer) FileExists(relPath string) bool {
+	return fileutil.Exists(a.AbsPath(relPath))
 }
 
 func (a *Analyzer) HasAnyFile(patterns ...string) bool {

@@ -5,7 +5,9 @@ import (
 	"strconv"
 
 	"github.com/denisbrodbeck/machineid"
+
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 var DeviceID string
@@ -33,8 +35,8 @@ func Enabled() bool {
 	return enabled
 }
 
-func DoNotTrack() bool {
+func DoNotTrack() bool { // TODO: move to env utils
 	// https://consoledonottrack.com/
-	doNotTrack, _ := strconv.ParseBool(os.Getenv("DO_NOT_TRACK"))
+	doNotTrack, _ := strconv.ParseBool(os.Getenv(env.DoNotTrack))
 	return doNotTrack
 }

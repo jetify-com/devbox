@@ -14,6 +14,7 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
@@ -197,7 +198,7 @@ func ensureGlobalProfileInPath() error {
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(os.Getenv("PATH"), binPath) {
+	if !strings.Contains(os.Getenv(env.Path), binPath) {
 		return warningNotInPath
 	}
 	return nil

@@ -12,8 +12,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -43,7 +45,7 @@ func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
 	if d.flag.Changed {
 		strVal = d.flag.Value.String()
 	} else {
-		strVal = os.Getenv("DEVBOX_DEBUG")
+		strVal = os.Getenv(env.DevboxDebug)
 	}
 	if enabled, _ := strconv.ParseBool(strVal); enabled {
 		debug.Enable()

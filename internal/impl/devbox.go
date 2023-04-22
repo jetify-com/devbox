@@ -29,6 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lockfile"
@@ -176,18 +177,18 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-	env["DEVBOX_SHELL_ENABLED"] = "1"
+	envs[env.DevboxShellEnabled] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
-	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
+	shellStartTime := os.Getenv(env.DevboxShellStartTime)
 	if shellStartTime == "" {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
 	}
@@ -197,7 +198,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
-		WithEnvVariables(env),
+		WithEnvVariables(envs),
 		WithShellStartTime(shellStartTime),
 	}
 
@@ -981,13 +982,12 @@ func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
 }
 
-// Move to a utility package?
-func IsDevboxShellEnabled() bool {
-	inDevboxShell, _ := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
+func IsDevboxShellEnabled() bool { // TODO: move to env utils
+	inDevboxShell, _ := strconv.ParseBool(os.Getenv(env.DevboxShellEnabled))
 	return inDevboxShell
 }
 
-func commandExists(command string) bool {
+func commandExists(command string) bool { // TODO: move to a utility package
 	_, err := exec.LookPath(command)
 	return err == nil
 }

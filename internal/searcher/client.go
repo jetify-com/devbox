@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh/search"
@@ -19,8 +21,8 @@ type client struct {
 
 func NewClient() *client {
 	endpoint := searchAPIEndpoint
-	if os.Getenv("DEVBOX_SEARCH_ENDPOINT") != "" {
-		endpoint = os.Getenv("DEVBOX_SEARCH_ENDPOINT")
+	if os.Getenv(env.DevboxSearchEndpoint) != "" {
+		endpoint = os.Getenv(env.DevboxSearchEndpoint)
 	}
 	return &client{
 		endpoint: endpoint,
