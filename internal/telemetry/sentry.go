@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -252,7 +253,7 @@ func bufferEvent(event *sentry.Event) {
 
 	file := filepath.Join(errorBufferDir, string(event.EventID)+".json")
 	err = os.WriteFile(file, data, 0600)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// XDG specifies perms 0700.
 		if err := os.MkdirAll(errorBufferDir, 0700); err != nil {
 			return

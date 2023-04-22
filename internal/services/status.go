@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -93,7 +94,7 @@ func initCloudDir(projectDir, hostID string) error {
 	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0755)
 	gitignorePath := filepath.Join(cloudDirPath, ".gitignore")
 	_, err := os.Stat(gitignorePath)
-	if !os.IsNotExist(err) {
+	if !errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 	return errors.WithStack(os.WriteFile(gitignorePath, []byte("*"), 0644))
@@ -130,7 +131,8 @@ func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
 }
 
 func readServiceStatus(path string) (*ServiceStatus, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	_, err := os.Stat(path)
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
 	}
 

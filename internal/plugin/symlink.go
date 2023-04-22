@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -49,7 +50,7 @@ func createVirtenvSymlink(w io.Writer, projectDir string) (string, error) {
 
 	// Create the symlink
 	virtenvPath := filepath.Join(projectDir, VirtenvPath)
-	if err := os.Symlink(virtenvPath, symlinkPath); err != nil && !errors.Is(err, os.ErrExist) {
+	if err := os.Symlink(virtenvPath, symlinkPath); err != nil && !errors.Is(err, fs.ErrExist) {
 		return "", errors.WithStack(err)
 	}
 	return symlinkPath, nil

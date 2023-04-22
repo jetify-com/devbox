@@ -39,11 +39,6 @@ func IsFile(path string) bool {
 }
 
 func Exists(path string) bool {
-	err := TryExists(path)
-	return err == nil
-}
-
-func TryExists(path string) error {
 	_, err := os.Stat(path)
-	return err
+	return err == nil
 }
