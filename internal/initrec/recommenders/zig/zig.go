@@ -12,7 +12,7 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {

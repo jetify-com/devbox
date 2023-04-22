@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/bmatcuk/doublestar/v4"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
@@ -57,7 +58,7 @@ func (a *Analyzer) GlobFiles(patterns ...string) []string {
 	return results
 }
 
-func (a *Analyzer) FileExists(relPath string) bool {
+func (a *Analyzer) FileExists(relPath string) bool { // TODO: remove it?
 	_, err := os.Stat(a.AbsPath(relPath))
 	return err == nil
 }

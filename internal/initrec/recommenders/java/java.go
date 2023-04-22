@@ -1,5 +1,6 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package java
 
 import (
@@ -10,7 +11,9 @@ import (
 
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
@@ -45,13 +48,13 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
 	pomXMLPath := filepath.Join(r.SrcDir, mavenFileName)
 	buildGradlePath := filepath.Join(r.SrcDir, gradleFileName)
-	return plansdk.FileExists(pomXMLPath) || plansdk.FileExists(buildGradlePath)
+	return fileutil.Exists(pomXMLPath) || fileutil.Exists(buildGradlePath)
 }
 
 func (r *Recommender) Packages() []string {
@@ -67,13 +70,13 @@ func (r *Recommender) Packages() []string {
 func (r *Recommender) packageManager() (string, error) {
 	pomXMLPath := filepath.Join(r.SrcDir, mavenFileName)
 	buildGradlePath := filepath.Join(r.SrcDir, gradleFileName)
-	if plansdk.FileExists(pomXMLPath) {
+	if fileutil.Exists(pomXMLPath) {
 		return MavenType, nil
-	} else if plansdk.FileExists(buildGradlePath) {
-		return GradleType, nil
-	} else {
-		return "", errors.New("could not locate a Maven or Gradle file")
 	}
+	if fileutil.Exists(buildGradlePath) {
+		return GradleType, nil
+	}
+	return "", errors.New("could not locate a Maven or Gradle file")
 }
 
 func (r *Recommender) devPackages(builderTool string) ([]string, error) {
