@@ -15,9 +15,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
@@ -156,12 +158,12 @@ func findProjectDirAtPath(absPath string) (string, error) {
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		if !plansdk.FileExists(filepath.Join(absPath, configFilename)) {
+		if !fileutil.Exists(filepath.Join(absPath, configFilename)) {
 			return "", missingConfigError(absPath, false /*didCheckParents*/)
 		}
 		return absPath, nil
 	default: // assumes 'file' i.e. mode.IsRegular()
-		if !plansdk.FileExists(filepath.Clean(absPath)) {
+		if !fileutil.Exists(filepath.Clean(absPath)) {
 			return "", missingConfigError(absPath, false /*didCheckParents*/)
 		}
 		// we return a directory from this function
@@ -174,12 +176,12 @@ func findProjectDirFromParentDirSearch(root string, absPath string) (string, err
 	// Search parent directories for a devbox.json
 	for cur != root {
 		debug.Log("finding %s in dir: %s\n", configFilename, cur)
-		if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+		if fileutil.Exists(filepath.Join(cur, configFilename)) {
 			return cur, nil
 		}
 		cur = filepath.Dir(cur)
 	}
-	if plansdk.FileExists(filepath.Join(cur, configFilename)) {
+	if fileutil.Exists(filepath.Join(cur, configFilename)) {
 		return cur, nil
 	}
 	return "", missingConfigError(absPath, true /*didCheckParents*/)

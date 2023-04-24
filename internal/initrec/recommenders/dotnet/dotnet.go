@@ -1,5 +1,6 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package dotnet
 
 import (
@@ -7,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -25,7 +27,7 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Suggestor (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {

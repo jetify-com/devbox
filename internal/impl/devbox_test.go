@@ -10,6 +10,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
+
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -34,7 +36,7 @@ func testShellPlan(t *testing.T, testPath string) {
 		t.Setenv("XDG_DATA_HOME", "/tmp/devbox")
 		assert := assert.New(t)
 		shellPlanFile := filepath.Join(baseDir, "shell_plan.json")
-		hasShellPlanFile := fileExists(shellPlanFile)
+		hasShellPlanFile := fileutil.Exists(shellPlanFile)
 
 		box, err := Open(baseDir, os.Stdout)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
@@ -58,9 +60,4 @@ func assertShellPlansMatch(t *testing.T, expected *plansdk.ShellPlan, actual *pl
 	assert := assert.New(t)
 
 	assert.ElementsMatch(expected.DevPackages, actual.DevPackages, "DevPackages should match")
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }

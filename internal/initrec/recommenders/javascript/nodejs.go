@@ -1,11 +1,13 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package javascript
 
 import (
 	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
@@ -14,12 +16,12 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
 	packageJSONPath := filepath.Join(r.SrcDir, "package.json")
-	return plansdk.FileExists(packageJSONPath)
+	return fileutil.Exists(packageJSONPath)
 }
 
 func (r *Recommender) Packages() []string {
@@ -73,7 +75,7 @@ func (r *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
 
 func (r *Recommender) packageManager() string {
 	yarnPkgLockPath := filepath.Join(r.SrcDir, "yarn.lock")
-	if plansdk.FileExists(yarnPkgLockPath) {
+	if fileutil.Exists(yarnPkgLockPath) {
 		return "yarn"
 	}
 	return "npm"

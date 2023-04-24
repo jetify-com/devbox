@@ -328,7 +328,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
 	// check if devcontainer.json or Dockerfile exist
-	filesExist := plansdk.FileExists(devContainerJSONPath) || plansdk.FileExists(dockerfilePath)
+	filesExist := fileutil.Exists(devContainerJSONPath) || fileutil.Exists(dockerfilePath)
 	if !force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
@@ -361,7 +361,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
-	filesExist := plansdk.FileExists(dockerfilePath)
+	filesExist := fileutil.Exists(dockerfilePath)
 	if !force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +

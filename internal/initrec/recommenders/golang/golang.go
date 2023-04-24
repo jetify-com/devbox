@@ -1,13 +1,16 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package golang
 
 import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"golang.org/x/mod/modfile"
+
+	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetpack.io/devbox/internal/initrec/recommenders"
 )
 
 var versionMap = map[string]string{
@@ -23,12 +26,11 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
-	goModPath := filepath.Join(r.SrcDir, "go.mod")
-	return fileExists(goModPath)
+	return fileutil.Exists(filepath.Join(r.SrcDir, "go.mod"))
 }
 
 func (r *Recommender) Packages() []string {
@@ -62,9 +64,4 @@ func parseGoVersion(gomodPath string) string {
 		return ""
 	}
 	return parsed.Go.Version
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }
