@@ -348,10 +348,12 @@ func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 		filenames := []string{".zshenv", ".zprofile", ".zlogin"}
 		for _, filename := range filenames {
 			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
-			if _, err := os.Stat(fileOld); errors.Is(err, fs.ErrNotExist) {
+			_, err := os.Stat(fileOld)
+			if errors.Is(err, fs.ErrNotExist) {
 				// this file may not be relevant for the user's setup.
 				continue
-			} else if err != nil {
+			}
+			if err != nil {
 				debug.Log("os.Stat error for %s is %v", fileOld, err)
 			}
 

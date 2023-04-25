@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -186,7 +187,8 @@ func globalBinPath() (string, error) {
 	currentPath := xdg.DataSubpath("devbox/global/current")
 	// For now default is always current. In the future we will support multiple
 	// and allow user to switch.
-	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
+	err = os.Symlink(nixProfilePath, currentPath)
+	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return "", errors.WithStack(err)
 	}
 	return filepath.Join(currentPath, "bin"), nil

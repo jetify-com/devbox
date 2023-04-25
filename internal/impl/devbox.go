@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1043,7 +1044,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
 }
 
-// nix bins returns the paths to all the nix binaries that are installed by
+// NixBins returns the paths to all the nix binaries that are installed by
 // the flake. If there are conflicts, it returns the first one it finds of a
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
@@ -1057,7 +1058,7 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	bins := map[string]string{}
 	for _, dir := range dirs {
 		binPath := filepath.Join(dir, "bin")
-		if _, err = os.Stat(binPath); os.IsNotExist(err) {
+		if _, err = os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 		files, err := os.ReadDir(binPath)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -87,7 +88,8 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 
 	// Ensure the nixpkgs commit file path exists so we can write an update to it
 	path := nixpkgsCommitFilePath()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+	err = os.MkdirAll(filepath.Dir(path), 0755)
+	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.WithStack(err)
 	}
 

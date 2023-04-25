@@ -1,10 +1,12 @@
 package sshshim
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 )
@@ -37,12 +39,13 @@ func Setup() error {
 }
 
 func makeSymlink(from string, target string) error {
-	if err := os.Remove(from); err != nil && !os.IsNotExist(err) {
+	err := os.Remove(from)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return errors.WithStack(err)
 	}
 
-	err := os.Symlink(target, from)
-	if os.IsExist(err) {
+	err = os.Symlink(target, from)
+	if errors.Is(err, fs.ErrExist) {
 		err = nil
 	}
 	return errors.WithStack(err)

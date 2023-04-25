@@ -213,7 +213,7 @@ func containsDevboxInclude(r io.Reader) bool {
 
 // move to a file utility
 func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
-	if err := os.Mkdir(path, perm); err != nil && !errors.Is(err, os.ErrExist) {
+	if err := os.Mkdir(path, perm); err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.WithStack(err)
 	}
 	if chmod {
@@ -301,7 +301,7 @@ type atomicEdit struct {
 func editFile(path string, perm os.FileMode) (*atomicEdit, error) {
 	// editFile will be nil when creating a new file.
 	editFile, err := os.Open(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, errors.WithStack(err)
 	}
 

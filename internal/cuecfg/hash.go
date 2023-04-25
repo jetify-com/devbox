@@ -3,12 +3,14 @@ package cuecfg
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"io/fs"
 	"os"
 )
 
 func FileHash(path string) (string, error) {
 	data, err := os.ReadFile(path)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return "", err
 	}
 	hash := sha256.Sum256(data)

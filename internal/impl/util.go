@@ -1,10 +1,12 @@
 package impl
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -43,7 +45,8 @@ func utilityLookPath(binName string) (string, error) {
 		return "", err
 	}
 	absPath := filepath.Join(binPath, binName)
-	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+	_, err = os.Stat(absPath)
+	if errors.Is(err, fs.ErrNotExist) {
 		return "", err
 	}
 	return absPath, nil

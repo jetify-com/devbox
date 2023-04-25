@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -325,7 +326,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}()
 
 	dir, err := filepath.EvalSymlinks(profileDir)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 	if err != nil {
@@ -334,7 +335,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 
 	// older nix profiles have a manifest.nix file present
 	_, err = os.Stat(filepath.Join(dir, "manifest.nix"))
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 	if err != nil {

@@ -27,13 +27,13 @@ const xdgStateHomeDir = "/tmp/devbox-example-testscripts"
 
 // RunExamplesTestscripts generates testscripts for each example devbox-project.
 func RunExamplesTestscripts(t *testing.T, examplesDir string) {
-
 	// ensure the state home dir for devbox exists
-	if err := os.MkdirAll(xdgStateHomeDir, 0700); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	err := os.MkdirAll(xdgStateHomeDir, 0700)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		t.Error(err)
 	}
 
-	err := filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
+	err = filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

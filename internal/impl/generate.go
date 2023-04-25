@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -106,7 +107,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 		perm    = fs.FileMode(0644)
 	)
 	outFile, err := os.OpenFile(outPath, flag, perm)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		if err := os.MkdirAll(path, 0755); err != nil {
 			return errors.WithStack(err)
 		}
@@ -202,7 +203,7 @@ func isProjectInGitRepo(dir string) bool {
 			// Found a .git
 			return true
 		}
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, fs.ErrNotExist) {
 			// An error means we will not find a git repo so return false
 			return false
 		}

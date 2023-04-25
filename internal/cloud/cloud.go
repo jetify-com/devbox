@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -528,7 +529,7 @@ func gitIgnorePaths(projectDir string) ([]string, error) {
 
 	fpath := filepath.Join(projectDir, ".gitignore")
 	if _, err := os.Stat(fpath); err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return result, nil
 		}
 		return nil, errors.WithStack(err)
@@ -583,7 +584,7 @@ func ensureProjectDirIsNotSensitive(dir string) error {
 		// (and potentially syncing all the code to devbox-cloud)
 		_, err := os.Stat(filepath.Join(dir, ".git"))
 		if err != nil {
-			if os.IsNotExist(err) {
+			if errors.Is(err, fs.ErrNotExist) {
 				return usererr.New(
 					"Found a config (devbox.json) file at %s, "+
 						"but since it is a sensitive directory we require it to be part of a git repository "+

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -110,7 +111,7 @@ func createWrapper(args *createWrapperArgs) error {
 // will contain the union of both. We need to do the same.
 func createSymlinksForSupportDirs(projectDir string) error {
 	profilePath := filepath.Join(projectDir, nix.ProfilePath)
-	if _, err := os.Stat(profilePath); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(profilePath); errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 
