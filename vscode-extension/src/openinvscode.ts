@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { exec } from 'child_process';
 import * as FormData from 'form-data';
 import { Uri, commands, window } from 'vscode';
-import { chmod, open, writeFile } from 'fs/promises';
+import { chmod, mkdir, open, writeFile } from 'fs/promises';
 
 type VmInfo = {
     /* eslint-disable @typescript-eslint/naming-convention */
@@ -104,8 +104,11 @@ async function setupSSHConfig(vmId: string, prKey: string) {
         console.debug(`stdout: ${stdout}`);
         console.debug(`stderr: ${stderr}`);
     });
+
     // save private key to file
-    const prkeyPath = `${process.env['HOME']}/.config/devbox/ssh/keys/${vmId}.vm.devbox-vms.internal`;
+    const prkeyDir = `${process.env['HOME']}/.config/devbox/ssh/keys`;
+    await ensureDir(prkeyDir);
+    const prkeyPath = `${prkeyDir}/${vmId}.vm.devbox-vms.internal`;
     try {
         const prKeydata = new Uint8Array(Buffer.from(prKey));
         const fileHandler = await open(prkeyPath, 'w');
@@ -128,5 +131,16 @@ function connectToRemote(username: string, vmId: string, workDir: string) {
         commands.executeCommand("vscode.openFolder", uriToOpen, false);
     } catch (err: any) {
         console.error('failed to connect to remote: ' + err);
+    }
+}
+
+async function ensureDir(dir: string) {
+    try {
+        await mkdir(dir, {recursive: true, mode: 0o700});
+    } catch (err: any) {
+        if (err.code !== 'EEXIST') {
+            console.error('Failed to setup ssh keys directory: ' + err);
+            throw (err);
+        }
     }
 }
