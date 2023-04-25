@@ -25,4 +25,4 @@ if [[ "$__DEVBOX_SHELLENV_HASH" != "{{ .ShellEnvHash }}" ]]; then
 eval "$(DO_NOT_TRACK=1 devbox shellenv)"
 fi
 
-{{ .Command }} "$@"
+exec {{ .Command }} "$@"
