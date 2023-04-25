@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"runtime"
-	"strconv"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
@@ -17,7 +15,7 @@ import (
 var enabled bool
 
 func init() {
-	enabled, _ = strconv.ParseBool(os.Getenv(env.DevboxDebug))
+	enabled = env.IsDevboxDebugEnabled()
 }
 
 func IsEnabled() bool { return enabled }

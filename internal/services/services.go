@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cloud/envir"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 type Services map[string]Service
@@ -43,7 +43,7 @@ func listenToAutoPortForwardingChangesOnRemote(
 	action serviceAction,
 	cancel context.CancelFunc,
 ) error {
-	if !envir.IsCLICloudShell() {
+	if !env.IsCLICloudShell() {
 		return nil
 	}
 
@@ -80,7 +80,7 @@ func listenToAutoPortForwardingChangesOnRemote(
 }
 
 func printProxyURL(w io.Writer, services Services) error { // TODO: remove it?
-	if !envir.IsDevboxCloud() {
+	if !env.IsDevboxCloud() {
 		return nil
 	}
 

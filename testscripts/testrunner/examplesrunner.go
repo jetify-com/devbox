@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -60,10 +59,9 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		if strings.Contains(path, "pipenv") {
 			// pipenv takes 1100 seconds on CICD
 
-			// CI env var is always true in Github Actions
+			// CI env var is always true in GitHub Actions
 			// https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
-			ciEnv, err := strconv.ParseBool(os.Getenv("CI"))
-			isInCI := ciEnv && err == nil
+			isInCI := env.IsCI()
 			if isInCI && runtime.GOOS == "darwin" {
 				t.Logf("skipping pipenv on darwin in CI. config at: %s\n", path)
 				return nil

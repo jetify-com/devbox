@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -106,7 +105,7 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
-	if notUpgrade, _ := strconv.ParseBool(os.Getenv(env.DevboxDoNotUpgradeConfig)); notUpgrade {
+	if env.NotUpgradeConfig() {
 		return nil
 	}
 	if cfg.Nixpkgs.Commit == "" {
