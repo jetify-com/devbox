@@ -41,7 +41,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	bashPath, err := exec.LookPath("bash")
 	if err != nil {
-		return err
+		bashPath = "/bin/bash"
 	}
 
 	// Remove all old wrappers
