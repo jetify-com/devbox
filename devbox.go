@@ -61,10 +61,6 @@ func InitConfig(dir string, writer io.Writer) (bool, error) {
 	return impl.InitConfig(dir, writer)
 }
 
-func IsDevboxShellEnabled() bool {
-	return impl.IsDevboxShellEnabled()
-}
-
 func GlobalDataPath() (string, error) {
 	return impl.GlobalDataPath()
 }

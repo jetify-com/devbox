@@ -5,7 +5,6 @@ package boxcli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -14,7 +13,6 @@ import (
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
-	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/env"
 )
 
@@ -136,7 +134,7 @@ func cloudPortForwardList() *cobra.Command {
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud shell` when already in the VM is not allowed.
-	if region := envir.GetRegion(); region != "" {
+	if env.IsDevboxCloud() {
 		return shellInceptionErrorMsg("devbox cloud shell")
 	}
 
@@ -149,7 +147,7 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 
 func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud init` when already in the VM is not allowed.
-	if region := os.Getenv(env.DevboxRegion); region != "" {
+	if env.IsDevboxCloud() {
 		return shellInceptionErrorMsg("devbox cloud init")
 	}
 

@@ -13,7 +13,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -464,7 +463,7 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
@@ -501,7 +500,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 }
 
 func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		args := []string{"services", "stop"}
 		args = append(args, serviceNames...)
 		if allProjects {
@@ -540,7 +539,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 }
 
 func (d *Devbox) ListServices(ctx context.Context) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", []string{"services", "ls"})
 	}
 
@@ -578,7 +577,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
@@ -644,7 +643,7 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
@@ -981,11 +980,6 @@ func (d *Devbox) globalCommitHash() string {
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
-}
-
-func IsDevboxShellEnabled() bool { // TODO: move to env utils
-	inDevboxShell, _ := strconv.ParseBool(os.Getenv(env.DevboxShellEnabled))
-	return inDevboxShell
 }
 
 func commandExists(command string) bool { // TODO: move to a utility package

@@ -11,6 +11,7 @@ import (
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 type shellCmdFlags struct {
@@ -59,7 +60,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return nil // return here to prevent opening a devbox shell
 	}
 
-	if devbox.IsDevboxShellEnabled() {
+	if env.IsDevboxShellEnabled() {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
