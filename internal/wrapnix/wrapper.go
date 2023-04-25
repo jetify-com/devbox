@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"text/template"
 
@@ -38,13 +39,10 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	shell, ok := os.LookupEnv("CONFIG_SHELL")
-        if !ok {
-            shell, ok = os.LookupEnv("SHELL")
-            if !ok {
-                shell = "/bin/bash"
-            }
-        }
+	bashPath, err := exec.LookPath("bash")
+	if err != nil {
+		return err
+	}
 
 	// Remove all old wrappers
 	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
@@ -55,19 +53,19 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
+			BashPath:     bashPath,
 			Command:      service.Start,
 			Env:          service.Env,
 			ShellEnvHash: shellEnvHash,
-			EnvShell:     shell,
 			destPath:     filepath.Join(destPath, service.StartName()),
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
+			BashPath:     bashPath,
 			Command:      service.Stop,
 			Env:          service.Env,
 			ShellEnvHash: shellEnvHash,
-			EnvShell:     shell,
 			destPath:     filepath.Join(destPath, service.StopName()),
 		}); err != nil {
 			return err
@@ -81,9 +79,9 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
+			BashPath:     bashPath,
 			Command:      bin,
 			ShellEnvHash: shellEnvHash,
-			EnvShell:     shell,
 			destPath:     filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
@@ -94,10 +92,10 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 }
 
 type createWrapperArgs struct {
+	BashPath     string
 	Command      string
 	Env          map[string]string
 	ShellEnvHash string
-	EnvShell     string
 
 	destPath string
 }
