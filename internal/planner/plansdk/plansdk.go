@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
+	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/env"
-	"go.jetpack.io/devbox/internal/pkgslice"
 )
 
 type PlanError struct {
@@ -75,10 +75,10 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 		}
 	}
 
-	shellPlan.DevPackages = pkgslice.Unique(shellPlan.DevPackages)
-	shellPlan.GlobalPackages = pkgslice.Unique(shellPlan.GlobalPackages)
-	shellPlan.Definitions = pkgslice.Unique(shellPlan.Definitions)
-	shellPlan.ShellInitHook = pkgslice.Unique(shellPlan.ShellInitHook)
+	shellPlan.DevPackages = lo.Uniq(shellPlan.DevPackages)
+	shellPlan.GlobalPackages = lo.Uniq(shellPlan.GlobalPackages)
+	shellPlan.Definitions = lo.Uniq(shellPlan.Definitions)
+	shellPlan.ShellInitHook = lo.Uniq(shellPlan.ShellInitHook)
 
 	return shellPlan, nil
 }
