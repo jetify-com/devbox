@@ -106,7 +106,7 @@ async function setupSSHConfig(vmId: string, prKey: string) {
     });
 
     // save private key to file
-    const prkeyDir = `${process.env['HOME']}/.config/devbox/ssh/keys/`;
+    const prkeyDir = `${process.env['HOME']}/.config/devbox/ssh/keys`;
     await ensureDir(prkeyDir);
     const prkeyPath = `${prkeyDir}/${vmId}.vm.devbox-vms.internal`;
     try {
