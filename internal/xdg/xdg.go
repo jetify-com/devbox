@@ -3,6 +3,8 @@ package xdg
 import (
 	"os"
 	"path/filepath"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
 func DataSubpath(subpath string) string {
@@ -21,10 +23,10 @@ func StateSubpath(subpath string) string {
 	return filepath.Join(stateDir(), subpath)
 }
 
-func dataDir() string   { return resolveDir("XDG_DATA_HOME", ".local/share") }
-func configDir() string { return resolveDir("XDG_CONFIG_HOME", ".config") }
-func cacheDir() string  { return resolveDir("XDG_CACHE_HOME", ".cache") }
-func stateDir() string  { return resolveDir("XDG_STATE_HOME", ".local/state") }
+func dataDir() string   { return resolveDir(env.XDGDataHome, ".local/share") }
+func configDir() string { return resolveDir(env.XDGConfigHome, ".config") }
+func cacheDir() string  { return resolveDir(env.XDGCacheHome, ".cache") }
+func stateDir() string  { return resolveDir(env.XDGStateHome, ".local/state") }
 
 func resolveDir(envvar string, defaultPath string) string {
 	dir := os.Getenv(envvar)

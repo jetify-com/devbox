@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ func Remove(projectDir string, pkgs []string) error {
 
 func RemoveInvalidSymlinks(projectDir string) error {
 	binPath := filepath.Join(projectDir, VirtenvBinPath)
-	if _, err := os.Stat(binPath); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 	dirEntry, err := os.ReadDir(binPath)
@@ -27,7 +28,7 @@ func RemoveInvalidSymlinks(projectDir string) error {
 	}
 	for _, entry := range dirEntry {
 		_, err := os.Stat(filepath.Join(projectDir, VirtenvBinPath, entry.Name()))
-		if errors.Is(err, os.ErrNotExist) {
+		if errors.Is(err, fs.ErrNotExist) {
 			os.Remove(filepath.Join(projectDir, VirtenvBinPath, entry.Name()))
 		}
 	}

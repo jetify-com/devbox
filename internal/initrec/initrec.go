@@ -5,6 +5,7 @@ package initrec
 
 import (
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/initrec/recommenders/dotnet"
 	"go.jetpack.io/devbox/internal/initrec/recommenders/golang"

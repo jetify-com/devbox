@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/redact"
 )
@@ -322,9 +325,10 @@ type manifest struct {
 
 func readManifest(profilePath string) (manifest, error) {
 	data, err := os.ReadFile(filepath.Join(profilePath, "manifest.json"))
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return manifest{}, nil
-	} else if err != nil {
+	}
+	if err != nil {
 		return manifest{}, err
 	}
 

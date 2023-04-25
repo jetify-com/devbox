@@ -3,6 +3,7 @@ package impl
 import (
 	"errors"
 	"flag"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 		test.hooksFilePath = scriptPath(projectDir, hooksFilename)
 
 		test.shellrcPath = filepath.Join(path, "shellrc")
-		if _, err := os.Stat(test.shellrcPath); errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(test.shellrcPath); errors.Is(err, fs.ErrNotExist) {
 			test.shellrcPath = ""
 		}
 		test.goldShellrcPath = filepath.Join(path, "shellrc.golden")

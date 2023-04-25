@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cloud/envir"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating
@@ -93,7 +94,7 @@ func initCloudDir(projectDir, hostID string) error {
 	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0755)
 	gitignorePath := filepath.Join(cloudDirPath, ".gitignore")
 	_, err := os.Stat(gitignorePath)
-	if !os.IsNotExist(err) {
+	if !errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
 	return errors.WithStack(os.WriteFile(gitignorePath, []byte("*"), 0644))
@@ -117,7 +118,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 
 //lint:ignore U1000 Ignore unused function temporarily for debugging
 func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
-	if !envir.IsDevboxCloud() {
+	if !env.IsDevboxCloud() {
 		return nil
 	}
 	host, err := os.Hostname()
@@ -130,7 +131,8 @@ func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
 }
 
 func readServiceStatus(path string) (*ServiceStatus, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	_, err := os.Stat(path)
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
 	}
 

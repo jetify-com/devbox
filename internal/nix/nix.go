@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -122,7 +123,7 @@ func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, e
 			if err := json.Unmarshal(data, &out); err != nil {
 				return nil, errors.WithStack(err)
 			}
-		} else if !errors.Is(err, os.ErrNotExist) {
+		} else if !errors.Is(err, fs.ErrNotExist) {
 			return nil, errors.WithStack(err)
 		}
 	}

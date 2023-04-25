@@ -9,14 +9,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
 
 func searchHost() string {
 	endpoint := searchAPIEndpoint
-	if os.Getenv("DEVBOX_SEARCH_HOST") != "" {
-		endpoint = os.Getenv("DEVBOX_SEARCH_HOST")
+	if os.Getenv(env.DevboxSearchHost) != "" {
+		endpoint = os.Getenv(env.DevboxSearchHost)
 	}
 	return endpoint
 }

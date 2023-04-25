@@ -8,11 +8,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -29,6 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lockfile"
@@ -176,18 +177,18 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-	env["DEVBOX_SHELL_ENABLED"] = "1"
+	envs[env.DevboxShellEnabled] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
-	shellStartTime := os.Getenv("DEVBOX_SHELL_START_TIME")
+	shellStartTime := os.Getenv(env.DevboxShellStartTime)
 	if shellStartTime == "" {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
 	}
@@ -197,7 +198,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
-		WithEnvVariables(env),
+		WithEnvVariables(envs),
 		WithShellStartTime(shellStartTime),
 	}
 
@@ -462,7 +463,7 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
@@ -499,7 +500,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 }
 
 func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		args := []string{"services", "stop"}
 		args = append(args, serviceNames...)
 		if allProjects {
@@ -538,7 +539,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 }
 
 func (d *Devbox) ListServices(ctx context.Context) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", []string{"services", "ls"})
 	}
 
@@ -576,7 +577,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
@@ -642,7 +643,7 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !IsDevboxShellEnabled() {
+	if !env.IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
@@ -981,13 +982,7 @@ func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
 }
 
-// Move to a utility package?
-func IsDevboxShellEnabled() bool {
-	inDevboxShell, _ := strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
-	return inDevboxShell
-}
-
-func commandExists(command string) bool {
+func commandExists(command string) bool { // TODO: move to a utility package
 	_, err := exec.LookPath(command)
 	return err == nil
 }
@@ -1043,7 +1038,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
 }
 
-// nix bins returns the paths to all the nix binaries that are installed by
+// NixBins returns the paths to all the nix binaries that are installed by
 // the flake. If there are conflicts, it returns the first one it finds of a
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
@@ -1057,7 +1052,7 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	bins := map[string]string{}
 	for _, dir := range dirs {
 		binPath := filepath.Join(dir, "bin")
-		if _, err = os.Stat(binPath); os.IsNotExist(err) {
+		if _, err = os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 		files, err := os.ReadDir(binPath)

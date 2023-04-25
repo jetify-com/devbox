@@ -12,9 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
+
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cloud/envir"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 // cmdStartTime records the time at the start of any devbox command invocation.
@@ -78,7 +79,7 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		AnonymousID: DeviceID,
 		AppName:     AppDevbox,
 		AppVersion:  build.Version,
-		CloudRegion: envir.GetRegion(),
+		CloudRegion: os.Getenv(env.DevboxRegion),
 		Duration:    time.Since(start),
 		OsName:      build.OS(),
 		UserID:      UserIDFromGithubUsername(),
@@ -153,9 +154,9 @@ func UnixTimestampFromTime(t time.Time) string {
 
 func shellAccess() shellAccessKind {
 	// Check if running in devbox cloud
-	if envir.IsDevboxCloud() {
+	if env.IsDevboxCloud() {
 		// Check if running via ssh tty (i.e. ssh shell)
-		if os.Getenv("SSH_TTY") != "" {
+		if os.Getenv(env.SSHTTY) != "" {
 			return ssh
 		}
 		return browser

@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"golang.org/x/mod/semver"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cloud/envir"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
-	"golang.org/x/mod/semver"
 )
 
 // Keep this in-sync with latest version in launch.sh. If this version is newer
@@ -20,8 +21,8 @@ import (
 const expectedLauncherVersion = "v0.1.0"
 
 func CheckLauncherVersion(w io.Writer) {
-	launcherVersion := os.Getenv("LAUNCHER_VERSION")
-	if launcherVersion == "" || envir.IsDevboxCloud() {
+	launcherVersion := os.Getenv(env.LauncherVersion)
+	if launcherVersion == "" || env.IsDevboxCloud() {
 		return
 	}
 
@@ -32,7 +33,7 @@ func CheckLauncherVersion(w io.Writer) {
 			"newer launcher version %s is available (current = v%s), please update "+
 				"using `devbox version update`\n",
 			expectedLauncherVersion,
-			os.Getenv("LAUNCHER_VERSION"),
+			launcherVersion,
 		)
 	}
 }

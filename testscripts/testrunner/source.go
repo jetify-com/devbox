@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/rogpeppe/go-internal/testscript"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
 // Sources whatever path is exported in stdout. Ignored everything else
@@ -22,7 +24,7 @@ func sourcePath(script *testscript.TestScript, neg bool, args []string) {
 		if strings.HasPrefix(line, "export PATH=") {
 			path := strings.TrimPrefix(line, "export PATH=")
 			path = strings.Trim(path, "\"")
-			script.Setenv("PATH", path)
+			script.Setenv(env.Path, path)
 			break
 		}
 	}

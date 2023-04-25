@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
@@ -185,7 +187,8 @@ func globalBinPath() (string, error) {
 	currentPath := xdg.DataSubpath("devbox/global/current")
 	// For now default is always current. In the future we will support multiple
 	// and allow user to switch.
-	if err := os.Symlink(nixProfilePath, currentPath); err != nil && !os.IsExist(err) {
+	err = os.Symlink(nixProfilePath, currentPath)
+	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return "", errors.WithStack(err)
 	}
 	return filepath.Join(currentPath, "bin"), nil
@@ -197,7 +200,7 @@ func ensureGlobalProfileInPath() error {
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(os.Getenv("PATH"), binPath) {
+	if !strings.Contains(os.Getenv(env.Path), binPath) {
 		return warningNotInPath
 	}
 	return nil

@@ -9,17 +9,17 @@ import (
 	"os"
 	"runtime/trace"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cloud/envir"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -59,8 +59,8 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
-		CloudRegion:  envir.GetRegion(),
-		CloudCache:   os.Getenv("DEVBOX_CACHE"),
+		CloudRegion:  os.Getenv(env.DevboxRegion),
+		CloudCache:   os.Getenv(env.DevboxCache),
 	}
 
 	subcmd, flags, err := getSubcommand(cmd, args)
@@ -71,9 +71,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
 	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
-	meta.InShell, _ = strconv.ParseBool(os.Getenv("DEVBOX_SHELL_ENABLED"))
-	meta.InBrowser, _ = strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
-	meta.InCloud = envir.IsDevboxCloud()
+	meta.InShell = env.IsDevboxShellEnabled()
+	meta.InBrowser = env.IsInBrowser()
+	meta.InCloud = env.IsDevboxCloud()
 	telemetry.Error(runErr, meta)
 
 	if !telemetry.Enabled() {
@@ -130,7 +130,7 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			AnonymousID: telemetry.DeviceID,
 			AppName:     telemetry.AppDevbox,
 			AppVersion:  build.Version,
-			CloudRegion: envir.GetRegion(),
+			CloudRegion: os.Getenv(env.DevboxRegion),
 			Duration:    time.Since(m.startTime),
 			OsName:      build.OS(),
 			UserID:      userID,
@@ -144,9 +144,9 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		Failed:        runErr != nil,
 		Packages:      pkgs,
 		CommitHash:    hash,
-		InDevboxShell: devbox.IsDevboxShellEnabled(),
+		InDevboxShell: env.IsDevboxShellEnabled(),
 		DevboxEnv:     devboxEnv,
-		Shell:         os.Getenv("SHELL"),
+		Shell:         os.Getenv(env.Shell),
 	}
 }
 

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
 func TestVirtenvSymlinkPath(t *testing.T) {
@@ -17,7 +19,7 @@ func TestVirtenvSymlinkPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(testXdgStateHome)
-	t.Setenv("XDG_STATE_HOME", testXdgStateHome)
+	t.Setenv(env.XDGStateHome, testXdgStateHome)
 
 	testCases := []struct {
 		projectDir       string

@@ -2,7 +2,7 @@ package lockfile
 
 import (
 	"errors"
-	"os"
+	"io/fs"
 	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/build"
@@ -57,7 +57,7 @@ type devboxProject interface {
 func Local(project devboxProject) (*localLockFile, error) {
 	lockFile := &localLockFile{project: project}
 	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return lockFile, nil
 	}
 	if err != nil {

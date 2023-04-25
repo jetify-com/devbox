@@ -1,11 +1,10 @@
 package telemetry
 
 import (
-	"os"
-	"strconv"
-
 	"github.com/denisbrodbeck/machineid"
+
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 var DeviceID string
@@ -18,7 +17,7 @@ const (
 func init() {
 	// TODO(gcurtis): clean this up so that Sentry and Segment use the same
 	// start/stop functions.
-	if DoNotTrack() || build.TelemetryKey == "" {
+	if env.NotTrack() || build.TelemetryKey == "" {
 		return
 	}
 	enabled = true
@@ -31,10 +30,4 @@ var enabled bool
 
 func Enabled() bool {
 	return enabled
-}
-
-func DoNotTrack() bool {
-	// https://consoledonottrack.com/
-	doNotTrack, _ := strconv.ParseBool(os.Getenv("DO_NOT_TRACK"))
-	return doNotTrack
 }

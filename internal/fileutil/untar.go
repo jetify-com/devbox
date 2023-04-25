@@ -14,7 +14,7 @@ import (
 )
 
 func Untar(archive io.Reader, destPath string) error {
-	err := TryExists(destPath)
+	_, err := os.Stat(destPath)
 	if err != nil {
 		return err
 	}

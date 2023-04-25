@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -20,7 +21,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	pkgerrors "github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -44,7 +47,7 @@ var started bool
 
 // Start enables telemetry for the current program.
 func Start(appName string) {
-	if started || DoNotTrack() {
+	if started || env.NotTrack() {
 		return
 	}
 	started = initSentry(appName)
@@ -252,7 +255,7 @@ func bufferEvent(event *sentry.Event) {
 
 	file := filepath.Join(errorBufferDir, string(event.EventID)+".json")
 	err = os.WriteFile(file, data, 0600)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// XDG specifies perms 0700.
 		if err := os.MkdirAll(errorBufferDir, 0700); err != nil {
 			return

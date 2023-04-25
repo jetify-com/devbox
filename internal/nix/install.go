@@ -12,8 +12,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 const rootError = "warning: installing Nix as root is not supported by this script!"
@@ -81,9 +83,8 @@ func BinaryInstalled() bool {
 	return err == nil
 }
 
-func DirExists() bool {
-	_, err := os.Stat("/nix")
-	return err == nil
+func dirExists() bool {
+	return fileutil.Exists("/nix")
 }
 
 func isRoot() bool {
@@ -94,7 +95,7 @@ func EnsureNixInstalled(writer io.Writer, daemon *bool) error {
 	if BinaryInstalled() {
 		return nil
 	}
-	if DirExists() {
+	if dirExists() {
 		if err := SourceNixEnv(); err != nil {
 			return err
 		} else if BinaryInstalled() {

@@ -1,6 +1,6 @@
 package plansdk
 
-type Stage struct {
+type Stage struct { // TODO: remove it?
 	Command string `cue:"string" json:"command"`
 	// InputFiles is internal for planners only.
 	InputFiles []string `cue:"[...string]" json:"input_files,omitempty"`
