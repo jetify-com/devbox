@@ -7,9 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/bmatcuk/doublestar/v4"
-
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 // Analyzer helps understand the source code present in a given directory
@@ -58,16 +55,7 @@ func (a *Analyzer) GlobFiles(patterns ...string) []string {
 	return results
 }
 
-func (a *Analyzer) FileExists(relPath string) bool {
-	return fileutil.Exists(a.AbsPath(relPath))
-}
-
 func (a *Analyzer) HasAnyFile(patterns ...string) bool {
 	matches := a.GlobFiles(patterns...)
 	return len(matches) > 0
-}
-
-func (a *Analyzer) ParseFile(relPath string, ptr any) error {
-	abs := a.AbsPath(relPath)
-	return cuecfg.ParseFile(abs, ptr)
 }
