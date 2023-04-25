@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/xdg"
@@ -93,7 +94,6 @@ func writeGlobalProcessComposeJSON(config *globalProcessComposeConfig, file *os.
 }
 
 func openGlobalConfigFile() (*os.File, error) {
-
 	configPath, err := globalProcessComposeJSONPath()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config path: %w", err)
@@ -254,12 +254,7 @@ func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeCo
 	return nil
 }
 
-func StopProcessManager(
-	ctx context.Context,
-	projectDir string,
-	w io.Writer,
-) error {
-
+func StopProcessManager(ctx context.Context, projectDir string, w io.Writer) error {
 	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return err
@@ -361,7 +356,6 @@ func GetProcessManagerPort(projectDir string) (int, error) {
 }
 
 func lockFile(file *os.File) error {
-
 	lockResult := make(chan error)
 
 	go func() {

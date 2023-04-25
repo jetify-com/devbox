@@ -3,17 +3,19 @@ package envir
 import (
 	"os"
 	"strconv"
+
+	"go.jetpack.io/devbox/internal/env"
 )
 
-func IsCLICloudShell() bool {
-	cliCloudShell, _ := strconv.ParseBool(os.Getenv("DEVBOX_CLI_CLOUD_SHELL"))
+func IsCLICloudShell() bool { // TODO: move to env utils
+	cliCloudShell, _ := strconv.ParseBool(os.Getenv(env.DevboxCLICloudShell))
 	return cliCloudShell
 }
 
-func IsDevboxCloud() bool {
+func IsDevboxCloud() bool { // TODO: move to env utils
 	return GetRegion() != ""
 }
 
-func GetRegion() string {
-	return os.Getenv("DEVBOX_REGION")
+func GetRegion() string { // TODO: move to env utils
+	return os.Getenv(env.DevboxRegion)
 }

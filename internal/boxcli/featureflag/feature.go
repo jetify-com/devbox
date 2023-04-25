@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 type feature struct {
@@ -34,7 +35,7 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if on, err := strconv.ParseBool(os.Getenv("DEVBOX_FEATURE_" + f.name)); err == nil {
+	if on, err := strconv.ParseBool(os.Getenv(env.DevboxFeaturePrefix + f.name)); err == nil {
 		status := "enabled"
 		if !on {
 			status = "disabled"

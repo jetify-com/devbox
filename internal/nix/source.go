@@ -10,14 +10,16 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/hashicorp/go-envparse"
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 func nixLinks() []string {
 	return []string{
 		"/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh",
-		filepath.Join(os.Getenv("HOME"), ".nix-profile/etc/profile.d/nix.sh"),
+		filepath.Join(os.Getenv(env.Home), ".nix-profile/etc/profile.d/nix.sh"),
 		// logic introduced in https://github.com/NixOS/nix/pull/5588/files
 		xdg.StateSubpath("nix/profile/etc/profile.d/nix.sh"),
 		xdg.StateSubpath("nix/profiles/profile/etc/profile.d/nix.sh"),
@@ -68,8 +70,8 @@ func SourceNixEnv() error {
 		// was printed to stderr and that we want in the error for debugging.
 		return errors.Wrap(err, string(bs))
 	}
-	envvars, err := envparse.Parse(bytes.NewReader(bs))
 
+	envvars, err := envparse.Parse(bytes.NewReader(bs))
 	if err != nil {
 		return errors.Wrap(err, "failed to parse nix env vars")
 	}

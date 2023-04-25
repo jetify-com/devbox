@@ -10,10 +10,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
 	"go.jetpack.io/devbox/internal/cloud/envir"
+	"go.jetpack.io/devbox/internal/env"
 )
 
 type cloudShellCmdFlags struct {
@@ -147,7 +149,7 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 
 func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud init` when already in the VM is not allowed.
-	if region := os.Getenv("DEVBOX_REGION"); region != "" {
+	if region := os.Getenv(env.DevboxRegion); region != "" {
 		return shellInceptionErrorMsg("devbox cloud init")
 	}
 

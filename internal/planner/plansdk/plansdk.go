@@ -12,6 +12,7 @@ import (
 	"github.com/imdario/mergo"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/pkgslice"
 )
 
@@ -113,7 +114,7 @@ func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 }
 
 func nixpkgsMirrorURL(commitHash string) string {
-	baseURL := os.Getenv("DEVBOX_CACHE")
+	baseURL := os.Getenv(env.DevboxCache)
 	if baseURL == "" {
 		return ""
 	}

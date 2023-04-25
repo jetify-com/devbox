@@ -31,15 +31,15 @@ func (v Version) parts() []string {
 	if len(groups) > 0 {
 		return groups[1:]
 	}
-	return []string{}
+	return nil
 }
 
 func (v Version) Exact() string {
 	parts := v.parts()
-	if len(parts) > 0 {
-		return strings.Join(parts, "")
+	if len(parts) == 0 {
+		return ""
 	}
-	return ""
+	return strings.Join(parts, "")
 }
 
 func (v Version) Major() string {
