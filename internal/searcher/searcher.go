@@ -52,14 +52,15 @@ func Exists(name, version string) (bool, error) {
 
 func FlakeURL(name, version string) string {
 	return fmt.Sprintf(
-		"https://search.devbox.sh/%s/%s.tar.gz",
+		// Don't use url.JoinPath because of special chars
+		searchHost()+"/%s/%s.tar.gz",
 		url.PathEscape(name),
 		url.PathEscape(version),
 	)
 }
 
 func URLIsDevboxPackage(url string) bool {
-	return strings.HasPrefix(url, "https://search.devbox.sh/")
+	return strings.HasPrefix(url, searchHost())
 }
 
 func GetNameAndVersionFromPath(path string) (string, string, error) {

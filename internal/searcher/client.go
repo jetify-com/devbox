@@ -11,17 +11,22 @@ import (
 	"os"
 )
 
-const searchAPIEndpoint = "https://search.devbox.sh/search"
+const searchAPIEndpoint = "https://search.devbox.sh"
+
+func searchHost() string {
+	endpoint := searchAPIEndpoint
+	if os.Getenv("DEVBOX_SEARCH_HOST") != "" {
+		endpoint = os.Getenv("DEVBOX_SEARCH_HOST")
+	}
+	return endpoint
+}
 
 type client struct {
 	endpoint string
 }
 
 func NewClient() *client {
-	endpoint := searchAPIEndpoint
-	if os.Getenv("DEVBOX_SEARCH_ENDPOINT") != "" {
-		endpoint = os.Getenv("DEVBOX_SEARCH_ENDPOINT")
-	}
+	endpoint, _ := url.JoinPath(searchHost(), "search")
 	return &client{
 		endpoint: endpoint,
 	}

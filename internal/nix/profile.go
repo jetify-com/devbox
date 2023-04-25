@@ -275,14 +275,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	// to implement your own nicer output. --print-build-logs flag may be useful.
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = args.Writer
-
-	input := InputFromString(args.Package, args.ProjectDir)
-	// Temporary hack until devbox packages include lock file
-	if input.IsDevboxPackage() {
-		cmd.Args = append(cmd.Args, "--no-write-lock-file")
-	} else {
-		cmd.Stderr = args.Writer // This is noisy when --no-write-lock-file is set
-	}
+	cmd.Stderr = args.Writer
 
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
