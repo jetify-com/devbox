@@ -20,9 +20,6 @@ type Input struct {
 	url.URL
 }
 
-func AbsoluteInputFromString(s string) *Input {
-	return InputFromString(s, "")
-}
 func InputFromString(s, projectDir string) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
