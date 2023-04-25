@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
+
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
@@ -17,12 +19,12 @@ type RecommenderPoetry struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*RecommenderPoetry)(nil)
 
 func (r *RecommenderPoetry) IsRelevant() bool {
-	return plansdk.FileExists(filepath.Join(r.SrcDir, "poetry.lock")) ||
-		plansdk.FileExists(filepath.Join(r.SrcDir, "pyproject.toml"))
+	return fileutil.Exists(filepath.Join(r.SrcDir, "poetry.lock")) ||
+		fileutil.Exists(filepath.Join(r.SrcDir, "pyproject.toml"))
 }
 func (r *RecommenderPoetry) Packages() []string {
 	version := r.PythonVersion()

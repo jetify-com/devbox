@@ -21,9 +21,8 @@ type Process struct {
 
 func StartServices(ctx context.Context, w io.Writer, serviceName string, projectDir string) error {
 	path := fmt.Sprintf("/process/start/%s", serviceName)
-	method := "POST"
 
-	body, status, err := clientRequest(path, method, projectDir)
+	body, status, err := clientRequest(path, http.MethodPost, projectDir)
 	if err != nil {
 		return err
 	}
@@ -40,9 +39,8 @@ func StartServices(ctx context.Context, w io.Writer, serviceName string, project
 
 func StopServices(ctx context.Context, serviceName string, projectDir string, w io.Writer) error {
 	path := fmt.Sprintf("/process/stop/%s", serviceName)
-	method := "PATCH"
 
-	body, status, err := clientRequest(path, method, projectDir)
+	body, status, err := clientRequest(path, http.MethodPatch, projectDir)
 	if err != nil {
 		return err
 	}
@@ -58,9 +56,8 @@ func StopServices(ctx context.Context, serviceName string, projectDir string, w 
 
 func RestartServices(ctx context.Context, serviceName string, projectDir string, w io.Writer) error {
 	path := fmt.Sprintf("/process/restart/%s", serviceName)
-	method := "POST"
 
-	body, status, err := clientRequest(path, method, projectDir)
+	body, status, err := clientRequest(path, http.MethodPost, projectDir)
 	if err != nil {
 		return err
 	}
@@ -76,10 +73,9 @@ func RestartServices(ctx context.Context, serviceName string, projectDir string,
 
 func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Process, error) {
 	path := "/processes"
-	method := "GET"
 	results := []Process{}
 
-	body, status, err := clientRequest(path, method, projectDir)
+	body, status, err := clientRequest(path, http.MethodGet, projectDir)
 	if err != nil {
 		return results, err
 	}
@@ -99,7 +95,6 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 			})
 		}
 		return results, nil
-
 	default:
 		return results, fmt.Errorf("unable to list services: %s", body)
 	}

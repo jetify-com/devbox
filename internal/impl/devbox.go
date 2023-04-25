@@ -180,6 +180,8 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	env["DEVBOX_SHELL_ENABLED"] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
@@ -223,6 +225,10 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	if err != nil {
 		return err
 	}
+	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	// This is temporary because StartServices() needs it but should be replaced with
+	// better alternative since devbox run and devbox shell are not the same.
+	env["DEVBOX_SHELL_ENABLED"] = "1"
 
 	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
@@ -263,14 +269,8 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	if lock, err := lockfile.Local(d); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return "", err
-	} else if upToDate, err := lock.IsUpToDate(); err != nil {
-		return "", err
-	} else if !upToDate {
-		if err := d.Generate(); err != nil {
-			return "", err
-		}
 	}
 
 	envs, err := d.nixEnv(ctx)
@@ -328,7 +328,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 	dockerfilePath := filepath.Join(devContainerPath, "Dockerfile")
 
 	// check if devcontainer.json or Dockerfile exist
-	filesExist := plansdk.FileExists(devContainerJSONPath) || plansdk.FileExists(dockerfilePath)
+	filesExist := fileutil.Exists(devContainerJSONPath) || fileutil.Exists(dockerfilePath)
 	if !force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
@@ -361,7 +361,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 func (d *Devbox) GenerateDockerfile(force bool) error {
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
-	filesExist := plansdk.FileExists(dockerfilePath)
+	filesExist := fileutil.Exists(dockerfilePath)
 	if !force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
@@ -761,7 +761,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// These variables are only needed for shell, but we include them here in the computed env
 	// for both shell and run in order to be as identical as possible.
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
-	env["DEVBOX_SHELL_ENABLED"] = "1"      // Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 
 	debug.Log("nix environment PATH is: %s", env)
 
@@ -979,7 +978,7 @@ func (d *Devbox) globalCommitHash() string {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
-	return conf.OSExpandEnvMap(d.cfg.Env, d.ProjectDir(), computedEnv)
+	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
 }
 
 // Move to a utility package?

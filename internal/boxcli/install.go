@@ -3,7 +3,9 @@ package boxcli
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox"
 )
 
 func installCmd() *cobra.Command {
@@ -16,20 +18,25 @@ func installCmd() *cobra.Command {
 		Args:    cobra.MaximumNArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// the colon ':' character in standard shell means noop.
-			// So essentially, this command is running devbox run noop
-			err := runScriptCmd(cmd, []string{":"}, flags)
-			if err != nil {
-				// BUG(gcurtis): if this fails it will be reported as a usererr.ExitError
-				// and not sent to Sentry.
-				return err
-			}
-			fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
-			return nil
+			return installCmdFunc(cmd, flags)
 		},
 	}
 
 	flags.config.register(command)
 
 	return command
+}
+
+func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
+	// Check the directory exists.
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = box.PrintEnv(cmd.Context(), false /* run init hooks */)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
+	return nil
 }

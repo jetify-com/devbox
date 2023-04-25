@@ -1,4 +1,5 @@
 # Do not support shell inception
 exec devbox init
-! exec devbox run devbox shell
+env DEVBOX_SHELL_ENABLED=1
+! exec devbox shell
 stderr 'Error: You are already in an active devbox shell.'

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/pkgslice"
 )
@@ -83,11 +84,6 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 
 func (p PlanError) MarshalJSON() ([]byte, error) {
 	return cuecfg.MarshalJSON(p.Error())
-}
-
-func FileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }
 
 func WelcomeMessage(s string) string {

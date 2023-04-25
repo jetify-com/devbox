@@ -1,5 +1,6 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
+
 package haskell
 
 import (
@@ -22,7 +23,7 @@ type Recommender struct {
 	SrcDir string
 }
 
-// implements interface Recommender (compile-time check)
+// implements interface recommenders.Recommender (compile-time check)
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
@@ -31,9 +32,8 @@ func (r *Recommender) IsRelevant() bool {
 		// We should log that an error has occurred.
 		return false
 	}
-	isRelevant := a.HasAnyFile(stackYaml)
 
-	return isRelevant
+	return a.HasAnyFile(stackYaml)
 }
 
 func (r *Recommender) Packages() []string {
