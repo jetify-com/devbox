@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -26,10 +25,9 @@ import (
 
 // Config defines a devbox environment as JSON.
 type Config struct {
-	// RawPackages is the slice of Nix packages that devbox makes available in
+	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	// If you want local packages and global packages use MergedPackages() instead.
-	RawPackages []string `cue:"[...string]" json:"packages"`
+	Packages []string `cue:"[...string]" json:"packages"`
 
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
@@ -51,21 +49,6 @@ type NixpkgsConfig struct {
 // Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `cue:"string" json:"command"`
-}
-
-// MergedPackages returns the list of packages to install, including global
-// packages. It returns higher priority packages first.
-func (c *Config) MergedPackages(w io.Writer) []string {
-	dataPath, err := GlobalDataPath()
-	if err != nil {
-		return c.RawPackages
-	}
-	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
-	if err != nil {
-		return c.RawPackages
-	}
-
-	return lo.Uniq(append(c.RawPackages, global.RawPackages...))
 }
 
 func (c *Config) Hash() (string, error) {

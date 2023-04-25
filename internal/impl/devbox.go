@@ -135,7 +135,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
-	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
+	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
 	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.GlobalPackages = d.globalPackages()
 	shellPlan.FlakeInputs = d.flakeInputs()
@@ -350,7 +350,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(devContainerPath, d.mergedPackages())
+	err = generate.CreateDevcontainer(devContainerPath, d.packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -439,7 +439,7 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.mergedPackages(), d.projectDir)
+	pluginSvcs, err := plugin.GetServices(d.packages(), d.projectDir)
 	if err != nil {
 		return nil, err
 	}
@@ -713,9 +713,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
-	originalPath, ok := env["DEVBOX_OG_PATH"]
+	// We add the project dir hash to ensure that we don't have conflicts
+	// between different projects (including global)
+	// (moving a project would change the hash and that's fine)
+	originalPath, ok := env["DEVBOX_OG_PATH_"+d.projectDirHash()]
 	if !ok {
-		env["DEVBOX_OG_PATH"] = currentEnvPath
+		env["DEVBOX_OG_PATH_"+d.projectDirHash()] = currentEnvPath
 		originalPath = currentEnvPath
 	}
 
@@ -770,7 +773,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.mergedPackages(), d.projectDir, env)
+	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
@@ -850,7 +853,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.mergedPackages(), d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -929,17 +932,17 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// mergedPackages returns the list of packages to be installed in the nix shell as
-// specified by config and globals. It maintains the order of mergedPackages
+// packages returns the list of packages to be installed in the nix shell as
+// specified by config and globals. It maintains the order of packages
 // as specified by Config.Packages() (higher priority first)
-func (d *Devbox) mergedPackages() []string {
-	return d.cfg.MergedPackages(d.writer)
+func (d *Devbox) packages() []string {
+	return d.cfg.Packages
 }
 
 // TODO(landau): localPackages, globalPackages, and flakeInput packages could
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
-	return lo.Filter(d.cfg.RawPackages, func(pkg string, _ int) bool {
+	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
 		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
 }
@@ -954,7 +957,7 @@ func (d *Devbox) globalPackages() []string {
 	if err != nil {
 		return []string{}
 	}
-	return lo.Filter(global.RawPackages, func(pkg string, _ int) bool {
+	return lo.Filter(global.Packages, func(pkg string, _ int) bool {
 		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
 }
@@ -1066,6 +1069,11 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 		}
 	}
 	return lo.Values(bins), nil
+}
+
+func (d *Devbox) projectDirHash() string {
+	hash, _ := cuecfg.Hash(d.cfg)
+	return hash
 }
 
 func addHashToEnv(env map[string]string) error {
