@@ -114,7 +114,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	devbox := &Devbox{
 		cfg:        &Config{},
 		nix:        &testNix{"/tmp/my/path"},
-		projectDir: "/tmp/TestComputeNixPathIsIdempotent",
+		projectDir: "/tmp/TestComputeNixPathWhenRemoving",
 	}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
