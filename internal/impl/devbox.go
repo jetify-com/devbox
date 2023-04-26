@@ -712,9 +712,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We add the project dir hash to ensure that we don't have conflicts
 	// between different projects (including global)
 	// (moving a project would change the hash and that's fine)
-	originalPath, ok := env["DEVBOX_OG_PATH_"+d.projectDirHash()]
+	originalPath, ok := env[d.ogPathKey()]
 	if !ok {
-		env["DEVBOX_OG_PATH_"+d.projectDirHash()] = currentEnvPath
+		env[d.ogPathKey()] = currentEnvPath
 		originalPath = currentEnvPath
 	}
 
@@ -831,6 +831,10 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
 	}
 	return nixEnvCache, err
+}
+
+func (d *Devbox) ogPathKey() string {
+	return "DEVBOX_OG_PATH_" + d.projectDirHash()
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -1038,7 +1042,7 @@ func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 }
 
 func (d *Devbox) projectDirHash() string {
-	hash, _ := cuecfg.Hash(d.cfg)
+	hash, _ := cuecfg.Hash(d.projectDir)
 	return hash
 }
 
