@@ -5,12 +5,16 @@ package searcher
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/lockfile"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
@@ -27,11 +31,16 @@ type client struct {
 	endpoint string
 }
 
-func NewClient() *client {
-	endpoint, _ := url.JoinPath(searchHost(), "search")
-	return &client{
-		endpoint: endpoint,
+var cachedClient *client
+
+func Client() *client {
+	if cachedClient == nil {
+		endpoint, _ := url.JoinPath(searchHost(), "search")
+		cachedClient = &client{
+			endpoint: endpoint,
+		}
 	}
+	return cachedClient
 }
 
 func (c *client) Search(query string) (*SearchResult, error) {
@@ -44,6 +53,30 @@ func (c *client) SearchVersion(query, version string) (*SearchResult, error) {
 			"?q=" + url.QueryEscape(query) +
 			"&v=" + url.QueryEscape(version),
 	)
+}
+
+func (c *client) Resolve(pkg, version string) (*lockfile.PackageLock, error) {
+	result, err := c.SearchVersion(pkg, version)
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Results) == 0 {
+		return nil, usererr.New("No results found for %q.", pkg)
+	}
+	return &lockfile.PackageLock{
+		LastModified: result.Results[0].Packages[0].Date,
+		Resolved: fmt.Sprintf(
+			"github:NixOS/nixpkgs/%s#%s",
+			result.Results[0].Packages[0].NixpkgCommit,
+			result.Results[0].Packages[0].AttributePath,
+		),
+		Version: result.Results[0].Packages[0].Version,
+	}, nil
+}
+
+func (c *client) IsVersionedPackage(pkg string) bool {
+	name, version, found := strings.Cut(pkg, "@")
+	return found && name != "" && version != ""
 }
 
 func execSearch(url string) (*SearchResult, error) {

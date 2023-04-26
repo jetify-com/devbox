@@ -35,7 +35,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	original := d.cfg.RawPackages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.projectDir)
+		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.lockfile)
 		if err != nil {
 			return err
 		}
@@ -83,6 +83,10 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
+	if err := d.lockfile.Add(pkgs...); err != nil {
+		return err
+	}
+
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
@@ -117,6 +121,10 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
+		return err
+	}
+
+	if err := d.lockfile.Remove(uninstalledPackages...); err != nil {
 		return err
 	}
 
@@ -224,10 +232,10 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
+			Lockfile:          d.lockfile,
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
-			ProjectDir:        d.projectDir,
 			Writer:            d.writer,
 		}); err != nil {
 			return err
@@ -247,9 +255,9 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 
 	for _, pkg := range pkgs {
 		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+			Lockfile:   d.lockfile,
 			Writer:     d.writer,
 			Pkg:        pkg,
-			ProjectDir: d.projectDir,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
@@ -293,9 +301,9 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	for _, pkg := range d.mergedPackages() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
+			Lockfile:   d.lockfile,
 			Writer:     d.writer,
 			Pkg:        pkg,
-			ProjectDir: d.projectDir,
 			ProfileDir: profileDir,
 		})
 		if err != nil {

@@ -13,20 +13,22 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/searcher"
 )
 
 type Input struct {
 	url.URL
+	lockfile *lockfile.Lockfile
 }
 
-func InputFromString(s, projectDir string) *Input {
+func InputFromString(s string, l *lockfile.Lockfile) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
-		u.Path = filepath.Join(projectDir, u.Opaque)
+		u.Path = filepath.Join(l.ProjectDir(), u.Opaque)
 		u.Opaque = ""
 	}
-	return &Input{*u}
+	return &Input{*u, l}
 }
 
 // IsFlake returns true if the package descriptor has a scheme. For now
@@ -45,13 +47,10 @@ func (i *Input) IsDevboxPackage() bool {
 	if !featureflag.VersionedPackages.Enabled() {
 		return false
 	}
-	if searcher.URLIsDevboxPackage(i.String()) {
-		return true
-	}
 	if i.Scheme != "" {
 		return false
 	}
-	return strings.Contains(i.Path, "@")
+	return searcher.Client().IsVersionedPackage(i.String())
 }
 
 func (i *Input) IsGithub() bool {
@@ -74,14 +73,20 @@ func (i *Input) Name() string {
 
 func (i *Input) URLForInput() string {
 	if i.IsDevboxPackage() {
-		return searcher.FlakeURL(i.canonicalName(), i.version())
+		resolved, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			panic(err)
+			// TODO(landau): handle error
+		}
+		withoutFragment, _, _ := strings.Cut(resolved, "#")
+		return withoutFragment
 	}
 	return i.urlWithoutFragment()
 }
 
 func (i *Input) URLForInstall() (string, error) {
 	if i.IsDevboxPackage() {
-		return searcher.FlakeURL(i.canonicalName(), i.version()), nil
+		return i.lockfile.Resolve(i.String())
 	}
 	attrPath, err := i.PackageAttributePath()
 	if err != nil {
@@ -100,7 +105,11 @@ func (i *Input) PackageAttributePath() (string, error) {
 
 	var infos map[string]*Info
 	if i.IsDevboxPackage() {
-		infos = search(searcher.FlakeURL(i.canonicalName(), i.version()))
+		path, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			return "", err
+		}
+		infos = search(path)
 	} else {
 		infos = search(i.String())
 	}
@@ -190,10 +199,6 @@ func (i *Input) canonicalName() string {
 	if !i.IsDevboxPackage() {
 		return ""
 	}
-	if searcher.URLIsDevboxPackage(i.String()) {
-		name, _, _ := searcher.GetNameAndVersionFromPath(i.Path)
-		return name
-	}
 	name, _, _ := strings.Cut(i.Path, "@")
 	return name
 }
@@ -203,10 +208,6 @@ func (i *Input) canonicalName() string {
 func (i *Input) version() string {
 	if !i.IsDevboxPackage() {
 		return ""
-	}
-	if searcher.URLIsDevboxPackage(i.String()) {
-		_, version, _ := searcher.GetNameAndVersionFromPath(i.Path)
-		return version
 	}
 	_, version, _ := strings.Cut(i.Path, "@")
 	return version

@@ -9,7 +9,7 @@ import (
 func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
 	inputs := map[string]*plansdk.FlakeInput{}
 	for _, p := range d.cfg.MergedPackages(d.writer) {
-		pkg := nix.InputFromString(p, d.projectDir)
+		pkg := nix.InputFromString(p, d.lockfile)
 		if pkg.IsFlake() {
 			AttributePath, err := pkg.PackageAttributePath()
 			if err != nil {

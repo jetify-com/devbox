@@ -72,7 +72,7 @@ func TestInput(t *testing.T) {
 	}
 
 	for _, testCase := range cases {
-		i := testInputFromString(testCase.pkg, projectDir)
+		i := testInputFromString(testCase.pkg)
 		if isFLake := i.IsFlake(); testCase.isFlake != isFLake {
 			t.Errorf("IsFlake() = %v, want %v", isFLake, testCase.isFlake)
 		}
@@ -92,8 +92,8 @@ type testInput struct {
 	Input
 }
 
-func testInputFromString(s, projectDir string) *testInput {
-	return lo.ToPtr(testInput{Input: *InputFromString(s, projectDir)})
+func testInputFromString(s string) *testInput {
+	return lo.ToPtr(testInput{Input: *InputFromString(s, nil)})
 }
 
 func (i *testInput) Package() string {

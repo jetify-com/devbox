@@ -39,6 +39,7 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
@@ -90,7 +91,8 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 }
 
 type Devbox struct {
-	cfg *Config
+	cfg      *Config
+	lockfile *lockfile.Lockfile
 	// projectDir is the directory where the config file (devbox.json) resides
 	projectDir    string
 	pluginManager *plugin.Manager
@@ -119,6 +121,11 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
 	}
+	lock, err := lockfile.Get(box, searcher.Client())
+	if err != nil {
+		return nil, err
+	}
+	box.lockfile = lock
 	return box, nil
 }
 
@@ -940,7 +947,7 @@ func (d *Devbox) mergedPackages() []string {
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
 	return lo.Filter(d.cfg.RawPackages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
+		return !nix.InputFromString(pkg, d.lockfile).IsFlake()
 	})
 }
 
@@ -955,7 +962,7 @@ func (d *Devbox) globalPackages() []string {
 		return []string{}
 	}
 	return lo.Filter(global.RawPackages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
+		return !nix.InputFromString(pkg, d.lockfile).IsFlake()
 	})
 }
 
