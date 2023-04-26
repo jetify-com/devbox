@@ -50,7 +50,7 @@ func (i *Input) IsDevboxPackage() bool {
 	if i.Scheme != "" {
 		return false
 	}
-	return searcher.Client().IsVersionedPackage(i.String())
+	return i.lockfile.IsVersionedPackage(i.String())
 }
 
 func (i *Input) IsGithub() bool {

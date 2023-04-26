@@ -15,7 +15,7 @@ const lockFileVersion = "1"
 // Lightly inspired by package-lock.json
 type File struct {
 	devboxProject
-	resolver resolver
+	resolver
 
 	LockFileVersion string             `json:"lockfile_version"`
 	Packages        map[string]Package `json:"packages"`
@@ -47,7 +47,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 
 func (l *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if l.resolver.IsVersionedPackage(p) {
+		if l.IsVersionedPackage(p) {
 			if _, err := l.Resolve(p); err != nil {
 				return err
 			}
