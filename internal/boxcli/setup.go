@@ -51,6 +51,8 @@ func ensureNixInstalled(cmd *cobra.Command, _args []string) error {
 	return nix.EnsureNixInstalled(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
+// We return a closure to avoid printing the warning every time and just
+// printing it if we actually need the value of the flag.
 func nixDaemonFlagVal(cmd *cobra.Command) func() *bool {
 	return func() *bool {
 		if !cmd.Flags().Changed(nixDaemonFlag) {
