@@ -30,17 +30,6 @@ func GetShellPlan(srcDir string, userPkgs []string) *plansdk.ShellPlan {
 	return result
 }
 
-// GetShellPackageSuggestion returns a merged shell plan from all planners.
-func GetShellPackageSuggestion(srcDir string, userPkgs []string) []string { // TODO: remove it?
-	result := &plansdk.ShellPlan{}
-	planners := getRelevantPlanners(srcDir, userPkgs)
-	for _, p := range planners {
-		result, _ = plansdk.MergeShellPlans(result, p.GetShellPlan(srcDir))
-	}
-
-	return result.DevPackages
-}
-
 func getRelevantPlanners(srcDir string, userPkgs []string) []plansdk.Planner {
 	result := []plansdk.Planner{}
 	for _, planner := range planners {

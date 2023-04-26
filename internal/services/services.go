@@ -2,7 +2,6 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,50 +33,6 @@ const (
 	startService serviceAction = iota
 	stopService
 )
-
-func listenToAutoPortForwardingChangesOnRemote(
-	ctx context.Context,
-	serviceName string,
-	w io.Writer,
-	projectDir string,
-	action serviceAction,
-	cancel context.CancelFunc,
-) error {
-	if !env.IsCLICloudShell() {
-		return nil
-	}
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	fmt.Fprintf(w, "Waiting for port forwarding to start/stop for service %q\n", serviceName)
-
-	// Listen to changes in the service status file
-	return ListenToChanges(
-		ctx,
-		&ListenerOpts{
-			HostID:     hostname,
-			ProjectDir: projectDir,
-			Writer:     w,
-			UpdateFunc: func(service *ServiceStatus) (*ServiceStatus, bool) {
-				if service == nil || service.Name != serviceName {
-					return service, false
-				}
-				if action == startService && service.Running && service.Port != "" && service.LocalPort != "" {
-					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> %s:%s\n", hostname, service.Port, "http://localhost", service.LocalPort)
-					cancel()
-				}
-				if action == stopService && !service.Running && service.Port != "" {
-					color.New(color.FgYellow).Fprintf(w, "Port forwarding %s:%s -> localhost stopped\n", hostname, service.Port)
-					cancel()
-				}
-				return service, false
-			},
-		},
-	)
-}
 
 func printProxyURL(w io.Writer, services Services) error { // TODO: remove it?
 	if !env.IsDevboxCloud() {

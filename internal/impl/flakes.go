@@ -2,13 +2,14 @@ package impl
 
 import (
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
 	inputs := map[string]*plansdk.FlakeInput{}
-	for _, p := range d.cfg.MergedPackages(d.writer) {
+	for _, p := range d.packages() {
 		pkg := nix.InputFromString(p, d.lockfile)
 		if pkg.IsFlake() {
 			AttributePath, err := pkg.PackageAttributePath()

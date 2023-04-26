@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
