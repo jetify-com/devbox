@@ -90,6 +90,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 type Devbox struct {
 	cfg *Config
 	// projectDir is the directory where the config file (devbox.json) resides
+	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
 	writer        io.Writer
@@ -113,6 +114,7 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 
 	box := &Devbox{
 		cfg:           cfg,
+		nix:           &nix.Nix{},
 		projectDir:    projectDir,
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
@@ -709,7 +711,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		originalPath = currentEnvPath
 	}
 
-	vaf, err := nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
+	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,

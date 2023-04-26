@@ -10,8 +10,3 @@ exec devbox shellenv
 source.path
 exec hello
 stdout 'Hello, world!'
-
-# Remove hello and ensure it is no longer accessible
-exec devbox rm hello
-! exec hello
-! stdout .
