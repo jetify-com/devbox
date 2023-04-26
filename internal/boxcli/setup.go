@@ -44,28 +44,32 @@ func runInstallNixCmd(cmd *cobra.Command) error {
 		)
 		return nil
 	}
-	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
+	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd)())
 }
 
 func ensureNixInstalled(cmd *cobra.Command, _args []string) error {
 	return nix.EnsureNixInstalled(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
-func nixDaemonFlagVal(cmd *cobra.Command) *bool {
-	if !cmd.Flags().Changed(nixDaemonFlag) {
-		if os.Geteuid() == 0 {
-			ux.Fwarning(
-				cmd.ErrOrStderr(),
-				"Running as root. Installing Nix in multi-user mode.\n",
-			)
-			return lo.ToPtr(true)
+// We return a closure to avoid printing the warning every time and just
+// printing it if we actually need the value of the flag.
+func nixDaemonFlagVal(cmd *cobra.Command) func() *bool {
+	return func() *bool {
+		if !cmd.Flags().Changed(nixDaemonFlag) {
+			if os.Geteuid() == 0 {
+				ux.Fwarning(
+					cmd.ErrOrStderr(),
+					"Running as root. Installing Nix in multi-user mode.\n",
+				)
+				return lo.ToPtr(true)
+			}
+			return nil
 		}
-		return nil
-	}
 
-	val, err := cmd.Flags().GetBool(nixDaemonFlag)
-	if err != nil {
-		return nil
+		val, err := cmd.Flags().GetBool(nixDaemonFlag)
+		if err != nil {
+			return nil
+		}
+		return &val
 	}
-	return &val
 }

@@ -391,8 +391,9 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 		}
 
 		if strings.ToLower(result) == "y" || !isInteractiveMode || source == "generate" {
-			nixDaemon := false
-			if err := nix.EnsureNixInstalled(d.writer, &nixDaemon); err != nil {
+			if err := nix.EnsureNixInstalled(
+				d.writer, func() *bool { return lo.ToPtr(false) },
+			); err != nil {
 				return err
 			}
 

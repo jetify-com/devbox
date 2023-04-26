@@ -19,8 +19,9 @@ content readable.
 */ -}}
 
 {{- if .OriginalInitPath -}}
-. "{{ .OriginalInitPath }}"
-
+if [ -f {{ .OriginalInitPath }} ]; then
+  . "{{ .OriginalInitPath }}"
+fi
 {{ end -}}
 
 # Begin Devbox Post-init Hook

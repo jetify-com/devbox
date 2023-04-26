@@ -79,7 +79,7 @@ func Install(writer io.Writer, daemon *bool) error {
 }
 
 func BinaryInstalled() bool {
-	_, err := exec.LookPath("nix-shell")
+	_, err := exec.LookPath("nix")
 	return err == nil
 }
 
@@ -91,7 +91,7 @@ func isRoot() bool {
 	return os.Geteuid() == 0
 }
 
-func EnsureNixInstalled(writer io.Writer, daemon *bool) error {
+func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) error {
 	if BinaryInstalled() {
 		return nil
 	}
@@ -118,7 +118,7 @@ func EnsureNixInstalled(writer io.Writer, daemon *bool) error {
 		fmt.Scanln()
 	}
 
-	if err := Install(writer, daemon); err != nil {
+	if err := Install(writer, withDaemonFunc()); err != nil {
 		return err
 	}
 
