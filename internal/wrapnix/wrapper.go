@@ -57,6 +57,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			BashPath:     bashPath,
 			Command:      service.Start,
 			Env:          service.Env,
+			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, service.StartName()),
 		}); err != nil {
@@ -66,6 +67,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			BashPath:     bashPath,
 			Command:      service.Stop,
 			Env:          service.Env,
+			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, service.StopName()),
 		}); err != nil {
@@ -82,6 +84,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		if err = createWrapper(&createWrapperArgs{
 			BashPath:     bashPath,
 			Command:      bin,
+			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
@@ -96,6 +99,7 @@ type createWrapperArgs struct {
 	BashPath     string
 	Command      string
 	Env          map[string]string
+	ProjectDir   string
 	ShellEnvHash string
 
 	destPath string
