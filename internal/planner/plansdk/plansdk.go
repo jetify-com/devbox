@@ -36,8 +36,7 @@ type FlakeInput struct {
 
 // ShellPlan tells devbox how to start shell projects.
 type ShellPlan struct {
-	NixpkgsInfo       *NixpkgsInfo
-	GlobalNixpkgsInfo *NixpkgsInfo
+	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
 	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
