@@ -4,6 +4,11 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.7]
+
+- Fixed a bug for `Open in VSCode` that ensures the directory in which
+  we save the VM's ssh key does exist.
+
 ## [0.0.6]
 
 - Fixed a small bug connecting to a remote environment.

@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by jetpack.io",
   "description": "devbox integration for VSCode",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",

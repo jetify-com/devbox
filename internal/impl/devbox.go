@@ -34,7 +34,6 @@ import (
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -136,8 +135,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
-	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
-	shellPlan.GlobalPackages = d.globalPackages()
+	shellPlan.DevPackages = lo.Uniq(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.FlakeInputs = d.flakeInputs()
 
 	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
@@ -941,21 +939,6 @@ func (d *Devbox) packages() []string {
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
 	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
-	})
-}
-
-func (d *Devbox) globalPackages() []string {
-	dataPath, err := GlobalDataPath()
-	if err != nil {
-		ux.Ferror(d.writer, "unable to get devbox global data path: %s\n", err)
-		return []string{}
-	}
-	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
-	if err != nil {
-		return []string{}
-	}
-	return lo.Filter(global.Packages, func(pkg string, _ int) bool {
 		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
 }
