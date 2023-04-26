@@ -2,6 +2,7 @@ package impl
 
 import (
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )

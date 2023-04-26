@@ -34,7 +34,6 @@ import (
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lockfile"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -136,7 +135,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.mergedPackages())
-	shellPlan.DevPackages = pkgslice.Unique(append(d.localPackages(), shellPlan.DevPackages...))
+	shellPlan.DevPackages = lo.Uniq(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.GlobalPackages = d.globalPackages()
 	shellPlan.FlakeInputs = d.flakeInputs()
 
