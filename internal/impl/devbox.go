@@ -88,8 +88,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 }
 
 type Devbox struct {
-	cfg *Config
-	// projectDir is the directory where the config file (devbox.json) resides
+	cfg           *Config
 	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
