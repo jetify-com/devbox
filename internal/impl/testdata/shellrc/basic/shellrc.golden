@@ -1,5 +1,6 @@
-. "testdata/shellrc/basic/shellrc"
-
+if [ -f testdata/shellrc/basic/shellrc ]; then
+  . "testdata/shellrc/basic/shellrc"
+fi
 # Begin Devbox Post-init Hook
 
 export quote="they said, \"lasers\"";
