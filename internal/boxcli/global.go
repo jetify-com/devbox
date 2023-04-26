@@ -103,8 +103,9 @@ func globalPullCmd() *cobra.Command {
 func globalShellenvCmd() *cobra.Command {
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
-		Use:   "shellenv",
-		Short: "Print shell commands that add global Devbox packages to your PATH",
+		Use:     "shellenv",
+		Short:   "Print shell commands that add global Devbox packages to your PATH",
+		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return shellenvGlobalCmdFunc(cmd, flags.runInitHook)
 		},

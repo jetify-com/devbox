@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -22,13 +21,13 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-var warningNotInPath = usererr.NewWarning(`the devbox global profile is not in your $PATH.
+var warningNotInPath = `the devbox global profile is not in your $PATH.
 
 Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
 and restart your shell to fix this:
 
 	eval "$(devbox global shellenv)"
-`)
+`
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
@@ -80,7 +79,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
-	return ensureGlobalProfileInPath()
+	return d.ensureGlobalProfileInPath()
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
@@ -195,13 +194,13 @@ func globalBinPath() (string, error) {
 }
 
 // Checks if the global profile is in the path
-func ensureGlobalProfileInPath() error {
+func (d *Devbox) ensureGlobalProfileInPath() error {
 	binPath, err := globalBinPath()
 	if err != nil {
 		return err
 	}
 	if !strings.Contains(os.Getenv(env.Path), binPath) {
-		return warningNotInPath
+		ux.Fwarning(d.writer, warningNotInPath)
 	}
 	return nil
 }
