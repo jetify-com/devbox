@@ -42,30 +42,22 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 			return nix.ErrPackageNotFound
 		}
 	}
-	var added []string
 	profilePath, err := GlobalNixProfilePath()
 	if err != nil {
 		return err
 	}
 
-	total := len(pkgs)
-	for idx, pkg := range pkgs {
-		stepNum := idx + 1
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
-			CustomStepMessage: stepMsg,
-			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
-			Package:           pkg,
-			ProfilePath:       profilePath,
-			Writer:            d.writer,
-		})
-		if err != nil {
-			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
-		} else {
-			added = append(added, pkg)
-		}
-	}
+	added, err := nix.ProfileInstall(&nix.ProfileInstallArgs{
+		CustomStepMessage: func(idx int, pkg string) string {
+			stepNum := idx + 1
+			return fmt.Sprintf("[%d/%d] %s", stepNum, len(pkgs), pkg)
+		},
+		Lockfile:      d.lockfile,
+		NixpkgsCommit: d.cfg.Nixpkgs.Commit,
+		Packages:      pkgs,
+		ProfilePath:   profilePath,
+		Writer:        d.writer,
+	})
 	if len(added) == 0 && err != nil {
 		return err
 	}

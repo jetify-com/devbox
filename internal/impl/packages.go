@@ -225,25 +225,20 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return err
 	}
 
-	total := len(pkgs)
-	for idx, pkg := range pkgs {
-		stepNum := idx + 1
-
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-
-		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
-			CustomStepMessage: stepMsg,
-			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
-			Package:           pkg,
-			ProfilePath:       profileDir,
-			Writer:            d.writer,
-		}); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	_, err = nix.ProfileInstall(&nix.ProfileInstallArgs{
+		CustomStepMessage: func(idx int, pkg string) string {
+			stepNum := idx + 1
+			return fmt.Sprintf("[%d/%d] %s", stepNum, len(pkgs), pkg)
+		},
+		FastFail:      true,
+		Lockfile:      d.lockfile,
+		NixpkgsCommit: d.cfg.Nixpkgs.Commit,
+		Packages:      pkgs,
+		ProfilePath:   profileDir,
+		ProjectDir:    d.projectDir,
+		Writer:        d.writer,
+	})
+	return err
 }
 
 func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) error {

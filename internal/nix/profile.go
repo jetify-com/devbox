@@ -232,29 +232,56 @@ func (item *NixProfileListItem) String() string {
 }
 
 type ProfileInstallArgs struct {
-	CustomStepMessage string
+	CustomStepMessage func(idx int, pkg string) string
 	ExtraFlags        []string
-	Lockfile          *lock.File
-	NixpkgsCommit     string
-	Package           string
-	ProfilePath       string
-	Writer            io.Writer
+	// FastFail determines if the ProfileInstall should fail on the first errant
+	// package or continue to install the remaining packages.
+	FastFail      bool
+	Lockfile      *lock.File
+	NixpkgsCommit string
+	Packages      []string
+	ProfilePath   string
+	ProjectDir    string
+	Writer        io.Writer
 }
 
-// ProfileInstall calls nix profile install with default profile
-func ProfileInstall(args *ProfileInstallArgs) error {
+// ProfileInstall calls nix profile install on args.Packages with the default profile,
+// and returns a list of installed packages.
+func ProfileInstall(args *ProfileInstallArgs) ([]string, error) {
 	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
-		return err
+		return nil, err
 	}
-	stepMsg := args.Package
-	if args.CustomStepMessage != "" {
-		stepMsg = args.CustomStepMessage
+
+	installed := []string{}
+	var err error
+	for idx, pkg := range args.Packages {
+		if err := profileInstall(args, idx, pkg); err != nil {
+			if args.FastFail {
+				return nil, err
+			}
+			fmt.Fprintf(args.Writer, "Error installing %s: %s", pkg, err)
+		} else {
+			installed = append(installed, pkg)
+		}
+	}
+	if len(installed) == 0 && err != nil {
+		return nil, err
+	}
+
+	return installed, nil
+}
+
+// profileInstall calls nix profile install on a single package.
+func profileInstall(args *ProfileInstallArgs, idx int, pkg string) error {
+	stepMsg := pkg
+	if args.CustomStepMessage != nil {
+		stepMsg = args.CustomStepMessage(idx, pkg)
 		// Only print this first one if we have a custom message. Otherwise it feels
 		// repetitive.
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	path, err := flakePath(args)
+	path, err := flakePath(pkg, args)
 	if err != nil {
 		return err
 	}
@@ -350,11 +377,11 @@ func nextPriority(profilePath string) string {
 	return fmt.Sprintf("%d", max+1)
 }
 
-func flakePath(args *ProfileInstallArgs) (string, error) {
-	input := InputFromString(args.Package, args.Lockfile)
+func flakePath(pkg string, args *ProfileInstallArgs) (string, error) {
+	input := InputFromString(pkg, args.Lockfile)
 	if input.IsFlake() {
 		return input.URLForInstall()
 	}
 
-	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package, nil
+	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + pkg, nil
 }

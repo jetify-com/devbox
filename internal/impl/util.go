@@ -25,13 +25,14 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 		return err
 	}
 
-	return nix.ProfileInstall(&nix.ProfileInstallArgs{
+	_, err = nix.ProfileInstall(&nix.ProfileInstallArgs{
 		Lockfile:      d.lockfile,
 		NixpkgsCommit: nixpkgsUtilityCommit,
-		Package:       pkg,
+		Packages:      []string{pkg},
 		ProfilePath:   profilePath,
 		Writer:        d.writer,
 	})
+	return err
 }
 
 func utilityLookPath(binName string) (string, error) {
