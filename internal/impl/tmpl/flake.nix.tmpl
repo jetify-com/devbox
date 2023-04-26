@@ -3,9 +3,6 @@
 
   inputs = {
     nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
-    {{- if .GlobalNixpkgsInfo }}
-    nixpkgs-global.url = "{{ .GlobalNixpkgsInfo.URL }}";
-    {{- end }}
     flake-utils.url = "github:numtide/flake-utils";
     {{- range .FlakeInputs }}
     {{.Name}}.url = "{{.URL}}";
@@ -15,9 +12,6 @@
   outputs = { 
     self,
     nixpkgs,
-    {{- if .GlobalNixpkgsInfo }}
-    nixpkgs-global,
-    {{- end }}
     {{- range .FlakeInputs }}
     {{.Name}},
     {{- end }}
@@ -29,12 +23,6 @@
           inherit system;
           config.allowUnfree = true;
         });
-        {{- if .GlobalNixpkgsInfo }}
-        global-pkgs = (import nixpkgs-global {
-          inherit system;
-          config.allowUnfree = true;
-        });
-        {{- end }}
         {{- range .Definitions}}
         {{.}}
         {{- end }}
@@ -44,9 +32,6 @@
           buildInputs = with pkgs; [
             {{- range .DevPackages}}
             {{.}}
-            {{- end}}
-            {{- range .GlobalPackages}}
-            global-pkgs.{{.}}
             {{- end}}
             {{- range $_, $flake := .FlakeInputs }}
             {{- range $flake.Packages }}

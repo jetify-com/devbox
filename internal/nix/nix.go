@@ -93,11 +93,11 @@ func parseSearchResults(data []byte) map[string]*Info {
 	return infos
 }
 
-type printDevEnvOut struct {
-	Variables map[string]variable // the key is the name.
+type PrintDevEnvOut struct {
+	Variables map[string]Variable // the key is the name.
 }
 
-type variable struct {
+type Variable struct {
 	Type  string // valid types are var, exported, and array.
 	Value any    // can be a string or an array of strings (iff type is array).
 }
@@ -110,12 +110,12 @@ type PrintDevEnvArgs struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*printDevEnvOut, error) {
+func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
 	var data []byte
 	var err error
-	var out printDevEnvOut
+	var out PrintDevEnvOut
 
 	if args.UsePrintDevEnvCache {
 		data, err = os.ReadFile(args.PrintDevEnvCachePath)
@@ -156,7 +156,7 @@ func PrintDevEnvCacheHash(profileDir string) (string, error) {
 	)
 }
 
-func savePrintDevEnvCache(path string, out printDevEnvOut) error {
+func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {
 	data, err := json.Marshal(out)
 	if err != nil {
 		return errors.WithStack(err)

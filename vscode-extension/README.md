@@ -31,3 +31,9 @@ When VSCode Terminal is opened on a devbox project, this extension detects `devb
 Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
 
 - [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+
+## Publishing
+
+Steps:
+1. Bump the version in `package.json`, and add notes to `CHANGELOG.md`. Sample PR: #951.
+2. Manually trigger the [`vscode-ext-release` in Github Actions](https://github.com/jetpack-io/devbox/actions/workflows/vscode-ext-release.yaml).

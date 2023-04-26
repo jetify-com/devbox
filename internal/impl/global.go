@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -22,13 +21,13 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-var warningNotInPath = usererr.NewWarning(`the devbox global profile is not in your $PATH.
+var warningNotInPath = `the devbox global profile is not in your $PATH.
 
 Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
 and restart your shell to fix this:
 
 	eval "$(devbox global shellenv)"
-`)
+`
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
@@ -76,16 +75,16 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	if len(added) == 0 && err != nil {
 		return err
 	}
-	d.cfg.RawPackages = lo.Uniq(append(d.cfg.RawPackages, added...))
+	d.cfg.Packages = lo.Uniq(append(d.cfg.Packages, added...))
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
-	return ensureGlobalProfileInPath()
+	return d.ensureGlobalProfileInPath()
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	pkgs = lo.Uniq(pkgs)
-	if _, missing := lo.Difference(d.cfg.RawPackages, pkgs); len(missing) > 0 {
+	if _, missing := lo.Difference(d.cfg.Packages, pkgs); len(missing) > 0 {
 		ux.Fwarning(
 			d.writer,
 			"the following packages were not found in your global devbox.json: %s\n",
@@ -97,7 +96,7 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 	if err != nil {
 		return err
 	}
-	for _, pkg := range lo.Intersect(d.cfg.RawPackages, pkgs) {
+	for _, pkg := range lo.Intersect(d.cfg.Packages, pkgs) {
 		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
 			if errors.Is(err, nix.ErrPackageNotInstalled) {
 				removed = append(removed, pkg)
@@ -109,7 +108,7 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 			removed = append(removed, pkg)
 		}
 	}
-	d.cfg.RawPackages, _ = lo.Difference(d.cfg.RawPackages, removed)
+	d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, removed)
 	return d.saveCfg()
 }
 
@@ -122,7 +121,7 @@ func (d *Devbox) PullGlobal(path string) error {
 }
 
 func (d *Devbox) PrintGlobalList() error {
-	for _, p := range d.cfg.RawPackages {
+	for _, p := range d.cfg.Packages {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil
@@ -153,7 +152,7 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 		ux.Fwarning(d.writer, "nixpkgs commit mismatch. Using local one by default\n")
 	}
 
-	diff, _ := lo.Difference(pullCfg.RawPackages, d.cfg.RawPackages)
+	diff, _ := lo.Difference(pullCfg.Packages, d.cfg.Packages)
 	if len(diff) == 0 {
 		fmt.Fprint(d.writer, "No new packages to install\n")
 		return nil
@@ -195,13 +194,13 @@ func globalBinPath() (string, error) {
 }
 
 // Checks if the global profile is in the path
-func ensureGlobalProfileInPath() error {
+func (d *Devbox) ensureGlobalProfileInPath() error {
 	binPath, err := globalBinPath()
 	if err != nil {
 		return err
 	}
 	if !strings.Contains(os.Getenv(env.Path), binPath) {
-		return warningNotInPath
+		ux.Fwarning(d.writer, warningNotInPath)
 	}
 	return nil
 }
