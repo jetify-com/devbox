@@ -19,10 +19,10 @@ import (
 
 type Input struct {
 	url.URL
-	lockfile *lock.File
+	lockfile lock.Locker
 }
 
-func InputFromString(s string, l *lock.File) *Input {
+func InputFromString(s string, l lock.Locker) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		u.Path = filepath.Join(l.ProjectDir(), u.Opaque)

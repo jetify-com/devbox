@@ -72,7 +72,7 @@ func TestInput(t *testing.T) {
 	}
 
 	for _, testCase := range cases {
-		i := testInputFromString(testCase.pkg)
+		i := testInputFromString(testCase.pkg, projectDir)
 		if isFLake := i.IsFlake(); testCase.isFlake != isFLake {
 			t.Errorf("IsFlake() = %v, want %v", isFLake, testCase.isFlake)
 		}
@@ -92,8 +92,28 @@ type testInput struct {
 	Input
 }
 
-func testInputFromString(s string) *testInput {
-	return lo.ToPtr(testInput{Input: *InputFromString(s, nil)})
+type lockfile struct {
+	projectDir string
+}
+
+func (lockfile) ConfigHash() (string, error) {
+	return "", nil
+}
+
+func (l *lockfile) ProjectDir() string {
+	return l.projectDir
+}
+
+func (lockfile) IsVersionedPackage(pkg string) bool {
+	return false
+}
+
+func (lockfile) Resolve(pkg string) (string, error) {
+	return "", nil
+}
+
+func testInputFromString(s, projectDir string) *testInput {
+	return lo.ToPtr(testInput{Input: *InputFromString(s, &lockfile{projectDir})})
 }
 
 func (i *testInput) Package() string {
