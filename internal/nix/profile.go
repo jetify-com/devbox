@@ -16,7 +16,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -76,7 +76,7 @@ type ProfileListIndexArgs struct {
 	// For performance you can reuse the same list in multiple operations if you
 	// are confident index has not changed.
 	List       NixProfileList
-	Lockfile   *lockfile.Lockfile
+	Lockfile   *lock.File
 	Writer     io.Writer
 	Pkg        string
 	ProfileDir string
@@ -234,7 +234,7 @@ func (item *NixProfileListItem) String() string {
 type ProfileInstallArgs struct {
 	CustomStepMessage string
 	ExtraFlags        []string
-	Lockfile          *lockfile.Lockfile
+	Lockfile          *lock.File
 	NixpkgsCommit     string
 	Package           string
 	ProfilePath       string

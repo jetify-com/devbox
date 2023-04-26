@@ -16,7 +16,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
@@ -146,7 +146,7 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
-	lock, err := lockfile.Local(d)
+	lock, err := lock.Local(d)
 	if err != nil {
 		return err
 	}

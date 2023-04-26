@@ -32,7 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/pkgslice"
 	"go.jetpack.io/devbox/internal/planner"
@@ -92,7 +92,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 
 type Devbox struct {
 	cfg      *Config
-	lockfile *lockfile.Lockfile
+	lockfile *lock.File
 	// projectDir is the directory where the config file (devbox.json) resides
 	projectDir    string
 	pluginManager *plugin.Manager
@@ -121,7 +121,7 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
 	}
-	lock, err := lockfile.Get(box, searcher.Client())
+	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
 		return nil, err
 	}
@@ -828,7 +828,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		usePrintDevEnvCache := false
 
 		// If lockfile is up-to-date, we can use the print-dev-env cache.
-		if lock, err := lockfile.Local(d); err != nil {
+		if lock, err := lock.Local(d); err != nil {
 			return nil, err
 		} else if upToDate, err := lock.IsUpToDate(); err != nil {
 			return nil, err

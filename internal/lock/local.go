@@ -1,4 +1,4 @@
-package lockfile
+package lock
 
 import (
 	"errors"

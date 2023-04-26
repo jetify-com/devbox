@@ -1,4 +1,4 @@
-package lockfile
+package lock
 
 type devboxProject interface {
 	ConfigHash() (string, error)
@@ -7,5 +7,5 @@ type devboxProject interface {
 
 type resolver interface {
 	IsVersionedPackage(pkg string) bool
-	Resolve(pkg, version string) (*PackageLock, error)
+	Resolve(pkg, version string) (*Package, error)
 }

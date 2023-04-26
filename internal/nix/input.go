@@ -13,16 +13,16 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
 )
 
 type Input struct {
 	url.URL
-	lockfile *lockfile.Lockfile
+	lockfile *lock.File
 }
 
-func InputFromString(s string, l *lockfile.Lockfile) *Input {
+func InputFromString(s string, l *lock.File) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		u.Path = filepath.Join(l.ProjectDir(), u.Opaque)

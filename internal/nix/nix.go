@@ -17,7 +17,7 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
@@ -28,7 +28,7 @@ const ProfilePath = ".devbox/nix/profile/default"
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
-func PkgExists(nixpkgsCommit, pkg string, lock *lockfile.Lockfile) (bool, error) {
+func PkgExists(nixpkgsCommit, pkg string, lock *lock.File) (bool, error) {
 	input := InputFromString(pkg, lock)
 	if input.IsFlake() {
 		return input.validateExists()
