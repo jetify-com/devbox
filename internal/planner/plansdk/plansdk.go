@@ -36,11 +36,9 @@ type FlakeInput struct {
 
 // ShellPlan tells devbox how to start shell projects.
 type ShellPlan struct {
-	NixpkgsInfo       *NixpkgsInfo
-	GlobalNixpkgsInfo *NixpkgsInfo
+	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
-	DevPackages    []string `cue:"[...string]" json:"dev_packages,omitempty"`
-	GlobalPackages []string `cue:"[...string]" json:"global_packages,omitempty"`
+	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
 	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
 	// Nix expressions. Currently, PHP needs it for shell.
@@ -76,7 +74,6 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	}
 
 	shellPlan.DevPackages = lo.Uniq(shellPlan.DevPackages)
-	shellPlan.GlobalPackages = lo.Uniq(shellPlan.GlobalPackages)
 	shellPlan.Definitions = lo.Uniq(shellPlan.Definitions)
 	shellPlan.ShellInitHook = lo.Uniq(shellPlan.ShellInitHook)
 

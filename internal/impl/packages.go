@@ -38,7 +38,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	original := d.cfg.RawPackages
+	original := d.cfg.Packages
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
 		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.projectDir)
@@ -52,10 +52,10 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	// Add to Packages of the config only if it's not already there
 	for _, pkg := range pkgs {
-		if slices.Contains(d.cfg.RawPackages, pkg) {
+		if slices.Contains(d.cfg.Packages, pkg) {
 			continue
 		}
-		d.cfg.RawPackages = append(d.cfg.RawPackages, pkg)
+		d.cfg.Packages = append(d.cfg.Packages, pkg)
 	}
 	if err := d.saveCfg(); err != nil {
 		return err
@@ -73,7 +73,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 				"Packages were not added to devbox.json\n",
 			strings.Join(pkgs, ", "),
 		)
-		d.cfg.RawPackages = original
+		d.cfg.Packages = original
 		_ = d.saveCfg() // ignore error to ensure we return the original error
 		return err
 	}
@@ -100,8 +100,8 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	pkgs = lo.Uniq(pkgs)
 
 	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
-	uninstalledPackages := lo.Intersect(d.cfg.RawPackages, pkgs)
-	remainingPkgs, missingPkgs := lo.Difference(d.cfg.RawPackages, pkgs)
+	uninstalledPackages := lo.Intersect(d.cfg.Packages, pkgs)
+	remainingPkgs, missingPkgs := lo.Difference(d.cfg.Packages, pkgs)
 	if len(missingPkgs) > 0 {
 		ux.Fwarning(
 			d.writer,
@@ -109,7 +109,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 			strings.Join(missingPkgs, ", "),
 		)
 	}
-	d.cfg.RawPackages = remainingPkgs
+	d.cfg.Packages = remainingPkgs
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	if err != nil {
 		return nil, err
 	}
-	for _, pkg := range d.mergedPackages() {
+	for _, pkg := range d.packages() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
 			Writer:     d.writer,

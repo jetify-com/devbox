@@ -31,13 +31,9 @@ func TestWriteFromTemplate(t *testing.T) {
 			NixpkgsInfo struct {
 				URL string
 			}
-			GlobalNixpkgsInfo *struct {
-				URL string
-			}
-			Definitions    []string
-			DevPackages    []string
-			GlobalPackages []string
-			FlakeInputs    []plansdk.FlakeInput
+			Definitions []string
+			DevPackages []string
+			FlakeInputs []plansdk.FlakeInput
 		}{}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
 		if err != nil {
@@ -46,18 +42,6 @@ func TestWriteFromTemplate(t *testing.T) {
 		cmpGoldenFile(t, outPath, "testdata/flake-empty.nix.golden")
 	})
 
-	t.Run("TestWithGlobal", func(t *testing.T) {
-		plan := testFlakeTmplPlan
-		plan.GlobalNixpkgsInfo = &struct{ URL string }{
-			URL: "https://github.com/nixos/nixpkgs/archive/somehash.tar.gz",
-		}
-		plan.GlobalPackages = []string{"curl", "hello"}
-		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
-		if err != nil {
-			t.Fatal("got error writing flake template:", err)
-		}
-		cmpGoldenFile(t, outPath, "testdata/flake-with-global.nix.golden")
-	})
 }
 
 func cmpGoldenFile(t *testing.T, gotPath, wantGoldenPath string) {
@@ -93,13 +77,9 @@ var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
 	}
-	GlobalNixpkgsInfo *struct {
-		URL string
-	}
-	Definitions    []string
-	DevPackages    []string
-	GlobalPackages []string
-	FlakeInputs    []plansdk.FlakeInput
+	Definitions []string
+	DevPackages []string
+	FlakeInputs []plansdk.FlakeInput
 }{
 	NixpkgsInfo: struct {
 		URL string
