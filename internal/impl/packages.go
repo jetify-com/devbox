@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -225,7 +226,13 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return err
 	}
 
+	allOrNothing := d.writer == nil || d.writer == io.Discard
+	if allOrNothing {
+		fmt.Printf("DEBUG: Installing packages in all-or-nothing mode.\n")
+	}
+
 	_, err = nix.ProfileInstall(&nix.ProfileInstallArgs{
+		AllOrNothing: d.writer == nil || d.writer == io.Discard,
 		CustomStepMessage: func(idx int, pkg string) string {
 			stepNum := idx + 1
 			return fmt.Sprintf("[%d/%d] %s", stepNum, len(pkgs), pkg)

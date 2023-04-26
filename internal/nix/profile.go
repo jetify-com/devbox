@@ -232,6 +232,7 @@ func (item *NixProfileListItem) String() string {
 }
 
 type ProfileInstallArgs struct {
+	AllOrNothing      bool
 	CustomStepMessage func(idx int, pkg string) string
 	ExtraFlags        []string
 	// FastFail determines if the ProfileInstall should fail on the first errant
@@ -252,15 +253,44 @@ func ProfileInstall(args *ProfileInstallArgs) ([]string, error) {
 		return nil, err
 	}
 
+	paths := []string{}
+	for _, pkg := range args.Packages {
+		path, err := flakePath(pkg, args)
+		if err != nil {
+			return nil, err
+		}
+		paths = append(paths, path)
+	}
+
+	if args.AllOrNothing {
+		err := profileInstall(args, paths)
+		return args.Packages, err
+	}
+
 	installed := []string{}
 	var err error
 	for idx, pkg := range args.Packages {
-		if err := profileInstall(args, idx, pkg); err != nil {
+		stepMsg := pkg
+		if args.CustomStepMessage != nil {
+			stepMsg = args.CustomStepMessage(idx, pkg)
+			// Only print this first one if we have a custom message. Otherwise it feels
+			// repetitive.
+			fmt.Fprintf(args.Writer, "%s\n", stepMsg)
+		}
+
+		if err := profileInstall(args, []string{paths[idx]}); err != nil {
+
+			fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+			color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
+			err = redact.Errorf("error running \"nix profile install\": %w", err)
 			if args.FastFail {
 				return nil, err
 			}
 			fmt.Fprintf(args.Writer, "Error installing %s: %s", pkg, err)
+
 		} else {
+			fmt.Fprintf(args.Writer, "%s: ", stepMsg)
+			color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
 			installed = append(installed, pkg)
 		}
 	}
@@ -272,19 +302,7 @@ func ProfileInstall(args *ProfileInstallArgs) ([]string, error) {
 }
 
 // profileInstall calls nix profile install on a single package.
-func profileInstall(args *ProfileInstallArgs, idx int, pkg string) error {
-	stepMsg := pkg
-	if args.CustomStepMessage != nil {
-		stepMsg = args.CustomStepMessage(idx, pkg)
-		// Only print this first one if we have a custom message. Otherwise it feels
-		// repetitive.
-		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
-	}
-
-	path, err := flakePath(pkg, args)
-	if err != nil {
-		return err
-	}
+func profileInstall(args *ProfileInstallArgs, paths []string) error {
 
 	cmd := exec.Command(
 		"nix", "profile", "install",
@@ -294,9 +312,9 @@ func profileInstall(args *ProfileInstallArgs, idx int, pkg string) error {
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
-		path,
 	)
 	cmd.Env = AllowUnfreeEnv()
+	cmd.Args = append(cmd.Args, paths...)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
 
@@ -307,15 +325,7 @@ func profileInstall(args *ProfileInstallArgs, idx int, pkg string) error {
 	cmd.Stdout = args.Writer
 	cmd.Stderr = args.Writer
 
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
-		return redact.Errorf("error running \"nix profile install\": %w", err)
-	}
-
-	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
-	return nil
+	return cmd.Run()
 }
 
 func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
