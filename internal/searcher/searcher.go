@@ -9,12 +9,11 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
 func SearchAndPrint(w io.Writer, query string) error {
-	c := NewClient()
+	c := Client()
 	result, err := c.Search(query)
 	if err != nil {
 		return redact.Errorf("error getting search results: %v", redact.Safe(err))
@@ -40,36 +39,11 @@ func SearchAndPrint(w io.Writer, query string) error {
 	return nil
 }
 
-func GenLockedReferences(pkgs []string) ([]string, error) {
-	c := NewClient()
-	references := append([]string(nil), pkgs...) // copy
-	for i, pkg := range pkgs {
-		if name, version, found := strings.Cut(pkg, "@"); found {
-			result, err := c.SearchVersion(name, version)
-			if err != nil {
-				return nil, err
-			}
-			if len(result.Results) == 0 {
-				errorText := fmt.Sprintf("No results found for %q.", pkg)
-				if len(result.Suggestions) > 0 && len(result.Suggestions[0].Packages) > 0 {
-					versions := lo.Map(
-						result.Suggestions[0].Packages,
-						func(p *NixPackageInfo, _ int) string { return p.Version },
-					)
-					errorText += fmt.Sprintf(
-						" Available versions %s",
-						strings.Join(versions, ", "),
-					)
-				}
-				return nil, usererr.New(errorText + "\n")
-			}
-
-			references[i] = fmt.Sprintf(
-				"github:NixOS/nixpkgs/%s#%s",
-				result.Results[0].Packages[0].NixpkgCommit,
-				result.Results[0].Packages[0].AttributePath,
-			)
-		}
+func Exists(name, version string) (bool, error) {
+	c := Client()
+	result, err := c.SearchVersion(name, version)
+	if err != nil {
+		return false, err
 	}
-	return references, nil
+	return len(result.Results) > 0, nil
 }

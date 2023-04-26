@@ -16,7 +16,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -76,9 +76,9 @@ type ProfileListIndexArgs struct {
 	// For performance you can reuse the same list in multiple operations if you
 	// are confident index has not changed.
 	List       NixProfileList
+	Lockfile   *lock.File
 	Writer     io.Writer
 	Pkg        string
-	ProjectDir string
 	ProfileDir string
 }
 
@@ -92,7 +92,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		}
 	}
 
-	input := InputFromString(args.Pkg, args.ProjectDir)
+	input := InputFromString(args.Pkg, args.Lockfile)
 
 	for _, item := range list {
 		name, err := item.packageName()
@@ -100,7 +100,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 			return -1, err
 		}
 
-		existing := InputFromString(name, args.ProjectDir)
+		existing := InputFromString(name, args.Lockfile)
 
 		if input.equals(existing) {
 			return item.index, nil
@@ -192,8 +192,8 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
 // and then packageName = go_1_19
 func (item *NixProfileListItem) packageName() (string, error) {
-	// Since unlocked references should already have absolute paths, projectDir is not needed
-	input := InputFromString(item.unlockedReference, "" /*projectDir*/)
+	// Since unlocked references should already have absolute paths, lockfile is not needed
+	input := InputFromString(item.unlockedReference, nil)
 	if input.IsFlake() {
 		// TODO(landau): this needs to be normalized so that we can compare
 		// packages.aarch64-darwin.hello and hello and determine that they are
@@ -234,10 +234,10 @@ func (item *NixProfileListItem) String() string {
 type ProfileInstallArgs struct {
 	CustomStepMessage string
 	ExtraFlags        []string
+	Lockfile          *lock.File
 	NixpkgsCommit     string
 	Package           string
 	ProfilePath       string
-	ProjectDir        string
 	Writer            io.Writer
 }
 
@@ -336,10 +336,6 @@ func readManifest(profilePath string) (manifest, error) {
 	return m, json.Unmarshal(data, &m)
 }
 
-func ManifestHash(profileDir string) (string, error) {
-	return cuecfg.FileHash(filepath.Join(profileDir, ProfilePath, "manifest.json"))
-}
-
 func nextPriority(profilePath string) string {
 	// error is ignored because it's ok if the file doesn't exist
 	m, _ := readManifest(profilePath)
@@ -355,9 +351,9 @@ func nextPriority(profilePath string) string {
 }
 
 func flakePath(args *ProfileInstallArgs) (string, error) {
-	input := InputFromString(args.Package, args.ProjectDir)
+	input := InputFromString(args.Package, args.Lockfile)
 	if input.IsFlake() {
-		return input.NormalizedName()
+		return input.URLForInstall()
 	}
 
 	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package, nil

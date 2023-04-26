@@ -8,7 +8,7 @@ const (
 	DevboxGateway            = "DEVBOX_GATEWAY"
 	DevboxDoNotUpgradeConfig = "DEVBOX_DONT_UPGRADE_CONFIG"
 	DevboxRegion             = "DEVBOX_REGION"
-	DevboxSearchEndpoint     = "DEVBOX_SEARCH_ENDPOINT"
+	DevboxSearchHost         = "DEVBOX_SEARCH_HOST"
 	DevboxShellEnabled       = "DEVBOX_SHELL_ENABLED"
 	DevboxShellStartTime     = "DEVBOX_SHELL_START_TIME"
 	DevboxVM                 = "DEVBOX_VM"

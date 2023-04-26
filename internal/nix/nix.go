@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/lock"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
@@ -28,8 +28,8 @@ const ProfilePath = ".devbox/nix/profile/default"
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
-func PkgExists(nixpkgsCommit, pkg, projectDir string) (bool, error) {
-	input := InputFromString(pkg, projectDir)
+func PkgExists(nixpkgsCommit, pkg string, lock *lock.File) (bool, error) {
+	input := InputFromString(pkg, lock)
 	if input.IsFlake() {
 		return input.validateExists()
 	}
@@ -148,12 +148,6 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	return &out, nil
-}
-
-func PrintDevEnvCacheHash(profileDir string) (string, error) {
-	return cuecfg.FileHash(
-		filepath.Join(profileDir, ".devbox", ".nix-print-dev-env-cache"),
-	)
 }
 
 func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {

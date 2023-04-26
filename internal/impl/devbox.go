@@ -32,12 +32,13 @@ import (
 	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/wrapnix"
@@ -89,6 +90,7 @@ func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 
 type Devbox struct {
 	cfg           *Config
+	lockfile      *lock.File
 	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
@@ -118,6 +120,11 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
 	}
+	lock, err := lock.GetFile(box, searcher.Client())
+	if err != nil {
+		return nil, err
+	}
+	box.lockfile = lock
 	return box, nil
 }
 
@@ -813,7 +820,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		usePrintDevEnvCache := false
 
 		// If lockfile is up-to-date, we can use the print-dev-env cache.
-		if lock, err := lockfile.Local(d); err != nil {
+		if lock, err := lock.Local(d); err != nil {
 			return nil, err
 		} else if upToDate, err := lock.IsUpToDate(); err != nil {
 			return nil, err
@@ -930,7 +937,7 @@ func (d *Devbox) packages() []string {
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
 	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
+		return !nix.InputFromString(pkg, d.lockfile).IsFlake()
 	})
 }
 

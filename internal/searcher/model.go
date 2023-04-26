@@ -7,6 +7,7 @@ type NixPackageInfoList []*NixPackageInfo
 
 type NixPackageInfo struct {
 	AttributePath string  `json:"attribute_path,omitempty"`
+	Date          string  `json:"date,omitempty"`
 	NixpkgCommit  string  `json:"nixpkg_commit,omitempty"`
 	PName         string  `json:"pname,omitempty"`
 	Version       string  `json:"version,omitempty"`

@@ -31,6 +31,8 @@ func enabled(name string) *feature {
 	return features[name]
 }
 
+var logMap = map[string]bool{}
+
 func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
@@ -40,7 +42,10 @@ func (f *feature) Enabled() bool {
 		if !on {
 			status = "disabled"
 		}
-		debug.Log("Feature %q %s via environment variable.", f.name, status)
+		if !logMap[f.name] {
+			debug.Log("Feature %q %s via environment variable.", f.name, status)
+			logMap[f.name] = true
+		}
 		return on
 	}
 	return f.enabled

@@ -1,4 +1,4 @@
-package lockfile
+package lock
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/nix"
 )
 
 // localLockFile is a non-shared lock file that helps track the state of the
@@ -49,11 +48,6 @@ func (l *localLockFile) Update() error {
 	return cuecfg.WriteFile(localLockFilePath(l.project), l)
 }
 
-type devboxProject interface {
-	ConfigHash() (string, error)
-	ProjectDir() string
-}
-
 func Local(project devboxProject) (*localLockFile, error) {
 	lockFile := &localLockFile{project: project}
 	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
@@ -72,12 +66,12 @@ func forProject(project devboxProject) (*localLockFile, error) {
 		return nil, err
 	}
 
-	nixHash, err := nix.ManifestHash(project.ProjectDir())
+	nixHash, err := manifestHash(project.ProjectDir())
 	if err != nil {
 		return nil, err
 	}
 
-	printDevEnvCacheHash, err := nix.PrintDevEnvCacheHash(project.ProjectDir())
+	printDevEnvCacheHash, err := printDevEnvCacheHash(project.ProjectDir())
 	if err != nil {
 		return nil, err
 	}
@@ -95,4 +89,18 @@ func forProject(project devboxProject) (*localLockFile, error) {
 
 func localLockFilePath(project devboxProject) string {
 	return filepath.Join(project.ProjectDir(), ".devbox", "local.lock")
+}
+
+func manifestHash(profileDir string) (string, error) {
+	return cuecfg.FileHash(filepath.Join(
+		profileDir,
+		".devbox/nix/profile/default",
+		"manifest.json",
+	))
+}
+
+func printDevEnvCacheHash(profileDir string) (string, error) {
+	return cuecfg.FileHash(
+		filepath.Join(profileDir, ".devbox", ".nix-print-dev-env-cache"),
+	)
 }

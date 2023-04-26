@@ -16,10 +16,9 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lockfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
@@ -33,15 +32,11 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	pkgs = lo.Uniq(pkgs)
 
-	pkgs, err := searcher.GenLockedReferences(pkgs)
-	if err != nil {
-		return err
-	}
-
 	original := d.cfg.Packages
+
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.projectDir)
+		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.lockfile)
 		if err != nil {
 			return err
 		}
@@ -89,6 +84,10 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
+	if err := d.lockfile.Add(pkgs...); err != nil {
+		return err
+	}
+
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
@@ -126,6 +125,10 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
+	if err := d.lockfile.Remove(uninstalledPackages...); err != nil {
+		return err
+	}
+
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
@@ -144,7 +147,7 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
-	lock, err := lockfile.Local(d)
+	lock, err := lock.Local(d)
 	if err != nil {
 		return err
 	}
@@ -230,10 +233,10 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
+			Lockfile:          d.lockfile,
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
-			ProjectDir:        d.projectDir,
 			Writer:            d.writer,
 		}); err != nil {
 			return err
@@ -253,9 +256,9 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 
 	for _, pkg := range pkgs {
 		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+			Lockfile:   d.lockfile,
 			Writer:     d.writer,
 			Pkg:        pkg,
-			ProjectDir: d.projectDir,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
@@ -299,9 +302,9 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	for _, pkg := range d.packages() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
+			Lockfile:   d.lockfile,
 			Writer:     d.writer,
 			Pkg:        pkg,
-			ProjectDir: d.projectDir,
 			ProfileDir: profileDir,
 		})
 		if err != nil {

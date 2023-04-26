@@ -34,14 +34,10 @@ const currentGlobalProfile = "default"
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
 	pkgs = lo.Uniq(pkgs)
-	globalRoot, err := GlobalDataPath()
-	if err != nil {
-		return err
-	}
 
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
-		found, err := nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg, globalRoot)
+		found, err := nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg, d.lockfile)
 		if err != nil {
 			return err
 		} else if !found {
@@ -60,10 +56,10 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
+			Lockfile:          d.lockfile,
 			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
-			ProjectDir:        globalRoot,
 			Writer:            d.writer,
 		})
 		if err != nil {
