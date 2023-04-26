@@ -40,7 +40,6 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
@@ -143,16 +142,6 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 		return nil, err
 	}
 	shellPlan.NixpkgsInfo = nixpkgsInfo
-
-	if len(shellPlan.GlobalPackages) > 0 {
-		if globalHash := d.globalCommitHash(); globalHash != "" {
-			globalNixpkgsInfo, err := plansdk.GetNixpkgsInfo(globalHash)
-			if err != nil {
-				return nil, err
-			}
-			shellPlan.GlobalNixpkgsInfo = globalNixpkgsInfo
-		}
-	}
 
 	return shellPlan, nil
 }
@@ -935,25 +924,12 @@ func (d *Devbox) packages() []string {
 	return d.cfg.Packages
 }
 
-// TODO(landau): localPackages, globalPackages, and flakeInput packages could
+// TODO(landau): localPackages, and flakeInput packages could
 // be merged into a single buildInput map of the form: source => []pkg
 func (d *Devbox) localPackages() []string {
 	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
 		return !nix.InputFromString(pkg, d.projectDir).IsFlake()
 	})
-}
-
-func (d *Devbox) globalCommitHash() string {
-	dataPath, err := GlobalDataPath()
-	if err != nil {
-		ux.Ferror(d.writer, "unable to get devbox global data path: %s\n", err)
-		return ""
-	}
-	global, err := readConfig(filepath.Join(dataPath, "devbox.json"))
-	if err != nil {
-		return ""
-	}
-	return global.Nixpkgs.Commit
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env
