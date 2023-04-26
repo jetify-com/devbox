@@ -55,6 +55,10 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		return err
 	}
 
+	if err := nix.EnsureNixpkgsPrefetched(d.writer, d.cfg.Nixpkgs.Commit); err != nil {
+		return err
+	}
+
 	total := len(pkgs)
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1

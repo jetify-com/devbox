@@ -222,6 +222,10 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return err
 	}
 
+	if err := nix.EnsureNixpkgsPrefetched(d.writer, d.cfg.Nixpkgs.Commit); err != nil {
+		return err
+	}
+
 	total := len(pkgs)
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1

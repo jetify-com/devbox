@@ -242,10 +242,9 @@ type ProfileInstallArgs struct {
 }
 
 // ProfileInstall calls nix profile install with default profile
+// Note: for better UX callers should invoke nix.EnsureNixpkgsPrefetched
+// before calling this function. We'll refactor this API soon.
 func ProfileInstall(args *ProfileInstallArgs) error {
-	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
-		return err
-	}
 	stepMsg := args.Package
 	if args.CustomStepMessage != "" {
 		stepMsg = args.CustomStepMessage

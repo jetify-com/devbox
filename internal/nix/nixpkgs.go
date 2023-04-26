@@ -16,6 +16,12 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
+// EnsureNixpkgsPrefetched ensures that the nixpkgs registry is downloaded
+// Having this public is a temporary hack for a perf win, until we refactor NixProfileInstall.
+func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
+	return ensureNixpkgsPrefetched(w, commit)
+}
+
 // ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
 func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
 	// Look up the cached map of commitHash:nixStoreLocation

@@ -30,6 +30,10 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 		return err
 	}
 
+	if err := nix.EnsureNixpkgsPrefetched(d.writer, d.cfg.Nixpkgs.Commit); err != nil {
+		return err
+	}
+
 	return nix.ProfileInstall(&nix.ProfileInstallArgs{
 		NixpkgsCommit: nixpkgsUtilityCommit,
 		Package:       pkg,
