@@ -5,7 +5,6 @@ package impl
 
 import (
 	"fmt"
-	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -14,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/env"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
@@ -75,7 +73,8 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
-	return d.ensureGlobalProfileInPath()
+	d.ensureDevboxGlobalShellenvEnabled()
+	return nil
 }
 
 func (d *Devbox) RemoveGlobal(pkgs ...string) error {
@@ -174,29 +173,9 @@ func GlobalNixProfilePath() (string, error) {
 	return filepath.Join(path, "profile"), nil
 }
 
-func globalBinPath() (string, error) {
-	nixProfilePath, err := GlobalNixProfilePath()
-	if err != nil {
-		return "", err
-	}
-	currentPath := xdg.DataSubpath("devbox/global/current")
-	// For now default is always current. In the future we will support multiple
-	// and allow user to switch.
-	err = os.Symlink(nixProfilePath, currentPath)
-	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return "", errors.WithStack(err)
-	}
-	return filepath.Join(currentPath, "bin"), nil
-}
-
-// Checks if the global profile is in the path
-func (d *Devbox) ensureGlobalProfileInPath() error {
-	binPath, err := globalBinPath()
-	if err != nil {
-		return err
-	}
-	if !strings.Contains(os.Getenv(env.Path), binPath) {
+// Checks if the global has been shellenv'd and warns the user if not
+func (d *Devbox) ensureDevboxGlobalShellenvEnabled() {
+	if os.Getenv(d.ogPathKey()) == "" {
 		ux.Fwarning(d.writer, warningNotInPath)
 	}
-	return nil
 }
