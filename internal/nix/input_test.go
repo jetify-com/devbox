@@ -1,7 +1,6 @@
 package nix
 
 import (
-	"fmt"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -73,9 +72,6 @@ func TestInput(t *testing.T) {
 
 	for _, testCase := range cases {
 		i := testInputFromString(testCase.pkg, projectDir)
-		if isFLake := i.IsFlake(); testCase.isFlake != isFLake {
-			t.Errorf("IsFlake() = %v, want %v", isFLake, testCase.isFlake)
-		}
 		if name := i.Name(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
@@ -100,12 +96,12 @@ func (lockfile) ConfigHash() (string, error) {
 	return "", nil
 }
 
-func (l *lockfile) ProjectDir() string {
-	return l.projectDir
+func (lockfile) NixPkgsCommitHash() string {
+	return ""
 }
 
-func (lockfile) IsVersionedPackage(pkg string) bool {
-	return false
+func (l *lockfile) ProjectDir() string {
+	return l.projectDir
 }
 
 func (lockfile) Resolve(pkg string) (string, error) {
@@ -117,11 +113,5 @@ func testInputFromString(s, projectDir string) *testInput {
 }
 
 func (i *testInput) Package() string {
-	if i.IsFlake() {
-		return fmt.Sprintf(
-			"packages.x86_64-darwin.%s",
-			lo.Ternary(i.Fragment != "", i.Fragment, "default"),
-		)
-	}
 	return i.String()
 }

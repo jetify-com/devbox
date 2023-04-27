@@ -95,12 +95,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	input := InputFromString(args.Pkg, args.Lockfile)
 
 	for _, item := range list {
-		name, err := item.packageName()
-		if err != nil {
-			return -1, err
-		}
-
-		existing := InputFromString(name, args.Lockfile)
+		existing := InputFromString(item.unlockedReference, args.Lockfile)
 
 		if input.equals(existing) {
 			return item.index, nil
@@ -185,42 +180,6 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	return attrPath, nil
 }
 
-// packageName parses the package name from the NixProfileListItem.lockedReference
-//
-// For example:
-// if NixProfileListItem.lockedReference = github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
-// then AttributePath = legacyPackages.x86_64-darwin.go_1_19
-// and then packageName = go_1_19
-func (item *NixProfileListItem) packageName() (string, error) {
-	// Since unlocked references should already have absolute paths, lockfile is not needed
-	input := InputFromString(item.unlockedReference, nil)
-	if input.IsFlake() {
-		// TODO(landau): this needs to be normalized so that we can compare
-		// packages.aarch64-darwin.hello and hello and determine that they are
-		// the same package.
-		return item.unlockedReference, nil
-	}
-
-	// TODO(landau/savil): Should we use unlocked reference instead?
-	// I'm not sure we gain anything by using the locked reference. since
-	// the user specifies only the package name when installing
-	attrPath, err := item.AttributePath()
-	if err != nil {
-		return "", err
-	}
-
-	parts := strings.Split(attrPath, ".")
-	if len(parts) < 2 {
-		return "", redact.Errorf(
-			"expected >= 2 parts for AttributePath in \"nix profile list\" output, but got %d parts: %s",
-			redact.Safe(len(parts)),
-			redact.Safe(attrPath),
-		)
-	}
-
-	return strings.Join(parts[2:], "."), nil
-}
-
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
 func (item *NixProfileListItem) String() string {
 	return fmt.Sprintf("%d %s %s %s",
@@ -254,7 +213,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	path, err := flakePath(args)
+	input := InputFromString(args.Package, args.Lockfile)
+	urlForInstall, err := input.URLForInstall()
 	if err != nil {
 		return err
 	}
@@ -267,7 +227,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
-		path,
+		urlForInstall,
 	)
 	cmd.Env = AllowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
@@ -348,13 +308,4 @@ func nextPriority(profilePath string) string {
 	// Each subsequent package gets a lower priority. This matches how flake.nix
 	// behaves
 	return fmt.Sprintf("%d", max+1)
-}
-
-func flakePath(args *ProfileInstallArgs) (string, error) {
-	input := InputFromString(args.Package, args.Lockfile)
-	if input.IsFlake() {
-		return input.URLForInstall()
-	}
-
-	return FlakeNixpkgs(args.NixpkgsCommit) + "#" + args.Package, nil
 }

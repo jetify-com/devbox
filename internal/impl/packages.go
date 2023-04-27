@@ -36,7 +36,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.lockfile)
+		ok, err := nix.PkgExists(pkg, d.lockfile)
 		if err != nil {
 			return err
 		}

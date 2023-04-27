@@ -35,7 +35,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
-		found, err := nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg, d.lockfile)
+		found, err := nix.PkgExists(pkg, d.lockfile)
 		if err != nil {
 			return err
 		} else if !found {

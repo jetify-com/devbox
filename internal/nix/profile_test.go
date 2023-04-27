@@ -86,12 +86,4 @@ func testItem(t *testing.T, line string, expected expectedTestData) {
 	if gotAttrPath != expected.attrPath {
 		t.Errorf("expected attribute path %s but got %s", expected.attrPath, gotAttrPath)
 	}
-
-	gotPackageName, err := item.packageName()
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-	if gotPackageName != expected.packageName {
-		t.Errorf("expected package name %s but got %s", expected.packageName, gotPackageName)
-	}
 }
