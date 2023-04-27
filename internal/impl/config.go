@@ -17,7 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -88,7 +88,7 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
-	if env.DoNotUpgradeConfig() {
+	if envir.DoNotUpgradeConfig() {
 		return nil
 	}
 	if cfg.Nixpkgs.Commit == "" {

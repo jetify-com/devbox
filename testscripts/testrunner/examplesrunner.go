@@ -14,7 +14,7 @@ import (
 	"github.com/rogpeppe/go-internal/testscript"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/impl"
 )
 
@@ -61,7 +61,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 
 			// CI env var is always true in GitHub Actions
 			// https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
-			isInCI := env.IsCI()
+			isInCI := envir.IsCI()
 			if isInCI && runtime.GOOS == "darwin" {
 				t.Logf("skipping pipenv on darwin in CI. config at: %s\n", path)
 				return nil
@@ -97,7 +97,7 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 
 		// We set a custom XDG_STATE_HOME to an intentionally short path.
 		// Reason: devbox plugins like postgres store unix socket files in their state dir.
-		envs.Setenv(env.XDGStateHome, xdgStateHomeDir)
+		envs.Setenv(envir.XDGStateHome, xdgStateHomeDir)
 
 		// setup the devbox testscript environment
 		if err := setup(envs); err != nil {

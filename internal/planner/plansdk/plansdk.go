@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type PlanError struct {
@@ -111,7 +111,7 @@ func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
 }
 
 func nixpkgsMirrorURL(commitHash string) string {
-	baseURL := os.Getenv(env.DevboxCache)
+	baseURL := os.Getenv(envir.DevboxCache)
 	if baseURL == "" {
 		return ""
 	}

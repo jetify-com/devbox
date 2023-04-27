@@ -14,7 +14,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -24,8 +24,8 @@ import (
 const expectedLauncherVersion = "v0.1.0"
 
 func CheckLauncherVersion(w io.Writer) {
-	launcherVersion := os.Getenv(env.LauncherVersion)
-	if launcherVersion == "" || env.IsDevboxCloud() {
+	launcherVersion := os.Getenv(envir.LauncherVersion)
+	if launcherVersion == "" || envir.IsDevboxCloud() {
 		return
 	}
 

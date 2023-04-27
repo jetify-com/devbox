@@ -8,7 +8,7 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 // Usage: env.path.len <number>
@@ -20,7 +20,7 @@ func assertPathLength(script *testscript.TestScript, neg bool, args []string) {
 	expectedN, err := strconv.Atoi(args[0])
 	script.Check(err)
 
-	path := script.Getenv(env.Path)
+	path := script.Getenv(envir.Path)
 	actualN := len(strings.Split(path, ":"))
 	if neg {
 		if actualN == expectedN {

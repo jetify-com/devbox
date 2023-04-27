@@ -7,7 +7,7 @@ import (
 	"github.com/denisbrodbeck/machineid"
 
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 var DeviceID string
@@ -20,7 +20,7 @@ const (
 func init() {
 	// TODO(gcurtis): clean this up so that Sentry and Segment use the same
 	// start/stop functions.
-	if env.DoNotTrack() || build.TelemetryKey == "" {
+	if envir.DoNotTrack() || build.TelemetryKey == "" {
 		return
 	}
 	enabled = true
