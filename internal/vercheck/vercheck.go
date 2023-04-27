@@ -16,31 +16,43 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/debug"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // Keep this in-sync with latest version in launch.sh. If this version is newer
-// Than the version in launch.sh, we'll print a warning.
-const expectedLauncherVersion = "v0.1.0"
+// than the version in launch.sh, we'll print a notice.
+// TODO savil: bump to new version after https://github.com/jetpack-io/axiom/pull/3150 lands
+const expectedLauncherVersion = "v0.2.0"
 
-func CheckLauncherVersion(w io.Writer) {
+// currentBinaryVersion is the version of the binary that is currently running.
+// We use this variable so we can mock it in tests.
+var currentBinaryVersion = build.Version
+
+// CheckVersion checks the launcher and binary versions and prints a notice if
+// they are out of date.
+func CheckVersion(w io.Writer) {
+
 	// Replace with envir.IsDevboxCloud(). Not doing so to minimize merge conflicts.
 	if os.Getenv("DEVBOX_REGION") != "" {
 		return
 	}
 
-	if isNewLauncherAvailable() {
-		ux.Fwarning(
-			w,
-			"newer launcher version %s is available (current = %s), please update "+
-				"using `devbox version update`\n",
-			expectedLauncherVersion,
-			currentLauncherVersion(),
-		)
+	launcherNotice := launcherVersionNotice()
+	if launcherNotice != "" {
+		color.New(color.FgYellow).Fprintf(w, launcherNotice)
+
+		// we can stop here since updating the launcher would update the binary as well
+		// TODO savil: should the message also warn about updating the binary?
+		return
+	}
+
+	binaryNotice := binaryVersionNotice()
+	if binaryNotice != "" {
+		color.New(color.FgYellow).Fprintf(w, binaryNotice)
 	}
 }
 
@@ -163,6 +175,37 @@ func printSuccessMessage(w io.Writer, toolName, oldVersion, newVersion string) {
 	fmt.Fprintf(w, "%s%s\n", color.New(color.FgGreen).Sprint("Success: "), msg)
 }
 
+func launcherVersionNotice() string {
+	if !isNewLauncherAvailable() {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"New launcher available: %s -> %s. Please run `devbox version update`.\n",
+		currentLauncherVersion(),
+		expectedLauncherVersion,
+	)
+}
+
+func binaryVersionNotice() string {
+	if !isNewBinaryAvailable() {
+		return ""
+	}
+
+	availableVersion, err := getAvailableVersion()
+	if err != nil {
+		// This would be a most unexpected error because isNewBinaryAvailable
+		// internally checks for the availableVersion too.
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"New devbox available: %s -> %s. Please run `devbox version update`.\n",
+		currentBinaryVersion,
+		availableVersion,
+	)
+}
+
 // isNewLauncherAvailable returns true if a new launcher version is available.
 func isNewLauncherAvailable() bool {
 	launcherVersion := currentLauncherVersion()
@@ -171,6 +214,23 @@ func isNewLauncherAvailable() bool {
 	}
 
 	return semverCompare(launcherVersion, expectedLauncherVersion) < 0
+}
+
+func isNewBinaryAvailable() bool {
+
+	availableVersion, err := getAvailableVersion()
+	if err != nil {
+		debug.Log("ERROR: failed to get available version for CLI: %v\n", err)
+		return false
+	}
+
+	// If currentVersion is invalid, semver.Compare will return 0 and we'll assume
+	// that a new binary is not available.
+	if semver.Compare(currentBinaryVersion, availableVersion) >= 0 {
+		return false
+	}
+
+	return true
 }
 
 // currentLauncherAvailable returns launcher's version if it is
@@ -210,4 +270,20 @@ func semverCompare(ver1, ver2 string) int {
 		ver2 = "v" + ver2
 	}
 	return semver.Compare(ver1, ver2)
+}
+
+// getAvailableVersion returns the latest version available for the binary.
+func getAvailableVersion() (string, error) {
+	path := availableVersionPath()
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return string(contents), nil
+}
+
+// availableVersionPath returns the path to the file that contains the latest
+// version available for the binary.
+func availableVersionPath() string {
+	return filepath.Join(xdg.CacheSubpath("devbox"), "available-version")
 }
