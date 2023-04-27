@@ -73,7 +73,7 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
-	d.ensureGlobalProfileInPath()
+	d.ensureDevboxGlobalShellenvEnabled()
 	return nil
 }
 
@@ -174,7 +174,7 @@ func GlobalNixProfilePath() (string, error) {
 }
 
 // Checks if the global has been shellenv'd and warns the user if not
-func (d *Devbox) ensureGlobalProfileInPath() {
+func (d *Devbox) ensureDevboxGlobalShellenvEnabled() {
 	if os.Getenv(d.ogPathKey()) == "" {
 		ux.Fwarning(d.writer, warningNotInPath)
 	}
