@@ -12,130 +12,69 @@ Before making any changes to the source code (documentation excluded) make sure 
 
 The easiest way to develop Devbox is with Devbox!
 
-* Install Devbox using the command below. If you don't have Nix installed, Devbox will automatically install it for you when you run a command.
+1. Install Devbox:
 
-```bash
-curl -fsSL https://get.jetpack.io/devbox | bash
-```
+       curl -fsSL https://get.jetpack.io/devbox | bash
 
-* You can start up a development shell with all the dependencies installed by running
+2. Clone this repository:
 
-```bash
-devbox shell
-```
+       git clone https://github.com/jetpack-io/devbox.git go.jetpack.io/devbox
+       cd go.jetpack.io/devbox
 
-* Build the Devbox CLI. Note: You can run these commands outside of Devbox Shell
+3. Build the Devbox CLI. If you don't have Nix installed, Devbox will automatically install it for you before building:
 
-```bash
-# Build for your current OS
-devbox run build
+       devbox run build
 
-# Build for Linux
-devbox run build-linux
+4. Start a development shell using your build of Devbox:
 
-# Run the CI Linter
-devbox run lint
-```
+       dist/devbox shell
 
-* Run and Test the Devbox CLI:
-
-```bash
-./dist/devbox <test_command>
-```
-
-* For the best experience working on Devbox with VSCode, we recommend starting VSCode from inside your Devbox shell. You can also run:
-
-```bash
-devbox run code
-```
+Tip: you can also start VSCode from inside your Devbox shell with `devbox run code`.
 
 ### Setting up the Environment Without Devbox
 
-If you are unable to install or use Devbox, you can manually replicate the environment by following the steps below
+If you are unable to install or use Devbox, you can manually replicate the environment by following the steps below.
 
-* Install [Nix Package Manager](https://nixos.org/download.html).
-* Install [Golang](https://go.dev/doc/install) (current version: 1.20)
-* Clone this repository:
+1. Install Nix Package Manager. We recommend using the [Determinate Systems installer](https://github.com/DeterminateSystems/nix-installer):
 
-    ```bash
-        git clone github.com/jetpack/devbox go.jetpack.io
-    ```
+       curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-* Setup you `GOPATH` env variable to the parent directory of `go.jetpack.io/`
-  * Example: If the cloned repository is at `/Users/johndoe/projects/go.jetpack.io/`:
+   Alternatively, you can also use [the official installer](https://nixos.org/download.html).
 
-    ```bash
-    export GOPATH=/Users/johndoe/projects/
+2. Install [Go](https://go.dev/doc/install) (current version: 1.20)
 
-* Install dependencies:
+3. Clone this repository and build Devbox:
 
-    ```bash
-    go install
-    ```
-
-* Build Devbox:
-
-    ```bash
-    go build -o ./dist/devbox cmd/devbox/main.go
-    ```
-
-    This will build an executable file.
-
-* Run and test Devbox:
-
-    ```bash
-    ./dist/devbox <your_test_command>
-    ```
+       git clone https://github.com/jetpack-io/devbox.git go.jetpack.io/devbox
+       cd go.jetpack.io/devbox
+       go build ./cmd/devbox
+       ./devbox run -- echo hello, world
 
 ## Pull Request Process
 
-1. Ensure any new feature or functionality also includes tests to verify its correctness.
+1. For new features or non-trivial changes, consider first filing an issue to discuss what changes you plan on making. This will let us help you with implementation details and to make sure we don't duplicate any work.
+2. Ensure any new feature or functionality includes tests to verify its correctness.
+3. Run `devbox run lint` and `devbox run test`.
+4. Run `go mod tidy` if you added any new dependencies.
+5. Submit your pull request and someone will take a look!
 
-2. Ensure any new dependency is also included in [go.mod](go.mod) file
+### Style Guide
 
-3. Ensure any binary file as a result of build (e.g., `./devbox`) are removed and/or excluded from tracking in git.
+We don't expect you to read through a long style guide or be an expert in Go before contributing. When necessary, a reviewer will be happy to help out with any suggestions around code style when you submit your PR. Otherwise, the Devbox codebase generally follows common Go idioms and patterns:
 
-4. Update the [README.md](README.md) and/or docs with details of changes to the interface, this includes new environment
-   variables, new commands, new flags, and useful file locations.
-
-5. You may merge the Pull Request in once you have the sign-off of developers/maintainers, or if you
-   do not have permission to do that, you may request the maintainers to merge it for you.
+- If you're unfamiliar with idiomatic Go, [Effective Go](https://go.dev/doc/effective_go) and the [Google Go Style Guide](https://google.github.io/styleguide/go) are good resources.
+- There's no strict commit message format, but a good practice is to start the subject with the name of the Go packages you add/modified. For example, `boxcli: update help for add command`.
 
 ## Developer Certificate of Origin
 
 By contributing to this project you agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) which was created by the Linux Foundation and is a simple statement that you, as a contributor, have the legal right to make the contribution. See the DCO description for details below:
-> Developer Certificate of Origin
->
-> Version 1.1
->
-> Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
->
-> Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
->
->
-> Developer's Certificate of Origin 1.1
->
+
 > By making a contribution to this project, I certify that:
 >
-> (a) The contribution was created in whole or in part by me and I
-    have the right to submit it under the open source license
-    indicated in the file; or
+> a. The contribution was created in whole or in part by me and I have the right to submit it under the open source license indicated in the file; or
 >
-> (b) The contribution is based upon previous work that, to the best
-    of my knowledge, is covered under an appropriate open source
-    license and I have the right under that license to submit that
-    work with modifications, whether created in whole or in part
-    by me, under the same open source license (unless I am
-    permitted to submit under a different license), as indicated
-    in the file; or
+> b. The contribution is based upon previous work that, to the best of my knowledge, is covered under an appropriate open source license and I have the right under that license to submit that work with modifications, whether created in whole or in part by me, under the same open source license (unless I am permitted to submit under a different license), as indicated in the file; or
 >
-> (c) The contribution was provided directly to me by some other
-    person who certified (a), (b) or (c) and I have not modified
-    it.
+> c. The contribution was provided directly to me by some other person who certified (a), (b) or (c) and I have not modified it.
 >
-> (d) I understand and agree that this project and the contribution
-    are public and that a record of the contribution (including all
-    personal information I submit with it, including my sign-off) is
-    maintained indefinitely and may be redistributed consistent with
-    this project or the open source license(s) involved.
+> d. I understand and agree that this project and the contribution are public and that a record of the contribution (including all personal information I submit with it, including my sign-off) is maintained indefinitely and may be redistributed consistent with this project or the open source license(s) involved.
