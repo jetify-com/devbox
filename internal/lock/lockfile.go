@@ -47,10 +47,8 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 
 func (l *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if l.IsVersionedPackage(p) {
-			if _, err := l.Resolve(p); err != nil {
-				return err
-			}
+		if _, err := l.Resolve(p); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -65,18 +63,27 @@ func (l *File) Remove(pkgs ...string) error {
 
 func (l *File) Resolve(pkg string) (string, error) {
 	if _, ok := l.Packages[pkg]; !ok {
-		name, version, _ := strings.Cut(pkg, "@")
-		locked, err := l.resolver.Resolve(name, version)
-		if err != nil {
-			return "", err
+		name, version, found := strings.Cut(pkg, "@")
+		if found {
+			locked, err := l.resolver.Resolve(name, version)
+			if err != nil {
+				return "", err
+			}
+			l.Packages[pkg] = *locked
+		} else {
+			l.Packages[pkg] = Package{}
 		}
-		l.Packages[pkg] = *locked
 		if err := l.Update(); err != nil {
 			return "", err
 		}
 	}
 
 	return l.Packages[pkg].Resolved, nil
+}
+
+func (l *File) Contains(pkg string) bool {
+	_, ok := l.Packages[pkg]
+	return ok
 }
 
 func (l *File) Update() error {

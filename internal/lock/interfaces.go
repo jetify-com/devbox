@@ -2,6 +2,7 @@ package lock
 
 type devboxProject interface {
 	ConfigHash() (string, error)
+	IsPlugin(name string) bool
 	ProjectDir() string
 }
 

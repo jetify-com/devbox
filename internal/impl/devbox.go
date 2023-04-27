@@ -124,6 +124,7 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
+	box.pluginManager.ApplyOptions(plugin.WithLockfile(lock))
 	box.lockfile = lock
 	return box, nil
 }
@@ -435,7 +436,7 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.packages(), d.projectDir)
+	pluginSvcs, err := plugin.GetServices(d.packages(), d.cfg.Include, d.projectDir)
 	if err != nil {
 		return nil, err
 	}

@@ -56,7 +56,6 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
 		// if installation fails, revert devbox.json
 		// This is not perfect because there may be more than 1 package being
@@ -346,4 +345,8 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}
 
 	return errors.WithStack(os.Remove(profileDir))
+}
+
+func (d *Devbox) IsPlugin(name string) bool {
+	return d.pluginManager.IsPlugin(name)
 }

@@ -56,7 +56,16 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) error {
+func (m *Manager) Include(w io.Writer, include, projectDir string) error {
+	name, err := parseInclude(include)
+	if err != nil {
+		return err
+	}
+	err = m.Create(w, name, projectDir)
+	return err
+}
+
+func (m *Manager) Create(w io.Writer, pkg, projectDir string) error {
 	virtenvPath, err := createVirtenvSymlink(w, projectDir)
 	if err != nil {
 		return err
@@ -206,7 +215,7 @@ func createSymlink(root, filePath string) error {
 
 func (m *Manager) shouldCreateFile(filePath string) bool {
 	// Only create devboxDir files in add mode.
-	if strings.Contains(filePath, devboxDirName) && !m.addMode {
+	if strings.Contains(filePath, devboxDirName) && m.lockfile.Contains(filePath) {
 		return false
 	}
 
@@ -216,5 +225,5 @@ func (m *Manager) shouldCreateFile(filePath string) bool {
 	}
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
-	return errors.Is(err, fs.ErrNotExist)
+	return os.IsNotExist(err)
 }
