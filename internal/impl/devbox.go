@@ -148,10 +148,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
 	shellPlan.FlakeInputs = d.flakeInputs()
 
-	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
-	if err != nil {
-		return nil, err
-	}
+	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	shellPlan.NixpkgsInfo = nixpkgsInfo
 
 	return shellPlan, nil

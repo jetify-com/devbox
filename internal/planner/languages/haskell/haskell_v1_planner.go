@@ -63,20 +63,20 @@ func (p *V2Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	// Remove the ghc package from the list of user packages
 	p.userPackages = append(p.userPackages[:index], p.userPackages[index+1:]...)
 	haskellPackages := p.getHaskellPackages(ghcPackage)
-	definitions := []string{}
+	definitions := map[string]string{}
 	// Create the haskell-pkg definition based on the compiler type
 	switch ghcPackage.compilerType {
 	case Default:
-		definitions = []string{
-			fmt.Sprintf(
-				"haskell-pkg = pkgs.haskellPackages.ghcWithPackages (ps: with ps; [ %s ]);",
+		definitions = map[string]string{
+			"haskell-pkg": fmt.Sprintf(
+				"pkgs.haskellPackages.ghcWithPackages (ps: with ps; [ %s ]);",
 				strings.Join(haskellPackages, " "),
 			),
 		}
 	case Versioned:
-		definitions = []string{
-			fmt.Sprintf(
-				"haskell-pkg = pkgs.haskell.packages.%s.ghcWithPackages (ps: with ps; [ %s ]);",
+		definitions = map[string]string{
+			"haskell-pkg": fmt.Sprintf(
+				"pkgs.haskell.packages.%s.ghcWithPackages (ps: with ps; [ %s ]);",
 				ghcPackage.pkg,
 				strings.Join(haskellPackages, " "),
 			),
