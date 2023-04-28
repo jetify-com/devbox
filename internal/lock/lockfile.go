@@ -79,7 +79,7 @@ func (l *File) Resolve(pkg string) (string, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{
 				Resolved: fmt.Sprintf(
-					"flake:nixpkgs/%s#%s",
+					"github:NixOS/nixpkgs/%s#%s",
 					l.NixPkgsCommitHash(),
 					pkg,
 				),
@@ -105,4 +105,11 @@ func (l *File) Update() error {
 
 func lockFilePath(project devboxProject) string {
 	return filepath.Join(project.ProjectDir(), "devbox.lock")
+}
+
+func getLockfileHash(project devboxProject) (string, error) {
+	if !featureflag.LockFile.Enabled() {
+		return "", nil
+	}
+	return cuecfg.FileHash(lockFilePath(project))
 }

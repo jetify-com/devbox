@@ -55,14 +55,14 @@ func TestInput(t *testing.T) {
 			isFlake:            false,
 			name:               "nixpkgs-hsdafk",
 			urlWithoutFragment: "hello",
-			urlForInput:        fmt.Sprintf("flake:nixpkgs/%s", nixCommitHash),
+			urlForInput:        fmt.Sprintf("github:NixOS/nixpkgs/%s", nixCommitHash),
 		},
 		{
 			pkg:                "hello@123",
 			isFlake:            false,
 			name:               "nixpkgs-hsdafk",
 			urlWithoutFragment: "hello@123",
-			urlForInput:        fmt.Sprintf("flake:nixpkgs/%s", nixCommitHash),
+			urlForInput:        fmt.Sprintf("github:NixOS/nixpkgs/%s", nixCommitHash),
 		},
 		{
 			pkg:                "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
@@ -121,7 +121,7 @@ func (lockfile) Resolve(pkg string) (string, error) {
 		return pkg, nil
 	}
 	return fmt.Sprintf(
-		"flake:nixpkgs/%s#%s",
+		"github:NixOS/nixpkgs/%s#%s",
 		nixCommitHash,
 		pkg,
 	), nil

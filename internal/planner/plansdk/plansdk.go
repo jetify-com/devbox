@@ -99,7 +99,7 @@ func GetNixpkgsInfo(commitHash string) *NixpkgsInfo {
 		}
 	}
 	return &NixpkgsInfo{
-		URL: fmt.Sprintf("flake:nixpkgs/%s", commitHash),
+		URL: fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash),
 	}
 }
 

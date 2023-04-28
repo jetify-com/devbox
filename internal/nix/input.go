@@ -203,15 +203,15 @@ func (i *Input) version() string {
 }
 
 // IsNixpkgsURL returns true if the input is a nixpkgs flake of the form:
-// flake:nixpkgs/...
+// github:NixOS/nixpkgs/...
 //
 // While there are many ways to specify this input, devbox always uses
-// flake:nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
+// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func IsNixpkgsURL(url string) bool {
-	return strings.HasPrefix(url, "flake:nixpkgs/")
+	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
 }
 
 func HashFromNiPkgsURL(url string) string {
-	return strings.TrimPrefix(url, "flake:nixpkgs/")
+	return strings.TrimPrefix(url, "github:NixOS/nixpkgs/")
 }

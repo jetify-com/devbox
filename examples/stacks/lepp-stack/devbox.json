@@ -20,7 +20,7 @@
             "run_test": [
                 "devbox run init_db",
                 "devbox services start",
-                "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
+                "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
                 "devbox run create_db",
                 "curl localhost:8089",
                 "devbox services stop"

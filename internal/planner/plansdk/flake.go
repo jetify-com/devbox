@@ -14,10 +14,10 @@ type FlakeInput struct {
 }
 
 // IsNixpkgs returns true if the input is a nixpkgs flake of the form:
-// flake:nixpkgs/...
+// github:NixOS/nixpkgs/...
 //
 // While there are many ways to specify this input, devbox always uses
-// flake:nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
+// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func (f *FlakeInput) IsNixpkgs() bool {
 	return nix.IsNixpkgsURL(f.URL)

@@ -38,7 +38,7 @@ func TestNixProfileListItem(t *testing.T) {
 		"numpy": {
 			line: fmt.Sprintf("%d %s %s %s",
 				2,
-				"flake:nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
+				"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
 				"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin."+
 					"python39Packages.numpy ",
 				"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3",
@@ -46,7 +46,7 @@ func TestNixProfileListItem(t *testing.T) {
 			expected: expectedTestData{
 				item: &NixProfileListItem{
 					2,
-					"flake:nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
+					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
 					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
 					"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3",
 				},
