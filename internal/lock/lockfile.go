@@ -75,7 +75,7 @@ func (l *File) Resolve(pkg string) (string, error) {
 				return "", err
 			}
 		} else {
-			// These are legacy packages without a version. Resolve to nixpks with
+			// These are legacy packages without a version. Resolve to nixpkgs with
 			// whatever hash is in the devbox.json
 			locked = &Package{
 				Resolved: fmt.Sprintf(

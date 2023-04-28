@@ -2,7 +2,7 @@
   description = "A devbox shell";
 
   inputs = {
-   {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */}}
+    {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */ -}}
     nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
     flake-utils.url = "github:numtide/flake-utils";
     {{- range .FlakeInputs }}
@@ -39,8 +39,8 @@
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            {{/* add definitions at the top so they take priority */}}
-            {{/* We may duplicate packages but that's ok */}}
+            {{- /* add definitions at the top so they take priority */ -}}
+            {{- /* We may duplicate packages but that's ok */ -}}
             {{- range $definition, $_ := .Definitions}}
             {{ $definition }}
             {{- end }}
