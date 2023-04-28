@@ -172,11 +172,6 @@ func StartProcessManager(
 		}
 	}
 
-	file := lookupProcessCompose(projectDir, processComposeFilePath)
-	if file != "" {
-		flags = append(flags, "-f", file)
-	}
-
 	if processComposeBackground {
 		flags = append(flags, "-t=false")
 		cmd := exec.Command(processComposeBinPath, flags...)
