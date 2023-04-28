@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package sshshim
 
 // The sshshim is invoked by mutagen daemon, so we log errors to a file which
