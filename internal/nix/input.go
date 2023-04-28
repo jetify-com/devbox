@@ -205,6 +205,14 @@ func (i *Input) version() string {
 	return version
 }
 
+func (i *Input) IsNixpkgsURL() bool {
+	return IsNixpkgsURL(i.URLForInput())
+}
+
+func (i *Input) hashFromNiPkgsURL() string {
+	return HashFromNiPkgsURL(i.URLForInput())
+}
+
 // IsNixpkgsURL returns true if the input is a nixpkgs flake of the form:
 // github:NixOS/nixpkgs/...
 //

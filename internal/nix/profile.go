@@ -197,7 +197,6 @@ type ProfileInstallArgs struct {
 	CustomStepMessage string
 	ExtraFlags        []string
 	Lockfile          *lock.File
-	NixpkgsCommit     string
 	Package           string
 	ProfilePath       string
 	Writer            io.Writer
@@ -205,8 +204,11 @@ type ProfileInstallArgs struct {
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
-	if err := ensureNixpkgsPrefetched(args.Writer, args.NixpkgsCommit); err != nil {
-		return err
+	input := InputFromString(args.Package, args.Lockfile)
+	if input.IsNixpkgsURL() {
+		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNiPkgsURL()); err != nil {
+			return err
+		}
 	}
 	stepMsg := args.Package
 	if args.CustomStepMessage != "" {
@@ -216,7 +218,6 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	input := InputFromString(args.Package, args.Lockfile)
 	urlForInstall, err := input.URLForInstall()
 	if err != nil {
 		return err

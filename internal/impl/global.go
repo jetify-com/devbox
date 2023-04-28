@@ -55,7 +55,6 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
 			Writer:            d.writer,

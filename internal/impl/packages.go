@@ -237,7 +237,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
 			Writer:            d.writer,
