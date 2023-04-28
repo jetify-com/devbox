@@ -31,6 +31,7 @@
             "run_test": [
                 "initdb",
                 "devbox services start",
+                "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
                 "devbox run create_db",
                 "python todo_project/manage.py test",
                 "devbox services stop"
