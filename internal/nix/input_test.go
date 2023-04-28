@@ -53,14 +53,14 @@ func TestInput(t *testing.T) {
 		{
 			pkg:                "hello",
 			isFlake:            false,
-			name:               "hello-5d4140",
+			name:               "nixpkgs-hsdafk",
 			urlWithoutFragment: "hello",
 			urlForInput:        fmt.Sprintf("flake:nixpkgs/%s", nixCommitHash),
 		},
 		{
 			pkg:                "hello@123",
 			isFlake:            false,
-			name:               "hello-123-56bf37",
+			name:               "nixpkgs-hsdafk",
 			urlWithoutFragment: "hello@123",
 			urlForInput:        fmt.Sprintf("flake:nixpkgs/%s", nixCommitHash),
 		},

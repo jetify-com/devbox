@@ -58,7 +58,7 @@ func TestMergeShellPlans(t *testing.T) {
 	}
 	expected = &ShellPlan{
 		DevPackages:   []string{},
-		Definitions:   map[string]string{},
+		Definitions:   nil,
 		ShellInitHook: []string{},
 		GeneratedFiles: map[string]string{
 			"a": "b",

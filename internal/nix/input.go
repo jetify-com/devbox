@@ -53,7 +53,11 @@ func (i *Input) Name() string {
 	} else if i.IsGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
 	} else if url := i.URLForInput(); IsNixpkgsURL(url) {
-		result = "nixpkgs-" + HashFromNiPkgsURL(url)[0:6]
+		u := HashFromNiPkgsURL(url)
+		if len(u) > 6 {
+			u = u[0:6]
+		}
+		result = "nixpkgs-" + u
 	} else {
 		result = i.String() + "-" + i.hash()
 	}
