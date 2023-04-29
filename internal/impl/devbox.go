@@ -26,6 +26,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
@@ -383,7 +384,7 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 		)
 	}
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if commandExists("direnv") {
+	if cmdutil.Exists("direnv") {
 		// prompt for direnv allow
 		var result string
 		isInteractiveMode := isatty.IsTerminal(os.Stdin.Fd())
@@ -815,22 +816,26 @@ var nixEnvCache map[string]string
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
-	var err error
-	if nixEnvCache == nil {
-		usePrintDevEnvCache := false
-
-		// If lockfile is up-to-date, we can use the print-dev-env cache.
-		if lock, err := lock.Local(d); err != nil {
-			return nil, err
-		} else if upToDate, err := lock.IsUpToDate(); err != nil {
-			return nil, err
-		} else if upToDate {
-			usePrintDevEnvCache = true
-		}
-
-		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
+	if nixEnvCache != nil {
+		return nixEnvCache, nil
 	}
-	return nixEnvCache, err
+
+	usePrintDevEnvCache := false
+
+	// If lockfile is up-to-date, we can use the print-dev-env cache.
+	lockFile, err := lock.Local(d)
+	if err != nil {
+		return nil, err
+	}
+	upToDate, err := lockFile.IsUpToDate()
+	if err != nil {
+		return nil, err
+	}
+	if upToDate {
+		usePrintDevEnvCache = true
+	}
+
+	return d.computeNixEnv(ctx, usePrintDevEnvCache)
 }
 
 func (d *Devbox) ogPathKey() string {
@@ -947,11 +952,6 @@ func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
 }
 
-func commandExists(command string) bool { // TODO: move to a utility package
-	_, err := exec.LookPath(command)
-	return err == nil
-}
-
 // ignoreCurrentEnvVar contains environment variables that Devbox should remove
 // from the slice of [os.Environ] variables before sourcing them. These are
 // variables that are set automatically by a new shell.
@@ -1042,7 +1042,6 @@ func addHashToEnv(env map[string]string) error {
 	hash, err := cuecfg.Hash(env)
 	if err == nil {
 		env[devboxShellEnvHashVarName] = hash
-
 	}
 	return err
 }

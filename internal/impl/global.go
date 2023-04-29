@@ -38,16 +38,17 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		found, err := nix.PkgExists(pkg, d.lockfile)
 		if err != nil {
 			return err
-		} else if !found {
+		}
+		if !found {
 			return nix.ErrPackageNotFound
 		}
 	}
-	var added []string
 	profilePath, err := GlobalNixProfilePath()
 	if err != nil {
 		return err
 	}
 
+	var added []string
 	total := len(pkgs)
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1

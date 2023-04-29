@@ -9,12 +9,12 @@ import (
 	_ "embed"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"text/template"
 
 	"github.com/pkg/errors"
 
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
@@ -43,11 +43,6 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	bashPath, err := exec.LookPath("bash")
-	if err != nil {
-		bashPath = "/bin/bash"
-	}
-
 	// Remove all old wrappers
 	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
 
@@ -55,6 +50,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	destPath := filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
 	_ = os.MkdirAll(destPath, 0755)
 
+	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
 			BashPath:     bashPath,

@@ -15,11 +15,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
@@ -75,9 +76,9 @@ func SelfUpdate(stdOut, stdErr io.Writer) error {
 
 func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 	installScript := ""
-	if _, err := exec.LookPath("curl"); err == nil {
+	if cmdutil.Exists("curl") {
 		installScript = "curl -fsSL https://get.jetpack.io/devbox | bash"
-	} else if _, err := exec.LookPath("wget"); err == nil {
+	} else if cmdutil.Exists("wget") {
 		installScript = "wget -qO- https://get.jetpack.io/devbox | bash"
 	} else {
 		return usererr.New("curl or wget is required to update devbox. Please install either and try again.")
