@@ -9,7 +9,7 @@ import (
 )
 
 func IsCLICloudShell() bool {
-	cliCloudShell, _ := strconv.ParseBool(os.Getenv(DevboxCLICloudShell))
+	cliCloudShell, _ := strconv.ParseBool(os.Getenv(devboxCLICloudShell))
 	return cliCloudShell
 }
 
@@ -22,9 +22,9 @@ func IsDevboxShellEnabled() bool {
 	return inDevboxShell
 }
 
-func NotTrack() bool {
+func DoNotTrack() bool {
 	// https://consoledonottrack.com/
-	doNotTrack, _ := strconv.ParseBool(os.Getenv(DoNotTrack))
+	doNotTrack, _ := strconv.ParseBool(os.Getenv("DO_NOT_TRACK"))
 	return doNotTrack
 }
 
@@ -33,13 +33,13 @@ func IsDevboxDebugEnabled() bool {
 	return enabled
 }
 
-func NotUpgradeConfig() bool {
+func DoNotUpgradeConfig() bool {
 	notUpgrade, _ := strconv.ParseBool(os.Getenv(DevboxDoNotUpgradeConfig))
 	return notUpgrade
 }
 
 func IsInBrowser() bool { // TODO: a better name
-	inBrowser, _ := strconv.ParseBool(os.Getenv(StartWebTerminal))
+	inBrowser, _ := strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
 	return inBrowser
 }
 

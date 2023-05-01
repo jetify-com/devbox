@@ -5,7 +5,7 @@ package env
 
 const (
 	DevboxCache              = "DEVBOX_CACHE"
-	DevboxCLICloudShell      = "DEVBOX_CLI_CLOUD_SHELL"
+	devboxCLICloudShell      = "DEVBOX_CLI_CLOUD_SHELL"
 	DevboxDebug              = "DEVBOX_DEBUG"
 	DevboxFeaturePrefix      = "DEVBOX_FEATURE_"
 	DevboxGateway            = "DEVBOX_GATEWAY"
@@ -16,13 +16,9 @@ const (
 	DevboxShellStartTime     = "DEVBOX_SHELL_START_TIME"
 	DevboxVM                 = "DEVBOX_VM"
 
-	DoNotTrack = "DO_NOT_TRACK"
-
 	LauncherVersion = "LAUNCHER_VERSION"
 
 	SSHTTY = "SSH_TTY"
-
-	StartWebTerminal = "START_WEB_TERMINAL"
 
 	XDGDataHome   = "XDG_DATA_HOME"
 	XDGConfigHome = "XDG_CONFIG_HOME"

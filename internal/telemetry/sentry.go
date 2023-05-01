@@ -50,7 +50,7 @@ var started bool
 
 // Start enables telemetry for the current program.
 func Start(appName string) {
-	if started || env.NotTrack() {
+	if started || env.DoNotTrack() {
 		return
 	}
 	started = initSentry(appName)
