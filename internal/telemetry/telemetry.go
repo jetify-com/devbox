@@ -20,7 +20,7 @@ const (
 func init() {
 	// TODO(gcurtis): clean this up so that Sentry and Segment use the same
 	// start/stop functions.
-	if env.NotTrack() || build.TelemetryKey == "" {
+	if env.DoNotTrack() || build.TelemetryKey == "" {
 		return
 	}
 	enabled = true

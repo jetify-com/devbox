@@ -88,7 +88,7 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 }
 
 func upgradeConfig(cfg *Config, absFilePath string) error {
-	if env.NotUpgradeConfig() {
+	if env.DoNotUpgradeConfig() {
 		return nil
 	}
 	if cfg.Nixpkgs.Commit == "" {
