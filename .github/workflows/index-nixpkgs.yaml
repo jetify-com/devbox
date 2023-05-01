@@ -1,0 +1,14 @@
+name: Index nixpkgs-unstable
+run-name: Daily index update
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  check-channel:
+    name: Check for channel updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch nixpkgs-unstable channel history
+        run: curl --silent --show-error --fail --proto '=https' --tlsv1.2 --location https://channels.nix.gsc.io/nixpkgs-unstable/history-v2
