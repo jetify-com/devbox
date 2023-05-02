@@ -13,6 +13,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -85,7 +86,7 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 		return err
 	}
 
-	// Fetch the new launcher.
+	// Fetch the new launcher. And installs the new devbox CLI binary.
 	cmd := exec.Command("sh", "-c", installScript)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
@@ -93,7 +94,8 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	// Invoke a devbox command to trigger an update of the devbox CLI binary.
+	// Previously, we have already updated the binary. So, we call triggerUpdate
+	// just to get the new version information.
 	updated, err := triggerUpdate(stdErr)
 	if err != nil {
 		return errors.WithStack(err)
@@ -133,12 +135,14 @@ type updatedVersions struct {
 // devbox versions.
 func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 
-	exe, err := os.Executable()
-	if err != nil {
-		return nil, errors.WithStack(err)
+	exePath := os.Getenv("LAUNCHER_PATH")
+	if exePath == "" {
+		ux.Fwarning(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
+		exePath = "devbox"
 	}
+
 	// TODO savil. Add a --json flag to devbox version and parse the output as JSON
-	cmd := exec.Command(exe, "version", "-v")
+	cmd := exec.Command(exePath, "version", "-v")
 
 	buf := new(bytes.Buffer)
 	cmd.Stdout = io.MultiWriter(stdErr, buf)
