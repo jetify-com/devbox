@@ -19,28 +19,42 @@ import (
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // Keep this in-sync with latest version in launch.sh. If this version is newer
-// Than the version in launch.sh, we'll print a warning.
-const expectedLauncherVersion = "v0.1.0"
+// than the version in launch.sh, we'll print a notice.
+const expectedLauncherVersion = "v0.2.0"
 
-func CheckLauncherVersion(w io.Writer) {
+// currentDevboxVersion is the version of the devbox CLI binary that is currently running.
+// We use this variable so we can mock it in tests.
+var currentDevboxVersion = build.Version
+
+// envDevboxLatestVersion is the latest version available of the devbox CLI binary.
+// Change to env.DevboxLatestVersion. Not doing so to minimize merge conflicts.
+var envDevboxLatestVersion = "DEVBOX_LATEST_VERSION"
+
+// CheckVersion checks the launcher and binary versions and prints a notice if
+// they are out of date.
+func CheckVersion(w io.Writer) {
+
 	// Replace with envir.IsDevboxCloud(). Not doing so to minimize merge conflicts.
 	if os.Getenv("DEVBOX_REGION") != "" {
 		return
 	}
 
-	if isNewLauncherAvailable() {
-		ux.Fwarning(
-			w,
-			"newer launcher version %s is available (current = %s), please update "+
-				"using `devbox version update`\n",
-			expectedLauncherVersion,
-			currentLauncherVersion(),
-		)
+	launcherNotice := launcherVersionNotice()
+	if launcherNotice != "" {
+		// TODO: use ux.FNotice
+		color.New(color.FgYellow).Fprintf(w, launcherNotice)
+
+		// fallthrough to alert the user about a new Devbox CLI binary being possibly available
+	}
+
+	devboxNotice := devboxVersionNotice()
+	if devboxNotice != "" {
+		// TODO: use ux.FNotice
+		color.New(color.FgYellow).Fprintf(w, devboxNotice)
 	}
 }
 
@@ -89,7 +103,7 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 	}
 
 	printSuccessMessage(stdErr, "Launcher", currentLauncherVersion(), updated.launcherVersion)
-	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
+	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
 
 	return nil
 }
@@ -107,7 +121,7 @@ func selfUpdateDevbox(stdErr io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
+	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
 
 	return nil
 }
@@ -163,14 +177,46 @@ func printSuccessMessage(w io.Writer, toolName, oldVersion, newVersion string) {
 	fmt.Fprintf(w, "%s%s\n", color.New(color.FgGreen).Sprint("Success: "), msg)
 }
 
+func launcherVersionNotice() string {
+	if !isNewLauncherAvailable() {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"New launcher available: %s -> %s. Please run `devbox version update`.\n",
+		currentLauncherVersion(),
+		expectedLauncherVersion,
+	)
+}
+
+func devboxVersionNotice() string {
+	if !isNewDevboxAvailable() {
+		return ""
+	}
+
+	return fmt.Sprintf(
+		"New devbox available: %s -> %s. Please run `devbox version update`.\n",
+		currentDevboxVersion,
+		latestVersion(),
+	)
+}
+
 // isNewLauncherAvailable returns true if a new launcher version is available.
 func isNewLauncherAvailable() bool {
 	launcherVersion := currentLauncherVersion()
 	if launcherVersion == "" {
 		return false
 	}
-
 	return semverCompare(launcherVersion, expectedLauncherVersion) < 0
+}
+
+// isNewDevboxAvailable returns true if a new devbox CLI binary version is available.
+func isNewDevboxAvailable() bool {
+	latest := latestVersion()
+	if latest == "" {
+		return false
+	}
+	return semverCompare(currentDevboxVersion, latest) < 0
 }
 
 // currentLauncherAvailable returns launcher's version if it is
@@ -210,4 +256,13 @@ func semverCompare(ver1, ver2 string) int {
 		ver2 = "v" + ver2
 	}
 	return semver.Compare(ver1, ver2)
+}
+
+// latestVersion returns the latest version available for the binary.
+func latestVersion() string {
+	version := os.Getenv(envDevboxLatestVersion)
+	if version == "" {
+		return ""
+	}
+	return "v" + version
 }
