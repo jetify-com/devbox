@@ -14,7 +14,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type Services map[string]Service
@@ -38,7 +38,7 @@ const (
 )
 
 func printProxyURL(w io.Writer, services Services) error { // TODO: remove it?
-	if !env.IsDevboxCloud() {
+	if !envir.IsDevboxCloud() {
 		return nil
 	}
 

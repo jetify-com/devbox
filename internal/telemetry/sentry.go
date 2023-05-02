@@ -26,7 +26,7 @@ import (
 	pkgerrors "github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -50,7 +50,7 @@ var started bool
 
 // Start enables telemetry for the current program.
 func Start(appName string) {
-	if started || env.DoNotTrack() {
+	if started || envir.DoNotTrack() {
 		return
 	}
 	started = initSentry(appName)

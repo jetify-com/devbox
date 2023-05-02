@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/rogpeppe/go-internal/testscript"
-	"go.jetpack.io/devbox/internal/env"
+
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
@@ -21,7 +22,7 @@ func setupTestEnv(t *testing.T, envs *testscript.Env) error {
 		return err
 	}
 
-	envs.Setenv(env.DevboxDebug, os.Getenv(env.DevboxDebug))
+	envs.Setenv(envir.DevboxDebug, os.Getenv(envir.DevboxDebug))
 	return nil
 }
 
@@ -30,7 +31,7 @@ func setupHome(t *testing.T, envs *testscript.Env) {
 	// 1. testscripts overrides it to /no-home, presumably to improve isolation
 	// 2. but many language tools rely on a $HOME being set, and break due to 1.
 	//    examples include ~/.dotnet folder and GOCACHE=$HOME/Library/Caches/go-build
-	envs.Setenv(env.Home, t.TempDir())
+	envs.Setenv(envir.Home, t.TempDir())
 }
 
 func setupPATH(envs *testscript.Env) {
@@ -39,9 +40,9 @@ func setupPATH(envs *testscript.Env) {
 	// The one entry we need to keep is the /bin directory in the testing directory.
 	// That directory is setup by the testing framework itself, and it's what allows
 	// us to call our own custom "devbox" command.
-	oldPath := envs.Getenv(env.Path)
+	oldPath := envs.Getenv(envir.Path)
 	newPath := strings.Split(oldPath, ":")[0]
-	envs.Setenv(env.Path, newPath)
+	envs.Setenv(envir.Path, newPath)
 }
 
 func setupCacheHome(envs *testscript.Env) error {
@@ -49,7 +50,7 @@ func setupCacheHome(envs *testscript.Env) error {
 	// XDG_CACHE_HOME (which defaults to ~/.cache). For purposes of this
 	// test set it to a location within the test's working directory:
 	cacheHome := filepath.Join(envs.WorkDir, ".cache")
-	envs.Setenv(env.XDGCacheHome, cacheHome)
+	envs.Setenv(envir.XDGCacheHome, cacheHome)
 	err := os.MkdirAll(cacheHome, 0755) // Ensure dir exists.
 	if err != nil {
 		return err
