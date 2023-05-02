@@ -33,7 +33,7 @@ func RootCmd() *cobra.Command {
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			vercheck.CheckLauncherVersion(cmd.ErrOrStderr())
+			vercheck.CheckVersion(cmd.ErrOrStderr())
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
 			}
