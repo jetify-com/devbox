@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/spf13/cobra"
@@ -56,6 +57,7 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 		fmt.Fprintf(w, "Commit:      %v\n", v.Commit)
 		fmt.Fprintf(w, "Commit Time: %v\n", v.CommitDate)
 		fmt.Fprintf(w, "Go Version:  %v\n", v.GoVersion)
+		fmt.Fprintf(w, "Launcher:    %v\n", v.LauncherVersion)
 	} else {
 		fmt.Fprintf(w, "%v\n", v.Version)
 	}
@@ -63,12 +65,13 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 }
 
 type versionInfo struct {
-	Version      string
-	IsPrerelease bool
-	Platform     string
-	Commit       string
-	CommitDate   string
-	GoVersion    string
+	Version         string
+	IsPrerelease    bool
+	Platform        string
+	Commit          string
+	CommitDate      string
+	GoVersion       string
+	LauncherVersion string
 }
 
 func getVersionInfo() *versionInfo {
@@ -78,6 +81,8 @@ func getVersionInfo() *versionInfo {
 		Commit:     build.Commit,
 		CommitDate: build.CommitDate,
 		GoVersion:  runtime.Version(),
+		// Change to env.LauncherVersion. Not doing so to minimize merge conflicts.
+		LauncherVersion: os.Getenv("LAUNCHER_VERSION"),
 	}
 
 	return v
