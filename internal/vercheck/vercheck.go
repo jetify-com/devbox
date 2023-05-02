@@ -16,7 +16,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/debug"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -25,12 +24,15 @@ import (
 
 // Keep this in-sync with latest version in launch.sh. If this version is newer
 // than the version in launch.sh, we'll print a notice.
-// TODO savil: bump to new version after https://github.com/jetpack-io/axiom/pull/3150 lands
 const expectedLauncherVersion = "v0.2.0"
 
-// currentBinaryVersion is the version of the binary that is currently running.
+// currentDevboxVersion is the version of the devbox CLI binary that is currently running.
 // We use this variable so we can mock it in tests.
-var currentBinaryVersion = build.Version
+var currentDevboxVersion = build.Version
+
+// envDevboxLatestVersion is the latest version available of the devbox CLI binary.
+// Change to env.DevboxLatestVersion. Not doing so to minimize merge conflicts.
+var envDevboxLatestVersion = "DEVBOX_LATEST_VERSION"
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
 // they are out of date.
@@ -43,16 +45,16 @@ func CheckVersion(w io.Writer) {
 
 	launcherNotice := launcherVersionNotice()
 	if launcherNotice != "" {
+		// TODO: use ux.FNotice
 		color.New(color.FgYellow).Fprintf(w, launcherNotice)
 
-		// we can stop here since updating the launcher would update the binary as well
-		// TODO savil: should the message also warn about updating the binary?
-		return
+		// fallthrough to alert the user about a new Devbox CLI binary being possibly available
 	}
 
-	binaryNotice := binaryVersionNotice()
-	if binaryNotice != "" {
-		color.New(color.FgYellow).Fprintf(w, binaryNotice)
+	devboxNotice := devboxVersionNotice()
+	if devboxNotice != "" {
+		// TODO: use ux.FNotice
+		color.New(color.FgYellow).Fprintf(w, devboxNotice)
 	}
 }
 
@@ -101,7 +103,7 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 	}
 
 	printSuccessMessage(stdErr, "Launcher", currentLauncherVersion(), updated.launcherVersion)
-	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
+	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
 
 	return nil
 }
@@ -119,7 +121,7 @@ func selfUpdateDevbox(stdErr io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
+	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
 
 	return nil
 }
@@ -187,22 +189,15 @@ func launcherVersionNotice() string {
 	)
 }
 
-func binaryVersionNotice() string {
-	if !isNewBinaryAvailable() {
-		return ""
-	}
-
-	availableVersion, err := getAvailableVersion()
-	if err != nil {
-		// This would be a most unexpected error because isNewBinaryAvailable
-		// internally checks for the availableVersion too.
+func devboxVersionNotice() string {
+	if !isNewDevboxAvailable() {
 		return ""
 	}
 
 	return fmt.Sprintf(
 		"New devbox available: %s -> %s. Please run `devbox version update`.\n",
-		currentBinaryVersion,
-		availableVersion,
+		currentDevboxVersion,
+		latestVersion(),
 	)
 }
 
@@ -212,25 +207,16 @@ func isNewLauncherAvailable() bool {
 	if launcherVersion == "" {
 		return false
 	}
-
 	return semverCompare(launcherVersion, expectedLauncherVersion) < 0
 }
 
-func isNewBinaryAvailable() bool {
-
-	availableVersion, err := getAvailableVersion()
-	if err != nil {
-		debug.Log("ERROR: failed to get available version for CLI: %v\n", err)
+// isNewDevboxAvailable returns true if a new devbox CLI binary version is available.
+func isNewDevboxAvailable() bool {
+	latest := latestVersion()
+	if latest == "" {
 		return false
 	}
-
-	// If currentVersion is invalid, semver.Compare will return 0 and we'll assume
-	// that a new binary is not available.
-	if semver.Compare(currentBinaryVersion, availableVersion) >= 0 {
-		return false
-	}
-
-	return true
+	return semverCompare(currentDevboxVersion, latest) < 0
 }
 
 // currentLauncherAvailable returns launcher's version if it is
@@ -272,18 +258,11 @@ func semverCompare(ver1, ver2 string) int {
 	return semver.Compare(ver1, ver2)
 }
 
-// getAvailableVersion returns the latest version available for the binary.
-func getAvailableVersion() (string, error) {
-	path := availableVersionPath()
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return "", errors.WithStack(err)
+// latestVersion returns the latest version available for the binary.
+func latestVersion() string {
+	version := os.Getenv(envDevboxLatestVersion)
+	if version == "" {
+		return ""
 	}
-	return string(contents), nil
-}
-
-// availableVersionPath returns the path to the file that contains the latest
-// version available for the binary.
-func availableVersionPath() string {
-	return filepath.Join(xdg.CacheSubpath("devbox"), "available-version")
+	return "v" + version
 }
