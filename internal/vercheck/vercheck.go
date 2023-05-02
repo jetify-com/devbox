@@ -4,18 +4,21 @@
 package vercheck
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"net/http"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/build"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -24,12 +27,9 @@ import (
 // Than the version in launch.sh, we'll print a warning.
 const expectedLauncherVersion = "v0.1.0"
 
-// currentChannel represents the CLI update channel. For now, we set it to a
-// constant, but we'll expand this to be a variable in the future.
-const currentChannel = "stable"
-
 func CheckLauncherVersion(w io.Writer) {
-	if envir.IsDevboxCloud() {
+	// Replace with envir.IsDevboxCloud(). Not doing so to minimize merge conflicts.
+	if os.Getenv("DEVBOX_REGION") != "" {
 		return
 	}
 
@@ -44,14 +44,18 @@ func CheckLauncherVersion(w io.Writer) {
 	}
 }
 
-// SelfUpdate updates the devbox launcher and binary. It ignores and deletes the
-// version cache
+// SelfUpdate updates the devbox launcher and devbox CLI binary.
+// It ignores and deletes the version cache.
+//
+// The launcher is a wrapper bash script introduced to manage the auto-update process
+// for devbox. The production devbox application is actually this launcher script
+// that acts as "devbox" and delegates commands to the devbox CLI binary.
 func SelfUpdate(stdOut, stdErr io.Writer) error {
 	if isNewLauncherAvailable() {
 		return selfUpdateLauncher(stdOut, stdErr)
 	}
 
-	return selfUpdateBinary(stdOut, stdErr)
+	return selfUpdateDevbox(stdErr)
 }
 
 func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
@@ -64,9 +68,13 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 		return usererr.New("curl or wget is required to update devbox. Please install either and try again.")
 	}
 
-	// Delete version cache.
-	_ = os.Remove(versionCacheFilePath())
+	// Delete current version file. This will trigger an update when invoking any devbox command;
+	// in this case, inside triggerUpdate function.
+	if err := removeCurrentVersionFile(); err != nil {
+		return err
+	}
 
+	// Fetch the new launcher.
 	cmd := exec.Command("sh", "-c", installScript)
 	cmd.Stdout = stdOut
 	cmd.Stderr = stdErr
@@ -74,84 +82,132 @@ func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	fmt.Fprint(stdOut, "Latest version: ")
-	return triggerUpdateAndPrintNewVersion(stdOut, stdErr)
-}
-
-// selfUpdateBinary will update the binary to the latest version.
-func selfUpdateBinary(stdOut, stdErr io.Writer) error {
-	resp, err := http.Get(fmt.Sprintf("https://releases.jetpack.io/devbox/%s/version", currentChannel))
-	if err != nil {
-		fmt.Fprint(
-			stdErr,
-			"Failed to get latest version. "+
-				"Please try again, or run the command from https://www.jetpack.io/devbox/docs/installing_devbox/",
-		)
-		return errors.WithStack(err)
-	}
-	defer resp.Body.Close()
-
-	newVersion, err := io.ReadAll(resp.Body)
+	// Invoke a devbox command to trigger an update of the devbox CLI binary.
+	updated, err := triggerUpdate(stdErr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	// Remove the version cache file, so that when we re-create it the expiration
-	// time is reset.
-	_ = os.Remove(versionCacheFilePath())
+	printSuccessMessage(stdErr, "Launcher", currentLauncherVersion(), updated.launcherVersion)
+	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
 
-	// Write the new version to the version cache file.
-	if err := os.WriteFile(versionCacheFilePath(), newVersion, 0644); err != nil {
+	return nil
+}
+
+// selfUpdateDevbox will update the devbox CLI binary to the latest version.
+func selfUpdateDevbox(stdErr io.Writer) error {
+	// Delete current version file. This will trigger an update when the next devbox command is run;
+	// in this case, inside triggerUpdate function.
+	if err := removeCurrentVersionFile(); err != nil {
+		return err
+	}
+
+	updated, err := triggerUpdate(stdErr)
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return triggerUpdateAndPrintNewVersion(stdOut, stdErr)
+	printSuccessMessage(stdErr, "Devbox", build.Version, updated.devboxVersion)
+
+	return nil
 }
 
-func triggerUpdateAndPrintNewVersion(stdOut, stdErr io.Writer) error {
-	fmt.Fprintln(stdOut, "triggering update...")
+type updatedVersions struct {
+	devboxVersion   string
+	launcherVersion string
+}
+
+// triggerUpdate runs `devbox version -v` and triggers an update since a new
+// version is available. It parses the output to get the new launcher and
+// devbox versions.
+func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 
 	exe, err := os.Executable()
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
-	cmd := exec.Command(exe, "version")
-	cmd.Stdout = stdOut
-	cmd.Stderr = stdErr
-	return errors.WithStack(cmd.Run())
+	// TODO savil. Add a --json flag to devbox version and parse the output as JSON
+	cmd := exec.Command(exe, "version", "-v")
 
+	buf := new(bytes.Buffer)
+	cmd.Stdout = io.MultiWriter(stdErr, buf)
+	cmd.Stderr = stdErr
+	if err := cmd.Run(); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Parse the output to ascertain the new devbox and launcher versions
+	updated := &updatedVersions{}
+	for _, line := range strings.Split(buf.String(), "\n") {
+		if strings.HasPrefix(line, "Version:") {
+			updated.devboxVersion = strings.TrimSpace(strings.TrimPrefix(line, "Version:"))
+		}
+
+		if strings.HasPrefix(line, "Launcher:") {
+			updated.launcherVersion = strings.TrimSpace(strings.TrimPrefix(line, "Launcher:"))
+		}
+	}
+	return updated, nil
 }
 
-// isNewLauncherAvailable returns the latest launcher version if it is
-// available, or empty string if it is not.
+func printSuccessMessage(w io.Writer, toolName, oldVersion, newVersion string) {
+	var msg string
+	if semverCompare(oldVersion, newVersion) == 0 {
+		msg = fmt.Sprintf("already at %s version %s", toolName, newVersion)
+	} else {
+		msg = fmt.Sprintf("updated to %s version %s", toolName, newVersion)
+	}
+
+	// Prints a <green>Success:</green> message to the writer.
+	// Move to ux.Success. Not doing so to minimize merge-conflicts.
+	fmt.Fprintf(w, "%s%s\n", color.New(color.FgGreen).Sprint("Success: "), msg)
+}
+
+// isNewLauncherAvailable returns true if a new launcher version is available.
 func isNewLauncherAvailable() bool {
 	launcherVersion := currentLauncherVersion()
 	if launcherVersion == "" {
 		return false
 	}
 
-	// If launcherVersion is invalid, this will return 0, and we'll assume that
-	// a new launcher is not available.
-	if semver.Compare(launcherVersion, expectedLauncherVersion) >= 0 {
-		return false
-	}
-
-	return true
+	return semverCompare(launcherVersion, expectedLauncherVersion) < 0
 }
 
+// currentLauncherAvailable returns launcher's version if it is
+// available, or empty string if it is not.
 func currentLauncherVersion() string {
-	launcherVersion := os.Getenv(envir.LauncherVersion)
+	// Change to envir.LauncherVersion. Not doing so to minimize merge-conflicts.
+	launcherVersion := os.Getenv("LAUNCHER_VERSION")
 	if launcherVersion == "" {
 		return ""
 	}
 	return "v" + launcherVersion
 }
 
-// versionCacheFilePath returns the path to the file that contains the latest
-// version. The launcher checks this file to see if a new version is available.
-// If the version is newer, then the launcher updates.
-//
-// Note: keep this in sync with launch.sh code
-func versionCacheFilePath() string {
-	return filepath.Join(xdg.CacheSubpath("devbox"), "latest-version")
+func removeCurrentVersionFile() error {
+	// currentVersionFilePath is the path to the file that contains the cached
+	// version. The launcher checks this file to see if a new version is available.
+	// If the version is newer, then the launcher updates.
+	//
+	// Note: keep this in sync with launch.sh code
+	currentVersionFilePath := filepath.Join(xdg.CacheSubpath("devbox"), "current-version")
+
+	if err := os.Remove(currentVersionFilePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return usererr.WithLoggedUserMessage(
+			err,
+			"Failed to delete version-cache at %s. Please manually delete it and try again.",
+			currentVersionFilePath,
+		)
+	}
+	return nil
+}
+
+func semverCompare(ver1, ver2 string) int {
+	if !strings.HasPrefix(ver1, "v") {
+		ver1 = "v" + ver1
+	}
+	if !strings.HasPrefix(ver2, "v") {
+		ver2 = "v" + ver2
+	}
+	return semver.Compare(ver1, ver2)
 }
