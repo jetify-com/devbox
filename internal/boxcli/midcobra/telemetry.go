@@ -18,7 +18,7 @@ import (
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -58,8 +58,8 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
-		CloudRegion:  os.Getenv(env.DevboxRegion),
-		CloudCache:   os.Getenv(env.DevboxCache),
+		CloudRegion:  os.Getenv(envir.DevboxRegion),
+		CloudCache:   os.Getenv(envir.DevboxCache),
 	}
 
 	subcmd, flags, err := getSubcommand(cmd, args)
@@ -70,9 +70,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
 	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
-	meta.InShell = env.IsDevboxShellEnabled()
-	meta.InBrowser = env.IsInBrowser()
-	meta.InCloud = env.IsDevboxCloud()
+	meta.InShell = envir.IsDevboxShellEnabled()
+	meta.InBrowser = envir.IsInBrowser()
+	meta.InCloud = envir.IsDevboxCloud()
 	telemetry.Error(runErr, meta)
 
 	if !telemetry.Enabled() {
@@ -129,7 +129,7 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 			AnonymousID: telemetry.DeviceID,
 			AppName:     telemetry.AppDevbox,
 			AppVersion:  build.Version,
-			CloudRegion: os.Getenv(env.DevboxRegion),
+			CloudRegion: os.Getenv(envir.DevboxRegion),
 			Duration:    time.Since(m.startTime),
 			OsName:      build.OS(),
 			UserID:      userID,
@@ -143,9 +143,9 @@ func (m *telemetryMiddleware) newEventIfValid(cmd *cobra.Command, args []string,
 		Failed:        runErr != nil,
 		Packages:      pkgs,
 		CommitHash:    hash,
-		InDevboxShell: env.IsDevboxShellEnabled(),
+		InDevboxShell: envir.IsDevboxShellEnabled(),
 		DevboxEnv:     devboxEnv,
-		Shell:         os.Getenv(env.Shell),
+		Shell:         os.Getenv(envir.Shell),
 	}
 }
 

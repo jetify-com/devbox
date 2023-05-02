@@ -12,13 +12,13 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 var enabled bool
 
 func init() {
-	enabled = env.IsDevboxDebugEnabled()
+	enabled = envir.IsDevboxDebugEnabled()
 }
 
 func IsEnabled() bool { return enabled }

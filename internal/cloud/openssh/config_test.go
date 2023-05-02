@@ -15,7 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 func TestDevboxIncludeRegex(t *testing.T) {
@@ -103,7 +103,7 @@ func TestSetupDevbox(t *testing.T) {
 	t.Run("NoConfigs", func(t *testing.T) {
 		in := fstest.MapFS{}
 		workdir := fsToDir(t, in)
-		t.Setenv(env.Home, workdir)
+		t.Setenv(envir.Home, workdir)
 		if err := SetupDevbox(); err != nil {
 			t.Error("got SetupDevbox() error:", err)
 		}
@@ -133,7 +133,7 @@ func TestSetupDevbox(t *testing.T) {
 		}
 
 		workdir := fsToDir(t, input)
-		t.Setenv(env.Home, workdir)
+		t.Setenv(envir.Home, workdir)
 		if err := SetupDevbox(); err != nil {
 			t.Error("got SetupDevbox() error:", err)
 		}
@@ -143,7 +143,7 @@ func TestSetupDevbox(t *testing.T) {
 	t.Run("AlreadySetup", func(t *testing.T) {
 		in := want
 		workdir := fsToDir(t, in)
-		t.Setenv(env.Home, workdir)
+		t.Setenv(envir.Home, workdir)
 		if err := SetupDevbox(); err != nil {
 			t.Error("got SetupDevbox() error:", err)
 		}
@@ -182,7 +182,7 @@ func TestSetupInsecureDebug(t *testing.T) {
 	t.Run("NoConfigs", func(t *testing.T) {
 		in := fstest.MapFS{}
 		workdir := fsToDir(t, in)
-		t.Setenv(env.Home, workdir)
+		t.Setenv(envir.Home, workdir)
 		if err := SetupInsecureDebug(wantAddr); err != nil {
 			t.Errorf("got SetupInsecureDebug(%q) error: %v", wantAddr, err)
 		}
@@ -210,7 +210,7 @@ func TestSetupInsecureDebug(t *testing.T) {
 		}
 
 		workdir := fsToDir(t, input)
-		t.Setenv(env.Home, workdir)
+		t.Setenv(envir.Home, workdir)
 		if err := SetupInsecureDebug(wantAddr); err != nil {
 			t.Errorf("got SetupInsecureDebug(%q) error: %v", wantAddr, err)
 		}
@@ -238,7 +238,7 @@ func TestAddVMKey(t *testing.T) {
 	}
 
 	workdir := fsToDir(t, input)
-	t.Setenv(env.Home, workdir)
+	t.Setenv(envir.Home, workdir)
 	if err := AddVMKey(host, string(goldenVMKey)); err != nil {
 		t.Error("got AddKey(host, key) error:", err)
 	}

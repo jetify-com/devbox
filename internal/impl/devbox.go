@@ -29,7 +29,7 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lock"
@@ -177,13 +177,13 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-	envs[env.DevboxShellEnabled] = "1"
+	envs[envir.DevboxShellEnabled] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
-	shellStartTime := os.Getenv(env.DevboxShellStartTime)
+	shellStartTime := os.Getenv(envir.DevboxShellStartTime)
 	if shellStartTime == "" {
 		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
 	}
@@ -459,7 +459,7 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
@@ -496,7 +496,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 }
 
 func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		args := []string{"services", "stop"}
 		args = append(args, serviceNames...)
 		if allProjects {
@@ -535,7 +535,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 }
 
 func (d *Devbox) ListServices(ctx context.Context) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", []string{"services", "ls"})
 	}
 
@@ -573,7 +573,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
@@ -639,7 +639,7 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {

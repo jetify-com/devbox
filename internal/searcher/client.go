@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -21,8 +21,8 @@ const searchAPIEndpoint = "https://search.devbox.sh"
 
 func searchHost() string {
 	endpoint := searchAPIEndpoint
-	if os.Getenv(env.DevboxSearchHost) != "" {
-		endpoint = os.Getenv(env.DevboxSearchHost)
+	if os.Getenv(envir.DevboxSearchHost) != "" {
+		endpoint = os.Getenv(envir.DevboxSearchHost)
 	}
 	return endpoint
 }

@@ -26,7 +26,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux/stepper"
@@ -40,7 +40,7 @@ func SSHSetup(username string) (*openssh.Cmd, error) {
 	// When developing we can use this env variable to point
 	// to a different gateway
 	var err error
-	if envGateway := os.Getenv(env.DevboxGateway); envGateway != "" {
+	if envGateway := os.Getenv(envir.DevboxGateway); envGateway != "" {
 		sshCmd.DestinationAddr = envGateway
 		err = openssh.SetupInsecureDebug(envGateway)
 	} else {
@@ -247,7 +247,7 @@ func promptUsername() (string, error) {
 	username := ""
 	prompt := &survey.Input{
 		Message: "What is your github username?",
-		Default: os.Getenv(env.User),
+		Default: os.Getenv(envir.User),
 	}
 	err := survey.AskOne(prompt, &username, survey.WithValidator(survey.Required))
 	if err != nil {
@@ -496,7 +496,7 @@ func absoluteProjectPathInVM(sshUser, relativeProjectPath string) string {
 }
 
 func parseVMEnvVar() (username string, vmHostname string) {
-	vmEnvVar := os.Getenv(env.DevboxVM)
+	vmEnvVar := os.Getenv(envir.DevboxVM)
 	if vmEnvVar == "" {
 		return "", ""
 	}
