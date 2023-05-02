@@ -55,8 +55,8 @@ func (i *Input) Name() string {
 		result = filepath.Base(i.Path) + "-" + i.hash()
 	} else if i.IsGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
-	} else if url := i.URLForInput(); IsNixpkgsURL(url) {
-		u := HashFromNiPkgsURL(url)
+	} else if url := i.URLForInput(); IsGithubNixpkgsURL(url) {
+		u := HashFromNixPkgsURL(url)
 		if len(u) > 6 {
 			u = u[0:6]
 		}
@@ -205,24 +205,20 @@ func (i *Input) version() string {
 	return version
 }
 
-func (i *Input) IsNixpkgsURL() bool {
-	return IsNixpkgsURL(i.URLForInput())
-}
-
 func (i *Input) hashFromNiPkgsURL() string {
-	return HashFromNiPkgsURL(i.URLForInput())
+	return HashFromNixPkgsURL(i.URLForInput())
 }
 
-// IsNixpkgsURL returns true if the input is a nixpkgs flake of the form:
+// IsGithubNixpkgsURL returns true if the input is a nixpkgs flake of the form:
 // github:NixOS/nixpkgs/...
 //
 // While there are many ways to specify this input, devbox always uses
 // github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
-func IsNixpkgsURL(url string) bool {
+func IsGithubNixpkgsURL(url string) bool {
 	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
 }
 
-func HashFromNiPkgsURL(url string) string {
+func HashFromNixPkgsURL(url string) string {
 	return strings.TrimPrefix(url, "github:NixOS/nixpkgs/")
 }

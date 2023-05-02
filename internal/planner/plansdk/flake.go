@@ -20,14 +20,14 @@ type FlakeInput struct {
 // github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func (f *FlakeInput) IsNixpkgs() bool {
-	return nix.IsNixpkgsURL(f.URL)
+	return nix.IsGithubNixpkgsURL(f.URL)
 }
 
 func (f *FlakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
 		return f.URL
 	}
-	hash := nix.HashFromNiPkgsURL(f.URL)
+	hash := nix.HashFromNixPkgsURL(f.URL)
 	return GetNixpkgsInfo(hash).URL
 }
 

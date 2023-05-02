@@ -205,7 +205,7 @@ type ProfileInstallArgs struct {
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
 	input := InputFromString(args.Package, args.Lockfile)
-	if input.IsNixpkgsURL() {
+	if IsGithubNixpkgsURL(input.URLForInput()) {
 		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNiPkgsURL()); err != nil {
 			return err
 		}
