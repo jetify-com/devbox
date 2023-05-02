@@ -70,6 +70,14 @@ func CreateDevcontainer(path string, pkgs []string) error {
 	return err
 }
 
+func OutputEnvrcContent(tmplFS embed.FS) error {
+	// get .direnvrc content
+	tmplName := "direnvrc.tmpl"
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	// write content into file
+	return t.Execute(os.Stdout, nil)
+}
+
 func CreateEnvrc(tmplFS embed.FS, path string) error {
 	// create .envrc file
 	file, err := os.Create(filepath.Join(path, ".envrc"))

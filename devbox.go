@@ -27,7 +27,7 @@ type Devbox interface {
 	Generate() error
 	GenerateDevcontainer(force bool) error
 	GenerateDockerfile(force bool) error
-	GenerateEnvrc(force bool, source string) error
+	GenerateEnvrc(force bool, envrcContent bool, source string) error
 	Info(pkg string, markdown bool) error
 	ListScripts() []string
 	PrintEnv(ctx context.Context, includeHooks bool) (string, error)

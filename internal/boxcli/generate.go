@@ -16,6 +16,7 @@ import (
 type generateCmdFlags struct {
 	config         configFlags
 	force          bool
+	envrcContent   bool
 	githubUsername string
 }
 
@@ -98,6 +99,8 @@ func direnvCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
+	command.Flags().BoolVarP(
+		&flags.envrcContent, "envrc", "e", false, "output contents of a configuration to use in .envrc")
 	flags.config.register(command)
 	return command
 }
@@ -137,7 +140,7 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	case "dockerfile":
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
-		return box.GenerateEnvrc(flags.force, "generate")
+		return box.GenerateEnvrc(flags.force, flags.envrcContent, "generate")
 	}
 	return nil
 }

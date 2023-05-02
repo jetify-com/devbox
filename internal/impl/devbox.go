@@ -371,10 +371,13 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 }
 
 // GenerateEnvrc generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrc(force bool, source string) error {
+func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) error {
 	ctx, task := trace.NewTask(context.Background(), "devboxGenerateEnvrc")
 	defer task.End()
 
+	if envrcContent {
+		return generate.OutputEnvrcContent(tmplFS)
+	}
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
 	if !force && filesExist {
