@@ -6,12 +6,6 @@ concurrency: cli-release
 on:
   # Build/Release on demand
   workflow_dispatch:
-    inputs:
-      is_prerelease:
-        description: "Pre-release?"
-        required: false
-        default: false
-        type: boolean
   schedule:
     - cron: "45 8 * * 4" # Weekly pre-release on Thursdays.
   push:
@@ -30,53 +24,6 @@ jobs:
     with:
       run-mac-tests: true
 
-  prerelease:
-    runs-on: ubuntu-latest
-    environment: release
-    needs: tests
-    if: ${{ inputs.is_prerelease || github.event.schedule }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Needed by goreleaser to browse history.
-      - name: Set up go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: ./go.mod
-          cache: true
-      - name: Build snapshot with goreleaser
-        uses: goreleaser/goreleaser-action@v3
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist --skip-publish --skip-announce --snapshot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      - name: Determine snapshot tag
-        run: |
-          TAG=$(ls dist/*_linux_386.tar.gz | cut -d '_' -f 2 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-dev')
-          echo "release_tag=$TAG" >> $GITHUB_ENV
-      - name: Create Sentry release
-        uses: getsentry/action-release@v1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: development
-          version: ${{ env.release_tag }}
-      - name: Publish snapshot release to GitHub
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          fail_on_unmatched_files: true
-          tag_name: ${{ env.release_tag }}
-          files: |
-            dist/checksums.txt
-            dist/*.tar.gz
   release:
     runs-on: ubuntu-latest
     environment: release
