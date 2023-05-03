@@ -1,0 +1,20 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "actionlint": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/3364b5b117f65fe1ce65a3cdd5612a078a3b31e3#actionlint",
+      "version": ""
+    },
+    "go_1_20": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/3364b5b117f65fe1ce65a3cdd5612a078a3b31e3#go_1_20",
+      "version": ""
+    },
+    "golangci-lint": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/3364b5b117f65fe1ce65a3cdd5612a078a3b31e3#golangci-lint",
+      "version": ""
+    }
+  }
+}

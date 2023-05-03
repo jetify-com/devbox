@@ -5,6 +5,7 @@ package lock
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -68,10 +69,24 @@ func (l *File) Remove(pkgs ...string) error {
 
 func (l *File) Resolve(pkg string) (string, error) {
 	if _, ok := l.Packages[pkg]; !ok {
-		name, version, _ := strings.Cut(pkg, "@")
-		locked, err := l.resolver.Resolve(name, version)
-		if err != nil {
-			return "", err
+		var locked *Package
+		var err error
+		if l.IsVersionedPackage(pkg) {
+			name, version, _ := strings.Cut(pkg, "@")
+			locked, err = l.resolver.Resolve(name, version)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			// These are legacy packages without a version. Resolve to nixpkgs with
+			// whatever hash is in the devbox.json
+			locked = &Package{
+				Resolved: fmt.Sprintf(
+					"github:NixOS/nixpkgs/%s#%s",
+					l.NixPkgsCommitHash(),
+					pkg,
+				),
+			}
 		}
 		l.Packages[pkg] = *locked
 		if err := l.Update(); err != nil {
@@ -84,7 +99,7 @@ func (l *File) Resolve(pkg string) (string, error) {
 
 func (l *File) Update() error {
 	// Never write lockfile if versioned packages is not enabled
-	if !featureflag.VersionedPackages.Enabled() {
+	if !featureflag.LockFile.Enabled() {
 		return nil
 	}
 
@@ -93,4 +108,11 @@ func (l *File) Update() error {
 
 func lockFilePath(project devboxProject) string {
 	return filepath.Join(project.ProjectDir(), "devbox.lock")
+}
+
+func getLockfileHash(project devboxProject) (string, error) {
+	if !featureflag.LockFile.Enabled() {
+		return "", nil
+	}
+	return cuecfg.FileHash(lockFilePath(project))
 }

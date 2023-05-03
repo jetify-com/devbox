@@ -14,7 +14,6 @@ import (
 
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -34,12 +33,6 @@ func InputFromString(s string, l lock.Locker) *Input {
 	return &Input{*u, l}
 }
 
-// IsFlake returns true if the package descriptor has a scheme. For now
-// we only support the "path" scheme.
-func (i *Input) IsFlake() bool {
-	return i.IsLocal() || i.IsGithub() || i.IsDevboxPackage()
-}
-
 func (i *Input) IsLocal() bool {
 	// Technically flakes allows omitting the scheme for local absolute paths, but
 	// we don't support that (yet).
@@ -47,13 +40,7 @@ func (i *Input) IsLocal() bool {
 }
 
 func (i *Input) IsDevboxPackage() bool {
-	if !featureflag.VersionedPackages.Enabled() {
-		return false
-	}
-	if i.Scheme != "" {
-		return false
-	}
-	return i.lockfile.IsVersionedPackage(i.String())
+	return i.Scheme == ""
 }
 
 func (i *Input) IsGithub() bool {
@@ -68,6 +55,12 @@ func (i *Input) Name() string {
 		result = filepath.Base(i.Path) + "-" + i.hash()
 	} else if i.IsGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
+	} else if url := i.URLForInput(); IsGithubNixpkgsURL(url) {
+		u := HashFromNixPkgsURL(url)
+		if len(u) > 6 {
+			u = u[0:6]
+		}
+		result = "nixpkgs-" + u
 	} else {
 		result = i.String() + "-" + i.hash()
 	}
@@ -102,10 +95,6 @@ func (i *Input) URLForInstall() (string, error) {
 // references is returns the full path to the package in the flake. e.g.
 // packages.x86_64-linux.hello
 func (i *Input) PackageAttributePath() (string, error) {
-	if !i.IsFlake() {
-		return i.String(), nil
-	}
-
 	var infos map[string]*Info
 	if i.IsDevboxPackage() {
 		path, err := i.lockfile.Resolve(i.String())
@@ -214,4 +203,22 @@ func (i *Input) version() string {
 	}
 	_, version, _ := strings.Cut(i.Path, "@")
 	return version
+}
+
+func (i *Input) hashFromNiPkgsURL() string {
+	return HashFromNixPkgsURL(i.URLForInput())
+}
+
+// IsGithubNixpkgsURL returns true if the input is a nixpkgs flake of the form:
+// github:NixOS/nixpkgs/...
+//
+// While there are many ways to specify this input, devbox always uses
+// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
+// themselves, this function may not return true.
+func IsGithubNixpkgsURL(url string) bool {
+	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
+}
+
+func HashFromNixPkgsURL(url string) string {
+	return strings.TrimPrefix(url, "github:NixOS/nixpkgs/")
 }

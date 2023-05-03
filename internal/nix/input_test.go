@@ -6,18 +6,20 @@ package nix
 import (
 	"fmt"
 	"path/filepath"
-	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/samber/lo"
 )
+
+const nixCommitHash = "hsdafkhsdafhas"
 
 type inputTestCase struct {
 	pkg                string
 	isFlake            bool
 	name               string
 	urlWithoutFragment string
-	packageName        string
+	urlForInput        string
 }
 
 func TestInput(t *testing.T) {
@@ -28,65 +30,69 @@ func TestInput(t *testing.T) {
 			isFlake:            true,
 			name:               "my-flake-c7758d",
 			urlWithoutFragment: "path://" + filepath.Join(projectDir, "path/to/my-flake"),
-			packageName:        "packages.x86_64-darwin.my-package",
+			urlForInput:        "path://" + filepath.Join(projectDir, "path/to/my-flake"),
 		},
 		{
 			pkg:                "path:.#my-package",
 			isFlake:            true,
 			name:               "my-project-744eaa",
 			urlWithoutFragment: "path://" + projectDir,
-			packageName:        "packages.x86_64-darwin.my-package",
+			urlForInput:        "path://" + projectDir,
 		},
 		{
 			pkg:                "path:/tmp/my-project/path/to/my-flake#my-package",
 			isFlake:            true,
 			name:               "my-flake-773986",
 			urlWithoutFragment: "path:" + filepath.Join(projectDir, "path/to/my-flake"),
-			packageName:        "packages.x86_64-darwin.my-package",
+			urlForInput:        "path:" + filepath.Join(projectDir, "path/to/my-flake"),
 		},
 		{
 			pkg:                "path:/tmp/my-project/path/to/my-flake",
 			isFlake:            true,
 			name:               "my-flake-eaedce",
 			urlWithoutFragment: "path:" + filepath.Join(projectDir, "path/to/my-flake"),
-			packageName:        "packages.x86_64-darwin.default",
+			urlForInput:        "path:" + filepath.Join(projectDir, "path/to/my-flake"),
 		},
 		{
 			pkg:                "hello",
 			isFlake:            false,
-			name:               "hello-5d4140",
+			name:               "nixpkgs-hsdafk",
 			urlWithoutFragment: "hello",
-			packageName:        "hello",
+			urlForInput:        fmt.Sprintf("github:NixOS/nixpkgs/%s", nixCommitHash),
+		},
+		{
+			pkg:                "hello@123",
+			isFlake:            false,
+			name:               "nixpkgs-hsdafk",
+			urlWithoutFragment: "hello@123",
+			urlForInput:        fmt.Sprintf("github:NixOS/nixpkgs/%s", nixCommitHash),
 		},
 		{
 			pkg:                "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
 			isFlake:            true,
 			name:               "gh-nixos-nixpkgs-5233fd2ba76a3accb5aaa999c00509a11fd0793c",
 			urlWithoutFragment: "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
-			packageName:        "packages.x86_64-darwin.hello",
+			urlForInput:        "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
 		},
 		{
 			pkg:                "github:F1bonacc1/process-compose",
 			isFlake:            true,
 			name:               "gh-F1bonacc1-process-compose",
 			urlWithoutFragment: "github:F1bonacc1/process-compose",
-			packageName:        "packages.x86_64-darwin.default",
+			urlForInput:        "github:F1bonacc1/process-compose",
 		},
 	}
 
 	for _, testCase := range cases {
 		i := testInputFromString(testCase.pkg, projectDir)
-		if isFLake := i.IsFlake(); testCase.isFlake != isFLake {
-			t.Errorf("IsFlake() = %v, want %v", isFLake, testCase.isFlake)
-		}
 		if name := i.Name(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
 		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
 			t.Errorf("URLWithoutFragment() = %v, want %v", urlWithoutFragment, testCase.urlWithoutFragment)
 		}
-		if packages := i.Package(); !reflect.DeepEqual(testCase.packageName, packages) {
-			t.Errorf("Package() = %v, want %v", packages, testCase.packageName)
+		if urlForInput := i.URLForInput(); testCase.urlForInput != urlForInput {
+			t.Errorf("URLForInput() = %v, want %v", urlForInput, testCase.urlForInput)
 		}
 	}
 }
@@ -103,28 +109,27 @@ func (lockfile) ConfigHash() (string, error) {
 	return "", nil
 }
 
+func (lockfile) NixPkgsCommitHash() string {
+	return ""
+}
+
 func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (lockfile) IsVersionedPackage(pkg string) bool {
-	return false
-}
-
 func (lockfile) Resolve(pkg string) (string, error) {
-	return "", nil
+	if strings.Contains(pkg, "path:") {
+		return pkg, nil
+	} else if strings.Contains(pkg, "github:") {
+		return pkg, nil
+	}
+	return fmt.Sprintf(
+		"github:NixOS/nixpkgs/%s#%s",
+		nixCommitHash,
+		pkg,
+	), nil
 }
 
 func testInputFromString(s, projectDir string) *testInput {
 	return lo.ToPtr(testInput{Input: *InputFromString(s, &lockfile{projectDir})})
-}
-
-func (i *testInput) Package() string {
-	if i.IsFlake() {
-		return fmt.Sprintf(
-			"packages.x86_64-darwin.%s",
-			lo.Ternary(i.Fragment != "", i.Fragment, "default"),
-		)
-	}
-	return i.String()
 }

@@ -39,7 +39,7 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok, err := nix.PkgExists(d.cfg.Nixpkgs.Commit, pkg, d.lockfile)
+		ok, err := nix.PkgExists(pkg, d.lockfile)
 		if err != nil {
 			return err
 		}
@@ -237,7 +237,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profileDir,
 			Writer:            d.writer,

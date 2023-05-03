@@ -140,15 +140,15 @@ func (d *Devbox) ConfigHash() (string, error) {
 	return d.cfg.Hash()
 }
 
+func (d *Devbox) NixPkgsCommitHash() string {
+	return d.cfg.Nixpkgs.Commit
+}
+
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
-	shellPlan.DevPackages = lo.Uniq(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.FlakeInputs = d.flakeInputs()
 
-	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
-	if err != nil {
-		return nil, err
-	}
+	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 	shellPlan.NixpkgsInfo = nixpkgsInfo
 
 	return shellPlan, nil
@@ -628,7 +628,7 @@ func (d *Devbox) StartProcessManager(
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.writer, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage("process-compose"); err != nil {
+		if err = d.addDevboxUtilityPackage("github:F1bonacc1/process-compose/v0.43.1"); err != nil {
 			return err
 		}
 
@@ -935,14 +935,6 @@ func (d *Devbox) nixFlakesFilePath() string {
 // packages returns the list of packages to be installed in the nix shell.
 func (d *Devbox) packages() []string {
 	return d.cfg.Packages
-}
-
-// TODO(landau): localPackages, and flakeInput packages could
-// be merged into a single buildInput map of the form: source => []pkg
-func (d *Devbox) localPackages() []string {
-	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.lockfile).IsFlake()
-	})
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env

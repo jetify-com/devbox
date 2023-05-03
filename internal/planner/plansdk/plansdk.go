@@ -20,12 +20,6 @@ type PlanError struct {
 	error
 }
 
-type FlakeInput struct {
-	Name     string
-	Packages []string
-	URL      string
-}
-
 // TODO: Plan currently has a bunch of fields that it should not export.
 // Two reasons why we need this right now:
 // 1/ So that individual planners can use the fields
@@ -38,11 +32,11 @@ type FlakeInput struct {
 type ShellPlan struct {
 	NixpkgsInfo *NixpkgsInfo
 	// Set by devbox.json
-	DevPackages []string `cue:"[...string]" json:"dev_packages,omitempty"`
+	DevPackages []string `json:"dev_packages,omitempty"`
 	// Init hook on shell start. Currently, Nginx and python pip planners need it for shell.
-	ShellInitHook []string `cue:"[...string]" json:"shell_init_hook,omitempty"`
+	ShellInitHook []string `json:"shell_init_hook,omitempty"`
 	// Nix expressions. Currently, PHP needs it for shell.
-	Definitions []string `cue:"[...string]" json:"definitions,omitempty"`
+	Definitions map[string]string `json:"definitions,omitempty"`
 	// GeneratedFiles is a map of name => content for files that should be generated
 	// in the .devbox/gen directory. (Use string to make it marshalled version nicer.)
 	GeneratedFiles map[string]string `json:"generated_files,omitempty"`
@@ -74,7 +68,6 @@ func MergeShellPlans(plans ...*ShellPlan) (*ShellPlan, error) {
 	}
 
 	shellPlan.DevPackages = lo.Uniq(shellPlan.DevPackages)
-	shellPlan.Definitions = lo.Uniq(shellPlan.Definitions)
 	shellPlan.ShellInitHook = lo.Uniq(shellPlan.ShellInitHook)
 
 	return shellPlan, nil
@@ -89,25 +82,25 @@ func WelcomeMessage(s string) string {
 }
 
 // publicly visible so that json marshalling works
+// TODO: We can probably get rid of this once we remove the haskell and php
+// planners
 type NixpkgsInfo struct {
 	URL string
-
-	Sha256 string
 }
 
 // The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
 const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
 
-func GetNixpkgsInfo(commitHash string) (*NixpkgsInfo, error) {
+func GetNixpkgsInfo(commitHash string) *NixpkgsInfo {
 	mirror := nixpkgsMirrorURL(commitHash)
 	if mirror != "" {
 		return &NixpkgsInfo{
 			URL: mirror,
-		}, nil
+		}
 	}
 	return &NixpkgsInfo{
-		URL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
-	}, nil
+		URL: fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash),
+	}
 }
 
 func nixpkgsMirrorURL(commitHash string) string {

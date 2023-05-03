@@ -2,9 +2,6 @@ let
   pkgs = import
     (fetchTarball {
       url = "{{ .NixpkgsInfo.URL }}";
-      {{- if .NixpkgsInfo.Sha256 }}
-      sha256 = "{{ .NixpkgsInfo.Sha256 }}";
-      {{- end }}
     })
     { };
   {{- range .Definitions}}

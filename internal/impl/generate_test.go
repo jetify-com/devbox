@@ -80,7 +80,7 @@ var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
 	}
-	Definitions []string
+	Definitions map[string]string
 	DevPackages []string
 	FlakeInputs []plansdk.FlakeInput
 }{
@@ -89,9 +89,9 @@ var testFlakeTmplPlan = &struct {
 	}{
 		URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
 	},
-	Definitions: []string{
-		"php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ blackfire ]));",
-		"php81Packages.composer = php.packages.composer;",
+	Definitions: map[string]string{
+		"php":                    "pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ blackfire ]));",
+		"php81Packages.composer": "php.packages.composer;",
 	},
 	DevPackages: []string{
 		"php",

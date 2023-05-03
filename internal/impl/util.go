@@ -14,10 +14,6 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-// we need a more modern commit to get version of process-compose we want
-// once the default nixpkgs commit is updated, we can remove this
-const nixpkgsUtilityCommit = "f7475ce8950b761d80a13f3f81d2c23fce60c1dd"
-
 // addDevboxUtilityPackage adds a package to the devbox utility profile.
 // It's used to install applications devbox might need, like process-compose
 // This is an alternative to a global install which would modify a user's
@@ -29,11 +25,10 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 	}
 
 	return nix.ProfileInstall(&nix.ProfileInstallArgs{
-		Lockfile:      d.lockfile,
-		NixpkgsCommit: nixpkgsUtilityCommit,
-		Package:       pkg,
-		ProfilePath:   profilePath,
-		Writer:        d.writer,
+		Lockfile:    d.lockfile,
+		Package:     pkg,
+		ProfilePath: profilePath,
+		Writer:      d.writer,
 	})
 }
 

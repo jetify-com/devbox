@@ -5,6 +5,7 @@ package lock
 
 type devboxProject interface {
 	ConfigHash() (string, error)
+	NixPkgsCommitHash() string
 	ProjectDir() string
 }
 
@@ -15,6 +16,5 @@ type resolver interface {
 
 type Locker interface {
 	devboxProject
-	IsVersionedPackage(pkg string) bool
 	Resolve(pkg string) (string, error)
 }

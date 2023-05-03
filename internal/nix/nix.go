@@ -28,12 +28,8 @@ const ProfilePath = ".devbox/nix/profile/default"
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
-func PkgExists(nixpkgsCommit, pkg string, lock *lock.File) (bool, error) {
-	input := InputFromString(pkg, lock)
-	if input.IsFlake() {
-		return input.validateExists()
-	}
-	return PkgInfo(nixpkgsCommit, pkg) != nil, nil
+func PkgExists(pkg string, lock *lock.File) (bool, error) {
+	return InputFromString(pkg, lock).validateExists()
 }
 
 type Info struct {
