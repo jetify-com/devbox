@@ -24,6 +24,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
