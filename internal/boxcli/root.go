@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
@@ -19,8 +20,8 @@ import (
 )
 
 var (
-	debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
-	traceMiddleware *midcobra.TraceMiddleware = &midcobra.TraceMiddleware{}
+	debugMiddleware = &midcobra.DebugMiddleware{}
+	traceMiddleware = &midcobra.TraceMiddleware{}
 )
 
 type rootCmdFlags struct {

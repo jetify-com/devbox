@@ -18,6 +18,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
@@ -82,8 +83,7 @@ func Install(writer io.Writer, daemon *bool) error {
 }
 
 func BinaryInstalled() bool {
-	_, err := exec.LookPath("nix")
-	return err == nil
+	return cmdutil.Exists("nix")
 }
 
 func dirExists() bool {

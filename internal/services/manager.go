@@ -109,7 +109,7 @@ func openGlobalConfigFile() (*os.File, error) {
 
 	err = lockFile(globalConfigFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to lock file: %w", err)
 	}
 
 	return globalConfigFile, nil
@@ -204,11 +204,11 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 	config.File.Close()
 
 	err = cmd.Wait()
-
-	if err != nil && err.Error() == "exit status 1" {
-		fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", err.Error())
-		return nil
-	} else if err != nil {
+	if err != nil {
+		if err.Error() == "exit status 1" {
+			fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", err.Error())
+			return nil
+		}
 		return err
 	}
 
@@ -246,7 +246,7 @@ func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeCo
 
 	err = writeGlobalProcessComposeJSON(config, config.File)
 	if err != nil {
-		return fmt.Errorf("failed to write global process-compose config")
+		return fmt.Errorf("failed to write global process-compose config: %w", err)
 	}
 
 	return nil
