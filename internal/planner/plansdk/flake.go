@@ -23,6 +23,13 @@ func (f *FlakeInput) IsNixpkgs() bool {
 	return nix.IsGithubNixpkgsURL(f.URL)
 }
 
+func (f *FlakeInput) HashFromNixPkgsURL() string {
+	if !f.IsNixpkgs() {
+		return ""
+	}
+	return nix.HashFromNixPkgsURL(f.URL)
+}
+
 func (f *FlakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
 		return f.URL

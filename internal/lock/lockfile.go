@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -21,8 +20,8 @@ type File struct {
 	devboxProject
 	resolver
 
-	LockFileVersion string             `json:"lockfile_version"`
-	Packages        map[string]Package `json:"packages"`
+	LockFileVersion string              `json:"lockfile_version"`
+	Packages        map[string]*Package `json:"packages"`
 }
 
 type Package struct {
@@ -37,7 +36,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
-		Packages:        map[string]Package{},
+		Packages:        map[string]*Package{},
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -67,15 +66,14 @@ func (l *File) Remove(pkgs ...string) error {
 	return l.Update()
 }
 
-func (l *File) Resolve(pkg string) (string, error) {
-	if _, ok := l.Packages[pkg]; !ok {
+func (l *File) Resolve(pkg string) (*Package, error) {
+	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
 		var locked *Package
 		var err error
 		if l.IsVersionedPackage(pkg) {
-			name, version, _ := strings.Cut(pkg, "@")
-			locked, err = l.resolver.Resolve(name, version)
+			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 		} else {
 			// These are legacy packages without a version. Resolve to nixpkgs with
@@ -88,13 +86,22 @@ func (l *File) Resolve(pkg string) (string, error) {
 				),
 			}
 		}
-		l.Packages[pkg] = *locked
+		l.Packages[pkg] = locked
 		if err := l.Update(); err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return l.Packages[pkg].Resolved, nil
+	return l.Packages[pkg], nil
+}
+
+func (l *File) ForceResolve(pkg string) (*Package, error) {
+	delete(l.Packages, pkg)
+	return l.Resolve(pkg)
+}
+
+func (l *File) Entry(pkg string) *Package {
+	return l.Packages[pkg]
 }
 
 func (l *File) Update() error {

@@ -55,13 +55,14 @@ func (c *client) SearchVersion(query, version string) (*SearchResult, error) {
 	)
 }
 
-func (c *client) Resolve(pkg, version string) (*lock.Package, error) {
-	result, err := c.SearchVersion(pkg, version)
+func (c *client) Resolve(pkg string) (*lock.Package, error) {
+	name, version, _ := strings.Cut(pkg, "@")
+	result, err := c.SearchVersion(name, version)
 	if err != nil {
 		return nil, err
 	}
 	if len(result.Results) == 0 {
-		return nil, usererr.New("No results found for %q.", pkg)
+		return nil, usererr.New("No results found for %q.", name)
 	}
 	return &lock.Package{
 		LastModified: result.Results[0].Packages[0].Date,
