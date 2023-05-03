@@ -10,13 +10,17 @@ const (
 	DevboxFeaturePrefix      = "DEVBOX_FEATURE_"
 	DevboxGateway            = "DEVBOX_GATEWAY"
 	DevboxDoNotUpgradeConfig = "DEVBOX_DONT_UPGRADE_CONFIG"
-	DevboxRegion             = "DEVBOX_REGION"
-	DevboxSearchHost         = "DEVBOX_SEARCH_HOST"
-	DevboxShellEnabled       = "DEVBOX_SHELL_ENABLED"
-	DevboxShellStartTime     = "DEVBOX_SHELL_START_TIME"
-	DevboxVM                 = "DEVBOX_VM"
+	// DevboxLatestVersion is the latest version available of the devbox CLI binary.
+	// NOTE: it should NOT start with v (like 0.4.8)
+	DevboxLatestVersion  = "DEVBOX_LATEST_VERSION"
+	DevboxRegion         = "DEVBOX_REGION"
+	DevboxSearchHost     = "DEVBOX_SEARCH_HOST"
+	DevboxShellEnabled   = "DEVBOX_SHELL_ENABLED"
+	DevboxShellStartTime = "DEVBOX_SHELL_START_TIME"
+	DevboxVM             = "DEVBOX_VM"
 
 	LauncherVersion = "LAUNCHER_VERSION"
+	LauncherPath    = "LAUNCHER_PATH"
 
 	SSHTTY = "SSH_TTY"
 

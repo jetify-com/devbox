@@ -9,7 +9,9 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/vercheck"
 )
 
@@ -76,13 +78,12 @@ type versionInfo struct {
 
 func getVersionInfo() *versionInfo {
 	v := &versionInfo{
-		Version:    build.Version,
-		Platform:   fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH),
-		Commit:     build.Commit,
-		CommitDate: build.CommitDate,
-		GoVersion:  runtime.Version(),
-		// Change to env.LauncherVersion. Not doing so to minimize merge conflicts.
-		LauncherVersion: os.Getenv("LAUNCHER_VERSION"),
+		Version:         build.Version,
+		Platform:        fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH),
+		Commit:          build.Commit,
+		CommitDate:      build.CommitDate,
+		GoVersion:       runtime.Version(),
+		LauncherVersion: os.Getenv(envir.LauncherVersion),
 	}
 
 	return v
