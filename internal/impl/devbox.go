@@ -16,9 +16,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
@@ -26,7 +24,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
@@ -387,40 +384,25 @@ func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) err
 		)
 	}
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if cmdutil.Exists("direnv") {
-		// prompt for direnv allow
-		var result string
-		isInteractiveMode := isatty.IsTerminal(os.Stdin.Fd())
-		if isInteractiveMode {
-			prompt := &survey.Input{
-				Message: "Do you want to enable direnv integration for this devbox project? [y/N]",
-			}
-			err := survey.AskOne(prompt, &result)
-			if err != nil {
-				return errors.WithStack(err)
-			}
+	if source == "generate" {
+		if err := nix.EnsureNixInstalled(
+			d.writer, func() *bool { return lo.ToPtr(false) },
+		); err != nil {
+			return err
 		}
 
-		if strings.ToLower(result) == "y" || !isInteractiveMode || source == "generate" {
-			if err := nix.EnsureNixInstalled(
-				d.writer, func() *bool { return lo.ToPtr(false) },
-			); err != nil {
-				return err
-			}
-
-			// generate all shell files to ensure we can refer to them in the .envrc script
-			if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-				return err
-			}
-
-			// .envrc file creation
-			err := generate.CreateEnvrc(tmplFS, d.projectDir)
-			if err != nil {
-				return errors.WithStack(err)
-			}
+		// generate all shell files to ensure we can refer to them in the .envrc script
+		if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+			return err
 		}
 
-		if strings.ToLower(result) == "y" || !isInteractiveMode {
+		// .envrc file creation
+		err := generate.CreateEnvrc(tmplFS, d.projectDir)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if cmdutil.Exists("direnv") {
 			cmd := exec.Command("direnv", "allow")
 			err := cmd.Run()
 			if err != nil {
@@ -428,7 +410,6 @@ func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) err
 			}
 		}
 	}
-
 	return nil
 }
 
