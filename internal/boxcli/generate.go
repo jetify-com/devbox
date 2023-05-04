@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -131,7 +129,7 @@ func sshConfigCmd() *cobra.Command {
 
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}

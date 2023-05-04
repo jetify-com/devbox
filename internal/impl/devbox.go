@@ -40,6 +40,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
@@ -402,13 +403,14 @@ func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) err
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
+		ux.Fsuccess(d.writer, "generated .envrc file\n")
 		if cmdutil.Exists("direnv") {
 			cmd := exec.Command("direnv", "allow")
 			err := cmd.Run()
 			if err != nil {
 				return errors.WithStack(err)
 			}
+			ux.Fsuccess(d.writer, "ran `direnv allow`\n")
 		}
 	}
 	return nil
