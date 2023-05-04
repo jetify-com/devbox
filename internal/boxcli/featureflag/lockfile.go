@@ -1,3 +1,3 @@
 package featureflag
 
-var LockFile = disabled("LOCKFILE")
+var LockFile = enabled("LOCKFILE")
