@@ -100,7 +100,8 @@ func direnvCmd() *cobra.Command {
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
 	command.Flags().BoolVarP(
-		&flags.envrcContent, "envrc-fn", "e", false, "output contents of devbox configuration to use in .envrc")
+		&flags.envrcContent, "print-envrc", "p", false, "output contents of devbox configuration to use in .envrc")
+	command.Flags().MarkHidden("print-envrc")
 	flags.config.register(command)
 	return command
 }
