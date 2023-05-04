@@ -61,6 +61,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(setupCmd())
 	command.AddCommand(shellCmd())
 	command.AddCommand(shellEnvCmd())
+	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
 	// Preview commands
 	command.AddCommand(cloudCmd())

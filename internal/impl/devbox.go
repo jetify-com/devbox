@@ -150,6 +150,19 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan.FlakeInputs = d.flakeInputs()
 
 	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
+
+	// This is an optimization. If there are no dev packages (which we only use
+	// for php/haskell planners) we can use nixpkgs from one of the flakes.
+	// That saves us from downloading nixpkgs an additional time for mkShell.
+	if len(shellPlan.DevPackages) == 0 {
+		for _, input := range shellPlan.FlakeInputs {
+			if input.IsNixpkgs() {
+				nixpkgsInfo = plansdk.GetNixpkgsInfo(input.HashFromNixPkgsURL())
+				break
+			}
+		}
+	}
+
 	shellPlan.NixpkgsInfo = nixpkgsInfo
 
 	return shellPlan, nil
@@ -940,6 +953,27 @@ func (d *Devbox) nixFlakesFilePath() string {
 // packages returns the list of packages to be installed in the nix shell.
 func (d *Devbox) packages() []string {
 	return d.cfg.Packages
+}
+
+func (d *Devbox) findPackageByName(name string) (string, error) {
+	results := []string{}
+	for _, pkg := range d.cfg.Packages {
+		i := nix.InputFromString(pkg, d.lockfile)
+		if i.String() == name || i.CanonicalName() == name {
+			results = append(results, pkg)
+		}
+	}
+	if len(results) > 1 {
+		return "", usererr.New(
+			"found multiple packages with name %s: %s. Please specify version",
+			name,
+			results,
+		)
+	}
+	if len(results) == 0 {
+		return "", usererr.New("no package found with name %s", name)
+	}
+	return results[0], nil
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env

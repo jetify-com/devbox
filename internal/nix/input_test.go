@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/lock"
 )
 
 const nixCommitHash = "hsdafkhsdafhas"
@@ -117,17 +118,21 @@ func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (lockfile) Resolve(pkg string) (string, error) {
-	if strings.Contains(pkg, "path:") {
-		return pkg, nil
-	} else if strings.Contains(pkg, "github:") {
-		return pkg, nil
+func (lockfile) Resolve(pkg string) (*lock.Package, error) {
+	switch {
+	case strings.Contains(pkg, "path:"):
+		return &lock.Package{Resolved: pkg}, nil
+	case strings.Contains(pkg, "github:"):
+		return &lock.Package{Resolved: pkg}, nil
+	default:
+		return &lock.Package{
+			Resolved: fmt.Sprintf(
+				"github:NixOS/nixpkgs/%s#%s",
+				nixCommitHash,
+				pkg,
+			),
+		}, nil
 	}
-	return fmt.Sprintf(
-		"github:NixOS/nixpkgs/%s#%s",
-		nixCommitHash,
-		pkg,
-	), nil
 }
 
 func testInputFromString(s, projectDir string) *testInput {

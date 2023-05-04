@@ -233,7 +233,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		"--priority", nextPriority(args.ProfilePath),
 		urlForInstall,
 	)
-	cmd.Env = AllowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
 
@@ -265,7 +265,7 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
 		info.attributeKey,
 	)
-	cmd.Env = AllowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not match any packages")) {
@@ -277,7 +277,7 @@ func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
 	return nil
 }
 
-func AllowUnfreeEnv() []string {
+func allowUnfreeEnv() []string {
 	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
 }
 

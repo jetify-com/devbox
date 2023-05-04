@@ -49,6 +49,8 @@ type Devbox interface {
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, allProjects bool, services ...string) error
 	ListServices(ctx context.Context) error
+
+	Update(ctx context.Context, pkgs ...string) error
 }
 
 // Open opens a devbox by reading the config file in dir.

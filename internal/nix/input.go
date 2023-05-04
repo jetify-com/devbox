@@ -69,12 +69,12 @@ func (i *Input) Name() string {
 
 func (i *Input) URLForInput() string {
 	if i.IsDevboxPackage() {
-		resolved, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			panic(err)
 			// TODO(landau): handle error
 		}
-		withoutFragment, _, _ := strings.Cut(resolved, "#")
+		withoutFragment, _, _ := strings.Cut(entry.Resolved, "#")
 		return withoutFragment
 	}
 	return i.urlWithoutFragment()
@@ -82,7 +82,11 @@ func (i *Input) URLForInput() string {
 
 func (i *Input) URLForInstall() (string, error) {
 	if i.IsDevboxPackage() {
-		return i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			return "", err
+		}
+		return entry.Resolved, nil
 	}
 	attrPath, err := i.PackageAttributePath()
 	if err != nil {
@@ -97,11 +101,11 @@ func (i *Input) URLForInstall() (string, error) {
 func (i *Input) PackageAttributePath() (string, error) {
 	var infos map[string]*Info
 	if i.IsDevboxPackage() {
-		path, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			return "", err
 		}
-		infos = search(path)
+		infos = search(entry.Resolved)
 	} else {
 		infos = search(i.String())
 	}
@@ -158,7 +162,11 @@ func (i *Input) hash() string {
 
 func (i *Input) validateExists() (bool, error) {
 	if i.IsDevboxPackage() {
-		return searcher.Exists(i.canonicalName(), i.version())
+		version := i.version()
+		if version == "" && i.isVersioned() {
+			return false, usererr.New("No version specified for %q.", i.Path)
+		}
+		return searcher.Exists(i.CanonicalName(), version)
 	}
 	info, err := i.PackageAttributePath()
 	return info != "", err
@@ -185,9 +193,9 @@ func (i *Input) equals(other *Input) bool {
 	return name == otherName
 }
 
-// canonicalName returns the name of the package without the version
+// CanonicalName returns the name of the package without the version
 // it only applies to devbox packages
-func (i *Input) canonicalName() string {
+func (i *Input) CanonicalName() string {
 	if !i.IsDevboxPackage() {
 		return ""
 	}
@@ -203,6 +211,10 @@ func (i *Input) version() string {
 	}
 	_, version, _ := strings.Cut(i.Path, "@")
 	return version
+}
+
+func (i *Input) isVersioned() bool {
+	return i.IsDevboxPackage() && strings.Contains(i.Path, "@")
 }
 
 func (i *Input) hashFromNiPkgsURL() string {

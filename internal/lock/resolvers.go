@@ -10,11 +10,10 @@ type devboxProject interface {
 }
 
 type resolver interface {
-	IsVersionedPackage(pkg string) bool
-	Resolve(pkg, version string) (*Package, error)
+	Resolve(pkg string) (*Package, error)
 }
 
 type Locker interface {
 	devboxProject
-	Resolve(pkg string) (string, error)
+	resolver
 }
