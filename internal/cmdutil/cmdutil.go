@@ -5,6 +5,7 @@ package cmdutil
 
 import (
 	"os/exec"
+	"time"
 )
 
 // Exists indicates if the command exists
@@ -22,4 +23,20 @@ func GetPathOrDefault(command string, def string) string {
 	}
 
 	return path
+}
+
+// WithRetry retries the given function for at most retries times.
+// You can adjust the wait time in your function.
+func WithRetry(retries int, fn func(round int) (time.Duration, error)) error {
+	var finalErr error
+	for num := 0; num < retries; num++ {
+		wait, err := fn(num)
+		if err == nil {
+			return nil
+		}
+		finalErr = err
+		time.Sleep(wait)
+	}
+
+	return finalErr
 }

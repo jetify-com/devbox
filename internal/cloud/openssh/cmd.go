@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -72,17 +73,19 @@ func (c *Cmd) ExecRemote(cmd string) ([]byte, error) {
 // with an exponential backoff if the command fails. maxWait is the maximum
 // seconds we wait in between retries.
 func (c *Cmd) ExecRemoteWithRetry(cmd string, retries, maxWait int) ([]byte, error) {
-	var err error
-	var stdout []byte
-	for i := 0; i < (retries + 1); i++ {
-		if stdout, err = c.ExecRemote(cmd); err == nil {
-			break
+	var ret []byte
+	err := cmdutil.WithRetry(retries, func(round int) (time.Duration, error) {
+		stdout, err := c.ExecRemote(cmd)
+		ret = stdout
+		if err == nil {
+			return 0, nil
 		}
-		wait := int(math.Min(float64(maxWait), math.Pow(2, float64(i))))
+		// calculate the wait time for the next round
+		wait := int(math.Min(float64(maxWait), math.Pow(2, float64(round))))
 		debug.Log("Error: %v Retrying ExecRemote in %d seconds", err, wait)
-		time.Sleep(time.Duration(wait) * time.Second)
-	}
-	return stdout, err
+		return time.Duration(wait) * time.Second, err
+	})
+	return ret, err
 }
 
 func (c *Cmd) cmd(sshArgs ...string) *exec.Cmd {

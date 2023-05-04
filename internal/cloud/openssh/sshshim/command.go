@@ -27,11 +27,13 @@ func execute(args []string) error {
 	EnableDebug() // Always enable for now.
 	debug.Log("os.Args: %v", args)
 
-	if alive, err := EnsureLiveVMOrTerminateMutagenSessions(args[1:]); err != nil {
+	alive, err := EnsureLiveVMOrTerminateMutagenSessions(args[1:])
+	if err != nil {
 		debug.Log("ensureLiveVMOrTerminateMutagenSessions error: %v", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return err
-	} else if !alive {
+	}
+	if !alive {
 		return nil
 	}
 

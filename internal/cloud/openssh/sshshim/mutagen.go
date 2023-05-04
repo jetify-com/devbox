@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -28,9 +30,11 @@ func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
 		return true, nil
 	}
 
-	if isActive, err := checkActiveVMWithRetries(vmAddr); err != nil {
+	isActive, err := checkActiveVMWithRetries(vmAddr)
+	if err != nil {
 		return false, errors.WithStack(err)
-	} else if !isActive {
+	}
+	if !isActive {
 		debug.Log("terminating mutagen session for vm: %s", vmAddr)
 		// If no vm is active, then we should terminate the running mutagen sessions
 		return false, terminateMutagenSessions(vmAddr)
@@ -58,20 +62,17 @@ func terminateMutagenSessions(vmAddr string) error {
 }
 
 func checkActiveVMWithRetries(vmAddr string) (bool, error) {
-	var err error
-
-	// Try 3 times:
-	for num := 0; num < 3; num++ {
-		var isActive bool
-		isActive, err = checkActiveVM(vmAddr)
+	err := cmdutil.WithRetry(3, func(round int) (time.Duration, error) {
+		isActive, err := checkActiveVM(vmAddr)
+		// found an active VM
 		if err == nil && isActive {
-			// found an active VM
-			return true, nil
+			return 0, nil
 		}
-		time.Sleep(10 * time.Second)
-		debug.Log("Try %d failed to find activeVM for %s", num, vmAddr)
-	}
-	return false, err
+		debug.Log("Try %d failed to find activeVM for %s", round, vmAddr)
+		return 10 * time.Second, err
+	})
+
+	return err == nil, err
 }
 
 func checkActiveVM(vmAddr string) (bool, error) {
