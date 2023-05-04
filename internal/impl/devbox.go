@@ -965,8 +965,12 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 	}
 	if len(results) > 1 {
 		return "", usererr.New(
-			"found multiple packages with name %s: %s", name, results)
-	} else if len(results) == 0 {
+			"found multiple packages with name %s: %s. Please specify version",
+			name,
+			results,
+		)
+	}
+	if len(results) == 0 {
 		return "", usererr.New("no package found with name %s", name)
 	}
 	return results[0], nil

@@ -3,24 +3,25 @@ package impl
 import (
 	"context"
 	"fmt"
+
+	"go.jetpack.io/devbox/internal/lock"
 )
 
 func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
-	pkgsToUpdate := []string{}
-	if len(pkgs) == 0 {
-		pkgsToUpdate = append([]string(nil), d.packages()...)
-	} else {
-		for _, pkg := range pkgs {
-			found, err := d.findPackageByName(pkg)
-			if err != nil {
-				return err
-			}
-			pkgsToUpdate = append(pkgsToUpdate, found)
+	var pkgsToUpdate []string
+	for _, pkg := range pkgs {
+		found, err := d.findPackageByName(pkg)
+		if err != nil {
+			return err
 		}
+		pkgsToUpdate = append(pkgsToUpdate, found)
+	}
+	if len(pkgsToUpdate) == 0 {
+		pkgsToUpdate = d.packages()
 	}
 
 	for _, pkg := range pkgsToUpdate {
-		if !d.lockfile.IsVersionedPackage(pkg) {
+		if !lock.IsVersionedPackage(pkg) {
 			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
 			continue
 		}

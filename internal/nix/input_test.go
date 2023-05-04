@@ -118,24 +118,21 @@ func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (l *lockfile) IsVersionedPackage(pkg string) bool {
-	name, version, found := strings.Cut(pkg, "@")
-	return found && name != "" && version != ""
-}
-
 func (lockfile) Resolve(pkg string) (*lock.Package, error) {
-	if strings.Contains(pkg, "path:") {
+	switch {
+	case strings.Contains(pkg, "path:"):
 		return &lock.Package{Resolved: pkg}, nil
-	} else if strings.Contains(pkg, "github:") {
+	case strings.Contains(pkg, "github:"):
 		return &lock.Package{Resolved: pkg}, nil
+	default:
+		return &lock.Package{
+			Resolved: fmt.Sprintf(
+				"github:NixOS/nixpkgs/%s#%s",
+				nixCommitHash,
+				pkg,
+			),
+		}, nil
 	}
-	return &lock.Package{
-		Resolved: fmt.Sprintf(
-			"github:NixOS/nixpkgs/%s#%s",
-			nixCommitHash,
-			pkg,
-		),
-	}, nil
 }
 
 func testInputFromString(s, projectDir string) *testInput {

@@ -162,7 +162,11 @@ func (i *Input) hash() string {
 
 func (i *Input) validateExists() (bool, error) {
 	if i.IsDevboxPackage() {
-		return searcher.Exists(i.CanonicalName(), i.version())
+		version := i.version()
+		if version == "" && i.isVersioned() {
+			return false, usererr.New("No version specified for %q.", i.Path)
+		}
+		return searcher.Exists(i.CanonicalName(), version)
 	}
 	info, err := i.PackageAttributePath()
 	return info != "", err
@@ -207,6 +211,10 @@ func (i *Input) version() string {
 	}
 	_, version, _ := strings.Cut(i.Path, "@")
 	return version
+}
+
+func (i *Input) isVersioned() bool {
+	return i.IsDevboxPackage() && strings.Contains(i.Path, "@")
 }
 
 func (i *Input) hashFromNiPkgsURL() string {

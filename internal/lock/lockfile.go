@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -50,7 +51,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 
 func (l *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if l.IsVersionedPackage(p) {
+		if IsVersionedPackage(p) {
 			if _, err := l.Resolve(p); err != nil {
 				return err
 			}
@@ -70,7 +71,7 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
 		var locked *Package
 		var err error
-		if l.IsVersionedPackage(pkg) {
+		if IsVersionedPackage(pkg) {
 			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
 				return nil, err
@@ -111,6 +112,11 @@ func (l *File) Update() error {
 	}
 
 	return cuecfg.WriteFile(lockFilePath(l), l)
+}
+
+func IsVersionedPackage(pkg string) bool {
+	name, version, found := strings.Cut(pkg, "@")
+	return found && name != "" && version != ""
 }
 
 func lockFilePath(project devboxProject) string {

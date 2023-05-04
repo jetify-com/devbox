@@ -18,15 +18,13 @@ func updateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "update [pkg]...",
-		Short: "Updates one, many, or all packages in your devbox",
-		Long: "Updates one, many, or all packages in your devbox. If no " +
-			"packages are specified, all packages will be updated. Only updates " +
-			"versioned packages (e.g. `python@3.11`), not packages that are " +
-			"pinned to a nix channel (e.g. `python3`)",
+		Short: "Updates packages in your devbox",
+		Long: "Updates one, many, or all packages in your devbox. " +
+			"If no packages are specified, all packages will be updated. " +
+			"Only updates versioned packages (e.g. `python@3.11`), not packages that are pinned to a nix channel (e.g. `python3`)",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)
-
 		},
 	}
 
