@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func IsCLICloudShell() bool {
+func IsCLICloudShell() bool { // TODO: not used any more
 	cliCloudShell, _ := strconv.ParseBool(os.Getenv(devboxCLICloudShell))
 	return cliCloudShell
 }

@@ -20,31 +20,28 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-// Keep this in-sync with latest version in launch.sh. If this version is newer
-// than the version in launch.sh, we'll print a notice.
+// Keep this in-sync with latest version in launch.sh.
+// If this version is newer than the version in launch.sh, we'll print a notice.
 const expectedLauncherVersion = "v0.2.0"
 
 // currentDevboxVersion is the version of the devbox CLI binary that is currently running.
-// We use this variable so we can mock it in tests.
+// We use this variable so that we can mock it in tests.
 var currentDevboxVersion = build.Version
-
-// envDevboxLatestVersion is the latest version available of the devbox CLI binary.
-// Change to env.DevboxLatestVersion. Not doing so to minimize merge conflicts.
-var envDevboxLatestVersion = "DEVBOX_LATEST_VERSION"
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
 // they are out of date.
 func CheckVersion(w io.Writer) {
 
-	// Replace with envir.IsDevboxCloud(). Not doing so to minimize merge conflicts.
-	if os.Getenv("DEVBOX_REGION") != "" {
+	if envir.IsDevboxCloud() {
 		return
 	}
 
+	// check launcher version
 	launcherNotice := launcherVersionNotice()
 	if launcherNotice != "" {
 		// TODO: use ux.FNotice
@@ -53,6 +50,7 @@ func CheckVersion(w io.Writer) {
 		// fallthrough to alert the user about a new Devbox CLI binary being possibly available
 	}
 
+	// check devbox CLI version
 	devboxNotice := devboxVersionNotice()
 	if devboxNotice != "" {
 		// TODO: use ux.FNotice
@@ -139,7 +137,7 @@ type updatedVersions struct {
 // devbox versions.
 func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 
-	exePath := os.Getenv("LAUNCHER_PATH")
+	exePath := os.Getenv(envir.LauncherPath)
 	if exePath == "" {
 		ux.Fwarning(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
 		exePath = "devbox"
@@ -227,8 +225,7 @@ func isNewDevboxAvailable() bool {
 // currentLauncherAvailable returns launcher's version if it is
 // available, or empty string if it is not.
 func currentLauncherVersion() string {
-	// Change to envir.LauncherVersion. Not doing so to minimize merge-conflicts.
-	launcherVersion := os.Getenv("LAUNCHER_VERSION")
+	launcherVersion := os.Getenv(envir.LauncherVersion)
 	if launcherVersion == "" {
 		return ""
 	}
@@ -265,7 +262,7 @@ func semverCompare(ver1, ver2 string) int {
 
 // latestVersion returns the latest version available for the binary.
 func latestVersion() string {
-	version := os.Getenv(envDevboxLatestVersion)
+	version := os.Getenv(envir.DevboxLatestVersion)
 	if version == "" {
 		return ""
 	}
