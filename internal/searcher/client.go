@@ -9,22 +9,17 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
 
 func searchHost() string {
-	endpoint := searchAPIEndpoint
-	if os.Getenv(env.DevboxSearchHost) != "" {
-		endpoint = os.Getenv(env.DevboxSearchHost)
-	}
-	return endpoint
+	return envir.GetValueOrDefault(envir.DevboxSearchHost, searchAPIEndpoint)
 }
 
 type client struct {
@@ -55,8 +50,12 @@ func (c *client) SearchVersion(query, version string) (*SearchResult, error) {
 	)
 }
 
-func (c *client) Resolve(pkg, version string) (*lock.Package, error) {
-	result, err := c.SearchVersion(pkg, version)
+func (c *client) Resolve(pkg string) (*lock.Package, error) {
+	name, version, _ := strings.Cut(pkg, "@")
+	if version == "" {
+		return nil, usererr.New("No version specified for %q.", name)
+	}
+	result, err := c.SearchVersion(name, version)
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +71,6 @@ func (c *client) Resolve(pkg, version string) (*lock.Package, error) {
 		),
 		Version: result.Results[0].Packages[0].Version,
 	}, nil
-}
-
-func (c *client) IsVersionedPackage(pkg string) bool {
-	name, version, found := strings.Cut(pkg, "@")
-	return found && name != "" && version != ""
 }
 
 func execSearch(url string) (*SearchResult, error) {

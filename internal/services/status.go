@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 //lint:ignore U1000 Ignore unused function temporarily for debugging
 
 package services
@@ -14,7 +17,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating
@@ -118,7 +121,7 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 
 //lint:ignore U1000 Ignore unused function temporarily for debugging
 func updateServiceStatusOnRemote(projectDir string, s *ServiceStatus) error {
-	if !env.IsDevboxCloud() {
+	if !envir.IsDevboxCloud() {
 		return nil
 	}
 	host, err := os.Hostname()

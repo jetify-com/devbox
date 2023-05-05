@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package plansdk
@@ -13,7 +13,7 @@ func TestMergeShellPlans(t *testing.T) {
 	plan1 := &ShellPlan{}
 	plan2 := &ShellPlan{
 		DevPackages:   []string{},
-		Definitions:   []string{"a"},
+		Definitions:   map[string]string{"a": "b"},
 		ShellInitHook: []string{"a", "b"},
 		GeneratedFiles: map[string]string{
 			"a": "b",
@@ -26,16 +26,16 @@ func TestMergeShellPlans(t *testing.T) {
 
 	// Test merge array
 	plan1 = &ShellPlan{
-		Definitions:   []string{"a"},
+		Definitions:   map[string]string{"a": "b"},
 		ShellInitHook: []string{"c"},
 	}
 	plan2 = &ShellPlan{
-		Definitions:   []string{"a"},
+		Definitions:   map[string]string{"a": "b"},
 		ShellInitHook: []string{"a", "b"},
 	}
 	expected = &ShellPlan{
 		DevPackages:   []string{},
-		Definitions:   []string{"a"},
+		Definitions:   map[string]string{"a": "b"},
 		ShellInitHook: []string{"c", "a", "b"},
 	}
 	actual, err = MergeShellPlans(plan1, plan2)
@@ -58,7 +58,7 @@ func TestMergeShellPlans(t *testing.T) {
 	}
 	expected = &ShellPlan{
 		DevPackages:   []string{},
-		Definitions:   []string{},
+		Definitions:   nil,
 		ShellInitHook: []string{},
 		GeneratedFiles: map[string]string{
 			"a": "b",

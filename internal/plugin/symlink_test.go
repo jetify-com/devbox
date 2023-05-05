@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package plugin
 
 import (
@@ -5,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 func TestVirtenvSymlinkPath(t *testing.T) {
@@ -19,7 +22,7 @@ func TestVirtenvSymlinkPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(testXdgStateHome)
-	t.Setenv(env.XDGStateHome, testXdgStateHome)
+	t.Setenv(envir.XDGStateHome, testXdgStateHome)
 
 	testCases := []struct {
 		projectDir       string

@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package shellcmd
 
 import (
@@ -12,7 +15,7 @@ import (
 // Formats for marshalling and unmarshalling a series of shell commands in a
 // devbox config.
 const (
-	// CmdArray formats shell commands as an array of of strings.
+	// CmdArray formats shell commands as an array of strings.
 	CmdArray CmdFormat = iota
 
 	// CmdString formats shell commands as a single string.
@@ -43,7 +46,6 @@ type Commands struct {
 	// UnmarshalJSON will set MarshalAs automatically so that commands
 	// marshal back to their original format. The default zero-value
 	// formats them as an array.
-	//
 	MarshalAs CmdFormat
 	Cmds      []string
 }

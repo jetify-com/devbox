@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
@@ -19,8 +20,8 @@ import (
 )
 
 var (
-	debugMiddleware *midcobra.DebugMiddleware = &midcobra.DebugMiddleware{}
-	traceMiddleware *midcobra.TraceMiddleware = &midcobra.TraceMiddleware{}
+	debugMiddleware = &midcobra.DebugMiddleware{}
+	traceMiddleware = &midcobra.TraceMiddleware{}
 )
 
 type rootCmdFlags struct {
@@ -33,7 +34,7 @@ func RootCmd() *cobra.Command {
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			vercheck.CheckLauncherVersion(cmd.ErrOrStderr())
+			vercheck.CheckVersion(cmd.ErrOrStderr())
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
 			}
@@ -60,6 +61,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(setupCmd())
 	command.AddCommand(shellCmd())
 	command.AddCommand(shellEnvCmd())
+	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
 	// Preview commands
 	command.AddCommand(cloudCmd())

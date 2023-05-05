@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 // Package impl creates isolated development environments.
@@ -26,10 +26,11 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lock"
@@ -141,15 +142,33 @@ func (d *Devbox) ConfigHash() (string, error) {
 	return d.cfg.Hash()
 }
 
+func (d *Devbox) NixPkgsCommitHash() string {
+	if hash := d.cfg.Nixpkgs.Commit; hash != "" {
+		return hash
+	}
+	// Tests don't have a nixpkgs commit, so we use the default one.
+	// Not sure if users ever run into this.
+	return plansdk.DefaultNixpkgsCommit
+}
+
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
-	shellPlan.DevPackages = lo.Uniq(append(d.localPackages(), shellPlan.DevPackages...))
 	shellPlan.FlakeInputs = d.flakeInputs()
 
-	nixpkgsInfo, err := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
-	if err != nil {
-		return nil, err
+	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
+
+	// This is an optimization. If there are no dev packages (which we only use
+	// for php/haskell planners) we can use nixpkgs from one of the flakes.
+	// That saves us from downloading nixpkgs an additional time for mkShell.
+	if len(shellPlan.DevPackages) == 0 {
+		for _, input := range shellPlan.FlakeInputs {
+			if input.IsNixpkgs() {
+				nixpkgsInfo = plansdk.GetNixpkgsInfo(input.HashFromNixPkgsURL())
+				break
+			}
+		}
 	}
+
 	shellPlan.NixpkgsInfo = nixpkgsInfo
 
 	return shellPlan, nil
@@ -178,16 +197,16 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-	envs[env.DevboxShellEnabled] = "1"
+	envs[envir.DevboxShellEnabled] = "1"
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
-	shellStartTime := os.Getenv(env.DevboxShellStartTime)
-	if shellStartTime == "" {
-		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
-	}
+	shellStartTime := envir.GetValueOrDefault(
+		envir.DevboxShellStartTime,
+		telemetry.UnixTimestampFromTime(telemetry.CommandStartTime()),
+	)
 
 	opts := []ShellOption{
 		WithHooksFilePath(d.scriptPath(hooksFilename)),
@@ -384,7 +403,7 @@ func (d *Devbox) GenerateEnvrc(force bool, source string) error {
 		)
 	}
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if commandExists("direnv") {
+	if cmdutil.Exists("direnv") {
 		// prompt for direnv allow
 		var result string
 		isInteractiveMode := isatty.IsTerminal(os.Stdin.Fd())
@@ -460,7 +479,7 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
@@ -497,7 +516,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 }
 
 func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		args := []string{"services", "stop"}
 		args = append(args, serviceNames...)
 		if allProjects {
@@ -536,7 +555,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 }
 
 func (d *Devbox) ListServices(ctx context.Context) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", []string{"services", "ls"})
 	}
 
@@ -574,7 +593,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
@@ -629,7 +648,7 @@ func (d *Devbox) StartProcessManager(
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.writer, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage("process-compose"); err != nil {
+		if err = d.addDevboxUtilityPackage("github:F1bonacc1/process-compose/v0.43.1"); err != nil {
 			return err
 		}
 
@@ -640,7 +659,7 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !env.IsDevboxShellEnabled() {
+	if !envir.IsDevboxShellEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
@@ -816,22 +835,26 @@ var nixEnvCache map[string]string
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
-	var err error
-	if nixEnvCache == nil {
-		usePrintDevEnvCache := false
-
-		// If lockfile is up-to-date, we can use the print-dev-env cache.
-		if lock, err := lock.Local(d); err != nil {
-			return nil, err
-		} else if upToDate, err := lock.IsUpToDate(); err != nil {
-			return nil, err
-		} else if upToDate {
-			usePrintDevEnvCache = true
-		}
-
-		nixEnvCache, err = d.computeNixEnv(ctx, usePrintDevEnvCache)
+	if nixEnvCache != nil {
+		return nixEnvCache, nil
 	}
-	return nixEnvCache, err
+
+	usePrintDevEnvCache := false
+
+	// If lockfile is up-to-date, we can use the print-dev-env cache.
+	lockFile, err := lock.Local(d)
+	if err != nil {
+		return nil, err
+	}
+	upToDate, err := lockFile.IsUpToDate()
+	if err != nil {
+		return nil, err
+	}
+	if upToDate {
+		usePrintDevEnvCache = true
+	}
+
+	return d.computeNixEnv(ctx, usePrintDevEnvCache)
 }
 
 func (d *Devbox) ogPathKey() string {
@@ -938,12 +961,25 @@ func (d *Devbox) packages() []string {
 	return d.cfg.Packages
 }
 
-// TODO(landau): localPackages, and flakeInput packages could
-// be merged into a single buildInput map of the form: source => []pkg
-func (d *Devbox) localPackages() []string {
-	return lo.Filter(d.cfg.Packages, func(pkg string, _ int) bool {
-		return !nix.InputFromString(pkg, d.lockfile).IsFlake()
-	})
+func (d *Devbox) findPackageByName(name string) (string, error) {
+	results := []string{}
+	for _, pkg := range d.cfg.Packages {
+		i := nix.InputFromString(pkg, d.lockfile)
+		if i.String() == name || i.CanonicalName() == name {
+			results = append(results, pkg)
+		}
+	}
+	if len(results) > 1 {
+		return "", usererr.New(
+			"found multiple packages with name %s: %s. Please specify version",
+			name,
+			results,
+		)
+	}
+	if len(results) == 0 {
+		return "", usererr.New("no package found with name %s", name)
+	}
+	return results[0], nil
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env
@@ -954,11 +990,6 @@ func (d *Devbox) localPackages() []string {
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
-}
-
-func commandExists(command string) bool { // TODO: move to a utility package
-	_, err := exec.LookPath(command)
-	return err == nil
 }
 
 // ignoreCurrentEnvVar contains environment variables that Devbox should remove
@@ -1051,7 +1082,6 @@ func addHashToEnv(env map[string]string) error {
 	hash, err := cuecfg.Hash(env)
 	if err == nil {
 		env[devboxShellEnvHashVarName] = hash
-
 	}
 	return err
 }

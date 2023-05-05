@@ -25,6 +25,8 @@
           buildInputs = with pkgs; [
             php
             php81Packages.composer
+            php
+            php81Packages.composer
             php81Extensions.blackfire
             flyctl
             postgresql

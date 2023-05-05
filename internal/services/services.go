@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 //lint:file-ignore U1000 Ignore unused function temporarily for debugging
 package services
 
@@ -11,7 +14,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type Services map[string]Service
@@ -35,7 +38,7 @@ const (
 )
 
 func printProxyURL(w io.Writer, services Services) error { // TODO: remove it?
-	if !env.IsDevboxCloud() {
+	if !envir.IsDevboxCloud() {
 		return nil
 	}
 

@@ -1,7 +1,11 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package lock
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -17,8 +21,8 @@ type File struct {
 	devboxProject
 	resolver
 
-	LockFileVersion string             `json:"lockfile_version"`
-	Packages        map[string]Package `json:"packages"`
+	LockFileVersion string              `json:"lockfile_version"`
+	Packages        map[string]*Package `json:"packages"`
 }
 
 type Package struct {
@@ -33,7 +37,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
-		Packages:        map[string]Package{},
+		Packages:        map[string]*Package{},
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -47,8 +51,10 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 
 func (l *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if _, err := l.Resolve(p); err != nil {
-			return err
+		if IsVersionedPackage(p) {
+			if _, err := l.Resolve(p); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -61,24 +67,42 @@ func (l *File) Remove(pkgs ...string) error {
 	return l.Update()
 }
 
-func (l *File) Resolve(pkg string) (string, error) {
-	if _, ok := l.Packages[pkg]; !ok {
-		name, version, found := strings.Cut(pkg, "@")
-		if found {
-			locked, err := l.resolver.Resolve(name, version)
+func (l *File) Resolve(pkg string) (*Package, error) {
+	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
+		var locked *Package
+		var err error
+		if IsVersionedPackage(pkg) {
+			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-			l.Packages[pkg] = *locked
 		} else {
-			l.Packages[pkg] = Package{}
+			// These are legacy packages without a version. Resolve to nixpkgs with
+			// whatever hash is in the devbox.json
+			locked = &Package{
+				Resolved: fmt.Sprintf(
+					"github:NixOS/nixpkgs/%s#%s",
+					l.NixPkgsCommitHash(),
+					pkg,
+				),
+			}
 		}
+		l.Packages[pkg] = locked
 		if err := l.Update(); err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return l.Packages[pkg].Resolved, nil
+	return l.Packages[pkg], nil
+}
+
+func (l *File) ForceResolve(pkg string) (*Package, error) {
+	delete(l.Packages, pkg)
+	return l.Resolve(pkg)
+}
+
+func (l *File) Entry(pkg string) *Package {
+	return l.Packages[pkg]
 }
 
 func (l *File) Contains(pkg string) bool {
@@ -88,13 +112,25 @@ func (l *File) Contains(pkg string) bool {
 
 func (l *File) Update() error {
 	// Never write lockfile if versioned packages is not enabled
-	if !featureflag.VersionedPackages.Enabled() {
+	if !featureflag.LockFile.Enabled() {
 		return nil
 	}
 
 	return cuecfg.WriteFile(lockFilePath(l), l)
 }
 
+func IsVersionedPackage(pkg string) bool {
+	name, version, found := strings.Cut(pkg, "@")
+	return found && name != "" && version != ""
+}
+
 func lockFilePath(project devboxProject) string {
 	return filepath.Join(project.ProjectDir(), "devbox.lock")
+}
+
+func getLockfileHash(project devboxProject) (string, error) {
+	if !featureflag.LockFile.Enabled() {
+		return "", nil
+	}
+	return cuecfg.FileHash(lockFilePath(project))
 }

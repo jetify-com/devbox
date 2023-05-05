@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package impl
@@ -60,7 +60,7 @@ func (d *Devbox) generateShellFiles() error {
 		}
 	}
 
-	for _, pkg := range plan.DevPackages {
+	for _, pkg := range d.packages() {
 		if err := d.pluginManager.Create(d.writer, pkg, d.projectDir); err != nil {
 			return err
 		}

@@ -1,9 +1,12 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package featureflag
 
 import (
 	"testing"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 func TestEnabledFeature(t *testing.T) {
@@ -25,7 +28,7 @@ func TestDisabledFeature(t *testing.T) {
 func TestEnabledFeatureEnv(t *testing.T) {
 	name := "TestEnabledFeatureEnv"
 	disabled(name)
-	t.Setenv(env.DevboxFeaturePrefix+name, "1")
+	t.Setenv(envir.DevboxFeaturePrefix+name, "1")
 	if !features[name].Enabled() {
 		t.Errorf("got %s.Enabled() = false, want true.", name)
 	}

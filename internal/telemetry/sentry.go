@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package telemetry
 
 import (
@@ -23,7 +26,7 @@ import (
 	pkgerrors "github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -47,7 +50,7 @@ var started bool
 
 // Start enables telemetry for the current program.
 func Start(appName string) {
-	if started || env.NotTrack() {
+	if started || envir.DoNotTrack() {
 		return
 	}
 	started = initSentry(appName)

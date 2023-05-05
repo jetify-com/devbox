@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package nix
 
 import (
@@ -12,14 +15,14 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 func nixLinks() []string {
 	return []string{
 		"/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh",
-		filepath.Join(os.Getenv(env.Home), ".nix-profile/etc/profile.d/nix.sh"),
+		filepath.Join(os.Getenv(envir.Home), ".nix-profile/etc/profile.d/nix.sh"),
 		// logic introduced in https://github.com/NixOS/nix/pull/5588/files
 		xdg.StateSubpath("nix/profile/etc/profile.d/nix.sh"),
 		xdg.StateSubpath("nix/profiles/profile/etc/profile.d/nix.sh"),

@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package impl
@@ -35,19 +35,20 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 
 	// validate all packages exist. Don't install anything if any are missing
 	for _, pkg := range pkgs {
-		found, err := nix.PkgExists(plansdk.DefaultNixpkgsCommit, pkg, d.lockfile)
+		found, err := nix.PkgExists(pkg, d.lockfile)
 		if err != nil {
 			return err
-		} else if !found {
+		}
+		if !found {
 			return nix.ErrPackageNotFound
 		}
 	}
-	var added []string
 	profilePath, err := GlobalNixProfilePath()
 	if err != nil {
 		return err
 	}
 
+	var added []string
 	total := len(pkgs)
 	for idx, pkg := range pkgs {
 		stepNum := idx + 1
@@ -55,7 +56,6 @@ func (d *Devbox) AddGlobal(pkgs ...string) error {
 		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
-			NixpkgsCommit:     d.cfg.Nixpkgs.Commit,
 			Package:           pkg,
 			ProfilePath:       profilePath,
 			Writer:            d.writer,

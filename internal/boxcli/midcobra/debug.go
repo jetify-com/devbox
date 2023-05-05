@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package midcobra
@@ -15,7 +15,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -45,7 +45,7 @@ func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
 	if d.flag.Changed {
 		strVal = d.flag.Value.String()
 	} else {
-		strVal = os.Getenv(env.DevboxDebug)
+		strVal = os.Getenv(envir.DevboxDebug)
 	}
 	if enabled, _ := strconv.ParseBool(strVal); enabled {
 		debug.Enable()

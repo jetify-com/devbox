@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package plansdk
@@ -35,11 +35,7 @@ func (v Version) parts() []string {
 }
 
 func (v Version) Exact() string {
-	parts := v.parts()
-	if len(parts) == 0 {
-		return ""
-	}
-	return strings.Join(parts, "")
+	return strings.Join(v.parts(), "")
 }
 
 func (v Version) Major() string {

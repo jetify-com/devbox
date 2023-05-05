@@ -1,14 +1,17 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/vercheck"
 )
 
@@ -56,6 +59,7 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 		fmt.Fprintf(w, "Commit:      %v\n", v.Commit)
 		fmt.Fprintf(w, "Commit Time: %v\n", v.CommitDate)
 		fmt.Fprintf(w, "Go Version:  %v\n", v.GoVersion)
+		fmt.Fprintf(w, "Launcher:    %v\n", v.LauncherVersion)
 	} else {
 		fmt.Fprintf(w, "%v\n", v.Version)
 	}
@@ -63,21 +67,23 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 }
 
 type versionInfo struct {
-	Version      string
-	IsPrerelease bool
-	Platform     string
-	Commit       string
-	CommitDate   string
-	GoVersion    string
+	Version         string
+	IsPrerelease    bool
+	Platform        string
+	Commit          string
+	CommitDate      string
+	GoVersion       string
+	LauncherVersion string
 }
 
 func getVersionInfo() *versionInfo {
 	v := &versionInfo{
-		Version:    build.Version,
-		Platform:   fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH),
-		Commit:     build.Commit,
-		CommitDate: build.CommitDate,
-		GoVersion:  runtime.Version(),
+		Version:         build.Version,
+		Platform:        fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH),
+		Commit:          build.Commit,
+		CommitDate:      build.CommitDate,
+		GoVersion:       runtime.Version(),
+		LauncherVersion: os.Getenv(envir.LauncherVersion),
 	}
 
 	return v

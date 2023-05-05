@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -11,7 +11,7 @@ import (
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type shellCmdFlags struct {
@@ -60,7 +60,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return nil // return here to prevent opening a devbox shell
 	}
 
-	if env.IsDevboxShellEnabled() {
+	if envir.IsDevboxShellEnabled() {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 

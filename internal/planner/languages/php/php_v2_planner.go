@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package php
@@ -35,19 +35,18 @@ func (p *V2Planner) IsRelevantForPackages(packages []string) bool {
 
 func (p *V2Planner) GetShellPlan(srcDir string) *plansdk.ShellPlan {
 	phpPackage := p.getPHPPackage()
-	definitions := []string{
-		fmt.Sprintf(
-			"%s = pkgs.%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
-			phpPackage,
+	definitions := map[string]string{
+		phpPackage: fmt.Sprintf(
+			"pkgs.%s.withExtensions ({ enabled, all }: enabled ++ (with all; [ %s ]));",
 			phpPackage,
 			strings.Join(p.getExtensions(), " "),
 		),
 	}
 
 	if composerPackage := p.getComposerPackage(); composerPackage != "" {
-		definitions = append(
-			definitions,
-			fmt.Sprintf("%s = %s.packages.composer;", composerPackage, phpPackage),
+		definitions[composerPackage] = fmt.Sprintf(
+			"%s.packages.composer;",
+			phpPackage,
 		)
 	}
 

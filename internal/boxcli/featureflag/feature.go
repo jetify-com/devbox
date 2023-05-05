@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package featureflag
 
 import (
@@ -5,7 +8,7 @@ import (
 	"strconv"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type feature struct {
@@ -37,7 +40,7 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if on, err := strconv.ParseBool(os.Getenv(env.DevboxFeaturePrefix + f.name)); err == nil {
+	if on, err := strconv.ParseBool(os.Getenv(envir.DevboxFeaturePrefix + f.name)); err == nil {
 		status := "enabled"
 		if !on {
 			status = "disabled"

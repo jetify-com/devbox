@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package nix
 
 import (
@@ -7,6 +10,7 @@ import (
 	"os/exec"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -21,10 +25,7 @@ func RunScript(projectDir string, cmdWithArgs string, env map[string]string) err
 	}
 
 	// Try to find sh in the PATH, if not, default to a well known absolute path.
-	shPath, err := exec.LookPath("sh")
-	if err != nil {
-		shPath = "/bin/sh"
-	}
+	shPath := cmdutil.GetPathOrDefault("sh", "/bin/sh")
 	cmd := exec.Command(shPath, "-c", cmdWithArgs)
 	cmd.Env = envPairs
 	cmd.Dir = projectDir

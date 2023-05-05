@@ -1,10 +1,13 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package xdg
 
 import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 func DataSubpath(subpath string) string {
@@ -23,10 +26,10 @@ func StateSubpath(subpath string) string {
 	return filepath.Join(stateDir(), subpath)
 }
 
-func dataDir() string   { return resolveDir(env.XDGDataHome, ".local/share") }
-func configDir() string { return resolveDir(env.XDGConfigHome, ".config") }
-func cacheDir() string  { return resolveDir(env.XDGCacheHome, ".cache") }
-func stateDir() string  { return resolveDir(env.XDGStateHome, ".local/state") }
+func dataDir() string   { return resolveDir(envir.XDGDataHome, ".local/share") }
+func configDir() string { return resolveDir(envir.XDGConfigHome, ".config") }
+func cacheDir() string  { return resolveDir(envir.XDGCacheHome, ".cache") }
+func stateDir() string  { return resolveDir(envir.XDGStateHome, ".local/state") }
 
 func resolveDir(envvar string, defaultPath string) string {
 	dir := os.Getenv(envvar)

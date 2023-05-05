@@ -1,4 +1,4 @@
-// Copyright 2022 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -13,7 +13,7 @@ import (
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 type cloudShellCmdFlags struct {
@@ -134,7 +134,7 @@ func cloudPortForwardList() *cobra.Command {
 
 func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud shell` when already in the VM is not allowed.
-	if env.IsDevboxCloud() {
+	if envir.IsDevboxCloud() {
 		return shellInceptionErrorMsg("devbox cloud shell")
 	}
 
@@ -147,7 +147,7 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 
 func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 	// calling `devbox cloud init` when already in the VM is not allowed.
-	if env.IsDevboxCloud() {
+	if envir.IsDevboxCloud() {
 		return shellInceptionErrorMsg("devbox cloud init")
 	}
 

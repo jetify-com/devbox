@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package telemetry
 
 import (
@@ -15,7 +18,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
-	"go.jetpack.io/devbox/internal/env"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 // cmdStartTime records the time at the start of any devbox command invocation.
@@ -79,7 +82,7 @@ func LogShellDurationEvent(eventName string, startTime string) error {
 		AnonymousID: DeviceID,
 		AppName:     AppDevbox,
 		AppVersion:  build.Version,
-		CloudRegion: os.Getenv(env.DevboxRegion),
+		CloudRegion: os.Getenv(envir.DevboxRegion),
 		Duration:    time.Since(start),
 		OsName:      build.OS(),
 		UserID:      UserIDFromGithubUsername(),
@@ -154,9 +157,9 @@ func UnixTimestampFromTime(t time.Time) string {
 
 func shellAccess() shellAccessKind {
 	// Check if running in devbox cloud
-	if env.IsDevboxCloud() {
+	if envir.IsDevboxCloud() {
 		// Check if running via ssh tty (i.e. ssh shell)
-		if os.Getenv(env.SSHTTY) != "" {
+		if os.Getenv(envir.SSHTTY) != "" {
 			return ssh
 		}
 		return browser
