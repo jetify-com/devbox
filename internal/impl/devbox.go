@@ -377,8 +377,8 @@ func (d *Devbox) PrintEnvrcContent(w io.Writer) error {
 	return t.Execute(w, nil)
 }
 
-// CreateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) CreateEnvrcFile(force bool) error {
+// GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
+func (d *Devbox) GenerateEnvrcFile(force bool) error {
 	ctx, task := trace.NewTask(context.Background(), "devboxGenerateEnvrc")
 	defer task.End()
 
