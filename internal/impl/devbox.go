@@ -197,10 +197,10 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	shellStartTime := os.Getenv(envir.DevboxShellStartTime)
-	if shellStartTime == "" {
-		shellStartTime = telemetry.UnixTimestampFromTime(telemetry.CommandStartTime())
-	}
+	shellStartTime := envir.GetValueOrDefault(
+		envir.DevboxShellStartTime,
+		telemetry.UnixTimestampFromTime(telemetry.CommandStartTime()),
+	)
 
 	opts := []ShellOption{
 		WithHooksFilePath(d.scriptPath(hooksFilename)),

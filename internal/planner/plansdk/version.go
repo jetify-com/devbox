@@ -35,11 +35,7 @@ func (v Version) parts() []string {
 }
 
 func (v Version) Exact() string {
-	parts := v.parts()
-	if len(parts) == 0 {
-		return ""
-	}
-	return strings.Join(parts, "")
+	return strings.Join(v.parts(), "")
 }
 
 func (v Version) Major() string {
