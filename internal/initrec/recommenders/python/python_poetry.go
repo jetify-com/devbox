@@ -39,7 +39,7 @@ func (r *RecommenderPoetry) Packages() []string {
 // TODO: This can be generalized to all python planners
 func (r *RecommenderPoetry) PythonVersion() *plansdk.Version {
 	defaultVersion, _ := plansdk.NewVersion("3.10.6")
-	project := r.PyProject()
+	project := r.pyProject()
 
 	if project == nil {
 		return defaultVersion
@@ -67,7 +67,7 @@ type pyProject struct {
 	} `toml:"tool"`
 }
 
-func (r *RecommenderPoetry) PyProject() *pyProject {
+func (r *RecommenderPoetry) pyProject() *pyProject {
 	pyProjectPath := filepath.Join(r.SrcDir, "pyproject.toml")
 	content, err := os.ReadFile(pyProjectPath)
 	if err != nil {

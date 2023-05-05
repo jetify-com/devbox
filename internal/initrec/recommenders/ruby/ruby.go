@@ -64,8 +64,6 @@ func parseRubyVersion(gemfile string) string {
 			return matches[2]
 		}
 	}
-	if err := s.Err(); err != nil {
-		return ""
-	}
-	return "" // not found
+
+	return ""
 }

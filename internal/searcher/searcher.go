@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/redact"
 )
 

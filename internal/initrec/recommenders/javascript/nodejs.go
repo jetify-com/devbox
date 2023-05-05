@@ -20,8 +20,7 @@ type Recommender struct {
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
-	packageJSONPath := filepath.Join(r.SrcDir, "package.json")
-	return fileutil.Exists(packageJSONPath)
+	return fileutil.Exists(filepath.Join(r.SrcDir, "package.json"))
 }
 
 func (r *Recommender) Packages() []string {
@@ -74,8 +73,7 @@ func (r *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
 }
 
 func (r *Recommender) packageManager() string {
-	yarnPkgLockPath := filepath.Join(r.SrcDir, "yarn.lock")
-	if fileutil.Exists(yarnPkgLockPath) {
+	if fileutil.Exists(filepath.Join(r.SrcDir, "yarn.lock")) {
 		return "yarn"
 	}
 	return "npm"
