@@ -15,6 +15,7 @@ import (
 	"runtime/trace"
 	"strings"
 	"text/tabwriter"
+	"text/template"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -369,14 +370,18 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir))
 }
 
-// GenerateEnvrc generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) error {
+func (d *Devbox) PrintEnvrcContent(w io.Writer) error {
+	tmplName := "envrcContent.tmpl"
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	// write content into file
+	return t.Execute(w, nil)
+}
+
+// CreateEnvrcFile generates a .envrc file that makes direnv integration convenient
+func (d *Devbox) CreateEnvrcFile(force bool) error {
 	ctx, task := trace.NewTask(context.Background(), "devboxGenerateEnvrc")
 	defer task.End()
 
-	if envrcContent {
-		return generate.OutputEnvrcContent(tmplFS)
-	}
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
 	filesExist := fileutil.Exists(envrcfilePath)
 	if !force && filesExist {
@@ -386,32 +391,30 @@ func (d *Devbox) GenerateEnvrc(force bool, envrcContent bool, source string) err
 		)
 	}
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if source == "generate" {
-		if err := nix.EnsureNixInstalled(
-			d.writer, func() *bool { return lo.ToPtr(false) },
-		); err != nil {
-			return err
-		}
+	if err := nix.EnsureNixInstalled(
+		d.writer, func() *bool { return lo.ToPtr(false) },
+	); err != nil {
+		return err
+	}
 
-		// generate all shell files to ensure we can refer to them in the .envrc script
-		if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-			return err
-		}
+	// generate all shell files to ensure we can refer to them in the .envrc script
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+		return err
+	}
 
-		// .envrc file creation
-		err := generate.CreateEnvrc(tmplFS, d.projectDir)
+	// .envrc file creation
+	err := generate.CreateEnvrc(tmplFS, d.projectDir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	ux.Fsuccess(d.writer, "generated .envrc file\n")
+	if cmdutil.Exists("direnv") {
+		cmd := exec.Command("direnv", "allow")
+		err := cmd.Run()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		ux.Fsuccess(d.writer, "generated .envrc file\n")
-		if cmdutil.Exists("direnv") {
-			cmd := exec.Command("direnv", "allow")
-			err := cmd.Run()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			ux.Fsuccess(d.writer, "ran `direnv allow`\n")
-		}
+		ux.Fsuccess(d.writer, "ran `direnv allow`\n")
 	}
 	return nil
 }

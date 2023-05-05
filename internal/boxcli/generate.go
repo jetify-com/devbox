@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -100,7 +102,7 @@ func direnvCmd() *cobra.Command {
 	command.Flags().BoolVarP(
 		&flags.envrcContent, "print-envrc", "p", false, "output contents of devbox configuration to use in .envrc")
 	// this command marks a flag as hidden. Error handling for it is not necessary.
-	_ = command.Flags().MarkHidden("print-envrc")
+	// _ = command.Flags().MarkHidden("print-envrc")
 
 	flags.config.register(command)
 	return command
@@ -141,7 +143,11 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	case "dockerfile":
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
-		return box.GenerateEnvrc(flags.force, flags.envrcContent, "generate")
+		if flags.envrcContent {
+			fmt.Println("alkdsfhlaskghslkdfj")
+			return box.PrintEnvrcContent(cmd.OutOrStdout())
+		}
+		return box.CreateEnvrcFile(flags.force)
 	}
 	return nil
 }
