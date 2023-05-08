@@ -82,6 +82,16 @@ jobs:
           files: |
             dist/checksums.txt
             dist/*.tar.gz
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-west-2
+      - name: Update weekly version in s3
+        run: |
+          tmp_file=$(mktemp)
+          echo "${{ env.WEEKLY_TAG }}" > $tmp_file
+          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/weekly/version
 
   release:
     runs-on: ubuntu-latest
