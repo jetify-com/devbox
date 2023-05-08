@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Determine weekly tag
         # This tag is semver and works with semver.Compare
-        run: echo "WEEKLY_TAG=$(date +%Y.%U)" >> $GITHUB_ENV
+        run: echo "WEEKLY_TAG=0.0.0-weekly.$(date +%Y.%U)" >> $GITHUB_ENV
       - name: Set weekly tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
