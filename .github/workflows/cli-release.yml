@@ -7,13 +7,13 @@ on:
   # Build/Release on demand
   workflow_dispatch:
     inputs:
-      update_nightly:
-        description: "Update nightly?"
+      update_weekly:
+        description: "Update weekly?"
         required: false
         default: false
         type: boolean
   schedule:
-    - cron: "0 0 * * *" # Nightly
+    - cron: "45 8 * * 4" # Weekly pre-release on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -23,31 +23,31 @@ permissions:
   pull-requests: read
   id-token: write # Needed for aws-actions/configure-aws-credentials@v1
 
-env:
-  NIGHTLY_TAG: 0.0.0-nightly
-
 jobs:
   tests:
     uses: ./.github/workflows/cli-tests.yaml
     with:
       run-mac-tests: true
 
-  nightly:
+  weekly:
     runs-on: ubuntu-latest
     environment: release
     # needs: tests
-    if: ${{ inputs.update_nightly || github.event.schedule }}
+    if: ${{ inputs.update_weekly || github.event.schedule }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
-      - name: Set nightly tag
+      - name: Determine weekly tag
+        # This tag is semver and works with semver.Compare
+        run: echo "WEEKLY_TAG=$(date +%Y.%U)" >> $GITHUB_ENV
+      - name: Set weekly tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ env.NIGHTLY_TAG }}
+          custom_tag: ${{ env.WEEKLY_TAG }}
           tag_prefix: ""
       - name: Set up go
         uses: actions/setup-go@v4
@@ -72,15 +72,13 @@ jobs:
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: development
-          # TODO: Add hash or date.
-          version:  ${{ env.NIGHTLY_TAG }}
+          version:  ${{ env.WEEKLY_TAG }}
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
           fail_on_unmatched_files: true
-          tag_name: ${{ env.NIGHTLY_TAG }}
-          name: nightly
+          tag_name: ${{ env.WEEKLY_TAG }}
           files: |
             dist/checksums.txt
             dist/*.tar.gz
