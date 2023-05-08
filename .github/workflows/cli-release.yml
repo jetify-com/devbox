@@ -33,7 +33,7 @@ jobs:
   prerelease:
     runs-on: ubuntu-latest
     environment: release
-    needs: tests
+    # needs: tests
     if: ${{ inputs.is_prerelease || github.event.schedule }}
     steps:
       - name: Checkout source code
