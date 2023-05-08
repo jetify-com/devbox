@@ -24,5 +24,4 @@ jobs:
         run: |
           tmp_file=$(mktemp)
           echo "${{ github.ref_name }}" > $tmp_file
-          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/latest/version
           aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/stable/version
