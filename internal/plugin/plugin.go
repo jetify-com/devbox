@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
 )
@@ -64,11 +65,18 @@ func (m *Manager) Include(w io.Writer, include, projectDir string) error {
 	if err != nil {
 		return err
 	}
-	err = m.Create(w, name, projectDir)
+	err = m.create(w, name, projectDir, m.lockfile.Packages[include])
 	return err
 }
 
 func (m *Manager) Create(w io.Writer, pkg, projectDir string) error {
+	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg])
+}
+
+func (m *Manager) create(
+	w io.Writer, pkg, projectDir string,
+	locked *lock.Package,
+) error {
 	virtenvPath, err := createVirtenvSymlink(w, projectDir)
 	if err != nil {
 		return err
@@ -89,7 +97,7 @@ func (m *Manager) Create(w io.Writer, pkg, projectDir string) error {
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(filePath) {
+		if !m.shouldCreateFile(locked, filePath) {
 			continue
 		}
 
@@ -138,7 +146,12 @@ func (m *Manager) Create(w io.Writer, pkg, projectDir string) error {
 			}
 		}
 	}
-	return nil
+
+	if locked != nil {
+		locked.PluginVersion = cfg.Version
+	}
+
+	return m.lockfile.Update()
 }
 
 // Env returns the environment variables for the given plugins.
@@ -216,9 +229,10 @@ func createSymlink(root, filePath string) error {
 	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
-func (m *Manager) shouldCreateFile(filePath string) bool {
-	// Only create devboxDir files in add mode.
-	if strings.Contains(filePath, devboxDirName) && m.lockfile.Contains(filePath) {
+func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
+	// Only create files in devboxDir is they are not in the lockfile
+	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
+	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
 		return false
 	}
 

@@ -348,7 +348,3 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 
 	return errors.WithStack(os.Remove(profileDir))
 }
-
-func (d *Devbox) IsPlugin(name string) bool {
-	return d.pluginManager.IsPlugin(name)
-}

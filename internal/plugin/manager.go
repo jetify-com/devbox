@@ -28,8 +28,3 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 		opt(m)
 	}
 }
-
-func (m *Manager) IsPlugin(name string) bool {
-	_, err := parseInclude(name)
-	return err == nil
-}

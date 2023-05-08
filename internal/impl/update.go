@@ -25,7 +25,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
 			continue
 		}
-		existing := d.lockfile.Entry(pkg)
+		existing := d.lockfile.Packages[pkg]
 		newEntry, err := d.lockfile.ForceResolve(pkg)
 		if err != nil {
 			return err

@@ -26,9 +26,10 @@ type File struct {
 }
 
 type Package struct {
-	LastModified string `json:"last_modified"`
-	Resolved     string `json:"resolved"`
-	Version      string `json:"version"`
+	LastModified  string `json:"last_modified,omitempty"`
+	PluginVersion string `json:"plugin_version,omitempty"`
+	Resolved      string `json:"resolved,omitempty"`
+	Version       string `json:"version,omitempty"`
 }
 
 func GetFile(project devboxProject, resolver resolver) (*File, error) {
@@ -51,10 +52,8 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 
 func (l *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if IsVersionedPackage(p) {
-			if _, err := l.Resolve(p); err != nil {
-				return err
-			}
+		if _, err := l.Resolve(p); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -69,14 +68,14 @@ func (l *File) Remove(pkgs ...string) error {
 
 func (l *File) Resolve(pkg string) (*Package, error) {
 	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
-		var locked *Package
+		locked := &Package{}
 		var err error
 		if IsVersionedPackage(pkg) {
 			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
 				return nil, err
 			}
-		} else {
+		} else if IsLegacyPackage(pkg) {
 			// These are legacy packages without a version. Resolve to nixpkgs with
 			// whatever hash is in the devbox.json
 			locked = &Package{
@@ -101,15 +100,6 @@ func (l *File) ForceResolve(pkg string) (*Package, error) {
 	return l.Resolve(pkg)
 }
 
-func (l *File) Entry(pkg string) *Package {
-	return l.Packages[pkg]
-}
-
-func (l *File) Contains(pkg string) bool {
-	_, ok := l.Packages[pkg]
-	return ok
-}
-
 func (l *File) Update() error {
 	// Never write lockfile if versioned packages is not enabled
 	if !featureflag.LockFile.Enabled() {
@@ -122,6 +112,18 @@ func (l *File) Update() error {
 func IsVersionedPackage(pkg string) bool {
 	name, version, found := strings.Cut(pkg, "@")
 	return found && name != "" && version != ""
+}
+
+// This probably belongs in input.go but can't add it there because it will
+// create a circular dependency. We could move Input into own package.
+func IsLegacyPackage(pkg string) bool {
+	return !IsVersionedPackage(pkg) &&
+		!strings.Contains(pkg, ":") &&
+		// We don't support absolute paths without "path:" prefix, but adding here
+		// just inc ase we ever do.
+		// Landau note: I don't think we should support it, it's hard to read and a
+		// bit ambiguous.
+		!strings.HasPrefix(pkg, "/")
 }
 
 func lockFilePath(project devboxProject) string {
