@@ -1,0 +1,4 @@
+exec devbox init
+exec devbox generate direnv
+exists .envrc
+
