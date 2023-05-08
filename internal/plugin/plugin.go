@@ -242,5 +242,5 @@ func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
 	}
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
-	return os.IsNotExist(err)
+	return errors.Is(err, fs.ErrNotExist)
 }
