@@ -32,7 +32,7 @@ jobs:
   weekly:
     runs-on: ubuntu-latest
     environment: release
-    # needs: tests
+    needs: tests
     if: ${{ inputs.update_weekly || github.event.schedule }}
     steps:
       - name: Checkout source code
