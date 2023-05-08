@@ -10,6 +10,11 @@ import (
 	"github.com/fatih/color"
 )
 
+func Fsuccess(w io.Writer, format string, a ...any) {
+	color.New(color.FgHiGreen).Fprint(w, "Success: ")
+	fmt.Fprintf(w, format, a...)
+}
+
 func Fwarning(w io.Writer, format string, a ...any) {
 	color.New(color.FgHiYellow).Fprint(w, "Warning: ")
 	fmt.Fprintf(w, format, a...)

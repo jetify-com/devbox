@@ -4,8 +4,6 @@
 package boxcli
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -14,9 +12,10 @@ import (
 )
 
 type generateCmdFlags struct {
-	config         configFlags
-	force          bool
-	githubUsername string
+	config            configFlags
+	force             bool
+	printEnvrcContent bool
+	githubUsername    string
 }
 
 func generateCmd() *cobra.Command {
@@ -98,6 +97,11 @@ func direnvCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
+	command.Flags().BoolVarP(
+		&flags.printEnvrcContent, "print-envrc", "p", false, "output contents of devbox configuration to use in .envrc")
+	// this command marks a flag as hidden. Error handling for it is not necessary.
+	_ = command.Flags().MarkHidden("print-envrc")
+
 	flags.config.register(command)
 	return command
 }
@@ -125,7 +129,7 @@ func sshConfigCmd() *cobra.Command {
 
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, os.Stdout)
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -137,7 +141,10 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	case "dockerfile":
 		return box.GenerateDockerfile(flags.force)
 	case "direnv":
-		return box.GenerateEnvrc(flags.force, "generate")
+		if flags.printEnvrcContent {
+			return box.PrintEnvrcContent(cmd.OutOrStdout())
+		}
+		return box.GenerateEnvrcFile(flags.force)
 	}
 	return nil
 }

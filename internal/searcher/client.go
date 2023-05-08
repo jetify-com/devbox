@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -20,11 +19,7 @@ import (
 const searchAPIEndpoint = "https://search.devbox.sh"
 
 func searchHost() string {
-	endpoint := searchAPIEndpoint
-	if os.Getenv(envir.DevboxSearchHost) != "" {
-		endpoint = os.Getenv(envir.DevboxSearchHost)
-	}
-	return endpoint
+	return envir.GetValueOrDefault(envir.DevboxSearchHost, searchAPIEndpoint)
 }
 
 type client struct {
