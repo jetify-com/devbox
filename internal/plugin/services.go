@@ -7,6 +7,8 @@ import (
 	"go.jetpack.io/devbox/internal/services"
 )
 
+// TODO: this should have PluginManager as receiver so we can build once with
+// pkgs, includes, etc
 func GetServices(pkgs, includes []string, projectDir string) (services.Services, error) {
 	svcs := services.Services{}
 

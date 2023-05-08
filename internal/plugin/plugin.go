@@ -157,13 +157,25 @@ func (m *Manager) create(
 // Env returns the environment variables for the given plugins.
 // TODO: We should associate the env variables with the individual plugin
 // binaries via wrappers instead of adding to the environment everywhere.
+// TODO: this should have PluginManager as receiver so we can build once with
+// pkgs, includes, etc
 func Env(
 	pkgs []string,
+	includes []string,
 	projectDir string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
+	allPkgs := append([]string(nil), pkgs...)
+	for _, include := range includes {
+		name, err := parseInclude(include)
+		if err != nil {
+			return nil, err
+		}
+		allPkgs = append(allPkgs, name)
+	}
+
 	env := map[string]string{}
-	for _, pkg := range pkgs {
+	for _, pkg := range allPkgs {
 		cfg, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err

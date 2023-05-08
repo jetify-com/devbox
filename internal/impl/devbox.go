@@ -779,7 +779,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
+	pluginEnv, err := plugin.Env(d.packages(), d.cfg.Include, d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
