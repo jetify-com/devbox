@@ -35,6 +35,10 @@ func RootCmd() *cobra.Command {
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if flags.quiet {
+				cmd.SetErr(io.Discard)
+			}
+
 			// Skip CheckVersion for `devbox global shellenv` because users will include that
 			// command in their shellrc files, and we don't want to bother them everytime they
 			// open their terminals.
@@ -43,9 +47,6 @@ func RootCmd() *cobra.Command {
 			if !strings.HasPrefix(cmd.CommandPath(), "devbox global shellenv") &&
 				!build.IsDev {
 				vercheck.CheckVersion(cmd.ErrOrStderr())
-			}
-			if flags.quiet {
-				cmd.SetErr(io.Discard)
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
