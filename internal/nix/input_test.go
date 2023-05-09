@@ -29,16 +29,16 @@ func TestInput(t *testing.T) {
 		{
 			pkg:                "path:path/to/my-flake#my-package",
 			isFlake:            true,
-			name:               "my-flake-c7758d",
-			urlWithoutFragment: "path://" + filepath.Join(projectDir, "path/to/my-flake"),
-			urlForInput:        "path://" + filepath.Join(projectDir, "path/to/my-flake"),
+			name:               "my-flake-eaedce",
+			urlWithoutFragment: "path:" + filepath.Join(projectDir, "path/to/my-flake"),
+			urlForInput:        "path:" + filepath.Join(projectDir, "path/to/my-flake"),
 		},
 		{
 			pkg:                "path:.#my-package",
 			isFlake:            true,
-			name:               "my-project-744eaa",
-			urlWithoutFragment: "path://" + projectDir,
-			urlForInput:        "path://" + projectDir,
+			name:               "my-project-bbeb05",
+			urlWithoutFragment: "path:" + projectDir,
+			urlForInput:        "path:" + projectDir,
 		},
 		{
 			pkg:                "path:/tmp/my-project/path/to/my-flake#my-package",

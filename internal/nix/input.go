@@ -27,8 +27,9 @@ type Input struct {
 func InputFromString(s string, l lock.Locker) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
-		u.Path = filepath.Join(l.ProjectDir(), u.Opaque)
-		u.Opaque = ""
+		// This normalizes url paths to be absolute. It also ensures all
+		// path urls have a single slash (instead of possibly 3 slashes)
+		u, _ = url.Parse("path:" + filepath.Join(l.ProjectDir(), u.Opaque))
 	}
 	return &Input{*u, l}
 }
@@ -142,13 +143,12 @@ func (i *Input) PackageAttributePath() (string, error) {
 		)
 	}
 
-	return "", usererr.New("Flake \"%s\" was not found", i.String())
+	return "", usererr.New("Package \"%s\" was not found", i.String())
 }
 
 func (i *Input) urlWithoutFragment() string {
 	u := i.URL // get copy
 	u.Fragment = ""
-	// This will produce urls with extra slashes after the scheme, but that's ok
 	return u.String()
 }
 
@@ -161,7 +161,7 @@ func (i *Input) hash() string {
 }
 
 func (i *Input) validateExists() (bool, error) {
-	if i.IsDevboxPackage() {
+	if i.isVersioned() {
 		version := i.version()
 		if version == "" && i.isVersioned() {
 			return false, usererr.New("No version specified for %q.", i.Path)
