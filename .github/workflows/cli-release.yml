@@ -7,13 +7,13 @@ on:
   # Build/Release on demand
   workflow_dispatch:
     inputs:
-      create_alpha_release:
-        description: "Create alpha release?"
+      create_edge_release:
+        description: "Create edge release?"
         required: false
         default: false
         type: boolean
   schedule:
-    - cron: "45 8 * * 4" # Create alpha weekly on Thursdays.
+    - cron: "45 8 * * 4" # Create edge weekly on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -29,25 +29,25 @@ jobs:
     with:
       run-mac-tests: true
 
-  alpha:
+  edge:
     runs-on: ubuntu-latest
     environment: release
     needs: tests
-    if: ${{ inputs.create_alpha_release || github.event.schedule }}
+    if: ${{ inputs.create_edge_release || github.event.schedule }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
-      - name: Determine alpha tag
+      - name: Determine edge tag
         # This tag is semver and works with semver.Compare
-        run: echo "ALPHA_TAG=0.0.0-alpha.$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - name: Set alpha tag
+        run: echo "EDGE_TAG=0.0.0-edge.$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - name: Set edge tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ env.ALPHA_TAG }}
+          custom_tag: ${{ env.EDGE_TAG }}
           tag_prefix: ""
       - name: Set up go
         uses: actions/setup-go@v4
@@ -72,13 +72,13 @@ jobs:
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: development
-          version:  ${{ env.ALPHA_TAG }}
+          version:  ${{ env.EDGE_TAG }}
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
           fail_on_unmatched_files: true
-          tag_name: ${{ env.ALPHA_TAG }}
+          tag_name: ${{ env.EDGE_TAG }}
           files: |
             dist/checksums.txt
             dist/*.tar.gz
@@ -87,11 +87,11 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: us-west-2
-      - name: Update alpha version in s3
+      - name: Update edge version in s3
         run: |
           tmp_file=$(mktemp)
-          echo "${{ env.ALPHA_TAG }}" > $tmp_file
-          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/alpha/version
+          echo "${{ env.EDGE_TAG }}" > $tmp_file
+          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/edge/version
 
   release:
     runs-on: ubuntu-latest
