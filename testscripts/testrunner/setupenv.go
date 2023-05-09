@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package testrunner
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/rogpeppe/go-internal/testscript"
 
 	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 func setupTestEnv(t *testing.T, envs *testscript.Env) error {
@@ -61,14 +64,9 @@ func setupCacheHome(envs *testscript.Env) error {
 	// nixpkgs every time.
 	// Here we create a shared location for nix's cache, and symlink from
 	// the test's working directory.
-	err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0755) // Ensure dir exists.
+	err = os.MkdirAll(fileutil.NixCacheForTestDir, 0755) // Ensure dir exists.
 	if err != nil {
 		return err
 	}
-	err = os.Symlink(xdg.CacheSubpath("devbox-tests/nix"), filepath.Join(cacheHome, "nix"))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.Symlink(fileutil.NixCacheForTestDir, filepath.Join(cacheHome, "nix"))
 }

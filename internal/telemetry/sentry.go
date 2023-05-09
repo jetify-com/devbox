@@ -27,8 +27,8 @@ import (
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 var ExecutionID string
@@ -70,14 +70,12 @@ func Stop() {
 	started = false
 }
 
-var errorBufferDir = xdg.StateSubpath(filepath.FromSlash("devbox/sentry"))
-
 func ReportErrors() {
 	if !initSentry(AppDevbox) {
 		return
 	}
 
-	dirEntries, err := os.ReadDir(errorBufferDir)
+	dirEntries, err := os.ReadDir(fileutil.ErrorBufferDir)
 	if err != nil {
 		return
 	}
@@ -86,7 +84,7 @@ func ReportErrors() {
 			continue
 		}
 
-		path := filepath.Join(errorBufferDir, entry.Name())
+		path := filepath.Join(fileutil.ErrorBufferDir, entry.Name())
 		data, err := os.ReadFile(path)
 		// Always delete the file so we don't end up with an infinitely growing
 		// backlog of errors.
@@ -256,11 +254,11 @@ func bufferEvent(event *sentry.Event) {
 		return
 	}
 
-	file := filepath.Join(errorBufferDir, string(event.EventID)+".json")
+	file := filepath.Join(fileutil.ErrorBufferDir, string(event.EventID)+".json")
 	err = os.WriteFile(file, data, 0600)
 	if errors.Is(err, fs.ErrNotExist) {
 		// XDG specifies perms 0700.
-		if err := os.MkdirAll(errorBufferDir, 0700); err != nil {
+		if err := os.MkdirAll(fileutil.ErrorBufferDir, 0700); err != nil {
 			return
 		}
 		err = os.WriteFile(file, data, 0600)

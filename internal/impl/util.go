@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // addDevboxUtilityPackage adds a package to the devbox utility profile.
@@ -19,9 +19,10 @@ import (
 // This is an alternative to a global install which would modify a user's
 // environment.
 func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
-	profilePath, err := utilityNixProfilePath()
-	if err != nil {
-		return err
+	profilePath := fileutil.UtilityNixProfileDir
+	// ensure the dir exists
+	if err := os.MkdirAll(profilePath, 0755); err != nil {
+		return errors.WithStack(err)
 	}
 
 	return nix.ProfileInstall(&nix.ProfileInstallArgs{
@@ -33,35 +34,16 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 }
 
 func utilityLookPath(binName string) (string, error) {
-	binPath, err := utilityBinPath()
-	if err != nil {
-		return "", err
+	binPath := fileutil.UtilityBinaryDir
+	// ensure the dir exists
+	if err := os.MkdirAll(binPath, 0755); err != nil {
+		return "", errors.WithStack(err)
 	}
+
 	absPath := filepath.Join(binPath, binName)
-	_, err = os.Stat(absPath)
+	_, err := os.Stat(absPath)
 	if errors.Is(err, fs.ErrNotExist) {
 		return "", err
 	}
 	return absPath, nil
-}
-
-func utilityDataPath() (string, error) {
-	path := xdg.DataSubpath("devbox/util")
-	return path, errors.WithStack(os.MkdirAll(path, 0755))
-}
-
-func utilityNixProfilePath() (string, error) {
-	path, err := utilityDataPath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, "profile"), nil
-}
-
-func utilityBinPath() (string, error) {
-	nixProfilePath, err := utilityNixProfilePath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(nixProfilePath, "bin"), nil
 }

@@ -10,7 +10,6 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
@@ -21,8 +20,8 @@ import (
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // Keep this in-sync with latest version in launch.sh.
@@ -238,7 +237,7 @@ func removeCurrentVersionFile() error {
 	// If the version is newer, then the launcher updates.
 	//
 	// Note: keep this in sync with launch.sh code
-	currentVersionFilePath := filepath.Join(xdg.CacheSubpath("devbox"), "current-version")
+	currentVersionFilePath := fileutil.CurrentVersionFile
 
 	if err := os.Remove(currentVersionFilePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return usererr.WithLoggedUserMessage(

@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
@@ -30,7 +29,7 @@ func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
 	// Check if this nixpkgs.Commit is located in the local /nix/store
 	location, isPresent := commitToLocation[commit]
 	if isPresent {
-		if fi, err := os.Stat(location); err == nil && fi.IsDir() {
+		if fileutil.IsDir(location) {
 			// The nixpkgs for this commit hash is present, so we don't need to prefetch
 			return nil
 		}
@@ -56,7 +55,7 @@ func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
 }
 
 func nixpkgsCommitFileContents() (map[string]string, error) {
-	path := nixpkgsCommitFilePath()
+	path := fileutil.NixpkgsCommitFile
 	if !fileutil.Exists(path) {
 		return map[string]string{}, nil
 	}
@@ -90,7 +89,7 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 	}
 
 	// Ensure the nixpkgs commit file path exists so we can write an update to it
-	path := nixpkgsCommitFilePath()
+	path := fileutil.NixpkgsCommitFile
 	err = os.MkdirAll(filepath.Dir(path), 0755)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.WithStack(err)
@@ -104,9 +103,4 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 	}
 
 	return errors.WithStack(os.WriteFile(path, serialized, 0644))
-}
-
-func nixpkgsCommitFilePath() string {
-	cacheDir := xdg.CacheSubpath("devbox")
-	return filepath.Join(cacheDir, "nixpkgs.json")
 }

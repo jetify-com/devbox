@@ -13,8 +13,9 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // Create and return a path of a symlink to the virtenv directory.
@@ -43,7 +44,7 @@ func createVirtenvSymlink(w io.Writer, projectDir string) (string, error) {
 		ux.Fwarning(w, "Virtenv's symlink (%s) in XDG_STATE_HOME (%s) "+
 			"is longer than 104 characters. If a plugin you are using uses a unix-socket, then "+
 			"it may not work. Consider changing XDG_STATE_HOME to a shorter path for devbox.",
-			symlinkPath, xdg.StateSubpath("devbox"))
+			symlinkPath, fileutil.StateDir)
 	}
 
 	// Ensure the symlink path's directory exists
@@ -88,5 +89,5 @@ func virtenvSymlinkPath(projectDir string) (string, error) {
 	// This disambiguates devbox/virtenv directories for different projects.
 	linkName := fmt.Sprintf("v-%s", hashed)
 
-	return filepath.Join(xdg.StateSubpath("devbox"), linkName), nil
+	return filepath.Join(fileutil.StateDir, linkName), nil
 }

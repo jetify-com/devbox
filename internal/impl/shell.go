@@ -19,8 +19,8 @@ import (
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 //go:embed shellrc.tmpl
@@ -137,16 +137,16 @@ func initShellBinaryFields(path string) *DevboxShell {
 	switch base {
 	case "bash":
 		shell.name = shBash
-		shell.userShellrcPath = rcfilePath(".bashrc")
+		shell.userShellrcPath = fileutil.BashConfigFile
 	case "zsh":
 		shell.name = shZsh
-		shell.userShellrcPath = rcfilePath(".zshrc")
+		shell.userShellrcPath = fileutil.ZshConfigFile
 	case "ksh":
 		shell.name = shKsh
-		shell.userShellrcPath = rcfilePath(".kshrc")
+		shell.userShellrcPath = fileutil.KshConfigFile
 	case "fish":
 		shell.name = shFish
-		shell.userShellrcPath = fishConfig()
+		shell.userShellrcPath = fileutil.FishConfigFile
 	case "dash", "ash", "shell":
 		shell.name = shPosix
 		shell.userShellrcPath = os.Getenv(envir.Env)
@@ -197,20 +197,6 @@ func WithShellStartTime(time string) ShellOption {
 	return func(s *DevboxShell) {
 		s.shellStartTime = time
 	}
-}
-
-// rcfilePath returns the absolute path for an rcfile, which is usually in the
-// user's home directory. It doesn't guarantee that the file exists.
-func rcfilePath(basename string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, basename)
-}
-
-func fishConfig() string {
-	return xdg.ConfigSubpath("fish/config.fish")
 }
 
 func (s *DevboxShell) Run() error {

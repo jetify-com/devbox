@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -19,7 +18,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 const (
@@ -63,8 +62,8 @@ func newGlobalProcessComposeConfig() *globalProcessComposeConfig {
 }
 
 func globalProcessComposeJSONPath() (string, error) {
-	path := xdg.DataSubpath(filepath.Join("devbox", "global"))
-	return filepath.Join(path, "process-compose.json"), errors.WithStack(os.MkdirAll(path, 0755))
+	path := fileutil.GlobalProcessComposeJSONFile
+	return path, errors.WithStack(fileutil.EnsureFile(path))
 }
 
 func readGlobalProcessComposeJSON(file *os.File) *globalProcessComposeConfig {

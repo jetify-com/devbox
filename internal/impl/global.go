@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
 var warningNotInPath = `the devbox global profile is not in your $PATH.
@@ -26,9 +25,6 @@ and restart your shell to fix this:
 
 	eval "$(devbox global shellenv)"
 `
-
-// In the future we will support multiple global profiles
-const currentGlobalProfile = "default"
 
 func (d *Devbox) AddGlobal(pkgs ...string) error {
 	pkgs = lo.Uniq(pkgs)
@@ -161,16 +157,13 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 }
 
 func GlobalDataPath() (string, error) {
-	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
-	return path, errors.WithStack(os.MkdirAll(path, 0755))
+	path, err := fileutil.EnsureDir(fileutil.CurrentGlobalProfileDir)
+	return path, errors.WithStack(err)
 }
 
 func GlobalNixProfilePath() (string, error) {
-	path, err := GlobalDataPath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, "profile"), nil
+	path, err := fileutil.EnsureDir(fileutil.GlobalNixProfileDir)
+	return path, errors.WithStack(err)
 }
 
 // Checks if the global has been shellenv'd and warns the user if not
