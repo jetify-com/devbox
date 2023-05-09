@@ -137,7 +137,7 @@ func (i *Input) PackageAttributePath() (string, error) {
 				strings.Join(lo.Keys(infos), ", ")
 		}
 		return "", usererr.New(
-			"Flake \"%s\" is ambiguous. %s",
+			"Package \"%s\" is ambiguous. %s",
 			i.String(),
 			outputs,
 		)
