@@ -18,8 +18,12 @@ func IsDevboxCloud() bool {
 }
 
 func IsDevboxShellEnabled() bool {
-	inDevboxShell, _ := strconv.ParseBool(os.Getenv(DevboxShellEnabled))
+	inDevboxShell, _ := strconv.ParseBool(os.Getenv(devboxShellEnabled))
 	return inDevboxShell
+}
+
+func EnableDevboxShell(env map[string]string) {
+	env[devboxShellEnabled] = "1"
 }
 
 func DoNotTrack() bool {
@@ -57,4 +61,11 @@ func GetValueOrDefault(key, def string) string {
 	}
 
 	return val
+}
+
+func GetPath(env map[string]string) string {
+	if env == nil {
+		return ""
+	}
+	return env[Path]
 }

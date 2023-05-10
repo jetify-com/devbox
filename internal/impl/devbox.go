@@ -196,7 +196,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
-	envs[envir.DevboxShellEnabled] = "1"
+	envir.EnableDevboxShell(envs)
 
 	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
@@ -243,7 +243,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	// This is temporary because StartServices() needs it but should be replaced with
 	// better alternative since devbox run and devbox shell are not the same.
-	env["DEVBOX_SHELL_ENABLED"] = "1"
+	envir.EnableDevboxShell(env)
 
 	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
@@ -264,7 +264,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 			return err
 		}
 		cmdWithArgs = []string{d.scriptPath(arbitraryCmdFilename)}
-		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
+		env[envir.DevboxRunCmd] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
@@ -714,7 +714,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 		env[key] = val
 	}
-	currentEnvPath := env["PATH"]
+	currentEnvPath := envir.GetPath(env)
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
@@ -771,7 +771,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// for both shell and run in order to be as identical as possible.
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
 
-	debug.Log("nix environment PATH is: %s", env)
+	debug.Log("nix environment variable is: %s", env)
 
 	// Add any vars defined in plugins.
 	// TODO: Now that we have bin wrappers, this may can eventually be removed.
@@ -787,7 +787,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	// Prepend virtenv bin path first so user can override it if needed. Virtenv
 	// is where the bin wrappers live
-	env["PATH"] = JoinPathLists(
+	env[envir.Path] = JoinPathLists(
 		filepath.Join(d.projectDir, plugin.WrapperBinPath),
 		// Adding profile bin path is a temporary hack. Some packages .e.g. curl
 		// don't export the correct bin in the package, instead they export
@@ -798,7 +798,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		// Landau: I prefer option 2 because it doesn't require us to re-implement
 		// nix recursive bin lookup.
 		nix.ProfileBinPath(d.projectDir),
-		env["PATH"],
+		envir.GetPath(env),
 	)
 
 	// Include env variables in devbox.json
@@ -807,11 +807,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	markEnvsAsSetByDevbox(pluginEnv, configEnv)
 
-	nixEnvPath := env["PATH"]
+	nixEnvPath := envir.GetPath(env)
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
-	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
-	debug.Log("computed environment PATH is: %s", env["PATH"])
+	env[envir.Path] = JoinPathLists(nixEnvPath, originalPath)
+	debug.Log("computed environment PATH is: %s", envir.GetPath(env))
 
 	d.setCommonHelperEnvVars(env)
 
@@ -847,7 +847,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 }
 
 func (d *Devbox) ogPathKey() string {
-	return "DEVBOX_OG_PATH_" + d.projectDirHash()
+	return envir.DevboxOGPathPrefix + d.projectDirHash()
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.

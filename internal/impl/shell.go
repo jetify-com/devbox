@@ -266,7 +266,7 @@ func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]stri
 	case shZsh:
 		extraEnv = map[string]string{"ZDOTDIR": shellescape.Quote(filepath.Dir(shellrc))}
 	case shKsh, shPosix:
-		extraEnv = map[string]string{"ENV": shellescape.Quote(shellrc)}
+		extraEnv = map[string]string{envir.Env: shellescape.Quote(shellrc)}
 	case shFish:
 		extraArgs = []string{"-C", ". " + shellrc}
 	}

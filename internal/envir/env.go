@@ -13,9 +13,11 @@ const (
 	// DevboxLatestVersion is the latest version available of the devbox CLI binary.
 	// NOTE: it should NOT start with v (like 0.4.8)
 	DevboxLatestVersion  = "DEVBOX_LATEST_VERSION"
+	DevboxOGPathPrefix   = "DEVBOX_OG_PATH_"
 	DevboxRegion         = "DEVBOX_REGION"
+	DevboxRunCmd         = "DEVBOX_RUN_CMD"
 	DevboxSearchHost     = "DEVBOX_SEARCH_HOST"
-	DevboxShellEnabled   = "DEVBOX_SHELL_ENABLED"
+	devboxShellEnabled   = "DEVBOX_SHELL_ENABLED"
 	DevboxShellStartTime = "DEVBOX_SHELL_START_TIME"
 	DevboxVM             = "DEVBOX_VM"
 
