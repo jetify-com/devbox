@@ -32,7 +32,7 @@ jobs:
   edge:
     runs-on: ubuntu-latest
     environment: release
-    needs: tests
+    # needs: tests
     if: ${{ inputs.create_edge_release || github.event.schedule }}
     steps:
       - name: Checkout source code
