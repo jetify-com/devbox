@@ -7,13 +7,13 @@ on:
   # Build/Release on demand
   workflow_dispatch:
     inputs:
-      is_prerelease:
-        description: "Pre-release?"
+      create_edge_release:
+        description: "Create edge release?"
         required: false
         default: false
         type: boolean
   schedule:
-    - cron: "45 8 * * 4" # Weekly pre-release on Thursdays.
+    - cron: "45 8 * * 4" # Create edge weekly on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -23,23 +23,32 @@ permissions:
   pull-requests: read
   id-token: write # Needed for aws-actions/configure-aws-credentials@v1
 
-
 jobs:
   tests:
     uses: ./.github/workflows/cli-tests.yaml
     with:
       run-mac-tests: true
 
-  prerelease:
+  edge:
     runs-on: ubuntu-latest
     environment: release
     needs: tests
-    if: ${{ inputs.is_prerelease || github.event.schedule }}
+    if: ${{ inputs.create_edge_release || github.event.schedule }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
+      - name: Determine edge tag
+        # This tag is semver and works with semver.Compare
+        run: echo "EDGE_TAG=0.0.0-edge.$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - name: Set edge tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ env.EDGE_TAG }}
+          tag_prefix: ""
       - name: Set up go
         uses: actions/setup-go@v4
         with:
@@ -55,28 +64,39 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      - name: Determine snapshot tag
-        run: |
-          TAG=$(ls dist/*_linux_386.tar.gz | cut -d '_' -f 2 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-dev')
-          echo "release_tag=$TAG" >> $GITHUB_ENV
       - name: Create Sentry release
         uses: getsentry/action-release@v1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: development
-          version: ${{ env.release_tag }}
+          version:  ${{ env.EDGE_TAG }}
+      - name: Create release body
+        run: echo "BODY=$(git log --pretty=oneline $(git describe --tags --abbrev=0 --match '0.0.0-edge*')..HEAD)" >> $GITHUB_OUTPUT
+        id: body
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
+          body: ${{ steps.body.outputs.BODY }}
           fail_on_unmatched_files: true
-          tag_name: ${{ env.release_tag }}
+          tag_name: ${{ env.EDGE_TAG }}
           files: |
             dist/checksums.txt
             dist/*.tar.gz
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: us-west-2
+      - name: Update edge version in s3
+        run: |
+          tmp_file=$(mktemp)
+          echo "${{ env.EDGE_TAG }}" > $tmp_file
+          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/edge/version
+
   release:
     runs-on: ubuntu-latest
     environment: release
