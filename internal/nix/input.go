@@ -24,6 +24,14 @@ type Input struct {
 	lockfile lock.Locker
 }
 
+func InputsFromStrings(names []string, l lock.Locker) []*Input {
+	inputs := []*Input{}
+	for _, name := range names {
+		inputs = append(inputs, InputFromString(name, l))
+	}
+	return inputs
+}
+
 func InputFromString(s string, l lock.Locker) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
