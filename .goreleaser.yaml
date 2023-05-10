@@ -26,7 +26,7 @@ archives:
       - no-files-will-match-* # Glob that does not match to create archive with only binaries.
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 snapshot:
-  name_template: "{{ incpatch .Version }}-dev"
+  name_template: "{{ .Env.EDGE_TAG }}"
 checksum:
   name_template: "checksums.txt"
   algorithm: sha256
