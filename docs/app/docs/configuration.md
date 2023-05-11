@@ -13,6 +13,7 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
         "init_hook": "...",
         "scripts": {}
     },
+    "include": [],
     "nixpkgs": {
         "commit": "..."
     }
@@ -25,6 +26,22 @@ This is a list of Nix packages that should be installed in your Devbox shell and
 
 You can add packages to your devbox.json using `devbox add <package_name>`, and remove them using `devbox rm <package_name>`
 
+#### Pinning a Specific Version of a Package
+
+You can pin a specific version of a package by adding a `@` followed by the version number to the end of the package name. For example, to pin the `go` package to version `1.19`, you can run `devbox add go@1.19`, or add `go@1.19` to the packages list in your `devbox.json`:
+
+```json
+{
+    "packages": [
+        "go@1.19"
+    ]
+}
+```
+
+Where possible, pinned packages follow semver. For example, if you pin `python@3`, it will install the latest version of `python` with major version `3`.
+
+To see a list of packages and their available versions, you can run `devbox search <pkg>`.
+
 #### Adding Packages from Flakes
 
 You can add packages from flakes by adding a reference to the  flake in the `packages` list in your `devbox.json`. We currently support installing Flakes from Github and local paths.
@@ -32,10 +49,10 @@ You can add packages from flakes by adding a reference to the  flake in the `pac
 ```json
 {
     "packages": [
-        // Add the default package from a github repository 
+        // Add the default package from a github repository
         "github:numtide/flake-utils",
         // Install a specific attribute or package from a Github hosted flake
-        "github:nix-community/fenix#stable.toolchain", 
+        "github:nix-community/fenix#stable.toolchain",
         // Install a package from a specific channel of Nixpkgs
         "github:nixos/nixpkgs/21.05#hello",
         // Install a package form a specific commit of Nixpkgs
@@ -63,7 +80,7 @@ For example, you could set variable `$FOO` to `bar` by adding the following to y
 }
 ```
 
-Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell. 
+Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell.
 
 
 ### Shell
@@ -72,9 +89,9 @@ The Shell object defines init hooks and scripts that can be run with your shell.
 
 #### Init Hook
 
-The init hook is used to run shell commands before the shell finishes setting up. This hook runs after any other `~/.*rc` scripts, allowing you to override environment variables or further customize the shell. 
+The init hook is used to run shell commands before the shell finishes setting up. This hook runs after any other `~/.*rc` scripts, allowing you to override environment variables or further customize the shell.
 
-The init hook will run every time a new shell is started using `devbox shell` or `devbox run`, and is best used for setting up environment variables, aliases, or other quick setup steps needed to configure your environment. For longer running tasks, you should consider using a Script. 
+The init hook will run every time a new shell is started using `devbox shell` or `devbox run`, and is best used for setting up environment variables, aliases, or other quick setup steps needed to configure your environment. For longer running tasks, you should consider using a Script.
 
 This is an example `devbox.json` that customizes the prompt and prints a welcome message:
 
@@ -115,7 +132,7 @@ Scripts can be defined by giving a name, and one or more commands. Single comman
 }
 ```
 
-To run multiple commands in a single script, you can pass them as an array: 
+To run multiple commands in a single script, you can pass them as an array:
 
 ```json
 {
@@ -130,14 +147,27 @@ To run multiple commands in a single script, you can pass them as an array:
 }
 ```
 
+### Includes
+
+Includes can be used to explicitly add extra configuration or plugins to your Devbox project. Currently this only supports adding our [built-in plugins](guides/plugins.md) to your project.
+
+You should use this section to activate plugins when you install a package from a [Flake](guides/using_flakes.md) that uses a plugin. To ensure that a plugin is activated for your project, add it to the `includes` section of your `devbox.json`. For example, to explicitly activate the PHP plugin, you can add the following to your `devbox.json`:
+
+```json
+{
+    "includes": [
+        "plugin:php-config"
+    ]
+}
+```
+
 ### Nixpkgs
 
-The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use for installing packages. It currently takes a single field, `commit`, which takes a commit hash for the specific revision of Nixpkgs you want to use.
+The Nixpkg object is used to optionally configure which version of the Nixpkgs repository you want Devbox to use as the default for installing packages. It currently takes a single field, `commit`, which takes a commit hash for the specific revision of Nixpkgs you want to use.
 
-If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages to the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org
+If a Nixpkg commit is not set, Devbox will automatically add a default commit hash to your `devbox.json`. To upgrade your packages to the latest available versions in the future, you can replace the default hash with the latest nixpkgs-unstable hash from https://status.nixos.org.
 
-To learn more, consult our guide on [setting the Nixpkg commit hash](guides/pinning_packages.md). 
-
+To learn more, consult our guide on [setting the Nixpkg commit hash](guides/pinning_packages.md).
 
 ### Example: A Rust Devbox
 
@@ -150,6 +180,9 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
         "cargo",
         "libiconv"
     ],
+    "env": {
+        "RUST_BACKTRACE": "1"
+    },
     "shell": {
         "init_hook": [
             "source conf/set-environment.sh",

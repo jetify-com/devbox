@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 ## Background
 
-Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start their dev environment by running `devbox shell` within your project. 
+Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start their dev environment by running `devbox shell` within your project.
 
 To learn more about how Devbox works, you can read our [introduction](index.md)
 
@@ -43,28 +43,30 @@ We’ll create a new development environment with the packages we need. These pa
 
     This creates a `devbox.json` file in the current directory. You should commit it to source control.
 
-3. Add command-line tools from [Nix Packages](https://search.nixos.org/packages). For example, to add Python 3.10:
+3. Search for packages to add to your Devbox project with `devbox search`.  For example, to search for Python packages, you can run the `devbox search python3`
+
+3. You can add a package to your project by running `devbox add <package>`. If you want to install a specific version of a package, you can run `devbox add <package>@<version>`. For example, to install Python 3.10, you can run:
 
     ```bash
-    devbox add python310
+    devbox add python@3.10
     ```
 
 4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
     ```json
     {
-        "packages": ["python310"]
+        "packages": ["python@3.10"]
     }
     ```
 
-5. Start a new shell that has these tools installed:
+5. Start a new shell that has your packages and tools installed:
 
     ```bash
     devbox shell
     ```
 
     :::info
-    The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster. 
+    The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster.
     :::
 
     You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
@@ -107,7 +109,7 @@ Once you publish your Devbox project to Github, you can help other developers ge
 ```html
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
     <img
-        src="https://jetpack.io/img/devbox/shield_galaxy.svg" 
+        src="https://jetpack.io/img/devbox/shield_galaxy.svg"
         alt="Built with Devbox"
     />
 </a>
@@ -130,9 +132,9 @@ Once you publish your Devbox project to Github, you can help other developers ge
 
 ```html
 <a href="https://jetpack.io/devbox/docs/contributor-quickstart/">
-    <img 
-        src="https://jetpack.io/img/devbox/shield_moon.svg" 
-        alt="Built with Devbox" 
+    <img
+        src="https://jetpack.io/img/devbox/shield_moon.svg"
+        alt="Built with Devbox"
     />
 </a>
 ```
