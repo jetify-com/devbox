@@ -22,6 +22,7 @@ import (
 type Input struct {
 	url.URL
 	lockfile lock.Locker
+	Raw      string
 }
 
 func InputsFromStrings(names []string, l lock.Locker) []*Input {
@@ -39,7 +40,7 @@ func InputFromString(s string, l lock.Locker) *Input {
 		// path urls have a single slash (instead of possibly 3 slashes)
 		u, _ = url.Parse("path:" + filepath.Join(l.ProjectDir(), u.Opaque))
 	}
-	return &Input{*u, l}
+	return &Input{*u, l, s}
 }
 
 func (i *Input) IsLocal() bool {
@@ -221,6 +222,13 @@ func (i *Input) CanonicalName() string {
 	}
 	name, _, _ := strings.Cut(i.Path, "@")
 	return name
+}
+
+func (i *Input) Versioned() string {
+	if i.IsDevboxPackage() && !i.isVersioned() {
+		return i.Raw + "@latest"
+	}
+	return i.Raw
 }
 
 // version returns the version of the package

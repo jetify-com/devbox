@@ -33,9 +33,17 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
-	pkgs = lo.Uniq(pkgs)
-
-	original := d.cfg.Packages
+	versionedPackages := []string{}
+	// Add to Packages of the config only if it's not already there. We do this
+	// before addin @latest to ensure we don't accidentally add a package that
+	// is already in the config.
+	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgs), d.lockfile) {
+		versionedPackages = append(versionedPackages, pkg.Versioned())
+		if !slices.Contains(d.cfg.Packages, pkg.Raw) {
+			d.cfg.Packages = append(d.cfg.Packages, pkg.Versioned())
+		}
+	}
+	pkgs = versionedPackages
 
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
@@ -46,17 +54,6 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		if !ok {
 			return errors.WithMessage(nix.ErrPackageNotFound, pkg)
 		}
-	}
-
-	// Add to Packages of the config only if it's not already there
-	for _, pkg := range pkgs {
-		if slices.Contains(d.cfg.Packages, pkg) {
-			continue
-		}
-		d.cfg.Packages = append(d.cfg.Packages, pkg)
-	}
-	if err := d.saveCfg(); err != nil {
-		return err
 	}
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
@@ -71,8 +68,10 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 				"Packages were not added to devbox.json\n",
 			strings.Join(pkgs, ", "),
 		)
-		d.cfg.Packages = original
-		_ = d.saveCfg() // ignore error to ensure we return the original error
+		return err
+	}
+
+	if err := d.saveCfg(); err != nil {
 		return err
 	}
 
@@ -94,16 +93,24 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
-// Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile for this devbox project
+// Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile
+// for this devbox project
 func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRemove")
 	defer task.End()
 
-	pkgs = lo.Uniq(pkgs)
+	packagesToUninstall := []string{}
+	missingPkgs := []string{}
+	for _, pkg := range lo.Uniq(pkgs) {
+		found, _ := d.findPackageByName(pkg)
+		if found != "" {
+			packagesToUninstall = append(packagesToUninstall, found)
+			d.cfg.Packages = lo.Without(d.cfg.Packages, found)
+		} else {
+			missingPkgs = append(missingPkgs, pkg)
+		}
+	}
 
-	// First, save which packages are being uninstalled. Do this before we modify d.cfg.RawPackages below.
-	uninstalledPackages := lo.Intersect(d.cfg.Packages, pkgs)
-	remainingPkgs, missingPkgs := lo.Difference(d.cfg.Packages, pkgs)
 	if len(missingPkgs) > 0 {
 		ux.Fwarning(
 			d.writer,
@@ -111,16 +118,12 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 			strings.Join(missingPkgs, ", "),
 		)
 	}
-	d.cfg.Packages = remainingPkgs
-	if err := d.saveCfg(); err != nil {
+
+	if err := plugin.Remove(d.projectDir, packagesToUninstall); err != nil {
 		return err
 	}
 
-	if err := plugin.Remove(d.projectDir, uninstalledPackages); err != nil {
-		return err
-	}
-
-	if err := d.removePackagesFromProfile(ctx, uninstalledPackages); err != nil {
+	if err := d.removePackagesFromProfile(ctx, packagesToUninstall); err != nil {
 		return err
 	}
 
@@ -128,7 +131,11 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	if err := d.lockfile.Remove(uninstalledPackages...); err != nil {
+	if err := d.lockfile.Remove(packagesToUninstall...); err != nil {
+		return err
+	}
+
+	if err := d.saveCfg(); err != nil {
 		return err
 	}
 
