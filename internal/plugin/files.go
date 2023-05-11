@@ -29,7 +29,7 @@ func getConfigIfAny(pkg *nix.Input, projectDir string) (*config, error) {
 		}
 
 		name := pkg.CanonicalName()
-		cfg, err := buildConfig(name, projectDir, string(content))
+		cfg, err := buildConfig(pkg, projectDir, string(content))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

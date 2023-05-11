@@ -162,7 +162,7 @@ func Env(
 	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*config, error) {
+func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
 
 	virtenvPath, err := virtenvSymlinkPath(projectDir)
 	if err != nil {
@@ -170,17 +170,18 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 	}
 
 	cfg := &config{}
-	t, err := template.New(pkg + "-template").Parse(content)
+	name := pkg.CanonicalName()
+	t, err := template.New(name + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
 		"DevboxProjectDir":     projectDir,
-		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvPath, pkg),
+		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
