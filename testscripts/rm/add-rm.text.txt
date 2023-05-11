@@ -14,7 +14,7 @@ json.superset devbox.json empty.json
 
 -- all.json --
 {
-  "packages": ["hello", "vim", "cowsay"]
+  "packages": ["hello@latest", "vim@latest", "cowsay@latest"]
 }
 
 -- cowsay.json --
