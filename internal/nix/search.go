@@ -31,13 +31,13 @@ func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
-func PkgInfo(nixpkgsCommit, pkg string) *Info {
-	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
-	if nixpkgsCommit == "" {
-		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
+func PkgInfo(pkg string, lock lock.Locker) *Info {
+	locked, err := lock.Resolve(pkg)
+	if err != nil {
+		return nil
 	}
 
-	results := search(exactPackage)
+	results := search(locked.Resolved)
 	if len(results) == 0 {
 		return nil
 	}

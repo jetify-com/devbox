@@ -255,8 +255,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	return nil
 }
 
-func ProfileRemove(profilePath, nixpkgsCommit, pkg string) error {
-	info := PkgInfo(nixpkgsCommit, pkg)
+func ProfileRemove(profilePath, pkg string, lock lock.Locker) error {
+	info := PkgInfo(pkg, lock)
 	if info == nil {
 		return ErrPackageNotFound
 	}
