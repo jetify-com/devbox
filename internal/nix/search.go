@@ -67,16 +67,23 @@ func parseSearchResults(data []byte) map[string]*Info {
 	return infos
 }
 
-// pkgExistsForAnySystem is a bit slow. Only use it if there's already been
-// an error and we want to provide a better error message.
+// pkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
+// been an error and we want to provide a better error message.
 func pkgExistsForAnySystem(pkg string) bool {
 	systems := []string{
+		// Check most common systems first.
+		"x86_64-linux",
+		"x86_64-darwin",
 		"aarch64-linux",
+		"aarch64-darwin",
+
+		"armv5tel-linux",
 		"armv6l-linux",
 		"armv7l-linux",
 		"i686-linux",
-		"x86_64-darwin",
-		"x86_64-linux",
+		"mipsel-linux",
+		"powerpc64le-linux",
+		"riscv64-linux",
 	}
 	for _, system := range systems {
 		if len(searchSystem(pkg, system)) > 0 {
