@@ -92,7 +92,7 @@ func (d *Devbox) RemoveGlobal(pkgs ...string) error {
 		return err
 	}
 	for _, pkg := range lo.Intersect(d.cfg.Packages, pkgs) {
-		if err := nix.ProfileRemove(profilePath, plansdk.DefaultNixpkgsCommit, pkg); err != nil {
+		if err := nix.ProfileRemove(profilePath, pkg, d.lockfile); err != nil {
 			if errors.Is(err, nix.ErrPackageNotInstalled) {
 				removed = append(removed, pkg)
 			} else {

@@ -317,7 +317,7 @@ func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
-	info := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
+	info := nix.PkgInfo(pkg, d.lockfile)
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
