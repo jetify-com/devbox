@@ -79,13 +79,7 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 		} else {
 			// These are legacy packages without a version. Resolve to nixpkgs with
 			// whatever hash is in the devbox.json
-			locked = &Package{
-				Resolved: fmt.Sprintf(
-					"github:NixOS/nixpkgs/%s#%s",
-					l.NixPkgsCommitHash(),
-					pkg,
-				),
-			}
+			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
 		l.Packages[pkg] = locked
 		if err := l.Update(); err != nil {
@@ -112,6 +106,14 @@ func (l *File) Update() error {
 	}
 
 	return cuecfg.WriteFile(lockFilePath(l), l)
+}
+
+func (l *File) LegacyNixpkgsPath(pkg string) string {
+	return fmt.Sprintf(
+		"github:NixOS/nixpkgs/%s#%s",
+		l.NixPkgsCommitHash(),
+		pkg,
+	)
 }
 
 func IsVersionedPackage(pkg string) bool {

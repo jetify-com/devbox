@@ -109,12 +109,14 @@ func (i *Input) URLForInstall() (string, error) {
 // packages.x86_64-linux.hello
 func (i *Input) PackageAttributePath() (string, error) {
 	var infos map[string]*Info
-	if i.IsDevboxPackage() {
+	if i.isVersioned() {
 		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			return "", err
 		}
 		infos = search(entry.Resolved)
+	} else if i.IsDevboxPackage() {
+		infos = search(i.lockfile.LegacyNixpkgsPath(i.String()))
 	} else {
 		infos = search(i.String())
 	}

@@ -118,7 +118,15 @@ func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (lockfile) Resolve(pkg string) (*lock.Package, error) {
+func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
+	return fmt.Sprintf(
+		"github:NixOS/nixpkgs/%s#%s",
+		nixCommitHash,
+		pkg,
+	)
+}
+
+func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 	switch {
 	case strings.Contains(pkg, "path:"):
 		return &lock.Package{Resolved: pkg}, nil
@@ -126,11 +134,7 @@ func (lockfile) Resolve(pkg string) (*lock.Package, error) {
 		return &lock.Package{Resolved: pkg}, nil
 	default:
 		return &lock.Package{
-			Resolved: fmt.Sprintf(
-				"github:NixOS/nixpkgs/%s#%s",
-				nixCommitHash,
-				pkg,
-			),
+			Resolved: l.LegacyNixpkgsPath(pkg),
 		}, nil
 	}
 }
