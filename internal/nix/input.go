@@ -108,18 +108,20 @@ func (i *Input) URLForInstall() (string, error) {
 // references is returns the full path to the package in the flake. e.g.
 // packages.x86_64-linux.hello
 func (i *Input) PackageAttributePath() (string, error) {
-	var infos map[string]*Info
+	var query string
 	if i.isVersioned() {
 		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			return "", err
 		}
-		infos = search(entry.Resolved)
+		query = entry.Resolved
 	} else if i.IsDevboxPackage() {
-		infos = search(i.lockfile.LegacyNixpkgsPath(i.String()))
+		query = i.lockfile.LegacyNixpkgsPath(i.String())
 	} else {
-		infos = search(i.String())
+		query = i.String()
 	}
+
+	infos := search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
@@ -150,6 +152,14 @@ func (i *Input) PackageAttributePath() (string, error) {
 			"Package \"%s\" is ambiguous. %s",
 			i.String(),
 			outputs,
+		)
+	}
+
+	if pkgExistsForAnySystem(query) {
+		return "", usererr.New(
+			"Package \"%s\" was found, but we're unable to build it for your system."+
+				" You may need to choose another version or write a custom flake.",
+			i.String(),
 		)
 	}
 

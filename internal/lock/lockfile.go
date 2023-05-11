@@ -57,16 +57,18 @@ func (l *File) Add(pkgs ...string) error {
 			}
 		}
 	}
-	return nil
+	return l.Save()
 }
 
 func (l *File) Remove(pkgs ...string) error {
 	for _, p := range pkgs {
 		delete(l.Packages, p)
 	}
-	return l.Update()
+	return l.Save()
 }
 
+// Resolve updates the in memory copy for performance but does not write to disk
+// This avoids writing values that may need to be removed in case of error.
 func (l *File) Resolve(pkg string) (*Package, error) {
 	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
 		var locked *Package
@@ -82,9 +84,6 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
 		l.Packages[pkg] = locked
-		if err := l.Update(); err != nil {
-			return nil, err
-		}
 	}
 
 	return l.Packages[pkg], nil
@@ -99,7 +98,7 @@ func (l *File) Entry(pkg string) *Package {
 	return l.Packages[pkg]
 }
 
-func (l *File) Update() error {
+func (l *File) Save() error {
 	// Never write lockfile if versioned packages is not enabled
 	if !featureflag.LockFile.Enabled() {
 		return nil
