@@ -152,7 +152,11 @@ func (d *Devbox) NixPkgsCommitHash() string {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
-	shellPlan.FlakeInputs = d.flakeInputs()
+	var err error
+	shellPlan.FlakeInputs, err = d.flakeInputs()
+	if err != nil {
+		return nil, err
+	}
 
 	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 

@@ -14,13 +14,13 @@ import (
 // created by devbox. We map packages to the correct flake and attribute path
 // and group flakes by URL to avoid duplication. All inputs should be locked
 // i.e. have a commit hash and always resolve to the same package/version.
-func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
+func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
 	inputs := map[string]*plansdk.FlakeInput{}
 	for _, p := range d.packages() {
 		pkg := nix.InputFromString(p, d.lockfile)
 		AttributePath, err := pkg.PackageAttributePath()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		if input, ok := inputs[pkg.URLForInput()]; !ok {
 			inputs[pkg.URLForInput()] = &plansdk.FlakeInput{
@@ -35,5 +35,5 @@ func (d *Devbox) flakeInputs() []*plansdk.FlakeInput {
 		}
 	}
 
-	return lo.Values(inputs)
+	return lo.Values(inputs), nil
 }
