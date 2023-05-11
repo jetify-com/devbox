@@ -59,7 +59,11 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) error {
+func (m *Manager) CreateFilesAndShowReadme(
+	w io.Writer,
+	pkg *nix.Input,
+	projectDir string,
+) error {
 	virtenvPath, err := createVirtenvSymlink(w, projectDir)
 	if err != nil {
 		return err
@@ -73,8 +77,10 @@ func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) 
 		return nil
 	}
 
+	name := pkg.CanonicalName()
+
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(projectDir, VirtenvPath, pkg)); err != nil {
+	if err = createDir(filepath.Join(projectDir, VirtenvPath, name)); err != nil {
 		return err
 	}
 
@@ -108,10 +114,10 @@ func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) 
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
 			"DevboxConfigDir":      projectDir,
-			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(virtenvPath, pkg),
+			"Virtenv":              filepath.Join(virtenvPath, name),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -136,7 +142,7 @@ func (m *Manager) CreateFilesAndShowReadme(w io.Writer, pkg, projectDir string) 
 // TODO: We should associate the env variables with the individual plugin
 // binaries via wrappers instead of adding to the environment everywhere.
 func Env(
-	pkgs []string,
+	pkgs []*nix.Input,
 	projectDir string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
@@ -156,7 +162,7 @@ func Env(
 	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*config, error) {
+func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
 
 	virtenvPath, err := virtenvSymlinkPath(projectDir)
 	if err != nil {
@@ -164,17 +170,18 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 	}
 
 	cfg := &config{}
-	t, err := template.New(pkg + "-template").Parse(content)
+	name := pkg.CanonicalName()
+	t, err := template.New(name + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
 		"DevboxProjectDir":     projectDir,
-		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvPath, pkg),
+		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}

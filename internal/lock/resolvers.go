@@ -16,4 +16,5 @@ type resolver interface {
 type Locker interface {
 	devboxProject
 	resolver
+	LegacyNixpkgsPath(string) string
 }

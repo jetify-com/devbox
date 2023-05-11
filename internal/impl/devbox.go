@@ -327,7 +327,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		return errors.WithStack(err)
 	}
 	return plugin.PrintReadme(
-		pkg,
+		nix.InputFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
 		markdown,
@@ -444,7 +444,7 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.packages(), d.projectDir)
+	pluginSvcs, err := plugin.GetServices(d.packagesAsInputs(), d.projectDir)
 	if err != nil {
 		return nil, err
 	}
@@ -778,7 +778,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.packages(), d.projectDir, env)
+	pluginEnv, err := plugin.Env(d.packagesAsInputs(), d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
@@ -866,7 +866,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packagesAsInputs(), d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -948,6 +948,10 @@ func (d *Devbox) nixFlakesFilePath() string {
 // packages returns the list of packages to be installed in the nix shell.
 func (d *Devbox) packages() []string {
 	return d.cfg.Packages
+}
+
+func (d *Devbox) packagesAsInputs() []*nix.Input {
+	return nix.InputsFromStrings(d.packages(), d.lockfile)
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {

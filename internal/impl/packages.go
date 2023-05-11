@@ -76,9 +76,9 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	for _, pkg := range pkgs {
+	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
 		if err := plugin.PrintReadme(
-			pkg,
+			input,
 			d.projectDir,
 			d.writer,
 			false, /*markdown*/

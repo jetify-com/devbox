@@ -4,10 +4,14 @@
 package plugin
 
 import (
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
 )
 
-func GetServices(pkgs []string, projectDir string) (services.Services, error) {
+func GetServices(
+	pkgs []*nix.Input,
+	projectDir string,
+) (services.Services, error) {
 	svcs := services.Services{}
 	for _, pkg := range pkgs {
 		conf, err := getConfigIfAny(pkg, projectDir)
@@ -18,7 +22,7 @@ func GetServices(pkgs []string, projectDir string) (services.Services, error) {
 			continue
 		}
 
-		if file, hasProcessComposeYaml := conf.ProcessComposeYaml(); hasProcessComposeYaml {
+		if file, ok := conf.ProcessComposeYaml(); ok {
 			svc := services.Service{
 				Name:               conf.Name,
 				Env:                conf.Env,

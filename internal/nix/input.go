@@ -24,6 +24,14 @@ type Input struct {
 	lockfile lock.Locker
 }
 
+func InputsFromStrings(names []string, l lock.Locker) []*Input {
+	inputs := []*Input{}
+	for _, name := range names {
+		inputs = append(inputs, InputFromString(name, l))
+	}
+	return inputs
+}
+
 func InputFromString(s string, l lock.Locker) *Input {
 	u, _ := url.Parse(s)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
@@ -101,12 +109,14 @@ func (i *Input) URLForInstall() (string, error) {
 // packages.x86_64-linux.hello
 func (i *Input) PackageAttributePath() (string, error) {
 	var infos map[string]*Info
-	if i.IsDevboxPackage() {
+	if i.isVersioned() {
 		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			return "", err
 		}
 		infos = search(entry.Resolved)
+	} else if i.IsDevboxPackage() {
+		infos = search(i.lockfile.LegacyNixpkgsPath(i.String()))
 	} else {
 		infos = search(i.String())
 	}
