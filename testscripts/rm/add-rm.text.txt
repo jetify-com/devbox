@@ -19,7 +19,7 @@ json.superset devbox.json empty.json
 
 -- cowsay.json --
 {
-  "packages": ["cowsay"]
+  "packages": ["cowsay@latest"]
 }
 
 
