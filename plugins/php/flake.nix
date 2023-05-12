@@ -14,8 +14,8 @@
       ]);
     in
     {
-      packages.aarch64-darwin = {    
-        default = nixpkgs.legacyPackages.aarch64-darwin.php.withExtensions (
+      packages.{{ .System }} = {
+        default = nixpkgs.legacyPackages.{{ .System }}.php.withExtensions (
           { enabled, all }: enabled ++ (with all; 
             map (ext: all.${ext}) extensions
           )

@@ -108,6 +108,23 @@ func ExperimentalFlags() []string {
 	}
 }
 
+var cachedSystem string
+
+func System() (string, error) {
+	if cachedSystem == "" {
+		cmd := exec.Command(
+			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
+		)
+		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		out, err := cmd.Output()
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		cachedSystem = string(out)
+	}
+	return cachedSystem, nil
+}
+
 // Warning: be careful using the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {

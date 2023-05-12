@@ -108,17 +108,24 @@ func (m *Manager) CreateFilesAndShowReadme(
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		t, err := template.New(filePath + "-template").Parse(string(content))
+		tmpl, err := template.New(filePath + "-template").Parse(string(content))
 		if err != nil {
 			return errors.WithStack(err)
 		}
+
+		system, err := nix.System()
+		if err != nil {
+			return err
+		}
+
 		var buf bytes.Buffer
-		if err = t.Execute(&buf, map[string]any{
+		if err = tmpl.Execute(&buf, map[string]any{
 			"DevboxConfigDir":      projectDir,
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
 			"Packages":             m.Packages(),
+			"System":               system,
 			"URLForInput":          pkg.URLForInput(),
 			"Virtenv":              filepath.Join(virtenvPath, name),
 		}); err != nil {
