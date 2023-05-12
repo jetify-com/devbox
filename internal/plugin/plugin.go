@@ -40,6 +40,7 @@ type config struct {
 	Version     string            `json:"version"`
 	Match       string            `json:"match"`
 	CreateFiles map[string]string `json:"create_files"`
+	Packages    []string          `json:"packages"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
 	Services    services.Services `json:"services"`
@@ -86,7 +87,7 @@ func (m *Manager) CreateFilesAndShowReadme(
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(filePath) {
+		if !m.shouldCreateFile(filePath, virtenvPath) {
 			continue
 		}
 
@@ -112,11 +113,13 @@ func (m *Manager) CreateFilesAndShowReadme(
 			return errors.WithStack(err)
 		}
 		var buf bytes.Buffer
-		if err = t.Execute(&buf, map[string]string{
+		if err = t.Execute(&buf, map[string]any{
 			"DevboxConfigDir":      projectDir,
 			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+			"Packages":             m.Packages(),
+			"URLForInput":          pkg.URLForInput(),
 			"Virtenv":              filepath.Join(virtenvPath, name),
 		}); err != nil {
 			return errors.WithStack(err)
@@ -214,14 +217,15 @@ func createSymlink(root, filePath string) error {
 	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
-func (m *Manager) shouldCreateFile(filePath string) bool {
+func (m *Manager) shouldCreateFile(filePath, virtenvPath string) bool {
 	// Only create devboxDir files in add mode.
 	if strings.Contains(filePath, devboxDirName) && !m.addMode {
 		return false
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) {
+	if strings.Contains(filePath, devboxHiddenDirName) ||
+		strings.HasPrefix(filePath, virtenvPath) {
 		return true
 	}
 	_, err := os.Stat(filePath)

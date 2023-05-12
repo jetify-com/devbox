@@ -60,12 +60,6 @@ func (d *Devbox) generateShellFiles() error {
 		}
 	}
 
-	for _, pkg := range d.packagesAsInputs() {
-		if err := d.pluginManager.CreateFilesAndShowReadme(d.writer, pkg, d.projectDir); err != nil {
-			return err
-		}
-	}
-
 	return d.writeScriptsToFiles()
 }
 

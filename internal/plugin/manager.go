@@ -3,8 +3,21 @@
 
 package plugin
 
+import (
+	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
+)
+
 type Manager struct {
-	addMode bool
+	devboxProject
+
+	addMode  bool
+	lockfile *lock.File
+}
+
+type devboxProject interface {
+	Packages() []string
+	ProjectDir() string
 }
 
 type managerOption func(*Manager)
@@ -21,8 +34,34 @@ func WithAddMode() managerOption {
 	}
 }
 
+func WithLockfile(lockfile *lock.File) managerOption {
+	return func(m *Manager) {
+		m.lockfile = lockfile
+	}
+}
+
+func WithDevbox(provider devboxProject) managerOption {
+	return func(m *Manager) {
+		m.devboxProject = provider
+	}
+}
+
 func (m *Manager) ApplyOptions(opts ...managerOption) {
 	for _, opt := range opts {
 		opt(m)
 	}
+}
+
+func (m *Manager) PluginPackages(inputs []*nix.Input) ([]*nix.Input, error) {
+	pkgs := []*nix.Input{}
+	for _, input := range inputs {
+		config, err := getConfigIfAny(input, m.ProjectDir())
+		if err != nil {
+			return nil, err
+		} else if config == nil {
+			continue
+		}
+		pkgs = append(pkgs, nix.InputsFromStrings(config.Packages, m.lockfile)...)
+	}
+	return pkgs, nil
 }

@@ -58,7 +58,11 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := exec.CommandContext(ctx, "nix", "print-dev-env", args.FlakesFilePath)
+		cmd := exec.CommandContext(
+			ctx,
+			"nix", "print-dev-env", "--recreate-lock-file",
+			args.FlakesFilePath,
+		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
