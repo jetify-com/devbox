@@ -31,7 +31,7 @@ If you want to try Devbox before installing it, you can open a cloud shell on yo
 
 ## Create a development environment
 
-We’ll create a new development environment with the packages we need. These packages will only be available when using this Devbox shell, ensuring we don’t pollute your machine.
+We'll create a new development environment with the packages we need. These packages will only be available when using this Devbox shell, ensuring we don’t pollute your machine.
 
 1. Open a terminal in a new empty folder.
 
@@ -45,7 +45,13 @@ We’ll create a new development environment with the packages we need. These pa
 
 3. Search for packages to add to your Devbox project with `devbox search`.  For example, to search for Python packages, you can run the `devbox search python3`
 
-3. You can add a package to your project by running `devbox add <package>`. If you want to install a specific version of a package, you can run `devbox add <package>@<version>`. For example, to install Python 3.10, you can run:
+3. You can add a package to your project by running `devbox add <package>`. For example, running the following will install the latest available version of Python in your project:
+
+    ```bash
+    devbox add ripgrep
+    ```
+
+    If you want to install a specific version of a package, you can run `devbox add <package>@<version>`. For example, to install Python 3.10, you can run:
 
     ```bash
     devbox add python@3.10
@@ -55,7 +61,10 @@ We’ll create a new development environment with the packages we need. These pa
 
     ```json
     {
-        "packages": ["python@3.10"]
+        "packages": [
+            "ripgrep@latest",
+            "python@3.10"
+        ]
     }
     ```
 
@@ -69,15 +78,25 @@ We’ll create a new development environment with the packages we need. These pa
     The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster.
     :::
 
-    You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
+    You can tell you're in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
 
-6. Use your favorite tools.
+6. Use your favorite packages.
 
-    In this example we installed Python 3.10, so let’s use it.
+    In this example we installed Python 3.10, so let's use it.
 
     ```bash
-    python --version
+    $ python --version
+    Python 3.10.0
     ```
+
+    We will also have the latest verison of ripgrep installed in our shell:
+
+    ```bash
+    $ rg --version
+    ripgrep 13.0.0
+    -SIMD -AVX (compiled)
+    ```
+
 
 7. Your regular tools are also available including environment variables and config settings.
 

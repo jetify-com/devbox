@@ -4,7 +4,7 @@ sidebar_position: 3
 ---
 ## Background
 
-Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start a dev environment for their project by running `devbox shell`. 
+Devbox is a command-line tool that lets you easily create reproducible, reliable dev environments. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application. Developers can start a dev environment for their project by running `devbox shell`.
 
 To learn more about how Devbox works, you can read our [introduction](index.md)
 
@@ -23,7 +23,7 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 
 ## Start your development shell
 
-1. Open a terminal in the project. The project should contain a `devbox.json` that specifies how to create your development environment  
+1. Open a terminal in the project. The project should contain a `devbox.json` that specifies how to create your development environment
 
 1. Start a devbox shell for your project:
 
@@ -40,23 +40,25 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
     ```
 
     :::info
-    The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster. 
+    The first time you run `devbox shell` may take a while to complete due to Devbox downloading prerequisites and package catalogs required by Nix. This delay is a one-time cost, and future invocations and package additions should resolve much faster.
     :::
 
 1. Use the packages provided in your development environment
 
-    The packages listed in your project's `devbox.json` should now be available for you to use. For example, if the project's `devbox.json` contains `python310`, you should now have `python` in your path:
+    The packages listed in your project's `devbox.json` should now be available for you to use. For example, if the project's `devbox.json` contains `python@3.10`, you should now have `python` in your path:
 
     ```bash
-    python --version
+    $ python --version
+    Python 3.10.9
     ```
-    The above should return 3.10
 
 1. Your host environment's packages and tools are also available, including environment variables and config settings.
 
     ```bash
     git config --get user.name
     ```
+
+1. You can search for additional packages using `devbox search <pkg>`. You can then add them to your Devbox shell by running `devbox add [pkgs]`
 
 1. To exit the Devbox shell and return to your regular shell:
 

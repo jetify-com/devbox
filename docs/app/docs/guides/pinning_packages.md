@@ -18,7 +18,7 @@ To pin a specific version of a package, you can add a `@` followed by the versio
 ]
 ```
 
-Pinned packages that follow semver will install the latest version of the package with the same major version. For example, if you pin `python@3`, it will install the latest version of `python` with major version `3`.
+Pinned packages that follow semver will install the latest version of the package with the same major version. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0` .
 
 You can look up the available versions of a package by running `devbox search <package_name>`.
 
@@ -40,6 +40,10 @@ If you want to use a different commit for a single package, you can use a Flake 
 Note that using a different nixpkg commit may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
 
 ## Pinning the Default Nixpkg commit in your Devbox.json
+
+::: note
+Pinning the nixpkgs commit is considered deprecated starting with Devbox version 0.5.0, and will eventually be removed. We recommend using the `@` syntax to pin specific package versions instead.
+:::
 
 Devbox stores the Nixpkg commit in your project's `devbox.json`, under the `nixpkgs.commit`. If you do not specify one in your config, Devbox will automatically add a default commit hash when you run a command like `devbox add`, `devbox shell`, or `devbox run`:
 
