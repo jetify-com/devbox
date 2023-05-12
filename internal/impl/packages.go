@@ -75,9 +75,9 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	for _, pkg := range pkgs {
+	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
 		if err := plugin.PrintReadme(
-			pkg,
+			input,
 			d.projectDir,
 			d.writer,
 			false, /*markdown*/
@@ -149,12 +149,12 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
-	lock, err := lock.Local(d)
+	localLock, err := lock.Local(d)
 	if err != nil {
 		return err
 	}
 
-	upToDate, err := lock.IsUpToDate()
+	upToDate, err := localLock.IsUpToDate()
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,12 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	return lock.Update()
+	if err = localLock.Update(); err != nil {
+		return err
+	}
+
+	// Update lockfile to ensure any newly resolved packages are saved to disk.
+	return d.lockfile.Save()
 }
 
 func (d *Devbox) profilePath() (string, error) {

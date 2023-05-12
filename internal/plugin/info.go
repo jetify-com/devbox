@@ -9,9 +9,15 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
-func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
+func PrintReadme(
+	pkg *nix.Input,
+	projectDir string,
+	w io.Writer,
+	markdown bool,
+) error {
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err
@@ -39,7 +45,7 @@ func PrintReadme(pkg, projectDir string, w io.Writer, markdown bool) error {
 		return err
 	}
 
-	return printInfoInstructions(pkg, w)
+	return printInfoInstructions(pkg.CanonicalName(), w)
 }
 
 func printReadme(cfg *config, w io.Writer, markdown bool) error {

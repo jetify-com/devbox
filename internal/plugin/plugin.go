@@ -61,7 +61,7 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 }
 
 func (m *Manager) Include(w io.Writer, include, projectDir string) error {
-	name, err := parseInclude(include)
+	name, err := m.parseInclude(include)
 	if err != nil {
 		return err
 	}
@@ -69,12 +69,14 @@ func (m *Manager) Include(w io.Writer, include, projectDir string) error {
 	return err
 }
 
-func (m *Manager) Create(w io.Writer, pkg, projectDir string) error {
-	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg])
+func (m *Manager) Create(w io.Writer, pkg *nix.Input, projectDir string) error {
+	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg.Raw])
 }
 
 func (m *Manager) create(
-	w io.Writer, pkg, projectDir string,
+	w io.Writer,
+	pkg *nix.Input,
+	projectDir string,
 	locked *lock.Package,
 ) error {
 	virtenvPath, err := createVirtenvSymlink(w, projectDir)
@@ -90,8 +92,10 @@ func (m *Manager) create(
 		return nil
 	}
 
+	name := pkg.CanonicalName()
+
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(projectDir, VirtenvPath, pkg)); err != nil {
+	if err = createDir(filepath.Join(projectDir, VirtenvPath, name)); err != nil {
 		return err
 	}
 
@@ -125,10 +129,10 @@ func (m *Manager) create(
 		var buf bytes.Buffer
 		if err = t.Execute(&buf, map[string]string{
 			"DevboxConfigDir":      projectDir,
-			"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(virtenvPath, pkg),
+			"Virtenv":              filepath.Join(virtenvPath, name),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -151,7 +155,7 @@ func (m *Manager) create(
 		locked.PluginVersion = cfg.Version
 	}
 
-	return m.lockfile.Update()
+	return m.lockfile.Save()
 }
 
 // Env returns the environment variables for the given plugins.
@@ -159,19 +163,19 @@ func (m *Manager) create(
 // binaries via wrappers instead of adding to the environment everywhere.
 // TODO: this should have PluginManager as receiver so we can build once with
 // pkgs, includes, etc
-func Env(
-	pkgs []string,
+func (m *Manager) Env(
+	pkgs []*nix.Input,
 	includes []string,
 	projectDir string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
-	allPkgs := append([]string(nil), pkgs...)
+	allPkgs := append([]*nix.Input(nil), pkgs...)
 	for _, include := range includes {
-		name, err := parseInclude(include)
+		input, err := m.parseInclude(include)
 		if err != nil {
 			return nil, err
 		}
-		allPkgs = append(allPkgs, name)
+		allPkgs = append(allPkgs, input)
 	}
 
 	env := map[string]string{}
@@ -190,7 +194,7 @@ func Env(
 	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
 }
 
-func buildConfig(pkg, projectDir, content string) (*config, error) {
+func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
 
 	virtenvPath, err := virtenvSymlinkPath(projectDir)
 	if err != nil {
@@ -198,17 +202,18 @@ func buildConfig(pkg, projectDir, content string) (*config, error) {
 	}
 
 	cfg := &config{}
-	t, err := template.New(pkg + "-template").Parse(content)
+	name := pkg.CanonicalName()
+	t, err := template.New(name + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, map[string]string{
 		"DevboxProjectDir":     projectDir,
-		"DevboxDir":            filepath.Join(projectDir, devboxDirName, pkg),
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvPath, pkg),
+		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}

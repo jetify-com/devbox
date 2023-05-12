@@ -22,6 +22,15 @@ import (
 type Input struct {
 	url.URL
 	lockfile lock.Locker
+	Raw      string
+}
+
+func InputsFromStrings(names []string, l lock.Locker) []*Input {
+	inputs := []*Input{}
+	for _, name := range names {
+		inputs = append(inputs, InputFromString(name, l))
+	}
+	return inputs
 }
 
 func InputFromString(s string, l lock.Locker) *Input {
@@ -31,7 +40,7 @@ func InputFromString(s string, l lock.Locker) *Input {
 		// path urls have a single slash (instead of possibly 3 slashes)
 		u, _ = url.Parse("path:" + filepath.Join(l.ProjectDir(), u.Opaque))
 	}
-	return &Input{*u, l}
+	return &Input{*u, l, s}
 }
 
 func (i *Input) IsLocal() bool {
@@ -100,16 +109,20 @@ func (i *Input) URLForInstall() (string, error) {
 // references is returns the full path to the package in the flake. e.g.
 // packages.x86_64-linux.hello
 func (i *Input) PackageAttributePath() (string, error) {
-	var infos map[string]*Info
-	if i.IsDevboxPackage() {
+	var query string
+	if i.isVersioned() {
 		entry, err := i.lockfile.Resolve(i.String())
 		if err != nil {
 			return "", err
 		}
-		infos = search(entry.Resolved)
+		query = entry.Resolved
+	} else if i.IsDevboxPackage() {
+		query = i.lockfile.LegacyNixpkgsPath(i.String())
 	} else {
-		infos = search(i.String())
+		query = i.String()
 	}
+
+	infos := search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
@@ -140,6 +153,14 @@ func (i *Input) PackageAttributePath() (string, error) {
 			"Package \"%s\" is ambiguous. %s",
 			i.String(),
 			outputs,
+		)
+	}
+
+	if pkgExistsForAnySystem(query) {
+		return "", usererr.New(
+			"Package \"%s\" was found, but we're unable to build it for your system."+
+				" You may need to choose another version or write a custom flake.",
+			i.String(),
 		)
 	}
 

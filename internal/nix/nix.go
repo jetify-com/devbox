@@ -6,7 +6,6 @@ package nix
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -14,80 +13,14 @@ import (
 	"runtime/trace"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lock"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
 // or `nix profile install --profile ProfilePath <package...>`
 // Instead of using directory, prefer using the devbox.ProfileDir() function that ensures the directory exists.
 const ProfilePath = ".devbox/nix/profile/default"
-
-var ErrPackageNotFound = errors.New("package not found")
-var ErrPackageNotInstalled = errors.New("package not installed")
-
-func PkgExists(pkg string, lock *lock.File) (bool, error) {
-	return InputFromString(pkg, lock).validateExists()
-}
-
-type Info struct {
-	// attribute key is different in flakes vs legacy so we should only use it
-	// if we know exactly which version we are using
-	attributeKey string
-	PName        string
-	Version      string
-}
-
-func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s", i.PName, i.Version)
-}
-
-func PkgInfo(nixpkgsCommit, pkg string) *Info {
-	exactPackage := fmt.Sprintf("%s#%s", FlakeNixpkgs(nixpkgsCommit), pkg)
-	if nixpkgsCommit == "" {
-		exactPackage = fmt.Sprintf("nixpkgs#%s", pkg)
-	}
-
-	results := search(exactPackage)
-	if len(results) == 0 {
-		return nil
-	}
-	// we should only have one result
-	return lo.Values(results)[0]
-}
-
-func search(url string) map[string]*Info {
-	cmd := exec.Command("nix", "search", "--json", url)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	cmd.Stderr = os.Stderr
-	debug.Log("running command: %s\n", cmd)
-	out, err := cmd.Output()
-	if err != nil {
-		// for now, assume all errors are invalid packages.
-		return nil
-	}
-	return parseSearchResults(out)
-}
-
-func parseSearchResults(data []byte) map[string]*Info {
-	var results map[string]map[string]any
-	err := json.Unmarshal(data, &results)
-	if err != nil {
-		panic(err)
-	}
-	infos := map[string]*Info{}
-	for key, result := range results {
-		infos[key] = &Info{
-			attributeKey: key,
-			PName:        result["pname"].(string),
-			Version:      result["version"].(string),
-		}
-
-	}
-	return infos
-}
 
 type PrintDevEnvOut struct {
 	Variables map[string]Variable // the key is the name.

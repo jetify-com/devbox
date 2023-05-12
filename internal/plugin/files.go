@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg, projectDir string) (*config, error) {
+func getConfigIfAny(pkg *nix.Input, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -27,14 +28,15 @@ func getConfigIfAny(pkg, projectDir string) (*config, error) {
 			return nil, errors.WithStack(err)
 		}
 
+		name := pkg.CanonicalName()
 		cfg, err := buildConfig(pkg, projectDir, string(content))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		// if match regex is set we use it to check. Otherwise we assume it's a
 		// perfect match
-		if (cfg.Match != "" && !regexp.MustCompile(cfg.Match).MatchString(pkg)) ||
-			(cfg.Match == "" && strings.Split(file.Name(), ".")[0] != pkg) {
+		if (cfg.Match != "" && !regexp.MustCompile(cfg.Match).MatchString(name)) ||
+			(cfg.Match == "" && strings.Split(file.Name(), ".")[0] != name) {
 			continue
 		}
 		return cfg, nil

@@ -153,7 +153,11 @@ func (d *Devbox) NixPkgsCommitHash() string {
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
-	shellPlan.FlakeInputs = d.flakeInputs()
+	var err error
+	shellPlan.FlakeInputs, err = d.flakeInputs()
+	if err != nil {
+		return nil, err
+	}
 
 	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
 
@@ -314,7 +318,7 @@ func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
-	info := nix.PkgInfo(d.cfg.Nixpkgs.Commit, pkg)
+	info := nix.PkgInfo(pkg, d.lockfile)
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
@@ -328,7 +332,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		return errors.WithStack(err)
 	}
 	return plugin.PrintReadme(
-		pkg,
+		nix.InputFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
 		markdown,
@@ -445,7 +449,11 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.packages(), d.cfg.Include, d.projectDir)
+	pluginSvcs, err := d.pluginManager.GetServices(
+		d.packagesAsInputs(),
+		d.cfg.Include,
+		d.projectDir,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -779,7 +787,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.packages(), d.cfg.Include, d.projectDir, env)
+	pluginEnv, err := d.pluginManager.Env(
+		d.packagesAsInputs(), d.cfg.Include, d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}
@@ -867,7 +876,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.packages(), d.projectDir)
+	pluginHooks, err := plugin.InitHooks(d.packagesAsInputs(), d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -949,6 +958,10 @@ func (d *Devbox) nixFlakesFilePath() string {
 // packages returns the list of packages to be installed in the nix shell.
 func (d *Devbox) packages() []string {
 	return d.cfg.Packages
+}
+
+func (d *Devbox) packagesAsInputs() []*nix.Input {
+	return nix.InputsFromStrings(d.packages(), d.lockfile)
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
