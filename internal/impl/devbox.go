@@ -959,11 +959,11 @@ func (d *Devbox) packagesAsInputs() []*nix.Input {
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
-	results := []string{}
+	results := map[string]bool{}
 	for _, pkg := range d.cfg.Packages {
 		i := nix.InputFromString(pkg, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
-			results = append(results, pkg)
+			results[i.String()] = true
 		}
 	}
 	if len(results) > 1 {
@@ -976,7 +976,7 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 	if len(results) == 0 {
 		return "", usererr.New("no package found with name %s", name)
 	}
-	return results[0], nil
+	return lo.Keys(results)[0], nil
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env

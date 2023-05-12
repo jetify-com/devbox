@@ -38,9 +38,11 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 	// before addin @latest to ensure we don't accidentally add a package that
 	// is already in the config.
 	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgs), d.lockfile) {
-		versionedPackages = append(versionedPackages, pkg.Versioned())
-		if !slices.Contains(d.cfg.Packages, pkg.Raw) {
-			d.cfg.Packages = append(d.cfg.Packages, pkg.Versioned())
+		versioned := pkg.Versioned()
+		versionedPackages = append(versionedPackages, versioned)
+		// Only add if the package doesn't exist versioned or unversioned.
+		if !slices.Contains(d.cfg.Packages, pkg.Raw) && !slices.Contains(d.cfg.Packages, versioned) {
+			d.cfg.Packages = append(d.cfg.Packages, versioned)
 		}
 	}
 	pkgs = versionedPackages
