@@ -970,7 +970,7 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 		return "", usererr.New(
 			"found multiple packages with name %s: %s. Please specify version",
 			name,
-			results,
+			lo.Keys(results),
 		)
 	}
 	if len(results) == 0 {
