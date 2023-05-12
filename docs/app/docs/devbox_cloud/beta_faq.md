@@ -20,7 +20,7 @@ While you can open any Github Repo in a Devbox Cloud Shell, you will need a `dev
 
 Devbox.sh provides a Cloud IDE that you can use to edit your projects in the browser, but you can also open your project in your local VSCode Editor by clicking the open in desktop button.
 
-You can also use your own tools when you start Devbox Cloud from the terminal or SSH. See our [Getting Started Guide](getting_started.md) for more details.
+You can also use your own tools when you start Devbox Cloud from the terminal or SSH. See our [Getting Started Guide](getting_started.mdx) for more details.
 
 ### Do I have to pay to use Devbox Cloud during the Open Beta?
 

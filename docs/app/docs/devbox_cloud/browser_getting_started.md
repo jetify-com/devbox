@@ -3,7 +3,7 @@ title: Getting Started From Your Browser
 sidebar_position: 2
 ---
 
-In addition to using [Devbox Cloud from your terminal](getting_started.md), you can use Devbox Cloud to preview Github projects directly in your browser. Devbox Cloud comes with the Devbox CLI, Nix, and several common packages preinstalled, so you can easily run projects that include a `devbox.json`
+In addition to using [Devbox Cloud from your terminal](getting_started.mdx), you can use Devbox Cloud to preview Github projects directly in your browser. Devbox Cloud comes with the Devbox CLI, Nix, and several common packages preinstalled, so you can easily run projects that include a `devbox.json`
 
 ![Devbox Cloud Browser](../../static/img/devbox_cloud_editor.png)
 
