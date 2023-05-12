@@ -12,17 +12,32 @@ Because the repository changes frequently, and new releases of Nixpkgs infrequen
 
 ## Pinning a Package Version
 
-To pin a specific version of a package, you can add a `@` followed by the version number at the end of the package name. For example, to pin the `go` package to version `1.19`, you can run `devbox add go@1.19` or add `go@1.19` to the packages list in your `devbox.json`:
+### Searching for Available Packages
+
+You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
+
+```bash
+$ devbox search python
+
+Found 2770+ results for "python":
+
+* python (3.12.0a7, 3.12.0a6, 3.12.0a5, 3.12.0a3, 3.11.3, 3.11.2, 3.11.1, 3.11.0, 3.11.0rc1, 3.11.0b3, 3.11.0a7, 3.11.0a4, 3.11.0a2, 3.10.4, 3.10.2, 3.10.0, 3.10.0rc1, 3.10.0a5, 3.10.0a3, 3.10.0a1, 3.9.16, 3.9.14, 3.9.13, 3.9.4, 3.9.2, 3.9.1, 3.9.0, 3.9.0b5, 3.9.0a4, 3.8.16, 3.8.15, 3.8.13, 3.8.12, 3.8.11, 3.8.8, 3.8.6, 3.8.5, 3.8.3, 3.7.16, 3.7.15, 3.7.13, 3.7.12, 3.7.11, 3.7.10, 3.7.9, 3.7.8, 3.7.7, 3.6.14, 3.6.13, 3.6.12, 3.6.11, 3.6.10, 3.5.9, 2.7.18.6, 2.7.18.5, 2.7.18)
+...
+```
+
+### Adding a Specific Version to Devbox
+
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `python` package to version `3.11.1`, you can run `devbox add python@3.11.1` or add `python@3.11.1` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
-	"go@1.19"
+	"python@3.11.1"
 ]
 ```
 
 For packages that use semver, you can pin a range of versions for your project. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
-You can look up the available versions of a package by running `devbox search <package_name>`.
+When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `Devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
 ### Updating your packages
 
