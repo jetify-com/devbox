@@ -16,7 +16,7 @@ var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
 func PkgExists(pkg string, lock *lock.File) (bool, error) {
-	return InputFromString(pkg, lock).validateExists()
+	return InputFromString(pkg, lock).ValidateExists()
 }
 
 type Info struct {

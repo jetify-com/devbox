@@ -1,6 +1,6 @@
 {
     "packages": [
-        "dotnet-sdk"
+        "dotnet-sdk@latest"
     ],
     "shell": {
         "init_hook": null,
