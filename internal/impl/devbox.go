@@ -157,7 +157,19 @@ func (d *Devbox) NixPkgsCommitHash() string {
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 	// Create plugin directories first because inputs might depend on them
 	for _, pkg := range d.packagesAsInputs() {
-		if err := d.pluginManager.CreateFilesAndShowReadme(d.writer, pkg, d.projectDir); err != nil {
+		if err := d.pluginManager.Create(d.writer, pkg, d.projectDir); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, included := range d.cfg.Include {
+		// This is a slightly weird place to put this, but since includes can't be
+		// added via command and we need them to be added before we call
+		// plugin manager.Include
+		if err := d.lockfile.Add(included); err != nil {
+			return nil, err
+		}
+		if err := d.pluginManager.Include(d.writer, included, d.projectDir); err != nil {
 			return nil, err
 		}
 	}
@@ -459,7 +471,10 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.packagesAsInputs(), d.projectDir)
+	pluginSvcs, err := d.pluginManager.GetServices(
+		d.packagesAsInputs(),
+		d.cfg.Include,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -793,7 +808,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.packagesAsInputs(), d.projectDir, env)
+	pluginEnv, err := d.pluginManager.Env(d.packagesAsInputs(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}

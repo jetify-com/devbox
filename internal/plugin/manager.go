@@ -11,7 +11,6 @@ import (
 type Manager struct {
 	devboxProject
 
-	addMode  bool
 	lockfile *lock.File
 }
 
@@ -26,12 +25,6 @@ func NewManager(opts ...managerOption) *Manager {
 	m := &Manager{}
 	m.ApplyOptions(opts...)
 	return m
-}
-
-func WithAddMode() managerOption {
-	return func(m *Manager) {
-		m.addMode = true
-	}
 }
 
 func WithLockfile(lockfile *lock.File) managerOption {

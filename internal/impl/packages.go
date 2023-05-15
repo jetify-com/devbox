@@ -63,7 +63,6 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		}
 	}
 
-	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
 		return usererr.WithUserMessage(
 			err,
