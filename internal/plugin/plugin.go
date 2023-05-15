@@ -61,31 +61,30 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) Include(w io.Writer, included, projectDir string) error {
+func (m *Manager) Include(w io.Writer, included string) error {
 	name, err := m.parseInclude(included)
 	if err != nil {
 		return err
 	}
-	err = m.create(w, name, projectDir, m.lockfile.Packages[included])
+	err = m.create(w, name, m.lockfile.Packages[included])
 	return err
 }
 
-func (m *Manager) Create(w io.Writer, pkg *nix.Input, projectDir string) error {
-	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg.Raw])
+func (m *Manager) Create(w io.Writer, pkg *nix.Input) error {
+	return m.create(w, pkg, m.lockfile.Packages[pkg.Raw])
 }
 
 func (m *Manager) create(
 	w io.Writer,
 	pkg *nix.Input,
-	projectDir string,
 	locked *lock.Package,
 ) error {
-	virtenvPath, err := createVirtenvSymlink(w, projectDir)
+	virtenvPath, err := createVirtenvSymlink(w, m.ProjectDir())
 	if err != nil {
 		return err
 	}
 
-	cfg, err := getConfigIfAny(pkg, projectDir)
+	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
 		return err
 	}
@@ -96,7 +95,7 @@ func (m *Manager) create(
 	name := pkg.CanonicalName()
 
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(projectDir, VirtenvPath, name)); err != nil {
+	if err = createDir(filepath.Join(m.ProjectDir(), VirtenvPath, name)); err != nil {
 		return err
 	}
 
@@ -118,47 +117,10 @@ func (m *Manager) create(
 			continue
 		}
 
-		debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
-		content, err := getFileContent(contentPath)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		tmpl, err := template.New(filePath + "-template").Parse(string(content))
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		system, err := nix.System()
-		if err != nil {
+		if err = m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
 			return err
 		}
 
-		var buf bytes.Buffer
-		if err = tmpl.Execute(&buf, map[string]any{
-			"DevboxConfigDir":      projectDir,
-			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
-			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
-			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Packages":             m.Packages(),
-			"System":               system,
-			"URLForInput":          pkg.URLForInput(),
-			"Virtenv":              filepath.Join(virtenvPath, name),
-		}); err != nil {
-			return errors.WithStack(err)
-		}
-		var fileMode fs.FileMode = 0644
-		if strings.Contains(filePath, "bin/") {
-			fileMode = 0755
-		}
-
-		if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
-			return errors.WithStack(err)
-		}
-		if fileMode == 0755 {
-			if err := createSymlink(projectDir, filePath); err != nil {
-				return err
-			}
-		}
 	}
 
 	if locked != nil {
@@ -166,6 +128,55 @@ func (m *Manager) create(
 	}
 
 	return m.lockfile.Save()
+}
+
+func (m *Manager) createFile(
+	pkg *nix.Input,
+	filePath, contentPath, virtenvPath string,
+) error {
+	name := pkg.CanonicalName()
+	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
+	content, err := getFileContent(contentPath)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	tmpl, err := template.New(filePath + "-template").Parse(string(content))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	system, err := nix.System()
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, map[string]any{
+		"DevboxConfigDir":      m.ProjectDir(),
+		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
+		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
+		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
+		"Packages":             m.Packages(),
+		"System":               system,
+		"URLForInput":          pkg.URLForInput(),
+		"Virtenv":              filepath.Join(virtenvPath, name),
+	}); err != nil {
+		return errors.WithStack(err)
+	}
+	var fileMode fs.FileMode = 0644
+	if strings.Contains(filePath, "bin/") {
+		fileMode = 0755
+	}
+
+	if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
+		return errors.WithStack(err)
+	}
+	if fileMode == 0755 {
+		if err := createSymlink(m.ProjectDir(), filePath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Env returns the environment variables for the given plugins.
