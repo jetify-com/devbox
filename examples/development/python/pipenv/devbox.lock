@@ -1,0 +1,15 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "pipenv": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#pipenv",
+      "version": ""
+    },
+    "python310": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310",
+      "version": ""
+    }
+  }
+}

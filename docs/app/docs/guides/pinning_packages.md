@@ -8,7 +8,7 @@ This document explains how to use `devbox search` and `devbox add` to install a 
 
 Devbox installs packages using the [Nix Package Manager](https://nixos.org). Nix maintains over 80,000 build definitions in a Github repo at [NixOS/nixpkgs](https://github.com/NixOS/nixpkgs). Maintainers add new packages and remove outdated packages by committing changes to this repo.
 
-Because the repository changes frequently, and new releases of Nixpkgs infrequently keep older packages, installing older package versions with Nix can take effort. Devbox simplifies this by maintaining a search index that maps package names and version numbers to their latest available commit in the Nixpkgs repository. Devbox users can select packages by providing the package name and version without looking up a nixpkg commit.
+Because the repository changes frequently, and new releases of Nixpkgs infrequently keep older packages, installing older package versions with Nix can take effort. Devbox simplifies this by maintaining a search index that maps package names and version numbers to their latest available commit in the Nixpkgs repository. Devbox users can select packages by providing the package name and version without looking up a Nixpkg commit.
 
 ## Pinning a Package Version
 
@@ -17,11 +17,20 @@ Because the repository changes frequently, and new releases of Nixpkgs infrequen
 You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
 
 ```bash
-$ devbox search python
+$ devbox search nodejs
 
-Found 2770+ results for "python":
+Found 168+ results for "nodejs":
 
-* python (3.12.0a7, 3.12.0a6, 3.12.0a5, 3.12.0a3, 3.11.3, 3.11.2, 3.11.1, 3.11.0, 3.11.0rc1, 3.11.0b3, 3.11.0a7, 3.11.0a4, 3.11.0a2, 3.10.4, 3.10.2, 3.10.0, 3.10.0rc1, 3.10.0a5, 3.10.0a3, 3.10.0a1, 3.9.16, 3.9.14, 3.9.13, 3.9.4, 3.9.2, 3.9.1, 3.9.0, 3.9.0b5, 3.9.0a4, 3.8.16, 3.8.15, 3.8.13, 3.8.12, 3.8.11, 3.8.8, 3.8.6, 3.8.5, 3.8.3, 3.7.16, 3.7.15, 3.7.13, 3.7.12, 3.7.11, 3.7.10, 3.7.9, 3.7.8, 3.7.7, 3.6.14, 3.6.13, 3.6.12, 3.6.11, 3.6.10, 3.5.9, 2.7.18.6, 2.7.18.5, 2.7.18)
+* nodejs (19.8.1, 19.7.0, 19.5.0, 19.2.0, 18.16.0, 18.15.0, 18.14.2, 18.13.0, 18.12.1, 18.10.0,
+18.8.0, 18.4.0, 18.0.0, 17.9.0, 17.5.0, 17.3.0, 17.0.1, 16.19.1, 16.19.0, 16.18.1, 16.17.1, 16.17.0,
+16.15.0, 16.14.0, 16.13.1, 16.13.0, 16.8.0, 16.4.0, 16.0.0, 15.14.0, 15.10.0, 15.5.0, 15.0.1,
+14.18.1, 14.18.0, 14.17.5, 14.17.1, 14.16.1, 14.16.0, 14.15.3, 14.15.0, 14.9.0, 14.4.0, 13.14.0,
+12.22.12, 12.22.10, 12.22.8, 12.22.7, 12.22.5, 12.22.1, 12.21.0, 12.20.0, 12.19.0, 12.18.3,
+12.18.1, 10.24.1, 10.24.0, 10.23.0, 10.22.0, 10.21.0)
+* nodejs_16 (16.20.0)
+* nodejs_18 (18.16.0)
+* nodejs_19 (19.9.0)
+* nodejs_20 (20.0.0)
 ...
 ```
 
@@ -44,8 +53,9 @@ When you run a command that installs your packages (like `devbox shell` or `devb
 If you want to update your packages, you can run `devbox update`. This command will update all your pinned packages to the newest compatible version in the Devbox index.
 
 ### Using the Latest Version of a Package
+If you do not include a version string, Devbox will default to using the latest available version of a package in the Nixpkgs commit pinned in your `devbox.json`.
 
-To ensure you use the latest available package, you can run `devbox add <pkg>` without including a version string or adding `package_name@latest` to the package list in your devbox.json. For example, to use the latest version of `ripgrep,` run `devbox add ripgrep` or add `ripgrep@latest` to your devbox.json.
+To ensure you use the latest available package, you can run `devbox add <pkg>@latest` or adding `package@latest` to the package list in your devbox.json. For example, to use the latest version of `ripgrep,` run `devbox add ripgrep@latest` or add `ripgrep@latest` to your devbox.json.
 
 Whenever you run `devbox update`, your package will be updated to the latest version available in our index.
 
@@ -63,10 +73,6 @@ If you want to use a different commit for a single package, you can use a Flake 
 Using multiple nixpkg commits may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
 
 ## Pinning the Default Nixpkg commit in your Devbox.json
-
-::: note
-Pinning the nixpkgs commit is deprecated as of version 0.5.0 and will eventually be removed. We recommend using the `@` syntax to pin packages.
-:::
 
 Devbox stores a default Nixpkg commit in your project's `devbox.json`, under the `nixpkgs.commit`. If you do not provide one yourself, Devbox will automatically add a default commit when you run a command like `devbox add`, `devbox shell`, or `devbox run`:
 
