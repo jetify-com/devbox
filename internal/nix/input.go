@@ -14,6 +14,7 @@ import (
 
 	"github.com/samber/lo"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -225,7 +226,7 @@ func (i *Input) CanonicalName() string {
 }
 
 func (i *Input) Versioned() string {
-	if i.IsDevboxPackage() && !i.isVersioned() {
+	if featureflag.AutoLatest.Enabled() && i.IsDevboxPackage() && !i.isVersioned() {
 		return i.Raw + "@latest"
 	}
 	return i.Raw
