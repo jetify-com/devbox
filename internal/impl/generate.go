@@ -66,11 +66,11 @@ func (d *Devbox) generateShellFiles() error {
 		}
 	}
 
-	for _, includes := range d.cfg.Include {
-		if err := d.lockfile.Add(includes); err != nil {
+	for _, included := range d.cfg.Include {
+		if err := d.lockfile.Add(included); err != nil {
 			return err
 		}
-		if err := d.pluginManager.Include(d.writer, includes, d.projectDir); err != nil {
+		if err := d.pluginManager.Include(d.writer, included, d.projectDir); err != nil {
 			return err
 		}
 	}

@@ -60,12 +60,12 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) Include(w io.Writer, include, projectDir string) error {
-	name, err := m.parseInclude(include)
+func (m *Manager) Include(w io.Writer, included, projectDir string) error {
+	name, err := m.parseInclude(included)
 	if err != nil {
 		return err
 	}
-	err = m.create(w, name, projectDir, m.lockfile.Packages[include])
+	err = m.create(w, name, projectDir, m.lockfile.Packages[included])
 	return err
 }
 
@@ -170,8 +170,8 @@ func (m *Manager) Env(
 	computedEnv map[string]string,
 ) (map[string]string, error) {
 	allPkgs := append([]*nix.Input(nil), pkgs...)
-	for _, include := range includes {
-		input, err := m.parseInclude(include)
+	for _, included := range includes {
+		input, err := m.parseInclude(included)
 		if err != nil {
 			return nil, err
 		}
@@ -247,7 +247,7 @@ func createSymlink(root, filePath string) error {
 }
 
 func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
-	// Only create files in devboxDir is they are not in the lockfile
+	// Only create files in devboxDir if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
 	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
 		return false

@@ -45,7 +45,7 @@ type Config struct {
 	// path: for local files
 	// https:// for remote files
 	// plugin: for built-in plugins
-	// This is similar to nix inputs
+	// This is a similar format to nix inputs
 	Include []string `json:"include,omitempty"`
 }
 
