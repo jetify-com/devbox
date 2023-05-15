@@ -8,12 +8,25 @@ import (
 	"go.jetpack.io/devbox/internal/services"
 )
 
-func GetServices(
+// TODO: this should have PluginManager as receiver so we can build once with
+// pkgs, includes, etc
+func (m *Manager) GetServices(
 	pkgs []*nix.Input,
+	includes []string,
 	projectDir string,
 ) (services.Services, error) {
 	svcs := services.Services{}
-	for _, pkg := range pkgs {
+
+	allPkgs := append([]*nix.Input(nil), pkgs...)
+	for _, include := range includes {
+		name, err := m.parseInclude(include)
+		if err != nil {
+			return nil, err
+		}
+		allPkgs = append(allPkgs, name)
+	}
+
+	for _, pkg := range allPkgs {
 		conf, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err

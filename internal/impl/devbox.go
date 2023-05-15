@@ -125,6 +125,7 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
+	box.pluginManager.ApplyOptions(plugin.WithLockfile(lock))
 	box.lockfile = lock
 	return box, nil
 }
@@ -448,7 +449,11 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := plugin.GetServices(d.packagesAsInputs(), d.projectDir)
+	pluginSvcs, err := d.pluginManager.GetServices(
+		d.packagesAsInputs(),
+		d.cfg.Include,
+		d.projectDir,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -782,7 +787,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := plugin.Env(d.packagesAsInputs(), d.projectDir, env)
+	pluginEnv, err := d.pluginManager.Env(
+		d.packagesAsInputs(), d.cfg.Include, d.projectDir, env)
 	if err != nil {
 		return nil, err
 	}

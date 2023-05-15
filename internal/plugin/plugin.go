@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
 )
@@ -59,10 +60,24 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) CreateFilesAndShowReadme(
+func (m *Manager) Include(w io.Writer, included, projectDir string) error {
+	name, err := m.parseInclude(included)
+	if err != nil {
+		return err
+	}
+	err = m.create(w, name, projectDir, m.lockfile.Packages[included])
+	return err
+}
+
+func (m *Manager) Create(w io.Writer, pkg *nix.Input, projectDir string) error {
+	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg.Raw])
+}
+
+func (m *Manager) create(
 	w io.Writer,
 	pkg *nix.Input,
 	projectDir string,
+	locked *lock.Package,
 ) error {
 	virtenvPath, err := createVirtenvSymlink(w, projectDir)
 	if err != nil {
@@ -86,7 +101,7 @@ func (m *Manager) CreateFilesAndShowReadme(
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(filePath) {
+		if !m.shouldCreateFile(locked, filePath) {
 			continue
 		}
 
@@ -135,19 +150,36 @@ func (m *Manager) CreateFilesAndShowReadme(
 			}
 		}
 	}
-	return nil
+
+	if locked != nil {
+		locked.PluginVersion = cfg.Version
+	}
+
+	return m.lockfile.Save()
 }
 
 // Env returns the environment variables for the given plugins.
 // TODO: We should associate the env variables with the individual plugin
 // binaries via wrappers instead of adding to the environment everywhere.
-func Env(
+// TODO: this should have PluginManager as receiver so we can build once with
+// pkgs, includes, etc
+func (m *Manager) Env(
 	pkgs []*nix.Input,
+	includes []string,
 	projectDir string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
+	allPkgs := append([]*nix.Input(nil), pkgs...)
+	for _, included := range includes {
+		input, err := m.parseInclude(included)
+		if err != nil {
+			return nil, err
+		}
+		allPkgs = append(allPkgs, input)
+	}
+
 	env := map[string]string{}
-	for _, pkg := range pkgs {
+	for _, pkg := range allPkgs {
 		cfg, err := getConfigIfAny(pkg, projectDir)
 		if err != nil {
 			return nil, err
@@ -214,9 +246,10 @@ func createSymlink(root, filePath string) error {
 	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
-func (m *Manager) shouldCreateFile(filePath string) bool {
-	// Only create devboxDir files in add mode.
-	if strings.Contains(filePath, devboxDirName) && !m.addMode {
+func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
+	// Only create files in devboxDir if they are not in the lockfile
+	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
+	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
 		return false
 	}
 

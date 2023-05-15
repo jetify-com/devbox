@@ -3,8 +3,10 @@
 
 package plugin
 
+import "go.jetpack.io/devbox/internal/lock"
+
 type Manager struct {
-	addMode bool
+	lockfile *lock.File
 }
 
 type managerOption func(*Manager)
@@ -15,9 +17,9 @@ func NewManager(opts ...managerOption) *Manager {
 	return m
 }
 
-func WithAddMode() managerOption {
+func WithLockfile(lockfile *lock.File) managerOption {
 	return func(m *Manager) {
-		m.addMode = true
+		m.lockfile = lockfile
 	}
 }
 

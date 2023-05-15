@@ -40,6 +40,13 @@ type Config struct {
 
 	// Nixpkgs specifies the repository to pull packages from
 	Nixpkgs NixpkgsConfig `json:"nixpkgs,omitempty"`
+
+	// Reserved to allow including other config files. Proposed format is:
+	// path: for local files
+	// https:// for remote files
+	// plugin: for built-in plugins
+	// This is a similar format to nix inputs
+	Include []string `json:"include,omitempty"`
 }
 
 type NixpkgsConfig struct {
