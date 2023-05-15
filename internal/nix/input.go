@@ -181,7 +181,7 @@ func (i *Input) hash() string {
 	return shortHash
 }
 
-func (i *Input) validateExists() (bool, error) {
+func (i *Input) ValidateExists() (bool, error) {
 	if i.isVersioned() {
 		version := i.version()
 		if version == "" && i.isVersioned() {

@@ -13,11 +13,11 @@ import (
 	"runtime/trace"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -29,17 +29,22 @@ import (
 // packages.go has functions for adding, removing and getting info about nix packages
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
-func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
+func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
-	versionedPackages := []string{}
+	pkgs := nix.InputsFromStrings(lo.Uniq(pkgsNames), d.lockfile)
+
+	versionedPackages := []*nix.Input{}
 	// Add to Packages of the config only if it's not already there. We do this
 	// before addin @latest to ensure we don't accidentally add a package that
 	// is already in the config.
-	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgs), d.lockfile) {
+	for _, pkg := range pkgs {
 		versioned := pkg.Versioned()
-		versionedPackages = append(versionedPackages, versioned)
+		versionedPackages = append(
+			versionedPackages,
+			nix.InputFromString(versioned, d.lockfile),
+		)
 		// Only add if the package doesn't exist versioned or unversioned.
 		if !slices.Contains(d.cfg.Packages, pkg.Raw) && !slices.Contains(d.cfg.Packages, versioned) {
 			d.cfg.Packages = append(d.cfg.Packages, versioned)
@@ -49,35 +54,28 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
-		ok, err := nix.PkgExists(pkg, d.lockfile)
+		ok, err := pkg.ValidateExists()
 		if err != nil {
 			return err
 		}
 		if !ok {
-			return errors.WithMessage(nix.ErrPackageNotFound, pkg)
+			return errors.WithMessage(nix.ErrPackageNotFound, pkg.Raw)
 		}
 	}
 
 	d.pluginManager.ApplyOptions(plugin.WithAddMode())
 	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
-		// if installation fails, revert devbox.json
-		// This is not perfect because there may be more than 1 package being
-		// installed and we don't know which one failed. But it's better than
-		// blindly add all packages.
-		color.New(color.FgRed).Fprintf(
-			d.writer,
-			"There was an error installing nix packages: %v. "+
-				"Packages were not added to devbox.json\n",
-			strings.Join(pkgs, ", "),
+		return usererr.WithUserMessage(
+			err,
+			"There was an error installing nix packages",
 		)
-		return err
 	}
 
 	if err := d.saveCfg(); err != nil {
 		return err
 	}
 
-	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
+	for _, input := range pkgs {
 		if err := plugin.PrintReadme(
 			input,
 			d.projectDir,
@@ -88,7 +86,9 @@ func (d *Devbox) Add(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
-	if err := d.lockfile.Add(pkgs...); err != nil {
+	if err := d.lockfile.Add(
+		lo.Map(pkgs, func(pkg *nix.Input, _ int) string { return pkg.Raw })...,
+	); err != nil {
 		return err
 	}
 
