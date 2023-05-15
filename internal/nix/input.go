@@ -14,6 +14,7 @@ import (
 
 	"github.com/samber/lo"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -22,6 +23,7 @@ import (
 type Input struct {
 	url.URL
 	lockfile lock.Locker
+	Raw      string
 }
 
 func InputsFromStrings(names []string, l lock.Locker) []*Input {
@@ -39,7 +41,7 @@ func InputFromString(s string, l lock.Locker) *Input {
 		// path urls have a single slash (instead of possibly 3 slashes)
 		u, _ = url.Parse("path:" + filepath.Join(l.ProjectDir(), u.Opaque))
 	}
-	return &Input{*u, l}
+	return &Input{*u, l, s}
 }
 
 func (i *Input) IsLocal() bool {
@@ -180,7 +182,7 @@ func (i *Input) hash() string {
 	return shortHash
 }
 
-func (i *Input) validateExists() (bool, error) {
+func (i *Input) ValidateExists() (bool, error) {
 	if i.isVersioned() {
 		version := i.version()
 		if version == "" && i.isVersioned() {
@@ -221,6 +223,13 @@ func (i *Input) CanonicalName() string {
 	}
 	name, _, _ := strings.Cut(i.Path, "@")
 	return name
+}
+
+func (i *Input) Versioned() string {
+	if featureflag.AutoLatest.Enabled() && i.IsDevboxPackage() && !i.isVersioned() {
+		return i.Raw + "@latest"
+	}
+	return i.Raw
 }
 
 // version returns the version of the package
