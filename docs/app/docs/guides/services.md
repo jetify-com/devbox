@@ -4,11 +4,11 @@ title: Running Background Services
 
 When working on an application, you often want some services or dependencies running in the background for testing. Take a web app as an example. While working on your application, you will want to test it against a running development server and database. Previously developers would manage these services via tools like Docker Compose or orchestrating them manually.
 
-With Devbox, you can manage these services from the CLI using `devbox services`. Devbox uses [process-compose](https://github.com/F1bonacc1/process-compose#-launcher) under the hood to start and manage your project's services. 
+With Devbox, you can manage these services from the CLI using `devbox services`. Devbox uses [process-compose](https://github.com/F1bonacc1/process-compose#-launcher) under the hood to start and manage your project's services.
 
 ## Starting your Services
 
-You can start all the services in your project by running `devbox services up`. This will start process-compose in the foreground, and start all the services associated with your project: 
+You can start all the services in your project by running `devbox services up`. This will start process-compose in the foreground, and start all the services associated with your project:
 
 ![Process Compose running in the foreground](../../static/img/process-compose-tui.png)
 
@@ -36,7 +36,7 @@ This will now start your django service whenever you run `devbox services up`.
 
 ## Plugins that Support Services
 
-The following plugins provide a pre-configured service that can be managed with `devbox services`: 
+The following plugins provide a pre-configured service that can be managed with `devbox services`:
 
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
@@ -45,7 +45,7 @@ The following plugins provide a pre-configured service that can be managed with 
 * [Redis](../devbox_examples/databases/redis.md) (redis)
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82)
 
-The service will be made available to your project when you install the packages using `devbox add`. 
+The service will be made available to your project when you install the packages using `devbox add`.
 
 ## Listing the Services in our Project
 
@@ -62,7 +62,7 @@ No services currently running. Run `devbox services up` to start them:
 
 If process-compose is already running, `devbox services ls` will show you the list of services registered with process-compose and their current status
 
-```text 
+```text
 Services running in process-compose:
 NAME              STATUS          EXIT CODE
 django            Running         0

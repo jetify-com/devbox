@@ -1,32 +1,65 @@
 ---
-title: Pinning Packages with Nixpkg
+title: Selecting a Specific Package Version
 ---
 
-This doc will explain how to select and pin specific package versions in Devbox by setting a Nixpkg commit in your devbox.json
+This document explains how to use `devbox search` and `devbox add` to install a specific package version in your Devbox project. It also explains how to pin a particular major or minor version for the package in your project.
 
-## Background
+## The Nixpkgs Repository and the Devbox Search Index
 
-The Nix Package Manager, which Devbox uses to install your shell packages, stores its package definitions in a Github Repository at [NixOS/nixpkgs](https://github.com/NixOS/nixpkgs). This repository contains instructions for building over 80,000 different packages. Maintainers add new packages or remove deprecated packages by committing to the repo. 
+Devbox installs packages using the [Nix Package Manager](https://nixos.org). Nix maintains over 80,000 build definitions in a Github repo at [NixOS/nixpkgs](https://github.com/NixOS/nixpkgs). Maintainers add new packages and remove outdated packages by committing changes to this repo.
 
-Because Nix uses Git to store its package definitions, we can install specific packages from older versions of the Nix Store by specifying the default commit we want to use. You can also use this commit to pin your project to a specific version of Nixpkgs, so any developer using your project will get the same packages. 
+Because the repository changes frequently, and new releases of Nixpkgs infrequently keep older packages, installing older package versions with Nix can take effort. Devbox simplifies this by maintaining a search index that maps package names and version numbers to their latest available commit in the Nixpkgs repository. Devbox users can select packages by providing the package name and version without looking up a Nixpkg commit.
 
+## Pinning a Package Version
 
-## Pinning the Default Nixpkg commit in your Devbox.json
+### Searching for Available Packages
 
-Devbox stores the Nixpkg commit in your project's `devbox.json`, under the `nixpkgs.commit`. If you do not specify one in your config, Devbox will automatically add a default commit hash when you run a command like `devbox add`, `devbox shell`, or `devbox run`:
+You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
+
+```bash
+$ devbox search nodejs
+
+Found 168+ results for "nodejs":
+
+* nodejs (19.8.1, 19.7.0, 19.5.0, 19.2.0, 18.16.0, 18.15.0, 18.14.2, 18.13.0, 18.12.1, 18.10.0,
+18.8.0, 18.4.0, 18.0.0, 17.9.0, 17.5.0, 17.3.0, 17.0.1, 16.19.1, 16.19.0, 16.18.1, 16.17.1, 16.17.0,
+16.15.0, 16.14.0, 16.13.1, 16.13.0, 16.8.0, 16.4.0, 16.0.0, 15.14.0, 15.10.0, 15.5.0, 15.0.1,
+14.18.1, 14.18.0, 14.17.5, 14.17.1, 14.16.1, 14.16.0, 14.15.3, 14.15.0, 14.9.0, 14.4.0, 13.14.0,
+12.22.12, 12.22.10, 12.22.8, 12.22.7, 12.22.5, 12.22.1, 12.21.0, 12.20.0, 12.19.0, 12.18.3,
+12.18.1, 10.24.1, 10.24.0, 10.23.0, 10.22.0, 10.21.0)
+* nodejs_16 (16.20.0)
+* nodejs_18 (18.16.0)
+* nodejs_19 (19.9.0)
+* nodejs_20 (20.0.0)
+...
+```
+
+### Adding a Specific Version to Devbox
+
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `python` package to version `3.11.1`, you can run `devbox add python@3.11.1` or add `python@3.11.1` to the packages list in your `devbox.json`:
 
 ```json
-"nixpkgs": {
-    "commit": "89f196fe781c53cb50fef61d3063fa5e8d61b6e5"
-}
+"packages": [
+	"python@3.11.1"
+]
 ```
-This hash ensures that Devbox will install the same packages whenever you start a shell. By checking this into source control, you can also ensure that any other developers who run your project will get the same packages.
 
-## Using the latest version of Nixpkgs
+For packages that use semver, you can pin a range of versions for your project. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
-To use the latest available packages in Nix, you can replace the commit in `devbox.json` with the latest `nixpkgs-unstable` hash from [https://status.nixos.org](https://status.nixos.org). 
+When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `Devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
-## Pinning a Nixpkg Commit for a Single Package
+### Updating your packages
+
+If you want to update your packages, you can run `devbox update`. This command will update all your pinned packages to the newest compatible version in the Devbox index.
+
+### Using the Latest Version of a Package
+If you do not include a version string, Devbox will default to using the latest available version of a package in the Nixpkgs commit pinned in your `devbox.json`.
+
+To ensure you use the latest available package, you can run `devbox add <pkg>@latest` or adding `package@latest` to the package list in your devbox.json. For example, to use the latest version of `ripgrep,` run `devbox add ripgrep@latest` or add `ripgrep@latest` to your devbox.json.
+
+Whenever you run `devbox update`, your package will be updated to the latest version available in our index.
+
+## Manually Pinning a Nixpkg Commit for a Single Package
 
 If you want to use a different commit for a single package, you can use a Flake reference to use an older revision of Nixpkg for just that package. The example below shows how to install the `hello` package from a specific Nixpkg commit:
 
@@ -37,15 +70,15 @@ If you want to use a different commit for a single package, you can use a Flake 
 	]
 }
 ```
-Note that using a different nixpkg commit may install some duplicate packages and cause Nix Store bloat, so use this option sparingly. 
+Using multiple nixpkg commits may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
 
-## How to Find the Nixpkg Commit for a Package
+## Pinning the Default Nixpkg commit in your Devbox.json
 
-In most cases, the packages available in Devbox's default commit should suffice for your use cases. However, if you want to install an older package no longer available in Nix, you must use an older commit reference in either your Flake reference or default nixpkg commit.
+Devbox stores a default Nixpkg commit in your project's `devbox.json`, under the `nixpkgs.commit`. If you do not provide one yourself, Devbox will automatically add a default commit when you run a command like `devbox add`, `devbox shell`, or `devbox run`:
 
-Unfortunately, Nix does not have an official way to find the Nixpkg commit SHA for a specific package. However, an unofficial search tool at [https://lazamar.co.uk/nix-versions/](https://lazamar.co.uk/nix-versions/) can be used to list the Nixpkg commits for different versions of a specific package. To find the correct Nixpkg commit hash: 
-1. Select `nixpkgs-unstable` in the dropdown
-2. Enter the name of the package you want to search, and hit Search
-3. In the search results, find the version you want in the Version Column
-4. Copy the commit hash in the Revision column
-5. Add the commit hash to your `devbox.json`
+```json
+"nixpkgs": {
+    "commit": "89f196fe781c53cb50fef61d3063fa5e8d61b6e5"
+}
+```
+This hash ensures that Devbox will install the same packages whenever you start a shell. By checking this into source control, you can ensure that other developers who run your project will get the same packages.

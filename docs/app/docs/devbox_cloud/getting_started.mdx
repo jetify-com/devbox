@@ -1,23 +1,30 @@
 ---
 title: Getting Started From Your Terminal
-sidebar_position: 2
+sidebar_position: 3
 ---
 
-Devbox Cloud is a new way to create and run your Devbox Project in an isolated cloud environment. 
+Devbox Cloud is a new way to create and run your Devbox Project in an isolated cloud environment.
 
-Use cases for Devbox Cloud include: 
+Use cases for Devbox Cloud include:
 * Testing out Packages or Scripts in an Isolated Linux Environment -- Preview different combinations or environments in a remote VM
 * Easy Preview Environments for your project -- Developers or contributors can quickly test your project in a cloud development environment, using the same packages and configuration.
 * Develop in a consistent environment from any Machine -- Log on to your Cloud Shell from anywhere, and develop in a consistent Dev environment anywhere in the world. Our VMs are deployed at the edge using Fly.io to provide a low-latency environment
 
 :::note
-Devbox Cloud is currently in Beta and under active development. 
-::: 
+Devbox Cloud is currently in Beta and under active development.
+:::
+
+<figure className="text--center">
+
+![Devbox Cloud](../../static/img/cloud.svg)
+<figcaption> Launching a Cloud Shell from the Devbox CLI </figcaption>
+</figure>
+
 
 ## How It Works
 
 ### Prerequisites
-Devbox Cloud Shell requires the following: 
+Devbox Cloud Shell requires the following:
 
 * **Devbox 0.3.0 or higher.** If you do not have Nix installed on your machine, Devbox will install it with the default configuration for your OS.
 * **A Github Account with an SSH Key Configured**. This is used by Devbox to authenticate and connect you to your Cloud VM.
@@ -27,18 +34,18 @@ Devbox Cloud Shell requires the following:
 
 Devbox provides an easy password-less login flow using the SSH keys attached to your Github Account. If you do not have SSH keys configured with Github, follow the instructions here: [Connecting to Github with SSH](https://docs.github.com/en/enterprise-server@3.4/authentication/connecting-to-github-with-ssh/about-ssh)
 
-When you run `devbox cloud shell`, Devbox will first attempt to infer your Github username from your local environment, and prompt you if a username cannot be found. 
+When you run `devbox cloud shell`, Devbox will first attempt to infer your Github username from your local environment, and prompt you if a username cannot be found.
 
-Once Devbox has your username, it will authenticate you over SSH using the private/public key pair associated with your Github Account. 
+Once Devbox has your username, it will authenticate you over SSH using the private/public key pair associated with your Github Account.
 
 :::note
 All authentication is handled via SSH. Devbox never reads or stores your private key.
-:::  
+:::
 
 ### Step 2: Launch your Devbox Shell in a Cloud VM
 
-Once you are authenticated, Devbox will provision and start your Cloud Shell: 
-1. First, we will provision a VM within your region and connect using SSH. 
+Once you are authenticated, Devbox will provision and start your Cloud Shell:
+1. First, we will provision a VM within your region and connect using SSH.
 2. Your local project files will be synced to the VM using Mutagen
 3. Once your files are updated, Devbox will install your dependencies and start a `devbox shell` for your project
 
@@ -51,19 +58,19 @@ If you are using Devbox for the first time, this process may take over 1 minute 
 Let's create a simple project that uses Python 3.10 with Poetry to manage our packages. We'll start by running `devbox init` in our project directory, and then adding the packages:
 
 ```bash
-devbox init 
+devbox init
 ```
 ```bash
-devbox add python310 poetry
+devbox add python@3.10 poetry
 ```
 
-This should create a devbox.json in your directory that looks like the following: 
+This should create a devbox.json in your directory that looks like the following:
 
 ```json
 {
   "packages": [
     "poetry",
-    "python310"
+    "python@3.10"
   ],
   "shell": {
     "init_hook": null
@@ -97,13 +104,13 @@ You are now connected to your remote shell
 
 ### Step 3: Sync your Local Changes to Devbox Cloud
 
-When you start your cloud session, your files are kept locally, and synchronized with your Devbox Cloud VM when changes are detected. This means you can use your favorite tools and editors to develop your project, while running in an isolated cloud environment. 
+When you start your cloud session, your files are kept locally, and synchronized with your Devbox Cloud VM when changes are detected. This means you can use your favorite tools and editors to develop your project, while running in an isolated cloud environment.
 
 #### Example: Add a Simple Flask App
 
-Let's add a simple Flask "Hello World" to our project to test the syncing.  
+Let's add a simple Flask "Hello World" to our project to test the syncing.
 
-1. On your local machine, create a pyproject.toml file with the following: 
+1. On your local machine, create a pyproject.toml file with the following:
 
   ```toml
   [tool.poetry]
@@ -135,7 +142,7 @@ Let's add a simple Flask "Hello World" to our project to test the syncing.
         return '<h1>Hello from Devbox Cloud!</h1>'
   ```
 
-1. These files will be automatically synced to your Devbox Cloud Shell, meaning you can install and run the Flask server remotely: 
+1. These files will be automatically synced to your Devbox Cloud Shell, meaning you can install and run the Flask server remotely:
 
 ```bash
 poetry install
@@ -154,11 +161,11 @@ Press CTRL+C to quit
 
 ### Step 4: Test your Services with Port-forwarding
 
-Once your service is running, you may want to test it with your browser or local tools, or you may want to expose services running on your remote shell to your local machine. 
+Once your service is running, you may want to test it with your browser or local tools, or you may want to expose services running on your remote shell to your local machine.
 
  You can do this using `devbox cloud forward :<remote_port>`, which will forward ports from your cloud instance to your local machine. If you provide just the remote port, Devbox will forward it to a randomly assigned local port.
 
-You can view the full list of port-forwards on your machine using `devbox cloud forward ls`. You can also terminate port=forwarding with `devbox cloud forward terminate`. 
+You can view the full list of port-forwards on your machine using `devbox cloud forward ls`. You can also terminate port=forwarding with `devbox cloud forward terminate`.
 
 #### Example: Port-forwarding our Flask App
 

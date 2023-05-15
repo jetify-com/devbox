@@ -8,7 +8,7 @@ ___
 [direnv](https://direnv.net) is an open source environment management tool that allows setting unique environment variables per directory in your file system. This guide covers how to configure direnv to seamlessly work with a devbox project.
 
 :::note 
-Devbox 0.4.0 makes changes to how the environment is sourced in order to ensure better compatibility with the user's host shell. This may raise some errors if you generated your `.envrc` file with an older version of devbox.
+Devbox 0.5.0 makes changes to how the environment is sourced in order to ensure better compatibility with the user's host shell. This may raise some errors if you generated your `.envrc` file with an older version of devbox.
     
 If you see any errors when activating your `.envrc` file, you will need to run `devbox generate direnv --force`, and then re-run `devbox shell` to apply the latest changes. Be sure to back up your old `.envrc` file before running this command.
 :::
@@ -20,18 +20,17 @@ If you see any errors when activating your `.envrc` file, you will need to run `
 
 #### New Project
 
-If you have direnv installed, Devbox will generate an .envrc file when you run `devbox init` and prompt you to enable it:
+If you have direnv installed, Devbox will generate an .envrc file when you run `devbox init` and enables it by running `direnv allow` in the background:
 
 ```bash
 ➜  devbox init
-? Do you want to enable direnv integration for this devbox project?[y/n] y
 direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
 
-This will generate a `.envrc` file in your root directory along with your `devbox.json`, and run `direnv allow` so that your shell will activate whenever you navigate to the directory.
+This will generate a `.envrc` file in your root directory along with your `devbox.json`, you can run `direnv allow` so that your shell will activate whenever you navigate to the directory 
+or `direnv revoke` to stop.
 
-If you choose not to enable the integration, you can enable it at anytime by running `direnv allow`, or following the global settings below
 
 #### Existing Project
 
@@ -39,7 +38,6 @@ For an existing project, you can add a `.envrc` file by running `devbox generate
 
 ```bash
 ➜  devbox generate direnv
-? Do you want to enable direnv integration for this devbox project?[y/n] y
 direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
