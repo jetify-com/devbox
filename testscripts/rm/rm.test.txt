@@ -1,6 +1,6 @@
 exec devbox init
 
-exec devbox add hello vim
+exec DEVBOX_FEATURE_AUTO_LATEST=1 devbox add hello vim
 exec devbox run hello
 stdout 'Hello, world!'
 

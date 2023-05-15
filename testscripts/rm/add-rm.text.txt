@@ -1,12 +1,12 @@
 exec devbox init
 
-exec devbox add hello vim cowsay
+exec DEVBOX_FEATURE_AUTO_LATEST=1 devbox add hello vim cowsay
 json.superset devbox.json all.json
 
 exec devbox rm vim hello
 json.superset devbox.json cowsay.json
 
-exec devbox add vim hello vim hello vim hello vim hello cowsay
+exec DEVBOX_FEATURE_AUTO_LATEST=1 devbox add vim hello vim hello vim hello vim hello cowsay
 json.superset devbox.json all.json
 
 exec devbox rm vim hello cowsay cowsay
