@@ -1,6 +1,6 @@
 exec devbox init
 
-exec DEVBOX_FEATURE_AUTO_LATEST=1 devbox add hello vim
+exec devbox add hello vim
 exec devbox run hello
 stdout 'Hello, world!'
 
@@ -12,5 +12,5 @@ json.superset devbox.json expected.json
 
 -- expected.json --
 {
-  "packages": ["vim@latest"]
+  "packages": ["vim"]
 }
