@@ -78,10 +78,12 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 }
 
 func TestComputeNixEnv(t *testing.T) {
-	d := &Devbox{
-		cfg: &Config{},
-		nix: &testNix{},
-	}
+	path, _ := os.MkdirTemp("", "TestComputeNixEnv")
+	_, err := InitConfig(path, os.Stdout)
+	assert.NoError(t, err, "InitConfig should not fail")
+	d, err := Open(path, os.Stdout)
+	assert.NoError(t, err, "Open should not fail")
+	d.nix = &testNix{}
 	ctx := context.Background()
 	env, err := d.computeNixEnv(ctx, false /*use cache*/)
 	assert.NoError(t, err, "computeNixEnv should not fail")
@@ -89,11 +91,12 @@ func TestComputeNixEnv(t *testing.T) {
 }
 
 func TestComputeNixPathIsIdempotent(t *testing.T) {
-	devbox := &Devbox{
-		cfg:        &Config{},
-		nix:        &testNix{"/tmp/my/path"},
-		projectDir: "/tmp/TestComputeNixPathIsIdempotent",
-	}
+	dir, _ := os.MkdirTemp("", "TestComputeNixPathIsIdempotent")
+	_, err := InitConfig(dir, os.Stdout)
+	assert.NoError(t, err, "InitConfig should not fail")
+	devbox, err := Open(dir, os.Stdout)
+	assert.NoError(t, err, "Open should not fail")
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	assert.NoError(t, err, "computeNixEnv should not fail")
