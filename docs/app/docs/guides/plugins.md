@@ -4,7 +4,7 @@ title: Using Devbox Plugins
 
 This doc describes how to use Devbox Plugins with your project. **Plugins** provide a default Devbox configuration for a Nix package. Plugins make it easier to get started with packages that require additional setup when installed with Nix, and they offer a familiar interface for configuring packages. They also help keep all of your project's configuration within your project directory, which helps maintain portability and isolation.
 
-If a plugin is available for your package, it will activate when you install the plugin using `devbox add <package name>`.  
+If a plugin is available for your package, it will activate when you install the plugin using `devbox add <package name>`.
 
 ## Current Plugins
 Plugins are available for the following packages. You can activate the plugins for these packages by running `devbox add <package_name>`:
@@ -18,6 +18,20 @@ Plugins are available for the following packages. You can activate the plugins f
 * [Pip](../devbox_examples/languages/python.md) (python39Packages.pip, python310Packages.pip, python311Packages.pip)
 
 Our team is rapidly adding new plugins to Devbox. If you want to request a plugin, please file an issue in the Devbox Repo.
+
+## Using Plugins
+
+If you add one of the packages listed above to your project using `devbox add <pkg>`, Devbox will automatically activate the plugin for that package.
+
+You can also explicitly add a plugin in your project by adding it to the [`includes` section](../configuration.md#includes) of your `devbox.json` file. For example, to explicitly add the plugin for Nginx, you can add the following to your `devbox.json` file:
+
+```json
+{
+  "includes": [
+    "plugin:nginx"
+  ]
+}
+```
 
 ## An Example of a Plugin: Nginx
 Let's take a look at the plugin for Nginx. To get started, let's initialize a new devbox project, and add the `nginx` package:
@@ -64,7 +78,7 @@ To show this information, run `devbox info nginx`
 nginx (nginx-1.22.1) is now installed.
 ```
 
-Based on this info page, we can see that Devbox has created the configuration we need to run `nginx` in our local shell. Let's take a look at the files it created: 
+Based on this info page, we can see that Devbox has created the configuration we need to run `nginx` in our local shell. Let's take a look at the files it created:
 
 ```bash
 % tree
@@ -78,7 +92,7 @@ Based on this info page, we can see that Devbox has created the configuration we
 └── devbox.json
 ```
 
-These files give us everything we need to run NGINX, and we can modify the `nginx.conf` and `fastcgi.conf` to customize how Nginx works. 
+These files give us everything we need to run NGINX, and we can modify the `nginx.conf` and `fastcgi.conf` to customize how Nginx works.
 
 We can also see in the info page that Devbox has configured an NGINX service for us. Let's start this service with `devbox services start nginx`, and then test it with `curl`:
 
@@ -89,7 +103,7 @@ Installing nix packages. This may take a while... done.
 Starting a devbox shell...
 Service "nginx" started
 
-> curl localhost:80 
+> curl localhost:80
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -104,7 +118,7 @@ Service "nginx" started
 
 ## Plugin Configuration in detail
 
-When Devbox detects a plugin for an installed package, it automatically applies its configuration and prints a short explanation. Developers can review this explanation anytime using `devbox info <package_name>`. 
+When Devbox detects a plugin for an installed package, it automatically applies its configuration and prints a short explanation. Developers can review this explanation anytime using `devbox info <package_name>`.
 
 ### Services
 
@@ -112,7 +126,7 @@ If your package can run as a daemon or background service, Devbox can configure 
 
 To learn more, visit our page on [Devbox Services](services.md).
 
-### Environment Variables 
+### Environment Variables
 Devbox stores default environment variables for your package in `.devbox/virtenv/<package_name>/.env` in your project directory. Devbox automatically updates these environment variables whenever you run `devbox shell` or `devbox run` to match your current project, and developers should not check these `.env` files into source control.
 
 #### Customizing Environment Variables

@@ -5,12 +5,12 @@ sidebar_position: 4
 
 ### What do I need to use Devbox Cloud?
 
-To use Devbox Cloud from your Browser, you will need a Github Account. 
+To use Devbox Cloud from your Browser, you will need a Github Account.
 
-To use Devbox Cloud from your CLI, you will need: 
+To use Devbox Cloud from your CLI, you will need:
 
 * A Github account with linked SSH keys
-* Devbox 0.3.0 or later 
+* Devbox 0.3.0 or later
 
 ### Does my project need to use Devbox to use Devbox Cloud?
 
@@ -18,16 +18,18 @@ While you can open any Github Repo in a Devbox Cloud Shell, you will need a `dev
 
 ### Can I use my own IDE or editor with Devbox Cloud?
 
-Yes! You can use your own tools when you start Devbox Cloud from the terminal. See our [Getting Started Guide](getting_started.md) for more details
+Devbox.sh provides a Cloud IDE that you can use to edit your projects in the browser, but you can also open your project in your local VSCode Editor by clicking the open in desktop button.
+
+You can also use your own tools when you start Devbox Cloud from the terminal or SSH. See our [Getting Started Guide](getting_started.mdx) for more details.
 
 ### Do I have to pay to use Devbox Cloud during the Open Beta?
 
-Devbox Cloud is free to use during the Open Beta period, subject to the restrictions listed below. We expect to continue offering a free tier for personal use after the Open Beta period, but we will offer Paid Plans that provide more resources, concurrency, and persistence. 
+Devbox Cloud is free to use during the Open Beta period, subject to the restrictions listed below. We expect to continue offering a free tier for personal use after the Open Beta period, but we will offer Paid Plans that provide more resources, projects, and persistence.
 
 ### What are the resource limits for Devbox Cloud VMs
 
-* **CPU**: 1 Core, shared
-* **RAM**: 1 GB
+* **CPU**: 4 Cores
+* **RAM**: 8 GB
 * **SSD**: 8 GB
 
 If you need additional resources for your project, please reach out to us for **[Early Access](https://jetpack-io.typeform.com/devbox-cloud)**
@@ -38,18 +40,18 @@ Future releases will add more flexibility and features as part of our paid plans
 
 ### What OS does Devbox Cloud use?
 
-Alpine Linux 3.17.1, running on a x86-64 platform
+Debian Linux, running on a x86-64 platform
 
 ### How many VM's can I run concurrently?
 
-You can have up to 3 concurrent VMs per Github Account. 
+You can have up to 5 concurrent projects per Github Account.
 
 ### How long will my Devbox Cloud Shell stay alive for?
 
-VMs will stay alive for up to 5 minutes after a user disconnects. After that point, the VM and all data will be deleted.
+VMs will stay alive for up to 8 hours after going idle. After that point, the VM and all data will be deleted.
 
 ### Where will Devbox run my VM?
 
-Devbox VMs are run as Fly Machines in local Data Centers. To minimize latency, Devbox Cloud will attempt to create a Fly Machine as close to your current location as possible. 
+Devbox VMs are run as Fly Machines in local Data Centers. To minimize latency, Devbox Cloud will attempt to create a Fly Machine as close to your current location as possible.
 
 

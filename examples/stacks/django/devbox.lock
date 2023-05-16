@@ -1,0 +1,25 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "openssl": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#openssl",
+      "version": ""
+    },
+    "postgresql": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#postgresql",
+      "version": ""
+    },
+    "python310": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310",
+      "version": ""
+    },
+    "python310Packages.pip": {
+      "last_modified": "",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310Packages.pip",
+      "version": ""
+    }
+  }
+}
