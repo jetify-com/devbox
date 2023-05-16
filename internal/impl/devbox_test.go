@@ -117,11 +117,12 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 }
 
 func TestComputeNixPathWhenRemoving(t *testing.T) {
-	devbox := &Devbox{
-		cfg:        &Config{},
-		nix:        &testNix{"/tmp/my/path"},
-		projectDir: "/tmp/TestComputeNixPathWhenRemoving",
-	}
+	dir, _ := os.MkdirTemp("", "TestComputeNixPathWhenRemoving")
+	_, err := InitConfig(dir, os.Stdout)
+	assert.NoError(t, err, "InitConfig should not fail")
+	devbox, err := Open(dir, os.Stdout)
+	assert.NoError(t, err, "Open should not fail")
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	assert.NoError(t, err, "computeNixEnv should not fail")
