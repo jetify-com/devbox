@@ -15,7 +15,8 @@ func FileHash(path string) (string, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return "", nil
-	} else if err != nil {
+	}
+	if err != nil {
 		return "", err
 	}
 	hash := sha256.Sum256(data)
