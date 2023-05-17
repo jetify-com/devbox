@@ -1,5 +1,7 @@
 # Adding Overlays with Flakes
 
+For a more in depth walkthrough of this example, check out our [blog post](https://www.jetpack.io/blog/using-nix-flakes-with-devbox/)
+
 This flake shows how to use an overlay Nix flake to override a Nixpkgs package and use it in your devbox configuration.
 
 In this example, using the default `yarn` from Nixpkgs will cause `yarn start` to fail. To fix this issue, we use an overlay to modify the `yarn` package to use NodeJS 16 instead of it's default NodeJS 14.

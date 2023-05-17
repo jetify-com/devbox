@@ -24,3 +24,9 @@ devbox add postgres php81 php81Extensions.pgsql apacheHttpd
 
 1. Update `devbox.d/apacheHttpd/httpd.conf` to point to the directory with your PHP files. You'll need to update the `DocumentRoot` and `Directory` directives.
 1. Follow the instructions above in the How to Run section to initialize your project
+
+### Related Docs
+
+* [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)
+* [Using Apache with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/servers/apache/)
+* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/databases/postgres/)
