@@ -5,6 +5,7 @@ package vercheck
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestCheckVersion(t *testing.T) {
 	isDevBuild = false
 
 	t.Run("skip_if_devbox_cloud", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 		// if devbox cloud
 		t.Setenv(envir.DevboxRegion, "true")
 		buf := new(bytes.Buffer)
@@ -29,7 +30,7 @@ func TestCheckVersion(t *testing.T) {
 
 	// no launcher version or latest-version env var
 	t.Run("skip_if_no_launcher_version_or_latest_version", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 		t.Setenv(envir.LauncherVersion, "")
 		t.Setenv(envir.DevboxLatestVersion, "")
 		buf := new(bytes.Buffer)
@@ -40,7 +41,7 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 	t.Run("print_if_launcher_version_outdated", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 		// set older launcher version
 		t.Setenv(envir.LauncherVersion, "v0.1.0")
 
@@ -52,7 +53,7 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 	t.Run("print_if_binary_version_outdated", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 		// set the launcher version so that it is not outdated
 		t.Setenv(envir.LauncherVersion, strings.TrimPrefix(expectedLauncherVersion, "v"))
 
@@ -70,7 +71,7 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 	t.Run("skip_if_all_versions_up_to_date", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 
 		// set the launcher version so that it is not outdated
 		t.Setenv(envir.LauncherVersion, strings.TrimPrefix(expectedLauncherVersion, "v"))
@@ -89,8 +90,7 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 	t.Run("skip_if_dev_build", func(t *testing.T) {
-		defer ClearCheckEnvVar()
-
+		defer os.Unsetenv(envName)
 		isDevBuild = true
 		defer func() { isDevBuild = false }()
 
@@ -105,7 +105,7 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 	t.Run("skip_if_command_path_skipped", func(t *testing.T) {
-		defer ClearCheckEnvVar()
+		defer os.Unsetenv(envName)
 
 		for _, cmdPath := range commandSkipList {
 			cmdPathUnderscored := strings.ReplaceAll(cmdPath, " ", "_")

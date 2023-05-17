@@ -17,7 +17,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
@@ -29,22 +28,23 @@ import (
 // If this version is newer than the version in launch.sh, we'll print a notice.
 const expectedLauncherVersion = "v0.2.0"
 
-// versionCheckEnvName determines whether the version check has already occurred.
+// envName determines whether the version check has already occurred.
 // We set this env-var so that this devbox command invoking other devbox commands
 // do not re-run the version check and print the notice again.
-const versionCheckEnvName = "DEVBOX_VERSION_CHECK"
+const envName = "__DEVBOX_VERSION_CHECK"
 
 // currentDevboxVersion is the version of the devbox CLI binary that is currently running.
 // We use this variable so that we can mock it in tests.
-var currentDevboxVersion = build.Version
+var currentDevboxVersion = "0.4.8" // build.Version
 
 // isDevBuild determines whether this CLI binary was built during development, or published
 // as a release.
 // We use this variable so we can mock it in tests.
-var isDevBuild = build.IsDev
+var isDevBuild = false // build.IsDev
 
 var commandSkipList = []string{
 	"devbox global shellenv",
+	"devbox shellenv",
 }
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
@@ -57,7 +57,7 @@ func CheckVersion(w io.Writer, commandPath string) {
 		return
 	}
 
-	if os.Getenv(versionCheckEnvName) == "1" {
+	if os.Getenv(envName) == "1" {
 		return
 	}
 
@@ -85,12 +85,7 @@ func CheckVersion(w io.Writer, commandPath string) {
 		color.New(color.FgYellow).Fprintf(w, devboxNotice)
 	}
 
-	os.Setenv(versionCheckEnvName, "1")
-}
-
-// ClearCheckEnvVar will unset the env-var that indicates a version check was done.
-func ClearCheckEnvVar() {
-	os.Unsetenv(versionCheckEnvName)
+	os.Setenv(envName, "1")
 }
 
 // SelfUpdate updates the devbox launcher and devbox CLI binary.
