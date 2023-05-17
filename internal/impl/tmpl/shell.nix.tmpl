@@ -10,9 +10,5 @@ let
 in
 with pkgs;
 mkShell {
-  packages = [
-    {{- range .DevPackages}}
-      {{.}}
-    {{- end }}
-  ];
+  packages = [];
 }

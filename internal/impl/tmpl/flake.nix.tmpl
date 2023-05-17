@@ -44,9 +44,6 @@
             {{- range $definition, $_ := .Definitions}}
             {{ $definition }}
             {{- end }}
-            {{- range .DevPackages}}
-            {{.}}
-            {{- end}}
             {{- range $_, $flake := .FlakeInputs }}
             {{- range $flake.BuildInputs }}
             {{.}}
