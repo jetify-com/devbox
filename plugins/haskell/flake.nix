@@ -17,7 +17,7 @@
         {{- range .Packages }}
         # Test if {{ . }} is a haskell package
         (builtins.match "^(stack|cabal-install)$" "{{ . }}")
-        (builtins.match "^haskellPackages\.([a-zA-Z0-9\-\_\.]*)$" "{{ . }}")
+        (builtins.match "^haskellPackages\.(.*)$" "{{ . }}")
         (builtins.match "^haskell\.packages\.[^.]*\.(.*)$" "{{ . }}")
         {{- end }}
       ]);
