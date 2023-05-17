@@ -34,8 +34,6 @@ func TestWriteFromTemplate(t *testing.T) {
 			NixpkgsInfo struct {
 				URL string
 			}
-			Definitions []string
-			DevPackages []string
 			FlakeInputs []plansdk.FlakeInput
 		}{}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
@@ -80,8 +78,6 @@ var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
 	}
-	Definitions map[string]string
-	DevPackages []string
 	FlakeInputs []plansdk.FlakeInput
 }{
 	NixpkgsInfo: struct {
@@ -89,32 +85,34 @@ var testFlakeTmplPlan = &struct {
 	}{
 		URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
 	},
-	Definitions: map[string]string{
-		"php":                    "pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ blackfire ]));",
-		"php81Packages.composer": "php.packages.composer;",
-	},
-	DevPackages: []string{
-		"php",
-		"php81Packages.composer",
-		"php81Extensions.blackfire",
-		"flyctl",
-		"postgresql",
-		"tree",
-		"git",
-		"zsh",
-		"openssh",
-		"vim",
-		"sqlite",
-		"jq",
-		"delve",
-		"ripgrep",
-		"shellcheck",
-		"terraform",
-		"xz",
-		"zstd",
-		"gnupg",
-		"go_1_20",
-		"python3",
-		"graphviz",
+	FlakeInputs: []plansdk.FlakeInput{
+		{
+			Name: "nixpkgs",
+			URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
+			Packages: []string{
+				"legacyPackages.aarch64-darwin.php",
+				"legacyPackages.aarch64-darwin.php81Packages.composer",
+				"legacyPackages.aarch64-darwin.php81Extensions.blackfire",
+				"legacyPackages.aarch64-darwin.flyctl",
+				"legacyPackages.aarch64-darwin.postgresql",
+				"legacyPackages.aarch64-darwin.tree",
+				"legacyPackages.aarch64-darwin.git",
+				"legacyPackages.aarch64-darwin.zsh",
+				"legacyPackages.aarch64-darwin.openssh",
+				"legacyPackages.aarch64-darwin.vim",
+				"legacyPackages.aarch64-darwin.sqlite",
+				"legacyPackages.aarch64-darwin.jq",
+				"legacyPackages.aarch64-darwin.delve",
+				"legacyPackages.aarch64-darwin.ripgrep",
+				"legacyPackages.aarch64-darwin.shellcheck",
+				"legacyPackages.aarch64-darwin.terraform",
+				"legacyPackages.aarch64-darwin.xz",
+				"legacyPackages.aarch64-darwin.zstd",
+				"legacyPackages.aarch64-darwin.gnupg",
+				"legacyPackages.aarch64-darwin.go_1_20",
+				"legacyPackages.aarch64-darwin.python3",
+				"legacyPackages.aarch64-darwin.graphviz",
+			},
+		},
 	},
 }
