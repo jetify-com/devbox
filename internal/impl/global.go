@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -162,7 +163,21 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 
 func GlobalDataPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
-	return path, errors.WithStack(os.MkdirAll(path, 0755))
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	nixProfilePath := filepath.Join(path, "profile")
+	currentPath := xdg.DataSubpath("devbox/global/current")
+
+	// For now default is always current. In the future we will support multiple
+	// and allow user to switch.
+	err := os.Symlink(nixProfilePath, currentPath)
+	if err != nil && !errors.Is(err, fs.ErrExist) {
+		return "", errors.WithStack(err)
+	}
+
+	return path, nil
 }
 
 func GlobalNixProfilePath() (string, error) {
