@@ -4,9 +4,6 @@ let
       url = "{{ .NixpkgsInfo.TarURL }}";
     })
     { };
-  {{- range .Definitions}}
-    {{.}}
-  {{ end }}
 in
 with pkgs;
 mkShell {
