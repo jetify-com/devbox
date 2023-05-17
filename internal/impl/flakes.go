@@ -36,7 +36,7 @@ func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
 		if input, ok := inputs[pkg.URLForInput()]; !ok {
 			order = append(order, pkg.URLForInput())
 			inputs[pkg.URLForInput()] = &plansdk.FlakeInput{
-				Name:     pkg.Name(),
+				Name:     pkg.InputName(),
 				URL:      pkg.URLForInput(),
 				Packages: []string{AttributePath},
 			}

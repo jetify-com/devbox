@@ -60,7 +60,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	if len(data) == 0 {
 		cmd := exec.CommandContext(
 			ctx,
-			"nix", "print-dev-env", "--recreate-lock-file",
+			"nix", "print-dev-env",
 			args.FlakesFilePath,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
