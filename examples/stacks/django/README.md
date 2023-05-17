@@ -32,7 +32,7 @@
 
 ### Setting up the Database
 
-The Django example uses a Postgres database. To set up the database, we will first create a new PostgreSQL database cluster, create the `todo_db` and user, and run the Django migrations.
+The Django example uses a database. To set up the database, we will first create a new PostgreSQL database cluster, create the `todo_db` and user, and run the Django migrations.
 
 1. Initialize your Postgres database cluster with `devbox run initdb`.
 
@@ -64,4 +64,9 @@ You can now start your Django server by running the following command.
    python todo_project/manage.py runserver
    ```
 
-This should start the development server. 
+This should start the development server.
+
+### Related Docs
+
+* [Using Python with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/python/)
+* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/stacks/django/)

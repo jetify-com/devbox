@@ -31,3 +31,9 @@ devbox add postgres php81 php81Extensions.pgsql nginx
 
 1. Update `devbox.d/nginx/httpd.conf` to point to the directory with your PHP files. You'll need to update the `root` directive to point to your project folder
 2. Follow the instructions above in the How to Run section to initialize your project.
+
+### Related Docs
+
+* [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)
+* [Using Nginx with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/servers/nginx/)
+* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/databases/postgres/)

@@ -33,6 +33,7 @@
           inherit pname;
           inherit name;
 
+          # Path to the source code we want to build. In this case, it's the `ory-cli` input we defined above.
           src = ory-cli;
 
           # This was in the Makefile in the Ory repo, not sure if it's required
@@ -40,7 +41,7 @@
 
           doCheck = false;
 
-          # If the vendor folder is not checked in, we have to provide a hash
+          # If the vendor folder is not checked in, we have to provide a hash for the vendor folder. Nix requires this to ensure the vendor folder is reproducible, and matches what we expect.
           vendorSha256 = "sha256-J9jyeLIT+1pFnHOUHrzmblVCJikvY05Sw9zMz5qaDOk=";
 
           # The Go Mod is named `cli` by default, so we rename it to `ory`.
