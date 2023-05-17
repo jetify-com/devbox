@@ -15,29 +15,57 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"golang.org/x/mod/semver"
-
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
+	"golang.org/x/mod/semver"
 )
 
 // Keep this in-sync with latest version in launch.sh.
 // If this version is newer than the version in launch.sh, we'll print a notice.
 const expectedLauncherVersion = "v0.2.0"
 
+// envName determines whether the version check has already occurred.
+// We set this env-var so that this devbox command invoking other devbox commands
+// do not re-run the version check and print the notice again.
+const envName = "__DEVBOX_VERSION_CHECK"
+
 // currentDevboxVersion is the version of the devbox CLI binary that is currently running.
 // We use this variable so that we can mock it in tests.
-var currentDevboxVersion = build.Version
+var currentDevboxVersion = "0.4.8" // build.Version
+
+// isDevBuild determines whether this CLI binary was built during development, or published
+// as a release.
+// We use this variable so we can mock it in tests.
+var isDevBuild = false // build.IsDev
+
+var commandSkipList = []string{
+	"devbox global shellenv",
+	"devbox shellenv",
+}
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
 // they are out of date.
-func CheckVersion(w io.Writer) {
+//
+// It will set the checkVersionEnvName to indicate that the version check was done.
+// Callers should call ClearEnvVar after their work is done.
+func CheckVersion(w io.Writer, commandPath string) {
+	if isDevBuild {
+		return
+	}
+
+	if os.Getenv(envName) == "1" {
+		return
+	}
 
 	if envir.IsDevboxCloud() {
+		return
+	}
+
+	if lo.Contains(commandSkipList, commandPath) {
 		return
 	}
 
@@ -56,6 +84,8 @@ func CheckVersion(w io.Writer) {
 		// TODO: use ux.FNotice
 		color.New(color.FgYellow).Fprintf(w, devboxNotice)
 	}
+
+	os.Setenv(envName, "1")
 }
 
 // SelfUpdate updates the devbox launcher and devbox CLI binary.
