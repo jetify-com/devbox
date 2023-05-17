@@ -269,7 +269,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	}
 
 	var cmdWithArgs []string
-	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
+	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
 		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
 	} else {
@@ -290,9 +290,9 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 }
 
 func (d *Devbox) ListScripts() []string {
-	keys := make([]string, len(d.cfg.Shell.Scripts))
+	keys := make([]string, len(d.cfg.Scripts()))
 	i := 0
-	for k := range d.cfg.Shell.Scripts {
+	for k := range d.cfg.Scripts() {
 		keys[i] = k
 		i++
 	}
@@ -892,7 +892,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hooks := strings.Join(append(pluginHooks, d.cfg.Shell.InitHook.String()), "\n\n")
+	hooks := strings.Join(append(pluginHooks, d.cfg.InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
 	err = d.writeScriptFile(hooksFilename, hooks)
 	if err != nil {
@@ -901,7 +901,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	written[d.scriptPath(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
-	for name, body := range d.cfg.Shell.Scripts {
+	for name, body := range d.cfg.Scripts() {
 		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
