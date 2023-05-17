@@ -41,6 +41,7 @@ type config struct {
 	Version     string            `json:"version"`
 	Match       string            `json:"match"`
 	CreateFiles map[string]string `json:"create_files"`
+	Packages    []string          `json:"packages"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
 	Services    services.Services `json:"services"`
@@ -60,31 +61,30 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) Include(w io.Writer, included, projectDir string) error {
+func (m *Manager) Include(w io.Writer, included string) error {
 	name, err := m.parseInclude(included)
 	if err != nil {
 		return err
 	}
-	err = m.create(w, name, projectDir, m.lockfile.Packages[included])
+	err = m.create(w, name, m.lockfile.Packages[included])
 	return err
 }
 
-func (m *Manager) Create(w io.Writer, pkg *nix.Input, projectDir string) error {
-	return m.create(w, pkg, projectDir, m.lockfile.Packages[pkg.Raw])
+func (m *Manager) Create(w io.Writer, pkg *nix.Input) error {
+	return m.create(w, pkg, m.lockfile.Packages[pkg.Raw])
 }
 
 func (m *Manager) create(
 	w io.Writer,
 	pkg *nix.Input,
-	projectDir string,
 	locked *lock.Package,
 ) error {
-	virtenvPath, err := createVirtenvSymlink(w, projectDir)
+	virtenvPath, err := createVirtenvSymlink(w, m.ProjectDir())
 	if err != nil {
 		return err
 	}
 
-	cfg, err := getConfigIfAny(pkg, projectDir)
+	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
 		return err
 	}
@@ -95,13 +95,13 @@ func (m *Manager) create(
 	name := pkg.CanonicalName()
 
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(projectDir, VirtenvPath, name)); err != nil {
+	if err = createDir(filepath.Join(m.ProjectDir(), VirtenvPath, name)); err != nil {
 		return err
 	}
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(locked, filePath) {
+		if !m.shouldCreateFile(locked, filePath, virtenvPath) {
 			continue
 		}
 
@@ -117,38 +117,10 @@ func (m *Manager) create(
 			continue
 		}
 
-		debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
-		content, err := getFileContent(contentPath)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		t, err := template.New(filePath + "-template").Parse(string(content))
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		var buf bytes.Buffer
-		if err = t.Execute(&buf, map[string]string{
-			"DevboxConfigDir":      projectDir,
-			"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
-			"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
-			"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-			"Virtenv":              filepath.Join(virtenvPath, name),
-		}); err != nil {
-			return errors.WithStack(err)
-		}
-		var fileMode fs.FileMode = 0644
-		if strings.Contains(filePath, "bin/") {
-			fileMode = 0755
+		if err = m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
+			return err
 		}
 
-		if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
-			return errors.WithStack(err)
-		}
-		if fileMode == 0755 {
-			if err := createSymlink(projectDir, filePath); err != nil {
-				return err
-			}
-		}
 	}
 
 	if locked != nil {
@@ -156,6 +128,55 @@ func (m *Manager) create(
 	}
 
 	return m.lockfile.Save()
+}
+
+func (m *Manager) createFile(
+	pkg *nix.Input,
+	filePath, contentPath, virtenvPath string,
+) error {
+	name := pkg.CanonicalName()
+	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
+	content, err := getFileContent(contentPath)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	tmpl, err := template.New(filePath + "-template").Parse(string(content))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	system, err := nix.System()
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, map[string]any{
+		"DevboxConfigDir":      m.ProjectDir(),
+		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
+		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
+		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
+		"Packages":             m.Packages(),
+		"System":               system,
+		"URLForInput":          pkg.URLForInput(),
+		"Virtenv":              filepath.Join(virtenvPath, name),
+	}); err != nil {
+		return errors.WithStack(err)
+	}
+	var fileMode fs.FileMode = 0644
+	if strings.Contains(filePath, "bin/") {
+		fileMode = 0755
+	}
+
+	if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
+		return errors.WithStack(err)
+	}
+	if fileMode == 0755 {
+		if err := createSymlink(m.ProjectDir(), filePath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Env returns the environment variables for the given plugins.
@@ -166,7 +187,6 @@ func (m *Manager) create(
 func (m *Manager) Env(
 	pkgs []*nix.Input,
 	includes []string,
-	projectDir string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
 	allPkgs := append([]*nix.Input(nil), pkgs...)
@@ -180,7 +200,7 @@ func (m *Manager) Env(
 
 	env := map[string]string{}
 	for _, pkg := range allPkgs {
-		cfg, err := getConfigIfAny(pkg, projectDir)
+		cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 		if err != nil {
 			return nil, err
 		}
@@ -191,7 +211,7 @@ func (m *Manager) Env(
 			env[k] = v
 		}
 	}
-	return conf.OSExpandEnvMap(env, computedEnv, projectDir), nil
+	return conf.OSExpandEnvMap(env, computedEnv, m.ProjectDir()), nil
 }
 
 func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
@@ -246,7 +266,11 @@ func createSymlink(root, filePath string) error {
 	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
-func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
+func (m *Manager) shouldCreateFile(
+	pkg *lock.Package,
+	filePath,
+	virtenvPath string,
+) bool {
 	// Only create files in devboxDir if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
 	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
@@ -254,7 +278,8 @@ func (m *Manager) shouldCreateFile(pkg *lock.Package, filePath string) bool {
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) {
+	if strings.Contains(filePath, devboxHiddenDirName) ||
+		strings.HasPrefix(filePath, virtenvPath) {
 		return true
 	}
 	_, err := os.Stat(filePath)

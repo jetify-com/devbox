@@ -314,7 +314,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	if err != nil {
 		return nil, err
 	}
-	for _, pkg := range d.packages() {
+	for _, pkg := range d.Packages() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,

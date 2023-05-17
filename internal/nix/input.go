@@ -16,6 +16,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
 )
@@ -60,7 +61,7 @@ func (i *Input) IsGithub() bool {
 
 var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 
-func (i *Input) Name() string {
+func (i *Input) InputName() string {
 	result := ""
 	if i.IsLocal() {
 		result = filepath.Base(i.Path) + "-" + i.hash()
@@ -175,6 +176,14 @@ func (i *Input) urlWithoutFragment() string {
 }
 
 func (i *Input) hash() string {
+	// For local flakes, use content hash of the flake.nix file to ensure
+	// user always gets newest input.
+	if i.IsLocal() {
+		fileHash, _ := cuecfg.FileHash(filepath.Join(i.Path, "flake.nix"))
+		if fileHash != "" {
+			return fileHash[:6]
+		}
+	}
 	hasher := md5.New()
 	hasher.Write([]byte(i.String()))
 	hash := hasher.Sum(nil)

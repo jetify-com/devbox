@@ -125,7 +125,10 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	box.pluginManager.ApplyOptions(plugin.WithLockfile(lock))
+	box.pluginManager.ApplyOptions(
+		plugin.WithDevbox(box),
+		plugin.WithLockfile(lock),
+	)
 	box.lockfile = lock
 	return box, nil
 }
@@ -152,7 +155,26 @@ func (d *Devbox) NixPkgsCommitHash() string {
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
-	shellPlan := planner.GetShellPlan(d.projectDir, d.packages())
+	// Create plugin directories first because inputs might depend on them
+	for _, pkg := range d.packagesAsInputs() {
+		if err := d.pluginManager.Create(d.writer, pkg); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, included := range d.cfg.Include {
+		// This is a slightly weird place to put this, but since includes can't be
+		// added via command and we need them to be added before we call
+		// plugin manager.Include
+		if err := d.lockfile.Add(included); err != nil {
+			return nil, err
+		}
+		if err := d.pluginManager.Include(d.writer, included); err != nil {
+			return nil, err
+		}
+	}
+
+	shellPlan := planner.GetShellPlan(d.projectDir, d.Packages())
 	var err error
 	shellPlan.FlakeInputs, err = d.flakeInputs()
 	if err != nil {
@@ -369,7 +391,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(devContainerPath, d.packages())
+	err = generate.CreateDevcontainer(devContainerPath, d.Packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -452,7 +474,6 @@ func (d *Devbox) Services() (services.Services, error) {
 	pluginSvcs, err := d.pluginManager.GetServices(
 		d.packagesAsInputs(),
 		d.cfg.Include,
-		d.projectDir,
 	)
 	if err != nil {
 		return nil, err
@@ -787,8 +808,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(
-		d.packagesAsInputs(), d.cfg.Include, d.projectDir, env)
+	pluginEnv, err := d.pluginManager.Env(d.packagesAsInputs(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -955,13 +975,13 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// packages returns the list of packages to be installed in the nix shell.
-func (d *Devbox) packages() []string {
+// Packages returns the list of Packages to be installed in the nix shell.
+func (d *Devbox) Packages() []string {
 	return d.cfg.Packages
 }
 
 func (d *Devbox) packagesAsInputs() []*nix.Input {
-	return nix.InputsFromStrings(d.packages(), d.lockfile)
+	return nix.InputsFromStrings(d.Packages(), d.lockfile)
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
