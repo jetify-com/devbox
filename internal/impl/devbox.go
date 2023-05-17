@@ -744,6 +744,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 		env[key] = val
 	}
+	// check if contents of .envrc is old and print warning
+	err := d.checkOldEnvrc(usePrintDevEnvCache, env)
+	if err != nil {
+		return nil, err
+	}
+
 	currentEnvPath := env["PATH"]
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
@@ -1003,6 +1009,30 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 		return "", usererr.New("no package found with name %s", name)
 	}
 	return lo.Keys(results)[0], nil
+}
+
+func (d *Devbox) checkOldEnvrc(usePrintDevEnvCache bool, env map[string]string) error {
+	// check if user has an old version of envrc
+	// fmt.Println("checkoldEnvrc")
+	if !usePrintDevEnvCache && fileutil.Exists(".envrc") && env["DEVBOX_NO_ENVRC_UPDATE"] != "1" {
+		// fmt.Println("inside general if")
+		isNewEnvrc, err := fileutil.Contains(".envrc", "eval \"$(devbox generate direnv --print-envrc)\"")
+		if err != nil {
+			return err
+		}
+		if !isNewEnvrc {
+			// fmt.Println("should print now")
+			fmt.Fprintln(
+				d.writer,
+				color.HiYellowString(
+					"Your .envrc file seems to be out of date. "+
+						"Run `devbox generate direnv --force` to update it.\n"+
+						"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.",
+				),
+			)
+		}
+	}
+	return nil
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env
