@@ -85,7 +85,8 @@ func WelcomeMessage(s string) string {
 // TODO: We can probably get rid of this once we remove the haskell and php
 // planners
 type NixpkgsInfo struct {
-	URL string
+	URL    string
+	TarURL string
 }
 
 // The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
@@ -100,6 +101,8 @@ func GetNixpkgsInfo(commitHash string) *NixpkgsInfo {
 	}
 	return &NixpkgsInfo{
 		URL: fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash),
+		// legacy, used for shell.nix (which is no longer used, but some direnv users still need it)
+		TarURL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
 	}
 }
 
