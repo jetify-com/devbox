@@ -93,14 +93,12 @@ type NixpkgsInfo struct {
 const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
 
 func GetNixpkgsInfo(commitHash string) *NixpkgsInfo {
-	mirror := nixpkgsMirrorURL(commitHash)
-	if mirror != "" {
-		return &NixpkgsInfo{
-			URL: mirror,
-		}
+	url := fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash)
+	if mirror := nixpkgsMirrorURL(commitHash); mirror != "" {
+		url = mirror
 	}
 	return &NixpkgsInfo{
-		URL: fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash),
+		URL: url,
 		// legacy, used for shell.nix (which is no longer used, but some direnv users still need it)
 		TarURL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
 	}
