@@ -141,7 +141,7 @@ func (d *Devbox) pullGlobalFromPath(path string) error {
 }
 
 func (d *Devbox) addFromPull(pullCfg *Config) error {
-	if pullCfg.Nixpkgs.Commit != plansdk.DefaultNixpkgsCommit {
+	if pullCfg.NixPkgsCommitHash() != plansdk.DefaultNixpkgsCommit {
 		// TODO: For now show this warning, but we do plan to allow packages from
 		// multiple commits in the future
 		ux.Fwarning(d.writer, "nixpkgs commit mismatch. Using local one by default\n")

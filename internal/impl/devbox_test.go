@@ -23,7 +23,6 @@ import (
 
 func TestDevbox(t *testing.T) {
 	t.Setenv("TMPDIR", "/tmp")
-	t.Setenv(envir.DevboxDoNotUpgradeConfig, "1")
 	testPaths, err := doublestar.FilepathGlob("../../examples/**/devbox.json")
 	assert.NoError(t, err, "Reading testdata/ should not fail")
 

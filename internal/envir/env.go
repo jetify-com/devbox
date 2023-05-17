@@ -4,12 +4,11 @@
 package envir
 
 const (
-	DevboxCache              = "DEVBOX_CACHE"
-	devboxCLICloudShell      = "DEVBOX_CLI_CLOUD_SHELL"
-	DevboxDebug              = "DEVBOX_DEBUG"
-	DevboxFeaturePrefix      = "DEVBOX_FEATURE_"
-	DevboxGateway            = "DEVBOX_GATEWAY"
-	DevboxDoNotUpgradeConfig = "DEVBOX_DONT_UPGRADE_CONFIG"
+	DevboxCache         = "DEVBOX_CACHE"
+	devboxCLICloudShell = "DEVBOX_CLI_CLOUD_SHELL"
+	DevboxDebug         = "DEVBOX_DEBUG"
+	DevboxFeaturePrefix = "DEVBOX_FEATURE_"
+	DevboxGateway       = "DEVBOX_GATEWAY"
 	// DevboxLatestVersion is the latest version available of the devbox CLI binary.
 	// NOTE: it should NOT start with v (like 0.4.8)
 	DevboxLatestVersion  = "DEVBOX_LATEST_VERSION"
