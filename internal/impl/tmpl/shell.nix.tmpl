@@ -1,7 +1,7 @@
 let
   pkgs = import
     (fetchTarball {
-      url = "{{ .NixpkgsInfo.URL }}";
+      url = "{{ .NixpkgsInfo.TarURL }}";
     })
     { };
   {{- range .Definitions}}
