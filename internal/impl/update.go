@@ -17,7 +17,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	if len(pkgsToUpdate) == 0 {
-		pkgsToUpdate = d.packages()
+		pkgsToUpdate = d.Packages()
 	}
 
 	for _, pkg := range pkgsToUpdate {

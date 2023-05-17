@@ -14,6 +14,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -24,7 +25,7 @@ import (
 func TestDevbox(t *testing.T) {
 	t.Setenv("TMPDIR", "/tmp")
 	testPaths, err := doublestar.FilepathGlob("../../examples/**/devbox.json")
-	assert.NoError(t, err, "Reading testdata/ should not fail")
+	require.NoError(t, err, "Reading testdata/ should not fail")
 
 	assert.Greater(t, len(testPaths), 0, "testdata/ and examples/ should contain at least 1 test")
 
@@ -77,25 +78,28 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 }
 
 func TestComputeNixEnv(t *testing.T) {
-	d := &Devbox{
-		cfg: &Config{},
-		nix: &testNix{},
-	}
+	path := t.TempDir()
+	_, err := InitConfig(path, os.Stdout)
+	require.NoError(t, err, "InitConfig should not fail")
+	d, err := Open(path, os.Stdout)
+	require.NoError(t, err, "Open should not fail")
+	d.nix = &testNix{}
 	ctx := context.Background()
 	env, err := d.computeNixEnv(ctx, false /*use cache*/)
-	assert.NoError(t, err, "computeNixEnv should not fail")
+	require.NoError(t, err, "computeNixEnv should not fail")
 	assert.NotNil(t, env, "computeNixEnv should return a valid env")
 }
 
 func TestComputeNixPathIsIdempotent(t *testing.T) {
-	devbox := &Devbox{
-		cfg:        &Config{},
-		nix:        &testNix{"/tmp/my/path"},
-		projectDir: "/tmp/TestComputeNixPathIsIdempotent",
-	}
+	dir := t.TempDir()
+	_, err := InitConfig(dir, os.Stdout)
+	require.NoError(t, err, "InitConfig should not fail")
+	devbox, err := Open(dir, os.Stdout)
+	require.NoError(t, err, "Open should not fail")
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
-	assert.NoError(t, err, "computeNixEnv should not fail")
+	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
 
@@ -106,21 +110,22 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	)
 
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
-	assert.NoError(t, err, "computeNixEnv should not fail")
+	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 
 	assert.Equal(t, path, path2, "path should be the same")
 }
 
 func TestComputeNixPathWhenRemoving(t *testing.T) {
-	devbox := &Devbox{
-		cfg:        &Config{},
-		nix:        &testNix{"/tmp/my/path"},
-		projectDir: "/tmp/TestComputeNixPathWhenRemoving",
-	}
+	dir := t.TempDir()
+	_, err := InitConfig(dir, os.Stdout)
+	require.NoError(t, err, "InitConfig should not fail")
+	devbox, err := Open(dir, os.Stdout)
+	require.NoError(t, err, "Open should not fail")
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
-	assert.NoError(t, err, "computeNixEnv should not fail")
+	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
 	assert.Contains(t, path, "/tmp/my/path", "path should contain /tmp/my/path")
@@ -133,7 +138,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 
 	devbox.nix.(*testNix).path = ""
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
-	assert.NoError(t, err, "computeNixEnv should not fail")
+	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
 

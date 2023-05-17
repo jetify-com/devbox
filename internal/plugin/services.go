@@ -13,7 +13,6 @@ import (
 func (m *Manager) GetServices(
 	pkgs []*nix.Input,
 	includes []string,
-	projectDir string,
 ) (services.Services, error) {
 	svcs := services.Services{}
 
@@ -27,7 +26,7 @@ func (m *Manager) GetServices(
 	}
 
 	for _, pkg := range allPkgs {
-		conf, err := getConfigIfAny(pkg, projectDir)
+		conf, err := getConfigIfAny(pkg, m.ProjectDir())
 		if err != nil {
 			return nil, err
 		}

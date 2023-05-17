@@ -86,7 +86,7 @@ func TestInput(t *testing.T) {
 
 	for _, testCase := range cases {
 		i := testInputFromString(testCase.pkg, projectDir)
-		if name := i.Name(); testCase.name != name {
+		if name := i.InputName(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
 		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {

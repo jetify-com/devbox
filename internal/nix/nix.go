@@ -58,7 +58,11 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := exec.CommandContext(ctx, "nix", "print-dev-env", args.FlakesFilePath)
+		cmd := exec.CommandContext(
+			ctx,
+			"nix", "print-dev-env",
+			args.FlakesFilePath,
+		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
@@ -102,6 +106,23 @@ func ExperimentalFlags() []string {
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes",
 	}
+}
+
+var cachedSystem string
+
+func System() (string, error) {
+	if cachedSystem == "" {
+		cmd := exec.Command(
+			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
+		)
+		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		out, err := cmd.Output()
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		cachedSystem = string(out)
+	}
+	return cachedSystem, nil
 }
 
 // Warning: be careful using the bins in default/bin, they won't always match bins
