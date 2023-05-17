@@ -62,12 +62,8 @@ const (
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
-	config := &Config{}
-	if featureflag.EnvConfig.Enabled() {
-		// TODO: after removing feature flag we can decide if we want
-		// to have omitempty for Env in Config or not.
-		config.Env = map[string]string{}
-	}
+	config := defaultConfig()
+
 	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {

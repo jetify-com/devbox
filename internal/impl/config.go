@@ -58,6 +58,23 @@ type Stage struct {
 	Command string `cue:"string" json:"command"`
 }
 
+func defaultConfig() *Config {
+	return &Config{
+		Shell: &shellConfig{
+			Scripts: map[string]*shellcmd.Commands{
+				"test": {
+					Cmds: []string{"echo \"Error: no test specified\" && exit 1"},
+				},
+			},
+			InitHook: &shellcmd.Commands{
+				Cmds: []string{
+					"echo 'Welcome to devbox!'",
+				},
+			},
+		},
+	}
+}
+
 func (c *Config) Hash() (string, error) {
 	return cuecfg.Hash(c)
 }
