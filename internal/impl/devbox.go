@@ -138,12 +138,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
-	if hash := d.cfg.NixPkgsCommitHash(); hash != "" {
-		return hash
-	}
-	// Tests don't have a nixpkgs commit, so we use the default one.
-	// Not sure if users ever run into this.
-	return plansdk.DefaultNixpkgsCommit
+	return d.cfg.NixPkgsCommitHash()
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {

@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // Config defines a devbox environment as JSON.
@@ -63,7 +64,7 @@ func (c *Config) Hash() (string, error) {
 
 func (c *Config) NixPkgsCommitHash() string {
 	if c == nil || c.Nixpkgs == nil {
-		return ""
+		return plansdk.DefaultNixpkgsCommit
 	}
 	return c.Nixpkgs.Commit
 }
