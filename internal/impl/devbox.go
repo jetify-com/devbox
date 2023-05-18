@@ -745,9 +745,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		env[key] = val
 	}
 	// check if contents of .envrc is old and print warning
-	err := d.checkOldEnvrc(usePrintDevEnvCache, env)
-	if err != nil {
-		return nil, err
+	if !usePrintDevEnvCache {
+		err := d.checkOldEnvrc()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	currentEnvPath := env["PATH"]
@@ -1011,25 +1013,22 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 	return lo.Keys(results)[0], nil
 }
 
-func (d *Devbox) checkOldEnvrc(usePrintDevEnvCache bool, env map[string]string) error {
+func (d *Devbox) checkOldEnvrc() error {
 	// check if user has an old version of envrc
-	// fmt.Println("checkoldEnvrc")
-	if !usePrintDevEnvCache && fileutil.Exists(".envrc") && env["DEVBOX_NO_ENVRC_UPDATE"] != "1" {
+	if fileutil.Exists(".envrc") && os.Getenv("DEVBOX_NO_ENVRC_UPDATE") != "1" {
 		// fmt.Println("inside general if")
-		isNewEnvrc, err := fileutil.Contains(".envrc", "eval \"$(devbox generate direnv --print-envrc)\"")
-		if err != nil {
+		isNewEnvrc, err := fileutil.FileContains(".envrc", "eval \"$(devbox generate direnv --print-envrc)\"")
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 		if !isNewEnvrc {
-			// fmt.Println("should print now")
-			fmt.Fprintln(
+			ux.Fwarning(
 				d.writer,
-				color.HiYellowString(
-					"Your .envrc file seems to be out of date. "+
-						"Run `devbox generate direnv --force` to update it.\n"+
-						"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.",
-				),
+				"Your .envrc file seems to be out of date. "+
+					"Run `devbox generate direnv --force` to update it.\n"+
+					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.",
 			)
+
 		}
 	}
 	return nil
