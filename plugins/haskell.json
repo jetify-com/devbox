@@ -1,0 +1,12 @@
+{
+  "name": "haskell",
+  "version": "0.0.1",
+  "match": "^(ghc|haskell\\.compiler\\.(.*))$",
+  "readme": "Haskell plugin",
+  "packages": [
+    "path:{{ .Virtenv }}"
+  ],
+  "create_files": {
+    "{{ .Virtenv }}/flake.nix": "haskell/flake.nix"
+  }
+}
