@@ -48,6 +48,13 @@ func Init(w io.Writer, template, dir string) error {
 	return errors.WithStack(cmd.Run())
 }
 
+func List(w io.Writer) {
+	fmt.Fprintf(w, "Available templates:\n\n")
+	for name, path := range templates {
+		fmt.Fprintf(w, "* %-10s %s\n", name, path)
+	}
+}
+
 func createDirAndEnsureEmpty(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
