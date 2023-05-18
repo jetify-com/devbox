@@ -12,5 +12,5 @@ json.superset devbox.json expected.json
 
 -- expected.json --
 {
-  "packages": ["vim"]
+  "packages": ["vim@latest"]
 }

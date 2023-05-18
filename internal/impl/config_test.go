@@ -153,7 +153,7 @@ func TestNixpkgsValidation(t *testing.T) {
 			assert := assert.New(t)
 
 			err := validateNixpkg(&Config{
-				Nixpkgs: NixpkgsConfig{
+				Nixpkgs: &NixpkgsConfig{
 					Commit: testCase.commit,
 				},
 			})

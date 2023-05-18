@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/testscripts/testrunner"
 )
 
@@ -21,7 +20,6 @@ func TestMain(m *testing.M) {
 
 // TestExamples runs testscripts on the devbox-projects in the examples folder.
 func TestExamples(t *testing.T) {
-	t.Setenv(envir.DevboxDoNotUpgradeConfig, "1")
 	isOn, err := strconv.ParseBool(os.Getenv(exampleTestsEnvName))
 	if err != nil || !isOn {
 		t.Skipf("Skipping TestExamples. To enable, set %s=1.", exampleTestsEnvName)
@@ -31,7 +29,6 @@ func TestExamples(t *testing.T) {
 }
 
 func TestScriptsWithDevboxJSON(t *testing.T) {
-	t.Setenv(envir.DevboxDoNotUpgradeConfig, "1")
 	isOn, err := strconv.ParseBool(os.Getenv(exampleTestsEnvName))
 	if err != nil || !isOn {
 		t.Skipf("Skipping TestExamples. To enable, set %s=1.", exampleTestsEnvName)

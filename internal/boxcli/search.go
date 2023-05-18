@@ -11,10 +11,9 @@ import (
 
 func searchCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:    "search <pkg>",
-		Short:  "Search for nix packages",
-		Args:   cobra.ExactArgs(1),
-		Hidden: true,
+		Use:   "search <pkg>",
+		Short: "Search for nix packages",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ux.Fwarning(cmd.ErrOrStderr(), "Search is experimental and may not work as expected.\n\n")
 			return searcher.SearchAndPrint(cmd.OutOrStdout(), args[0])

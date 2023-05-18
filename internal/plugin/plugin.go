@@ -156,6 +156,7 @@ func (m *Manager) createFile(
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
+		"PackageName":          name,
 		"Packages":             m.Packages(),
 		"System":               system,
 		"URLForInput":          pkg.URLForInput(),

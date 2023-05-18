@@ -15,7 +15,6 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -142,12 +141,6 @@ func (d *Devbox) pullGlobalFromPath(path string) error {
 }
 
 func (d *Devbox) addFromPull(pullCfg *Config) error {
-	if pullCfg.Nixpkgs.Commit != plansdk.DefaultNixpkgsCommit {
-		// TODO: For now show this warning, but we do plan to allow packages from
-		// multiple commits in the future
-		ux.Fwarning(d.writer, "nixpkgs commit mismatch. Using local one by default\n")
-	}
-
 	diff, _ := lo.Difference(pullCfg.Packages, d.cfg.Packages)
 	if len(diff) == 0 {
 		fmt.Fprint(d.writer, "No new packages to install\n")
