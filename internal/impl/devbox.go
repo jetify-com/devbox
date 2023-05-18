@@ -34,7 +34,6 @@ import (
 	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/planner"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
@@ -141,7 +140,7 @@ func (d *Devbox) NixPkgsCommitHash() string {
 	return d.cfg.NixPkgsCommitHash()
 }
 
-func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
+func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 	// Create plugin directories first because inputs might depend on them
 	for _, pkg := range d.packagesAsInputs() {
 		if err := d.pluginManager.Create(d.writer, pkg); err != nil {
@@ -161,7 +160,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 		}
 	}
 
-	shellPlan := planner.GetShellPlan(d.projectDir, d.Packages())
+	shellPlan := &plansdk.FlakePlan{}
 	var err error
 	shellPlan.FlakeInputs, err = d.flakeInputs()
 	if err != nil {
@@ -170,15 +169,12 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 
 	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.NixPkgsCommitHash())
 
-	// This is an optimization. If there are no dev packages (which we only use
-	// for php/haskell planners) we can use nixpkgs from one of the flakes.
-	// That saves us from downloading nixpkgs an additional time for mkShell.
-	if len(shellPlan.DevPackages) == 0 {
-		for _, input := range shellPlan.FlakeInputs {
-			if input.IsNixpkgs() {
-				nixpkgsInfo = plansdk.GetNixpkgsInfo(input.HashFromNixPkgsURL())
-				break
-			}
+	// This is an optimization. Try to reuse the nixpkgs info from the flake
+	// inputs to avoid introducing a new one.
+	for _, input := range shellPlan.FlakeInputs {
+		if input.IsNixpkgs() {
+			nixpkgsInfo = plansdk.GetNixpkgsInfo(input.HashFromNixPkgsURL())
+			break
 		}
 	}
 

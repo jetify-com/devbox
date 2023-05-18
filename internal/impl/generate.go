@@ -53,13 +53,6 @@ func (d *Devbox) generateShellFiles() error {
 		return errors.WithStack(err)
 	}
 
-	for name, content := range plan.GeneratedFiles {
-		filePath := filepath.Join(outPath, name)
-		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
 	return d.writeScriptsToFiles()
 }
 
@@ -151,7 +144,7 @@ var templateFuncs = template.FuncMap{
 	"debug":    debug.IsEnabled,
 }
 
-func makeFlakeFile(outPath string, plan *plansdk.ShellPlan) error {
+func makeFlakeFile(outPath string, plan *plansdk.FlakePlan) error {
 	flakeDir := filepath.Join(outPath, "flake")
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {
