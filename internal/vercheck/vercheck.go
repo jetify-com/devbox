@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
@@ -35,12 +36,12 @@ const envName = "__DEVBOX_VERSION_CHECK"
 
 // currentDevboxVersion is the version of the devbox CLI binary that is currently running.
 // We use this variable so that we can mock it in tests.
-var currentDevboxVersion = "0.4.8" // build.Version
+var currentDevboxVersion = build.Version
 
 // isDevBuild determines whether this CLI binary was built during development, or published
 // as a release.
 // We use this variable so we can mock it in tests.
-var isDevBuild = false // build.IsDev
+var isDevBuild = build.IsDev
 
 var commandSkipList = []string{
 	"devbox global shellenv",
