@@ -14,10 +14,8 @@ import (
 func installCmd() *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
-		Use:   "install",
-		Short: "Install all packages mentioned in devbox.json",
-		Long: "Start a new devbox shell and installs all packages mentioned in devbox.json in current directory or" +
-			"a directory specified via --config. \n\n Then exits the shell when packages are done installing.\n\n ",
+		Use:     "install",
+		Short:   "Install all packages mentioned in devbox.json",
 		Args:    cobra.MaximumNArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
