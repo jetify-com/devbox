@@ -1,6 +1,6 @@
 # Rails Example in Devbox
 
-This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database. 
+This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database.
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/rails)
 
@@ -30,3 +30,7 @@ bin/rails server
    ```bash
    rails new blog
    ```
+
+## Related Docs
+
+* [Using Ruby with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/ruby/)

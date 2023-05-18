@@ -11,8 +11,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/build"
-
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
@@ -38,16 +36,7 @@ func RootCmd() *cobra.Command {
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
 			}
-
-			// Skip CheckVersion for `devbox global shellenv` because users will include that
-			// command in their shellrc files, and we don't want to bother them everytime they
-			// open their terminals.
-			//
-			// Skip CheckVersion for engineers building devbox during development.
-			if !strings.HasPrefix(cmd.CommandPath(), "devbox global shellenv") &&
-				!build.IsDev {
-				vercheck.CheckVersion(cmd.ErrOrStderr())
-			}
+			vercheck.CheckVersion(cmd.ErrOrStderr(), cmd.CommandPath())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()

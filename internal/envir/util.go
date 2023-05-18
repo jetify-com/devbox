@@ -33,11 +33,6 @@ func IsDevboxDebugEnabled() bool {
 	return enabled
 }
 
-func DoNotUpgradeConfig() bool {
-	notUpgrade, _ := strconv.ParseBool(os.Getenv(DevboxDoNotUpgradeConfig))
-	return notUpgrade
-}
-
 func IsInBrowser() bool { // TODO: a better name
 	inBrowser, _ := strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
 	return inBrowser

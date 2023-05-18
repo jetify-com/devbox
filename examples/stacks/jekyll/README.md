@@ -4,7 +4,7 @@
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/jekyll)
 
-Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html 
+Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html
 
 ## How to Use
 
@@ -21,3 +21,7 @@ Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix
 1. Add `"gem install jekyll --version \"~> 3.9.2\""` to your init hook. This will install the Jekyll gem in your local project.
 1. Start your `devbox shell`, then run `jekyll new myblog` to create the starter project.
 1. From here you can install the project using Bundler, and start the server using `jekyll serve`. See the scripts in this example for more details.
+
+## Related Docs
+
+* [Using Ruby with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/ruby/)
