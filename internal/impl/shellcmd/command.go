@@ -116,5 +116,8 @@ func (s *Commands) UnmarshalJSON(data []byte) error {
 
 // String formats the commands as a single string by joining them with newlines.
 func (s *Commands) String() string {
+	if s == nil {
+		return ""
+	}
 	return strings.Join(s.Cmds, "\n")
 }
