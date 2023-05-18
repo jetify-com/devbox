@@ -1,3 +1,3 @@
 package featureflag
 
-var AutoLatest = disabled("AUTO_LATEST")
+var AutoLatest = enabled("AUTO_LATEST")

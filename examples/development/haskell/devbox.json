@@ -1,19 +1,20 @@
 {
-    "packages": [
-        "gmp",
-        "stack",
-        "cabal-install",
-        "zlib",
-        "hpack"
-    ],
-    "shell": {
-        "init_hook": null,
-        "scripts": {
-            "run_test": [
-                "cd my-project",
-                "stack build",
-                "stack exec my-project-exe"
-            ]
-        }
+  "packages": [
+    "ghc",
+    "gmp",
+    "stack",
+    "cabal-install",
+    "zlib",
+    "hpack"
+  ],
+  "shell": {
+    "init_hook": null,
+    "scripts": {
+      "run_test": [
+        "cd my-project",
+        "stack build",
+        "stack exec my-project-exe"
+      ]
     }
+  }
 }

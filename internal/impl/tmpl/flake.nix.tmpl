@@ -32,21 +32,10 @@
         });
         {{- end }}
         {{- end }}
-        {{- range $k, $v := .Definitions}}
-        {{ $k }} = {{ $v }}
-        {{- end }}
       in
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            {{- /* add definitions at the top so they take priority */ -}}
-            {{- /* We may duplicate packages but that's ok */ -}}
-            {{- range $definition, $_ := .Definitions}}
-            {{ $definition }}
-            {{- end }}
-            {{- range .DevPackages}}
-            {{.}}
-            {{- end}}
             {{- range $_, $flake := .FlakeInputs }}
             {{- range $flake.BuildInputs }}
             {{.}}
