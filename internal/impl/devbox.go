@@ -62,11 +62,7 @@ const (
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
-	config := &Config{
-		Nixpkgs: NixpkgsConfig{
-			Commit: plansdk.DefaultNixpkgsCommit,
-		},
-	}
+	config := &Config{}
 	if featureflag.EnvConfig.Enabled() {
 		// TODO: after removing feature flag we can decide if we want
 		// to have omitempty for Env in Config or not.
@@ -110,10 +106,6 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	if err = upgradeConfig(cfg, cfgPath); err != nil {
-		return nil, err
-	}
-
 	box := &Devbox{
 		cfg:           cfg,
 		nix:           &nix.Nix{},
@@ -146,12 +138,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
-	if hash := d.cfg.Nixpkgs.Commit; hash != "" {
-		return hash
-	}
-	// Tests don't have a nixpkgs commit, so we use the default one.
-	// Not sure if users ever run into this.
-	return plansdk.DefaultNixpkgsCommit
+	return d.cfg.NixPkgsCommitHash()
 }
 
 func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
@@ -181,7 +168,7 @@ func (d *Devbox) ShellPlan() (*plansdk.ShellPlan, error) {
 		return nil, err
 	}
 
-	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.Nixpkgs.Commit)
+	nixpkgsInfo := plansdk.GetNixpkgsInfo(d.cfg.NixPkgsCommitHash())
 
 	// This is an optimization. If there are no dev packages (which we only use
 	// for php/haskell planners) we can use nixpkgs from one of the flakes.
@@ -243,7 +230,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := NewDevboxShell(d.cfg.Nixpkgs.Commit, opts...)
+	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), opts...)
 	if err != nil {
 		return err
 	}

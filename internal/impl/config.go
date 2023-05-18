@@ -17,7 +17,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -39,7 +38,8 @@ type Config struct {
 	} `json:"shell,omitempty"`
 
 	// Nixpkgs specifies the repository to pull packages from
-	Nixpkgs NixpkgsConfig `json:"nixpkgs,omitempty"`
+	// Deprecated: Versioned packages don't need this
+	Nixpkgs *NixpkgsConfig `json:"nixpkgs,omitempty"`
 
 	// Reserved to allow including other config files. Proposed format is:
 	// path: for local files
@@ -60,6 +60,13 @@ type Stage struct {
 
 func (c *Config) Hash() (string, error) {
 	return cuecfg.Hash(c)
+}
+
+func (c *Config) NixPkgsCommitHash() string {
+	if c == nil || c.Nixpkgs == nil {
+		return plansdk.DefaultNixpkgsCommit
+	}
+	return c.Nixpkgs.Commit
 }
 
 func readConfig(path string) (*Config, error) {
@@ -92,20 +99,6 @@ func readConfigFromURL(url *url.URL) (*Config, error) {
 		ext = ".json"
 	}
 	return cfg, cuecfg.Unmarshal(data, ext, cfg)
-}
-
-func upgradeConfig(cfg *Config, absFilePath string) error {
-	if envir.DoNotUpgradeConfig() {
-		return nil
-	}
-	if cfg.Nixpkgs.Commit == "" {
-		debug.Log("Missing nixpkgs.version from config, so adding the default value of %s",
-			plansdk.DefaultNixpkgsCommit)
-
-		cfg.Nixpkgs.Commit = plansdk.DefaultNixpkgsCommit
-		return WriteConfig(absFilePath, cfg)
-	}
-	return nil
 }
 
 // WriteConfig saves a devbox config file.
@@ -236,16 +229,17 @@ func validateScripts(cfg *Config) error {
 }
 
 func validateNixpkg(cfg *Config) error {
-	if cfg.Nixpkgs.Commit == "" {
+	hash := cfg.NixPkgsCommitHash()
+	if hash == "" {
 		return nil
 	}
 
 	const commitLength = 40
-	if len(cfg.Nixpkgs.Commit) != commitLength {
+	if len(hash) != commitLength {
 		return usererr.New(
 			"Expected nixpkgs.commit to be of length %d but it has length %d",
 			commitLength,
-			len(cfg.Nixpkgs.Commit),
+			len(hash),
 		)
 	}
 	return nil
