@@ -47,7 +47,7 @@ func Exists(path string) bool {
 	return err == nil
 }
 
-// Contains checks if a given file at 'path' contains the 'substring'
+// FileContains checks if a given file at 'path' contains the 'substring'
 func FileContains(path string, substring string) (bool, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
