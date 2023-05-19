@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 func TestTemplatesExist(t *testing.T) {
@@ -19,7 +21,7 @@ func TestTemplatesExist(t *testing.T) {
 	}
 	for _, path := range templates {
 		_, err := os.Stat(filepath.Join(curDir, path))
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			t.Errorf("Directory for %s does not exist", path)
 		}
 	}

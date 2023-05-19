@@ -57,7 +57,7 @@ func List(w io.Writer) {
 
 func createDirAndEnsureEmpty(dir string) error {
 	entries, err := os.ReadDir(dir)
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return errors.WithStack(err)
 		}
