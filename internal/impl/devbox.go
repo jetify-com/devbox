@@ -1018,7 +1018,9 @@ func (d *Devbox) checkOldEnvrc() error {
 	envrcPath := filepath.Join(d.ProjectDir(), ".envrc")
 	noUpdate, err := strconv.ParseBool(os.Getenv("DEVBOX_NO_ENVRC_UPDATE"))
 	if err != nil {
-		return err
+		// DEVBOX_NO_ENVRC_UPDATE is either not set or invalid
+		// so we consider it the same as false
+		noUpdate = false
 	}
 	// check if user has an old version of envrc
 	if fileutil.Exists(".envrc") && !noUpdate {
