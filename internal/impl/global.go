@@ -18,14 +18,6 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-var warningNotInPath = `the devbox global profile is not in your $PATH.
-
-Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
-and restart your shell to fix this:
-
-	eval "$(devbox global shellenv)"
-`
-
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
 
