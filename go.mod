@@ -20,7 +20,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-envparse v0.1.0
-	github.com/imdario/mergo v0.3.15
 	github.com/mattn/go-isatty v0.0.18
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/pelletier/go-toml/v2 v2.0.7
