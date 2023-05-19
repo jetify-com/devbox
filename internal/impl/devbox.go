@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"text/template"
@@ -61,12 +62,8 @@ const (
 func InitConfig(dir string, writer io.Writer) (created bool, err error) {
 	cfgPath := filepath.Join(dir, configFilename)
 
-	config := &Config{}
-	if featureflag.EnvConfig.Enabled() {
-		// TODO: after removing feature flag we can decide if we want
-		// to have omitempty for Env in Config or not.
-		config.Env = map[string]string{}
-	}
+	config := defaultConfig()
+
 	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
@@ -260,7 +257,7 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	}
 
 	var cmdWithArgs []string
-	if _, ok := d.cfg.Shell.Scripts[cmdName]; ok {
+	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
 		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
 	} else {
@@ -281,9 +278,9 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 }
 
 func (d *Devbox) ListScripts() []string {
-	keys := make([]string, len(d.cfg.Shell.Scripts))
+	keys := make([]string, len(d.cfg.Scripts()))
 	i := 0
-	for k := range d.cfg.Shell.Scripts {
+	for k := range d.cfg.Scripts() {
 		keys[i] = k
 		i++
 	}
@@ -727,6 +724,14 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 		env[key] = val
 	}
+	// check if contents of .envrc is old and print warning
+	if !usePrintDevEnvCache {
+		err := d.checkOldEnvrc()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	currentEnvPath := env["PATH"]
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
@@ -883,7 +888,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hooks := strings.Join(append(pluginHooks, d.cfg.Shell.InitHook.String()), "\n\n")
+	hooks := strings.Join(append(pluginHooks, d.cfg.InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
 	err = d.writeScriptFile(hooksFilename, hooks)
 	if err != nil {
@@ -892,7 +897,7 @@ func (d *Devbox) writeScriptsToFiles() error {
 	written[d.scriptPath(hooksFilename)] = struct{}{}
 
 	// Write scripts to files.
-	for name, body := range d.cfg.Shell.Scripts {
+	for name, body := range d.cfg.Scripts() {
 		err = d.writeScriptFile(name, d.scriptBody(body.String()))
 		if err != nil {
 			return errors.WithStack(err)
@@ -986,6 +991,36 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 		return "", usererr.New("no package found with name %s", name)
 	}
 	return lo.Keys(results)[0], nil
+}
+
+func (d *Devbox) checkOldEnvrc() error {
+	envrcPath := filepath.Join(d.ProjectDir(), ".envrc")
+	noUpdate, err := strconv.ParseBool(os.Getenv("DEVBOX_NO_ENVRC_UPDATE"))
+	if err != nil {
+		// DEVBOX_NO_ENVRC_UPDATE is either not set or invalid
+		// so we consider it the same as false
+		noUpdate = false
+	}
+	// check if user has an old version of envrc
+	if fileutil.Exists(".envrc") && !noUpdate {
+		isNewEnvrc, err := fileutil.FileContains(
+			envrcPath,
+			"eval \"$(devbox generate direnv --print-envrc)\"",
+		)
+		if err != nil {
+			return err
+		}
+		if !isNewEnvrc {
+			ux.Fwarning(
+				d.writer,
+				"Your .envrc file seems to be out of date. "+
+					"Run `devbox generate direnv --force` to update it.\n"+
+					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.",
+			)
+
+		}
+	}
+	return nil
 }
 
 // configEnvs takes the computed env variables (nix + plugin) and adds env

@@ -31,12 +31,7 @@ type Config struct {
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 	// Shell configures the devbox shell environment.
-	Shell struct {
-		// InitHook contains commands that will run at shell startup.
-		InitHook shellcmd.Commands             `json:"init_hook,omitempty"`
-		Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
-	} `json:"shell,omitempty"`
-
+	Shell *shellConfig `json:"shell,omitempty"`
 	// Nixpkgs specifies the repository to pull packages from
 	// Deprecated: Versioned packages don't need this
 	Nixpkgs *NixpkgsConfig `json:"nixpkgs,omitempty"`
@@ -49,6 +44,12 @@ type Config struct {
 	Include []string `json:"include,omitempty"`
 }
 
+type shellConfig struct {
+	// InitHook contains commands that will run at shell startup.
+	InitHook *shellcmd.Commands            `json:"init_hook,omitempty"`
+	Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
+}
+
 type NixpkgsConfig struct {
 	Commit string `json:"commit,omitempty"`
 }
@@ -56,6 +57,23 @@ type NixpkgsConfig struct {
 // Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `cue:"string" json:"command"`
+}
+
+func defaultConfig() *Config {
+	return &Config{
+		Shell: &shellConfig{
+			Scripts: map[string]*shellcmd.Commands{
+				"test": {
+					Cmds: []string{"echo \"Error: no test specified\" && exit 1"},
+				},
+			},
+			InitHook: &shellcmd.Commands{
+				Cmds: []string{
+					"echo 'Welcome to devbox!'",
+				},
+			},
+		},
+	}
 }
 
 func (c *Config) Hash() (string, error) {
@@ -67,6 +85,20 @@ func (c *Config) NixPkgsCommitHash() string {
 		return plansdk.DefaultNixpkgsCommit
 	}
 	return c.Nixpkgs.Commit
+}
+
+func (c *Config) Scripts() map[string]*shellcmd.Commands {
+	if c == nil || c.Shell == nil {
+		return nil
+	}
+	return c.Shell.Scripts
+}
+
+func (c *Config) InitHook() *shellcmd.Commands {
+	if c == nil || c.Shell == nil {
+		return nil
+	}
+	return c.Shell.InitHook
 }
 
 func readConfig(path string) (*Config, error) {
@@ -214,14 +246,15 @@ func validateConfig(cfg *Config) error {
 var whitespace = regexp.MustCompile(`\s`)
 
 func validateScripts(cfg *Config) error {
-	for k := range cfg.Shell.Scripts {
+	scripts := cfg.Scripts()
+	for k := range scripts {
 		if strings.TrimSpace(k) == "" {
 			return errors.New("cannot have script with empty name in devbox.json")
 		}
 		if whitespace.MatchString(k) {
 			return errors.Errorf("cannot have script name with whitespace in devbox.json: %s", k)
 		}
-		if strings.TrimSpace(cfg.Shell.Scripts[k].String()) == "" {
+		if strings.TrimSpace(scripts[k].String()) == "" {
 			return errors.Errorf("cannot have an empty script body in devbox.json: %s", k)
 		}
 	}
