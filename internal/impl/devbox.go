@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"text/template"
@@ -1014,11 +1015,18 @@ func (d *Devbox) findPackageByName(name string) (string, error) {
 }
 
 func (d *Devbox) checkOldEnvrc() error {
+	envrcPath := filepath.Join(d.ProjectDir(), ".envrc")
+	noUpdate, err := strconv.ParseBool(os.Getenv("DEVBOX_NO_ENVRC_UPDATE"))
+	if err != nil {
+		return err
+	}
 	// check if user has an old version of envrc
-	if fileutil.Exists(".envrc") && os.Getenv("DEVBOX_NO_ENVRC_UPDATE") != "1" {
-		// fmt.Println("inside general if")
-		isNewEnvrc, err := fileutil.FileContains(".envrc", "eval \"$(devbox generate direnv --print-envrc)\"")
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if fileutil.Exists(".envrc") && !noUpdate {
+		isNewEnvrc, err := fileutil.FileContains(
+			envrcPath,
+			"eval \"$(devbox generate direnv --print-envrc)\"",
+		)
+		if err != nil {
 			return err
 		}
 		if !isNewEnvrc {
