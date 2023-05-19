@@ -1,6 +1,14 @@
 exec devbox run -- php index.php
 stdout 'done\n'
 
+exec devbox rm php81Extensions.ds
+exec devbox run -- php index.php
+stdout 'ds extension is not enabled'
+
+exec devbox add php81Extensions.ds
+exec devbox run -- php index.php
+stdout 'done\n'
+
 -- devbox.json --
 {
   "packages": [

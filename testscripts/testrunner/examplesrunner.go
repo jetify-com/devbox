@@ -51,7 +51,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 			return err
 		}
 		// skip configs that do not have a run_test defined
-		if _, ok := config.Shell.Scripts["run_test"]; !ok {
+		if _, ok := config.Scripts()["run_test"]; !ok {
 			t.Logf("skipping config due to missing run_test at: %s\n", path)
 			return nil
 		}
