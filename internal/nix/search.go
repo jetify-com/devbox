@@ -94,6 +94,14 @@ func pkgExistsForAnySystem(pkg string) bool {
 }
 
 func searchSystem(url string, system string) map[string]*Info {
+	// Search will download nixpkgs if it's not already downloaded. Adding this
+	// check here provides a slightly better UX.
+	if IsGithubNixpkgsURL(url) {
+		hash := HashFromNixPkgsURL(url)
+		// TODO, pass legit writer, handle error
+		_ = ensureNixpkgsPrefetched(os.Stderr, hash)
+	}
+
 	cmd := exec.Command("nix", "search", "--json", url)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	if system != "" {

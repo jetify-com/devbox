@@ -206,7 +206,7 @@ type ProfileInstallArgs struct {
 func ProfileInstall(args *ProfileInstallArgs) error {
 	input := InputFromString(args.Package, args.Lockfile)
 	if IsGithubNixpkgsURL(input.URLForInput()) {
-		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNiPkgsURL()); err != nil {
+		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNixPkgsURL()); err != nil {
 			return err
 		}
 	}

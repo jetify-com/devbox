@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -124,6 +125,8 @@ func (i *Input) PackageAttributePath() (string, error) {
 		query = i.String()
 	}
 
+	// We prefer search over just trying to parse the URL because search will
+	// guarantee that the package exists for the current system.
 	infos := search(query)
 
 	if len(infos) == 1 {
@@ -241,6 +244,14 @@ func (i *Input) Versioned() string {
 	return i.Raw
 }
 
+func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {
+	hash := i.hashFromNixPkgsURL()
+	if hash == "" {
+		return nil
+	}
+	return ensureNixpkgsPrefetched(w, hash)
+}
+
 // version returns the version of the package
 // it only applies to devbox packages
 func (i *Input) version() string {
@@ -255,7 +266,7 @@ func (i *Input) isVersioned() bool {
 	return i.IsDevboxPackage() && strings.Contains(i.Path, "@")
 }
 
-func (i *Input) hashFromNiPkgsURL() string {
+func (i *Input) hashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(i.URLForInput())
 }
 
@@ -269,6 +280,12 @@ func IsGithubNixpkgsURL(url string) bool {
 	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
 }
 
+var nixPkgsRegex = regexp.MustCompile(`github:NixOS/nixpkgs/([^#]+).*`)
+
 func HashFromNixPkgsURL(url string) string {
-	return strings.TrimPrefix(url, "github:NixOS/nixpkgs/")
+	matches := nixPkgsRegex.FindStringSubmatch(url)
+	if len(matches) == 2 {
+		return matches[1]
+	}
+	return ""
 }

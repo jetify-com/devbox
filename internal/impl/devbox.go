@@ -1002,7 +1002,7 @@ func (d *Devbox) checkOldEnvrc() error {
 		noUpdate = false
 	}
 	// check if user has an old version of envrc
-	if fileutil.Exists(".envrc") && !noUpdate {
+	if fileutil.Exists(envrcPath) && !noUpdate {
 		isNewEnvrc, err := fileutil.FileContains(
 			envrcPath,
 			"eval \"$(devbox generate direnv --print-envrc)\"",
@@ -1015,7 +1015,7 @@ func (d *Devbox) checkOldEnvrc() error {
 				d.writer,
 				"Your .envrc file seems to be out of date. "+
 					"Run `devbox generate direnv --force` to update it.\n"+
-					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.",
+					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
 			)
 
 		}
