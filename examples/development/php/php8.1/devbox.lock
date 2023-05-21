@@ -1,0 +1,26 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "php81Extensions.imagick@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.imagick",
+      "version": "3.7.0"
+    },
+    "php81Extensions.xdebug@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.xdebug",
+      "version": "3.2.1"
+    },
+    "php81Packages.composer@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Packages.composer",
+      "version": "2.5.5"
+    },
+    "php@8.1": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php",
+      "version": "8.1.18"
+    }
+  }
+}
