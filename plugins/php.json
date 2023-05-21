@@ -10,10 +10,12 @@
   "env": {
     "PHPFPM_ERROR_LOG_FILE": "{{ .Virtenv }}/php-fpm.log",
     "PHPFPM_PID_FILE": "{{ .Virtenv }}/php-fpm.log",
-    "PHPFPM_PORT": "8082"
+    "PHPFPM_PORT": "8082",
+    "PHPRC": "{{ .DevboxDir }}"
   },
   "create_files": {
     "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf",
+    "{{ .DevboxDir }}/php.ini": "php/php.ini",
     "{{ .Virtenv }}/process-compose.yaml": "php/process-compose.yaml",
     "{{ .Virtenv }}/flake.nix": "php/flake.nix"
   },
