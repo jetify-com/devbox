@@ -5,6 +5,7 @@ package impl
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -80,4 +81,11 @@ func markEnvsAsSetByDevbox(envs ...map[string]string) {
 			env[devboxSetPrefix+key] = "1"
 		}
 	}
+}
+
+// IsEnvEnabled checks if the devbox environment is enabled. We use the ogPathKey
+// as a proxy for this. This allows us to differentiate between global and
+// individual project shells.
+func (d *Devbox) IsEnvEnabled() bool {
+	return os.Getenv(d.ogPathKey()) != ""
 }

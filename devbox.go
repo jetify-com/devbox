@@ -19,7 +19,6 @@ type Devbox interface {
 	// environment. It validates that the Nix packages exist, and install them.
 	// Adding duplicate packages is a no-op.
 	Add(ctx context.Context, pkgs ...string) error
-	AddGlobal(pkgs ...string) error
 	Config() *impl.Config
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
@@ -29,15 +28,15 @@ type Devbox interface {
 	GenerateDockerfile(force bool) error
 	GenerateEnvrcFile(force bool) error
 	Info(pkg string, markdown bool) error
+	IsEnvEnabled() bool
 	ListScripts() []string
 	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintGlobalList() error
 	PrintEnvrcContent(w io.Writer) error
-	PullGlobal(path string) error
+	PullGlobal(ctx context.Context, path string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
-	RemoveGlobal(pkgs ...string) error
 	RestartServices(ctx context.Context, services ...string) error
 	RunScript(scriptName string, scriptArgs []string) error
 	Services() (services.Services, error)
