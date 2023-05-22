@@ -191,12 +191,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if err = localLock.Update(); err != nil {
+	if err = d.lockfile.Save(); err != nil {
 		return err
 	}
 
-	// Update lockfile to ensure any newly resolved packages are saved to disk.
-	return d.lockfile.Save()
+	return localLock.Update()
 }
 
 func (d *Devbox) profilePath() (string, error) {
