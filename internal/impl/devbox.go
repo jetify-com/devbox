@@ -365,7 +365,7 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = generate.CreateDockerfile(tmplFS, devContainerPath)
+	err = generate.CreateDockerfile(tmplFS, devContainerPath, true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -392,7 +392,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir))
+	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, false /* isDevcontainer */))
 }
 
 func (d *Devbox) PrintEnvrcContent(w io.Writer) error {

@@ -36,8 +36,12 @@ type vscode struct {
 	Extensions []string `json:"extensions"`
 }
 
+type dockerfileData struct {
+	IsDevcontainer bool
+}
+
 // CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
-func CreateDockerfile(tmplFS embed.FS, path string) error {
+func CreateDockerfile(tmplFS embed.FS, path string, isDevcontainer bool) error {
 	// create dockerfile
 	file, err := os.Create(filepath.Join(path, "Dockerfile"))
 	if err != nil {
@@ -48,7 +52,7 @@ func CreateDockerfile(tmplFS embed.FS, path string) error {
 	tmplName := "devcontainerDockerfile.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	return t.Execute(file, nil)
+	return t.Execute(file, &dockerfileData{IsDevcontainer: isDevcontainer})
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
