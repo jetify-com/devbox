@@ -142,3 +142,47 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 func testInputFromString(s, projectDir string) *testInput {
 	return lo.ToPtr(testInput{Input: *InputFromString(s, &lockfile{projectDir})})
 }
+
+func TestHashFromNixPkgsURL(t *testing.T) {
+	tests := []struct {
+		url      string
+		expected string
+	}{
+		{
+			url:      "github:NixOS/nixpkgs/12345",
+			expected: "12345",
+		},
+		{
+			url:      "github:NixOS/nixpkgs/abcdef#hello",
+			expected: "abcdef",
+		},
+		{
+			url:      "github:NixOS/nixpkgs/",
+			expected: "",
+		},
+		{
+			url:      "github:NixOS/nixpkgs",
+			expected: "",
+		},
+		{
+			url:      "github:NixOS/other-repo/12345",
+			expected: "",
+		},
+		{
+			url:      "",
+			expected: "",
+		},
+	}
+
+	for _, test := range tests {
+		result := HashFromNixPkgsURL(test.url)
+		if result != test.expected {
+			t.Errorf(
+				"Expected hash '%s' for URL '%s', but got '%s'",
+				test.expected,
+				test.url,
+				result,
+			)
+		}
+	}
+}
