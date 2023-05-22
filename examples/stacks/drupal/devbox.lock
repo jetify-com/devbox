@@ -1,0 +1,22 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "git": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#git"
+    },
+    "mariadb": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#mariadb"
+    },
+    "nginx": {
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#nginx"
+    },
+    "php81": {
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#php81"
+    },
+    "php81Packages.composer": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#php81Packages.composer"
+    }
+  }
+}
