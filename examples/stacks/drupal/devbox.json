@@ -6,6 +6,9 @@
     "php81Packages.composer",
     "nginx"
   ],
+  "env": {
+    "PHPRC": "$PWD/devbox.d/php81"
+  },
   "shell": {
     "init_hook": [
       "source devbox.d/mysql/set-env.sh"
