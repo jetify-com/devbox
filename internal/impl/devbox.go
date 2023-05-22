@@ -87,7 +87,12 @@ type Devbox struct {
 	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
-	writer        io.Writer
+
+	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
+	// writer is error prone. Since it is almost always stderr, we should default
+	// it and if the user wants stdout then they can return a string and print it.
+	// I can't think of a case where we want all the diagnostics to go to stdout.
+	writer io.Writer
 }
 
 func Open(path string, writer io.Writer) (*Devbox, error) {

@@ -94,12 +94,15 @@ func pkgExistsForAnySystem(pkg string) bool {
 }
 
 func searchSystem(url string, system string) map[string]*Info {
+	// Eventually we may pass a writer here, but for now it is safe to use stderr
+	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this
 	// check here provides a slightly better UX.
 	if IsGithubNixpkgsURL(url) {
 		hash := HashFromNixPkgsURL(url)
-		// TODO, pass legit writer, handle error
-		_ = ensureNixpkgsPrefetched(os.Stderr, hash)
+		// purposely ignore error here. The function already prints an error.
+		// We don't want to panic or stop execution if we can't prefetch.
+		_ = ensureNixpkgsPrefetched(writer, hash)
 	}
 
 	cmd := exec.Command("nix", "search", "--json", url)
@@ -107,7 +110,7 @@ func searchSystem(url string, system string) map[string]*Info {
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = writer
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
