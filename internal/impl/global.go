@@ -4,6 +4,7 @@
 package impl
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -14,105 +15,18 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
 )
-
-var warningNotInPath = `the devbox global profile is not in your $PATH.
-
-Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
-and restart your shell to fix this:
-
-	eval "$(devbox global shellenv)"
-`
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
 
-func (d *Devbox) AddGlobal(pkgs ...string) error {
-	pkgs = lo.Uniq(pkgs)
-
-	// validate all packages exist. Don't install anything if any are missing
-	for _, pkg := range pkgs {
-		found, err := nix.PkgExists(pkg, d.lockfile)
-		if err != nil {
-			return err
-		}
-		if !found {
-			return nix.ErrPackageNotFound
-		}
-	}
-	profilePath, err := GlobalNixProfilePath()
-	if err != nil {
-		return err
-	}
-
-	var added []string
-	total := len(pkgs)
-	for idx, pkg := range pkgs {
-		stepNum := idx + 1
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		err = nix.ProfileInstall(&nix.ProfileInstallArgs{
-			CustomStepMessage: stepMsg,
-			Lockfile:          d.lockfile,
-			Package:           pkg,
-			ProfilePath:       profilePath,
-			Writer:            d.writer,
-		})
-		if err != nil {
-			fmt.Fprintf(d.writer, "Error installing %s: %s", pkg, err)
-		} else {
-			added = append(added, pkg)
-		}
-	}
-	if len(added) == 0 && err != nil {
-		return err
-	}
-	d.cfg.Packages = lo.Uniq(append(d.cfg.Packages, added...))
-	if err := d.saveCfg(); err != nil {
-		return err
-	}
-	d.ensureDevboxGlobalShellenvEnabled()
-	return nil
-}
-
-func (d *Devbox) RemoveGlobal(pkgs ...string) error {
-	pkgs = lo.Uniq(pkgs)
-	if _, missing := lo.Difference(d.cfg.Packages, pkgs); len(missing) > 0 {
-		ux.Fwarning(
-			d.writer,
-			"the following packages were not found in your global devbox.json: %s\n",
-			strings.Join(missing, ", "),
-		)
-	}
-	var removed []string
-	profilePath, err := GlobalNixProfilePath()
-	if err != nil {
-		return err
-	}
-	for _, pkg := range lo.Intersect(d.cfg.Packages, pkgs) {
-		if err := nix.ProfileRemove(profilePath, pkg, d.lockfile); err != nil {
-			if errors.Is(err, nix.ErrPackageNotInstalled) {
-				removed = append(removed, pkg)
-			} else {
-				fmt.Fprintf(d.writer, "Error removing %s: %s", pkg, err)
-			}
-		} else {
-			fmt.Fprintf(d.writer, "%s was removed\n", pkg)
-			removed = append(removed, pkg)
-		}
-	}
-	d.cfg.Packages, _ = lo.Difference(d.cfg.Packages, removed)
-	return d.saveCfg()
-}
-
-func (d *Devbox) PullGlobal(path string) error {
+func (d *Devbox) PullGlobal(ctx context.Context, path string) error {
 	u, err := url.Parse(path)
 	if err == nil && u.Scheme != "" {
-		return d.pullGlobalFromURL(u)
+		return d.pullGlobalFromURL(ctx, u)
 	}
-	return d.pullGlobalFromPath(path)
+	return d.pullGlobalFromPath(ctx, path)
 }
 
 func (d *Devbox) PrintGlobalList() error {
@@ -122,25 +36,25 @@ func (d *Devbox) PrintGlobalList() error {
 	return nil
 }
 
-func (d *Devbox) pullGlobalFromURL(u *url.URL) error {
+func (d *Devbox) pullGlobalFromURL(ctx context.Context, u *url.URL) error {
 	fmt.Fprintf(d.writer, "Pulling global config from %s\n", u)
 	cfg, err := readConfigFromURL(u)
 	if err != nil {
 		return err
 	}
-	return d.addFromPull(cfg)
+	return d.addFromPull(ctx, cfg)
 }
 
-func (d *Devbox) pullGlobalFromPath(path string) error {
+func (d *Devbox) pullGlobalFromPath(ctx context.Context, path string) error {
 	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
 	cfg, err := readConfig(path)
 	if err != nil {
 		return err
 	}
-	return d.addFromPull(cfg)
+	return d.addFromPull(ctx, cfg)
 }
 
-func (d *Devbox) addFromPull(pullCfg *Config) error {
+func (d *Devbox) addFromPull(ctx context.Context, pullCfg *Config) error {
 	diff, _ := lo.Difference(pullCfg.Packages, d.cfg.Packages)
 	if len(diff) == 0 {
 		fmt.Fprint(d.writer, "No new packages to install\n")
@@ -151,7 +65,7 @@ func (d *Devbox) addFromPull(pullCfg *Config) error {
 		"Installing the following packages: %s\n",
 		strings.Join(diff, ", "),
 	)
-	return d.AddGlobal(diff...)
+	return d.Add(ctx, diff...)
 }
 
 func GlobalDataPath() (string, error) {
@@ -160,30 +74,22 @@ func GlobalDataPath() (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	nixProfilePath := filepath.Join(path, "profile")
+	nixProfilePath := filepath.Join(path)
 	currentPath := xdg.DataSubpath("devbox/global/current")
 
 	// For now default is always current. In the future we will support multiple
-	// and allow user to switch.
+	// and allow user to switch. Remove any existing symlink and create a new one
+	// because previous versions of devbox may have created a symlink to a different
+	// profile.
+	existing, _ := os.Readlink(currentPath)
+	if existing != nixProfilePath {
+		_ = os.Remove(currentPath)
+	}
+
 	err := os.Symlink(nixProfilePath, currentPath)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return "", errors.WithStack(err)
 	}
 
 	return path, nil
-}
-
-func GlobalNixProfilePath() (string, error) {
-	path, err := GlobalDataPath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(path, "profile"), nil
-}
-
-// Checks if the global has been shellenv'd and warns the user if not
-func (d *Devbox) ensureDevboxGlobalShellenvEnabled() {
-	if os.Getenv(d.ogPathKey()) == "" {
-		ux.Fwarning(d.writer, warningNotInPath)
-	}
 }

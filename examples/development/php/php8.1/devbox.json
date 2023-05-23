@@ -1,15 +1,22 @@
 {
-    "packages": [
-        "php81",
-        "php81Packages.composer",
-        "phpExtensions.imagick"
+  "packages": [
+    "php81Packages.composer@latest",
+    "php81Extensions.xdebug@latest",
+    "php81Extensions.imagick@latest",
+    "php@8.1"
+  ],
+  "env": {
+    "PHPRC": "$PWD/devbox.d/php"
+  },
+  "shell": {
+    "init_hook": [
+      "composer install"
     ],
-    "shell": {
-        "init_hook": [
-            "composer install"
-        ],
-        "run_test": [
-            "php public/index.php"
-        ]
+    "scripts": {
+      "run_test": "php public/index.php"
     }
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
 }

@@ -27,4 +27,8 @@ WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
 COPY devbox.json devbox.json
 RUN devbox install
+{{if .IsDevcontainer}}
+RUN devbox shellenv --init-hook >> ~/.profile
+{{- else}}
 CMD ["devbox", "shell"]
+{{- end}}

@@ -191,12 +191,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if err = localLock.Update(); err != nil {
+	if err = d.lockfile.Save(); err != nil {
 		return err
 	}
 
-	// Update lockfile to ensure any newly resolved packages are saved to disk.
-	return d.lockfile.Save()
+	return localLock.Update()
 }
 
 func (d *Devbox) profilePath() (string, error) {
@@ -217,6 +216,15 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 	if mode == uninstall {
 		return nil
+	}
+
+	// If packages are in profile but nixpkgs has been purged, the experience
+	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
+	// prefetched for all our packages.
+	for _, input := range d.packagesAsInputs() {
+		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
+			return err
+		}
 	}
 
 	pkgs, err := d.pendingPackagesForInstallation(ctx)
