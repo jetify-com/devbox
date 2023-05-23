@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"golang.org/x/exp/slices"
 )
 
 func Init(w io.Writer, template, dir string) error {
@@ -48,10 +50,16 @@ func Init(w io.Writer, template, dir string) error {
 	return errors.WithStack(cmd.Run())
 }
 
-func List(w io.Writer) {
-	fmt.Fprintf(w, "Available templates:\n\n")
-	for name, path := range templates {
-		fmt.Fprintf(w, "* %-15s %s\n", name, path)
+func List(w io.Writer, showAll bool) {
+	fmt.Fprintf(w, "Templates:\n\n")
+	keysToShow := popularTemplates
+	if showAll {
+		keysToShow = lo.Keys(templates)
+	}
+
+	slices.Sort(keysToShow)
+	for _, key := range keysToShow {
+		fmt.Fprintf(w, "* %-15s %s\n", key, templates[key])
 	}
 }
 

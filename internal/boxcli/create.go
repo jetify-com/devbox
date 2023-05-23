@@ -6,6 +6,7 @@ package boxcli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/templates"
@@ -13,6 +14,7 @@ import (
 )
 
 type createCmdFlags struct {
+	showAll  bool
 	template string
 }
 
@@ -28,7 +30,13 @@ func createCmd() *cobra.Command {
 					cmd.ErrOrStderr(),
 					"Usage: devbox create [dir] --template <template>\n\n",
 				)
-				templates.List(cmd.ErrOrStderr())
+				templates.List(cmd.ErrOrStderr(), flags.showAll)
+				if !flags.showAll {
+					fmt.Fprintf(
+						cmd.ErrOrStderr(),
+						"\nTo see all available templates, run `devbox create --show-all`\n",
+					)
+				}
 				return nil
 			}
 			return runCreateCmd(cmd, args, flags)
@@ -38,6 +46,10 @@ func createCmd() *cobra.Command {
 	command.Flags().StringVarP(
 		&flags.template, "template", "t", "",
 		"template to initialize the project with",
+	)
+	command.Flags().BoolVar(
+		&flags.showAll, "show-all", false,
+		"show all available templates",
 	)
 
 	return command
@@ -50,7 +62,8 @@ func runCreateCmd(
 ) error {
 	path := pathArg(args)
 	if path == "" {
-		path, _ = os.Getwd()
+		wd, _ := os.Getwd()
+		path = filepath.Join(wd, flags.template)
 	}
 
 	err := templates.Init(cmd.ErrOrStderr(), flags.template, path)
