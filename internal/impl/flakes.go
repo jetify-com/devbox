@@ -6,6 +6,7 @@ package impl
 import (
 	"github.com/samber/lo"
 
+	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
@@ -47,14 +48,5 @@ func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
 		}
 	}
 
-	return PickByKeysSorted(inputs, order), nil
-}
-
-// TODO: move this to a util package
-func PickByKeysSorted[K comparable, V any](in map[K]V, keys []K) []V {
-	out := make([]V, len(keys))
-	for i, key := range keys {
-		out[i] = in[key]
-	}
-	return out
+	return goutil.PickByKeysSorted(inputs, order), nil
 }

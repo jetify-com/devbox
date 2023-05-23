@@ -46,6 +46,7 @@ func RootCmd() *cobra.Command {
 	}
 	// Stable commands
 	command.AddCommand(addCmd())
+	command.AddCommand(createCmd())
 	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
 	command.AddCommand(infoCmd())
