@@ -812,6 +812,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	d.setCommonHelperEnvVars(env)
 
+	// preserve the original XDG_DATA_DIRS by prepending to it
+	env["XDG_DATA_DIRS"] = JoinPathLists(
+		env["XDG_DATA_DIRS"],
+		os.Getenv("XDG_DATA_DIRS"),
+	)
+
 	return env, addHashToEnv(env)
 }
 
