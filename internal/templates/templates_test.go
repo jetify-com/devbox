@@ -20,9 +20,9 @@ func TestTemplatesExist(t *testing.T) {
 		curDir += "../"
 	}
 	for _, path := range templates {
-		_, err := os.Stat(filepath.Join(curDir, path))
+		_, err := os.Stat(filepath.Join(curDir, path, "devbox.json"))
 		if errors.Is(err, os.ErrNotExist) {
-			t.Errorf("Directory for %s does not exist", path)
+			t.Errorf("Directory/devbox.json for %s does not exist", path)
 		}
 	}
 }

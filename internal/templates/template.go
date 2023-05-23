@@ -51,7 +51,7 @@ func Init(w io.Writer, template, dir string) error {
 func List(w io.Writer) {
 	fmt.Fprintf(w, "Available templates:\n\n")
 	for name, path := range templates {
-		fmt.Fprintf(w, "* %-10s %s\n", name, path)
+		fmt.Fprintf(w, "* %-15s %s\n", name, path)
 	}
 }
 

@@ -19,7 +19,7 @@ type createCmdFlags struct {
 func createCmd() *cobra.Command {
 	flags := &createCmdFlags{}
 	command := &cobra.Command{
-		Use:   "create [dir]",
+		Use:   "create [dir] --template <template>",
 		Short: "Initialize a directory as a devbox project using a template",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
