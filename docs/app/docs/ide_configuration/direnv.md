@@ -34,7 +34,7 @@ or `direnv revoke` to stop.
 
 #### Existing Project
 
-For an existing project, you can add a `.envrc` file by running `devbox generate envrc`:
+For an existing project, you can add a `.envrc` file by running `devbox generate direnv`:
 
 ```bash
 ➜  devbox generate direnv
