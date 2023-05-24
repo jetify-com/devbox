@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-type merger func(src, dst string) error
-
 type pullbox struct {
 }
 
