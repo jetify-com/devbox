@@ -1,0 +1,22 @@
+{
+  "packages": [
+    "php81Packages.composer@latest",
+    "php81Extensions.xdebug@latest",
+    "php@8.1"
+  ],
+  "env": {
+    "PHPRC": "$PWD/devbox.d/php",
+    "PHP_EXT_DIR": "$PWD/devbox.d/php/extensions"
+  },
+  "shell": {
+    "init_hook": [
+      "composer install"
+    ],
+    "scripts": {
+      "run_test": "php public/index.php"
+    }
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
+}
