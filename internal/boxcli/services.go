@@ -14,18 +14,15 @@ type servicesCmdFlags struct {
 }
 
 type serviceUpFlags struct {
-	configFlags
 	background         bool
 	processComposeFile string
 }
 
 type serviceStopFlags struct {
-	configFlags
 	allProjects bool
 }
 
 func (flags *serviceUpFlags) register(cmd *cobra.Command) {
-	flags.configFlags.register(cmd)
 	cmd.Flags().StringVar(
 		&flags.processComposeFile,
 		"process-compose-file",
@@ -38,7 +35,6 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
-	flags.configFlags.register(cmd)
 	cmd.Flags().BoolVar(
 		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
 }
@@ -74,7 +70,7 @@ func servicesCmd() *cobra.Command {
 		Short: "Stop one or more services in the current project. If no service is specified, stops all services in the current project.",
 		Long:  `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return stopServices(cmd, args, serviceStopFlags)
+			return stopServices(cmd, args, flags, serviceStopFlags)
 		},
 	}
 
@@ -90,11 +86,11 @@ func servicesCmd() *cobra.Command {
 		Use:   "up [service]...",
 		Short: "Starts process manager with specified services. If no services are listed, starts the process manager with all the services in your project",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return startProcessManager(cmd, args, serviceUpFlags)
+			return startProcessManager(cmd, args, flags, serviceUpFlags)
 		},
 	}
 
-	flags.config.register(servicesCommand)
+	flags.config.registerPersistent(servicesCommand)
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
 	servicesCommand.AddCommand(lsCommand)
@@ -112,7 +108,6 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	}
 
 	return box.ListServices(cmd.Context())
-
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
@@ -124,8 +119,13 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 	return box.StartServices(cmd.Context(), services...)
 }
 
-func stopServices(cmd *cobra.Command, services []string, flags serviceStopFlags) error {
-	box, err := devbox.Open(flags.configFlags.path, cmd.ErrOrStderr())
+func stopServices(
+	cmd *cobra.Command,
+	services []string,
+	servicesFlags servicesCmdFlags,
+	flags serviceStopFlags,
+) error {
+	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -148,8 +148,13 @@ func restartServices(
 	return box.RestartServices(cmd.Context(), services...)
 }
 
-func startProcessManager(cmd *cobra.Command, args []string, flags serviceUpFlags) error {
-	box, err := devbox.Open(flags.path, cmd.ErrOrStderr())
+func startProcessManager(
+	cmd *cobra.Command,
+	args []string,
+	servicesFlags servicesCmdFlags,
+	flags serviceUpFlags,
+) error {
+	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
