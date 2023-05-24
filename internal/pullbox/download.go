@@ -5,7 +5,7 @@ package pullbox
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -21,7 +21,7 @@ func download(url string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to download file: %s", response.Status)
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}

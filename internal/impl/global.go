@@ -24,12 +24,12 @@ const currentGlobalProfile = "default"
 
 func (d *Devbox) PullGlobal(
 	ctx context.Context,
-	action pullbox.Action,
+	force bool,
 	path string,
 ) error {
 	u, err := url.Parse(path)
 	if err == nil && u.Scheme != "" {
-		return d.pullGlobalFromURL(ctx, action, u)
+		return d.pullGlobalFromURL(ctx, force, u)
 	}
 	return d.pullGlobalFromPath(ctx, path)
 }
@@ -43,11 +43,11 @@ func (d *Devbox) PrintGlobalList() error {
 
 func (d *Devbox) pullGlobalFromURL(
 	ctx context.Context,
-	action pullbox.Action,
+	overwrite bool,
 	configURL *url.URL,
 ) error {
 	fmt.Fprintf(d.writer, "Pulling global config from %s\n", configURL)
-	puller := pullbox.New(mergeConfigs)
+	puller := pullbox.New()
 	if ok, err := puller.URLIsArchive(configURL.String()); ok {
 		fmt.Fprintf(
 			d.writer,
@@ -55,7 +55,7 @@ func (d *Devbox) pullGlobalFromURL(
 			configURL,
 			d.ProjectDir(),
 		)
-		return puller.DownloadAndExtract(action, configURL.String(), d.projectDir)
+		return puller.DownloadAndExtract(overwrite, configURL.String(), d.projectDir)
 	} else if err != nil {
 		return err
 	}
@@ -113,17 +113,4 @@ func GlobalDataPath() (string, error) {
 	}
 
 	return path, nil
-}
-
-func mergeConfigs(src, dst string) error {
-	dstCfg, err := readConfig(dst)
-	if err != nil {
-		return err
-	}
-	srcCfg, err := readConfig(src)
-	if err != nil {
-		return err
-	}
-	dstCfg.Merge(srcCfg)
-	return WriteConfig(dst, dstCfg)
 }

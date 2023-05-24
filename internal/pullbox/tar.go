@@ -15,7 +15,7 @@ import (
 
 var ErrFileExists = errors.New("file already exists")
 
-// extract decompresses a tar file and saves it to the specified directory
+// extract decompresses a tar file and saves it to a tmp directory
 func extract(data []byte) (string, error) {
 	tempFile, err := os.CreateTemp("", "temp.tar.gz")
 	if err != nil {
@@ -51,14 +51,15 @@ func extract(data []byte) (string, error) {
 	return tempDir, nil
 }
 
-func (p *pullbox) copy(action Action, src, dst string) error {
+func (p *pullbox) copy(overwrite bool, src, dst string) error {
 	srcFiles, err := os.ReadDir(src)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	for _, srcFile := range srcFiles {
-		if _, err := os.Stat(filepath.Join(dst, srcFile.Name())); err == nil {
-			if action == NoAction {
+
+	if !overwrite {
+		for _, srcFile := range srcFiles {
+			if _, err := os.Stat(filepath.Join(dst, srcFile.Name())); err == nil {
 				return ErrFileExists
 			}
 		}
@@ -66,22 +67,8 @@ func (p *pullbox) copy(action Action, src, dst string) error {
 
 	for _, srcFile := range srcFiles {
 		srcPath := filepath.Join(src, srcFile.Name())
-		dstPath := filepath.Join(dst, srcFile.Name())
-
-		_, err := os.Stat(dstPath)
-		// Special case for devbox.json and merge if needed.
-		if err == nil && action == MergeAction && srcFile.Name() == "devbox.json" {
-			fmt.Fprintf(os.Stderr, "Merging devbox.json\n")
-			if err := p.merger(srcPath, dstPath); err != nil {
-				return err
-			}
-			// Copy if overwrite or file doesn't exist.
-		} else if action == OverwriteAction || err != nil {
-			if err := exec.Command("cp", "-rf", srcPath, dst).Run(); err != nil {
-				return err
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Conflict, not replacing %s\n", dstPath)
+		if err := exec.Command("cp", "-rf", srcPath, dst).Run(); err != nil {
+			return err
 		}
 	}
 	return nil

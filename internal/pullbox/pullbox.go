@@ -11,14 +11,13 @@ import (
 type merger func(src, dst string) error
 
 type pullbox struct {
-	merger merger
 }
 
-func New(m merger) *pullbox {
-	return &pullbox{merger: m}
+func New() *pullbox {
+	return &pullbox{}
 }
 
-func (p *pullbox) DownloadAndExtract(a Action, url, target string) error {
+func (p *pullbox) DownloadAndExtract(overwrite bool, url, target string) error {
 	data, err := download(url)
 	if err != nil {
 		return err
@@ -28,7 +27,7 @@ func (p *pullbox) DownloadAndExtract(a Action, url, target string) error {
 		return err
 	}
 
-	return p.copy(a, tmpDir, target)
+	return p.copy(overwrite, tmpDir, target)
 }
 
 // URLIsArchive checks if a file URL points to an archive file

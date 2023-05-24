@@ -121,14 +121,3 @@ func (s *Commands) String() string {
 	}
 	return strings.Join(s.Cmds, "\n")
 }
-
-func (s *Commands) Merge(other *Commands) {
-	if other == nil {
-		return
-	}
-	if s == nil {
-		*s = *other
-		return
-	}
-	s.Cmds = append(s.Cmds, other.Cmds...)
-}

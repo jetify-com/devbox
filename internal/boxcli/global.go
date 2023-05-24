@@ -6,17 +6,17 @@ package boxcli
 import (
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/pullbox"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
 type globalPullCmdFlags struct {
-	action string
+	force bool
 }
 
 func globalCmd() *cobra.Command {
@@ -65,14 +65,14 @@ func globalPullCmd() *cobra.Command {
 		Long:    "Pull a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pullGlobalCmdFunc(cmd, args, pullbox.ActionFromString(flags.action))
+			return pullGlobalCmdFunc(cmd, args, flags.force)
 		},
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringVarP(
-		&flags.action, "action", "a", "",
-		"Strategy to use when pulling. Valid values are 'merge' and 'overwrite'.",
+	cmd.Flags().BoolVarP(
+		&flags.force, "force", "f", false,
+		"Force overwrite of existing global config files",
 	)
 
 	return cmd
@@ -94,7 +94,7 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 func pullGlobalCmdFunc(
 	cmd *cobra.Command,
 	args []string,
-	action pullbox.Action,
+	overwrite bool,
 ) error {
 	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
@@ -105,11 +105,17 @@ func pullGlobalCmdFunc(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	err = box.PullGlobal(cmd.Context(), action, args[0])
+	err = box.PullGlobal(cmd.Context(), overwrite, args[0])
 	if errors.Is(err, pullbox.ErrFileExists) {
-		return usererr.New(
-			"Conflict while pulling. Use --action (merge|overwrite)  to resolve.",
-		)
+		prompt := &survey.Confirm{
+			Message: "File(s) already exists. Overwrite?",
+		}
+		if err = survey.AskOne(prompt, &overwrite); err != nil {
+			return errors.WithStack(err)
+		}
+		if overwrite {
+			err = box.PullGlobal(cmd.Context(), overwrite, args[0])
+		}
 	}
 	return err
 }
