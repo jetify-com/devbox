@@ -117,7 +117,11 @@ func pullGlobalCmdFunc(
 			err = box.PullGlobal(cmd.Context(), overwrite, args[0])
 		}
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	return installCmdFunc(cmd, runCmdFlags{config: configFlags{path: path}})
 }
 
 var globalConfigPath string
