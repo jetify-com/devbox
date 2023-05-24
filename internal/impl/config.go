@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -99,6 +100,20 @@ func (c *Config) InitHook() *shellcmd.Commands {
 		return nil
 	}
 	return c.Shell.InitHook
+}
+
+func (c *Config) Merge(other *Config) {
+	if other == nil {
+		return
+	}
+	c.Packages = lo.Uniq(append(c.Packages, other.Packages...))
+	c.Env = lo.Assign(c.Env, other.Env)
+	c.InitHook().Merge(other.InitHook())
+	if c.Shell == nil {
+		c.Shell = &shellConfig{}
+	}
+	c.Shell.Scripts = lo.Assign(c.Scripts(), other.Scripts())
+	c.Include = append(c.Include, other.Include...)
 }
 
 func readConfig(path string) (*Config, error) {

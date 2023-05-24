@@ -15,16 +15,21 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
+	"go.jetpack.io/devbox/internal/pullbox"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
 
-func (d *Devbox) PullGlobal(ctx context.Context, path string) error {
+func (d *Devbox) PullGlobal(
+	ctx context.Context,
+	action pullbox.Action,
+	path string,
+) error {
 	u, err := url.Parse(path)
 	if err == nil && u.Scheme != "" {
-		return d.pullGlobalFromURL(ctx, u)
+		return d.pullGlobalFromURL(ctx, action, u)
 	}
 	return d.pullGlobalFromPath(ctx, path)
 }
@@ -36,9 +41,25 @@ func (d *Devbox) PrintGlobalList() error {
 	return nil
 }
 
-func (d *Devbox) pullGlobalFromURL(ctx context.Context, u *url.URL) error {
-	fmt.Fprintf(d.writer, "Pulling global config from %s\n", u)
-	cfg, err := readConfigFromURL(u)
+func (d *Devbox) pullGlobalFromURL(
+	ctx context.Context,
+	action pullbox.Action,
+	configURL *url.URL,
+) error {
+	fmt.Fprintf(d.writer, "Pulling global config from %s\n", configURL)
+	puller := pullbox.New(mergeConfigs)
+	if ok, err := puller.URLIsArchive(configURL.String()); ok {
+		fmt.Fprintf(
+			d.writer,
+			"%s is an archive, extracting to %s\n",
+			configURL,
+			d.ProjectDir(),
+		)
+		return puller.DownloadAndExtract(action, configURL.String(), d.projectDir)
+	} else if err != nil {
+		return err
+	}
+	cfg, err := readConfigFromURL(configURL)
 	if err != nil {
 		return err
 	}
@@ -92,4 +113,17 @@ func GlobalDataPath() (string, error) {
 	}
 
 	return path, nil
+}
+
+func mergeConfigs(src, dst string) error {
+	dstCfg, err := readConfig(dst)
+	if err != nil {
+		return err
+	}
+	srcCfg, err := readConfig(src)
+	if err != nil {
+		return err
+	}
+	dstCfg.Merge(srcCfg)
+	return WriteConfig(dst, dstCfg)
 }

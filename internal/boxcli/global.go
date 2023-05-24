@@ -10,8 +10,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/pullbox"
 	"go.jetpack.io/devbox/internal/ux"
 )
+
+type globalPullCmdFlags struct {
+	action string
+}
 
 func globalCmd() *cobra.Command {
 
@@ -52,14 +58,24 @@ func globalListCmd() *cobra.Command {
 }
 
 func globalPullCmd() *cobra.Command {
-	return &cobra.Command{
+	flags := globalPullCmdFlags{}
+	cmd := &cobra.Command{
 		Use:     "pull <file> | <url>",
 		Short:   "Pull a global config from a file or URL",
 		Long:    "Pull a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
-		RunE:    pullGlobalCmdFunc,
-		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return pullGlobalCmdFunc(cmd, args, pullbox.ActionFromString(flags.action))
+		},
+		Args: cobra.ExactArgs(1),
 	}
+
+	cmd.Flags().StringVarP(
+		&flags.action, "action", "a", "",
+		"Strategy to use when pulling. Valid values are 'merge' and 'overwrite'.",
+	)
+
+	return cmd
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
@@ -75,7 +91,11 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	return box.PrintGlobalList()
 }
 
-func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
+func pullGlobalCmdFunc(
+	cmd *cobra.Command,
+	args []string,
+	action pullbox.Action,
+) error {
 	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
 		return errors.WithStack(err)
@@ -85,7 +105,13 @@ func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.PullGlobal(cmd.Context(), args[0])
+	err = box.PullGlobal(cmd.Context(), action, args[0])
+	if errors.Is(err, pullbox.ErrFileExists) {
+		return usererr.New(
+			"Conflict while pulling. Use --action (merge|overwrite)  to resolve.",
+		)
+	}
+	return err
 }
 
 var globalConfigPath string
