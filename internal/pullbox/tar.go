@@ -5,6 +5,7 @@ package pullbox
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,8 +13,6 @@ import (
 
 	"github.com/pkg/errors"
 )
-
-var ErrFileExists = errors.New("file already exists")
 
 // extract decompresses a tar file and saves it to a tmp directory
 func extract(data []byte) (string, error) {
@@ -60,7 +59,7 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 	if !overwrite {
 		for _, srcFile := range srcFiles {
 			if _, err := os.Stat(filepath.Join(dst, srcFile.Name())); err == nil {
-				return ErrFileExists
+				return fs.ErrExist
 			}
 		}
 	}

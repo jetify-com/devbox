@@ -5,13 +5,12 @@ package boxcli
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/pullbox"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
@@ -106,7 +105,7 @@ func pullGlobalCmdFunc(
 		return errors.WithStack(err)
 	}
 	err = box.PullGlobal(cmd.Context(), overwrite, args[0])
-	if errors.Is(err, pullbox.ErrFileExists) {
+	if errors.Is(err, fs.ErrExist) {
 		prompt := &survey.Confirm{
 			Message: "File(s) already exists. Overwrite?",
 		}
