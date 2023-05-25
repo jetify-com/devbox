@@ -18,7 +18,6 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
@@ -30,9 +29,9 @@ import (
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/initrec"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -46,8 +45,6 @@ import (
 )
 
 const (
-	// configFilename is name of the JSON file that defines a devbox environment.
-	configFilename = "devbox.json"
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
@@ -59,30 +56,8 @@ const (
 	arbitraryCmdFilename = ".cmd"
 )
 
-func InitConfig(dir string, writer io.Writer) (created bool, err error) {
-	cfgPath := filepath.Join(dir, configFilename)
-
-	config := defaultConfig()
-
-	// package suggestion
-	pkgsToSuggest, err := initrec.Get(dir)
-	if err != nil {
-		return false, err
-	}
-	if len(pkgsToSuggest) > 0 {
-		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
-		fmt.Fprintf(
-			writer,
-			"We detected extra packages you may need. To install them, run `%s`\n",
-			color.HiYellowString(s),
-		)
-	}
-
-	return cuecfg.InitFile(cfgPath, config)
-}
-
 type Devbox struct {
-	cfg           *Config
+	cfg           *devconfig.Config
 	lockfile      *lock.File
 	nix           nix.Nixer
 	projectDir    string
@@ -100,9 +75,9 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfgPath := filepath.Join(projectDir, configFilename)
+	cfgPath := filepath.Join(projectDir, devconfig.DefaultName)
 
-	cfg, err := ReadConfig(cfgPath)
+	cfg, err := devconfig.Load(cfgPath)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -130,7 +105,7 @@ func (d *Devbox) ProjectDir() string {
 	return d.projectDir
 }
 
-func (d *Devbox) Config() *Config {
+func (d *Devbox) Config() *devconfig.Config {
 	return d.cfg
 }
 
@@ -451,8 +426,7 @@ func (d *Devbox) GenerateEnvrcFile(force bool) error {
 
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
-	cfgPath := filepath.Join(d.projectDir, configFilename)
-	return cuecfg.WriteFile(cfgPath, d.cfg)
+	return d.cfg.SaveTo(d.ProjectDir())
 }
 
 func (d *Devbox) Services() (services.Services, error) {
