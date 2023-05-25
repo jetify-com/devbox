@@ -30,9 +30,12 @@ func globalCmd() *cobra.Command {
 	}
 
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
-	addCommandAndHideConfigFlag(globalCmd, removeCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
+	addCommandAndHideConfigFlag(globalCmd, removeCmd())
+	addCommandAndHideConfigFlag(globalCmd, runCmd())
+	addCommandAndHideConfigFlag(globalCmd, servicesCmd())
 	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd())
+	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 
 	// Create list for non-global? Mike: I want it :)
 	globalCmd.AddCommand(globalListCmd())

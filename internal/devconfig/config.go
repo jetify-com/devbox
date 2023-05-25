@@ -69,7 +69,7 @@ func DefaultConfig() *Config {
 			},
 			InitHook: &shellcmd.Commands{
 				Cmds: []string{
-					"echo 'Welcome to devbox!'",
+					"echo 'Welcome to devbox!' > /dev/null",
 				},
 			},
 		},

@@ -457,7 +457,7 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !envir.IsDevboxShellEnabled() {
+	if !d.IsEnvEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
@@ -494,7 +494,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 }
 
 func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !envir.IsDevboxShellEnabled() {
+	if !d.IsEnvEnabled() {
 		args := []string{"services", "stop"}
 		args = append(args, serviceNames...)
 		if allProjects {
@@ -533,7 +533,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 }
 
 func (d *Devbox) ListServices(ctx context.Context) error {
-	if !envir.IsDevboxShellEnabled() {
+	if !d.IsEnvEnabled() {
 		return d.RunScript("devbox", []string{"services", "ls"})
 	}
 
@@ -571,7 +571,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 }
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !envir.IsDevboxShellEnabled() {
+	if !d.IsEnvEnabled() {
 		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
@@ -637,7 +637,7 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !envir.IsDevboxShellEnabled() {
+	if !d.IsEnvEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {

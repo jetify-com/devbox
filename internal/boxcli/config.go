@@ -17,3 +17,9 @@ func (flags *configFlags) register(cmd *cobra.Command) {
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
 	)
 }
+
+func (flags *configFlags) registerPersistent(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(
+		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+	)
+}
