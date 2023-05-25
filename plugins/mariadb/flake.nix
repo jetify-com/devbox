@@ -29,7 +29,7 @@
           wrapProgram "$out/bin/mysql_install_db" \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
 
-          wrapProgram "$out/bin/mariadbd_install_db" \
+          wrapProgram "$out/bin/mariadb_install_db" \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
 
         '';
