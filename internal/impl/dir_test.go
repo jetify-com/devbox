@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.jetpack.io/devbox/internal/devconfig"
 )
 
 func TestFindProjectDirFromParentDirSearch(t *testing.T) {
@@ -52,7 +53,7 @@ func TestFindProjectDirFromParentDirSearch(t *testing.T) {
 			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0777)
 			assert.NoError(err)
 
-			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, configFilename))
+			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
 			assert.NoError(err)
 			err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
 			assert.NoError(err)
@@ -96,14 +97,14 @@ func TestFindParentDirAtPath(t *testing.T) {
 			name:        "flag_path_is_file_has_config",
 			allDirs:     "a/b/c",
 			projectDir:  "a/b",
-			flagPath:    "a/b/" + configFilename,
+			flagPath:    "a/b/" + devconfig.DefaultName,
 			expectError: false,
 		},
 		{
 			name:        "flag_path_is_file_missing_config",
 			allDirs:     "a/b/c",
 			projectDir:  "", // missing config
-			flagPath:    "a/b/" + configFilename,
+			flagPath:    "a/b/" + devconfig.DefaultName,
 			expectError: true,
 		},
 	}
@@ -120,7 +121,7 @@ func TestFindParentDirAtPath(t *testing.T) {
 
 			var absProjectPath string
 			if testCase.projectDir != "" {
-				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, configFilename))
+				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
 				assert.NoError(err)
 				err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
 				assert.NoError(err)
@@ -152,8 +153,8 @@ func TestNixpkgsValidation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			err := validateNixpkg(&Config{
-				Nixpkgs: &NixpkgsConfig{
+			err := devconfig.ValidateNixpkg(&devconfig.Config{
+				Nixpkgs: &devconfig.NixpkgsConfig{
 					Commit: testCase.commit,
 				},
 			})

@@ -14,8 +14,8 @@ import (
 	"github.com/rogpeppe/go-internal/testscript"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/impl"
 )
 
 // xdgStateHomeDir is the home directory for devbox state. We store symlinks to
@@ -42,7 +42,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		}
 
 		configPath := filepath.Join(path, "devbox.json")
-		config, err := impl.ReadConfig(configPath)
+		config, err := devconfig.Load(configPath)
 		if err != nil {
 			// skip directories that do not have a devbox.json defined
 			if errors.Is(err, fs.ErrNotExist) {

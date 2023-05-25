@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/devconfig"
 )
 
 // extract decompresses a tar file and saves it to a tmp directory
@@ -58,7 +59,9 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 
 	if !overwrite {
 		for _, srcFile := range srcFiles {
-			if _, err := os.Stat(filepath.Join(dst, srcFile.Name())); err == nil {
+			// Only show error if file exists and is not a non-modified config
+			_, err := os.Stat(filepath.Join(dst, srcFile.Name()))
+			if err == nil && !isModifiedConfig(srcFile.Name()) {
 				return fs.ErrExist
 			}
 		}
@@ -71,4 +74,15 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		}
 	}
 	return nil
+}
+
+func isModifiedConfig(path string) bool {
+	if filepath.Base(path) == devconfig.DefaultName {
+		cfg, err := devconfig.Load(path)
+		if err != nil {
+			return false
+		}
+		return !cfg.Equals(devconfig.DefaultConfig())
+	}
+	return false
 }
