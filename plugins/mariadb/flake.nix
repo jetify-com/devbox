@@ -22,6 +22,9 @@
           wrapProgram $out/bin/mysqld \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
 
+          wrapProgram $out/bin/mysqld_safe \
+            --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+
           wrapProgram "$out/bin/mysql_install_db" \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
 

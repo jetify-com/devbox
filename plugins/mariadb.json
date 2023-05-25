@@ -12,7 +12,8 @@
   "create_files": {
     "{{ .Virtenv }}/run": "",
     "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix",
-    "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh"
+    "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh",
+    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml"
   },
   "packages": [
     "path:{{ .Virtenv }}"
