@@ -11,9 +11,15 @@
   },
   "create_files": {
     "{{ .Virtenv }}/run": "",
-    "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix"
+    "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix",
+    "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh"
   },
   "packages": [
     "path:{{ .Virtenv }}"
-  ]
+  ],
+  "shell": {
+    "init_hook": [
+      "bash {{ .Virtenv }}/setup_db.sh"
+    ]
+  }
 }
