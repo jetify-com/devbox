@@ -5,13 +5,18 @@ package boxcli
 
 import (
 	"fmt"
+	"io/fs"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/ux"
 )
+
+type globalPullCmdFlags struct {
+	force bool
+}
 
 func globalCmd() *cobra.Command {
 
@@ -52,14 +57,24 @@ func globalListCmd() *cobra.Command {
 }
 
 func globalPullCmd() *cobra.Command {
-	return &cobra.Command{
+	flags := globalPullCmdFlags{}
+	cmd := &cobra.Command{
 		Use:     "pull <file> | <url>",
 		Short:   "Pull a global config from a file or URL",
 		Long:    "Pull a global config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
-		RunE:    pullGlobalCmdFunc,
-		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return pullGlobalCmdFunc(cmd, args, flags.force)
+		},
+		Args: cobra.ExactArgs(1),
 	}
+
+	cmd.Flags().BoolVarP(
+		&flags.force, "force", "f", false,
+		"Force overwrite of existing global config files",
+	)
+
+	return cmd
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
@@ -75,7 +90,11 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	return box.PrintGlobalList()
 }
 
-func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
+func pullGlobalCmdFunc(
+	cmd *cobra.Command,
+	args []string,
+	overwrite bool,
+) error {
 	path, err := ensureGlobalConfig(cmd)
 	if err != nil {
 		return errors.WithStack(err)
@@ -85,7 +104,23 @@ func pullGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.PullGlobal(cmd.Context(), args[0])
+	err = box.PullGlobal(cmd.Context(), overwrite, args[0])
+	if errors.Is(err, fs.ErrExist) {
+		prompt := &survey.Confirm{
+			Message: "File(s) already exists. Overwrite?",
+		}
+		if err = survey.AskOne(prompt, &overwrite); err != nil {
+			return errors.WithStack(err)
+		}
+		if overwrite {
+			err = box.PullGlobal(cmd.Context(), overwrite, args[0])
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	return installCmdFunc(cmd, runCmdFlags{config: configFlags{path: path}})
 }
 
 var globalConfigPath string
