@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/impl"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/services"
@@ -19,7 +20,7 @@ type Devbox interface {
 	// environment. It validates that the Nix packages exist, and install them.
 	// Adding duplicate packages is a no-op.
 	Add(ctx context.Context, pkgs ...string) error
-	Config() *impl.Config
+	Config() *devconfig.Config
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
@@ -60,7 +61,7 @@ func Open(dir string, writer io.Writer) (Devbox, error) {
 
 // InitConfig creates a default devbox config file if one doesn't already exist.
 func InitConfig(dir string, writer io.Writer) (bool, error) {
-	return impl.InitConfig(dir, writer)
+	return devconfig.Init(dir, writer)
 }
 
 func GlobalDataPath() (string, error) {

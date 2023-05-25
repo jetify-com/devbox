@@ -112,9 +112,10 @@ func pullGlobalCmdFunc(
 		if err = survey.AskOne(prompt, &overwrite); err != nil {
 			return errors.WithStack(err)
 		}
-		if overwrite {
-			err = box.PullGlobal(cmd.Context(), overwrite, args[0])
+		if !overwrite {
+			return nil
 		}
+		err = box.PullGlobal(cmd.Context(), overwrite, args[0])
 	}
 	if err != nil {
 		return err
