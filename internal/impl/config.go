@@ -81,7 +81,7 @@ func (c *Config) Hash() (string, error) {
 }
 
 func (c *Config) NixPkgsCommitHash() string {
-	if c == nil || c.Nixpkgs == nil {
+	if c == nil || c.Nixpkgs == nil || c.Nixpkgs.Commit == "" {
 		return plansdk.DefaultNixpkgsCommit
 	}
 	return c.Nixpkgs.Commit
