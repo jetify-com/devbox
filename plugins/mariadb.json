@@ -1,7 +1,6 @@
 {
   "name": "mariadb",
   "version": "0.0.1",
-  "match": "disabled",
   "readme": "* This package creates shims and stores them in .devbox/virtenv/mariadb/bin\n* Use mysql_install_db to initialize data directory\n* Use mysqld to start the server",
   "env": {
     "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
@@ -11,11 +10,10 @@
     "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid"
   },
   "create_files": {
-    "{{ .Virtenv }}/data": "",
     "{{ .Virtenv }}/run": "",
-    "{{ .Virtenv }}/bin/mysql": "mariadb/mysql",
-    "{{ .Virtenv }}/bin/mysql_install_db": "mariadb/mysql_install_db",
-    "{{ .Virtenv }}/bin/mysqladmin": "mariadb/mysqladmin",
-    "{{ .Virtenv }}/bin/mysqld": "mariadb/mysqld"
-  }
+    "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix"
+  },
+  "packages": [
+    "path:{{ .Virtenv }}"
+  ]
 }
