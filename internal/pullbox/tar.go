@@ -59,9 +59,9 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 
 	if !overwrite {
 		for _, srcFile := range srcFiles {
-			// Only show error if file exists and is not a non-modified config
-			_, err := os.Stat(filepath.Join(dst, srcFile.Name()))
-			if err == nil && !isModifiedConfig(srcFile.Name()) {
+			dstPath := filepath.Join(dst, srcFile.Name())
+			// Only show error if file exists and is a modified config
+			if _, err := os.Stat(dstPath); err == nil && isModifiedConfig(dstPath) {
 				return fs.ErrExist
 			}
 		}

@@ -61,7 +61,7 @@ func Open(dir string, writer io.Writer) (Devbox, error) {
 
 // InitConfig creates a default devbox config file if one doesn't already exist.
 func InitConfig(dir string, writer io.Writer) (bool, error) {
-	return devconfig.InitConfig(dir, writer)
+	return devconfig.Init(dir, writer)
 }
 
 func GlobalDataPath() (string, error) {

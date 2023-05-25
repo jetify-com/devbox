@@ -60,6 +60,7 @@ type Stage struct {
 
 func DefaultConfig() *Config {
 	return &Config{
+		Packages: []string{}, // initialize to empty slice instead of nil for consistent marshalling
 		Shell: &shellConfig{
 			Scripts: map[string]*shellcmd.Commands{
 				"test": {
@@ -141,7 +142,10 @@ func LoadConfigFromURL(url *url.URL) (*Config, error) {
 	if !cuecfg.IsSupportedExtension(ext) {
 		ext = ".json"
 	}
-	return cfg, cuecfg.Unmarshal(data, ext, cfg)
+	if err = cuecfg.Unmarshal(data, ext, cfg); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return cfg, validateConfig(cfg)
 }
 
 // WriteConfig saves a devbox config file.

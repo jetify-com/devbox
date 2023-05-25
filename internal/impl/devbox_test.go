@@ -63,7 +63,7 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 
 func TestComputeNixEnv(t *testing.T) {
 	path := t.TempDir()
-	_, err := devconfig.InitConfig(path, os.Stdout)
+	_, err := devconfig.Init(path, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	d, err := Open(path, os.Stdout)
 	require.NoError(t, err, "Open should not fail")
@@ -76,7 +76,7 @@ func TestComputeNixEnv(t *testing.T) {
 
 func TestComputeNixPathIsIdempotent(t *testing.T) {
 	dir := t.TempDir()
-	_, err := devconfig.InitConfig(dir, os.Stdout)
+	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	devbox, err := Open(dir, os.Stdout)
 	require.NoError(t, err, "Open should not fail")
@@ -102,7 +102,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 
 func TestComputeNixPathWhenRemoving(t *testing.T) {
 	dir := t.TempDir()
-	_, err := devconfig.InitConfig(dir, os.Stdout)
+	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	devbox, err := Open(dir, os.Stdout)
 	require.NoError(t, err, "Open should not fail")

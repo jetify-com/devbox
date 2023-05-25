@@ -14,7 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
-func InitConfig(dir string, writer io.Writer) (created bool, err error) {
+func Init(dir string, writer io.Writer) (created bool, err error) {
 	cfgPath := filepath.Join(dir, DefaultName)
 
 	config := DefaultConfig()
