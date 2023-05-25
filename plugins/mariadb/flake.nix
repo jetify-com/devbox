@@ -20,7 +20,6 @@
           wrapProgram $out/bin/mariadbd \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
 
-dd
           wrapProgram $out/bin/mysqld_safe \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
 
