@@ -335,7 +335,10 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 			ProfileDir: profileDir,
 		})
 		if err != nil {
-			pending = append(pending, input.Raw)
+			if errors.Is(err, nix.ErrPackageNotFound) {
+				pending = append(pending, input.Raw)
+			}
+			return nil, err
 		}
 	}
 	return pending, nil
