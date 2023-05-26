@@ -1,8 +1,8 @@
 {
   "name": "mariadb",
   "version": "0.0.1",
-  "match": "disabled",
-  "readme": "* This package creates shims and stores them in .devbox/virtenv/mariadb/bin\n* Use mysql_install_db to initialize data directory\n* Use mysqld to start the server",
+  "match": "^mariadb_?[0-9]*$",
+  "readme": "* This plugin wraps mysqld and mysql_install_db to work in your local project\n* This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init\n* Use mysqld to manually start the server, and `mysqladmin -u root shutdown` to manually stop it",
   "env": {
     "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
     "MYSQL_HOME": "{{ .Virtenv }}/run",
@@ -11,11 +11,23 @@
     "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid"
   },
   "create_files": {
-    "{{ .Virtenv }}/data": "",
     "{{ .Virtenv }}/run": "",
-    "{{ .Virtenv }}/bin/mysql": "mariadb/mysql",
-    "{{ .Virtenv }}/bin/mysql_install_db": "mariadb/mysql_install_db",
-    "{{ .Virtenv }}/bin/mysqladmin": "mariadb/mysqladmin",
-    "{{ .Virtenv }}/bin/mysqld": "mariadb/mysqld"
+    "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix",
+    "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh",
+    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml"
+  },
+  "packages": [
+    "path:{{ .Virtenv }}"
+  ],
+  "shell": {
+    "init_hook": [
+      "bash {{ .Virtenv }}/setup_db.sh"
+    ]
+  },
+  "services": {
+    "mariadb": {
+      "start": "mysqld 2> $MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mariadb_logs for details'",
+      "stop": "mysqladmin -u root shutdown"
+    }
   }
 }
