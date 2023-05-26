@@ -19,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/searcher"
 )
 
 type Input struct {
@@ -108,10 +107,54 @@ func (i *Input) URLForInstall() (string, error) {
 	return i.urlWithoutFragment() + "#" + attrPath, nil
 }
 
-// PackageAttributePath returns just the name for non-flakes. For flake
-// references is returns the full path to the package in the flake. e.g.
-// packages.x86_64-linux.hello
+func (i *Input) normalizedDevboxPackageReference() (string, error) {
+	if !i.IsDevboxPackage() {
+		return "", nil
+	}
+
+	path := ""
+	if i.isVersioned() {
+		entry, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			return "", err
+		}
+		path = entry.Resolved
+	} else if i.IsDevboxPackage() {
+		path = i.lockfile.LegacyNixpkgsPath(i.String())
+	}
+
+	if path != "" {
+		s, err := System()
+		if err != nil {
+			return "", err
+		}
+		url, fragment, _ := strings.Cut(path, "#")
+		return fmt.Sprintf("%s#legacyPackages.%s.%s", url, s, fragment), nil
+	}
+
+	return "", nil
+}
+
+// PackageAttributePath returns the attribute path for a package. It is not
+// always normalized which means it should not be used to compare packages.
+// During happy paths (devbox packages and nix flakes that contains a fragment)
+// it is much faster than NormalizedPackageAttributePath
 func (i *Input) PackageAttributePath() (string, error) {
+	if i.IsDevboxPackage() {
+		reference, err := i.normalizedDevboxPackageReference()
+		if err != nil {
+			return "", err
+		}
+		_, fragment, _ := strings.Cut(reference, "#")
+		return fragment, nil
+	}
+	return i.NormalizedPackageAttributePath()
+}
+
+// NormalizedPackageAttributePath returns an attribute path normalized by nix
+// search. This is useful for comparing different attribute paths that may
+// point to the same package. Note, it's an expensive call.
+func (i *Input) NormalizedPackageAttributePath() (string, error) {
 	var query string
 	if i.isVersioned() {
 		entry, err := i.lockfile.Resolve(i.String())
@@ -195,14 +238,10 @@ func (i *Input) hash() string {
 }
 
 func (i *Input) ValidateExists() (bool, error) {
-	if i.isVersioned() {
-		version := i.version()
-		if version == "" && i.isVersioned() {
-			return false, usererr.New("No version specified for %q.", i.Path)
-		}
-		return searcher.Exists(i.CanonicalName(), version)
+	if i.isVersioned() && i.version() == "" {
+		return false, usererr.New("No version specified for %q.", i.Path)
 	}
-	info, err := i.PackageAttributePath()
+	info, err := i.NormalizedPackageAttributePath()
 	return info != "", err
 }
 
@@ -216,11 +255,11 @@ func (i *Input) equals(other *Input) bool {
 		return false
 	}
 
-	name, err := i.PackageAttributePath()
+	name, err := i.NormalizedPackageAttributePath()
 	if err != nil {
 		return false
 	}
-	otherName, err := other.PackageAttributePath()
+	otherName, err := other.NormalizedPackageAttributePath()
 	if err != nil {
 		return false
 	}
