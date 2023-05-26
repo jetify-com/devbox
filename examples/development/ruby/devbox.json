@@ -1,12 +1,12 @@
 {
-    "packages": [
-        "bundler",
-        "ruby_3_1"
-    ],
-    "shell": {
-        "init_hook": [],
-        "scripts": {
-            "run_test": "ruby -e 'puts \"Hello from Ruby #{RUBY_VERSION}\"'"
-        }
+  "packages": [
+    "bundler@2.4",
+    "ruby@3.1"
+  ],
+  "shell": {
+    "init_hook": [],
+    "scripts": {
+      "run_test": "ruby -e 'puts \"Hello from Ruby #{RUBY_VERSION}\"'"
     }
+  }
 }

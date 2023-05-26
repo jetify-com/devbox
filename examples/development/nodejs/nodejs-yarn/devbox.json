@@ -1,7 +1,7 @@
 {
   "packages": [
-    "nodejs",
-    "yarn"
+    "nodejs@19.8",
+    "yarn@1.22"
   ],
   "shell": {
     "init_hook": null

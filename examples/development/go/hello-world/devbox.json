@@ -1,9 +1,11 @@
 {
     "packages": [
-        "go_1_19"
+        "go@1.19.8"
     ],
     "shell": {
-        "init_hook": null,
+        "init_hook": [
+            "export \"GOROOT=$(go env GOROOT)\""
+        ],
         "scripts": {
             "run_test": "go run main.go"
         }

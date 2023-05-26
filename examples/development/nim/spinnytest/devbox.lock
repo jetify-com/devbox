@@ -1,0 +1,20 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "nim@1.6.12": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nim",
+      "version": "1.6.12"
+    },
+    "nimble-unwrapped@0.14": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nimble-unwrapped",
+      "version": "0.14.2"
+    },
+    "openssl_1_1@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#openssl_1_1",
+      "version": "1.1.1t"
+    }
+  }
+}

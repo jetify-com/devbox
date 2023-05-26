@@ -1,8 +1,6 @@
 {
   "packages": [
-    "apacheHttpd",
-    "tree",
-    "pulumi-bin"
+    "apacheHttpd@latest"
   ],
   "shell": {
     "init_hook": []

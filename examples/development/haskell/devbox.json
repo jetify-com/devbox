@@ -1,11 +1,11 @@
 {
   "packages": [
-    "ghc",
-    "gmp",
-    "stack",
-    "cabal-install",
-    "zlib",
-    "hpack"
+    "ghc@latest",
+    "gmp@latest",
+    "stack@latest",
+    "cabal-install@latest",
+    "zlib@latest",
+    "hpack@latest"
   ],
   "shell": {
     "init_hook": null,
