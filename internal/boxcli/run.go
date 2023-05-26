@@ -59,9 +59,9 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		if len(scripts) == 0 {
 			return redact.Errorf("no scripts defined in devbox.json")
 		}
-		fmt.Println("Available scripts:")
+		fmt.Fprintln(cmd.OutOrStdout(), "Available scripts:")
 		for _, p := range scripts {
-			fmt.Printf("* %s\n", p)
+			fmt.Fprintf(cmd.OutOrStdout(), "* %s\n", p)
 		}
 		return nil
 	}
