@@ -277,15 +277,19 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, pkg := range pkgs {
+	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
 		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			Pkg:        pkg,
+			Input:      input,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
-			ux.Ferror(d.writer, "Package %s not found in profile. Skipping.\n", pkg)
+			ux.Ferror(
+				d.writer,
+				"Package %s not found in profile. Skipping.\n",
+				input.Raw,
+			)
 			continue
 		}
 
@@ -322,16 +326,16 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	if err != nil {
 		return nil, err
 	}
-	for _, pkg := range d.Packages() {
+	for _, input := range d.packagesAsInputs() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			Pkg:        pkg,
+			Input:      input,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
-			pending = append(pending, pkg)
+			pending = append(pending, input.Raw)
 		}
 	}
 	return pending, nil

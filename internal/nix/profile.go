@@ -25,10 +25,11 @@ import (
 
 const DefaultPriority = 5
 
-type NixProfileList []*NixProfileListItem
-
 // ProfileListItems returns a list of the installed packages
-func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, error) {
+func ProfileListItems(
+	writer io.Writer,
+	profileDir string,
+) (map[string]*NixProfileListItem, error) {
 	cmd := exec.Command(
 		"nix", "profile", "list",
 		"--profile", profileDir,
@@ -55,7 +56,7 @@ func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, erro
 		return nil, redact.Errorf("error starting \"nix profile list\" command: %w", err)
 	}
 
-	items := []*NixProfileListItem{}
+	items := map[string]*NixProfileListItem{}
 	scanner := bufio.NewScanner(out)
 	scanner.Split(bufio.ScanLines)
 
@@ -66,7 +67,7 @@ func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, erro
 			return nil, err
 		}
 
-		items = append(items, item)
+		items[item.unlockedReference] = item
 	}
 
 	if err := cmd.Wait(); err != nil {
@@ -78,10 +79,10 @@ func ProfileListItems(writer io.Writer, profileDir string) (NixProfileList, erro
 type ProfileListIndexArgs struct {
 	// For performance you can reuse the same list in multiple operations if you
 	// are confident index has not changed.
-	List       NixProfileList
+	List       map[string]*NixProfileListItem
 	Lockfile   *lock.File
 	Writer     io.Writer
-	Pkg        string
+	Input      *Input
 	ProfileDir string
 }
 
@@ -95,12 +96,20 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		}
 	}
 
-	input := InputFromString(args.Pkg, args.Lockfile)
+	// This is an optimization for happy path. A resolved devbox package
+	// should match the unlockedReference of an existing profile item.
+	ref, err := args.Input.normalizedDevboxPackageReference()
+	if err != nil {
+		return -1, err
+	}
+	if item, found := list[ref]; found {
+		return item.index, nil
+	}
 
 	for _, item := range list {
 		existing := InputFromString(item.unlockedReference, args.Lockfile)
 
-		if input.equals(existing) {
+		if args.Input.equals(existing) {
 			return item.index, nil
 		}
 	}
