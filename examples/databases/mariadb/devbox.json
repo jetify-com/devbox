@@ -8,7 +8,7 @@
       "connect_db": [
         "mysql -u devbox_user -p -D devbox_lamp"
       ],
-      "setup_db": [
+      "run_test": [
         "devbox services up -b",
         "sleep 5",
         "mysql -u root < setup_db.sql",

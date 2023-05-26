@@ -10,8 +10,8 @@
       mariadb-bin =  nixpkgs.legacyPackages.{{.System}}.symlinkJoin {
 
         name = "mariadb-wrapped";
-        paths = [nixpkgs.legacyPackages.{{ .System }}.mariadb];
-        nativeBuildInputs = [ nixpkgs.legacyPackages.{{.System}}.makeWrapper ];
+        paths = [nixpkgs.legacyPackages.{{ .System }}.{{.PackageName}}];
+        nativeBuildInputs = [ nixpkgs.legacyPackages.{{.System}}.makeWrapper];
         postBuild = ''
 
           wrapProgram $out/bin/mysqld \
@@ -23,15 +23,18 @@
           wrapProgram $out/bin/mysqld_safe \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
 
-          wrapProgram $out/bin/mariadbd_safe \
-            --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+          if [-f $out/bin/mariadbd-safe]; then
+            wrapProgram $out/bin/mariadbd_safe \
+              --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+          fi
 
           wrapProgram "$out/bin/mysql_install_db" \
             --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
 
-          wrapProgram "$out/bin/mariadb_install_db" \
-            --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
-
+          if [-f $out/bin/mariadb-install-db]; then
+            wrapProgram "$out/bin/mariadb_install_db" \
+              --add-flags '--datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
+          fi
         '';
       };
     in{
