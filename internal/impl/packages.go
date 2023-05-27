@@ -167,6 +167,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	if err != nil {
 		return err
 	}
+
 	if upToDate {
 		return nil
 	}
@@ -174,7 +175,16 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	if err := d.generateShellFiles(); err != nil {
 		return err
 	}
+
 	if mode == ensure {
+    fmt.Fprintln(d.writer, d.cfg.DisableEnsure)
+		if d.cfg.DisableEnsure {
+			if !upToDate {
+				fmt.Fprintln(d.writer, "There are updates to be applied. Run 'devbox global apply'")
+			}
+			return nil
+		}
+
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
