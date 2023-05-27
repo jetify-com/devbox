@@ -1,9 +1,9 @@
 {
     "packages": [
         "python310",
-        "openssl",
+        "openssl@latest",
         "python310Packages.pip",
-        "postgresql"
+        "postgresql@latest"
     ],
     "env": {
         "PGPORT": "5434"
