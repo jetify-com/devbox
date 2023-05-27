@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
@@ -28,7 +30,6 @@ func runCmd() *cobra.Command {
 		Example: "\nRun a command directly:\n\n  devbox add cowsay\n  devbox run cowsay hello\n  " +
 			"devbox run -- cowsay -d hello\n\nRun a script (defined as `\"moo\": \"cowsay moo\"`) " +
 			"in your devbox.json:\n\n  devbox run moo",
-		Args:    cobra.MinimumNArgs(1),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runScriptCmd(cmd, args, flags)
@@ -53,6 +54,19 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 }
 
 func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+	if len(args) == 0 {
+		scripts := listScripts(cmd, flags)
+		if len(scripts) == 0 {
+			fmt.Fprintln(cmd.OutOrStdout(), "no scripts defined in devbox.json")
+			return nil
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), "Available scripts:")
+		for _, p := range scripts {
+			fmt.Fprintf(cmd.OutOrStdout(), "* %s\n", p)
+		}
+		return nil
+	}
+
 	path, script, scriptArgs, err := parseScriptArgs(args, flags)
 	if err != nil {
 		return redact.Errorf("error parsing script arguments: %w", err)
