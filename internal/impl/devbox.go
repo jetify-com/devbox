@@ -818,6 +818,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		os.Getenv("XDG_DATA_DIRS"),
 	)
 
+	env["DEVBOX_GLOBAL_PREFIX"] = filepath.Join(d.projectDir, nix.ProfilePath)
+
 	return env, addHashToEnv(env)
 }
 
