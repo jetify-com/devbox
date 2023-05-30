@@ -100,7 +100,7 @@ func (i *Input) URLForInstall() (string, error) {
 		}
 		return entry.Resolved, nil
 	}
-	attrPath, err := i.PackageAttributePath()
+	attrPath, err := i.FullPackageAttributePath()
 	if err != nil {
 		return "", err
 	}
@@ -135,11 +135,25 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 	return "", nil
 }
 
-// PackageAttributePath returns the attribute path for a package. It is not
+// PackageAttributePath returns the short attribute path for a package which
+// does not include packages/legacyPackages or the system name.
+func (i *Input) PackageAttributePath() (string, error) {
+	if i.IsDevboxPackage() {
+		entry, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			return "", err
+		}
+		_, fragment, _ := strings.Cut(entry.Resolved, "#")
+		return fragment, nil
+	}
+	return i.Fragment, nil
+}
+
+// FullPackageAttributePath returns the attribute path for a package. It is not
 // always normalized which means it should not be used to compare packages.
 // During happy paths (devbox packages and nix flakes that contains a fragment)
 // it is much faster than NormalizedPackageAttributePath
-func (i *Input) PackageAttributePath() (string, error) {
+func (i *Input) FullPackageAttributePath() (string, error) {
 	if i.IsDevboxPackage() {
 		reference, err := i.normalizedDevboxPackageReference()
 		if err != nil {
