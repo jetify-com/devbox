@@ -24,11 +24,6 @@ func (d *Devbox) PullGlobal(
 	force bool,
 	path string,
 ) error {
-	// u, err := url.Parse(path)
-	// if (err == nil && u.Scheme != "") || git.IsRepoURL(path) {
-	// 	return d.pullGlobalFromURL(ctx, force, path)
-	// }
-	// return d.pullGlobalFromPath(ctx, path)
 	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
 	return pullbox.New(d, path, force).Pull()
 }
