@@ -110,7 +110,12 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	return d.cfg.Hash()
+	hashes := lo.Map(d.packagesAsInputs(), func(i *nix.Input, _ int) string { return i.Hash() })
+	h, err := d.cfg.Hash()
+	if err != nil {
+		return "", err
+	}
+	return cuecfg.Hash(h + strings.Join(hashes, ""))
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
