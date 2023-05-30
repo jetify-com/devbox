@@ -3,6 +3,7 @@ import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import { posix } from 'path';
 
 import { handleOpenInVSCode } from './openinvscode';
+import { devboxReopen, devboxShellenv } from './devbox';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -83,6 +84,16 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox generate dockerfile', true);
 	});
 
+	const shellenv = commands.registerCommand('devbox.shellenv', async () => {
+		await devboxShellenv();
+	});
+
+	const reopen = commands.registerCommand('devbox.reopen', async () => {
+		await devboxReopen();
+	});
+
+	context.subscriptions.push(shellenv);
+	context.subscriptions.push(reopen);
 	context.subscriptions.push(devboxAdd);
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
@@ -98,6 +109,10 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 	if (workspace.workspaceFolders) {
 		const workspaceUri = workspace.workspaceFolders[0].uri;
 		try {
+			console.log(workspace.workspaceFolders[0].name);
+			if (workspace.workspaceFolders[0].name === '.devbox') {
+				await devboxReopen();
+			}
 			// check if the folder has devbox.json in it
 			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
 			// devbox.json exists setcontext for devbox commands to be available

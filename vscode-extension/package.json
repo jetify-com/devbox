@@ -31,6 +31,14 @@
         "title": "Devbox: Generate Dev Containers config files"
       },
       {
+        "command": "devbox.shellenv",
+        "title": "Devbox: Compute Devbox shell environment"
+      },
+      {
+        "command": "devbox.reopen",
+        "title": "Devbox: Reopen in Devbox shell environment"
+      },
+      {
         "command": "devbox.generateDockerfile",
         "title": "Devbox: Generate a Dockerfile from devbox.json"
       },
@@ -60,6 +68,13 @@
         {
           "command": "devbox.setupDevContainer",
           "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.shellenv",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.reopen"
         },
         {
           "command": "devbox.add",
