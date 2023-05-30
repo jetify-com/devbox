@@ -150,13 +150,18 @@ func (m *Manager) createFile(
 		return err
 	}
 
+	attributePath, err := pkg.PackageAttributePath()
+	if err != nil {
+		return err
+	}
+
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, map[string]any{
 		"DevboxConfigDir":      m.ProjectDir(),
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
-		"PackageName":          name,
+		"PackageAttributePath": attributePath,
 		"Packages":             m.Packages(),
 		"System":               system,
 		"URLForInput":          pkg.URLForInput(),

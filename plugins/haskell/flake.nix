@@ -7,9 +7,9 @@
 
   outputs = { self, nixpkgs }:
     let
-      version = builtins.elemAt (builtins.match "^haskell\.compiler\.(.*)$" "{{ .PackageName }}") 0;
+      version = builtins.elemAt (builtins.match "^haskell\.compiler\.(.*)$" "{{ .PackageAttributePath }}") 0;
       
-      ghcWithPackages = if "{{ .PackageName }}" == "ghc" 
+      ghcWithPackages = if "{{ .PackageAttributePath }}" == "ghc" 
         then nixpkgs.legacyPackages.{{ .System }}.pkgs.haskellPackages.ghcWithPackages
         else nixpkgs.legacyPackages.{{ .System }}.pkgs.haskell.packages.${version}.ghcWithPackages;
 
