@@ -64,7 +64,7 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 func (i *Input) InputName() string {
 	result := ""
 	if i.IsLocal() {
-		result = filepath.Base(i.Path) + "-" + i.hash()
+		result = filepath.Base(i.Path) + "-" + i.Hash()
 	} else if i.IsGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
 	} else if url := i.URLForInput(); IsGithubNixpkgsURL(url) {
@@ -74,7 +74,7 @@ func (i *Input) InputName() string {
 		}
 		result = "nixpkgs-" + u
 	} else {
-		result = i.String() + "-" + i.hash()
+		result = i.String() + "-" + i.Hash()
 	}
 	return inputNameRegex.ReplaceAllString(result, "-")
 }
@@ -221,7 +221,7 @@ func (i *Input) urlWithoutFragment() string {
 	return u.String()
 }
 
-func (i *Input) hash() string {
+func (i *Input) Hash() string {
 	// For local flakes, use content hash of the flake.nix file to ensure
 	// user always gets newest input.
 	if i.IsLocal() {
