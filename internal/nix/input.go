@@ -222,7 +222,7 @@ func (i *Input) urlWithoutFragment() string {
 }
 
 func (i *Input) Hash() string {
-	// For local flakes, use content Hash of the flake.nix file to ensure
+	// For local flakes, use content hash of the flake.nix file to ensure
 	// user always gets newest input.
 	if i.IsLocal() {
 		fileHash, _ := cuecfg.FileHash(filepath.Join(i.Path, "flake.nix"))
@@ -313,7 +313,7 @@ func (i *Input) hashFromNixPkgsURL() string {
 // github:NixOS/nixpkgs/...
 //
 // While there are many ways to specify this input, devbox always uses
-// github:NixOS/nixpkgs/<Hash> as the URL. If the user wishes to reference nixpkgs
+// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func IsGithubNixpkgsURL(url string) bool {
 	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")

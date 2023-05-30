@@ -285,6 +285,10 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 		return "", err
 	}
 
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+		return "", err
+	}
+
 	envStr := exportify(envs)
 
 	if includeHooks {

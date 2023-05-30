@@ -31,7 +31,7 @@ func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
 	location, isPresent := commitToLocation[commit]
 	if isPresent {
 		if fi, err := os.Stat(location); err == nil && fi.IsDir() {
-			// The nixpkgs for this commit Hash is present, so we don't need to prefetch
+			// The nixpkgs for this commit hash is present, so we don't need to prefetch
 			return nil
 		}
 	}
@@ -71,7 +71,7 @@ func nixpkgsCommitFileContents() (map[string]string, error) {
 }
 
 func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) error {
-	// Make a query to get the /nix/store path for this commit Hash.
+	// Make a query to get the /nix/store path for this commit hash.
 	cmd := exec.Command("nix", "flake", "prefetch", "--json",
 		FlakeNixpkgs(commit),
 	)

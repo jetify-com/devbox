@@ -4,10 +4,10 @@
 package lock
 
 import (
+	"errors"
 	"io/fs"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )

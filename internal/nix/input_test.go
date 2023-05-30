@@ -178,7 +178,7 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 		result := HashFromNixPkgsURL(test.url)
 		if result != test.expected {
 			t.Errorf(
-				"Expected Hash '%s' for URL '%s', but got '%s'",
+				"Expected hash '%s' for URL '%s', but got '%s'",
 				test.expected,
 				test.url,
 				result,
