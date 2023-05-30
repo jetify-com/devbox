@@ -52,3 +52,7 @@ func (p *pullbox) Pull() error {
 
 	return usererr.New("Could not determine how to pull %s", p.url)
 }
+
+func (p *pullbox) Push() error {
+	return git.Push(p.ProjectDir(), p.overwrite)
+}

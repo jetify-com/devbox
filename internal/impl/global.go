@@ -4,7 +4,6 @@
 package impl
 
 import (
-	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,21 +11,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/pullbox"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
-
-func (d *Devbox) Pull(
-	ctx context.Context,
-	force bool,
-	path string,
-) error {
-	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
-	return pullbox.New(d, path, force).Pull()
-}
 
 func (d *Devbox) PrintGlobalList() error {
 	for _, p := range d.cfg.Packages {
