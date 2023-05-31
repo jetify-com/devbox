@@ -62,6 +62,4 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 * {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
 * {PROJECT_DIR}/devbox.d/php81/php.ini
 
-You can modify this file to configure your PHP-FPM server
-
-```
+You can modify these file to configure PHP or your PHP-FPM server
