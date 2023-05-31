@@ -13,7 +13,7 @@
         {{- end }}
       ]);
 
-      php = nixpkgs.legacyPackages.{{ .System }}.php.withExtensions (
+      php = nixpkgs.legacyPackages.{{ .System }}.{{ .PackageAttributePath }}.withExtensions (
         { enabled, all }: enabled ++ (with all; 
           map (ext: all.${ext}) extensions
         )

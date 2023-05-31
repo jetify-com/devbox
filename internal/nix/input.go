@@ -64,7 +64,7 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 func (i *Input) InputName() string {
 	result := ""
 	if i.IsLocal() {
-		result = filepath.Base(i.Path) + "-" + i.hash()
+		result = filepath.Base(i.Path) + "-" + i.Hash()
 	} else if i.IsGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
 	} else if url := i.URLForInput(); IsGithubNixpkgsURL(url) {
@@ -74,7 +74,7 @@ func (i *Input) InputName() string {
 		}
 		result = "nixpkgs-" + u
 	} else {
-		result = i.String() + "-" + i.hash()
+		result = i.String() + "-" + i.Hash()
 	}
 	return inputNameRegex.ReplaceAllString(result, "-")
 }
@@ -100,7 +100,7 @@ func (i *Input) URLForInstall() (string, error) {
 		}
 		return entry.Resolved, nil
 	}
-	attrPath, err := i.PackageAttributePath()
+	attrPath, err := i.FullPackageAttributePath()
 	if err != nil {
 		return "", err
 	}
@@ -135,11 +135,25 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 	return "", nil
 }
 
-// PackageAttributePath returns the attribute path for a package. It is not
+// PackageAttributePath returns the short attribute path for a package which
+// does not include packages/legacyPackages or the system name.
+func (i *Input) PackageAttributePath() (string, error) {
+	if i.IsDevboxPackage() {
+		entry, err := i.lockfile.Resolve(i.String())
+		if err != nil {
+			return "", err
+		}
+		_, fragment, _ := strings.Cut(entry.Resolved, "#")
+		return fragment, nil
+	}
+	return i.Fragment, nil
+}
+
+// FullPackageAttributePath returns the attribute path for a package. It is not
 // always normalized which means it should not be used to compare packages.
 // During happy paths (devbox packages and nix flakes that contains a fragment)
 // it is much faster than NormalizedPackageAttributePath
-func (i *Input) PackageAttributePath() (string, error) {
+func (i *Input) FullPackageAttributePath() (string, error) {
 	if i.IsDevboxPackage() {
 		reference, err := i.normalizedDevboxPackageReference()
 		if err != nil {
@@ -221,7 +235,7 @@ func (i *Input) urlWithoutFragment() string {
 	return u.String()
 }
 
-func (i *Input) hash() string {
+func (i *Input) Hash() string {
 	// For local flakes, use content hash of the flake.nix file to ensure
 	// user always gets newest input.
 	if i.IsLocal() {

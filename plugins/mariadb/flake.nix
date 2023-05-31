@@ -10,7 +10,7 @@
       mariadb-bin =  nixpkgs.legacyPackages.{{.System}}.symlinkJoin {
 
         name = "mariadb-wrapped";
-        paths = [nixpkgs.legacyPackages.{{ .System }}.{{.PackageName}}];
+        paths = [nixpkgs.legacyPackages.{{ .System }}.{{.PackageAttributePath}}];
         nativeBuildInputs = [ nixpkgs.legacyPackages.{{.System}}.makeWrapper];
         postBuild = ''
 

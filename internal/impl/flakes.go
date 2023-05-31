@@ -30,7 +30,7 @@ func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
 	// if this is behavior we want for user plugins. We may need to add an optional
 	// priority field to the config.
 	for _, pkg := range append(pluginPackages, userPackages...) {
-		AttributePath, err := pkg.PackageAttributePath()
+		AttributePath, err := pkg.FullPackageAttributePath()
 		if err != nil {
 			return nil, err
 		}
