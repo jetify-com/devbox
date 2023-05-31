@@ -9,17 +9,20 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        packages = {
-          # Customize and export the PHP package with some extra config
-          php = pkgs.php.buildEnv {
-            # extraConfig will add the line below to our php.ini
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        # Customize and export the PHP package with some extra configuration
+        php-ext = pkgs.php.buildEnv {
+            # extraConfig will add the line below to the php.ini in our Nix store.
             # ${self} is a variable representing the current flake
             extraConfig = ''
-              extension=${self}/skeleton.so 
+              extension=${self}/skeleton.so
             '';
-          };
+        };
+      in {
+        packages = {
+          # Export the PHP package with our custom extension as the default
+          default = php-ext;
         };
       });
 }
