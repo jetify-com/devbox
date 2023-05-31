@@ -11,7 +11,6 @@ import (
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
-const devboxShellEnvHashVarName = "__DEVBOX_SHELLENV_HASH"
 
 func mapToPairs(m map[string]string) []string {
 	pairs := []string{}
