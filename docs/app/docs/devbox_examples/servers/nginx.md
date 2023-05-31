@@ -14,9 +14,11 @@ Run `devbox add nginx`, or add the following to your `devbox.json`
 
 ```json
   "packages": [
-    "nginx"
+    "nginx@latest"
   ]
 ```
+
+This will install the latest version of NGINX. You can find other installable versions of NGINX by running `devbox search nginx`.
 
 ## NGINX Plugin Details
 

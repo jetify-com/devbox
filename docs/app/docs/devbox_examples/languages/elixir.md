@@ -2,7 +2,7 @@
 title: Elixir
 ---
 
-Elixir can be configured to install Hex and Rebar dependencies in a local directory. This will keep Elixir from trying to install in your immutable Nix Store: 
+Elixir can be configured to install Hex and Rebar dependencies in a local directory. This will keep Elixir from trying to install in your immutable Nix Store:
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/elixir/elixir_hello)
 
@@ -15,18 +15,12 @@ Elixir can be configured to install Hex and Rebar dependencies in a local direct
 
 ```json
     "packages": [
-        "elixir",
-        "bash"
+        "elixir@latest",
+        "bash@latest"
     ],
 ```
 
-This will install Elixir 1.13. 
-Other versions available include: 
-
-* elixir_1_10 (version 1.10)
-* elixir_1_11 (version 1.11)
-* elixir_1_12 (version 1.12)
-* elixir_1_14 (version 1.14)
+This will install the latest version of Elixir available. You can find other installable versions of Elixir by running `devbox search elixir`.
 
 ## Installing Hex and Rebar locally
 

@@ -14,11 +14,11 @@ Haskell projects that use the Stack Framework can be run in Devbox by adding the
 
 ```json
   "packages": [
-    "stack",
-    "cabal-install",
-    "zlib",
-    "hpack"
+    "stack@latest",
+    "cabal-install@latest",
+    "zlib@latest",
+    "hpack@latest"
   ]
 ```
 
-This will install GHC, and the Haskell Tool Stack in your Devbox Shell.
+This will install GHC, and the Haskell Tool Stack in your Devbox Shell at their latest version. You can find other installable versions of Stack by running `devbox search <pkg>`.

@@ -2,9 +2,9 @@
 title: Java
 ---
 
-In addition to installing the JDK, you'll need to install either the Maven or Gradle build systems in your shell. 
+In addition to installing the JDK, you'll need to install either the Maven or Gradle build systems in your shell.
 
-In both cases, you'll want to first activate `devbox shell` before generating your Maven or Gradle projects, so that the tools use the right version of the JDK for creating your project. 
+In both cases, you'll want to first activate `devbox shell` before generating your Maven or Gradle projects, so that the tools use the right version of the JDK for creating your project.
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java)
 
@@ -14,17 +14,13 @@ In both cases, you'll want to first activate `devbox shell` before generating yo
 
 ```json
   "packages": [
-    "jdk",
-    "binutils"
+    "jdk@latest",
+    "binutils@latest"
   ],
 
 ```
 
-This will install the OpenJDK version 19. Other versions available include: 
-
-* jdk8 (OpenJDK 8)
-* jdk11 (OpenJDK 11)
-* jdk17 (OpenJDK 17)
+This will install the latest version of the JDK. To find other installable versions of the JDK, run `devbox search jdk`.
 
 Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are available in Nixpkgs, and can be found using [NixPkg Search](https://search.nixos.org/packages?channel=22.05&from=0&size=50&sort=relevance&type=packages&query=jdk#)
 
@@ -34,7 +30,7 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/java/gradle/hello-world)
 
-Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below: 
+Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below:
 
 1. Create a project folder: `my-project/` and call `devbox init` inside it. Then add these packages: `devbox add jdk` and `devbox add gradle`.
     - Replace `jdk` with the version of JDK you want. Get the exact nix-pkg name from `search.nixos.org`.

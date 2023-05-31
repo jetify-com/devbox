@@ -8,23 +8,16 @@ Python by default will attempt to install your packages globally, or in the Nix 
 
 ## Adding Python to your Project
 
-`devbox add python310`, or in your `devbox.json` add:
+`devbox add python@3.10`, or in your `devbox.json` add:
 
 
 ```json
   "packages": [
-    "python310"
+    "python@3.10"
   ],
 ```
 
-This will install Python 3.10 in your shell.
-
-Other versions available include: 
-
-* python37 (Python 3.7)
-* python38 (Python 3.8)
-* python39 (Python 3.9)
-* python311 (Python 3.11)
+This will install Python 3.10 in your shell. You can find other versions of Python by running `devbox search python`.
 
 ## Installing Packages with Pip
 
@@ -48,7 +41,7 @@ Your virtual environment is created in the `.devbox/virtenv/pip` directory by de
         "init_hook": ". $VENV_DIR/bin/activate"
     }
 }
-``` 
+```
 
 ## Pipenv
 
@@ -56,7 +49,7 @@ Your virtual environment is created in the `.devbox/virtenv/pip` directory by de
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/python/pipenv)
 
-[pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages. 
+[pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 
 You can install `pipenv` by adding it to the packages in your `devbox.json`. You can then manage your packages and virtual environment via a Pipfile
 
@@ -79,7 +72,7 @@ This init_hook will automatically start your virtualenv when you run `devbox she
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/python/poetry/poetry-demo)
 
-[Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project. 
+[Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project.
 
 You can install Poetry by adding it to the packages in your `devbox.json`. You can then manage your packages and virtual environment via a `pyproject.toml`
 
@@ -94,4 +87,4 @@ You can install Poetry by adding it to the packages in your `devbox.json`. You c
     }
 }
 ```
-This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages
+This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages.

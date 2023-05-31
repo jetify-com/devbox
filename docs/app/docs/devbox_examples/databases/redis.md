@@ -14,9 +14,11 @@ Redis can be configured automatically using Devbox's built in Redis plugin. This
 
 ```json
     "packages": [
-        "redis"
+        "redis@latest   "
     ],
 ```
+
+This will install the latest version of Redis. You can find other installable versions of Redis by running `devbox search redis`.
 
 ## Redis Plugin Details
 

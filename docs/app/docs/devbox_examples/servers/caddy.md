@@ -14,9 +14,11 @@ Run `devbox add caddy`, or add the following to your `devbox.json`
 
 ```json
   "packages": [
-    "caddy"
+    "caddy@latest"
   ]
 ```
+
+This will install the latest version of Caddy. You can find other installable versions of Caddy by running `devbox search caddy`.
 
 ## Caddy Plugin Details
 

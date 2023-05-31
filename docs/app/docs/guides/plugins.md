@@ -9,13 +9,14 @@ If a plugin is available for your package, it will activate when you install the
 ## Current Plugins
 Plugins are available for the following packages. You can activate the plugins for these packages by running `devbox add <package_name>`:
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
-* [Nginx](../devbox_examples/servers/nginx.md) (nginx)
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
+* [Nginx](../devbox_examples/servers/nginx.md) (nginx)
+* [MariaDB](../devbox_examples/databases/mariadb.md) (mariadb, mariadb_10_6...)
 * [PostgreSQL](../devbox_examples/databases/postgres.md) (postgresql)
 * [Redis](../devbox_examples/databases/redis.md) (redis)
-* [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82)
-* [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0)
-* [Pip](../devbox_examples/languages/python.md) (python39Packages.pip, python310Packages.pip, python311Packages.pip)
+* [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82...)
+* [Pip](../devbox_examples/languages/python.md) (python39Packages.pip, python310Packages.pip, python311Packages.pip...)
+* [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0...)
 
 Our team is rapidly adding new plugins to Devbox. If you want to request a plugin, please file an issue in the Devbox Repo.
 

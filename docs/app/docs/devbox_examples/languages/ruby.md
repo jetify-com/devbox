@@ -10,21 +10,16 @@ Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. Thi
 
 ## Adding Ruby to your shell
 
-Run `devbox add ruby bundler`, or add the following to your `devbox.json`
+Run `devbox add ruby@3.1 bundler`, or add the following to your `devbox.json`
 
 ```json
     "packages": [
-        "ruby_3_1",
-        "bundler"
+        "ruby@3.1",
+        "bundler@latest"
     ]
 ```
 
-This will install Ruby 3.1 to your shell.
-
-Other versions available include:
-
-* `ruby` (Ruby 2.7)
-* `ruby_3_0` (Ruby 3.0)
+This will install Ruby 3.1 to your shell. You can find other installable versions of Ruby by running `devbox search ruby`.
 
 ## Ruby Plugin Support
 

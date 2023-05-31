@@ -53,15 +53,15 @@ When you run a command that installs your packages (like `devbox shell` or `devb
 If you want to update your packages, you can run `devbox update`. This command will update all your pinned packages to the newest compatible version in the Devbox index.
 
 ### Using the Latest Version of a Package
-If you do not include a version string, Devbox will default to using the latest available version of a package in the Nixpkgs commit pinned in your `devbox.json`.
+If you do not include a version string, Devbox will default to using the latest available version of the package in our Nixpkg index. This is the same as adding `<pkg>@<latest>` to your devbox.json.
 
-To ensure you use the latest available package, you can run `devbox add <pkg>@latest` or adding `package@latest` to the package list in your devbox.json. For example, to use the latest version of `ripgrep,` run `devbox add ripgrep@latest` or add `ripgrep@latest` to your devbox.json.
+For example, to use the latest version of `ripgrep,` run `devbox add ripgrep`, `devbox add ripgrep@latest`, or add `ripgrep@latest` to your devbox.json package list.
 
-Whenever you run `devbox update`, your package will be updated to the latest version available in our index.
+Whenever you run `devbox update`, packages with the latest tag will be updated to the latest version available in our index.
 
-## Manually Pinning a Nixpkg Commit for a Single Package
+## Manually Pinning a Nixpkg Commit for a Package
 
-If you want to use a different commit for a single package, you can use a Flake reference to use an older revision of Nixpkg for just that package. The example below shows how to install the `hello` package from a specific Nixpkg commit:
+If you want to use a specific Nixpkg revision for a package, you can use a `github:nixos/nixpkgs/<commit_sha>#<pkg>` Flake reference. The example below shows how to install the `hello` package from a specific Nixpkg commit:
 
 ```json
 }
@@ -73,6 +73,10 @@ If you want to use a different commit for a single package, you can use a Flake 
 Using multiple nixpkg commits may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
 
 ## Pinning the Default Nixpkg commit in your Devbox.json
+
+:::caution
+Pinning the nixpkgs commit is considered deprecated starting with Devbox version 0.5.0, and will eventually be removed. We recommend using the `@` syntax to pin specific package versions instead.
+:::
 
 Devbox stores a default Nixpkg commit in your project's `devbox.json`, under the `nixpkgs.commit`. If you do not provide one yourself, Devbox will automatically add a default commit when you run a command like `devbox add`, `devbox shell`, or `devbox run`:
 
