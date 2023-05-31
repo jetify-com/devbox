@@ -20,7 +20,7 @@
 
           # If you only want to export a single package, you can name it default which allows
           # installation without using url fragment (.e.g. "path:my-flake")
-          default = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
+          # default = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
         };
       });
 }
