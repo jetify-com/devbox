@@ -90,6 +90,9 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		if err := os.RemoveAll(dst); err != nil {
 			return errors.WithStack(err)
 		}
+		if err := os.MkdirAll(dst, 0755); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	for _, srcFile := range srcFiles {
