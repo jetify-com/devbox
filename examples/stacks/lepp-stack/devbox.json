@@ -1,10 +1,10 @@
 {
     "packages": [
-        "curl",
-        "postgresql",
-        "php81",
-        "nginx",
-        "php81Extensions.pgsql"
+        "curl@8.0",
+        "postgresql@14",
+        "php@8.1",
+        "php81Extensions.pgsql@latest",
+        "nginx@1.24"
     ],
     "env": {
       "PGPORT": "5433"
@@ -19,8 +19,8 @@
             ],
             "run_test": [
                 "devbox run init_db",
-                "devbox services start",
-                "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
+                "devbox services up -b",
+                "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
                 "devbox run create_db",
                 "curl localhost:8089",
                 "devbox services stop"

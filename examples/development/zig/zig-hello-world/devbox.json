@@ -1,6 +1,6 @@
 {
     "packages": [
-        "zig"
+        "zig@0.10"
     ],
     "shell": {
         "init_hook": null,

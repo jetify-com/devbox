@@ -1,11 +1,11 @@
 {
     "packages": [
-        "ruby_3_1",
-        "bundler",
-        "nodejs-19_x",
-        "yarn",
-        "curl",
-        "sqlite"
+        "ruby@3.1",
+        "bundler@latest",
+        "nodejs@19",
+        "yarn@latest",
+        "curl@latest",
+        "sqlite@latest"
     ],
     "shell": {
         "init_hook": [

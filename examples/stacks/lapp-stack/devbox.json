@@ -1,10 +1,10 @@
 {
     "packages": [
-        "curl",
-        "postgresql",
-        "php81",
-        "php81Extensions.pgsql",
-        "apacheHttpd"
+        "curl@8.0",
+        "postgresql@14",
+        "php@8.1",
+        "php81Extensions.pgsql@latest",
+        "apache@2.4"
     ],
     "env": {
       "PGPORT": "5432"

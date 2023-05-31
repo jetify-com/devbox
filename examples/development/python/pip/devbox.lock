@@ -2,14 +2,12 @@
   "lockfile_version": "1",
   "packages": {
     "python310": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310",
-      "version": ""
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310"
     },
-    "python310Packages.pip": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310Packages.pip",
-      "version": ""
+    "python310Packages.pip@23.0.1": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python310Packages.pip",
+      "version": "23.0.1"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "packages": [
-    "caddy"
+    "caddy@latest"
   ],
   "shell": {
     "init_hook": null

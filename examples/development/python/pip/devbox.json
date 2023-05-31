@@ -1,7 +1,7 @@
 {
     "packages": [
         "python310",
-        "python310Packages.pip"
+        "python310Packages.pip@23.0.1"
     ],
     "shell": {
         "init_hook": [
