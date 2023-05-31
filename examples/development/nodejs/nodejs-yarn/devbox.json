@@ -4,6 +4,9 @@
     "yarn@1.22"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": [
+      "yarn install",
+      "yarn start"
+    ]
   }
 }

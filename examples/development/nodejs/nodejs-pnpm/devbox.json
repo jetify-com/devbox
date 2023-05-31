@@ -1,0 +1,12 @@
+{
+    "packages": [
+        "nodejs@18",
+        "nodePackages.pnpm@latest"
+    ],
+    "shell": {
+        "init_hook": [
+            "pnpm install",
+            "pnpm run start"
+        ]
+    }
+}
