@@ -733,6 +733,17 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		originalPath = currentEnvPath
 	}
 
+	// We use this XDG_DATA_DIRS by prepending the print-dev-env
+	// XDG_DATA_DIRS to it below. By preserving the original XDG_DATA_DIRS, we
+	// enable this shellenv calculation to be idempotent, if we do shellenv-ception.
+	originalXdgDataDirs, ok := env[d.ogXdgDataDirsKey()]
+	if !ok {
+		// if the env does not have XDG_DATA_DIRS then currentXdgDataDirs is empty string
+		currentXdgDataDirs, _ := env["XDG_DATA_DIRS"]
+		env[d.ogXdgDataDirsKey()] = currentXdgDataDirs
+		originalXdgDataDirs = currentXdgDataDirs
+	}
+
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
@@ -824,7 +835,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// preserve the original XDG_DATA_DIRS by prepending to it
 	env["XDG_DATA_DIRS"] = JoinPathLists(
 		env["XDG_DATA_DIRS"],
-		os.Getenv("XDG_DATA_DIRS"),
+		originalXdgDataDirs,
 	)
 
 	return env, addHashToEnv(env)
@@ -860,6 +871,10 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 
 func (d *Devbox) ogPathKey() string {
 	return "DEVBOX_OG_PATH_" + d.projectDirHash()
+}
+
+func (d *Devbox) ogXdgDataDirsKey() string {
+	return "DEVBOX_OG_XDG_DATA_DIRS_" + d.projectDirHash()
 }
 
 // writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
