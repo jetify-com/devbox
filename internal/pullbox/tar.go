@@ -86,6 +86,12 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		}
 	}
 
+	if overwrite {
+		if err := os.RemoveAll(dst); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	for _, srcFile := range srcFiles {
 		srcPath := src
 		if srcFileInfo.IsDir() {

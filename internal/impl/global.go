@@ -19,7 +19,7 @@ import (
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
 
-func (d *Devbox) PullGlobal(
+func (d *Devbox) Pull(
 	ctx context.Context,
 	force bool,
 	path string,

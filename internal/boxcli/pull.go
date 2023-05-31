@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/pullbox/git"
 )
 
 type pullCmdFlags struct {
@@ -28,14 +27,14 @@ func pullCmd() *cobra.Command {
 		Long:    "Pull a config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pullCmdFunc(cmd, args, flags.force)
+			return pullCmdFunc(cmd, args[0], &flags)
 		},
 		Args: cobra.ExactArgs(1),
 	}
 
 	cmd.Flags().BoolVarP(
 		&flags.force, "force", "f", false,
-		"Force overwrite of existing global config files",
+		"Force overwrite of existing [global] config files",
 	)
 
 	flags.config.register(cmd)
@@ -45,50 +44,44 @@ func pullCmd() *cobra.Command {
 
 func pullCmdFunc(
 	cmd *cobra.Command,
-	args []string,
-	overwrite bool,
+	url string,
+	flags *pullCmdFlags,
 ) error {
-	path, err := ensureGlobalConfig(cmd)
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	pullPath, err := absolutizeIfLocal(url)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	pullPath, err := absolutizeIfLocal(args[0])
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	err = box.PullGlobal(cmd.Context(), overwrite, pullPath)
+	err = box.Pull(cmd.Context(), flags.force, pullPath)
 	if prompt := pullErrorPrompt(err); prompt != "" {
 		prompt := &survey.Confirm{Message: prompt}
-		if err = survey.AskOne(prompt, &overwrite); err != nil {
+		if err = survey.AskOne(prompt, &flags.force); err != nil {
 			return errors.WithStack(err)
 		}
-		if !overwrite {
+		if !flags.force {
 			return nil
 		}
-		err = box.PullGlobal(cmd.Context(), overwrite, pullPath)
+		err = box.Pull(cmd.Context(), flags.force, pullPath)
 	}
 	if err != nil {
 		return err
 	}
 
-	return installCmdFunc(cmd, runCmdFlags{config: configFlags{path: path}})
+	return installCmdFunc(
+		cmd,
+		runCmdFlags{config: configFlags{path: flags.config.path}},
+	)
 }
 
 func pullErrorPrompt(err error) string {
 	switch {
 	case errors.Is(err, fs.ErrExist):
-		return "File(s) already exists. Overwrite?"
-	case errors.Is(err, git.ErrExist):
-		return "Directory is not empty. Overwrite?"
-	case errors.Is(err, git.ErrUncommittedChanges):
-		return "Uncommitted changes. Overwrite?"
+		return "Global profile already exists. Overwrite?"
 	default:
 		return ""
 	}

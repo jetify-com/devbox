@@ -24,7 +24,11 @@ func New(devbox devboxProject, url string, overwrite bool) *pullbox {
 
 func (p *pullbox) Pull() error {
 	if git.IsRepoURL(p.url) {
-		return git.CloneOrPull(p.url, p.ProjectDir(), p.overwrite)
+		tmpDir, err := git.CloneToTmp(p.url)
+		if err != nil {
+			return err
+		}
+		return p.copy(p.overwrite, tmpDir, p.ProjectDir())
 	}
 
 	if p.IsTextDevboxConfig() {
