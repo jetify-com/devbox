@@ -6,7 +6,7 @@
   "shell": {
     "init_hook": null,
     "scripts": {
-      "run_test": "[[ \"$(php -m | grep ds)\" == \"ds\" ]] "
+      "run_test": "[ \"$(php -m | grep ds)\" == \"ds\" ] || exit 1"
     }
   },
   "nixpkgs": {
