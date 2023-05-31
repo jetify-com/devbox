@@ -84,12 +84,23 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox generate dockerfile', true);
 	});
 
-	const shellenv = commands.registerCommand('devbox.shellenv', async () => {
-		await devboxShellenv();
+	const shellenv = commands.registerCommand('devbox.shellenv', () => {
+		devboxShellenv();
 	});
 
-	const reopen = commands.registerCommand('devbox.reopen', async () => {
-		await devboxReopen();
+	const reopen = commands.registerCommand('devbox.reopen', () => {
+
+		// try {
+		// 	await runInTerminal('node ./node.js', false);
+		// 	setTimeout(() => {
+		// 		commands.executeCommand('workbench.action.closeWindow');
+		// 	}, 3000);
+		// } catch (error) {
+		// 	window.showInformationMessage("failed setting up devbox env.");
+		// }
+
+
+		devboxReopen();
 	});
 
 	context.subscriptions.push(shellenv);
@@ -110,9 +121,9 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 		const workspaceUri = workspace.workspaceFolders[0].uri;
 		try {
 			console.log(workspace.workspaceFolders[0].name);
-			if (workspace.workspaceFolders[0].name === '.devbox') {
-				await devboxReopen();
-			}
+			// if (workspace.workspaceFolders[0].name === '.devbox') {
+			// 	await devboxReopen();
+			// }
 			// check if the folder has devbox.json in it
 			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
 			// devbox.json exists setcontext for devbox commands to be available
@@ -129,7 +140,7 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 	}
 }
 
-async function runInTerminal(cmd: string, showTerminal: boolean) {
+async function runInTerminal(cmd: string, showTerminal: boolean): Promise<unknown> {
 	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
 		const terminalName = 'DevboxTerminal';
@@ -141,7 +152,7 @@ async function runInTerminal(cmd: string, showTerminal: boolean) {
 	} else {
 		// A terminal is open
 		// run the given cmd in terminal
-		await commands.executeCommand('workbench.action.terminal.sendSequence', {
+		return commands.executeCommand('workbench.action.terminal.sendSequence', {
 			'text': `${cmd}\r\n`
 		});
 	}

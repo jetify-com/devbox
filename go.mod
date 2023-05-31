@@ -41,6 +41,8 @@ require (
 
 require github.com/lib/pq v1.10.7 // indirect
 
+require github.com/zealic/go2node v0.1.0 // indirect
+
 require (
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
