@@ -6,7 +6,6 @@ package devconfig
 import (
 	"io"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -127,8 +126,8 @@ func Load(path string) (*Config, error) {
 	return cfg, validateConfig(cfg)
 }
 
-func LoadConfigFromURL(url *url.URL) (*Config, error) {
-	res, err := http.Get(url.String())
+func LoadConfigFromURL(url string) (*Config, error) {
+	res, err := http.Get(url)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -138,7 +137,7 @@ func LoadConfigFromURL(url *url.URL) (*Config, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	ext := filepath.Ext(url.Path)
+	ext := filepath.Ext(url)
 	if !cuecfg.IsSupportedExtension(ext) {
 		ext = ".json"
 	}

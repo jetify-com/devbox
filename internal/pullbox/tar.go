@@ -6,9 +6,11 @@ package pullbox
 import (
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -52,9 +54,26 @@ func extract(data []byte) (string, error) {
 }
 
 func (p *pullbox) copy(overwrite bool, src, dst string) error {
-	srcFiles, err := os.ReadDir(src)
+	srcFileInfo, err := os.Stat(src)
 	if err != nil {
 		return errors.WithStack(err)
+	}
+
+	var srcFiles []fs.FileInfo
+	if srcFileInfo.IsDir() {
+		entries, err := os.ReadDir(src)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		for _, entry := range entries {
+			info, err := entry.Info()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			srcFiles = append(srcFiles, info)
+		}
+	} else {
+		srcFiles = []fs.FileInfo{srcFileInfo}
 	}
 
 	if !overwrite {
@@ -67,9 +86,24 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		}
 	}
 
+	if overwrite {
+		if err := os.RemoveAll(dst); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := os.MkdirAll(dst, 0755); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	for _, srcFile := range srcFiles {
-		srcPath := filepath.Join(src, srcFile.Name())
-		if err := exec.Command("cp", "-rf", srcPath, dst).Run(); err != nil {
+		srcPath := src
+		if srcFileInfo.IsDir() {
+			srcPath = filepath.Join(src, srcFile.Name())
+		}
+		cmd := exec.Command("cp", "-rf", srcPath, dst)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		if err := cmd.Run(); err != nil {
 			return err
 		}
 	}
@@ -85,4 +119,17 @@ func isModifiedConfig(path string) bool {
 		return !cfg.Equals(devconfig.DefaultConfig())
 	}
 	return false
+}
+
+// urlIsArchive checks if a file URL points to an archive file
+func urlIsArchive(url string) (bool, error) {
+	response, err := http.Head(url)
+	if err != nil {
+		return false, err
+	}
+	defer response.Body.Close()
+	contentType := response.Header.Get("Content-Type")
+	return strings.Contains(contentType, "tar") ||
+		strings.Contains(contentType, "zip") ||
+		strings.Contains(contentType, "octet-stream"), nil
 }

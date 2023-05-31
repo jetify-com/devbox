@@ -4,39 +4,51 @@
 package pullbox
 
 import (
-	"net/http"
-	"strings"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/pullbox/git"
 )
 
+type devboxProject interface {
+	ProjectDir() string
+}
+
 type pullbox struct {
+	devboxProject
+	overwrite bool
+	url       string
 }
 
-func New() *pullbox {
-	return &pullbox{}
+func New(devbox devboxProject, url string, overwrite bool) *pullbox {
+	return &pullbox{devbox, overwrite, url}
 }
 
-func (p *pullbox) DownloadAndExtract(overwrite bool, url, target string) error {
-	data, err := download(url)
-	if err != nil {
+func (p *pullbox) Pull() error {
+	if git.IsRepoURL(p.url) {
+		tmpDir, err := git.CloneToTmp(p.url)
+		if err != nil {
+			return err
+		}
+		return p.copy(p.overwrite, tmpDir, p.ProjectDir())
+	}
+
+	if p.IsTextDevboxConfig() {
+		return p.pullTextDevboxConfig()
+	}
+
+	if isArchive, err := urlIsArchive(p.url); err != nil {
 		return err
-	}
-	tmpDir, err := extract(data)
-	if err != nil {
-		return err
+	} else if isArchive {
+		data, err := download(p.url)
+		if err != nil {
+			return err
+		}
+		tmpDir, err := extract(data)
+		if err != nil {
+			return err
+		}
+
+		return p.copy(p.overwrite, tmpDir, p.ProjectDir())
 	}
 
-	return p.copy(overwrite, tmpDir, target)
-}
-
-// URLIsArchive checks if a file URL points to an archive file
-func (p *pullbox) URLIsArchive(url string) (bool, error) {
-	response, err := http.Head(url)
-	if err != nil {
-		return false, err
-	}
-	defer response.Body.Close()
-	contentType := response.Header.Get("Content-Type")
-	return strings.Contains(contentType, "tar") ||
-		strings.Contains(contentType, "zip") ||
-		strings.Contains(contentType, "octet-stream"), nil
+	return usererr.New("Could not determine how to pull %s", p.url)
 }
