@@ -13,10 +13,12 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
 
 ```json
     "packages": [
-        "postgresql",
-        "glibcLocales"
+        "postgresql@latest",
+        "glibcLocales@latest"
     ]
 ```
+
+This will install the latest version of Postgres. You can find other installable versions of Postgres by running `devbox search postgresql`.
 
 ## PostgreSQL Plugin Support
 
@@ -32,7 +34,7 @@ You can use `devbox services start|stop postgresql` to start or stop the Postgre
 `PGHOST=./.devbox/virtenv/postgresql`
 `PGDATA=./.devbox/virtenv/postgresql/data`
 
-This variable tells PostgreSQL which directory to use for creating and storing databases. 
+This variable tells PostgreSQL which directory to use for creating and storing databases.
 
 ### Notes
 

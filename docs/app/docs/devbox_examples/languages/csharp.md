@@ -14,16 +14,10 @@ C# and .NET projects can be easily generated in Devbox by adding the dotnet SDK 
 
 ```json
   "packages": [
-    "dotnet-sdk"
+    "dotnet-sdk@latest"
   ],
 ```
-This will install .NET SDK 6.0
-
-Other versions available include: 
-
-* dotnet-sdk_7 (version 7.0)
-* dotnet-sdk_5 (version 5.0)
-* dotnet-sdk_3 (version 3.1)
+This will install the latest version of the dotnet SDK. You can find other installable versions of the dotnet SDK by running `devbox search dotnet-sdk`.
 
 ## Creating a new C# Project
 

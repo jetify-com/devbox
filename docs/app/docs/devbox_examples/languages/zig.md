@@ -14,8 +14,8 @@ Zig projects can be run in Devbox by adding Zig and Nimble to your project.
 
 ```json
     "packages": [
-        "zig",
+        "zig@latest",
     ]
 ```
 
-This will install Zig 0.9.1. 
+This will install the latest version of Zig. You can find other installable versions of Zig by running `devbox search zig`.

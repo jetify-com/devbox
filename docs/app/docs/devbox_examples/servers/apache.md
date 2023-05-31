@@ -10,13 +10,15 @@ Apache can be automatically configured by Devbox via the built-in Apache Plugin.
 
 ### Adding Apache to your Shell
 
-Run `devbox add apacheHttpd`, or add the following to your `devbox.json`
+Run `devbox add apache`, or add the following to your `devbox.json`
 
 ```json
   "packages": [
-    "apacheHttpd"
+    "apache@latest"
   ]
 ```
+
+This will install the latest version of Apache. You can find other installable versions of Apache by running `devbox search apache`.
 
 ## Apache Plugin Details
 

@@ -14,16 +14,11 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 `devbox add nodejs`, or in your `devbox.json`:
 ```json
   "packages": [
-    "nodejs"
+    "nodejs@18"
   ],
 ```
 
-This will install NodeJS 18, and comes bundled with `npm`. 
-
-Other versions available include: 
-
-* `nodejs-16_x` (NodeJS 16)
-* `nodejs-19_x` (NodeJS 19)
+This will install NodeJS 18, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`.
 
 ## Adding Yarn as your Package Manager
 
@@ -31,7 +26,7 @@ Other versions available include:
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/nodejs/nodejs-yarn)
 
-`devbox add yarn`, or in your `devbox.json` add: 
+`devbox add yarn`, or in your `devbox.json` add:
 ```json
   "packages": [
     "nodejs",
@@ -41,9 +36,9 @@ Other versions available include:
 
 ## Installing Global Packages
 
-In some situations, you may want to install packages using `npm install --global`. This will fail in Devbox since the Nix Store is immutable. 
+In some situations, you may want to install packages using `npm install --global`. This will fail in Devbox since the Nix Store is immutable.
 
-You can instead install these global packages by adding them to the list of packages in your `devbox.json`. For example: to add `yalc` and `pm2`: 
+You can instead install these global packages by adding them to the list of packages in your `devbox.json`. For example: to add `yalc` and `pm2`:
 
 ```json
 {

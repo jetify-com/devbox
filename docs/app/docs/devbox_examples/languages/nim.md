@@ -14,10 +14,10 @@ Nim projects can be run in Devbox by adding Nim and Nimble to your project. For 
 
 ```json
     "packages": [
-        "nim",
-        "nimble-unwrapped",
-        "openssl_1_1"
+        "nim@latest",
+        "nimble-unwrapped@latest",
+        "openssl_1_1@latest"
     ]
 ```
 
-This will install Nim 1.6.8. 
+This will install the latest version of Nim available. You can find other installable versions of Nim by running `devbox search nim`.
