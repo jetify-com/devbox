@@ -928,6 +928,11 @@ func (d *Devbox) writeScriptFile(name string, body string) (err error) {
 		return errors.WithStack(err)
 	}
 
+	// add bash shebang if not present
+	if !strings.HasPrefix(body, "#!") {
+		body = "#!/bin/bash\n\n" + body
+	}
+
 	if featureflag.ScriptExitOnError.Enabled() {
 		body = fmt.Sprintf("set -e\n\n%s", body)
 	}
