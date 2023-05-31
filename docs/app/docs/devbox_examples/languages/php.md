@@ -15,7 +15,7 @@ Run `devbox add php php81Packages.composer`, or add the following to your `devbo
 ```json
     "packages": [
         "php@8.1",
-        "php81Packages.composer
+        "php81Packages.composer@latest
     ]
 ```
 

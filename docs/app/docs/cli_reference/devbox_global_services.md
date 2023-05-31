@@ -11,7 +11,7 @@ devbox global services [command]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
-| `-h, --help` | help for add |
+| `-h, --help` | help for global services |
 | `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO

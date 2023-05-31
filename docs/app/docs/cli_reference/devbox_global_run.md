@@ -5,7 +5,7 @@ Starts a new shell and runs your script or command in it, exiting when done.
 The script must be defined in `devbox.json`, or else it will be interpreted as an arbitrary command. You can pass arguments to your script or command. Everything after `--` will be passed verbatim into your command (see example)
 
 ```bash
-devbox global add <pkg>... [flags]
+devbox global run <pkg>... [flags]
 ```
 
 ## Examples
@@ -29,7 +29,7 @@ Run a script (defined as `"moo": "cowsay moo"`) in your devbox.json:
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
-| `-h, --help` | help for add |
+| `-h, --help` | help for global run |
 | `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO

@@ -19,7 +19,7 @@ devbox update [pkg]... [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
-| `-h, --help` | help for add |
+| `-h, --help` | help for update |
 | `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO

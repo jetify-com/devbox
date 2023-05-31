@@ -11,7 +11,7 @@ devbox global install <pkg>... [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
-| `-h, --help` | help for add |
+| `-h, --help` | help for global install |
 | `-q, --quiet` | suppresses logs |
 
 ## SEE ALSO
