@@ -47,6 +47,6 @@ In case you are using bundler to install gems, bundler config file can still be 
 
 `.bundle/config` file example:
 
-```
+```dotenv
 BUNDLE_BUILD__SASSC: "--disable-lto"
 ```
