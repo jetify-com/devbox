@@ -739,9 +739,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	originalXdgDataDirs, ok := env[d.ogXdgDataDirsKey()]
 	if !ok {
 		// if the env does not have XDG_DATA_DIRS then currentXdgDataDirs is empty string
-		currentXdgDataDirs, _ := env["XDG_DATA_DIRS"]
-		env[d.ogXdgDataDirsKey()] = currentXdgDataDirs
-		originalXdgDataDirs = currentXdgDataDirs
+		originalXdgDataDirs = env["XDG_DATA_DIRS"]
+		env[d.ogXdgDataDirsKey()] = originalXdgDataDirs
 	}
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
