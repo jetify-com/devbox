@@ -35,14 +35,18 @@ func InputsFromStrings(names []string, l lock.Locker) []*Input {
 	return inputs
 }
 
-func InputFromString(s string, l lock.Locker) *Input {
-	u, _ := url.Parse(s)
+func InputFromString(raw string, locker lock.Locker) *Input {
+	u, _ := url.Parse(raw)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		// This normalizes url paths to be absolute. It also ensures all
 		// path urls have a single slash (instead of possibly 3 slashes)
-		u, _ = url.Parse("path:" + filepath.Join(l.ProjectDir(), u.Opaque))
+		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), u.Opaque)
+		if u.Fragment != "" {
+			normalizedURL += "#" + u.Fragment
+		}
+		u, _ = url.Parse(normalizedURL)
 	}
-	return &Input{*u, l, s}
+	return &Input{*u, locker, raw}
 }
 
 func (i *Input) IsLocal() bool {

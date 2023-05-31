@@ -4,7 +4,10 @@
     "path:my-php-flake#hello"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": null,
+    "scripts": {
+      "run_test": "php -m | grep ds || exit 1"
+    }
   },
   "nixpkgs": {
     "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"

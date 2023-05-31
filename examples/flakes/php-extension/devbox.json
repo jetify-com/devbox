@@ -1,6 +1,6 @@
 {
     "packages": [
-        "path:my-php-flake#php"
+        "path:my-php-flake"
     ],
     "shell": {
         "init_hook": null
