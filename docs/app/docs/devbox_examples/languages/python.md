@@ -87,4 +87,4 @@ You can install Poetry by adding it to the packages in your `devbox.json`. You c
     }
 }
 ```
-This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages
+This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages.

@@ -29,8 +29,8 @@ This will install NodeJS 18, and comes bundled with `npm`. You can find other in
 `devbox add yarn`, or in your `devbox.json` add:
 ```json
   "packages": [
-    "nodejs",
-    "yarn"
+    "nodejs@18",
+    "yarn@latest"
   ],
 ```
 
@@ -43,9 +43,9 @@ You can instead install these global packages by adding them to the list of pack
 ```json
 {
     "packages": [
-        "nodejs",
-        "nodePackages.yalc",
-        "nodePackages.pm2"
+        "nodejs@18",
+        "nodePackages.yalc@latest",
+        "nodePackages.pm2@latest"
     ]
 }
 ```
