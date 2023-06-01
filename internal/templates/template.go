@@ -31,7 +31,7 @@ func Init(w io.Writer, template, dir string) error {
 		return errors.WithStack(err)
 	}
 	cmd := exec.Command(
-		"git", "clone", "git@github.com:jetpack-io/devbox.git", tmp,
+		"git", "clone", "https://github.com/jetpack-io/devbox.git", tmp,
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
