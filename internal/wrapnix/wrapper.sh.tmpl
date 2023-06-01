@@ -14,7 +14,7 @@ fi
 {{- end }}
 
 {{/*
-We use ShellEnvHashKey to prevent doing shellenv if the correct envrioment is 
+We use ShellEnvHashKey to prevent doing shellenv if the correct environment is
 already set. (perf optimization)
 
 We use the guard to prevent infinite loop if something in shellenv causes 
