@@ -107,31 +107,31 @@ If the new shellrc is correct, you can update the golden file with:
 
 func TestCleanEnvPath(t *testing.T) {
 	tests := []struct {
-		name       string
-		inPath     string
-		joinedPath string
+		name    string
+		inPath  string
+		outPath string
 	}{
 		{
-			name:       "NoEmptyPaths",
-			inPath:     "/usr/local/bin::",
-			joinedPath: "/usr/local/bin",
+			name:    "NoEmptyPaths",
+			inPath:  "/usr/local/bin::",
+			outPath: "/usr/local/bin",
 		},
 		{
-			name:       "NoRelativePaths",
-			inPath:     "/usr/local/bin:/usr/bin:../test:/bin:/usr/sbin:/sbin:.:..",
-			joinedPath: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+			name:    "NoRelativePaths",
+			inPath:  "/usr/local/bin:/usr/bin:../test:/bin:/usr/sbin:/sbin:.:..",
+			outPath: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
 		},
 		{
-			name:       "WithDuplicatedPaths",
-			inPath:     "/usr/bin/first:/usr/bin/second:/usr/bin/first",
-			joinedPath: "/usr/bin/first:/usr/bin/second",
+			name:    "WithDuplicatedPaths",
+			inPath:  "/usr/bin/first:/usr/bin/second:/usr/bin/first",
+			outPath: "/usr/bin/first:/usr/bin/second",
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := JoinPathLists(test.inPath)
-			if got != test.joinedPath {
-				t.Errorf("Got incorrect cleaned path.\ngot:  %s\nwant: %s", got, test.joinedPath)
+			if got != test.outPath {
+				t.Errorf("Got incorrect cleaned path.\ngot:  %s\nwant: %s", got, test.outPath)
 			}
 		})
 	}
