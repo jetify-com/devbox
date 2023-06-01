@@ -64,7 +64,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	// TODO(landau): Improve output
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
 		return err
 	}
 

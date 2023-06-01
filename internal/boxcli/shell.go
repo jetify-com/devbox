@@ -17,6 +17,7 @@ import (
 type shellCmdFlags struct {
 	config   configFlags
 	PrintEnv bool
+	Pure     bool
 }
 
 func shellCmd() *cobra.Command {
@@ -36,6 +37,8 @@ func shellCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
+	command.Flags().BoolVar(
+		&flags.PrintEnv, "pure", false, "Creates an isolated shell without taking any variables from parent system.")
 
 	flags.config.register(command)
 	return command
@@ -64,7 +67,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell(cmd.Context())
+	return box.Shell(cmd.Context(), flags.Pure)
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {

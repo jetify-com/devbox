@@ -183,11 +183,11 @@ func (d *Devbox) Generate() error {
 	return errors.WithStack(d.generateShellFiles())
 }
 
-func (d *Devbox) Shell(ctx context.Context) error {
+func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -197,7 +197,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, pure)
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), opts...)
+	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), pure, opts...)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
 		return err
 	}
 
@@ -242,7 +242,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	env, err := d.nixEnv(ctx, false /* pure */)
 	if err != nil {
 		return err
 	}
@@ -300,11 +300,11 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
 		return "", err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, false /* pure */)
 	if err != nil {
 		return "", err
 	}
@@ -320,7 +320,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, false /* pure */)
 	if err != nil {
 		return "", err
 	}
@@ -437,7 +437,7 @@ func (d *Devbox) GenerateEnvrcFile(force bool) error {
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
 		return err
 	}
 
@@ -722,20 +722,23 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pure bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
 	currentEnv := os.Environ()
-	env := make(map[string]string, len(currentEnv))
-	for _, kv := range currentEnv {
-		key, val, found := strings.Cut(kv, "=")
-		if !found {
-			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+	var env map[string]string
+	if !pure {
+		env = make(map[string]string, len(currentEnv))
+		for _, kv := range currentEnv {
+			key, val, found := strings.Cut(kv, "=")
+			if !found {
+				return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+			}
+			if ignoreCurrentEnvVar[key] {
+				continue
+			}
+			env[key] = val
 		}
-		if ignoreCurrentEnvVar[key] {
-			continue
-		}
-		env[key] = val
 	}
 	// check if contents of .envrc is old and print warning
 	if !usePrintDevEnvCache {
@@ -841,16 +844,22 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
-	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
+	if pure {
+		env["PATH"] = nixEnvPath
+	} else {
+		env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
+	}
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
 
-	// preserve the original XDG_DATA_DIRS by prepending to it
-	env["XDG_DATA_DIRS"] = JoinPathLists(
-		env["XDG_DATA_DIRS"],
-		os.Getenv("XDG_DATA_DIRS"),
-	)
+	if !pure {
+		// preserve the original XDG_DATA_DIRS by prepending to it
+		env["XDG_DATA_DIRS"] = JoinPathLists(
+			env["XDG_DATA_DIRS"],
+			os.Getenv("XDG_DATA_DIRS"),
+		)
+	}
 
 	return env, d.addHashToEnv(env)
 }
@@ -860,7 +869,7 @@ var nixEnvCache map[string]string
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+func (d *Devbox) nixEnv(ctx context.Context, pure bool) (map[string]string, error) {
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
 	}
@@ -880,7 +889,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		usePrintDevEnvCache = true
 	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache)
+	return d.computeNixEnv(ctx, usePrintDevEnvCache, pure)
 }
 
 func (d *Devbox) ogPathKey() string {
@@ -1117,7 +1126,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.nixEnv(ctx)
+	env, err := d.nixEnv(ctx, false /* pure */)
 
 	if err != nil {
 		return nil, err

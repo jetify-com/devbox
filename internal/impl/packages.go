@@ -71,7 +71,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		}
 	}
 
-	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, install, false /* pure */); err != nil {
 		return usererr.WithUserMessage(
 			err,
 			"There was an error installing nix packages",
@@ -136,7 +136,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, uninstall, false /* pure */); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ const (
 // ensurePackagesAreInstalled ensures that the nix profile has the packages specified
 // in the config (devbox.json). The `mode` is used for user messaging to explain
 // what operations are happening, because this function may take time to execute.
-func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
+func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode, pure bool) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
 	localLock, err := lock.Local(d)
@@ -195,7 +195,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Force print-dev-env cache to be recomputed.
-	if _, err = d.computeNixEnv(ctx, false /*use cache*/); err != nil {
+	if _, err = d.computeNixEnv(ctx, false /*use cache*/, pure); err != nil {
 		return err
 	}
 
