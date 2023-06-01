@@ -32,8 +32,8 @@ func pairsToMap(pairs []string) map[string]string {
 	return vars
 }
 
-// exportify takes an array of strings of the form VAR=VAL and returns a bash script
-// that exports all the vars after properly escaping them.
+// exportify takes a map of [string]string and returns a single string
+// of the form export KEY="VAL"; and escapes all the vals from special characters.
 func exportify(vars map[string]string) string {
 	keys := make([]string, 0, len(vars))
 	for k := range vars {
@@ -58,6 +58,37 @@ func exportify(vars map[string]string) string {
 		strb.WriteString("\";\n")
 	}
 	return strings.TrimSpace(strb.String())
+}
+
+// exportify takes a map of [string]string and returns an array of string
+// of the form KEY="VAL" and escapes all the vals from special characters.
+func keyEqualsValue(vars map[string]string) []string {
+	keys := make([]string, 0, len(vars))
+	for k := range vars {
+		keys = append(keys, k)
+	}
+	keyValues := make([]string, 0, len(vars))
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		if k == "PATH" { /* todo: remove this if - this is for debug purposes */
+			strb := strings.Builder{}
+			strb.WriteString(k)
+			strb.WriteString(`="`)
+			for _, r := range vars[k] {
+				switch r {
+				// Special characters inside double quotes:
+				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
+				case '$', '`', '"', '\\', '\n':
+					strb.WriteRune('\\')
+				}
+				strb.WriteRune(r)
+			}
+			strb.WriteString("\"")
+			keyValues = append(keyValues, strb.String())
+		}
+	}
+	return keyValues
 }
 
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,

@@ -28,9 +28,6 @@ export function devboxShellenv() {
             }
         });
         console.log("ooooooooooooooo");
-        // console.log(stdout);
-        // console.log("+++++++++");
-        // console.log(stderr);
     }
 }
 
@@ -59,7 +56,7 @@ export async function devboxReopen() {
                         const nodescript = Uri.joinPath(scriptsDir, 'vscode.js');
                         try {
                             // check if .devbox exists
-                            const fsres = await workspace.fs.stat(dotdevbox);
+                            await workspace.fs.stat(dotdevbox);
                         } catch (error) {
                             //.devbox doesn't exist
                             // running devbox shellenv to create it
@@ -69,7 +66,7 @@ export async function devboxReopen() {
                         }
                         // check if nodejs script exists
                         try {
-                            const fsres = await workspace.fs.stat(nodescript);
+                            await workspace.fs.stat(nodescript);
                         } catch (error) {
                             //nodescript doesn't exist
                             // create nodescript file
@@ -77,13 +74,11 @@ export async function devboxReopen() {
                             await workspace.fs.writeFile(nodescript, content);
                         }
                         // run script file
-                        console.log(nodescript.path);
-
                         const nodeprocess: ChildProcess = spawn('node',
                             [nodescript.path],
                             {
                                 env: {
-                                    processenv: workingDir.path,
+                                    devboxDir: workingDir.path,
                                     ...process.env
                                 },
                                 cwd: workingDir.path,
@@ -107,40 +102,23 @@ export async function devboxReopen() {
                 return p;
             }
         );
-
-
-        // setTimeout(() => {
-        // }, 5000);
-
-
-        //     // commands.executeCommand("workbench.action.closeWindow");
-        //     console.log("2222222");
-        //     console.log(stdout);
-        //     console.log("+++++33333333++++");
-        //     console.log(stderr);
-        // }
     }
 }
 
 const nodeFileContent = `const child_process = require('child_process');
 
 const devbox = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/devbox';
-const cdir = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/';
-const code = 'code'
-process.send({ status: process.env['processenv'] });
+process.send({ status: process.env['devboxDir'] });
 // allowing time for parent process to fully close
 setTimeout(() => {
     let child = child_process.spawn(devbox, ['integrate', 'vscode'], {
-        cwd: process.env['processenv'],
+        cwd: process.env['devboxDir'],
         stdio: [0, 1, 2, 'ipc']
     });
-
-
     child.on('close', (code) => {
         process.exit(code);
     });
-
-    child.send({ hello: "child" });
+    child.send({ configDir: process.env['devboxDir'] });
     child.on('message', function (msg, handle) {
         if (msg.status === "finished") {
             console.log(msg);
