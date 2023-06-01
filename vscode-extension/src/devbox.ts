@@ -1,35 +1,7 @@
 import { window, workspace, commands, ProgressLocation, Uri } from 'vscode';
-import { promisify } from 'node:util';
-import { ChildProcess, ForkOptions, SpawnOptions, execFile, fork, spawn, exec, spawnSync } from 'node:child_process';
+import { ChildProcess, spawn, spawnSync } from 'node:child_process';
 
 // const exe = promisify(spawn);
-
-
-export function devboxShellenv() {
-    if (workspace.workspaceFolders) {
-        let options: ForkOptions = {
-            stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-            cwd: "/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/"
-        };
-        const devboxProcess: ChildProcess = spawn('go', ['run', '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/integrate.go',], options);
-        devboxProcess.send({ hello: "child" });
-        devboxProcess.on('close', (code: number) => {
-            console.log('called close! with code: ' + code);
-            console.log(devboxProcess.stdout);
-            console.log(devboxProcess.stderr);
-
-        });
-
-        devboxProcess.on('message', (message: any, handle) => {
-            console.log(message);
-            if (message?.status === "finished") {
-                devboxProcess.send('Closing');
-                commands.executeCommand("workbench.action.closeWindow");
-            }
-        });
-        console.log("ooooooooooooooo");
-    }
-}
 
 interface Message {
     status: string

@@ -3,7 +3,7 @@ import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import { posix } from 'path';
 
 import { handleOpenInVSCode } from './openinvscode';
-import { devboxReopen, devboxShellenv } from './devbox';
+import { devboxReopen } from './devbox';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -84,26 +84,10 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox generate dockerfile', true);
 	});
 
-	const shellenv = commands.registerCommand('devbox.shellenv', () => {
-		devboxShellenv();
+	const reopen = commands.registerCommand('devbox.reopen', async () => {
+		await devboxReopen();
 	});
 
-	const reopen = commands.registerCommand('devbox.reopen', () => {
-
-		// try {
-		// 	await runInTerminal('node ./node.js', false);
-		// 	setTimeout(() => {
-		// 		commands.executeCommand('workbench.action.closeWindow');
-		// 	}, 3000);
-		// } catch (error) {
-		// 	window.showInformationMessage("failed setting up devbox env.");
-		// }
-
-
-		devboxReopen();
-	});
-
-	context.subscriptions.push(shellenv);
 	context.subscriptions.push(reopen);
 	context.subscriptions.push(devboxAdd);
 	context.subscriptions.push(devboxRun);
@@ -140,7 +124,7 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 	}
 }
 
-async function runInTerminal(cmd: string, showTerminal: boolean): Promise<unknown> {
+async function runInTerminal(cmd: string, showTerminal: boolean) {
 	// check if a terminal is open
 	if ((<any>window).terminals.length === 0) {
 		const terminalName = 'DevboxTerminal';
@@ -152,7 +136,7 @@ async function runInTerminal(cmd: string, showTerminal: boolean): Promise<unknow
 	} else {
 		// A terminal is open
 		// run the given cmd in terminal
-		return commands.executeCommand('workbench.action.terminal.sendSequence', {
+		await commands.executeCommand('workbench.action.terminal.sendSequence', {
 			'text': `${cmd}\r\n`
 		});
 	}
