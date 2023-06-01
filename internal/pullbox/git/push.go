@@ -9,12 +9,9 @@ import (
 	"go.jetpack.io/devbox/internal/pullbox/ioutil"
 )
 
-const rejectedErrorText = "rejected"
 const nothingToCommitErrorText = "nothing to commit"
 
-var ErrRejected = errors.New(rejectedErrorText)
-
-func Push(dir, url string, force bool) error {
+func Push(dir, url string) error {
 	tmpDir, err := CloneToTmp(url)
 	if err != nil {
 		return err
@@ -31,7 +28,7 @@ func Push(dir, url string, force bool) error {
 		return err
 	}
 
-	return push(tmpDir, force)
+	return push(tmpDir)
 }
 
 func createCommit(dir string) error {
@@ -40,7 +37,8 @@ func createCommit(dir string) error {
 	if err := cmd.Run(); err != nil {
 		return errors.WithStack(err)
 	}
-	cmd, buf := ioutil.CommandTTYWithBuffer("git", "commit", "-m", "devbox commit")
+	cmd, buf := ioutil.CommandTTYWithBuffer(
+		"git", "commit", "-m", "devbox commit")
 	cmd.Dir = dir
 	err := cmd.Run()
 	if strings.Contains(buf.String(), nothingToCommitErrorText) {
@@ -49,16 +47,10 @@ func createCommit(dir string) error {
 	return errors.WithStack(err)
 }
 
-func push(dir string, force bool) error {
-	cmd, buf := ioutil.CommandTTYWithBuffer("git", "push")
-	if force {
-		cmd.Args = append(cmd.Args, "--force")
-	}
+func push(dir string) error {
+	cmd := ioutil.CommandTTY("git", "push")
 	cmd.Dir = dir
 	err := cmd.Run()
-	if strings.Contains(buf.String(), rejectedErrorText) {
-		return ErrRejected
-	}
 	return errors.WithStack(err)
 }
 

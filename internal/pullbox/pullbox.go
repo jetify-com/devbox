@@ -62,5 +62,5 @@ func (p *pullbox) Pull() error {
 }
 
 func (p *pullbox) Push() error {
-	return git.Push(p.ProjectDir(), p.url, p.overwrite)
+	return git.Push(p.ProjectDir(), p.url)
 }

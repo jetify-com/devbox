@@ -24,7 +24,8 @@ func CloneToTmp(repo string) (string, error) {
 
 func IsRepoURL(url string) bool {
 	// For now only support ssh
-	return strings.HasPrefix(url, "git@")
+	return strings.HasPrefix(url, "git@") ||
+		(strings.HasPrefix(url, "https://") && strings.HasSuffix(url, ".git"))
 }
 
 func clone(repo, dir string) error {

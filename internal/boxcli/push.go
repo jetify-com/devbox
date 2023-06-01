@@ -4,16 +4,13 @@
 package boxcli
 
 import (
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/pullbox/git"
 )
 
 type pushCmdFlags struct {
 	config configFlags
-	force  bool
 }
 
 func pushCmd() *cobra.Command {
@@ -28,11 +25,6 @@ func pushCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(
-		&flags.force, "force", "f", false,
-		"Force push even if the remote has diverged",
-	)
-
 	flags.config.register(cmd)
 
 	return cmd
@@ -43,25 +35,5 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	err = box.Push(url, flags.force)
-	if prompt := pushErrorPrompt(err); prompt != "" {
-		prompt := &survey.Confirm{Message: prompt}
-		if err = survey.AskOne(prompt, &flags.force); err != nil {
-			return errors.WithStack(err)
-		}
-		if !flags.force {
-			return nil
-		}
-		return box.Push(url, flags.force)
-	}
-	return err
-}
-
-func pushErrorPrompt(err error) string {
-	switch {
-	case errors.Is(err, git.ErrRejected):
-		return "Push was rejected. Force?"
-	default:
-		return ""
-	}
+	return box.Push(url)
 }

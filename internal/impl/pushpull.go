@@ -16,7 +16,7 @@ func (d *Devbox) Pull(
 	return pullbox.New(d, path, force).Pull()
 }
 
-func (d *Devbox) Push(url string, force bool) error {
+func (d *Devbox) Push(url string) error {
 	fmt.Fprintf(d.writer, "Pushing global config\n")
-	return pullbox.New(d, url, force).Push()
+	return pullbox.New(d, url, false).Push()
 }
