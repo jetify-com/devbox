@@ -34,8 +34,7 @@ func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	_, err = box.PrintEnv(cmd.Context(), false /* run init hooks */)
-	if err != nil {
+	if err = box.Install(cmd.Context()); err != nil {
 		return errors.WithStack(err)
 	}
 	fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
