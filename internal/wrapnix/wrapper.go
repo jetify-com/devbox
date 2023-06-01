@@ -23,6 +23,7 @@ import (
 type devboxer interface {
 	NixBins(ctx context.Context) ([]string, error)
 	ShellEnvHash(ctx context.Context) (string, error)
+	ShellEnvHashKey() string
 	ProjectDir() string
 	Services() (services.Services, error)
 }
@@ -53,20 +54,20 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
+			devboxer:     devbox,
 			BashPath:     bashPath,
 			Command:      service.Start,
 			Env:          service.Env,
-			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, service.StartName()),
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
+			devboxer:     devbox,
 			BashPath:     bashPath,
 			Command:      service.Stop,
 			Env:          service.Env,
-			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, service.StopName()),
 		}); err != nil {
@@ -81,9 +82,9 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
+			devboxer:     devbox,
 			BashPath:     bashPath,
 			Command:      bin,
-			ProjectDir:   devbox.ProjectDir(),
 			ShellEnvHash: shellEnvHash,
 			destPath:     filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
@@ -95,10 +96,10 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 }
 
 type createWrapperArgs struct {
+	devboxer
 	BashPath     string
 	Command      string
 	Env          map[string]string
-	ProjectDir   string
 	ShellEnvHash string
 
 	destPath string

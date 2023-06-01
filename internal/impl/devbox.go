@@ -305,7 +305,12 @@ func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	return envs[devboxShellEnvHashVarName], nil
+	return envs[d.ShellEnvHashKey()], nil
+}
+
+func (d *Devbox) ShellEnvHashKey() string {
+	// Don't make this a const so we don't use it by itself accidentally
+	return "__DEVBOX_SHELLENV_HASH_" + d.projectDirHash()
 }
 
 func (d *Devbox) Info(pkg string, markdown bool) error {
@@ -827,7 +832,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		os.Getenv("XDG_DATA_DIRS"),
 	)
 
-	return env, addHashToEnv(env)
+	return env, d.addHashToEnv(env)
 }
 
 var nixEnvCache map[string]string
@@ -1113,10 +1118,10 @@ func (d *Devbox) projectDirHash() string {
 	return hash
 }
 
-func addHashToEnv(env map[string]string) error {
+func (d *Devbox) addHashToEnv(env map[string]string) error {
 	hash, err := cuecfg.Hash(env)
 	if err == nil {
-		env[devboxShellEnvHashVarName] = hash
+		env[d.ShellEnvHashKey()] = hash
 	}
 	return err
 }
