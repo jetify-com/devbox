@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/pullbox/ioutil"
+	"go.jetpack.io/devbox/internal/cmdutil"
 )
 
 func CloneToTmp(repo string) (string, error) {
@@ -29,7 +29,7 @@ func IsRepoURL(url string) bool {
 }
 
 func clone(repo, dir string) error {
-	cmd := ioutil.CommandTTY("git", "clone", repo, dir)
+	cmd := cmdutil.CommandTTY("git", "clone", repo, dir)
 	cmd.Dir = dir
 	err := cmd.Run()
 	return errors.WithStack(err)

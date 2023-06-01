@@ -14,8 +14,9 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/pullbox/ioutil"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 // extract decompresses a tar file and saves it to a tmp directory
@@ -88,7 +89,7 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 	}
 
 	if overwrite {
-		if err := ioutil.ClearDir(dst); err != nil {
+		if err := fileutil.ClearDir(dst); err != nil {
 			return err
 		}
 	}
@@ -98,7 +99,7 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		if srcFileInfo.IsDir() {
 			srcPath = filepath.Join(src, srcFile.Name())
 		}
-		cmd := ioutil.CommandTTY("cp", "-rf", srcPath, dst)
+		cmd := cmdutil.CommandTTY("cp", "-rf", srcPath, dst)
 		if err := cmd.Run(); err != nil {
 			return err
 		}

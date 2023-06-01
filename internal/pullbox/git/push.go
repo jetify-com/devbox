@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/pullbox/ioutil"
+	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 const nothingToCommitErrorText = "nothing to commit"
@@ -20,7 +21,7 @@ func Push(dir, url string) error {
 		return err
 	}
 
-	if err := ioutil.CopyAll(dir, tmpDir); err != nil {
+	if err := fileutil.CopyAll(dir, tmpDir); err != nil {
 		return err
 	}
 
@@ -32,12 +33,12 @@ func Push(dir, url string) error {
 }
 
 func createCommit(dir string) error {
-	cmd := ioutil.CommandTTY("git", "add", ".")
+	cmd := cmdutil.CommandTTY("git", "add", ".")
 	cmd.Dir = dir
 	if err := cmd.Run(); err != nil {
 		return errors.WithStack(err)
 	}
-	cmd, buf := ioutil.CommandTTYWithBuffer(
+	cmd, buf := cmdutil.CommandTTYWithBuffer(
 		"git", "commit", "-m", "devbox commit")
 	cmd.Dir = dir
 	err := cmd.Run()
@@ -48,7 +49,7 @@ func createCommit(dir string) error {
 }
 
 func push(dir string) error {
-	cmd := ioutil.CommandTTY("git", "push")
+	cmd := cmdutil.CommandTTY("git", "push")
 	cmd.Dir = dir
 	err := cmd.Run()
 	return errors.WithStack(err)

@@ -1,11 +1,14 @@
-package ioutil
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package fileutil
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/cmdutil"
 )
 
 func CopyAll(src, dst string) error {
@@ -14,9 +17,7 @@ func CopyAll(src, dst string) error {
 		return errors.WithStack(err)
 	}
 	for _, entry := range entries {
-		cmd := exec.Command("cp", "-rf", filepath.Join(src, entry.Name()), dst)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
+		cmd := cmdutil.CommandTTY("cp", "-rf", filepath.Join(src, entry.Name()), dst)
 		if err := cmd.Run(); err != nil {
 			return errors.WithStack(err)
 		}
@@ -28,5 +29,5 @@ func ClearDir(dir string) error {
 	if err := os.RemoveAll(dir); err != nil {
 		return errors.WithStack(err)
 	}
-	return os.MkdirAll(dir, 0755)
+	return errors.WithStack(os.MkdirAll(dir, 0755))
 }
