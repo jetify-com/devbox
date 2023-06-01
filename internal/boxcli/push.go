@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/pullbox/git"
 )
 
@@ -20,13 +19,12 @@ type pushCmdFlags struct {
 func pushCmd() *cobra.Command {
 	flags := pushCmdFlags{}
 	cmd := &cobra.Command{
-		Use:     "push",
-		Short:   "Push a config to a git repo",
-		Long:    "Push a config to a git repo. This will create a commit if needed and push it to the remote.",
+		Use:     "push <git-repo>",
+		Short:   "Push a [global] config to a git repo",
 		PreRunE: ensureNixInstalled,
-		Args:    cobra.ExactArgs(0),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pushCmdFunc(cmd, flags)
+			return pushCmdFunc(cmd, args[0], flags)
 		},
 	}
 
@@ -40,12 +38,12 @@ func pushCmd() *cobra.Command {
 	return cmd
 }
 
-func pushCmdFunc(cmd *cobra.Command, flags pushCmdFlags) error {
+func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	err = box.Push(flags.force)
+	err = box.Push(url, flags.force)
 	if prompt := pushErrorPrompt(err); prompt != "" {
 		prompt := &survey.Confirm{Message: prompt}
 		if err = survey.AskOne(prompt, &flags.force); err != nil {
@@ -54,14 +52,7 @@ func pushCmdFunc(cmd *cobra.Command, flags pushCmdFlags) error {
 		if !flags.force {
 			return nil
 		}
-		return box.Push(flags.force)
-	}
-	if errors.Is(err, git.ErrNotAGitRepo) {
-		return usererr.New(
-			"Not a git repo. Use 'devbox [global] pull <repo>' to follow"+
-				" a repo.\nYou can also cd to %s and manually set up a git repo.",
-			flags.config.path,
-		)
+		return box.Push(url, flags.force)
 	}
 	return err
 }

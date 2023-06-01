@@ -5,11 +5,10 @@ package git
 
 import (
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/pullbox/ioutil"
 )
 
 func CloneToTmp(repo string) (string, error) {
@@ -18,9 +17,6 @@ func CloneToTmp(repo string) (string, error) {
 		return "", errors.WithStack(err)
 	}
 	if err := clone(repo, tmpDir); err != nil {
-		return "", errors.WithStack(err)
-	}
-	if err := os.RemoveAll(filepath.Join(tmpDir, ".git")); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return tmpDir, nil
@@ -32,9 +28,7 @@ func IsRepoURL(url string) bool {
 }
 
 func clone(repo, dir string) error {
-	cmd := exec.Command("git", "clone", repo, dir)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+	cmd := ioutil.CommandTTY("git", "clone", repo, dir)
 	cmd.Dir = dir
 	err := cmd.Run()
 	return errors.WithStack(err)

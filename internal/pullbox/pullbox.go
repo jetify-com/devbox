@@ -4,6 +4,10 @@
 package pullbox
 
 import (
+	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/pullbox/git"
 )
@@ -27,6 +31,10 @@ func (p *pullbox) Pull() error {
 		tmpDir, err := git.CloneToTmp(p.url)
 		if err != nil {
 			return err
+		}
+		// Remove the .git directory, we don't want to keep state
+		if err := os.RemoveAll(filepath.Join(tmpDir, ".git")); err != nil {
+			return errors.WithStack(err)
 		}
 		return p.copy(p.overwrite, tmpDir, p.ProjectDir())
 	}
@@ -54,5 +62,5 @@ func (p *pullbox) Pull() error {
 }
 
 func (p *pullbox) Push() error {
-	return git.Push(p.ProjectDir(), p.overwrite)
+	return git.Push(p.ProjectDir(), p.url, p.overwrite)
 }
