@@ -41,52 +41,54 @@ type parentMessage struct {
 
 func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) error {
 
-	// Setup process communication with node as parent
-	channel, err := go2node.RunAsNodeChild()
-	if err != nil {
-		panic(err)
-	}
+	if ide == "vscode" {
+		// Setup process communication with node as parent
+		channel, err := go2node.RunAsNodeChild()
+		if err != nil {
+			panic(err)
+		}
 
-	// Get config dir as a message from parent process
-	msg, err := channel.Read()
-	if err != nil {
-		panic(err)
-	}
-	// Parse node process' message
-	var message parentMessage
-	json.Unmarshal(msg.Message, &message)
-	fmt.Println(message.ConfigDir) /* todo remove */
+		// Get config dir as a message from parent process
+		msg, err := channel.Read()
+		if err != nil {
+			panic(err)
+		}
+		// Parse node process' message
+		var message parentMessage
+		json.Unmarshal(msg.Message, &message)
+		fmt.Println(message.ConfigDir) /* todo remove */
 
-	// todo: add error handling - send message to parent process
-	box, err := devbox.Open(message.ConfigDir, cmd.OutOrStdout())
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	// Get env variables of a devbox shell
-	envVars, err := box.PrintEnvVars(cmd.Context())
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	fmt.Println("=====")
-	fmt.Println(envVars)
-
-	// Send message to parent process to terminate
-	err = channel.Write(&go2node.NodeMessage{
-		Message: []byte(`{"status": "finished"}`),
-	})
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(2 * time.Second)
-	// Open vscode with devbox shell environment
-	cmnd := exec.Command("code", "-n", message.ConfigDir)
-	cmnd.Env = append(cmnd.Env, envVars...)
-	err = cmnd.Run()
-	if err != nil {
+		// todo: add error handling - send message to parent process
+		box, err := devbox.Open(message.ConfigDir, cmd.OutOrStdout())
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// Get env variables of a devbox shell
+		envVars, err := box.PrintEnvVars(cmd.Context())
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		fmt.Println("=====")
-		fmt.Println(err.Error())
-		fmt.Println("=====")
-		return errors.WithStack(err)
+		fmt.Println(envVars)
+
+		// Send message to parent process to terminate
+		err = channel.Write(&go2node.NodeMessage{
+			Message: []byte(`{"status": "finished"}`),
+		})
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(2 * time.Second)
+		// Open vscode with devbox shell environment
+		cmnd := exec.Command("code", "-n", message.ConfigDir)
+		cmnd.Env = append(cmnd.Env, envVars...)
+		err = cmnd.Run()
+		if err != nil {
+			fmt.Println("=====")
+			fmt.Println(err.Error())
+			fmt.Println("=====")
+			return errors.WithStack(err)
+		}
 	}
 	return nil
 }
