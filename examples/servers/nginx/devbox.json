@@ -1,6 +1,6 @@
 {
   "packages": [
-    "nginx"
+    "nginx@latest"
   ],
   "shell": {
     "init_hook": null

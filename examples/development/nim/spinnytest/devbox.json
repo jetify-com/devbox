@@ -1,8 +1,8 @@
 {
     "packages": [
-        "nim",
-        "nimble-unwrapped",
-        "openssl_1_1"
+        "nim@1.6.12",
+        "nimble-unwrapped@0.14",
+        "openssl_1_1@latest"
     ],
     "shell": {
         "init_hook": null,

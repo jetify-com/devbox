@@ -1,0 +1,33 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "curl@8.0": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#curl",
+      "version": "8.0.1"
+    },
+    "nginx@1.24": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nginx",
+      "version": "1.24.0"
+    },
+    "php81Extensions.pgsql@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.pgsql",
+      "version": "8.1.18"
+    },
+    "php@8.1": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php",
+      "version": "8.1.18"
+    },
+    "postgresql@14": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
+      "version": "14.7"
+    }
+  }
+}

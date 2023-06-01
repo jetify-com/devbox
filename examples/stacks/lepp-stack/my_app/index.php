@@ -2,7 +2,7 @@
 
 include 'config.php';
 
-$dbconn = pg_connect("host=$db_hostname dbname=$db_database user=$db_username password=$db_password")
+$dbconn = pg_connect("host=$db_hostname dbname=$db_database user=$db_username password=$db_password port=$db_port")
 	or die('Could not connect: ' . pg_last_error());
 
 // Check if the form has been submitted
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$last_name = $_POST['last_name'];
 	$phone = $_POST['phone'];
 	$email = $_POST['email'];
-  
+
 	// Insert the new record into the database
 	$query = "INSERT INTO address_book (first_name, last_name, phone, email,) VALUES ('$first_name', '$last_name', '$phone', '$email')";
 	$result = pg_query($dbconn, $query);
@@ -21,16 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	  die("Error: " . pg_last_error($dbconn));
 	}
   }
-  
+
   // Query the database for all records
   $query = "SELECT * FROM address_book ORDER BY last_name, first_name";
   $result = pg_query($dbconn, $query);
   if (!$result) {
 	die("Error: " . pg_last_error($dbconn));
   }
-  
+
   ?>
-  
+
   <!-- HTML form for adding new records -->
   <form method="post" action="">
 	<label for="first_name">First name:</label><br>
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	<input type="text" id="email" name="email"><br>
 	<input type="submit" value="Submit">
   </form>
-  
+
   <!-- HTML table for displaying records -->
   <table>
 	<tr>
@@ -59,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	  </tr>
 	<?php } ?>
   </table>
-  
+
   <?php
-  
+
   // Close the database connection
   pg_close($dbconn);
-  
+

@@ -1,6 +1,6 @@
 {
     "packages": [
-        "elixir"
+        "elixir@latest"
     ],
     "env": {
         "MIX_HOME": "$PWD/.nix-mix",
