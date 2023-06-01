@@ -145,6 +145,18 @@ func createSymlinksForSupportDirs(projectDir string) error {
 		newname := filepath.Join(projectDir, plugin.WrapperPath, dir.Name())
 
 		if err := os.Symlink(oldname, newname); err != nil {
+			// ignore if the symlink already exists
+			if errors.Is(err, os.ErrExist) {
+				existing, readerr := os.Readlink(newname)
+				if readerr != nil {
+					return errors.WithStack(readerr)
+				}
+				if existing == oldname {
+					continue
+				}
+				return errors.Errorf("symlink %s already exists and points to %s", newname, existing)
+
+			}
 			return err
 		}
 	}
