@@ -20,16 +20,17 @@ If you see any errors when activating your `.envrc` file, you will need to run `
 
 #### New Project
 
-If you have direnv installed, Devbox will generate an .envrc file when you run `devbox init` and enables it by running `direnv allow` in the background:
+If you have direnv installed, Devbox will generate an .envrc file when you run `devbox generate direnv` and enables it by running `direnv allow` in the background:
 
 ```bash
-➜  devbox init
+➜  devbox generate direnv
+Success: generated .envrc file
+Success: ran `direnv allow`
 direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
 
-This will generate a `.envrc` file in your root directory along with your `devbox.json`, you can run `direnv allow` so that your shell will activate whenever you navigate to the directory 
-or `direnv revoke` to stop.
+This will generate a `.envrc` file in your project directory along with your `devbox.json`, if you make changes to `.envrc` file, you can run `direnv allow` so that your shell will activate whenever you navigate to the directory or `direnv revoke` to stop. Any changes to `devbox.json` will automatically trigger direnv to re-setup the environment.
 
 
 #### Existing Project
@@ -38,6 +39,8 @@ For an existing project, you can add a `.envrc` file by running `devbox generate
 
 ```bash
 ➜  devbox generate direnv
+Success: generated .envrc file
+Success: ran `direnv allow`
 direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
@@ -53,6 +56,9 @@ Alternatively, a project directory can be whitelisted so that changes will be au
 prefix = [ "/absolute/path/to/project" ]
 
 ```
-<!-- TODO: add steps for vscode integration -->
+
+### VSCode setup with direnv
+
+Best experience to have VSCode integration with a direnv environment is to open VSCode from a terminal window where direnv is activated (`code .`). Alternatively, there is [direnv VSCode extension](https://marketplace.visualstudio.com/items?itemName=mkhl.direnv) that helps integrate VSCode's environment if the VSCode workspace has a `.envrc` file.
 
 If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetpack-io/devbox/pulls) in Github.
