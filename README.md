@@ -84,7 +84,7 @@ In this quickstart we’ll create a development shell with specific tools instal
 3. Add command-line tools from [Nix Packages](https://search.nixos.org/packages). For example, to add Python 3.10:
 
    ```bash
-   devbox add python310
+   devbox add python@3.10
    ```
 
 4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
@@ -92,7 +92,7 @@ In this quickstart we’ll create a development shell with specific tools instal
    ```json
    {
       "packages": [
-         "python310"
+         "python@3.10"
        ]
    }
    ```
