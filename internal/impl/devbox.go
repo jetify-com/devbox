@@ -262,6 +262,16 @@ func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
+// Install ensures that all the packages in the config are installed and
+// creates all wrappers, but does not run init hooks. It is used to power
+// devbox install cli command.
+func (d *Devbox) Install(ctx context.Context) error {
+	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
+		return err
+	}
+	return wrapnix.CreateWrappers(ctx, d)
+}
+
 func (d *Devbox) ListScripts() []string {
 	keys := make([]string, len(d.cfg.Scripts()))
 	i := 0
@@ -282,10 +292,6 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
-		return "", err
-	}
-
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return "", err
 	}
 
