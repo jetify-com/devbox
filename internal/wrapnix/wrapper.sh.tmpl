@@ -14,14 +14,18 @@ fi
 {{- end }}
 
 {{/*
-We use ShellEnvHashKey to avoid re-sourcing shellenv. Since wrappers
-call other wrappers and potentially modify the environment, we don't want the
-environment to get re-written.
+We use ShellEnvHashKey to prevent doing shellenv if the correct environment is
+already set. (perf optimization)
+
+We use the guard to prevent infinite loop if something in shellenv causes 
+another wrapped binary to be called. The guard is specific to this project so shellenv
+could still cause another project's shellenv to be called.
 
 DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
 
-if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]]; then
+if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]] && [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
+export {{ .ShellEnvHashKey }}_GUARD=true
 eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
