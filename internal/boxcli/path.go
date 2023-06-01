@@ -5,15 +5,12 @@ package boxcli
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/nix"
 )
 
 type pathCmdFlags struct {
-	config     configFlags
-	nixProfile bool
+	config configFlags
 }
 
 func pathCmd() *cobra.Command {
@@ -24,20 +21,12 @@ func pathCmd() *cobra.Command {
 		PreRunE: ensureNixInstalled,
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if flags.nixProfile {
-				fmt.Println(filepath.Join(flags.config.path, nix.ProfilePath))
-			} else {
-				fmt.Println(flags.config.path)
-			}
+			fmt.Println(flags.config.path)
 			return nil
 		},
 	}
 
 	flags.config.register(cmd)
-	cmd.Flags().BoolVarP(
-		&flags.nixProfile, "nix-profile", "n", false,
-		"Show path to nix profile created by devbox",
-	)
 
 	return cmd
 }
