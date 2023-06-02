@@ -71,7 +71,7 @@ func keyEqualsValue(vars map[string]string) []string {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		if k == "PATH" { /* todo: remove this if - this is for debug purposes */
+		if isApproved(k) {
 			strb := strings.Builder{}
 			strb.WriteString(k)
 			strb.WriteString(`="`)
@@ -89,6 +89,22 @@ func keyEqualsValue(vars map[string]string) []string {
 		}
 	}
 	return keyValues
+}
+
+func isApproved(key string) bool {
+	// list to keys
+	// should find the corrupt key
+	troublingEnvKeys := []string{
+		"HOME",
+		"NODE_CHANNEL_FD",
+	}
+	approved := true
+	for _, ak := range troublingEnvKeys {
+		if key == ak {
+			approved = false
+		}
+	}
+	return approved
 }
 
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,

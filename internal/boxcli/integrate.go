@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -67,7 +68,6 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		fmt.Println("=====")
 		fmt.Println(envVars)
 
 		// Send message to parent process to terminate
@@ -77,15 +77,15 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		if err != nil {
 			panic(err)
 		}
-		// time.Sleep(2 * time.Second)
 		// Open vscode with devbox shell environment
-		cmnd := exec.Command("code", "-n", message.ConfigDir)
+		cmnd := exec.Command("code", message.ConfigDir)
 		cmnd.Env = append(cmnd.Env, envVars...)
+		var outb, errb bytes.Buffer
+		cmnd.Stdout = &outb
+		cmnd.Stderr = &errb
 		err = cmnd.Run()
 		if err != nil {
-			fmt.Println("=====")
-			fmt.Println(err.Error())
-			fmt.Println("=====")
+			fmt.Println("out: ", outb.String(), " err: ", errb.String())
 			return errors.WithStack(err)
 		}
 	}
