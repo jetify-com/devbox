@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -78,7 +77,7 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(2 * time.Second)
+		// time.Sleep(2 * time.Second)
 		// Open vscode with devbox shell environment
 		cmnd := exec.Command("code", "-n", message.ConfigDir)
 		cmnd.Env = append(cmnd.Env, envVars...)

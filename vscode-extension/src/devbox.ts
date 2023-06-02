@@ -64,9 +64,9 @@ export async function devboxReopen() {
                         nodeprocess.on('message', (message: Message, handler) => {
                             console.log(message.status);
                             resolve();
-                            setTimeout(() => {
-                                commands.executeCommand("workbench.action.closeWindow");
-                            }, 1000);
+                            // setTimeout(() => {
+                            commands.executeCommand("workbench.action.closeWindow");
+                            // }, 1000);
 
                         });
                     }
@@ -82,19 +82,18 @@ const nodeFileContent = `const child_process = require('child_process');
 const devbox = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/devbox';
 process.send({ status: process.env['devboxDir'] });
 // allowing time for parent process to fully close
-setTimeout(() => {
-    let child = child_process.spawn(devbox, ['integrate', 'vscode'], {
-        cwd: process.env['devboxDir'],
-        stdio: [0, 1, 2, 'ipc']
-    });
-    child.on('close', (code) => {
-        process.exit(code);
-    });
-    child.send({ configDir: process.env['devboxDir'] });
-    child.on('message', function (msg, handle) {
-        if (msg.status === "finished") {
-            console.log(msg);
-        }
-    });
-}, 5000);
+let child = child_process.spawn(devbox, ['integrate', 'vscode'], {
+    cwd: process.env['devboxDir'],
+    stdio: [0, 1, 2, 'ipc']
+});
+child.on('close', (code) => {
+    process.exit(code);
+});
+child.send({ configDir: process.env['devboxDir'] });
+child.on('message', function (msg, handle) {
+    if (msg.status === "finished") {
+        console.log(msg);
+    }
+});
+
 `;
