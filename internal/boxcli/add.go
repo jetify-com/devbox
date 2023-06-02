@@ -13,7 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-const toSearchForPackages = "To search for packages use https://search.nixos.org/packages"
+const toSearchForPackages = "To search for packages, use the `devbox search` command"
 
 type addCmdFlags struct {
 	config configFlags

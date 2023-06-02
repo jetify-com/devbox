@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
@@ -60,7 +61,7 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 		return nil, err
 	}
 	if len(result.Results) == 0 {
-		return nil, usererr.New("No results found for %q.", pkg)
+		return nil, nix.ErrPackageNotFound
 	}
 	return &lock.Package{
 		LastModified: result.Results[0].Packages[0].Date,
