@@ -25,6 +25,7 @@ func integrateCmd() *cobra.Command {
 		Use:     "integrate",
 		Short:   "integrate with ide",
 		Args:    cobra.MaximumNArgs(1),
+		Hidden:  true,
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return integrateCmdFunc(cmd, args[0], flags)
