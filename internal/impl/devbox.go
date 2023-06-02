@@ -841,6 +841,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
+	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
+		return !strings.HasPrefix(path, "/nix/store")
+	})
+	debug.Log("PATH after removing /nix/store paths is: %s", nixEnvPath)
+
 	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
