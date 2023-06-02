@@ -65,12 +65,12 @@ jobs:
 
           # Make the GitHub branch name safe for Kubernetes namespaces names:
           #
-          #   * `sed "s/[^0-9a-zA-Z]/-/g"`: replace any invalid characters in
+          #   * `sed "s/[^0-9a-z]/-/g"`: replace any invalid or uppercase characters in
           #      the branch name with dashes.
           #   * `tr -s -`: squash repeated consecutive dashes into one.
           #   * `cut -b -39`: truncate the name to 39 characters, leaving 24 for
           #     "devbox-docs-preview-" and "-ref" for a max of 63.
-          safe_github_ref="$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-zA-Z]/-/g" | cut -b -32)"
+          safe_github_ref="$(echo "${GITHUB_REF_NAME}" | sed "s/[^0-9a-z]/-/g" | cut -b -32)"
           namespace="$(echo "jetpack-io-preview-devbox-${safe_github_ref}-ref" | tr -s -)"
           launchpad up docs \
             --ttl 300 --debug \

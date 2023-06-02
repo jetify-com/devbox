@@ -6,7 +6,7 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/php8.1)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/php/php8.1)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=php)
 
 ## Adding PHP to your Project
 

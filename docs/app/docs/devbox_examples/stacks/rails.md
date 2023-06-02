@@ -6,7 +6,7 @@ This example demonstrates how to setup a simple Rails application. It makes use 
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/rails)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/stacks/rails)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=rails)
 
 ## How To Run
 
