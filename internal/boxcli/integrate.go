@@ -57,7 +57,6 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		// Parse node process' message
 		var message parentMessage
 		json.Unmarshal(msg.Message, &message)
-		fmt.Println(message.ConfigDir) /* todo remove */
 
 		// todo: add error handling - send message to parent process
 		box, err := devbox.Open(message.ConfigDir, cmd.OutOrStdout())
@@ -69,7 +68,6 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		fmt.Println(envVars)
 
 		// Send message to parent process to terminate
 		err = channel.Write(&go2node.NodeMessage{
