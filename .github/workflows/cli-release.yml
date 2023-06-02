@@ -72,14 +72,11 @@ jobs:
         with:
           environment: development
           version:  ${{ env.EDGE_TAG }}
-      - name: Create release body
-        run: echo "BODY=$(git log --pretty=oneline $(git describe --tags --abbrev=0 --match '0.0.0-edge*')..HEAD)" >> $GITHUB_OUTPUT
-        id: body
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          body: ${{ steps.body.outputs.BODY }}
+          body: "${{ env.EDGE_TAG }} edge release"
           fail_on_unmatched_files: true
           tag_name: ${{ env.EDGE_TAG }}
           files: |
