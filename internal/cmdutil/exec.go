@@ -20,10 +20,7 @@ func CommandTTY(name string, arg ...string) *exec.Cmd {
 
 // CommandTTYWithBuffer returns a command with stdin, stdout, and stderr
 // and a buffer that contains stdout and stderr combined.
-func CommandTTYWithBuffer(
-	name string,
-	arg ...string,
-) (*exec.Cmd, *bytes.Buffer) {
+func CommandTTYWithBuffer(name string, arg ...string) (*exec.Cmd, *bytes.Buffer) {
 	cmd := exec.Command(name, arg...)
 	cmd.Stdin = os.Stdin
 

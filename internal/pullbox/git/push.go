@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package git
 
 import (
@@ -6,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 const nothingToCommitErrorText = "nothing to commit"
 
-func Push(dir, url string) error {
+func Push(dir, url string, overwrite bool) error {
 	tmpDir, err := CloneToTmp(url)
 	if err != nil {
 		return err
@@ -29,7 +33,7 @@ func Push(dir, url string) error {
 		return err
 	}
 
-	return push(tmpDir)
+	return push(tmpDir, overwrite)
 }
 
 func createCommit(dir string) error {
@@ -48,11 +52,13 @@ func createCommit(dir string) error {
 	return errors.WithStack(err)
 }
 
-func push(dir string) error {
+func push(dir string, overwrite bool) error {
 	cmd := cmdutil.CommandTTY("git", "push")
+	if overwrite {
+		cmd.Args = append(cmd.Args, "-f")
+	}
 	cmd.Dir = dir
-	err := cmd.Run()
-	return errors.WithStack(err)
+	return errors.WithStack(cmd.Run())
 }
 
 func removeNonGitFiles(dir string) error {

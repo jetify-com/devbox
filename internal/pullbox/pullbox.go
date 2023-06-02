@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/pullbox/git"
 )
@@ -23,7 +24,11 @@ type pullbox struct {
 }
 
 func New(devbox devboxProject, url string, overwrite bool) *pullbox {
-	return &pullbox{devbox, overwrite, url}
+	return &pullbox{
+		devboxProject: devbox,
+		overwrite:     overwrite,
+		url:           url,
+	}
 }
 
 func (p *pullbox) Pull() error {
@@ -62,5 +67,5 @@ func (p *pullbox) Pull() error {
 }
 
 func (p *pullbox) Push() error {
-	return git.Push(p.ProjectDir(), p.url)
+	return git.Push(p.ProjectDir(), p.url, p.overwrite)
 }

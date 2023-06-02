@@ -8,15 +8,16 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
 )
 
-func CloneToTmp(repo string) (string, error) {
+func CloneToTmp(repoURL string) (string, error) {
 	tmpDir, err := os.MkdirTemp("", "devbox")
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	if err := clone(repo, tmpDir); err != nil {
+	if err := clone(repoURL, tmpDir); err != nil {
 		return "", errors.WithStack(err)
 	}
 	return tmpDir, nil
@@ -28,8 +29,8 @@ func IsRepoURL(url string) bool {
 		(strings.HasPrefix(url, "https://") && strings.HasSuffix(url, ".git"))
 }
 
-func clone(repo, dir string) error {
-	cmd := cmdutil.CommandTTY("git", "clone", repo, dir)
+func clone(repoURL, dir string) error {
+	cmd := cmdutil.CommandTTY("git", "clone", repoURL, dir)
 	cmd.Dir = dir
 	err := cmd.Run()
 	return errors.WithStack(err)
