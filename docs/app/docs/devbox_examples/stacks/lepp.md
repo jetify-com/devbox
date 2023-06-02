@@ -7,7 +7,7 @@ An example Devbox shell for NGINX, Postgres, and PHP. This example uses Devbox P
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/lepp-stack)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/stacks/lepp-stack)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=lepp-stack)
 
 ## How to Run
 
