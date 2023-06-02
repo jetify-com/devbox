@@ -5,8 +5,10 @@
   ],
   "shell": {
     "init_hook": [
-      "yarn install",
-      "yarn start"
-    ]
+      "yarn install"
+    ],
+    "scripts": {
+      "run_test": "yarn start"
+    }
   }
 }
