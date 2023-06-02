@@ -59,6 +59,11 @@ prefix = [ "/absolute/path/to/project" ]
 
 ### VSCode setup with direnv
 
-Best experience to have VSCode integration with a direnv environment is to open VSCode from a terminal window where direnv is activated (`code .`). Alternatively, there is [direnv VSCode extension](https://marketplace.visualstudio.com/items?itemName=mkhl.direnv) that helps integrate VSCode's environment if the VSCode workspace has a `.envrc` file.
+To seamlessly integrate VSCode with a direnv environment, follow these steps:
+
+1. Open a terminal window and activate direnv with `direnv allow`.
+2. Launch VSCode from the same terminal window using the command `code .` This ensures that VSCode inherits the direnv environment.
+
+Alternatively, you can use the [direnv VSCode extension](https://marketplace.visualstudio.com/items?itemName=mkhl.direnv) if your VSCode workspace has a .envrc file.
 
 If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetpack-io/devbox/pulls) in Github.
