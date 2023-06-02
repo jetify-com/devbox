@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 const toSearchForPackages = "To search for packages, use the `devbox search` command"
@@ -36,7 +37,7 @@ func addCmd() *cobra.Command {
 				return nil
 			}
 			err := addCmdFunc(cmd, args, flags)
-			if err != nil {
+			if errors.Is(err, nix.ErrPackageNotFound) {
 				return usererr.New("%s\n\n%s", err, toSearchForPackages)
 			}
 			return err
