@@ -30,7 +30,7 @@ direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
 
-This will generate a `.envrc` file in your project directory along with your `devbox.json`, if you make changes to `.envrc` file, you can run `direnv allow` so that your shell will activate whenever you navigate to the directory or `direnv revoke` to stop. Any changes to `devbox.json` will automatically trigger direnv to re-setup the environment.
+This will generate a `.envrc` file in your project directory that contains `devbox.json`. Run `direnv allow` to activate your shell upon directory navigation. Run `direnv revoke` to stop. Changes to `devbox.json` automatically trigger direnv to reset the environment.
 
 
 #### Existing Project
