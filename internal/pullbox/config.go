@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 func (p *pullbox) IsTextDevboxConfig() bool {
@@ -33,9 +33,9 @@ func (p *pullbox) pullTextDevboxConfig() error {
 		return err
 	}
 
-	tmpDir, err := os.MkdirTemp("", "devbox")
+	tmpDir, err := fileutil.CreateDevboxTempDir()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if err = cfg.SaveTo(tmpDir); err != nil {
 		return err

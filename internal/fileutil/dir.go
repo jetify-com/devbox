@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
 )
 
@@ -30,4 +31,9 @@ func ClearDir(dir string) error {
 		return errors.WithStack(err)
 	}
 	return errors.WithStack(os.MkdirAll(dir, 0755))
+}
+
+func CreateDevboxTempDir() (string, error) {
+	tmpDir, err := os.MkdirTemp("", "devbox")
+	return tmpDir, errors.WithStack(err)
 }
