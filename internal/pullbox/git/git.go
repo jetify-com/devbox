@@ -19,7 +19,7 @@ func CloneToTmp(repo string) (string, error) {
 	}
 
 	if err := clone(repo, tmpDir); err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return tmpDir, nil
 }
