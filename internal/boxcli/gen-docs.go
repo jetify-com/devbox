@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 func genDocsCmd() *cobra.Command {
@@ -30,15 +32,8 @@ func genDocsCmd() *cobra.Command {
 			// We clear out the existing directory so that the doc-pages for
 			// commands that have been deleted in the CLI will also be removed
 			// after we re-generate the docs below
-			err = os.RemoveAll(docsPath)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			// Ensure the directory exists
-			err = os.MkdirAll(docsPath, 0755)
-			if err != nil {
-				return errors.WithStack(err)
+			if err := fileutil.ClearDir(docsPath); err != nil {
+				return err
 			}
 
 			rootCmd := cmd

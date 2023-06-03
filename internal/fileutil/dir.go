@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
 )
 
@@ -26,8 +27,14 @@ func CopyAll(src, dst string) error {
 }
 
 func ClearDir(dir string) error {
+	f, err := os.Stat(dir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	mode := f.Mode()
+
 	if err := os.RemoveAll(dir); err != nil {
 		return errors.WithStack(err)
 	}
-	return errors.WithStack(os.MkdirAll(dir, 0755))
+	return errors.WithStack(os.MkdirAll(dir, mode))
 }
