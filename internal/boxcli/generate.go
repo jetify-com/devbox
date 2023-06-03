@@ -122,7 +122,7 @@ func sshConfigCmd() *cobra.Command {
 		},
 	}
 	command.Flags().StringVarP(
-		&flags.githubUsername, "username", "u", "", "Github username to use for ssh",
+		&flags.githubUsername, "username", "u", "", "GitHub username to use for ssh",
 	)
 	flags.config.register(command)
 	return command
@@ -139,11 +139,11 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	}
 	switch cmd.Use {
 	case "debug":
-		return box.Generate()
+		return box.Generate(cmd.Context())
 	case "devcontainer":
-		return box.GenerateDevcontainer(flags.force)
+		return box.GenerateDevcontainer(cmd.Context(), flags.force)
 	case "dockerfile":
-		return box.GenerateDockerfile(flags.force)
+		return box.GenerateDockerfile(cmd.Context(), flags.force)
 	}
 	return nil
 }
@@ -161,5 +161,5 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.GenerateEnvrcFile(flags.force)
+	return box.GenerateEnvrcFile(cmd.Context(), flags.force)
 }

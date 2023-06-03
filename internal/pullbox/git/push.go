@@ -4,6 +4,8 @@
 package git
 
 import (
+	"context"
+	"runtime/trace"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -14,7 +16,9 @@ import (
 
 const nothingToCommitErrorText = "nothing to commit"
 
-func Push(dir, url string) error {
+func Push(ctx context.Context, dir, url string) error {
+	defer trace.StartRegion(ctx, "Push").End()
+
 	tmpDir, err := fileutil.CreateDevboxTempDir()
 	if err != nil {
 		return err

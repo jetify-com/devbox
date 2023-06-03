@@ -6,6 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 )
 
@@ -29,9 +30,5 @@ func runInitCmd(cmd *cobra.Command, args []string) error {
 	path := pathArg(args)
 
 	_, err := devbox.InitConfig(path, cmd.ErrOrStderr())
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return errors.WithStack(err)
 }

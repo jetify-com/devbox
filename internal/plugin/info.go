@@ -4,20 +4,25 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"runtime/trace"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func PrintReadme(
+func PrintReadme(ctx context.Context,
 	pkg *nix.Input,
 	projectDir string,
 	w io.Writer,
 	markdown bool,
 ) error {
+	defer trace.StartRegion(ctx, "PrintReadme").End()
+
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err

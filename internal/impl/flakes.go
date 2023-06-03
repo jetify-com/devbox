@@ -4,6 +4,8 @@
 package impl
 
 import (
+	"context"
+	"runtime/trace"
 	"strings"
 
 	"github.com/samber/lo"
@@ -18,7 +20,9 @@ import (
 // i.e. have a commit hash and always resolve to the same package/version.
 // Note: inputs returned by this function include plugin packages. (php only for now)
 // It's not entirely clear we always want to add plugin packages to the top level
-func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
+func (d *Devbox) flakeInputs(ctx context.Context) ([]*plansdk.FlakeInput, error) {
+	defer trace.StartRegion(ctx, "flakeInputs").End()
+
 	inputs := map[string]*plansdk.FlakeInput{}
 
 	userPackages := d.packagesAsInputs()

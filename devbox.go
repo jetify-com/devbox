@@ -25,11 +25,11 @@ type Devbox interface {
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
-	Generate() error
-	GenerateDevcontainer(force bool) error
-	GenerateDockerfile(force bool) error
-	GenerateEnvrcFile(force bool) error
-	Info(pkg string, markdown bool) error
+	Generate(ctx context.Context) error
+	GenerateDevcontainer(ctx context.Context, force bool) error
+	GenerateDockerfile(ctx context.Context, force bool) error
+	GenerateEnvrcFile(ctx context.Context, force bool) error
+	Info(ctx context.Context, pkg string, markdown bool) error
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
@@ -37,7 +37,7 @@ type Devbox interface {
 	PrintEnvVars(ctx context.Context) ([]string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
-	Push(url string) error
+	Push(ctx context.Context, url string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
@@ -48,7 +48,7 @@ type Devbox interface {
 	Shell(ctx context.Context) error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
-	ShellPlan() (*plansdk.FlakePlan, error)
+	ShellPlan(ctx context.Context) (*plansdk.FlakePlan, error)
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, allProjects bool, services ...string) error
