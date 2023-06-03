@@ -1,7 +1,6 @@
 {
-  "name": "nodejs-yarn",
+  "name": "nodejs-pnpm",
   "main": "index.js",
-  "license": "MIT",
   "scripts": {
     "build": "echo building...",
     "start": "node index.js"

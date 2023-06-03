@@ -41,6 +41,7 @@ var templates = map[string]string{
 	"nginx":           "examples/servers/nginx/",
 	"nim":             "examples/development/nim/spinnytest/",
 	"node-npm":        "examples/development/nodejs/nodejs-npm/",
+	"node-pnpm":       "examples/development/nodejs/nodejs-pnpm/",
 	"node-typescript": "examples/development/nodejs/nodejs-typescript/",
 	"node-yarn":       "examples/development/nodejs/nodejs-yarn/",
 	"php":             "examples/development/php/php8.1/",

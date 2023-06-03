@@ -4,8 +4,10 @@
     ],
     "shell": {
         "init_hook": [
-            "npm install",
-            "npm run start"
-        ]
+            "npm install"
+        ],
+        "scripts": {
+            "run_test": "npm run start"
+        }
     }
 }
