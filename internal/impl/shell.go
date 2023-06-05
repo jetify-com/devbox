@@ -94,7 +94,7 @@ func shellPath(nixpkgsCommitHash string, pure bool) (path string, err error) {
 		}
 	}()
 
-	if pure {
+	if !pure {
 		// First, check the SHELL environment variable.
 		path = os.Getenv(envir.Shell)
 		if path != "" {
@@ -107,10 +107,14 @@ func shellPath(nixpkgsCommitHash string, pure bool) (path string, err error) {
 
 	var bashNixStorePath string // of the form /nix/store/{hash}-bash-{version}/
 
-	cmd := exec.Command(
-		"nix", "eval", "--raw",
-		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash)),
-	)
+	// construct exec args, add --pure-eval if pure shell
+	execArgs := []string{"eval", "--raw"}
+	if pure {
+		execArgs = append(execArgs, "--pure-eval")
+	}
+	execArgs = append(execArgs, fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash)))
+
+	cmd := exec.Command("nix", execArgs...)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
 	if err != nil {
