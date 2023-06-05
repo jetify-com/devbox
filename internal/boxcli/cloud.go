@@ -29,6 +29,7 @@ func cloudCmd() *cobra.Command {
 		Long: "Remote development environments on the cloud. All cloud commands " +
 			"are currently in developer preview and may have some rough edges. " +
 			"Please report any issues to https://github.com/jetpack-io/devbox/issues",
+		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
