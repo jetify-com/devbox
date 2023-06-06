@@ -187,7 +187,7 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, false); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -725,10 +725,10 @@ func (d *Devbox) StartProcessManager(
 func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pure bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
+	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
-	var env map[string]string
+	env := make(map[string]string, len(currentEnv))
 	if !pure {
-		env = make(map[string]string, len(currentEnv))
 		for _, kv := range currentEnv {
 			key, val, found := strings.Cut(kv, "=")
 			if !found {

@@ -38,7 +38,7 @@ func shellCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
 	command.Flags().BoolVar(
-		&flags.PrintEnv, "pure", false, "Creates an isolated shell without taking any variables from parent system.")
+		&flags.Pure, "pure", false, "Creates an isolated shell without taking any variables from parent system.")
 
 	flags.config.register(command)
 	return command
