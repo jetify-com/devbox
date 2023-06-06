@@ -47,6 +47,13 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		)
 		// Only add if the package doesn't exist versioned or unversioned.
 		if !slices.Contains(d.cfg.Packages, pkg.Raw) && !slices.Contains(d.cfg.Packages, versioned) {
+			// Remove existing packages with the same name. Ignore error
+			// (which is either missing or more than one)
+			if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
+				if err := d.Remove(ctx, name); err != nil {
+					return err
+				}
+			}
 			d.cfg.Packages = append(d.cfg.Packages, versioned)
 		}
 	}
