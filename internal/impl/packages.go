@@ -15,7 +15,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -37,7 +36,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	versionedPackages := []*nix.Input{}
 	// Add to Packages of the config only if it's not already there. We do this
-	// before addin @latest to ensure we don't accidentally add a package that
+	// before adding @latest to ensure we don't accidentally add a package that
 	// is already in the config.
 	for _, pkg := range pkgs {
 		versioned := pkg.Versioned()
@@ -45,17 +44,17 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			versionedPackages,
 			nix.InputFromString(versioned, d.lockfile),
 		)
-		// Only add if the package doesn't exist versioned or unversioned.
-		if !slices.Contains(d.cfg.Packages, pkg.Raw) && !slices.Contains(d.cfg.Packages, versioned) {
-			// Remove existing packages with the same name. Ignore error
-			// (which is either missing or more than one)
-			if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
-				if err := d.Remove(ctx, name); err != nil {
-					return err
-				}
+
+		// Remove existing packages with the same name. Ignore error
+		// (which is either missing or more than one). We search by CanonicalName
+		// so any legacy or versioned packages will be removed if they match.
+		if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
+			if err := d.Remove(ctx, name); err != nil {
+				return err
 			}
-			d.cfg.Packages = append(d.cfg.Packages, versioned)
 		}
+		d.cfg.Packages = append(d.cfg.Packages, versioned)
+
 	}
 	pkgs = versionedPackages
 

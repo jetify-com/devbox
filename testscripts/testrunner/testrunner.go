@@ -74,10 +74,11 @@ func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 		TestWork:            false, // Set to true if you're trying to debug a test.
 		Setup:               func(env *testscript.Env) error { return setupTestEnv(t, env) },
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
-			"env.path.len":  assertPathLength,
-			"json.superset": assertJSONSuperset,
-			"path.order":    assertPathOrder,
-			"source.path":   sourcePath,
+			"env.path.len":                 assertPathLength,
+			"devboxjson.packages.contains": assertDevboxJSONPackagesContains,
+			"json.superset":                assertJSONSuperset,
+			"path.order":                   assertPathOrder,
+			"source.path":                  sourcePath,
 		},
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
 )
 
@@ -30,6 +31,31 @@ func assertPathLength(script *testscript.TestScript, neg bool, args []string) {
 		if actualN != expectedN {
 			script.Fatalf("path length is %d, expected %d", actualN, expectedN)
 		}
+	}
+}
+
+func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, args []string) {
+	if len(args) != 2 {
+		script.Fatalf("usage: json.list.contains list.json value")
+	}
+
+	data := script.ReadFile(args[0])
+	list := devconfig.Config{}
+	err := json.Unmarshal([]byte(data), &list)
+	script.Check(err)
+
+	expected := args[1]
+	for _, actual := range list.Packages {
+		if actual == expected {
+			if neg {
+				script.Fatalf("value '%s' found in '%s'", expected, list.Packages)
+			}
+			return
+		}
+	}
+
+	if !neg {
+		script.Fatalf("value '%s' not found in '%s'", expected, list.Packages)
 	}
 }
 
