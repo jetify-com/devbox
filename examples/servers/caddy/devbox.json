@@ -3,6 +3,9 @@
     "caddy@latest"
   ],
   "shell": {
-    "init_hook": null
+    "init_hook": null,
+    "scripts": {
+      "start": "caddy run --config=devbox.d/caddy/Caddyfile"
+    }
   }
 }
