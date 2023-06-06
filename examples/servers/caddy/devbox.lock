@@ -3,6 +3,7 @@
   "packages": {
     "caddy@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#caddy",
       "version": "2.6.4"
     }
