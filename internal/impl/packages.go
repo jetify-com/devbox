@@ -26,31 +26,39 @@ import (
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
-// packages.go has functions for adding, removing and getting info about nix packages
+// packages.go has functions for adding, removing and getting info about nix
+// packages
 
-// Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this devbox project
+// Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
+// devbox project
 func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
-	pkgs := nix.InputsFromStrings(lo.Uniq(pkgsNames), d.lockfile)
-
-	versionedPackages := []*nix.Input{}
-	// Add to Packages of the config only if it's not already there. We do this
-	// before addin @latest to ensure we don't accidentally add a package that
-	// is already in the config.
-	for _, pkg := range pkgs {
+	// Only add packages that are not already in config. If same canonical exists,
+	// replace it.
+	pkgs := []*nix.Input{}
+	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
 		versioned := pkg.Versioned()
-		versionedPackages = append(
-			versionedPackages,
-			nix.InputFromString(versioned, d.lockfile),
-		)
-		// Only add if the package doesn't exist versioned or unversioned.
-		if !slices.Contains(d.cfg.Packages, pkg.Raw) && !slices.Contains(d.cfg.Packages, versioned) {
-			d.cfg.Packages = append(d.cfg.Packages, versioned)
+
+		// If exact versioned package is already in the config, skip.
+		if slices.Contains(d.cfg.Packages, versioned) {
+			continue
 		}
+
+		// On the other hand, if there's a package with same canonical name, replace
+		// it. Ignore error (which is either missing or more than one). We search by
+		// CanonicalName so any legacy or versioned packages will be removed if they
+		// match.
+		if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
+			if err := d.Remove(ctx, name); err != nil {
+				return err
+			}
+		}
+
+		pkgs = append(pkgs, nix.InputFromString(versioned, d.lockfile))
+		d.cfg.Packages = append(d.cfg.Packages, versioned)
 	}
-	pkgs = versionedPackages
 
 	// Check packages are valid before adding.
 	for _, pkg := range pkgs {
