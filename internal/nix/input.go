@@ -15,7 +15,6 @@ import (
 
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -295,10 +294,21 @@ func (i *Input) CanonicalName() string {
 }
 
 func (i *Input) Versioned() string {
-	if featureflag.AutoLatest.Enabled() && i.IsDevboxPackage() && !i.isVersioned() {
+	if i.IsDevboxPackage() && !i.isVersioned() {
 		return i.Raw + "@latest"
 	}
 	return i.Raw
+}
+
+func (i *Input) IsLegacy() bool {
+	return i.IsDevboxPackage() && !i.isVersioned()
+}
+
+func (i *Input) LegacyToVersioned() string {
+	if !i.IsLegacy() {
+		return i.Raw
+	}
+	return i.Raw + "@latest"
 }
 
 func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {

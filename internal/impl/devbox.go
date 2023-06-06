@@ -70,6 +70,8 @@ type Devbox struct {
 	writer io.Writer
 }
 
+var legacyPackagesWarningHasBeenShown = false
+
 func Open(path string, writer io.Writer) (*Devbox, error) {
 	projectDir, err := findProjectDir(path)
 	if err != nil {
@@ -98,6 +100,16 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		plugin.WithLockfile(lock),
 	)
 	box.lockfile = lock
+
+	if box.HasDeprecatedPackages() && !legacyPackagesWarningHasBeenShown {
+		legacyPackagesWarningHasBeenShown = true
+		ux.Fwarning(
+			os.Stderr, // Always stderr. box.writer should probably always be err.
+			"Your devbox.json contains packages in legacy format. "+
+				"Please run `devbox update` to update your devbox.json.\n",
+		)
+	}
+
 	return box, nil
 }
 
@@ -975,6 +987,15 @@ func (d *Devbox) Packages() []string {
 
 func (d *Devbox) packagesAsInputs() []*nix.Input {
 	return nix.InputsFromStrings(d.Packages(), d.lockfile)
+}
+
+func (d *Devbox) HasDeprecatedPackages() bool {
+	for _, pkg := range d.packagesAsInputs() {
+		if pkg.IsLegacy() {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
