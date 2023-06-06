@@ -1,6 +1,6 @@
 {
     "name": "caddy",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "readme": "You can customize the config used by the caddy service by modifying the Caddyfile in devbox.d/caddy, or by changing the CADDY_CONFIG environment variable to point to a custom config. The custom config must be either JSON or Caddyfile format.",
     "env": {
         "CADDY_CONFIG": "{{ .DevboxDir }}/Caddyfile",

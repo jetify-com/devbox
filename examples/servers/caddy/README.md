@@ -4,13 +4,14 @@
 
 You can customize the config used by the caddy service by modifying the Caddyfile in devbox.d/caddy, or by changing the CADDY_CONFIG environment variable to point to a custom config. The custom config must be either JSON or Caddyfile format.
 
-After starting the service, you can test this example using `curl https://localhost:2020`
+After starting the service, you can test this example using `curl http://localhost:8082`
 
 ## Services
 
 * caddy
 
-Use `devbox services start|stop [service]` to interact with services
+Use `devbox run start` to start the caddy server.
+You can also use `devbox services start|stop [service]` to interact with services.
 
 ## This plugin creates the following helper files
 

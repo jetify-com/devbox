@@ -38,3 +38,8 @@ func ClearDir(dir string) error {
 	}
 	return errors.WithStack(os.MkdirAll(dir, mode))
 }
+
+func CreateDevboxTempDir() (string, error) {
+	tmpDir, err := os.MkdirTemp("", "devbox")
+	return tmpDir, errors.WithStack(err)
+}
