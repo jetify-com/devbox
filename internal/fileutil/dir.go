@@ -4,6 +4,7 @@
 package fileutil
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -27,11 +28,17 @@ func CopyAll(src, dst string) error {
 }
 
 func ClearDir(dir string) error {
+	// if the dir doesn't exist, use default filemode 0755 to create it
+	// if the dir exists, use its own filemode to re-create it
+	var mode os.FileMode
 	f, err := os.Stat(dir)
-	if err != nil {
+	if err == nil {
+		mode = f.Mode()
+	} else if errors.Is(err, fs.ErrNotExist) {
+		mode = 0755
+	} else {
 		return errors.WithStack(err)
 	}
-	mode := f.Mode()
 
 	if err := os.RemoveAll(dir); err != nil {
 		return errors.WithStack(err)
