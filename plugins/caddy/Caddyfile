@@ -6,7 +6,7 @@
 	https_port 4443
 }
 
-:8080 {
+:8082 {
 	root * {$CADDY_ROOT_DIR}
 	log {
 		output file {$CADDY_LOG_DIR}/caddy.log
