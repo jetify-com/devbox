@@ -4,20 +4,22 @@
 package git
 
 import (
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 func CloneToTmp(repo string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", "devbox")
+	tmpDir, err := fileutil.CreateDevboxTempDir()
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
+
 	if err := clone(repo, tmpDir); err != nil {
-		return "", errors.WithStack(err)
+		return "", err
 	}
 	return tmpDir, nil
 }
