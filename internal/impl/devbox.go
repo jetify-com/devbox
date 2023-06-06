@@ -187,7 +187,7 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, false); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
