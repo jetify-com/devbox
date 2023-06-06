@@ -28,7 +28,11 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			if err := d.Remove(ctx, pkg.Raw); err != nil {
 				return err
 			}
-			d.lockfile.ResolveToCurrentNixpkgCommitHash(pkg.LegacyToVersioned())
+			if err := d.lockfile.ResolveToCurrentNixpkgCommitHash(
+				pkg.LegacyToVersioned(),
+			); err != nil {
+				return err
+			}
 			if err := d.Add(ctx, pkg.LegacyToVersioned()); err != nil {
 				return err
 			}
