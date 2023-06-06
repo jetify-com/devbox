@@ -841,6 +841,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
+	// We filter out nix store paths so that if a user removes a package from their devbox
+	// it no longer is available in their environment. This is needed because nix may keep
+	// packages around if they are used somewhere else or if the user hasn't triggered
+	// garbage collection.
 	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
 		return !strings.HasPrefix(path, "/nix/store")
 	})
