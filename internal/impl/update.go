@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
@@ -43,5 +44,9 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	// TODO(landau): Improve output
-	return d.ensurePackagesAreInstalled(ctx, ensure)
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+		return err
+	}
+
+	return wrapnix.CreateWrappers(ctx, d)
 }
