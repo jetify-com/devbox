@@ -1,11 +1,13 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package git
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
@@ -13,11 +15,12 @@ import (
 const nothingToCommitErrorText = "nothing to commit"
 
 func Push(dir, url string) error {
-	tmpDir, err := CloneToTmp(url)
+	tmpDir, err := fileutil.CreateDevboxTempDir()
 	if err != nil {
 		return err
 	}
-	if err := removeNonGitFiles(tmpDir); err != nil {
+
+	if err := cloneGitHistory(url, tmpDir); err != nil {
 		return err
 	}
 
@@ -30,6 +33,13 @@ func Push(dir, url string) error {
 	}
 
 	return push(tmpDir)
+}
+
+func cloneGitHistory(url, dst string) error {
+	// See https://stackoverflow.com/questions/38999901/clone-only-the-git-directory-of-a-git-repo
+	cmd := cmdutil.CommandTTY("git", "clone", "--no-checkout", url, dst)
+	cmd.Dir = dst
+	return errors.WithStack(cmd.Run())
 }
 
 func createCommit(dir string) error {
@@ -53,20 +63,4 @@ func push(dir string) error {
 	cmd.Dir = dir
 	err := cmd.Run()
 	return errors.WithStack(err)
-}
-
-func removeNonGitFiles(dir string) error {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		if entry.Name() == ".git" {
-			continue
-		}
-		if err := os.RemoveAll(filepath.Join(dir, entry.Name())); err != nil {
-			return err
-		}
-	}
-	return nil
 }
