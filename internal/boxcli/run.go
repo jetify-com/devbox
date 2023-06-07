@@ -16,6 +16,7 @@ import (
 
 type runCmdFlags struct {
 	config configFlags
+	pure   bool
 }
 
 func runCmd() *cobra.Command {
@@ -37,6 +38,8 @@ func runCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().BoolVar(
+		&flags.pure, "pure", false, "Runs the script in an isolated shell without taking any variables from parent system.")
 
 	command.ValidArgs = listScripts(command, flags)
 
@@ -80,7 +83,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
-	if err := box.RunScript(cmd.Context(), script, scriptArgs); err != nil {
+	if err := box.RunScript(cmd.Context(), script, scriptArgs, flags.pure); err != nil {
 		return redact.Errorf("error running command in Devbox: %w", err)
 	}
 	return nil

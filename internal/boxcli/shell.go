@@ -16,8 +16,8 @@ import (
 
 type shellCmdFlags struct {
 	config   configFlags
-	PrintEnv bool
-	Pure     bool
+	printEnv bool
+	pure     bool
 }
 
 func shellCmd() *cobra.Command {
@@ -36,9 +36,9 @@ func shellCmd() *cobra.Command {
 	}
 
 	command.Flags().BoolVar(
-		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
+		&flags.printEnv, "print-env", false, "print script to setup shell environment")
 	command.Flags().BoolVar(
-		&flags.Pure, "pure", false, "Creates an isolated shell without taking any variables from parent system.")
+		&flags.pure, "pure", false, "Creates an isolated shell without taking any variables from parent system.")
 
 	flags.config.register(command)
 	return command
@@ -51,7 +51,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	if flags.PrintEnv {
+	if flags.printEnv {
 		// false for includeHooks is because init hooks is not compatible with .envrc files generated
 		// by versions older than 0.4.6
 		script, err := box.PrintEnv(cmd.Context(), false /*includeHooks*/)
@@ -67,7 +67,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell(cmd.Context(), flags.Pure)
+	return box.Shell(cmd.Context(), flags.pure)
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {

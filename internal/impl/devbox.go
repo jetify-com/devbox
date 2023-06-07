@@ -230,11 +230,11 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
+func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string, pure bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
 		return err
 	}
 
@@ -242,7 +242,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.nixEnv(ctx, false /* pure */)
+	env, err := d.nixEnv(ctx, pure)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	if err = wrapnix.CreateWrappers(ctx, d, false /* pure */); err != nil {
+	if err = wrapnix.CreateWrappers(ctx, d, pure); err != nil {
 		return err
 	}
 
@@ -492,7 +492,7 @@ func (d *Devbox) Services() (services.Services, error) {
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...), false /* pure */)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -534,7 +534,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		if allProjects {
 			args = append(args, "--all-projects")
 		}
-		return d.RunScript(ctx, "devbox", args)
+		return d.RunScript(ctx, "devbox", args, false /* pure */)
 	}
 
 	if allProjects {
@@ -568,7 +568,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 
 func (d *Devbox) ListServices(ctx context.Context) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
+		return d.RunScript(ctx, "devbox", []string{"services", "ls"}, false /* pure */)
 	}
 
 	svcSet, err := d.Services()
@@ -606,7 +606,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...), false /* pure */)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -680,7 +680,7 @@ func (d *Devbox) StartProcessManager(
 		if background {
 			args = append(args, "--background")
 		}
-		return d.RunScript(ctx, "devbox", args)
+		return d.RunScript(ctx, "devbox", args, false /* pure */)
 	}
 
 	// Start the process manager
