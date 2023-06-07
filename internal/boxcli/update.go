@@ -6,6 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 )
 
@@ -18,10 +19,10 @@ func updateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "update [pkg]...",
-		Short: "Updates packages in your devbox",
-		Long: "Updates one, many, or all packages in your devbox. " +
+		Short: "Update packages in your devbox",
+		Long: "Update one, many, or all packages in your devbox. " +
 			"If no packages are specified, all packages will be updated. " +
-			"Only updates versioned packages (e.g. `python@3.11`), not packages that are pinned to a nix channel (e.g. `python3`)",
+			"Only update versioned packages (e.g. `python@3.11`), not packages that are pinned to a nix channel (e.g. `python3`)",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)
@@ -32,11 +33,7 @@ func updateCmd() *cobra.Command {
 	return command
 }
 
-func updateCmdFunc(
-	cmd *cobra.Command,
-	args []string,
-	flags *updateCmdFlags,
-) error {
+func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
 	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return errors.WithStack(err)
