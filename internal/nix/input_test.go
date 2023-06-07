@@ -118,10 +118,6 @@ func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (l *lockfile) Packages() []string {
-	return []string{}
-}
-
 func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
 	return fmt.Sprintf(
 		"github:NixOS/nixpkgs/%s#%s",

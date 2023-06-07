@@ -66,12 +66,12 @@ func (m *Manager) Include(w io.Writer, included string) error {
 	if err != nil {
 		return err
 	}
-	err = m.create(w, name, m.lockfile.PackageMap[included])
+	err = m.create(w, name, m.lockfile.Packages[included])
 	return err
 }
 
 func (m *Manager) Create(w io.Writer, pkg *nix.Input) error {
-	return m.create(w, pkg, m.lockfile.PackageMap[pkg.Raw])
+	return m.create(w, pkg, m.lockfile.Packages[pkg.Raw])
 }
 
 func (m *Manager) create(
