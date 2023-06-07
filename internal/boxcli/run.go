@@ -44,7 +44,7 @@ func runCmd() *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.OpenWithoutWarnings(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		debug.Log("failed to open devbox: %v", err)
 		return nil
@@ -80,7 +80,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
-	if err := box.RunScript(script, scriptArgs); err != nil {
+	if err := box.RunScript(cmd.Context(), script, scriptArgs); err != nil {
 		return redact.Errorf("error running command in Devbox: %w", err)
 	}
 	return nil

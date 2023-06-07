@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -93,13 +94,24 @@ func (l *File) ForceResolve(pkg string) (*Package, error) {
 	return l.Resolve(pkg)
 }
 
+func (l *File) ResolveToCurrentNixpkgCommitHash(pkg string) error {
+	name, version, found := strings.Cut(pkg, "@")
+	if found && version != "latest" {
+		return errors.New(
+			"only allowed version is @latest. Otherwise we can't guarantee the " +
+				"version will resolve")
+	}
+	l.Packages[pkg] = &Package{Resolved: l.LegacyNixpkgsPath(name)}
+	return nil
+}
+
 func (l *File) Save() error {
 	// Never write lockfile if versioned packages is not enabled
 	if !featureflag.LockFile.Enabled() {
 		return nil
 	}
 
-	return cuecfg.WriteFile(lockFilePath(l), l)
+	return cuecfg.WriteFile(lockFilePath(l.devboxProject), l)
 }
 
 func (l *File) LegacyNixpkgsPath(pkg string) string {
@@ -121,10 +133,16 @@ func IsLegacyPackage(pkg string) bool {
 	return !IsVersionedPackage(pkg) &&
 		!strings.Contains(pkg, ":") &&
 		// We don't support absolute paths without "path:" prefix, but adding here
-		// just inc ase we ever do.
+		// just in case we ever do.
 		// Landau note: I don't think we should support it, it's hard to read and a
 		// bit ambiguous.
 		!strings.HasPrefix(pkg, "/")
+}
+
+// Tidy ensures that the lockfile has the set of packages corresponding to the devbox.json config.
+// It gets rid of older packages that are no longer needed.
+func (l *File) Tidy() {
+	l.Packages = lo.PickByKeys(l.Packages, l.devboxProject.Packages())
 }
 
 func lockFilePath(project devboxProject) string {

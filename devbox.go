@@ -34,14 +34,13 @@ type Devbox interface {
 	ListScripts() []string
 	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintGlobalList() error
-	PrintEnvrcContent(w io.Writer) error
 	Pull(ctx context.Context, overwrite bool, path string) error
 	Push(url string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
 	RestartServices(ctx context.Context, services ...string) error
-	RunScript(scriptName string, scriptArgs []string) error
+	RunScript(ctx context.Context, scriptName string, scriptArgs []string) error
 	Services() (services.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell(ctx context.Context) error
@@ -58,7 +57,11 @@ type Devbox interface {
 
 // Open opens a devbox by reading the config file in dir.
 func Open(dir string, writer io.Writer) (Devbox, error) {
-	return impl.Open(dir, writer)
+	return impl.Open(dir, writer, true)
+}
+
+func OpenWithoutWarnings(dir string, writer io.Writer) (Devbox, error) {
+	return impl.Open(dir, writer, false)
 }
 
 // InitConfig creates a default devbox config file if one doesn't already exist.
@@ -68,4 +71,8 @@ func InitConfig(dir string, writer io.Writer) (bool, error) {
 
 func GlobalDataPath() (string, error) {
 	return impl.GlobalDataPath()
+}
+
+func PrintEnvrcContent(w io.Writer) error {
+	return impl.PrintEnvrcContent(w)
 }

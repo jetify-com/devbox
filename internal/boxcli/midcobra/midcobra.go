@@ -9,6 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/ux"

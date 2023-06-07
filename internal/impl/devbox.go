@@ -70,7 +70,9 @@ type Devbox struct {
 	writer io.Writer
 }
 
-func Open(path string, writer io.Writer) (*Devbox, error) {
+var legacyPackagesWarningHasBeenShown = false
+
+func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
@@ -98,6 +100,18 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		plugin.WithLockfile(lock),
 	)
 	box.lockfile = lock
+
+	if showWarnings &&
+		!legacyPackagesWarningHasBeenShown &&
+		box.HasDeprecatedPackages() {
+		legacyPackagesWarningHasBeenShown = true
+		ux.Fwarning(
+			os.Stderr, // Always stderr. box.writer should probably always be err.
+			"Your devbox.json contains packages in legacy format. "+
+				"Please run `devbox update` to update your devbox.json.\n",
+		)
+	}
+
 	return box, nil
 }
 
@@ -216,8 +230,8 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxRun")
+func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
+	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
@@ -395,7 +409,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, false /* isDevcontainer */))
 }
 
-func (d *Devbox) PrintEnvrcContent(w io.Writer) error {
+func PrintEnvrcContent(w io.Writer) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
@@ -478,7 +492,7 @@ func (d *Devbox) Services() (services.Services, error) {
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -520,7 +534,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		if allProjects {
 			args = append(args, "--all-projects")
 		}
-		return d.RunScript("devbox", args)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	if allProjects {
@@ -554,7 +568,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 
 func (d *Devbox) ListServices(ctx context.Context) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", []string{"services", "ls"})
+		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
 	}
 
 	svcSet, err := d.Services()
@@ -592,7 +606,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -666,7 +680,7 @@ func (d *Devbox) StartProcessManager(
 		if background {
 			args = append(args, "--background")
 		}
-		return d.RunScript("devbox", args)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	// Start the process manager
@@ -975,6 +989,15 @@ func (d *Devbox) Packages() []string {
 
 func (d *Devbox) packagesAsInputs() []*nix.Input {
 	return nix.InputsFromStrings(d.Packages(), d.lockfile)
+}
+
+func (d *Devbox) HasDeprecatedPackages() bool {
+	for _, pkg := range d.packagesAsInputs() {
+		if pkg.IsLegacy() {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {

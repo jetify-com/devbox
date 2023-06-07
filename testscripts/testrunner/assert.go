@@ -10,6 +10,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/lock"
 )
 
 // Usage: env.path.len <number>
@@ -36,7 +37,7 @@ func assertPathLength(script *testscript.TestScript, neg bool, args []string) {
 
 func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, args []string) {
 	if len(args) != 2 {
-		script.Fatalf("usage: json.list.contains list.json value")
+		script.Fatalf("usage: devboxjson.packages.contains devbox.json value")
 	}
 
 	data := script.ReadFile(args[0])
@@ -56,6 +57,28 @@ func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, a
 
 	if !neg {
 		script.Fatalf("value '%s' not found in '%s'", expected, list.Packages)
+	}
+}
+
+func assertDevboxLockPackagesContains(script *testscript.TestScript, neg bool, args []string) {
+	if len(args) != 2 {
+		script.Fatalf("usage: devboxlock.packages.contains devbox.lock value")
+	}
+
+	data := script.ReadFile(args[0])
+	lockfile := lock.File{}
+	err := json.Unmarshal([]byte(data), &lockfile)
+	script.Check(err)
+
+	expected := args[1]
+	if _, ok := lockfile.Packages[expected]; ok {
+		if neg {
+			script.Fatalf("value '%s' found in %s", expected, args[0])
+		}
+	} else {
+		if !neg {
+			script.Fatalf("value '%s' not found in '%s'", expected, args[0])
+		}
 	}
 }
 
