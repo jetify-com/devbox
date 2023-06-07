@@ -280,7 +280,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
-	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
+	if _, err := d.PrintEnv(ctx, false /* run init hooks */, false /* pure */); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
@@ -296,15 +296,15 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool, pure bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
 		return "", err
 	}
 
-	envs, err := d.nixEnv(ctx, false /* pure */)
+	envs, err := d.nixEnv(ctx, pure)
 	if err != nil {
 		return "", err
 	}

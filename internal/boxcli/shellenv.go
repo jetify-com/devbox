@@ -15,6 +15,7 @@ type shellEnvCmdFlags struct {
 	runInitHook          bool
 	install              bool
 	useCachedPrintDevEnv bool
+	pure                 bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -39,6 +40,9 @@ func shellEnvCmd() *cobra.Command {
 		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
 	command.Flags().BoolVar(
 		&flags.install, "install", false, "install packages before exporting shell environment")
+
+	command.Flags().BoolVar(
+		&flags.pure, "pure", false, "Creates an isolated environment without taking any variables from parent system.")
 
 	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
