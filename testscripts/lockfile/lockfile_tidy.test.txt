@@ -1,0 +1,28 @@
+# Testscript to ensure lockfile is updated to remove the older version of a package
+
+# start with a devbox.json having go@1.19
+cp devbox_original.json devbox.json
+exec devbox install
+devboxlock.packages.contains devbox.lock go@1.19
+
+# change devbox.json to instead have go@1.20
+cp devbox_changed.json devbox.json
+exec devbox install
+devboxlock.packages.contains devbox.lock go@1.20
+! devboxlock.packages.contains devbox.lock go@1.19
+
+
+-- devbox_original.json --
+ {
+   "packages": [
+     "go@1.19"
+   ]
+ }
+
+-- devbox_changed.json --
+{
+  "packages": [
+    "go@1.20"
+  ]
+}
+
