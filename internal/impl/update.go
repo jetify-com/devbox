@@ -8,37 +8,48 @@ import (
 	"fmt"
 
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
-	var pkgsToUpdate []string
-	for _, pkg := range pkgs {
-		found, err := d.findPackageByName(pkg)
-		if err != nil {
-			return err
-		}
-		pkgsToUpdate = append(pkgsToUpdate, found)
-	}
-	if len(pkgsToUpdate) == 0 {
-		pkgsToUpdate = d.Packages()
+	inputs, err := d.inputsToUpdate(pkgs...)
+	if err != nil {
+		return err
 	}
 
-	for _, pkg := range pkgsToUpdate {
-		if !lock.IsVersionedPackage(pkg) {
+	for _, pkg := range inputs {
+		if pkg.IsLegacy() {
+			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
+			if err := d.Remove(ctx, pkg.Raw); err != nil {
+				return err
+			}
+			if err := d.lockfile.ResolveToCurrentNixpkgCommitHash(
+				pkg.LegacyToVersioned(),
+			); err != nil {
+				return err
+			}
+			if err := d.Add(ctx, pkg.LegacyToVersioned()); err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, pkg := range inputs {
+		if !lock.IsVersionedPackage(pkg.Raw) {
 			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
 			continue
 		}
-		existing := d.lockfile.Packages[pkg]
-		newEntry, err := searcher.Client().Resolve(pkg)
+		existing := d.lockfile.Packages[pkg.Raw]
+		newEntry, err := searcher.Client().Resolve(pkg.Raw)
 		if err != nil {
 			return err
 		}
 		if existing != nil && existing.Version != newEntry.Version {
 			fmt.Fprintf(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
-			if err := d.removePackagesFromProfile(ctx, []string{pkg}); err != nil {
+			if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
 				// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
 				// sync the profile so we don't need to do this manually.
 				ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
@@ -49,7 +60,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			fmt.Fprintf(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
 		}
 		// Set the new entry after we've removed the old package from the profile
-		d.lockfile.Packages[pkg] = newEntry
+		d.lockfile.Packages[pkg.Raw] = newEntry
 	}
 
 	// TODO(landau): Improve output
@@ -58,4 +69,20 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	return wrapnix.CreateWrappers(ctx, d)
+}
+
+func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {
+	var pkgsToUpdate []string
+	for _, pkg := range pkgs {
+		found, err := d.findPackageByName(pkg)
+		if err != nil {
+			return nil, err
+		}
+		pkgsToUpdate = append(pkgsToUpdate, found)
+	}
+	if len(pkgsToUpdate) == 0 {
+		pkgsToUpdate = d.Packages()
+	}
+
+	return nix.InputsFromStrings(pkgsToUpdate, d.lockfile), nil
 }

@@ -94,6 +94,17 @@ func (l *File) ForceResolve(pkg string) (*Package, error) {
 	return l.Resolve(pkg)
 }
 
+func (l *File) ResolveToCurrentNixpkgCommitHash(pkg string) error {
+	name, version, found := strings.Cut(pkg, "@")
+	if found && version != "latest" {
+		return errors.New(
+			"only allowed version is @latest. Otherwise we can't guarantee the " +
+				"version will resolve")
+	}
+	l.Packages[pkg] = &Package{Resolved: l.LegacyNixpkgsPath(name)}
+	return nil
+}
+
 func (l *File) Save() error {
 	// Never write lockfile if versioned packages is not enabled
 	if !featureflag.LockFile.Enabled() {

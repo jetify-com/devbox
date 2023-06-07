@@ -70,7 +70,9 @@ type Devbox struct {
 	writer io.Writer
 }
 
-func Open(path string, writer io.Writer) (*Devbox, error) {
+var legacyPackagesWarningHasBeenShown = false
+
+func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
@@ -98,6 +100,18 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 		plugin.WithLockfile(lock),
 	)
 	box.lockfile = lock
+
+	if showWarnings &&
+		!legacyPackagesWarningHasBeenShown &&
+		box.HasDeprecatedPackages() {
+		legacyPackagesWarningHasBeenShown = true
+		ux.Fwarning(
+			os.Stderr, // Always stderr. box.writer should probably always be err.
+			"Your devbox.json contains packages in legacy format. "+
+				"Please run `devbox update` to update your devbox.json.\n",
+		)
+	}
+
 	return box, nil
 }
 
@@ -395,7 +409,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, false /* isDevcontainer */))
 }
 
-func (d *Devbox) PrintEnvrcContent(w io.Writer) error {
+func PrintEnvrcContent(w io.Writer) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
@@ -975,6 +989,15 @@ func (d *Devbox) Packages() []string {
 
 func (d *Devbox) packagesAsInputs() []*nix.Input {
 	return nix.InputsFromStrings(d.Packages(), d.lockfile)
+}
+
+func (d *Devbox) HasDeprecatedPackages() bool {
+	for _, pkg := range d.packagesAsInputs() {
+		if pkg.IsLegacy() {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {

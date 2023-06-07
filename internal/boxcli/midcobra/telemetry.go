@@ -222,7 +222,7 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		path = configFlag.Value.String()
 	}
 
-	box, err := devbox.Open(path, os.Stdout)
+	box, err := devbox.OpenWithoutWarnings(path, os.Stdout)
 	if err != nil {
 		return []string{}, ""
 	}

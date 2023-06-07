@@ -92,7 +92,7 @@ func direnvCmd() *cobra.Command {
 			"Requires direnv to be installed.",
 		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, flags)
+			return runGenerateDirenvCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVarP(
@@ -140,11 +140,19 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return box.GenerateDevcontainer(flags.force)
 	case "dockerfile":
 		return box.GenerateDockerfile(flags.force)
-	case "direnv":
-		if flags.printEnvrcContent {
-			return box.PrintEnvrcContent(cmd.OutOrStdout())
-		}
-		return box.GenerateEnvrcFile(flags.force)
 	}
 	return nil
+}
+
+func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
+	if flags.printEnvrcContent {
+		return devbox.PrintEnvrcContent(cmd.OutOrStdout())
+	}
+
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.GenerateEnvrcFile(flags.force)
 }

@@ -15,7 +15,6 @@ import (
 
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -85,7 +84,7 @@ func (i *Input) InputName() string {
 
 func (i *Input) URLForInput() string {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			panic(err)
 			// TODO(landau): handle error
@@ -98,7 +97,7 @@ func (i *Input) URLForInput() string {
 
 func (i *Input) URLForInstall() (string, error) {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -118,7 +117,7 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 
 	path := ""
 	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -143,7 +142,7 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 // does not include packages/legacyPackages or the system name.
 func (i *Input) PackageAttributePath() (string, error) {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -175,7 +174,7 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
 	var query string
 	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -295,10 +294,21 @@ func (i *Input) CanonicalName() string {
 }
 
 func (i *Input) Versioned() string {
-	if featureflag.AutoLatest.Enabled() && i.IsDevboxPackage() && !i.isVersioned() {
+	if i.IsDevboxPackage() && !i.isVersioned() {
 		return i.Raw + "@latest"
 	}
 	return i.Raw
+}
+
+func (i *Input) IsLegacy() bool {
+	return i.IsDevboxPackage() && !i.isVersioned()
+}
+
+func (i *Input) LegacyToVersioned() string {
+	if !i.IsLegacy() {
+		return i.Raw
+	}
+	return i.Raw + "@latest"
 }
 
 func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {
