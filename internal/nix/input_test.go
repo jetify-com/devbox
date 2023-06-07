@@ -106,20 +106,8 @@ type lockfile struct {
 	projectDir string
 }
 
-func (lockfile) ConfigHash() (string, error) {
-	return "", nil
-}
-
-func (lockfile) NixPkgsCommitHash() string {
-	return ""
-}
-
 func (l *lockfile) ProjectDir() string {
 	return l.projectDir
-}
-
-func (l *lockfile) Packages() []string {
-	return []string{}
 }
 
 func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
