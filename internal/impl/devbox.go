@@ -728,15 +728,18 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pu
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
 	env := make(map[string]string, len(currentEnv))
-	if !pure {
-		for _, kv := range currentEnv {
-			key, val, found := strings.Cut(kv, "=")
-			if !found {
-				return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
-			}
-			if ignoreCurrentEnvVar[key] {
-				continue
-			}
+
+	for _, kv := range currentEnv {
+		key, val, found := strings.Cut(kv, "=")
+		if !found {
+			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+		}
+		if ignoreCurrentEnvVar[key] {
+			continue
+		}
+		// Need HOME env variable for pure shell to leak through
+		// otherwise devbox binary won't work
+		if !pure || key == "HOME" {
 			env[key] = val
 		}
 	}
@@ -844,11 +847,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pu
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
-	if pure {
-		env["PATH"] = nixEnvPath
-	} else {
-		env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
-	}
+	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
