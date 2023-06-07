@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
@@ -97,17 +98,18 @@ func Execute(ctx context.Context, args []string) int {
 }
 
 func Main() {
+	ctx := context.Background()
 	if strings.HasSuffix(os.Args[0], "ssh") ||
 		strings.HasSuffix(os.Args[0], "scp") {
-		code := sshshim.Execute(os.Args)
-		os.Exit(code)
+		os.Exit(sshshim.Execute(ctx, os.Args))
 	}
+
 	if len(os.Args) > 1 && os.Args[1] == "bug" {
 		telemetry.ReportErrors()
 		return
 	}
-	code := Execute(context.Background(), os.Args[1:])
-	os.Exit(code)
+
+	os.Exit(Execute(ctx, os.Args[1:]))
 }
 
 func listAllCommands(cmd *cobra.Command, indent string) {

@@ -11,13 +11,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
 // EnsureLiveVMOrTerminateMutagenSessions returns true if a liveVM is found, OR sshArgs were connecting to a server that is not a devbox-VM.
 // EnsureLiveVMOrTerminateMutagenSessions returns false iff the sshArgs were connecting to a devbox VM AND a deadVM is found.
-func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
+func EnsureLiveVMOrTerminateMutagenSessions(ctx context.Context, sshArgs []string) (bool, error) {
 	vmAddr := vmAddressIfAny(sshArgs)
 
 	debug.Log("Found vmAddr: %s", vmAddr)
@@ -28,9 +29,11 @@ func EnsureLiveVMOrTerminateMutagenSessions(sshArgs []string) (bool, error) {
 		return true, nil
 	}
 
-	if isActive, err := checkActiveVMWithRetries(vmAddr); err != nil {
+	isActive, err := checkActiveVMWithRetries(ctx, vmAddr)
+	if err != nil {
 		return false, errors.WithStack(err)
-	} else if !isActive {
+	}
+	if !isActive {
 		debug.Log("terminating mutagen session for vm: %s", vmAddr)
 		// If no vm is active, then we should terminate the running mutagen sessions
 		return false, terminateMutagenSessions(vmAddr)
@@ -57,25 +60,25 @@ func terminateMutagenSessions(vmAddr string) error {
 	return mutagenbox.ForwardTerminateByHost(hostname)
 }
 
-func checkActiveVMWithRetries(vmAddr string) (bool, error) {
-	var err error
+func checkActiveVMWithRetries(ctx context.Context, vmAddr string) (bool, error) {
+	var finalErr error
 
 	// Try 3 times:
 	for num := 0; num < 3; num++ {
-		var isActive bool
-		isActive, err = checkActiveVM(vmAddr)
+		isActive, err := checkActiveVM(ctx, vmAddr)
 		if err == nil && isActive {
 			// found an active VM
 			return true, nil
 		}
+		finalErr = err
 		time.Sleep(10 * time.Second)
 		debug.Log("Try %d failed to find activeVM for %s", num, vmAddr)
 	}
-	return false, err
+	return false, finalErr
 }
 
-func checkActiveVM(vmAddr string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
+func checkActiveVM(ctx context.Context, vmAddr string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*2)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "ssh", vmAddr, "echo 'alive'")
 

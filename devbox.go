@@ -41,7 +41,7 @@ type Devbox interface {
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
 	RestartServices(ctx context.Context, services ...string) error
-	RunScript(scriptName string, scriptArgs []string) error
+	RunScript(ctx context.Context, scriptName string, scriptArgs []string) error
 	Services() (services.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell(ctx context.Context) error
