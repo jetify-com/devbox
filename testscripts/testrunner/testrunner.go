@@ -72,6 +72,9 @@ func copyFileCmd(script *testscript.TestScript, neg bool, args []string) {
 	if len(args) < 2 {
 		script.Fatalf("usage: cp <from-file> <to-file>")
 	}
+	if neg {
+		script.Fatalf("neg does not make sense for this command")
+	}
 	err := script.Exec("cp", script.MkAbs(args[0]), script.MkAbs(args[1]))
 	script.Check(err)
 }
