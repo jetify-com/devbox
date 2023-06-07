@@ -9,9 +9,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -52,7 +52,7 @@ func (c *client) SearchVersion(query, version string) (*SearchResult, error) {
 }
 
 func (c *client) Resolve(pkg string) (*lock.Package, error) {
-	name, version, _ := strings.Cut(pkg, "@")
+	name, version, _ := devpkg.ParseVersionedPackage(pkg)
 	if version == "" {
 		return nil, usererr.New("No version specified for %q.", name)
 	}

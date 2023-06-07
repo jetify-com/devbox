@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/initrec"
 )
