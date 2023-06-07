@@ -4,6 +4,7 @@
 package sshshim
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -11,27 +12,29 @@ import (
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
-func Execute(args []string) int {
+func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	telemetry.Start(telemetry.AppSSHShim)
 	defer telemetry.Stop()
 
-	if err := execute(args); err != nil {
+	if err := execute(ctx, args); err != nil {
 		telemetry.Error(err, telemetry.Metadata{})
 		return 1
 	}
 	return 0
 }
 
-func execute(args []string) error {
+func execute(ctx context.Context, args []string) error {
 	EnableDebug() // Always enable for now.
 	debug.Log("os.Args: %v", args)
 
-	if alive, err := EnsureLiveVMOrTerminateMutagenSessions(args[1:]); err != nil {
+	alive, err := EnsureLiveVMOrTerminateMutagenSessions(ctx, args[1:])
+	if err != nil {
 		debug.Log("ensureLiveVMOrTerminateMutagenSessions error: %v", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return err
-	} else if !alive {
+	}
+	if !alive {
 		return nil
 	}
 
@@ -40,5 +43,6 @@ func execute(args []string) error {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return err
 	}
+
 	return nil
 }
