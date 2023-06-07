@@ -12,19 +12,11 @@ import (
 )
 
 func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
-	var pkgsToUpdate []string
-	for _, pkg := range pkgs {
-		found, err := d.findPackageByName(pkg)
-		if err != nil {
-			return err
-		}
-		pkgsToUpdate = append(pkgsToUpdate, found)
-	}
-	if len(pkgsToUpdate) == 0 {
-		pkgsToUpdate = d.Packages()
+	inputs, err := d.inputsToUpdate(pkgs...)
+	if err != nil {
+		return err
 	}
 
-	inputs := nix.InputsFromStrings(pkgsToUpdate, d.lockfile)
 	for _, pkg := range inputs {
 		if pkg.IsLegacy() {
 			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
@@ -55,7 +47,8 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		if existing != nil && existing.Version != newEntry.Version {
 			fmt.Fprintf(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
 			if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
-				// Warn but continue. TODO(landau): ensurePackagesAreInstalled should sync the profile so we don't need to do this manually.
+				// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
+				// sync the profile so we don't need to do this manually.
 				ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 			}
 		} else if existing == nil {
@@ -73,4 +66,20 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	return wrapnix.CreateWrappers(ctx, d)
+}
+
+func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {
+	var pkgsToUpdate []string
+	for _, pkg := range pkgs {
+		found, err := d.findPackageByName(pkg)
+		if err != nil {
+			return nil, err
+		}
+		pkgsToUpdate = append(pkgsToUpdate, found)
+	}
+	if len(pkgsToUpdate) == 0 {
+		pkgsToUpdate = d.Packages()
+	}
+
+	return nix.InputsFromStrings(pkgsToUpdate, d.lockfile), nil
 }
