@@ -199,7 +199,8 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	d.lockfile.Tidy(d)
+	// Ensure we clean out packages that are no longer needed.
+	d.lockfile.Tidy()
 
 	if err = d.lockfile.Save(); err != nil {
 		return err

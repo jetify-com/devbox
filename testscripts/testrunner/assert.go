@@ -71,7 +71,7 @@ func assertDevboxLockPackagesContains(script *testscript.TestScript, neg bool, a
 	script.Check(err)
 
 	expected := args[1]
-	if _, ok := lockfile.PackageMap[expected]; ok {
+	if _, ok := lockfile.Packages[expected]; ok {
 		if neg {
 			script.Fatalf("value '%s' found in %s", expected, args[0])
 		}

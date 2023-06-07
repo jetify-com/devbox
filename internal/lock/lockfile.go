@@ -23,7 +23,7 @@ type File struct {
 	resolver
 
 	LockFileVersion string              `json:"lockfile_version"`
-	PackageMap      map[string]*Package `json:"packages"`
+	Packages        map[string]*Package `json:"packages"`
 }
 
 type Package struct {
@@ -39,7 +39,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
-		PackageMap:      map[string]*Package{},
+		Packages:        map[string]*Package{},
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -62,7 +62,7 @@ func (l *File) Add(pkgs ...string) error {
 
 func (l *File) Remove(pkgs ...string) error {
 	for _, p := range pkgs {
-		delete(l.PackageMap, p)
+		delete(l.Packages, p)
 	}
 	return l.Save()
 }
@@ -70,7 +70,7 @@ func (l *File) Remove(pkgs ...string) error {
 // Resolve updates the in memory copy for performance but does not write to disk
 // This avoids writing values that may need to be removed in case of error.
 func (l *File) Resolve(pkg string) (*Package, error) {
-	if entry, ok := l.PackageMap[pkg]; !ok || entry.Resolved == "" {
+	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
 		if IsVersionedPackage(pkg) {
@@ -83,14 +83,14 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
-		l.PackageMap[pkg] = locked
+		l.Packages[pkg] = locked
 	}
 
-	return l.PackageMap[pkg], nil
+	return l.Packages[pkg], nil
 }
 
 func (l *File) ForceResolve(pkg string) (*Package, error) {
-	delete(l.PackageMap, pkg)
+	delete(l.Packages, pkg)
 	return l.Resolve(pkg)
 }
 
@@ -100,7 +100,7 @@ func (l *File) Save() error {
 		return nil
 	}
 
-	return cuecfg.WriteFile(lockFilePath(l), l)
+	return cuecfg.WriteFile(lockFilePath(l.devboxProject), l)
 }
 
 func (l *File) LegacyNixpkgsPath(pkg string) string {
@@ -122,14 +122,16 @@ func IsLegacyPackage(pkg string) bool {
 	return !IsVersionedPackage(pkg) &&
 		!strings.Contains(pkg, ":") &&
 		// We don't support absolute paths without "path:" prefix, but adding here
-		// just inc ase we ever do.
+		// just in case we ever do.
 		// Landau note: I don't think we should support it, it's hard to read and a
 		// bit ambiguous.
 		!strings.HasPrefix(pkg, "/")
 }
 
-func (l *File) Tidy(project devboxProject) {
-	l.PackageMap = lo.PickByKeys(l.PackageMap, project.Packages())
+// Tidy ensures that the lockfile has the set of packages corresponding to the devbox.json config.
+// It gets rid of older packages that are no longer needed.
+func (l *File) Tidy() {
+	l.Packages = lo.PickByKeys(l.Packages, l.devboxProject.Packages())
 }
 
 func lockFilePath(project devboxProject) string {
