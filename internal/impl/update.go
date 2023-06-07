@@ -68,7 +68,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(ctx, d)
+	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
 }
 
 func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {
