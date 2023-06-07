@@ -6,6 +6,9 @@ import (
 
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
@@ -45,22 +48,29 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			continue
 		}
 		existing := d.lockfile.Packages[pkg.Raw]
-		newEntry, err := d.lockfile.ForceResolve(pkg.Raw)
+		newEntry, err := searcher.Client().Resolve(pkg.Raw)
 		if err != nil {
 			return err
 		}
 		if existing != nil && existing.Version != newEntry.Version {
 			fmt.Fprintf(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
 			if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
-				return err
+				// Warn but continue. TODO(landau): ensurePackagesAreInstalled should sync the profile so we don't need to do this manually.
+				ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 			}
 		} else if existing == nil {
 			fmt.Fprintf(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, newEntry.Resolved)
 		} else {
 			fmt.Fprintf(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
 		}
+		// Set the new entry after we've removed the old package from the profile
+		d.lockfile.Packages[pkg.Raw] = newEntry
 	}
 
 	// TODO(landau): Improve output
-	return d.ensurePackagesAreInstalled(ctx, ensure)
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+		return err
+	}
+
+	return wrapnix.CreateWrappers(ctx, d)
 }
