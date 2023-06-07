@@ -216,8 +216,8 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(cmdName string, cmdArgs []string) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxRun")
+func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
+	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
@@ -478,7 +478,7 @@ func (d *Devbox) Services() (services.Services, error) {
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "start"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -520,7 +520,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		if allProjects {
 			args = append(args, "--all-projects")
 		}
-		return d.RunScript("devbox", args)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	if allProjects {
@@ -554,7 +554,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 
 func (d *Devbox) ListServices(ctx context.Context) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", []string{"services", "ls"})
+		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
 	}
 
 	svcSet, err := d.Services()
@@ -592,7 +592,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript("devbox", append([]string{"services", "restart"}, serviceNames...))
+		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -666,7 +666,7 @@ func (d *Devbox) StartProcessManager(
 		if background {
 			args = append(args, "--background")
 		}
-		return d.RunScript("devbox", args)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	// Start the process manager
