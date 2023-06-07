@@ -99,7 +99,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(ctx, d)
+	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile
@@ -148,7 +148,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(ctx, d)
+	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation

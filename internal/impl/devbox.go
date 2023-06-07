@@ -204,7 +204,7 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	envs[envir.DevboxShellEnabled] = "1"
 
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+	if err := wrapnix.CreateWrappers(ctx, d, pure); err != nil {
 		return err
 	}
 
@@ -251,7 +251,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
+	if err = wrapnix.CreateWrappers(ctx, d, false /* pure */); err != nil {
 		return err
 	}
 
@@ -283,7 +283,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
 		return err
 	}
-	return wrapnix.CreateWrappers(ctx, d)
+	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
 }
 
 func (d *Devbox) ListScripts() []string {
