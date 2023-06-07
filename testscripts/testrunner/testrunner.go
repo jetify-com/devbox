@@ -67,6 +67,18 @@ func globDirs(pattern string) []string {
 	return directories
 }
 
+// copyFileCmd enables copying files within the WORKDIR
+func copyFileCmd(script *testscript.TestScript, neg bool, args []string) {
+	if len(args) < 2 {
+		script.Fatalf("usage: cp <from-file> <to-file>")
+	}
+	if neg {
+		script.Fatalf("neg does not make sense for this command")
+	}
+	err := script.Exec("cp", script.MkAbs(args[0]), script.MkAbs(args[1]))
+	script.Check(err)
+}
+
 func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
@@ -74,8 +86,10 @@ func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 		TestWork:            false, // Set to true if you're trying to debug a test.
 		Setup:               func(env *testscript.Env) error { return setupTestEnv(t, env) },
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
-			"env.path.len":                 assertPathLength,
+			"cp":                           copyFileCmd,
 			"devboxjson.packages.contains": assertDevboxJSONPackagesContains,
+			"devboxlock.packages.contains": assertDevboxLockPackagesContains,
+			"env.path.len":                 assertPathLength,
 			"json.superset":                assertJSONSuperset,
 			"path.order":                   assertPathOrder,
 			"source.path":                  sourcePath,
