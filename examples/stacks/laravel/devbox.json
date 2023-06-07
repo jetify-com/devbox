@@ -2,21 +2,20 @@
   "packages": [
     "php81Packages.composer@latest",
     "php81Extensions.xdebug@latest",
-    "php@8.1"
+    "php@8.1",
+    "nodejs@18",
+    "mariadb@latest",
+    "redis@latest"
   ],
-  "env": {
-    "PHPRC": "$PWD/devbox.d/php",
-    "PHP_EXT_DIR": "$PWD/devbox.d/php/extensions"
-  },
   "shell": {
     "init_hook": [
       "composer install"
     ],
     "scripts": {
-      "run_test": "php public/index.php"
+      "db:create": "mysql -u root -e 'CREATE DATABASE laravel_test;'",
+      "db:migrate": "php artisan migrate",
+      "db:mysql": "mysql -u root -D laravel_test",
+      "serve:dev": "php artisan serve"
     }
-  },
-  "nixpkgs": {
-    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
   }
 }
