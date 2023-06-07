@@ -6,6 +6,7 @@ package lock
 type devboxProject interface {
 	ConfigHash() (string, error)
 	NixPkgsCommitHash() string
+	Packages() []string
 	ProjectDir() string
 }
 

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -22,7 +23,7 @@ type File struct {
 	resolver
 
 	LockFileVersion string              `json:"lockfile_version"`
-	Packages        map[string]*Package `json:"packages"`
+	PackageMap      map[string]*Package `json:"packages"`
 }
 
 type Package struct {
@@ -38,7 +39,7 @@ func GetFile(project devboxProject, resolver resolver) (*File, error) {
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
-		Packages:        map[string]*Package{},
+		PackageMap:      map[string]*Package{},
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -61,7 +62,7 @@ func (l *File) Add(pkgs ...string) error {
 
 func (l *File) Remove(pkgs ...string) error {
 	for _, p := range pkgs {
-		delete(l.Packages, p)
+		delete(l.PackageMap, p)
 	}
 	return l.Save()
 }
@@ -69,7 +70,7 @@ func (l *File) Remove(pkgs ...string) error {
 // Resolve updates the in memory copy for performance but does not write to disk
 // This avoids writing values that may need to be removed in case of error.
 func (l *File) Resolve(pkg string) (*Package, error) {
-	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
+	if entry, ok := l.PackageMap[pkg]; !ok || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
 		if IsVersionedPackage(pkg) {
@@ -82,14 +83,14 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
-		l.Packages[pkg] = locked
+		l.PackageMap[pkg] = locked
 	}
 
-	return l.Packages[pkg], nil
+	return l.PackageMap[pkg], nil
 }
 
 func (l *File) ForceResolve(pkg string) (*Package, error) {
-	delete(l.Packages, pkg)
+	delete(l.PackageMap, pkg)
 	return l.Resolve(pkg)
 }
 
@@ -125,6 +126,10 @@ func IsLegacyPackage(pkg string) bool {
 		// Landau note: I don't think we should support it, it's hard to read and a
 		// bit ambiguous.
 		!strings.HasPrefix(pkg, "/")
+}
+
+func (l *File) Tidy(project devboxProject) {
+	l.PackageMap = lo.PickByKeys(l.PackageMap, project.Packages())
 }
 
 func lockFilePath(project devboxProject) string {
