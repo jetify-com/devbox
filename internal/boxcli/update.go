@@ -22,7 +22,8 @@ func updateCmd() *cobra.Command {
 		Short: "Update packages in your devbox",
 		Long: "Update one, many, or all packages in your devbox. " +
 			"If no packages are specified, all packages will be updated. " +
-			"Only update versioned packages (e.g. `python@3.11`), not packages that are pinned to a nix channel (e.g. `python3`)",
+			"Legacy non-versioned packages will be converted to @latest versioned " +
+			"packages resolved to their current version.",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)

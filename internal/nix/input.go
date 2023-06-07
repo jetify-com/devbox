@@ -84,7 +84,7 @@ func (i *Input) InputName() string {
 
 func (i *Input) URLForInput() string {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			panic(err)
 			// TODO(landau): handle error
@@ -97,7 +97,7 @@ func (i *Input) URLForInput() string {
 
 func (i *Input) URLForInstall() (string, error) {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -117,7 +117,7 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 
 	path := ""
 	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -142,7 +142,7 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 // does not include packages/legacyPackages or the system name.
 func (i *Input) PackageAttributePath() (string, error) {
 	if i.IsDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -174,7 +174,7 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
 	var query string
 	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.String())
+		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
 			return "", err
 		}
