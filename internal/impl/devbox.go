@@ -72,7 +72,7 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func Open(path string, writer io.Writer) (*Devbox, error) {
+func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,9 @@ func Open(path string, writer io.Writer) (*Devbox, error) {
 	)
 	box.lockfile = lock
 
-	if box.HasDeprecatedPackages() && !legacyPackagesWarningHasBeenShown {
+	if showWarnings &&
+		!legacyPackagesWarningHasBeenShown &&
+		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true
 		ux.Fwarning(
 			os.Stderr, // Always stderr. box.writer should probably always be err.
@@ -407,7 +409,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, false /* isDevcontainer */))
 }
 
-func (d *Devbox) PrintEnvrcContent(w io.Writer) error {
+func PrintEnvrcContent(w io.Writer) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file

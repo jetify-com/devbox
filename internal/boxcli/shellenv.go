@@ -13,6 +13,7 @@ import (
 type shellEnvCmdFlags struct {
 	config               configFlags
 	runInitHook          bool
+	install              bool
 	useCachedPrintDevEnv bool
 }
 
@@ -36,6 +37,8 @@ func shellEnvCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
+	command.Flags().BoolVar(
+		&flags.install, "install", false, "install packages before exporting shell environment")
 
 	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
@@ -54,6 +57,12 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
 	if err != nil {
 		return "", err
+	}
+
+	if flags.install {
+		if err := box.Install(cmd.Context()); err != nil {
+			return "", err
+		}
 	}
 
 	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook)
