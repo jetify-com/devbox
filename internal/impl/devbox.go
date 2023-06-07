@@ -334,7 +334,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		return errors.WithStack(err)
 	}
 	return plugin.PrintReadme(
-		nix.InputFromString(pkg, d.lockfile),
+		nix.InputFromString(pkg, d.projectDir, d.lockfile),
 		d.projectDir,
 		d.writer,
 		markdown,
@@ -974,13 +974,13 @@ func (d *Devbox) Packages() []string {
 }
 
 func (d *Devbox) packagesAsInputs() []*nix.Input {
-	return nix.InputsFromStrings(d.Packages(), d.lockfile)
+	return nix.InputsFromStrings(d.Packages(), d.projectDir, d.lockfile)
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
 	results := map[string]bool{}
 	for _, pkg := range d.cfg.Packages {
-		i := nix.InputFromString(pkg, d.lockfile)
+		i := nix.InputFromString(pkg, d.projectDir, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
 			results[i.String()] = true
 		}

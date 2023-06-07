@@ -38,7 +38,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
 	pkgs := []*nix.Input{}
-	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
+	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgsNames), d.projectDir, d.lockfile) {
 		versioned := pkg.Versioned()
 
 		// If exact versioned package is already in the config, skip.
@@ -56,7 +56,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			}
 		}
 
-		pkgs = append(pkgs, nix.InputFromString(versioned, d.lockfile))
+		pkgs = append(pkgs, nix.InputFromString(versioned, d.projectDir, d.lockfile))
 		d.cfg.Packages = append(d.cfg.Packages, versioned)
 	}
 
@@ -199,6 +199,8 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	d.lockfile.Tidy(d)
+
 	if err = d.lockfile.Save(); err != nil {
 		return err
 	}
@@ -285,7 +287,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
+	for _, input := range nix.InputsFromStrings(pkgs, d.projectDir, d.lockfile) {
 		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,

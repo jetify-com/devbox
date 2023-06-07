@@ -14,5 +14,5 @@ func (m *Manager) parseInclude(include string) (*nix.Input, error) {
 	} else if name == "" {
 		return nil, usererr.New("include name is required")
 	}
-	return nix.InputFromString(name, m.lockfile), nil
+	return nix.InputFromString(name, m.ProjectDir(), m.lockfile), nil
 }

@@ -54,7 +54,7 @@ func (m *Manager) PluginPackages(inputs []*nix.Input) ([]*nix.Input, error) {
 		} else if config == nil {
 			continue
 		}
-		pkgs = append(pkgs, nix.InputsFromStrings(config.Packages, m.lockfile)...)
+		pkgs = append(pkgs, nix.InputsFromStrings(config.Packages, m.ProjectDir(), m.lockfile)...)
 	}
 	return pkgs, nil
 }

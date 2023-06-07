@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -18,7 +19,7 @@ const lockFileVersion = "1"
 
 // Lightly inspired by package-lock.json
 type File struct {
-	devboxProject
+	project devboxProject
 	resolver
 
 	LockFileVersion string              `json:"lockfile_version"`
@@ -34,8 +35,8 @@ type Package struct {
 
 func GetFile(project devboxProject, resolver resolver) (*File, error) {
 	lockFile := &File{
-		devboxProject: project,
-		resolver:      resolver,
+		project:  project,
+		resolver: resolver,
 
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
@@ -99,15 +100,19 @@ func (l *File) Save() error {
 		return nil
 	}
 
-	return cuecfg.WriteFile(lockFilePath(l), l)
+	return cuecfg.WriteFile(lockFilePath(l.project), l)
 }
 
 func (l *File) LegacyNixpkgsPath(pkg string) string {
 	return fmt.Sprintf(
 		"github:NixOS/nixpkgs/%s#%s",
-		l.NixPkgsCommitHash(),
+		l.project.NixPkgsCommitHash(),
 		pkg,
 	)
+}
+
+func (l *File) Tidy(project devboxProject) {
+	l.Packages = lo.PickByKeys(l.Packages, project.Packages())
 }
 
 func IsVersionedPackage(pkg string) bool {
@@ -136,4 +141,12 @@ func getLockfileHash(project devboxProject) (string, error) {
 		return "", nil
 	}
 	return cuecfg.FileHash(lockFilePath(project))
+}
+
+func (l *File) ConfigHash() (string, error) {
+	return l.ConfigHash()
+}
+
+func (l *File) NixPkgsCommitHash() string {
+	return l.NixPkgsCommitHash()
 }

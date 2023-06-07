@@ -15,10 +15,6 @@ import (
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
-func PkgExists(pkg string, lock *lock.File) (bool, error) {
-	return InputFromString(pkg, lock).ValidateExists()
-}
-
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using

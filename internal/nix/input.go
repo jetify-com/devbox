@@ -27,20 +27,20 @@ type Input struct {
 	Raw      string
 }
 
-func InputsFromStrings(names []string, l lock.Locker) []*Input {
+func InputsFromStrings(names []string, projectDir string, l lock.Locker) []*Input {
 	inputs := []*Input{}
 	for _, name := range names {
-		inputs = append(inputs, InputFromString(name, l))
+		inputs = append(inputs, InputFromString(name, projectDir, l))
 	}
 	return inputs
 }
 
-func InputFromString(raw string, locker lock.Locker) *Input {
+func InputFromString(raw string, projectDir string, locker lock.Locker) *Input {
 	u, _ := url.Parse(raw)
 	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
 		// This normalizes url paths to be absolute. It also ensures all
 		// path urls have a single slash (instead of possibly 3 slashes)
-		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), u.Opaque)
+		normalizedURL := "path:" + filepath.Join(projectDir, u.Opaque)
 		if u.Fragment != "" {
 			normalizedURL += "#" + u.Fragment
 		}
