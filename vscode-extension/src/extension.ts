@@ -104,10 +104,6 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 	if (workspace.workspaceFolders) {
 		const workspaceUri = workspace.workspaceFolders[0].uri;
 		try {
-			console.log(workspace.workspaceFolders[0].name);
-			// if (workspace.workspaceFolders[0].name === '.devbox') {
-			// 	await devboxReopen();
-			// }
 			// check if the folder has devbox.json in it
 			await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
 			// devbox.json exists setcontext for devbox commands to be available

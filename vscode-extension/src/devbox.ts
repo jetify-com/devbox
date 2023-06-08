@@ -21,7 +21,6 @@ export async function devboxReopen() {
                 const p = new Promise<void>(async (resolve, reject) => {
 
                     if (workspace.workspaceFolders) {
-                        // await workspace.fs.stat(Uri.joinPath(workspaceUri, "devbox.json"));
                         const workingDir = workspace.workspaceFolders[0].uri;
                         const dotdevbox = Uri.joinPath(workingDir, '/.devbox');
                         const scriptsDir = Uri.joinPath(dotdevbox, '/gen/scripts');
