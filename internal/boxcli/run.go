@@ -40,7 +40,7 @@ func runCmd() *cobra.Command {
 
 	flags.config.register(command)
 	command.Flags().BoolVar(
-		&flags.pure, "pure", false, "Runs the script in an isolated shell without taking any variables from parent system.")
+		&flags.pure, "pure", false, "If this flag is specified, devbox runs the script in an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	command.ValidArgs = listScripts(command, flags)
 

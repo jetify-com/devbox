@@ -43,7 +43,7 @@ func shellEnvCmd() *cobra.Command {
 		&flags.install, "install", false, "install packages before exporting shell environment")
 
 	command.Flags().BoolVar(
-		&flags.pure, "pure", false, "Creates an isolated environment without taking any variables from parent system.")
+		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
