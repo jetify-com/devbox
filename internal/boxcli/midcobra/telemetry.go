@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -222,7 +223,10 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		path = configFlag.Value.String()
 	}
 
-	box, err := devbox.OpenWithoutWarnings(path, os.Stdout, &devbox.Opts{})
+	box, err := devbox.OpenWithoutWarnings(&devopt.Opts{
+		Dir:    path,
+		Writer: os.Stdout,
+	})
 	if err != nil {
 		return []string{}, ""
 	}

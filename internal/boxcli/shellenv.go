@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/devopt"
 )
 
 type shellEnvCmdFlags struct {
@@ -58,7 +59,11 @@ func shellEnvCmd() *cobra.Command {
 }
 
 func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{Pure: flags.pure})
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+		Pure:   flags.pure,
+	})
 	if err != nil {
 		return "", err
 	}

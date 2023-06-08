@@ -22,6 +22,7 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
+	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -73,8 +74,9 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox, error) {
-	projectDir, err := findProjectDir(path)
+func Open(opts *devopt.Opts) (*Devbox, error) {
+	// func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox, error) {
+	projectDir, err := findProjectDir(opts.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +92,8 @@ func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox,
 		nix:           &nix.Nix{},
 		projectDir:    projectDir,
 		pluginManager: plugin.NewManager(),
-		writer:        writer,
-		pure:          pure,
+		writer:        opts.Writer,
+		pure:          opts.Pure,
 	}
 	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
@@ -103,7 +105,7 @@ func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox,
 	)
 	box.lockfile = lock
 
-	if showWarnings &&
+	if opts.ShowWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
 		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/envir"
 )
@@ -46,7 +47,11 @@ func shellCmd() *cobra.Command {
 
 func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{Pure: flags.pure})
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Pure:   flags.pure,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}

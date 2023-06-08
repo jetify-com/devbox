@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
@@ -47,13 +48,11 @@ func runCmd() *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
-	box, err := devbox.OpenWithoutWarnings(
-		flags.config.path,
-		cmd.ErrOrStderr(),
-		&devbox.Opts{
-			Pure: flags.pure,
-		},
-	)
+	box, err := devbox.OpenWithoutWarnings(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+		Pure:   flags.pure,
+	})
 	if err != nil {
 		debug.Log("failed to open devbox: %v", err)
 		return nil
@@ -84,7 +83,11 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	debug.Log("script args: %v", scriptArgs)
 
 	// Check the directory exists.
-	box, err := devbox.Open(path, cmd.ErrOrStderr(), &devbox.Opts{Pure: flags.pure})
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    path,
+		Writer: cmd.ErrOrStderr(),
+		Pure:   flags.pure,
+	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
