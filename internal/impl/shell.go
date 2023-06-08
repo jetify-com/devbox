@@ -70,8 +70,8 @@ type ShellOption func(*DevboxShell)
 
 // NewDevboxShell initializes the DevboxShell struct so it can be used to start a shell environment
 // for the devbox project.
-func NewDevboxShell(d *Devbox, opts ...ShellOption) (*DevboxShell, error) {
-	shPath, err := shellPath(d)
+func NewDevboxShell(devbox *Devbox, opts ...ShellOption) (*DevboxShell, error) {
+	shPath, err := shellPath(devbox)
 	if err != nil {
 		return nil, err
 	}
@@ -87,14 +87,14 @@ func NewDevboxShell(d *Devbox, opts ...ShellOption) (*DevboxShell, error) {
 }
 
 // shellPath returns the path to a shell binary, or error if none found.
-func shellPath(d *Devbox) (path string, err error) {
+func shellPath(devbox *Devbox) (path string, err error) {
 	defer func() {
 		if err != nil {
 			path = filepath.Clean(path)
 		}
 	}()
 
-	if !d.pure {
+	if !devbox.pure {
 		// First, check the SHELL environment variable.
 		path = os.Getenv(envir.Shell)
 		if path != "" {
@@ -109,7 +109,7 @@ func shellPath(d *Devbox) (path string, err error) {
 
 	cmd := exec.Command(
 		"nix", "eval", "--raw",
-		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(d.cfg.NixPkgsCommitHash())),
+		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
 	)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
