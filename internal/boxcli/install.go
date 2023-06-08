@@ -30,7 +30,7 @@ func installCmd() *cobra.Command {
 
 func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

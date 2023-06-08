@@ -102,7 +102,7 @@ func servicesCmd() *cobra.Command {
 }
 
 func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -111,7 +111,7 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -125,7 +125,7 @@ func stopServices(
 	servicesFlags servicesCmdFlags,
 	flags serviceStopFlags,
 ) error {
-	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -140,7 +140,7 @@ func restartServices(
 	services []string,
 	flags servicesCmdFlags,
 ) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -154,7 +154,7 @@ func startProcessManager(
 	servicesFlags servicesCmdFlags,
 	flags serviceUpFlags,
 ) error {
-	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(servicesFlags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

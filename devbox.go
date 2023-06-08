@@ -32,7 +32,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	PrintEnv(ctx context.Context, includeHooks bool, pure bool) (string, error)
+	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
 	Push(url string) error
@@ -40,10 +40,10 @@ type Devbox interface {
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
 	RestartServices(ctx context.Context, services ...string) error
-	RunScript(ctx context.Context, scriptName string, scriptArgs []string, pure bool) error
+	RunScript(ctx context.Context, scriptName string, scriptArgs []string) error
 	Services() (services.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
-	Shell(ctx context.Context, pure bool) error
+	Shell(ctx context.Context) error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
 	ShellPlan() (*plansdk.FlakePlan, error)
@@ -55,13 +55,17 @@ type Devbox interface {
 	Update(ctx context.Context, pkgs ...string) error
 }
 
-// Open opens a devbox by reading the config file in dir.
-func Open(dir string, writer io.Writer) (Devbox, error) {
-	return impl.Open(dir, writer, true)
+type Opts struct {
+	Pure bool
 }
 
-func OpenWithoutWarnings(dir string, writer io.Writer) (Devbox, error) {
-	return impl.Open(dir, writer, false)
+// Open opens a devbox by reading the config file in dir.
+func Open(dir string, writer io.Writer, opts *Opts) (Devbox, error) {
+	return impl.Open(dir, writer, true, opts.Pure)
+}
+
+func OpenWithoutWarnings(dir string, writer io.Writer, opts *Opts) (Devbox, error) {
+	return impl.Open(dir, writer, false, opts.Pure)
 }
 
 // InitConfig creates a default devbox config file if one doesn't already exist.

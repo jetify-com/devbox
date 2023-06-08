@@ -62,6 +62,7 @@ type Devbox struct {
 	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
+	pure          bool
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -72,7 +73,7 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
+func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox, error) {
 	projectDir, err := findProjectDir(path)
 	if err != nil {
 		return nil, err
@@ -90,6 +91,7 @@ func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 		projectDir:    projectDir,
 		pluginManager: plugin.NewManager(),
 		writer:        writer,
+		pure:          pure,
 	}
 	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
@@ -183,11 +185,11 @@ func (d *Devbox) Generate() error {
 	return errors.WithStack(d.generateShellFiles())
 }
 
-func (d *Devbox) Shell(ctx context.Context, pure bool) error {
+func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 	fmt.Fprintln(d.writer, "Starting a devbox shell...")
@@ -197,14 +199,14 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx, pure)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	envs[envir.DevboxShellEnabled] = "1"
 
-	if err := wrapnix.CreateWrappers(ctx, d, pure); err != nil {
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
@@ -222,7 +224,7 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), pure, opts...)
+	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), d.pure, opts...)
 	if err != nil {
 		return err
 	}
@@ -230,11 +232,11 @@ func (d *Devbox) Shell(ctx context.Context, pure bool) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string, pure bool) error {
+func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -242,7 +244,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.nixEnv(ctx, pure)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -251,7 +253,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	if err = wrapnix.CreateWrappers(ctx, d, pure); err != nil {
+	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 
@@ -280,10 +282,10 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
-	if _, err := d.PrintEnv(ctx, false /* run init hooks */, false /* pure */); err != nil {
+	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
 		return err
 	}
-	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
+	return wrapnix.CreateWrappers(ctx, d)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -296,15 +298,15 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool, pure bool) (string, error) {
+func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, pure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return "", err
 	}
 
-	envs, err := d.nixEnv(ctx, pure)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -320,7 +322,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool, pure bool) (st
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
-	envs, err := d.nixEnv(ctx, false /* pure */)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -437,7 +439,7 @@ func (d *Devbox) GenerateEnvrcFile(force bool) error {
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -492,7 +494,7 @@ func (d *Devbox) Services() (services.Services, error) {
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...), false /* pure */)
+		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -534,7 +536,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		if allProjects {
 			args = append(args, "--all-projects")
 		}
-		return d.RunScript(ctx, "devbox", args, false /* pure */)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	if allProjects {
@@ -568,7 +570,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 
 func (d *Devbox) ListServices(ctx context.Context) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", []string{"services", "ls"}, false /* pure */)
+		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
 	}
 
 	svcSet, err := d.Services()
@@ -606,7 +608,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 
 func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
 	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...), false /* pure */)
+		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -680,7 +682,7 @@ func (d *Devbox) StartProcessManager(
 		if background {
 			args = append(args, "--background")
 		}
-		return d.RunScript(ctx, "devbox", args, false /* pure */)
+		return d.RunScript(ctx, "devbox", args)
 	}
 
 	// Start the process manager
@@ -722,7 +724,7 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pure bool) (map[string]string, error) {
+func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
 	// Append variables from current env if --pure is not passed
@@ -737,9 +739,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pu
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		// Need HOME env variable for pure shell to leak through
-		// otherwise devbox binary won't work
-		if !pure || key == "HOME" {
+		// Passing HOME USER and DISTPLAY for pure shell to leak through
+		// otherwise devbox binary won't work - this matches nix
+		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" {
 			env[key] = val
 		}
 	}
@@ -752,6 +754,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pu
 	}
 
 	currentEnvPath := env["PATH"]
+	if d.pure { // make nix available inside pure shell - necessary for devbox add to work
+		currentEnvPath = "/nix/var/nix/profiles/default/bin"
+	}
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
@@ -852,7 +857,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool, pu
 
 	d.setCommonHelperEnvVars(env)
 
-	if !pure {
+	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = JoinPathLists(
 			env["XDG_DATA_DIRS"],
@@ -868,7 +873,7 @@ var nixEnvCache map[string]string
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context, pure bool) (map[string]string, error) {
+func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
 	}
@@ -888,7 +893,7 @@ func (d *Devbox) nixEnv(ctx context.Context, pure bool) (map[string]string, erro
 		usePrintDevEnvCache = true
 	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache, pure)
+	return d.computeNixEnv(ctx, usePrintDevEnvCache)
 }
 
 func (d *Devbox) ogPathKey() string {
@@ -1125,7 +1130,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.nixEnv(ctx, false /* pure */)
+	env, err := d.nixEnv(ctx)
 
 	if err != nil {
 		return nil, err

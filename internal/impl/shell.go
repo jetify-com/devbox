@@ -64,6 +64,7 @@ type DevboxShell struct {
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime string
+	pure           bool
 }
 
 type ShellOption func(*DevboxShell)
@@ -107,12 +108,7 @@ func shellPath(nixpkgsCommitHash string, pure bool) (path string, err error) {
 
 	var bashNixStorePath string // of the form /nix/store/{hash}-bash-{version}/
 
-	// construct exec args, add --pure-eval if pure shell
-	execArgs := []string{"eval", "--raw"}
-	if pure {
-		execArgs = append(execArgs, "--pure-eval")
-	}
-	execArgs = append(execArgs, fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash)))
+	execArgs := []string{"eval", "--raw", fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash))}
 
 	cmd := exec.Command("nix", execArgs...)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
@@ -202,6 +198,12 @@ func WithProjectDir(projectDir string) ShellOption {
 func WithShellStartTime(time string) ShellOption {
 	return func(s *DevboxShell) {
 		s.shellStartTime = time
+	}
+}
+
+func WithPureShell(pure bool) ShellOption {
+	return func(s *DevboxShell) {
+		s.pure = pure
 	}
 }
 

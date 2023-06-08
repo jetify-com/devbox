@@ -49,7 +49,7 @@ func addCmd() *cobra.Command {
 }
 
 func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

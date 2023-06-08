@@ -58,7 +58,7 @@ func shellEnvCmd() *cobra.Command {
 }
 
 func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{Pure: flags.pure})
 	if err != nil {
 		return "", err
 	}

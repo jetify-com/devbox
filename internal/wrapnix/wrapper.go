@@ -34,7 +34,7 @@ var wrapper string
 var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
 // CreateWrappers creates wrappers for all the executables in nix paths
-func CreateWrappers(ctx context.Context, devbox devboxer, pure bool) error {
+func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	shellEnvHash, err := devbox.ShellEnvHash(ctx)
 	if err != nil {
 		return err
@@ -92,9 +92,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer, pure bool) error {
 			return errors.WithStack(err)
 		}
 	}
-	if pure {
-		createDevboxSymlink(devbox.ProjectDir())
-	}
+	createDevboxSymlink(devbox.ProjectDir())
 
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }

@@ -32,7 +32,7 @@ func infoCmd() *cobra.Command {
 }
 
 func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.OutOrStdout())
+	box, err := devbox.Open(flags.config.path, cmd.OutOrStdout(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

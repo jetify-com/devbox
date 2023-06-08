@@ -61,7 +61,7 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	box, err := devbox.Open(path, cmd.OutOrStdout())
+	box, err := devbox.Open(path, cmd.OutOrStdout(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -115,7 +115,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	box, err := devbox.Open(path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return err
 	}

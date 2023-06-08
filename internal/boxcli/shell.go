@@ -46,7 +46,7 @@ func shellCmd() *cobra.Command {
 
 func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{Pure: flags.pure})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -54,7 +54,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	if flags.printEnv {
 		// false for includeHooks is because init hooks is not compatible with .envrc files generated
 		// by versions older than 0.4.6
-		script, err := box.PrintEnv(cmd.Context(), false /*includeHooks*/, flags.pure)
+		script, err := box.PrintEnv(cmd.Context(), false /*includeHooks*/)
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell(cmd.Context(), flags.pure)
+	return box.Shell(cmd.Context())
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {

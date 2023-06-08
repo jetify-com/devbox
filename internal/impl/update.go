@@ -64,11 +64,11 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	// TODO(landau): Improve output
-	if err := d.ensurePackagesAreInstalled(ctx, ensure, false /* pure */); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(ctx, d, false /* pure */)
+	return wrapnix.CreateWrappers(ctx, d)
 }
 
 func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {

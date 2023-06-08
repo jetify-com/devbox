@@ -41,7 +41,7 @@ func testShellPlan(t *testing.T, testPath string) {
 		t.Setenv(envir.XDGDataHome, "/tmp/devbox")
 		assert := assert.New(t)
 
-		_, err := Open(baseDir, os.Stdout, true)
+		_, err := Open(baseDir, os.Stdout, true, false)
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 	})
 }
@@ -65,11 +65,11 @@ func TestComputeNixEnv(t *testing.T) {
 	path := t.TempDir()
 	_, err := devconfig.Init(path, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	d, err := Open(path, os.Stdout, true)
+	d, err := Open(path, os.Stdout, true, false)
 	require.NoError(t, err, "Open should not fail")
 	d.nix = &testNix{}
 	ctx := context.Background()
-	env, err := d.computeNixEnv(ctx, false /*use cache*/, false /* pure */)
+	env, err := d.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	assert.NotNil(t, env, "computeNixEnv should return a valid env")
 }
@@ -78,11 +78,11 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	dir := t.TempDir()
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(dir, os.Stdout, true)
+	devbox, err := Open(dir, os.Stdout, true, false)
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeNixEnv(ctx, false /*use cache*/, false /* pure */)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -93,7 +93,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
 	)
 
-	env, err = devbox.computeNixEnv(ctx, false /*use cache*/, false /* pure */)
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 
@@ -104,11 +104,11 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	dir := t.TempDir()
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(dir, os.Stdout, true)
+	devbox, err := Open(dir, os.Stdout, true, false)
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeNixEnv(ctx, false /*use cache*/, false /* pure */)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -121,7 +121,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	)
 
 	devbox.nix.(*testNix).path = ""
-	env, err = devbox.computeNixEnv(ctx, false /*use cache*/, false /* pure */)
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")

@@ -129,7 +129,7 @@ func sshConfigCmd() *cobra.Command {
 
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -149,7 +149,7 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return devbox.PrintEnvrcContent(cmd.OutOrStdout())
 	}
 
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

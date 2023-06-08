@@ -30,7 +30,7 @@ func removeCmd() *cobra.Command {
 }
 
 func runRemoveCmd(cmd *cobra.Command, args []string, flags removeCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr(), &devbox.Opts{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
