@@ -64,9 +64,7 @@ export async function devboxReopen() {
                         nodeprocess.on('message', (message: Message, handler) => {
                             console.log(message.status);
                             resolve();
-                            // setTimeout(() => {
                             commands.executeCommand("workbench.action.closeWindow");
-                            // }, 1000);
 
                         });
                     }
