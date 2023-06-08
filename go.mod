@@ -37,7 +37,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/lib/pq v1.10.7 // indirect
+require (
+	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
+	github.com/lib/pq v1.10.7 // indirect
+)
 
 require (
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect

@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/auth"
 )
@@ -16,7 +18,9 @@ func authCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(loginCmd())
+	cmd.AddCommand(logoutCmd())
 	cmd.AddCommand(refreshCmd())
+	cmd.AddCommand(whoAmICmd())
 
 	return cmd
 }
@@ -28,13 +32,34 @@ func loginCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return auth.NewAuthenticator().DeviceAuthFlow(cmd.Context())
+			return auth.NewAuthenticator(cmd.OutOrStdout()).DeviceAuthFlow(
+				cmd.Context(),
+			)
 		},
 	}
 
 	return cmd
 }
 
+func logoutCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:    "logout",
+		Short:  "logout from devbox",
+		Args:   cobra.ExactArgs(0),
+		Hidden: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := auth.NewAuthenticator(cmd.OutOrStdout()).Logout()
+			if err == nil {
+				fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
+			}
+			return err
+		},
+	}
+
+	return cmd
+}
+
+// This is for debugging purposes only.
 func refreshCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "refresh",
@@ -42,7 +67,27 @@ func refreshCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return auth.NewAuthenticator().RefreshTokens()
+			_, err := auth.NewAuthenticator(cmd.OutOrStdout()).RefreshTokens()
+			return err
+		},
+	}
+
+	return cmd
+}
+
+func whoAmICmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:    "whoami",
+		Short:  "Show the current user",
+		Args:   cobra.ExactArgs(0),
+		Hidden: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			user, err := auth.User()
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), user)
+			return nil
 		},
 	}
 
