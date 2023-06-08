@@ -12,40 +12,49 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/envir"
 )
 
 // Authenticator performs various auth0 login flows to authenticate users.
 type Authenticator struct {
-	ClientID    string
-	Domain      string
-	Scope       string
-	Audience    string
-	OpenBrowser bool
-	writer      io.Writer
+	ClientID string
+	Domain   string
+	Scope    string
+	Audience string
 }
 
 // NewAuthenticator creates an authenticator that uses the auth0 production
 // tenancy.
-func NewAuthenticator(writer io.Writer) *Authenticator {
+func NewAuthenticator() *Authenticator {
 	return &Authenticator{
-		ClientID:    "5PusB4fMm6BQ8WbTFObkTI0JUDi9ahPC",
-		Domain:      "auth.jetpack.io",
-		Scope:       "openid offline_access email profile",
-		Audience:    "https://api.jetpack.io",
-		OpenBrowser: true,
-		writer:      writer,
+		ClientID: envir.GetValueOrDefault(
+			"DEVBOX_AUTH_CLIENT_ID",
+			"5PusB4fMm6BQ8WbTFObkTI0JUDi9ahPC",
+		),
+		Domain: envir.GetValueOrDefault(
+			"DEVBOX_AUTH_DOMAIN",
+			"auth.jetpack.io",
+		),
+		Scope: envir.GetValueOrDefault(
+			"DEVBOX_AUTH_SCOPE",
+			"openid offline_access email profile",
+		),
+		Audience: envir.GetValueOrDefault(
+			"DEVBOX_AUTH_AUDIENCE",
+			"https://api.jetpack.io",
+		),
 	}
 }
 
 // DeviceAuthFlow starts decide auth flow
-func (a *Authenticator) DeviceAuthFlow(ctx context.Context) error {
+func (a *Authenticator) DeviceAuthFlow(ctx context.Context, w io.Writer) error {
 	resp, err := a.requestDeviceCode()
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(a.writer, "\nYour auth code is: %s\n\n", resp.UserCode)
-	a.showVerificationURL(resp.VerificationURIComplete)
+	fmt.Fprintf(w, "\nYour auth code is: %s\n\n", resp.UserCode)
+	a.showVerificationURL(resp.VerificationURIComplete, w)
 
 	tokenSuccess, err := a.requestTokens(ctx, resp)
 	if err != nil {
@@ -56,7 +65,7 @@ func (a *Authenticator) DeviceAuthFlow(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Fprintln(a.writer, "You are now authenticated.")
+	fmt.Fprintln(w, "You are now authenticated.")
 	return nil
 }
 

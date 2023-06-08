@@ -6,7 +6,6 @@ package auth
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/MicahParks/keyfunc/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -36,7 +35,7 @@ func User() (*user, error) {
 
 	// If the token is expired, refresh the tokens and try again.
 	if errors.Is(err, jwt.ErrTokenExpired) {
-		filesystemTokens, err = NewAuthenticator(os.Stderr).RefreshTokens()
+		filesystemTokens, err = NewAuthenticator().RefreshTokens()
 		if err != nil {
 			return nil, err
 		}
@@ -61,17 +60,18 @@ func (u *user) Email() string {
 }
 
 func parseToken(stringToken string) (*jwt.Token, error) {
-	jwksURL := "https://auth.jetpack.io/.well-known/jwks.json"
-	start := time.Now()
+	authenticator := NewAuthenticator()
+	jwksURL := fmt.Sprintf(
+		"https://%s/.well-known/jwks.json",
+		authenticator.Domain,
+	)
 	// TODO: Cache this
 	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{})
-	fmt.Println(time.Since(start))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	token, err := jwt.Parse(stringToken, jwks.Keyfunc)
-	fmt.Println("jwt.Parse", time.Since(start))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

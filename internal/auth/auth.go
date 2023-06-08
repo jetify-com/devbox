@@ -47,20 +47,16 @@ type requestTokenError struct {
 
 // showVerificationURL presents a device flow verification URL to the user,
 // either by printing it to stdout or opening a web browser.
-func (a *Authenticator) showVerificationURL(url string) {
-	opened := false
-	if a.OpenBrowser {
-		err := browser.OpenURL(url)
-		opened = err == nil
-	}
-	if opened {
-		fmt.Fprintf(a.writer, "Opening your browser to complete the login. "+
+func (a *Authenticator) showVerificationURL(url string, w io.Writer) {
+	err := browser.OpenURL(url)
+	if err == nil {
+		fmt.Fprintf(w, "Opening your browser to complete the login. "+
 			"If your browser didn't open, you can go to this URL "+
 			"and confirm your code manually:\n%s\n\n", url)
 		return
 	}
 	fmt.Fprintf(
-		a.writer,
+		w,
 		"Please go to this URL to confirm this code and login: %s\n\n", url)
 }
 

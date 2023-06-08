@@ -32,8 +32,9 @@ func loginCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return auth.NewAuthenticator(cmd.OutOrStdout()).DeviceAuthFlow(
+			return auth.NewAuthenticator().DeviceAuthFlow(
 				cmd.Context(),
+				cmd.OutOrStdout(),
 			)
 		},
 	}
@@ -48,7 +49,7 @@ func logoutCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := auth.NewAuthenticator(cmd.OutOrStdout()).Logout()
+			err := auth.NewAuthenticator().Logout()
 			if err == nil {
 				fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
 			}
@@ -67,7 +68,7 @@ func refreshCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := auth.NewAuthenticator(cmd.OutOrStdout()).RefreshTokens()
+			_, err := auth.NewAuthenticator().RefreshTokens()
 			return err
 		},
 	}

@@ -6,6 +6,7 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
+	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/a8m/envsubst v1.4.2
 	github.com/alessio/shellescape v1.4.1
 	github.com/bmatcuk/doublestar/v4 v4.6.0
@@ -17,6 +18,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getsentry/sentry-go v0.20.0
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-envparse v0.1.0
@@ -37,11 +39,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require (
-	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
-	github.com/lib/pq v1.10.7 // indirect
-)
+require github.com/lib/pq v1.10.7 // indirect
 
 require (
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
