@@ -15,7 +15,6 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/services"
@@ -92,7 +91,10 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			return errors.WithStack(err)
 		}
 	}
-	createDevboxSymlink(devbox.ProjectDir())
+	err = createDevboxSymlink(devbox.ProjectDir())
+	if err != nil {
+		return err
+	}
 
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
@@ -167,17 +169,17 @@ func createSymlinksForSupportDirs(projectDir string) error {
 
 // Creates a symlink for devbox in .devbox/virtenv/.wrappers/bin
 // so that devbox can be available inside a pure shell
-func createDevboxSymlink(projectDir string) {
+func createDevboxSymlink(projectDir string) error {
 
 	// Get absolute path for where devbox is called
 	devboxPath, err := filepath.Abs(os.Args[0])
 	if err != nil {
-		debug.Log("Failed to create devbox symlink. Devbox command won't be available, inside this shell. error: %v", err)
-		return
+		return errors.Errorf("Failed to create devbox symlink. Devbox command won't be available inside the shell. Error: %v", err)
 	}
 	// Create a symlink between devbox in .wrappers/bin
 	err = os.Symlink(devboxPath, filepath.Join(projectDir, plugin.WrapperBinPath, "devbox"))
 	if err != nil && !errors.Is(err, fs.ErrExist) {
-		debug.Log("Failed to create devbox symlink. Devbox command won't be available inside this shell. error: %v", err)
+		return errors.Errorf("Failed to create devbox symlink. Devbox command won't be available inside the shell. Error: %v", err)
 	}
+	return nil
 }

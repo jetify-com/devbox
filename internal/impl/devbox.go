@@ -224,7 +224,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), d.pure, opts...)
+	shell, err := NewDevboxShell(d, opts...)
 	if err != nil {
 		return err
 	}

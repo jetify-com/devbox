@@ -64,15 +64,14 @@ type DevboxShell struct {
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime string
-	pure           bool
 }
 
 type ShellOption func(*DevboxShell)
 
 // NewDevboxShell initializes the DevboxShell struct so it can be used to start a shell environment
 // for the devbox project.
-func NewDevboxShell(nixpkgsCommitHash string, pure bool, opts ...ShellOption) (*DevboxShell, error) {
-	shPath, err := shellPath(nixpkgsCommitHash, pure)
+func NewDevboxShell(d *Devbox, opts ...ShellOption) (*DevboxShell, error) {
+	shPath, err := shellPath(d)
 	if err != nil {
 		return nil, err
 	}
@@ -88,14 +87,14 @@ func NewDevboxShell(nixpkgsCommitHash string, pure bool, opts ...ShellOption) (*
 }
 
 // shellPath returns the path to a shell binary, or error if none found.
-func shellPath(nixpkgsCommitHash string, pure bool) (path string, err error) {
+func shellPath(d *Devbox) (path string, err error) {
 	defer func() {
 		if err != nil {
 			path = filepath.Clean(path)
 		}
 	}()
 
-	if !pure {
+	if !d.pure {
 		// First, check the SHELL environment variable.
 		path = os.Getenv(envir.Shell)
 		if path != "" {
@@ -108,9 +107,10 @@ func shellPath(nixpkgsCommitHash string, pure bool) (path string, err error) {
 
 	var bashNixStorePath string // of the form /nix/store/{hash}-bash-{version}/
 
-	execArgs := []string{"eval", "--raw", fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash))}
-
-	cmd := exec.Command("nix", execArgs...)
+	cmd := exec.Command(
+		"nix", "eval", "--raw",
+		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(d.cfg.NixPkgsCommitHash())),
+	)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
 	if err != nil {
@@ -198,12 +198,6 @@ func WithProjectDir(projectDir string) ShellOption {
 func WithShellStartTime(time string) ShellOption {
 	return func(s *DevboxShell) {
 		s.shellStartTime = time
-	}
-}
-
-func WithPureShell(pure bool) ShellOption {
-	return func(s *DevboxShell) {
-		s.pure = pure
 	}
 }
 
