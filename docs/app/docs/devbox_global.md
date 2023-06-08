@@ -112,7 +112,7 @@ devbox global shellenv --init-hook | source
 
 You can use Git to synchronize your `devbox global` config across multiple machines using `devbox global push <remote>` and `devbox global pull <remote>`.
 
-Your global `devbox.json` and any other files in the Git remote will be stored in `$XDG_DATA_HOME/devbox/global/default/devbox.json`. If `$XDG_DATA_HOME` is not set, it will default to `~/.local/share/devbox/global/default/devbox.json`.
+Your global `devbox.json` and any other files in the Git remote will be stored in `$XDG_DATA_HOME/devbox/global/default`. If `$XDG_DATA_HOME` is not set, it will default to `~/.local/share/devbox/global/default`. You can view the current global directory by running `devbox global path`.
 
 ## Next Steps
 
@@ -122,7 +122,7 @@ Your global `devbox.json` and any other files in the Git remote will be stored i
 * **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
 * **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
 * **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
-* **[Using Flakes with Devbox](guides/flakes.md):** Learn how to install packages from Nix Flakes.
+* **[Using Flakes with Devbox](guides/using_flakes.md):** Learn how to install packages from Nix Flakes.
 
 ### Use Devbox with your IDE
 
