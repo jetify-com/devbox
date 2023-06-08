@@ -1,6 +1,0 @@
-version: "0.5"
-
-processes:
-  artisan:
-    command: "php artisan serve"
-    restart: on_failure
