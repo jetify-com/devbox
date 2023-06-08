@@ -74,7 +74,7 @@ func keyEqualsValue(vars map[string]string) []string {
 		if isApproved(k) {
 			strb := strings.Builder{}
 			strb.WriteString(k)
-			strb.WriteString(`="`)
+			strb.WriteString(`=`)
 			for _, r := range vars[k] {
 				switch r {
 				// Special characters inside double quotes:
@@ -84,7 +84,6 @@ func keyEqualsValue(vars map[string]string) []string {
 				}
 				strb.WriteRune(r)
 			}
-			strb.WriteString("\"")
 			keyValues = append(keyValues, strb.String())
 		}
 	}
