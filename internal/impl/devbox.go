@@ -849,7 +849,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		for _, input := range buildInputs {
 			// input is of the form: /nix/store/<hash>-<package-name>-<version>
 			// path is of the form: /nix/store/<hash>-<package-name>-<version>/bin
-			if strings.HasPrefix(path, input) {
+			if strings.TrimSpace(input) != "" && strings.HasPrefix(path, input) {
+				debug.Log("returning false for path %s and input %s\n", path, input)
 				return false
 			}
 		}
