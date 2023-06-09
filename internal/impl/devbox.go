@@ -841,14 +841,21 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	nixEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
 
-	// We filter out nix store paths so that if a user removes a package from their devbox
-	// it no longer is available in their environment. This is needed because nix may keep
-	// packages around if they are used somewhere else or if the user hasn't triggered
-	// garbage collection.
+	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
+	// Motivation: if a user removes a package from their devbox it should no longer
+	// be available in their environment.
+	buildInputs := strings.Split(env["buildInputs"], " ")
 	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
-		return !strings.HasPrefix(path, "/nix/store")
+		for _, input := range buildInputs {
+			// input is of the form: /nix/store/<hash>-<package-name>-<version>
+			// path is of the form: /nix/store/<hash>-<package-name>-<version>/bin
+			if strings.HasPrefix(path, input) {
+				return false
+			}
+		}
+		return true
 	})
-	debug.Log("PATH after removing /nix/store paths is: %s", nixEnvPath)
+	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
 	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
 	debug.Log("computed environment PATH is: %s", env["PATH"])
