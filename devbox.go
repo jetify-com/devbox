@@ -10,6 +10,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/impl"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/services"
 )
@@ -56,12 +57,13 @@ type Devbox interface {
 }
 
 // Open opens a devbox by reading the config file in dir.
-func Open(dir string, writer io.Writer) (Devbox, error) {
-	return impl.Open(dir, writer, true)
-}
-
-func OpenWithoutWarnings(dir string, writer io.Writer) (Devbox, error) {
-	return impl.Open(dir, writer, false)
+func Open(opts *devopt.Opts) (Devbox, error) {
+	return impl.Open(&devopt.Opts{
+		Dir:          opts.Dir,
+		Pure:         opts.Pure,
+		ShowWarnings: opts.ShowWarnings,
+		Writer:       opts.Writer,
+	})
 }
 
 // InitConfig creates a default devbox config file if one doesn't already exist.

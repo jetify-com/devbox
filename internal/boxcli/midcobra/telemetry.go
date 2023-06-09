@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/telemetry"
 )
 
@@ -222,7 +223,11 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		path = configFlag.Value.String()
 	}
 
-	box, err := devbox.OpenWithoutWarnings(path, os.Stdout)
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:          path,
+		Writer:       os.Stdout,
+		ShowWarnings: false,
+	})
 	if err != nil {
 		return []string{}, ""
 	}

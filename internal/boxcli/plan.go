@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type planCmdFlags struct {
@@ -35,7 +36,10 @@ func planCmd() *cobra.Command {
 
 func runPlanCmd(cmd *cobra.Command, flags planCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}

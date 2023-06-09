@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type shellEnvCmdFlags struct {
@@ -15,6 +16,7 @@ type shellEnvCmdFlags struct {
 	runInitHook          bool
 	install              bool
 	useCachedPrintDevEnv bool
+	pure                 bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -40,6 +42,9 @@ func shellEnvCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.install, "install", false, "install packages before exporting shell environment")
 
+	command.Flags().BoolVar(
+		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+
 	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
 		&flags.useCachedPrintDevEnv,
@@ -54,7 +59,11 @@ func shellEnvCmd() *cobra.Command {
 }
 
 func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+		Pure:   flags.pure,
+	})
 	if err != nil {
 		return "", err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type infoCmdFlags struct {
@@ -32,7 +33,10 @@ func infoCmd() *cobra.Command {
 }
 
 func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.OutOrStdout())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.OutOrStdout(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}

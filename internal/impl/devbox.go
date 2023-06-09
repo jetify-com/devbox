@@ -32,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
@@ -62,6 +63,7 @@ type Devbox struct {
 	nix           nix.Nixer
 	projectDir    string
 	pluginManager *plugin.Manager
+	pure          bool
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -72,8 +74,8 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
-	projectDir, err := findProjectDir(path)
+func Open(opts *devopt.Opts) (*Devbox, error) {
+	projectDir, err := findProjectDir(opts.Dir)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +91,8 @@ func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 		nix:           &nix.Nix{},
 		projectDir:    projectDir,
 		pluginManager: plugin.NewManager(),
-		writer:        writer,
+		writer:        opts.Writer,
+		pure:          opts.Pure,
 	}
 	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
@@ -101,7 +104,7 @@ func Open(path string, writer io.Writer, showWarnings bool) (*Devbox, error) {
 	)
 	box.lockfile = lock
 
-	if showWarnings &&
+	if opts.ShowWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
 		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true
@@ -222,7 +225,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(shellStartTime),
 	}
 
-	shell, err := NewDevboxShell(d.cfg.NixPkgsCommitHash(), opts...)
+	shell, err := NewDevboxShell(d, opts...)
 	if err != nil {
 		return err
 	}
@@ -725,8 +728,10 @@ func (d *Devbox) StartProcessManager(
 func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
+	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
 	env := make(map[string]string, len(currentEnv))
+
 	for _, kv := range currentEnv {
 		key, val, found := strings.Cut(kv, "=")
 		if !found {
@@ -735,7 +740,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		env[key] = val
+		// Passing HOME USER and DISTPLAY for pure shell to leak through
+		// otherwise devbox binary won't work - this matches nix
+		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" {
+			env[key] = val
+		}
 	}
 	// check if contents of .envrc is old and print warning
 	if !usePrintDevEnvCache {
@@ -746,6 +755,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
+	if d.pure { // make nix available inside pure shell - necessary for devbox add to work
+		currentEnvPath = "/nix/var/nix/profiles/default/bin"
+	}
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
@@ -863,11 +875,13 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	d.setCommonHelperEnvVars(env)
 
-	// preserve the original XDG_DATA_DIRS by prepending to it
-	env["XDG_DATA_DIRS"] = JoinPathLists(
-		env["XDG_DATA_DIRS"],
-		os.Getenv("XDG_DATA_DIRS"),
-	)
+	if !d.pure {
+		// preserve the original XDG_DATA_DIRS by prepending to it
+		env["XDG_DATA_DIRS"] = JoinPathLists(
+			env["XDG_DATA_DIRS"],
+			os.Getenv("XDG_DATA_DIRS"),
+		)
+	}
 
 	return env, d.addHashToEnv(env)
 }

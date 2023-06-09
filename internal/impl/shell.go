@@ -70,8 +70,8 @@ type ShellOption func(*DevboxShell)
 
 // NewDevboxShell initializes the DevboxShell struct so it can be used to start a shell environment
 // for the devbox project.
-func NewDevboxShell(nixpkgsCommitHash string, opts ...ShellOption) (*DevboxShell, error) {
-	shPath, err := shellPath(nixpkgsCommitHash)
+func NewDevboxShell(devbox *Devbox, opts ...ShellOption) (*DevboxShell, error) {
+	shPath, err := shellPath(devbox)
 	if err != nil {
 		return nil, err
 	}
@@ -87,18 +87,20 @@ func NewDevboxShell(nixpkgsCommitHash string, opts ...ShellOption) (*DevboxShell
 }
 
 // shellPath returns the path to a shell binary, or error if none found.
-func shellPath(nixpkgsCommitHash string) (path string, err error) {
+func shellPath(devbox *Devbox) (path string, err error) {
 	defer func() {
 		if err != nil {
 			path = filepath.Clean(path)
 		}
 	}()
 
-	// First, check the SHELL environment variable.
-	path = os.Getenv(envir.Shell)
-	if path != "" {
-		debug.Log("Using SHELL env var for shell binary path: %s\n", path)
-		return path, nil
+	if !devbox.pure {
+		// First, check the SHELL environment variable.
+		path = os.Getenv(envir.Shell)
+		if path != "" {
+			debug.Log("Using SHELL env var for shell binary path: %s\n", path)
+			return path, nil
+		}
 	}
 
 	// Second, fallback to using the bash that nix uses by default.
@@ -107,7 +109,7 @@ func shellPath(nixpkgsCommitHash string) (path string, err error) {
 
 	cmd := exec.Command(
 		"nix", "eval", "--raw",
-		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(nixpkgsCommitHash)),
+		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
 	)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
