@@ -173,12 +173,12 @@ func createDevboxSymlink(projectDir string) error {
 	// Get absolute path for where devbox is called
 	devboxPath, err := filepath.Abs(os.Args[0])
 	if err != nil {
-		return errors.Wrap(err, "Failed to create devbox symlink. Devbox command won't be available inside the shell.")
+		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell.")
 	}
 	// Create a symlink between devbox in .wrappers/bin
 	err = os.Symlink(devboxPath, filepath.Join(projectDir, plugin.WrapperBinPath, "devbox"))
 	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return errors.Wrap(err, "Failed to create devbox symlink. Devbox command won't be available inside the shell.")
+		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell.")
 	}
 	return nil
 }
