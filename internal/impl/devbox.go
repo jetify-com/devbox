@@ -75,7 +75,6 @@ type Devbox struct {
 var legacyPackagesWarningHasBeenShown = false
 
 func Open(opts *devopt.Opts) (*Devbox, error) {
-	// func Open(path string, writer io.Writer, showWarnings bool, pure bool) (*Devbox, error) {
 	projectDir, err := findProjectDir(opts.Dir)
 	if err != nil {
 		return nil, err
