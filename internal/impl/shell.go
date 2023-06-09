@@ -399,3 +399,13 @@ func JoinPathLists(pathLists ...string) string {
 	}
 	return strings.Join(cleaned, string(filepath.ListSeparator))
 }
+
+func filterPathList(pathList string, keep func(string) bool) string {
+	filtered := []string{}
+	for _, path := range filepath.SplitList(pathList) {
+		if keep(path) {
+			filtered = append(filtered, path)
+		}
+	}
+	return strings.Join(filtered, string(filepath.ListSeparator))
+}

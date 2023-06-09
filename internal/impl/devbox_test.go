@@ -126,5 +126,5 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
 
-	assert.NotEqual(t, path, path2, "path should be the same")
+	assert.NotEqual(t, path, path2, "path should not be the same")
 }
