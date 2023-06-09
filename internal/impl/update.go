@@ -20,6 +20,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
+	pendingPackagesToUpdate := []*nix.Input{}
 	for _, pkg := range inputs {
 		if pkg.IsLegacy() {
 			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
@@ -34,10 +35,12 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			if err := d.Add(ctx, pkg.LegacyToVersioned()); err != nil {
 				return err
 			}
+		} else {
+			pendingPackagesToUpdate = append(pendingPackagesToUpdate, pkg)
 		}
 	}
 
-	for _, pkg := range inputs {
+	for _, pkg := range pendingPackagesToUpdate {
 		if !lock.IsVersionedPackage(pkg.Raw) {
 			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
 			continue

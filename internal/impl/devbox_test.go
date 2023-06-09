@@ -43,10 +43,9 @@ func testShellPlan(t *testing.T, testPath string) {
 		assert := assert.New(t)
 
 		_, err := Open(&devopt.Opts{
-			Dir:          baseDir,
-			Writer:       os.Stdout,
-			ShowWarnings: true,
-			Pure:         false,
+			Dir:    baseDir,
+			Writer: os.Stdout,
+			Pure:   false,
 		})
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 	})
@@ -72,10 +71,9 @@ func TestComputeNixEnv(t *testing.T) {
 	_, err := devconfig.Init(path, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	d, err := Open(&devopt.Opts{
-		Dir:          path,
-		Writer:       os.Stdout,
-		ShowWarnings: true,
-		Pure:         false,
+		Dir:    path,
+		Writer: os.Stdout,
+		Pure:   false,
 	})
 	require.NoError(t, err, "Open should not fail")
 	d.nix = &testNix{}
@@ -90,10 +88,9 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	devbox, err := Open(&devopt.Opts{
-		Dir:          dir,
-		Writer:       os.Stdout,
-		ShowWarnings: true,
-		Pure:         false,
+		Dir:    dir,
+		Writer: os.Stdout,
+		Pure:   false,
 	})
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}
@@ -121,10 +118,9 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
 	devbox, err := Open(&devopt.Opts{
-		Dir:          dir,
-		Writer:       os.Stdout,
-		ShowWarnings: true,
-		Pure:         false,
+		Dir:    dir,
+		Writer: os.Stdout,
+		Pure:   false,
 	})
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}

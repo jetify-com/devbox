@@ -3,8 +3,8 @@ package devopt
 import "io"
 
 type Opts struct {
-	Dir          string
-	Pure         bool
-	ShowWarnings bool
-	Writer       io.Writer
+	Dir            string
+	Pure           bool
+	IgnoreWarnings bool
+	Writer         io.Writer
 }

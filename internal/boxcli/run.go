@@ -49,10 +49,10 @@ func runCmd() *cobra.Command {
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:          flags.config.path,
-		Writer:       cmd.ErrOrStderr(),
-		Pure:         flags.pure,
-		ShowWarnings: false,
+		Dir:            flags.config.path,
+		Writer:         cmd.ErrOrStderr(),
+		Pure:           flags.pure,
+		IgnoreWarnings: true,
 	})
 	if err != nil {
 		debug.Log("failed to open devbox: %v", err)

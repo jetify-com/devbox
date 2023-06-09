@@ -58,12 +58,7 @@ type Devbox interface {
 
 // Open opens a devbox by reading the config file in dir.
 func Open(opts *devopt.Opts) (Devbox, error) {
-	return impl.Open(&devopt.Opts{
-		Dir:          opts.Dir,
-		Pure:         opts.Pure,
-		ShowWarnings: opts.ShowWarnings,
-		Writer:       opts.Writer,
-	})
+	return impl.Open(opts)
 }
 
 // InitConfig creates a default devbox config file if one doesn't already exist.
