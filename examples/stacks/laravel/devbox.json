@@ -4,9 +4,7 @@
     "php81Extensions.xdebug@latest",
     "php@8.1",
     "nodejs@18",
-    "mariadb@latest",
-    "redis@latest",
-    "nginx@latest"
+    "mariadb@latest"
   ],
   "shell": {
     "init_hook": [],
