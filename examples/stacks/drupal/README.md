@@ -2,7 +2,7 @@
 
 This example shows how to run a Drupal application in Devbox. It makes use of the PHP and Apache Plugins, while demonstrating how to configure a MariaDB instance to work with Devbox Cloud.
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/drupal)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=drupal)
 
 ## How to Run the example
 
@@ -10,7 +10,7 @@ In this directory, run:
 
 `devbox shell`
 
-To start all your services (PHP, MySQL, and NGINX), run `devbox run start_services`. To stop the services, run `devbox run stop_services`
+To start all your services (PHP, MySQL, and NGINX), run `devbox services up`. To stop the services, run `devbox services stop`
 
 To create the `devbox_drupal` database and example table, you should run:
 
