@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -48,10 +48,11 @@ func runCmd() *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
-	box, err := devbox.OpenWithoutWarnings(&devopt.Opts{
-		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
-		Pure:   flags.pure,
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:          flags.config.path,
+		Writer:       cmd.ErrOrStderr(),
+		Pure:         flags.pure,
+		ShowWarnings: false,
 	})
 	if err != nil {
 		debug.Log("failed to open devbox: %v", err)

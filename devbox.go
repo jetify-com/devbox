@@ -8,9 +8,9 @@ import (
 	"context"
 	"io"
 
-	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/impl"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/services"
 )
@@ -65,19 +65,9 @@ func Open(opts *devopt.Opts) (Devbox, error) {
 	return impl.Open(&devopt.Opts{
 		Dir:          opts.Dir,
 		Pure:         opts.Pure,
-		ShowWarnings: true,
+		ShowWarnings: opts.ShowWarnings,
 		Writer:       opts.Writer,
 	})
-}
-
-func OpenWithoutWarnings(opts *devopt.Opts) (Devbox, error) {
-	return impl.Open(&devopt.Opts{
-		Dir:          opts.Dir,
-		Pure:         opts.Pure,
-		ShowWarnings: false,
-		Writer:       opts.Writer,
-	})
-	// return impl.Open(dir, writer, false, opts.Pure)
 }
 
 // InitConfig creates a default devbox config file if one doesn't already exist.

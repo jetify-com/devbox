@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type shellCmdFlags struct {

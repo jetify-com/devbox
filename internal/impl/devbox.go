@@ -22,7 +22,6 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 
-	"go.jetpack.io/devbox/internal/boxcli/devopt"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -33,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
