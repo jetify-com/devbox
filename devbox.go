@@ -56,10 +56,6 @@ type Devbox interface {
 	Update(ctx context.Context, pkgs ...string) error
 }
 
-type Opts struct {
-	Pure bool
-}
-
 // Open opens a devbox by reading the config file in dir.
 func Open(opts *devopt.Opts) (Devbox, error) {
 	return impl.Open(&devopt.Opts{
