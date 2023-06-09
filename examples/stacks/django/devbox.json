@@ -2,7 +2,7 @@
   "packages": [
     "python310",
     "openssl@latest",
-    "python310Packages.pip@latest",
+    "python310Packages.pip",
     "postgresql@latest"
   ],
   "env": {
