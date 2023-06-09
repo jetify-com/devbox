@@ -12,16 +12,13 @@
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     },
-    "python310Packages.pip@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python310Packages.pip",
-      "version": "23.0.1"
-    },
-    "python@3.10": {
-      "last_modified": "2022-05-01T01:43:46Z",
+    "python310": {
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/b283b64580d1872333a99af2b4cef91bb84580cf#python310",
-      "version": "3.10.4"
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310"
     },
+    "python310Packages.pip": {
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310Packages.pip"
+    }
   }
 }
