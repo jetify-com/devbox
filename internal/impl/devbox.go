@@ -104,14 +104,19 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	)
 	box.lockfile = lock
 
-	if opts.ShowWarnings &&
+	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
 		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true
+		globalPath, err := GlobalDataPath()
+		if err != nil {
+			return nil, err
+		}
 		ux.Fwarning(
 			os.Stderr, // Always stderr. box.writer should probably always be err.
 			"Your devbox.json contains packages in legacy format. "+
-				"Please run `devbox update` to update your devbox.json.\n",
+				"Please run `devbox %supdate` to update your devbox.json.\n",
+			lo.Ternary(box.projectDir == globalPath, "global ", ""),
 		)
 	}
 
