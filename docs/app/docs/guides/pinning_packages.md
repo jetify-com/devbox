@@ -46,7 +46,7 @@ To add a specific version of a package with `<package_name>@<version>`. For exam
 
 For packages that use semver, you can pin a range of versions for your project. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
-When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `Devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
+When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
 ### Updating your packages
 
