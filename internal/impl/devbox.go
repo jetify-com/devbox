@@ -842,7 +842,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Prepend virtenv bin path first so user can override it if needed. Virtenv
 	// is where the bin wrappers live
 	env["PATH"] = JoinPathLists(
-		filepath.Join(d.projectDir, plugin.WrapperBinPath),
+		// Experiment: disable wrappers
+		//filepath.Join(d.projectDir, plugin.WrapperBinPath),
+
 		// Adding profile bin path is a temporary hack. Some packages .e.g. curl
 		// don't export the correct bin in the package, instead they export
 		// as a propagated build input. This can be fixed in 2 ways:

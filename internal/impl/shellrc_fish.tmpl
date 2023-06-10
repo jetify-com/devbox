@@ -70,3 +70,9 @@ if not type refresh >/dev/null 2>&1
     alias refresh='eval (devbox shellenv | string collect)'
     export DEVBOX_REFRESH_ALIAS="refresh"
 end
+
+# Experiment to trigger fish_prompt
+function __devbox_shellenv_eval --on-event fish_prompt;
+    echo "debug: running shellenv in $(pwd)"
+    devbox shellenv --init-hook | source;
+end;
