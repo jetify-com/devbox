@@ -1,17 +1,10 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "git": {
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#git"
-    },
     "git@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#git",
       "version": "2.40.1"
-    },
-    "mariadb": {
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#mariadb"
     },
     "mariadb@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
@@ -19,22 +12,11 @@
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#mariadb",
       "version": "10.6.12"
     },
-    "nginx": {
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#nginx"
-    },
     "nginx@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "plugin_version": "0.0.1",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nginx",
       "version": "1.24.0"
-    },
-    "php81": {
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#php81"
-    },
-    "php81Packages.composer": {
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#php81Packages.composer"
     },
     "php81Packages.composer@latest": {
       "last_modified": "2023-05-01T16:53:22Z",

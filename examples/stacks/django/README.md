@@ -1,8 +1,8 @@
 # Django Example
 
-[![Built with Devbox](https://jetpack.io/devbox/img/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://jetpack.io/img/devbox/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=stacks/django)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=django)
 
 ## How to Use
 
@@ -17,17 +17,17 @@
 ### Setting up the Project
 
 1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/).
-1. Run `devbox init` to create a new Devbox project in your directory.
-1. Install Python and PostgreSQL with `devbox install python python310Packages.pip openssl postgresql`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
+1. Run `devbox create --template django` to create a new Devbox project in your directory.
+1. Install Python and PostgreSQL with `devbox install`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
 1. Copy the requirements.txt and `todo_project` directory into the root folder of your project
-1. Start a devbox shell with `devbox shell`, then activate your virtual environment and install your requirements using the commands below.
+1. Start a devbox shell with `devbox shell`. This will activate your virtual environment and install your requirements using the commands below.
 
    ```bash
    source $VENV_DIR/bin/activate
    pip install -r requirements.txt
    ```
 
-   You can also add these lines to your `init_hook` to automatically activate your venv whenever you start your shell
+   These lines are already added to your `init_hook` to automatically activate your venv.
 
 
 ### Setting up the Database

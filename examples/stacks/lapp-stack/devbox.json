@@ -1,30 +1,30 @@
 {
-    "packages": [
-        "curl@8.0",
-        "postgresql@14",
-        "php@8.1",
-        "php81Extensions.pgsql@latest",
-        "apache@2.4"
-    ],
-    "env": {
-      "PGPORT": "5432"
-    },
-    "shell": {
-        "scripts": {
-            "init_db": "initdb",
-            "create_db": [
-                "dropdb --if-exists devbox_lapp",
-                "createdb devbox_lapp",
-                "psql devbox_lapp < setup_postgres_db.sql"
-            ],
-            "run_test": [
-                "devbox run init_db",
-                "devbox services start",
-                "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
-                "devbox run create_db",
-                "curl localhost:$HTTPD_PORT",
-                "devbox services stop"
-            ]
-        }
+  "packages": [
+    "curl@8.0",
+    "postgresql@14",
+    "php@8.1",
+    "php81Extensions.pgsql@latest",
+    "apache@2.4"
+  ],
+  "env": {
+    "PGPORT": "5432"
+  },
+  "shell": {
+    "scripts": {
+      "create_db": [
+        "dropdb --if-exists devbox_lapp",
+        "createdb devbox_lapp",
+        "psql devbox_lapp < setup_postgres_db.sql"
+      ],
+      "init_db": "initdb",
+      "run_test": [
+        "devbox run init_db",
+        "devbox services start",
+        "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
+        "devbox run create_db",
+        "curl localhost:$HTTPD_PORT",
+        "devbox services stop"
+      ]
     }
+  }
 }
