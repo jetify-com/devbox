@@ -263,6 +263,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
+	// wrap the arg in double-quotes, and escape any double-quotes inside it
+	for idx, arg := range cmdArgs {
+		cmdArgs[idx] = strconv.Quote(arg)
+	}
+
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
