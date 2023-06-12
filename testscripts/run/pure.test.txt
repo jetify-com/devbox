@@ -1,0 +1,21 @@
+# Tests related to having devbox run in pure mode.
+
+env FOO=bar
+env FOO2=bar2
+
+exec devbox run --pure echo '$FOO'
+stdout 'baz'
+
+exec devbox run --pure echo '$FOO2'
+stdout ''
+
+exec devbox run --pure hello
+stdout 'Hello, world!'
+
+-- devbox.json --
+{
+  "packages": ["hello"],
+  "env": {
+    "FOO": "baz"
+  }
+}
