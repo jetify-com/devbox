@@ -9,6 +9,11 @@
   "shell": {
     "init_hook": [],
     "scripts": {
+      "start": [
+        "devbox services up -b",
+        "echo 'Waiting for services to start' && sleep 2",
+        "./install-drupal.sh"
+      ],
       "run_test": [
         "devbox services up -b",
         "echo 'Waiting for services to start' && sleep 2",

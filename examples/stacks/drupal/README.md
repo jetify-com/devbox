@@ -6,19 +6,12 @@ This example shows how to run a Drupal application in Devbox. It makes use of th
 
 ## How to Run the example
 
-In this directory, run:
-
-`devbox shell`
-
-To start all your services (PHP, MySQL, and NGINX), run `devbox services up`. To stop the services, run `devbox services stop`
-
 To create the `devbox_drupal` database and example table, you should run:
 
-`mysql -u root < setup_db.sql`
+`devbox run start`
 
-To install Drupal and your dependencies, run `composer install`. The Drupal app will be installed in the `/web` directory, and you can configure your site by visiting `localhost:8000/autoload` in your browser and following the interactive instructions
-
-To exit the shell, use `exit`
+To start all your services (PHP, MySQL, and NGINX) with an interactive terminal logs, run `devbox services up`. To stop the services, run `devbox services stop`
+git 
 
 ## Configuration
 
