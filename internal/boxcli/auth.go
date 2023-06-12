@@ -12,9 +12,8 @@ import (
 
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "auth",
-		Short:  "Devbox auth commands",
-		Hidden: true,
+		Use:   "auth",
+		Short: "Devbox auth commands",
 	}
 
 	cmd.AddCommand(loginCmd())
@@ -27,10 +26,9 @@ func authCmd() *cobra.Command {
 
 func loginCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "login",
-		Short:  "Login to devbox",
-		Args:   cobra.ExactArgs(0),
-		Hidden: true,
+		Use:   "login",
+		Short: "Login to devbox",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return auth.NewAuthenticator().DeviceAuthFlow(
 				cmd.Context(),
@@ -44,10 +42,9 @@ func loginCmd() *cobra.Command {
 
 func logoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "logout",
-		Short:  "logout from devbox",
-		Args:   cobra.ExactArgs(0),
-		Hidden: true,
+		Use:   "logout",
+		Short: "logout from devbox",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := auth.NewAuthenticator().Logout()
 			if err == nil {
@@ -60,7 +57,7 @@ func logoutCmd() *cobra.Command {
 	return cmd
 }
 
-// This is for debugging purposes only.
+// This is for debugging purposes only. Hidden.
 func refreshCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "refresh",
@@ -78,10 +75,9 @@ func refreshCmd() *cobra.Command {
 
 func whoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "whoami",
-		Short:  "Show the current user",
-		Args:   cobra.ExactArgs(0),
-		Hidden: true,
+		Use:   "whoami",
+		Short: "Show the current user",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			user, err := auth.User()
 			if err != nil {
