@@ -761,14 +761,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	currentEnvPath := env["PATH"]
 	if d.pure { // make nix available inside pure shell - necessary for devbox commands to work
-		singleUserNixBin := fmt.Sprintf("%s/.nix-profile/bin", env["HOME"])
-		multiUserNixBin := "/nix/var/nix/profiles/default/bin"
-		// ~/.nix-profile/bin takes precedent because of this from Nix reference manual:
-		// "You generally wouldn’t have /nix/var/nix/profiles/some-profile/bin in your PATH.
-		// Rather, there is a symlink ~/.nix-profile that points to your current profile.
-		// This means that you should put ~/.nix-profile/bin in your PATH
-		// (and indeed, that’s what the initialisation script /nix/etc/profile.d/nix.sh does)."
-		currentEnvPath = fmt.Sprintf("%s:%s", singleUserNixBin, multiUserNixBin)
+		nixInPath, err := findNixInPATH(env)
+		if err != nil {
+			return nil, err
+		}
+		currentEnvPath = nixInPath
 	}
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
