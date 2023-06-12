@@ -1,3 +1,6 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package testrunner
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rogpeppe/go-internal/testscript"
 	"github.com/stretchr/testify/require"
+
 	"go.jetpack.io/devbox/internal/boxcli"
 )
 

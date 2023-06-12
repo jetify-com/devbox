@@ -98,10 +98,14 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) error {
 	if BinaryInstalled() {
 		return nil
 	}
+	fmt.Println("binary should not checked, but ", BinaryInstalled())
 	if dirExists() {
-		if err := SourceNixEnv(); err != nil {
+		err := sourceNixEnv()
+		if err != nil {
 			return err
-		} else if BinaryInstalled() {
+		}
+		// check if nix is in the path after sourcing nix env
+		if BinaryInstalled() {
 			return nil
 		}
 
@@ -126,8 +130,15 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) error {
 	}
 
 	// Source again
-	if err := SourceNixEnv(); err != nil {
+	if err := sourceNixEnv(); err != nil {
 		return err
+	}
+	// Check again
+	if !BinaryInstalled() {
+		return usererr.New(
+			"We installed nix but nix binary is still not in your PATH. " +
+				"Please create an issue at https://github.com/jetpack-io/devbox/issues",
+		)
 	}
 
 	fmt.Fprintln(writer, "Nix installed successfully. Devbox is ready to use!")

@@ -29,7 +29,7 @@ func nixLinks() []string {
 	}
 }
 
-func SourceNixEnv() error {
+func sourceNixEnv() error {
 	// if command is not in path, the source the nix startup files and hopefully
 	// the command will be found. (we should still check that nix is actually
 	// installed before we get here)
