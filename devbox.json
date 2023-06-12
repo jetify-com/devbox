@@ -5,6 +5,7 @@
     "golangci-lint@1.52.2"
   ],
   "env": {
+    "CONFIG_VAR1": "abc",
     "PATH": "$PATH:$PWD/dist"
   },
   "shell": {

@@ -20,6 +20,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/sheller"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -242,6 +243,8 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
+	fmt.Printf("cmdName: %q and cmdArgs %q\n", cmdName, cmdArgs)
+
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
@@ -262,6 +265,16 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
+
+	// We want to wrap each argument in double-quotes, so that users can
+	// pass arguments to other utilities (via `devbox run`) where the arguments
+	// may have a double-quote.
+	for idx, cmdArg := range cmdArgs {
+		cmdArgs[idx] = sheller.QuoteWrap(cmdArg)
+		//cmdArgs[idx] = strconv.Quote(cmdArg)
+	}
+	fmt.Printf("after QuoteWrap, cmdArgs %v\n", cmdArgs)
+	//fmt.Printf("after strconv.Quote, cmdArgs %v\n", cmdArgs)
 
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {

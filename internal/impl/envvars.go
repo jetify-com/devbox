@@ -8,6 +8,8 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"go.jetpack.io/devbox/internal/sheller"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
@@ -45,17 +47,9 @@ func exportify(vars map[string]string) string {
 	for _, k := range keys {
 		strb.WriteString("export ")
 		strb.WriteString(k)
-		strb.WriteString(`="`)
-		for _, r := range vars[k] {
-			switch r {
-			// Special characters inside double quotes:
-			// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-			case '$', '`', '"', '\\', '\n':
-				strb.WriteRune('\\')
-			}
-			strb.WriteRune(r)
-		}
-		strb.WriteString("\";\n")
+		strb.WriteString(`=`)
+		strb.WriteString(sheller.QuoteWrap(vars[k]))
+		strb.WriteString(";\n")
 	}
 	return strings.TrimSpace(strb.String())
 }

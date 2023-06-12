@@ -1,0 +1,17 @@
+exec devbox run echo '$__ETC_PROFILE_NIX_SOURCED'
+stdout '1'
+
+exec devbox run echo "$__ETC_PROFILE_NIX_SOURCED"
+stdout ''
+
+
+-- devbox.json --
+{
+  "packages": ["nginx@latest"],
+  "env": {
+    "CONFIG_VAR1": "abc",
+    "CONFIG_VAR2": "$DEVBOX_FOO",
+    "CONFIG_VAR3": "${PWD}",
+    "NGINX_CONFDIR": "devbox-json-override"
+  }
+}
