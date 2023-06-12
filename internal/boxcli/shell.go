@@ -12,11 +12,13 @@ import (
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type shellCmdFlags struct {
 	config   configFlags
-	PrintEnv bool
+	printEnv bool
+	pure     bool
 }
 
 func shellCmd() *cobra.Command {
@@ -35,7 +37,9 @@ func shellCmd() *cobra.Command {
 	}
 
 	command.Flags().BoolVar(
-		&flags.PrintEnv, "print-env", false, "print script to setup shell environment")
+		&flags.printEnv, "print-env", false, "print script to setup shell environment")
+	command.Flags().BoolVar(
+		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	flags.config.register(command)
 	return command
@@ -43,12 +47,16 @@ func shellCmd() *cobra.Command {
 
 func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Pure:   flags.pure,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if flags.PrintEnv {
+	if flags.printEnv {
 		// false for includeHooks is because init hooks is not compatible with .envrc files generated
 		// by versions older than 0.4.6
 		script, err := box.PrintEnv(cmd.Context(), false /*includeHooks*/)

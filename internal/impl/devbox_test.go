@@ -17,6 +17,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -41,7 +42,11 @@ func testShellPlan(t *testing.T, testPath string) {
 		t.Setenv(envir.XDGDataHome, "/tmp/devbox")
 		assert := assert.New(t)
 
-		_, err := Open(baseDir, os.Stdout, true)
+		_, err := Open(&devopt.Opts{
+			Dir:    baseDir,
+			Writer: os.Stdout,
+			Pure:   false,
+		})
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 	})
 }
@@ -65,7 +70,11 @@ func TestComputeNixEnv(t *testing.T) {
 	path := t.TempDir()
 	_, err := devconfig.Init(path, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	d, err := Open(path, os.Stdout, true)
+	d, err := Open(&devopt.Opts{
+		Dir:    path,
+		Writer: os.Stdout,
+		Pure:   false,
+	})
 	require.NoError(t, err, "Open should not fail")
 	d.nix = &testNix{}
 	ctx := context.Background()
@@ -78,7 +87,11 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	dir := t.TempDir()
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(dir, os.Stdout, true)
+	devbox, err := Open(&devopt.Opts{
+		Dir:    dir,
+		Writer: os.Stdout,
+		Pure:   false,
+	})
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
@@ -104,7 +117,11 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	dir := t.TempDir()
 	_, err := devconfig.Init(dir, os.Stdout)
 	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(dir, os.Stdout, true)
+	devbox, err := Open(&devopt.Opts{
+		Dir:    dir,
+		Writer: os.Stdout,
+		Pure:   false,
+	})
 	require.NoError(t, err, "Open should not fail")
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
@@ -126,5 +143,5 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
 
-	assert.NotEqual(t, path, path2, "path should be the same")
+	assert.NotEqual(t, path, path2, "path should not be the same")
 }

@@ -1,7 +1,7 @@
 ## nginx-1.22.1
 
 ### nginx NOTES:
-nginx is configured to use .devbox/conf/nginx.conf
+nginx is configured to use devbox.d/nginx/nginx.conf
 
 To customize:
 * Use $NGINX_CONFDIR to change the configuration directory
@@ -18,11 +18,11 @@ To customize:
 Use `devbox services start|stop [service]` to interact with services
 
 ### This configuration creates the following helper files:
-* .devbox/conf/nginx/nginx.conf
-* .devbox/conf/nginx/fastcgi.conf
+* devbox.d/nginx/nginx.conf
+* devbox.d/nginx/fastcgi.conf
 
 ### This configuration sets the following environment variables:
-* NGINX_CONFDIR=/Users/johnlago/src/devbox-examples/servers/nginx/.devbox/conf/nginx
+* NGINX_CONFDIR=<root_dir>/devbox.d/nginx
 
 To show this information, run `devbox info nginx`
 

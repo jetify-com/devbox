@@ -1,4 +1,4 @@
-# Process compose for starting django
+# Process compose for starting jekyll
 version: "0.5"
 
 processes:

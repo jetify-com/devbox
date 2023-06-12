@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 func installCmd() *cobra.Command {
@@ -30,7 +31,10 @@ func installCmd() *cobra.Command {
 
 func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}

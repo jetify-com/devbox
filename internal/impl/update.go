@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
@@ -20,6 +19,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
+	pendingPackagesToUpdate := []*nix.Input{}
 	for _, pkg := range inputs {
 		if pkg.IsLegacy() {
 			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
@@ -34,14 +34,12 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			if err := d.Add(ctx, pkg.LegacyToVersioned()); err != nil {
 				return err
 			}
+		} else {
+			pendingPackagesToUpdate = append(pendingPackagesToUpdate, pkg)
 		}
 	}
 
-	for _, pkg := range inputs {
-		if !lock.IsVersionedPackage(pkg.Raw) {
-			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
-			continue
-		}
+	for _, pkg := range pendingPackagesToUpdate {
 		existing := d.lockfile.Packages[pkg.Raw]
 		newEntry, err := searcher.Client().Resolve(pkg.Raw)
 		if err != nil {

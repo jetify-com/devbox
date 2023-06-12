@@ -1,0 +1,23 @@
+{
+  "packages": [
+    "php81Packages.composer@latest",
+    "php81Extensions.xdebug@latest",
+    "php@8.1",
+    "nodejs@18",
+    "mariadb@latest",
+    "redis@latest"
+  ],
+  "shell": {
+    "init_hook": [],
+    "scripts": {
+      "create-project": [
+        "composer create-project laravel/laravel tmp",
+        "mv tmp/* tmp/.* ."
+      ],
+      "db:create": "mysql -u root -e 'CREATE DATABASE laravel;'",
+      "db:migrate": "php artisan migrate",
+      "db:mysql": "mysql -u root -D laravel_test",
+      "serve:dev": "php artisan serve"
+    }
+  }
+}

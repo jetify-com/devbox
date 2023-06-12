@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type updateCmdFlags struct {
@@ -35,7 +36,10 @@ func updateCmd() *cobra.Command {
 }
 
 func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
@@ -61,7 +62,10 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	box, err := devbox.Open(path, cmd.OutOrStdout())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    path,
+		Writer: cmd.OutOrStdout(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -115,7 +119,10 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	box, err := devbox.Open(path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return err
 	}

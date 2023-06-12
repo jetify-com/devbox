@@ -9,6 +9,7 @@ import (
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/cloud"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type generateCmdFlags struct {
@@ -129,7 +130,10 @@ func sshConfigCmd() *cobra.Command {
 
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -149,7 +153,10 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return devbox.PrintEnvrcContent(cmd.OutOrStdout())
 	}
 
-	box, err := devbox.Open(flags.config.path, cmd.ErrOrStderr())
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
