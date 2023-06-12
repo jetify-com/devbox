@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/debug"
@@ -47,6 +48,9 @@ func RootCmd() *cobra.Command {
 	}
 	// Stable commands
 	command.AddCommand(addCmd())
+	if featureflag.Auth.Enabled() {
+		command.AddCommand(authCmd())
+	}
 	command.AddCommand(createCmd())
 	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
