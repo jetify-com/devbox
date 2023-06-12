@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
@@ -21,9 +22,9 @@ func pushCmd() *cobra.Command {
 		Use:     "push <git-repo>",
 		Short:   "Push a [global] config to a git repo",
 		PreRunE: ensureNixInstalled,
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pushCmdFunc(cmd, args[0], flags)
+			return pushCmdFunc(cmd, goutil.GetDefaulted(args, 0), flags)
 		},
 	}
 
@@ -40,5 +41,5 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.Push(url)
+	return box.Push(cmd.Context(), url)
 }

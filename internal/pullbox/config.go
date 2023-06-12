@@ -25,7 +25,7 @@ func (p *pullbox) IsTextDevboxConfig() bool {
 
 func (p *pullbox) pullTextDevboxConfig() error {
 	if p.isLocalConfig() {
-		return p.copy(p.overwrite, p.url, p.ProjectDir())
+		return p.copyToProfile(p.url)
 	}
 
 	cfg, err := devconfig.LoadConfigFromURL(p.url)
@@ -41,7 +41,7 @@ func (p *pullbox) pullTextDevboxConfig() error {
 		return err
 	}
 
-	return p.copy(p.overwrite, tmpDir, p.ProjectDir())
+	return p.copyToProfile(tmpDir)
 }
 
 func (p *pullbox) isLocalConfig() bool {

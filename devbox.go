@@ -36,7 +36,7 @@ type Devbox interface {
 	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
-	Push(url string) error
+	Push(ctx context.Context, url string) error
 	// Remove removes Nix packages from the config so that it no longer exists in
 	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error

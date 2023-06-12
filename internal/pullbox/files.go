@@ -4,14 +4,11 @@
 package pullbox
 
 import (
-	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -19,43 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
-// extract decompresses a tar file and saves it to a tmp directory
-func extract(data []byte) (string, error) {
-	tempFile, err := os.CreateTemp("", "temp.tar.gz")
-	if err != nil {
-		return "", err
-	}
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
-
-	_, err = tempFile.Write(data)
-	if err != nil {
-		return "", err
-	}
-
-	tempDir, err := os.MkdirTemp("", "temp")
-	if err != nil {
-		return "", err
-	}
-
-	cmd := exec.Command("tar", "-xf", tempFile.Name(), "-C", tempDir)
-
-	if err = cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			waitStatus := exitErr.Sys().(syscall.WaitStatus)
-			return "", fmt.Errorf(
-				"tar extraction failed with exit code: %d",
-				waitStatus.ExitStatus(),
-			)
-		}
-		return "", err
-	}
-
-	return tempDir, nil
-}
-
-func (p *pullbox) copy(overwrite bool, src, dst string) error {
+func (p *pullbox) copyToProfile(src string) error {
 	srcFileInfo, err := os.Stat(src)
 	if err != nil {
 		return errors.WithStack(err)
@@ -78,20 +39,8 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		srcFiles = []fs.FileInfo{srcFileInfo}
 	}
 
-	if !overwrite {
-		for _, srcFile := range srcFiles {
-			dstPath := filepath.Join(dst, srcFile.Name())
-			// Only show error if file exists and is a modified config
-			if _, err := os.Stat(dstPath); err == nil && isModifiedConfig(dstPath) {
-				return fs.ErrExist
-			}
-		}
-	}
-
-	if overwrite {
-		if err := fileutil.ClearDir(dst); err != nil {
-			return err
-		}
+	if err := fileutil.ClearDir(p.ProjectDir()); err != nil {
+		return err
 	}
 
 	for _, srcFile := range srcFiles {
@@ -99,12 +48,26 @@ func (p *pullbox) copy(overwrite bool, src, dst string) error {
 		if srcFileInfo.IsDir() {
 			srcPath = filepath.Join(src, srcFile.Name())
 		}
-		cmd := cmdutil.CommandTTY("cp", "-rf", srcPath, dst)
+		cmd := cmdutil.CommandTTY("cp", "-rf", srcPath, p.ProjectDir())
 		if err := cmd.Run(); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func profileIsNotEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+	for _, entry := range entries {
+		if entry.Name() != devconfig.DefaultName ||
+			isModifiedConfig(filepath.Join(path, entry.Name())) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func isModifiedConfig(path string) bool {

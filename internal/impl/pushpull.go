@@ -13,10 +13,10 @@ func (d *Devbox) Pull(
 	path string,
 ) error {
 	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
-	return pullbox.New(d, path, force).Pull()
+	return pullbox.New(d, path, force).Pull(ctx)
 }
 
-func (d *Devbox) Push(url string) error {
+func (d *Devbox) Push(ctx context.Context, url string) error {
 	fmt.Fprintf(d.writer, "Pushing global config\n")
-	return pullbox.New(d, url, false).Push()
+	return pullbox.New(d, url, false).Push(ctx)
 }

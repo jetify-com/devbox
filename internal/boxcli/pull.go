@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
@@ -28,9 +29,8 @@ func pullCmd() *cobra.Command {
 		Long:    "Pull a config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pullCmdFunc(cmd, args[0], &flags)
+			return pullCmdFunc(cmd, goutil.GetDefaulted(args, 0), &flags)
 		},
-		Args: cobra.ExactArgs(1),
 	}
 
 	cmd.Flags().BoolVarP(
