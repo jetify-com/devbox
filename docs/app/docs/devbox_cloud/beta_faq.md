@@ -7,20 +7,15 @@ sidebar_position: 4
 
 To use Devbox Cloud from your Browser, you will need a Github Account.
 
-To use Devbox Cloud from your CLI, you will need:
-
-* A Github account with linked SSH keys
-* Devbox 0.3.0 or later
-
 ### Does my project need to use Devbox to use Devbox Cloud?
 
-While you can open any Github Repo in a Devbox Cloud Shell, you will need a `devbox.json` to install packages or configure the environment. You can create a `devbox.json` in your shell by running `devbox init`
+While you can open any Github Repo in a Devbox Cloud Shell, you will need a `devbox.json` to install packages or configure the environment. You can add any packages in your shell by running `devbox add <pkg>`
 
 ### Can I use my own IDE or editor with Devbox Cloud?
 
-Devbox.sh provides a Cloud IDE that you can use to edit your projects in the browser, but you can also open your project in your local VSCode Editor by clicking the open in desktop button.
+Devbox.sh provides a Cloud IDE that you can use to edit your projects in the browser, but you can also open your project in your local VSCode Editor by clicking the `Open in Desktop` button.
 
-You can also use your own tools when you start Devbox Cloud from the terminal or SSH. See our [Getting Started Guide](getting_started.mdx) for more details.
+You can also use your own tools when you connect to the VM via SSH. See our [Getting Started Guide](index.mdx) for more details.
 
 ### Do I have to pay to use Devbox Cloud during the Open Beta?
 
@@ -48,7 +43,7 @@ You can have up to 5 concurrent projects per Github Account.
 
 ### How long will my Devbox Cloud Shell stay alive for?
 
-VMs will stay alive for up to 8 hours after going idle. After that point, the VM and all data will be deleted.
+VMs will stay alive for up to 8 hours after going idle. After that point, the VM will be deleted. The next time you visit the same project on the Dashboard, a new VM will be created. Data in the user's home directory will automatically be downloaded to the new machine.
 
 ### Where will Devbox run my VM?
 
