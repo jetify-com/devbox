@@ -20,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 const rootError = "warning: installing Nix as root is not supported by this script!"
@@ -70,9 +71,9 @@ func Install(writer io.Writer, daemon *bool) error {
 		}
 
 		if strings.Contains(buf.String(), rootError) {
-			color.New(color.FgYellow).Fprintln(
+			ux.Finfo(
 				writer,
-				"If installing nix as root, consider using the --daemon flag to install in multi-user mode.",
+				"If installing nix as root, consider using the --daemon flag to install in multi-user mode.\n",
 			)
 		}
 		close(done)
