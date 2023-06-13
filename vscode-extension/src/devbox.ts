@@ -32,8 +32,7 @@ export async function devboxReopen() {
                         });
                     }
                     // run devbox integrate and then close this window
-                    const devbox = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/devbox';
-                    // const devbox = 'devbox'
+                    const devbox = 'devbox';
                     let child = spawn(devbox, ['integrate', 'vscode'], {
                         cwd: workingDir.path,
                         stdio: [0, 1, 2, 'ipc']
