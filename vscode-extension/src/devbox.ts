@@ -1,7 +1,6 @@
 import { window, workspace, commands, ProgressLocation, Uri } from 'vscode';
-import { ChildProcess, spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
-// const exe = promisify(spawn);
 
 interface Message {
     status: string
@@ -23,8 +22,6 @@ export async function devboxReopen() {
                     if (workspace.workspaceFolders) {
                         const workingDir = workspace.workspaceFolders[0].uri;
                         const dotdevbox = Uri.joinPath(workingDir, '/.devbox');
-                        const scriptsDir = Uri.joinPath(dotdevbox, '/gen/scripts');
-                        const nodescript = Uri.joinPath(scriptsDir, 'vscode.js');
                         try {
                             // check if .devbox exists
                             await workspace.fs.stat(dotdevbox);
@@ -35,37 +32,27 @@ export async function devboxReopen() {
                                 cwd: workingDir.path
                             });
                         }
-                        // check if nodejs script exists
-                        try {
-                            await workspace.fs.stat(nodescript);
-                        } catch (error) {
-                            //nodescript doesn't exist
-                            // create nodescript file
-                            const content = Buffer.from(nodeFileContent, 'utf8');
-                            await workspace.fs.writeFile(nodescript, content);
-                        }
-                        // run script file
-                        const nodeprocess: ChildProcess = spawn('node',
-                            [nodescript.path],
-                            {
-                                env: {
-                                    devboxDir: workingDir.path,
-                                    ...process.env
-                                },
-                                cwd: workingDir.path,
-                                stdio: [0, 1, 2, 'ipc']
+                        // run devbox integrate and then close this window
+                        const devbox = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/devbox';
+                        // const devbox = 'devbox'
+                        let child = spawn(devbox, ['integrate', 'vscode'], {
+                            cwd: workingDir.path,
+                            stdio: [0, 1, 2, 'ipc']
+                        });
+                        child.on('close', (code: number) => {
+                            if (code === 1) {
+                                window.showErrorMessage("Failed to setup devbox environment.");
+                                reject();
                             }
-                        );
-                        nodeprocess.on('close', (code: number) => {
-                            console.log('called close! with code: ' + code);
+                        });
+                        child.send({ configDir: workingDir.path });
+                        child.on('message', function (msg: Message, handle) {
+                            if (msg.status === "finished") {
+                                resolve();
+                                commands.executeCommand("workbench.action.closeWindow");
+                            }
                         });
 
-                        nodeprocess.on('message', (message: Message, handler) => {
-                            console.log(message.status);
-                            resolve();
-                            commands.executeCommand("workbench.action.closeWindow");
-
-                        });
                     }
                 });
                 return p;
@@ -73,24 +60,3 @@ export async function devboxReopen() {
         );
     }
 }
-
-const nodeFileContent = `const child_process = require('child_process');
-
-const devbox = '/Users/mohsenansari/code/jetpack/go.jetpack.io/examples/vscode/vscodetest/devbox';
-process.send({ status: process.env['devboxDir'] });
-// allowing time for parent process to fully close
-let child = child_process.spawn(devbox, ['integrate', 'vscode'], {
-    cwd: process.env['devboxDir'],
-    stdio: [0, 1, 2, 'ipc']
-});
-child.on('close', (code) => {
-    process.exit(code);
-});
-child.send({ configDir: process.env['devboxDir'] });
-child.on('message', function (msg, handle) {
-    if (msg.status === "finished") {
-        console.log(msg);
-    }
-});
-
-`;

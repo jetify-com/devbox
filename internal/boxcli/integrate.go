@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type integrateCmdFlags struct {
@@ -46,27 +47,30 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 		// Setup process communication with node as parent
 		channel, err := go2node.RunAsNodeChild()
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// Get config dir as a message from parent process
 		msg, err := channel.Read()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// Parse node process' message
 		var message parentMessage
 		json.Unmarshal(msg.Message, &message)
 
 		// todo: add error handling - send message to parent process
-		box, err := devbox.Open(message.ConfigDir, cmd.OutOrStdout())
+		box, err := devbox.Open(&devopt.Opts{
+			Dir:    message.ConfigDir,
+			Writer: cmd.OutOrStdout(),
+		})
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 		// Get env variables of a devbox shell
 		envVars, err := box.PrintEnvVars(cmd.Context())
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
 
 		// Send message to parent process to terminate
@@ -74,7 +78,7 @@ func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) e
 			Message: []byte(`{"status": "finished"}`),
 		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// Open vscode with devbox shell environment
 		cmnd := exec.Command("code", message.ConfigDir)
