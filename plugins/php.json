@@ -9,7 +9,7 @@
   ],
   "env": {
     "PHPFPM_ERROR_LOG_FILE": "{{ .Virtenv }}/php-fpm.log",
-    "PHPFPM_PID_FILE": "{{ .Virtenv }}/php-fpm.log",
+    "PHPFPM_PID_FILE": "{{ .Virtenv }}/php-fpm.pid",
     "PHPFPM_PORT": "8082",
     "PHPRC": "{{ .DevboxDir }}"
   },
