@@ -746,22 +746,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 			continue
 		}
 		// handling special cases to for pure shell
-		if d.pure {
-			// Finding nix executables in path and passing it through
-			// Needed for devbox commands inside pure shell to work
-			if key == "PATH" {
-				nixInPath, err := findNixInPATH(env)
-				if err != nil {
-					return nil, err
-				}
-				env[key] = nixInPath
-			}
-			// Passing HOME USER and DISTPLAY for pure shell to leak through
-			// otherwise devbox binary won't work - this matches nix
-			if key == "HOME" || key == "USER" || key == "DISPLAY" {
-				env[key] = val
-			}
-		} else {
+		// Passing HOME USER and DISTPLAY for pure shell to leak through
+		// otherwise devbox binary won't work - this matches nix
+		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" || key == "PATH" {
 			env[key] = val
 		}
 	}
@@ -774,6 +761,16 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
+	if d.pure {
+		// Finding nix executables in path and passing it through
+		// Needed for devbox commands inside pure shell to work
+		nixInPath, err := findNixInPATH(env)
+		if err != nil {
+			return nil, err
+		}
+		currentEnvPath = nixInPath
+	}
+
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
