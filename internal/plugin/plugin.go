@@ -79,11 +79,6 @@ func (m *Manager) create(
 	pkg *nix.Input,
 	locked *lock.Package,
 ) error {
-	virtenvPath, err := createVirtenvSymlink(w, m.ProjectDir())
-	if err != nil {
-		return err
-	}
-
 	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
 		return err
@@ -101,7 +96,7 @@ func (m *Manager) create(
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(locked, filePath, virtenvPath) {
+		if !m.shouldCreateFile(filePath) {
 			continue
 		}
 
@@ -117,7 +112,7 @@ func (m *Manager) create(
 			continue
 		}
 
-		if err = m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
+		if err = m.createFile(pkg, filePath, contentPath); err != nil {
 			return err
 		}
 
@@ -132,7 +127,7 @@ func (m *Manager) create(
 
 func (m *Manager) createFile(
 	pkg *nix.Input,
-	filePath, contentPath, virtenvPath string,
+	filePath, contentPath string,
 ) error {
 	name := pkg.CanonicalName()
 	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
@@ -165,7 +160,7 @@ func (m *Manager) createFile(
 		"Packages":             m.Packages(),
 		"System":               system,
 		"URLForInput":          pkg.URLForInput(),
-		"Virtenv":              filepath.Join(virtenvPath, name),
+		"Virtenv":              filepath.Join(m.ProjectDir(), VirtenvPath, name),
 	}); err != nil {
 		return errors.WithStack(err)
 	}
@@ -221,12 +216,6 @@ func (m *Manager) Env(
 }
 
 func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
-
-	virtenvPath, err := virtenvSymlinkPath(projectDir)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := &config{}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)
@@ -239,7 +228,7 @@ func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvPath, name),
+		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -272,22 +261,7 @@ func createSymlink(root, filePath string) error {
 	return errors.WithStack(os.Symlink(filePath, newname))
 }
 
-func (m *Manager) shouldCreateFile(
-	pkg *lock.Package,
-	filePath,
-	virtenvPath string,
-) bool {
-	// Only create files in devboxDir if they are not in the lockfile
-	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
-	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
-		return false
-	}
-
-	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) ||
-		strings.HasPrefix(filePath, virtenvPath) {
-		return true
-	}
+func (m *Manager) shouldCreateFile(filePath string) bool {
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
 	return errors.Is(err, fs.ErrNotExist)

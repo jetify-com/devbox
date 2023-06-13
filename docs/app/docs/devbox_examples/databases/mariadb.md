@@ -60,3 +60,10 @@ These files are used to setup your database and service, and should not be modif
 * This plugin wraps mysqld and mysql_install_db to work in your local project. For more information, see the `flake.nix` created in your `.devbox/virtenv/mariadb` folder.
 * This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init.
 * You can use `mysqld` to manually start the server, and `mysqladmin -u root shutdown` to manually stop it
+* `.sock` filepath can only be maximum 100 characters long. You can point to a different path by setting the `MYSQL_UNIX_PORT` env variable in your `devbox.json` as follows:
+
+```json
+"env": {
+    "MYSQL_UNIX_PORT": "/<some-other-path>/mysql.sock"
+}
+```
