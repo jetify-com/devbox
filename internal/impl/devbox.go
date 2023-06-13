@@ -761,15 +761,15 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
-	if d.pure {
-		// Finding nix executables in path and passing it through
-		// Needed for devbox commands inside pure shell to work
-		nixInPath, err := findNixInPATH(env)
-		if err != nil {
-			return nil, err
-		}
-		currentEnvPath = nixInPath
-	}
+	// if d.pure {
+	// 	// Finding nix executables in path and passing it through
+	// 	// Needed for devbox commands inside pure shell to work
+	// 	nixInPath, err := findNixInPATH(env)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	currentEnvPath = nixInPath
+	// }
 
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
