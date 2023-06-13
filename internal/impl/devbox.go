@@ -293,7 +293,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
-	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
+	if _, err := d.PrintEnv(ctx, false /*includeHooks*/, false /*omitWrappersFromPath*/); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
@@ -309,7 +309,7 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) PrintEnv(ctx context.Context, includeHooks, omitWrappersFromPath bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
@@ -320,6 +320,16 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
+	}
+
+	if omitWrappersFromPath {
+		path := []string{}
+		for _, p := range strings.Split(envs["PATH"], string(filepath.ListSeparator)) {
+			if !strings.Contains(p, plugin.WrapperPath) {
+				path = append(path, p)
+			}
+		}
+		envs["PATH"] = strings.Join(path, string(filepath.ListSeparator))
 	}
 
 	envStr := exportify(envs)
