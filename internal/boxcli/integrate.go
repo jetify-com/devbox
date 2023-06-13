@@ -6,13 +6,12 @@ package boxcli
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os/exec"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
@@ -21,19 +20,32 @@ type integrateCmdFlags struct {
 }
 
 func integrateCmd() *cobra.Command {
-	flags := integrateCmdFlags{}
 	command := &cobra.Command{
 		Use:     "integrate",
-		Short:   "integrate with ide",
+		Short:   "integrate with an IDE",
 		Args:    cobra.MaximumNArgs(1),
 		Hidden:  true,
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return integrateCmdFunc(cmd, args[0], flags)
+			return cmd.Help()
 		},
 	}
+	command.AddCommand(integrateVSCodeCmd())
+	return command
+}
 
+func integrateVSCodeCmd() *cobra.Command {
+	flags := integrateCmdFlags{}
+	command := &cobra.Command{
+		Use:    "vscode",
+		Hidden: true,
+		Short:  "Integrate devbox environment with VSCode.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runIntegrateVSCodeCmd(cmd, &flags)
+		},
+	}
 	flags.config.register(command)
+
 	return command
 }
 
@@ -41,56 +53,54 @@ type parentMessage struct {
 	ConfigDir string `json:"configDir"`
 }
 
-func integrateCmdFunc(cmd *cobra.Command, ide string, flags integrateCmdFlags) error {
+func runIntegrateVSCodeCmd(cmd *cobra.Command, flags *integrateCmdFlags) error {
 
-	if ide == "vscode" {
-		// Setup process communication with node as parent
-		channel, err := go2node.RunAsNodeChild()
-		if err != nil {
-			return err
-		}
+	// Setup process communication with node as parent
+	channel, err := go2node.RunAsNodeChild()
+	if err != nil {
+		return err
+	}
 
-		// Get config dir as a message from parent process
-		msg, err := channel.Read()
-		if err != nil {
-			return err
-		}
-		// Parse node process' message
-		var message parentMessage
-		json.Unmarshal(msg.Message, &message)
+	// Get config dir as a message from parent process
+	msg, err := channel.Read()
+	if err != nil {
+		return err
+	}
+	// Parse node process' message
+	var message parentMessage
+	json.Unmarshal(msg.Message, &message)
 
-		// todo: add error handling - send message to parent process
-		box, err := devbox.Open(&devopt.Opts{
-			Dir:    message.ConfigDir,
-			Writer: cmd.OutOrStdout(),
-		})
-		if err != nil {
-			return err
-		}
-		// Get env variables of a devbox shell
-		envVars, err := box.PrintEnvVars(cmd.Context())
-		if err != nil {
-			return err
-		}
+	// todo: add error handling - consider sending error message to parent process
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    message.ConfigDir,
+		Writer: cmd.OutOrStdout(),
+	})
+	if err != nil {
+		return err
+	}
+	// Get env variables of a devbox shell
+	envVars, err := box.PrintEnvVars(cmd.Context())
+	if err != nil {
+		return err
+	}
 
-		// Send message to parent process to terminate
-		err = channel.Write(&go2node.NodeMessage{
-			Message: []byte(`{"status": "finished"}`),
-		})
-		if err != nil {
-			return err
-		}
-		// Open vscode with devbox shell environment
-		cmnd := exec.Command("code", message.ConfigDir)
-		cmnd.Env = append(cmnd.Env, envVars...)
-		var outb, errb bytes.Buffer
-		cmnd.Stdout = &outb
-		cmnd.Stderr = &errb
-		err = cmnd.Run()
-		if err != nil {
-			fmt.Println("out: ", outb.String(), " err: ", errb.String())
-			return errors.WithStack(err)
-		}
+	// Send message to parent process to terminate
+	err = channel.Write(&go2node.NodeMessage{
+		Message: []byte(`{"status": "finished"}`),
+	})
+	if err != nil {
+		return err
+	}
+	// Open vscode with devbox shell environment
+	cmnd := exec.Command("code", message.ConfigDir)
+	cmnd.Env = append(cmnd.Env, envVars...)
+	var outb, errb bytes.Buffer
+	cmnd.Stdout = &outb
+	cmnd.Stderr = &errb
+	err = cmnd.Run()
+	if err != nil {
+		debug.Log("out: %s \n err: %s", outb.String(), errb.String())
+		return err
 	}
 	return nil
 }

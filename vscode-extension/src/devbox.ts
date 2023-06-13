@@ -40,10 +40,9 @@ export async function devboxReopen() {
                     });
                     // if CLI closes before sending "finished" message
                     child.on('close', (code: number) => {
-                        if (code === 1) {
-                            window.showErrorMessage("Failed to setup devbox environment.");
-                            reject();
-                        }
+                        console.log("child process closed with exit code:", code);
+                        window.showErrorMessage("Failed to setup devbox environment.");
+                        reject();
                     });
                     // send config path to CLI
                     child.send({ configDir: workingDir.path });
