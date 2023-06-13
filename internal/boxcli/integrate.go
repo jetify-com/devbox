@@ -41,7 +41,7 @@ func integrateVSCodeCmd() *cobra.Command {
 		Hidden: true,
 		Short:  "Integrate devbox environment with VSCode.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runIntegrateVSCodeCmd(cmd, &flags)
+			return runIntegrateVSCodeCmd(cmd)
 		},
 	}
 	flags.config.register(command)
@@ -53,7 +53,7 @@ type parentMessage struct {
 	ConfigDir string `json:"configDir"`
 }
 
-func runIntegrateVSCodeCmd(cmd *cobra.Command, flags *integrateCmdFlags) error {
+func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 
 	// Setup process communication with node as parent
 	channel, err := go2node.RunAsNodeChild()
@@ -68,7 +68,9 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags *integrateCmdFlags) error {
 	}
 	// Parse node process' message
 	var message parentMessage
-	json.Unmarshal(msg.Message, &message)
+	if err = json.Unmarshal(msg.Message, &message); err != nil {
+		return err
+	}
 
 	// todo: add error handling - consider sending error message to parent process
 	box, err := devbox.Open(&devopt.Opts{
