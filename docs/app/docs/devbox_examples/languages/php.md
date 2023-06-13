@@ -53,7 +53,7 @@ Use `devbox services start|stop php-fpm` to start PHP-FPM in the background.
 ```bash
 PHPFPM_PORT=8082
 PHPFPM_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/php/php-fpm.log
-PHPFPM_PID_FILE={PROJECT_DIR}/.devbox/virtenv/php/php-fpm.log
+PHPFPM_PID_FILE={PROJECT_DIR}/.devbox/virtenv/php/php-fpm.pid
 PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 ```
 
@@ -62,4 +62,4 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 * {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
 * {PROJECT_DIR}/devbox.d/php81/php.ini
 
-You can modify these file to configure PHP or your PHP-FPM server
+You can modify these files to configure PHP or your PHP-FPM server

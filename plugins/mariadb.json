@@ -1,6 +1,6 @@
 {
   "name": "mariadb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "match": "^mariadb_?[0-9]*$",
   "readme": "* This plugin wraps mysqld and mysql_install_db to work in your local project\n* This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init\n* Use mysqld to manually start the server, and `mysqladmin -u root shutdown` to manually stop it",
   "env": {
@@ -23,11 +23,5 @@
     "init_hook": [
       "bash {{ .Virtenv }}/setup_db.sh"
     ]
-  },
-  "services": {
-    "mariadb": {
-      "start": "mysqld 2> $MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mariadb_logs for details'",
-      "stop": "mysqladmin -u root shutdown"
-    }
   }
 }

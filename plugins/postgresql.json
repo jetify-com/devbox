@@ -1,6 +1,6 @@
 {
     "name": "postgresql",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "match": "^postgresql(_[0-9]+)?$",
     "readme": "To initialize the database run `initdb`.",
     "env": {
@@ -10,11 +10,5 @@
     "create_files": {
         "{{ .Virtenv }}/data": "",
         "{{ .Virtenv }}/process-compose.yaml": "postgresql/process-compose.yaml"
-    },
-    "services": {
-        "postgresql": {
-            "start": "pg_ctl start -l {{ .Virtenv }}/logfile -o \"-k {{ .Virtenv }}\"",
-            "stop": "pg_ctl stop"
-        }
     }
 }

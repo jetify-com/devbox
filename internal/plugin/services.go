@@ -4,17 +4,18 @@
 package plugin
 
 import (
+	"fmt"
+	"os"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
 )
 
-// TODO: this should have PluginManager as receiver so we can build once with
-// pkgs, includes, etc
 func (m *Manager) GetServices(
 	pkgs []*nix.Input,
 	includes []string,
 ) (services.Services, error) {
-	svcs := services.Services{}
+	allSvcs := services.Services{}
 
 	allPkgs := append([]*nix.Input(nil), pkgs...)
 	for _, include := range includes {
@@ -34,15 +35,15 @@ func (m *Manager) GetServices(
 			continue
 		}
 
-		if file, ok := conf.ProcessComposeYaml(); ok {
-			svc := services.Service{
-				Name:               conf.Name,
-				Env:                conf.Env,
-				ProcessComposePath: file,
-			}
-			svcs[conf.Name] = svc
+		svcs, err := conf.Services()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading services in plugin \"%s\", skipping", conf.Name)
+			continue
 		}
-
+		for name, svc := range svcs {
+			allSvcs[name] = svc
+		}
 	}
-	return svcs, nil
+
+	return allSvcs, nil
 }

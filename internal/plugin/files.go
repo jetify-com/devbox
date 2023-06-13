@@ -18,11 +18,11 @@ func getConfigIfAny(pkg *nix.Input, projectDir string) (*config, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	// Try to find perfect match first
 	for _, file := range configFiles {
 		if file.IsDir() || strings.HasSuffix(file.Name(), ".go") {
 			continue
 		}
+		// Try to find perfect match first
 		content, err := plugins.BuiltIn.ReadFile(file.Name())
 		if err != nil {
 			return nil, errors.WithStack(err)
