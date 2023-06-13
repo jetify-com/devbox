@@ -1193,10 +1193,10 @@ func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error)
 			continue
 		}
 		// handling special cases to for pure shell
-		// Passing HOME USER and DISPLAY for pure shell to leak through
+		// Passing HOME for pure shell to leak through
 		// otherwise devbox binary won't work - this matches nix
-		// We include PATH to find the nix installation. It is cleaned for pure mode below
-		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" || key == "PATH" {
+		// We also include PATH to find the nix installation. It is cleaned for pure mode below
+		if !d.pure || key == "HOME" || key == "PATH" {
 			env[key] = val
 		}
 	}
