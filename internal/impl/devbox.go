@@ -747,8 +747,17 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 		// Passing HOME USER and DISTPLAY for pure shell to leak through
 		// otherwise devbox binary won't work - this matches nix
-		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" {
-			env[key] = val
+		if !d.pure {
+			if key == "PATH" {
+				nixInPath, err := findNixInPATH(env)
+				if err != nil {
+					return nil, err
+				}
+				env[key] = nixInPath
+			}
+			if key == "HOME" || key == "USER" || key == "DISPLAY" {
+				env[key] = val
+			}
 		}
 	}
 	// check if contents of .envrc is old and print warning
@@ -760,21 +769,21 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
-	if d.pure { // make nix available inside pure shell - necessary for devbox commands to work
-		// nixBins, err := d.NixBins(ctx)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		fmt.Println("####")
-		fmt.Println(env)
-		fmt.Println("####")
+	// if d.pure { // make nix available inside pure shell - necessary for devbox commands to work
+	// 	// nixBins, err := d.NixBins(ctx)
+	// 	// if err != nil {
+	// 	// 	return nil, err
+	// 	// }
+	// 	fmt.Println("####")
+	// 	fmt.Println(env)
+	// 	fmt.Println("####")
 
-		nixInPath, err := findNixInPATH(env)
-		if err != nil {
-			return nil, err
-		}
-		currentEnvPath = nixInPath
-	}
+	// 	nixInPath, err := findNixInPATH(env)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	currentEnvPath = nixInPath
+	// }
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
