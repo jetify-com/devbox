@@ -427,5 +427,5 @@ func findNixInPATH(env map[string]string) (string, error) {
 	}
 
 	// did not find nix executable in PATH, return error
-	return "", errors.New("Could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again.")
+	return "", errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again.")
 }
