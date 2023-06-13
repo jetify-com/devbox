@@ -54,10 +54,6 @@ func (f *feature) Enabled() bool {
 	return f.enabled
 }
 
-func (f *feature) Disabled() bool {
-	return !f.Enabled()
-}
-
 // All returns a map of all known features flags and whether they're enabled.
 func All() map[string]bool {
 	m := make(map[string]bool, len(features))
