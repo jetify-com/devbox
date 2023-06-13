@@ -733,12 +733,6 @@ func (d *Devbox) StartProcessManager(
 func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
-	// making sure nix is installed before saving current env
-	if err := nix.EnsureNixInstalled(
-		d.writer, func() *bool { return lo.ToPtr(false) },
-	); err != nil {
-		return nil, err
-	}
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
 	env := make(map[string]string, len(currentEnv))
@@ -767,7 +761,15 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	currentEnvPath := env["PATH"]
 	if d.pure { // make nix available inside pure shell - necessary for devbox commands to work
-		nixInPath, err := findNixInPATH(env)
+		nixBins, err := d.NixBins(ctx)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("####")
+		fmt.Println(nixBins)
+		fmt.Println("####")
+
+		nixInPath, err := findNixInPATH(nixBins, env)
 		if err != nil {
 			return nil, err
 		}
