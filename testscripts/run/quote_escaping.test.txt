@@ -1,0 +1,12 @@
+# ensure that we escape the arguments to `devbox run`
+
+exec devbox init
+exec devbox run -- echo 'this is a "hello world"'
+stdout 'this is a "hello world"'
+
+env FOO=bar
+exec devbox run echo '$FOO'
+stdout 'bar'
+
+exec devbox run echo "$FOO"
+stdout 'bar'
