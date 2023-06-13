@@ -740,22 +740,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
-	env := make(map[string]string, len(currentEnv))
-
-	for _, kv := range currentEnv {
-		key, val, found := strings.Cut(kv, "=")
-		if !found {
-			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
-		}
-		if ignoreCurrentEnvVar[key] {
-			continue
-		}
-		// Passing HOME USER and DISTPLAY for pure shell to leak through
-		// otherwise devbox binary won't work - this matches nix
-		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" {
-			env[key] = val
-		}
+	env, err := d.convertEnvToMap(currentEnv)
+	if err != nil {
+		return nil, err
 	}
+
 	// check if contents of .envrc is old and print warning
 	if !usePrintDevEnvCache {
 		err := d.checkOldEnvrc()
@@ -765,9 +754,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
-	if d.pure { // make nix available inside pure shell - necessary for devbox add to work
-		currentEnvPath = "/nix/var/nix/profiles/default/bin"
-	}
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
@@ -1194,4 +1180,36 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 		env[d.ShellEnvHashKey()] = hash
 	}
 	return err
+}
+
+func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error) {
+	env := make(map[string]string, len(currentEnv))
+	for _, kv := range currentEnv {
+		key, val, found := strings.Cut(kv, "=")
+		if !found {
+			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+		}
+		if ignoreCurrentEnvVar[key] {
+			continue
+		}
+		// handling special cases to for pure shell
+		// Passing HOME USER and DISPLAY for pure shell to leak through
+		// otherwise devbox binary won't work - this matches nix
+		// We include PATH to find the nix installation. It is cleaned for pure mode below
+		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" || key == "PATH" {
+			env[key] = val
+		}
+	}
+
+	// handling special case for PATH
+	if d.pure {
+		// Finding nix executables in path and passing it through
+		// Needed for devbox commands inside pure shell to work
+		nixInPath, err := findNixInPATH(env)
+		if err != nil {
+			return nil, err
+		}
+		env["PATH"] = nixInPath
+	}
+	return env, nil
 }
