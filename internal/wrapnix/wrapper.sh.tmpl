@@ -29,4 +29,32 @@ export {{ .ShellEnvHashKey }}_GUARD=true
 eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
+filterPath() {
+    # Get the pathEndsWith parameter
+    local pathEndsWith="$1"
+
+    # Split the existing PATH variable by ':' into an array
+    IFS=':' read -ra paths <<< "$PATH"
+
+    # Create an empty array to store the updated paths
+    local new_paths=()
+
+    # Iterate over each path
+    for path in "${paths[@]}"; do
+        # Check if the path ends with the specified value
+        if [[ $path != *"$pathEndsWith" ]]; then
+            # Path does not end with the specified value, add it to the new_paths array
+            new_paths+=("$path")
+        fi
+    done
+
+    # Join the new_paths array elements with ':' to form the updated PATH
+    local updated_path=$(IFS=:; echo "${new_paths[*]}")
+
+    # Export the updated PATH variable
+    export PATH="$updated_path"
+}
+
+filterPath "virtenv/.wrappers/bin"
+
 exec {{ .Command }} "$@"
