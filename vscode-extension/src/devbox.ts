@@ -31,7 +31,7 @@ export async function devboxReopen() {
                             cwd: workingDir.path
                         });
                     }
-                    // change this to absolute path to custom compiled devbox when testing
+                    // To use a custom compiled devbox when testing, change this to an absolute path.
                     const devbox = 'devbox';
                     // run devbox integrate and then close this window
                     let child = spawn(devbox, ['integrate', 'vscode'], {
