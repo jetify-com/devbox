@@ -31,6 +31,14 @@ You can query Nginx on port 80, which will route to the PHP example.
 2. Update `devbox.d/nginx/httpd.conf` to point to the directory with your PHP files. You'll need to update the `root` directive to point to your project folder
 3. Follow the instructions above in the How to Run section to initialize your project.
 
+Note that the `.sock` filepath can only be maximum 100 characters long. You can point to a different path by setting the `PGHOST` env variable in your `devbox.json` as follows:
+
+```
+"env": {
+    "PGHOST": "/<some-shorter-path>"
+}
+```
+
 ### Related Docs
 
 * [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)

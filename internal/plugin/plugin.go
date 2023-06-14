@@ -92,7 +92,7 @@ func (m *Manager) create(pkg *nix.Input, locked *lock.Package) error {
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(locked, filePath, virtenvPath) {
+		if !m.shouldCreateFile(locked, filePath) {
 			continue
 		}
 
@@ -259,8 +259,7 @@ func createSymlink(root, filePath string) error {
 
 func (m *Manager) shouldCreateFile(
 	pkg *lock.Package,
-	filePath,
-	virtenvPath string,
+	filePath string,
 ) bool {
 	// Only create files in devboxDir if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
@@ -269,8 +268,7 @@ func (m *Manager) shouldCreateFile(
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) ||
-		strings.HasPrefix(filePath, virtenvPath) {
+	if strings.Contains(filePath, devboxHiddenDirName) {
 		return true
 	}
 	_, err := os.Stat(filePath)
