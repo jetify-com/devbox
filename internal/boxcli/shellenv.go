@@ -81,7 +81,12 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		}
 	}
 
-	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook, flags.omitWrappersFromPath)
+	opts := &devopt.PrintEnv{
+		Ctx:                  cmd.Context(),
+		IncludeHooks:         flags.runInitHook,
+		OmitWrappersFromPath: flags.omitWrappersFromPath,
+	}
+	envStr, err := box.PrintEnv(opts)
 	if err != nil {
 		return "", err
 	}
