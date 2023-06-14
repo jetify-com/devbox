@@ -53,7 +53,7 @@ func (d *Devbox) flakeInputs() ([]*plansdk.FlakeInput, error) {
 	return goutil.PickByKeysSorted(inputs, order), nil
 }
 
-// getLocalFlakesDirs searches pacakges and returns list of directories
+// getLocalFlakesDirs searches packages and returns list of directories
 // of local flakes that are mentioned in config.
 // e.g., path:./my-flake#packageName -> ./my-flakes
 func (d *Devbox) getLocalFlakesDirs() []string {
