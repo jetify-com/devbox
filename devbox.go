@@ -33,7 +33,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	PrintEnv(ctx context.Context, opts *devopt.PrintEnv) (string, error)
+	PrintEnv(opts *devopt.PrintEnv) (string, error)
 	PrintEnvVars(ctx context.Context) ([]string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
