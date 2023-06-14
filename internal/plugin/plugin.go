@@ -6,7 +6,6 @@ package plugin
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -61,29 +60,21 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 	return "", false
 }
 
-func (m *Manager) Include(w io.Writer, included string) error {
+func (m *Manager) Include(included string) error {
 	name, err := m.parseInclude(included)
 	if err != nil {
 		return err
 	}
-	err = m.create(w, name, m.lockfile.Packages[included])
+	err = m.create(name, m.lockfile.Packages[included])
 	return err
 }
 
-func (m *Manager) Create(w io.Writer, pkg *nix.Input) error {
-	return m.create(w, pkg, m.lockfile.Packages[pkg.Raw])
+func (m *Manager) Create(pkg *nix.Input) error {
+	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
 }
 
-func (m *Manager) create(
-	w io.Writer,
-	pkg *nix.Input,
-	locked *lock.Package,
-) error {
-	virtenvPath, err := createVirtenvSymlink(w, m.ProjectDir())
-	if err != nil {
-		return err
-	}
-
+func (m *Manager) create(pkg *nix.Input, locked *lock.Package) error {
+	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
 	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
 		return err
@@ -95,13 +86,13 @@ func (m *Manager) create(
 	name := pkg.CanonicalName()
 
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(m.ProjectDir(), VirtenvPath, name)); err != nil {
+	if err = createDir(filepath.Join(virtenvPath, name)); err != nil {
 		return err
 	}
 
 	debug.Log("Creating files for package %q create files", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
-		if !m.shouldCreateFile(locked, filePath, virtenvPath) {
+		if !m.shouldCreateFile(locked, filePath) {
 			continue
 		}
 
@@ -221,12 +212,6 @@ func (m *Manager) Env(
 }
 
 func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
-
-	virtenvPath, err := virtenvSymlinkPath(projectDir)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := &config{}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)
@@ -239,7 +224,7 @@ func buildConfig(pkg *nix.Input, projectDir, content string) (*config, error) {
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(virtenvPath, name),
+		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -274,8 +259,7 @@ func createSymlink(root, filePath string) error {
 
 func (m *Manager) shouldCreateFile(
 	pkg *lock.Package,
-	filePath,
-	virtenvPath string,
+	filePath string,
 ) bool {
 	// Only create files in devboxDir if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
@@ -284,8 +268,7 @@ func (m *Manager) shouldCreateFile(
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) ||
-		strings.HasPrefix(filePath, virtenvPath) {
+	if strings.Contains(filePath, devboxHiddenDirName) {
 		return true
 	}
 	_, err := os.Stat(filePath)

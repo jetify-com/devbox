@@ -147,7 +147,7 @@ func (d *Devbox) NixPkgsCommitHash() string {
 func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 	// Create plugin directories first because inputs might depend on them
 	for _, pkg := range d.packagesAsInputs() {
-		if err := d.pluginManager.Create(d.writer, pkg); err != nil {
+		if err := d.pluginManager.Create(pkg); err != nil {
 			return nil, err
 		}
 	}
@@ -159,7 +159,7 @@ func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 		if err := d.lockfile.Add(included); err != nil {
 			return nil, err
 		}
-		if err := d.pluginManager.Include(d.writer, included); err != nil {
+		if err := d.pluginManager.Include(included); err != nil {
 			return nil, err
 		}
 	}

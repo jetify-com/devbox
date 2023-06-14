@@ -10,6 +10,8 @@
     "init_hook": [],
     "scripts": {
       "run_test": [
+        "mkdir -p /tmp/devbox/mariadb/run",
+        "export MYSQL_UNIX_PORT=/tmp/devbox/mariadb/run/mysql.sock",
         "devbox services up -b",
         "echo 'Waiting for services to start' && sleep 2",
         "./install-drupal.sh",

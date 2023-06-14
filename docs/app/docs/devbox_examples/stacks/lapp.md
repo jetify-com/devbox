@@ -21,8 +21,8 @@ This example shows how to build a simple application using Apache, PHP, and Post
 1. Add the packages using the command below. Installing the packages with `devbox add` will ensure that the plugins are activated:
 
 ```bash
-devbox add postgres php81 php81Extensions.pgsql apacheHttpd
+devbox add postgresql@14 php@8.1 php81Extensions.pgsql@latest apache@2.4
 ```
 
-1. Update `devbox.d/apacheHttpd/httpd.conf` to point to the directory with your PHP files. You'll need to update the `DocumentRoot` and `Directory` directives.
+1. Update `devbox.d/apache/httpd.conf` to point to the directory with your PHP files. You'll need to update the `DocumentRoot` and `Directory` directives.
 1. Follow the instructions above in the How to Run section to initialize your project
