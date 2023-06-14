@@ -34,6 +34,11 @@ var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 
 // CreateWrappers creates wrappers for all the executables in nix paths
 func CreateWrappers(ctx context.Context, devbox devboxer) error {
+	shellEnvHash, err := devbox.ShellEnvHash(ctx)
+	if err != nil {
+		return err
+	}
+
 	services, err := devbox.Services()
 	if err != nil {
 		return err
@@ -49,20 +54,22 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
 	for _, service := range services {
 		if err = createWrapper(&createWrapperArgs{
-			devboxer: devbox,
-			BashPath: bashPath,
-			Command:  service.Start,
-			Env:      service.Env,
-			destPath: filepath.Join(destPath, service.StartName()),
+			devboxer:     devbox,
+			BashPath:     bashPath,
+			Command:      service.Start,
+			Env:          service.Env,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, service.StartName()),
 		}); err != nil {
 			return err
 		}
 		if err = createWrapper(&createWrapperArgs{
-			devboxer: devbox,
-			BashPath: bashPath,
-			Command:  service.Stop,
-			Env:      service.Env,
-			destPath: filepath.Join(destPath, service.StopName()),
+			devboxer:     devbox,
+			BashPath:     bashPath,
+			Command:      service.Stop,
+			Env:          service.Env,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, service.StopName()),
 		}); err != nil {
 			return err
 		}
@@ -75,10 +82,11 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
-			devboxer: devbox,
-			BashPath: bashPath,
-			Command:  bin,
-			destPath: filepath.Join(destPath, filepath.Base(bin)),
+			devboxer:     devbox,
+			BashPath:     bashPath,
+			Command:      bin,
+			ShellEnvHash: shellEnvHash,
+			destPath:     filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -92,9 +100,10 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 type createWrapperArgs struct {
 	devboxer
-	BashPath string
-	Command  string
-	Env      map[string]string
+	BashPath     string
+	Command      string
+	Env          map[string]string
+	ShellEnvHash string
 
 	destPath string
 }
