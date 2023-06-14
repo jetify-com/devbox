@@ -99,7 +99,11 @@ func isApproved(key string) bool {
 	}
 	approved := true
 	for _, ak := range troublingEnvKeys {
-		if key == ak {
+		// DEVBOX_OG_PATH_<hash> being set causes devbox global shellenv or overwrite
+		// the PATH after vscode opens and resets it to global shellenv
+		// This causes vscode terminal to not be able to find devbox packages
+		// after reopen in devbox environment action is called
+		if key == ak || strings.HasPrefix(key, "DEVBOX_OG_PATH") {
 			approved = false
 		}
 	}
