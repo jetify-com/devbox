@@ -13,11 +13,10 @@ import (
 
 type shellEnvCmdFlags struct {
 	config               configFlags
-	install              bool
-	omitWrappersFromPath bool
-	pure                 bool
 	runInitHook          bool
+	install              bool
 	useCachedPrintDevEnv bool
+	pure                 bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -45,12 +44,6 @@ func shellEnvCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
-
-	// This flag is to be used by our generated bin-wrappers shell script.
-	command.Flags().BoolVar(
-		&flags.omitWrappersFromPath, "omit-wrappers-from-path", false, "If this flag is specified, "+
-			"the PATH from shellenv will not include the binary wrappers")
-	command.Flag("omit-wrappers-from-path").Hidden = true
 
 	// This is no longer used. Remove after 0.4.8 is released.
 	command.Flags().BoolVar(
@@ -81,12 +74,7 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		}
 	}
 
-	opts := &devopt.PrintEnv{
-		Ctx:                  cmd.Context(),
-		IncludeHooks:         flags.runInitHook,
-		OmitWrappersFromPath: flags.omitWrappersFromPath,
-	}
-	envStr, err := box.PrintEnv(opts)
+	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook)
 	if err != nil {
 		return "", err
 	}
