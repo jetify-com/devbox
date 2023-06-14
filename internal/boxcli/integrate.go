@@ -6,7 +6,6 @@ package boxcli
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os/exec"
 
 	"github.com/spf13/cobra"
@@ -32,7 +31,6 @@ func integrateCmd() *cobra.Command {
 		},
 	}
 	command.AddCommand(integrateVSCodeCmd())
-	command.AddCommand(integrateTestCmd())
 	return command
 }
 
@@ -49,38 +47,6 @@ func integrateVSCodeCmd() *cobra.Command {
 	flags.config.register(command)
 
 	return command
-}
-
-func integrateTestCmd() *cobra.Command {
-	flags := &integrateCmdFlags{}
-	command := &cobra.Command{
-		Use:    "test",
-		Hidden: true,
-		Short:  "for test purposes",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runIntegrateTestCmd(cmd, flags)
-		},
-	}
-	flags.config.register(command)
-
-	return command
-}
-
-func runIntegrateTestCmd(cmd *cobra.Command, flags *integrateCmdFlags) error {
-	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Writer: cmd.OutOrStdout(),
-	})
-	if err != nil {
-		return err
-	}
-	// Get env variables of a devbox shell
-	envVars, err := box.PrintEnvVars(cmd.Context())
-	if err != nil {
-		return err
-	}
-	fmt.Println(envVars)
-	return nil
 }
 
 type parentMessage struct {
