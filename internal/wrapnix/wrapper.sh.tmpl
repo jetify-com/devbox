@@ -18,6 +18,8 @@ fi
 We use the guard to prevent infinite loop if something in shellenv causes 
 another wrapped binary to be called. The guard is specific to this project so shellenv
 could still cause another project's shellenv to be called.
+Note, this guard can likely be removed since we use --omit-wrappers-from-path=true below,
+but leaving in to minimize change.
 
 DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 
