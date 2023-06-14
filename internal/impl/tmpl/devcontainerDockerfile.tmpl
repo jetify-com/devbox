@@ -26,6 +26,12 @@ ENV PATH="/home/${DEVBOX_USER}/.nix-profile/bin:/home/${DEVBOX_USER}/.devbox/nix
 WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
 COPY devbox.json devbox.json
+{{if len .LocalFlakeDirs}}
+# Step 6: Copying local flakes directories
+{{- end}}
+{{range $i, $element := .LocalFlakeDirs -}}
+COPY {{$element}} {{$element}}
+{{end}}
 RUN devbox install
 {{if .IsDevcontainer}}
 RUN devbox shellenv --init-hook >> ~/.profile
