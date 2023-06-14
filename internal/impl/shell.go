@@ -16,6 +16,7 @@ import (
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
@@ -313,6 +314,11 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		tmpl = fishrcTmpl
 	}
 
+	promptHook, err := s.ShellenvPromptHook()
+	if err != nil {
+		return "", err
+	}
+
 	err = tmpl.Execute(shellrcf, struct {
 		ProjectDir       string
 		OriginalInit     string
@@ -321,6 +327,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
+		PromptHook       string
 	}{
 		ProjectDir:       s.projectDir,
 		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
@@ -329,6 +336,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime:   s.shellStartTime,
 		HistoryFile:      strings.TrimSpace(s.historyFile),
 		ExportEnv:        exportify(s.env),
+		PromptHook:       promptHook,
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -428,4 +436,95 @@ func findNixInPATH(env map[string]string) (string, error) {
 
 	// did not find nix executable in PATH, return error
 	return "", errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again")
+}
+
+func (s *DevboxShell) ShellenvPromptHook() (string, error) {
+
+	if !featureflag.PromptHook.Enabled() {
+		return "", nil
+	}
+
+	// pun!
+	const fishHook = `
+function __devbox_shellenv_eval --on-event fish_prompt;
+    devbox shellenv --config {{ .ProjectDir }} | source;
+end;
+`
+
+	const bashHook = `
+_devbox_hook() {
+  local previous_exit_status=$?;
+  trap -- '' SIGINT;
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
+  trap - SIGINT;
+  return $previous_exit_status;
+};
+if ! [[ "${PROMPT_COMMAND:-}" =~ _devbox_hook ]]; then
+  PROMPT_COMMAND="_devbox_hook${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+fi
+`
+	const zshHook = `
+_devbox_hook() {
+  trap -- '' SIGINT;
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
+  trap - SIGINT;
+}
+typeset -ag precmd_functions;
+if [[ -z "${precmd_functions[(r)_devbox_hook]+1}" ]]; then
+  precmd_functions=( _devbox_hook ${precmd_functions[@]} )
+fi
+`
+
+	// um, this is ChatGPT writing it. I need to verify and test
+	const kshHook = `
+_devbox_hook() {
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
+}
+if [[ "$(typeset -f precmd)" != *"_devbox_hook"* ]]; then
+  function precmd {
+    _devbox_hook
+  }
+fi
+`
+
+	// um, this is ChatGPT writing it. I need to verify and test
+	const posixHook = `
+_devbox_hook() {
+  local previous_exit_status=$?
+  trap : INT
+  eval "$(devbox shellenv --config {{ .ProjectDir }})"
+  trap - INT
+  return $previous_exit_status
+}
+if [ -z "$PROMPT_COMMAND" ] || ! printf "%s" "$PROMPT_COMMAND" | grep -q "_devbox_hook"; then
+  PROMPT_COMMAND="_devbox_hook${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+fi
+`
+
+	const unknownShellHook = `echo "this shell will not update its environment. 
+Please exit and re-enter shell after making any changes that may affect the devbox generated environment.\n"`
+
+	var hookTemplate string
+	switch s.name {
+	case shFish:
+		hookTemplate = fishHook
+	case shBash:
+		hookTemplate = bashHook
+	case shZsh:
+		hookTemplate = zshHook
+	case shKsh:
+		hookTemplate = kshHook
+	case shPosix:
+		hookTemplate = posixHook
+	case shUnknown:
+		return unknownShellHook, nil
+	}
+
+	var buf bytes.Buffer
+	err := template.Must(template.New("hookTemplate").Parse(hookTemplate)).
+		Execute(&buf, struct{ ProjectDir string }{ProjectDir: s.projectDir})
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return buf.String(), nil
 }

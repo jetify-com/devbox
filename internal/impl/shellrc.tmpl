@@ -67,3 +67,6 @@ if ! type refresh >/dev/null 2>&1; then
   alias refresh='eval $(devbox shellenv)'
   export DEVBOX_REFRESH_ALIAS="refresh"
 fi
+
+# Ensure devbox shellenv is evaluated
+{{ .PromptHook }}
