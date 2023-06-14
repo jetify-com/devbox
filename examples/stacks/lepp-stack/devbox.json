@@ -7,7 +7,8 @@
         "nginx@1.24"
     ],
     "env": {
-        "PGPORT": "5433"
+        "PGPORT": "5433",
+        "PGHOST": "/tmp/devbox/lepp"
     },
     "shell": {
         "scripts": {
@@ -19,7 +20,6 @@
             ],
             "run_test": [
                 "mkdir -p /tmp/devbox/lepp",
-                "export PGHOST=/tmp/devbox/lepp",
                 "initdb",
                 "devbox services up -b",
                 "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
