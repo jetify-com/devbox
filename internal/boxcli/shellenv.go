@@ -55,6 +55,9 @@ func shellEnvCmd() *cobra.Command {
 	// This is used by bin wrappers and not meant for end users.
 	command.Flag("use-cached-print-dev-env").Hidden = true
 	flags.config.register(command)
+
+	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
+
 	return command
 }
 
@@ -74,7 +77,60 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		}
 	}
 
-	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook)
+	opts := &devopt.PrintEnv{
+		Ctx:          cmd.Context(),
+		IncludeHooks: flags.runInitHook,
+	}
+	envStr, err := box.PrintEnv(opts)
+	if err != nil {
+		return "", err
+	}
+
+	return envStr, nil
+}
+
+type shellEnvOnlyPathWithoutWrappersCmdFlags struct {
+	config configFlags
+}
+
+func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
+	flags := shellEnvOnlyPathWithoutWrappersCmdFlags{}
+	command := &cobra.Command{
+		Use:     "only-path-without-wrappers",
+		Hidden:  true,
+		Short:   "Print shell commands that export PATH without the bin-wrappers",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: ensureNixInstalled,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s, err := shellEnvOnlyPathWithoutWrappersFunc(cmd, &flags)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), s)
+			fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
+			return nil
+		},
+	}
+	flags.config.register(command)
+	return command
+}
+
+func shellEnvOnlyPathWithoutWrappersFunc(cmd *cobra.Command, flags *shellEnvOnlyPathWithoutWrappersCmdFlags) (string, error) {
+
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Writer: cmd.ErrOrStderr(),
+		Pure:   false,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	opts := &devopt.PrintEnv{
+		Ctx:                     cmd.Context(),
+		OnlyPathWithoutWrappers: true,
+	}
+	envStr, err := box.PrintEnv(opts)
 	if err != nil {
 		return "", err
 	}

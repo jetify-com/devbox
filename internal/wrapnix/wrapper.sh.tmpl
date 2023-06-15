@@ -29,4 +29,9 @@ export {{ .ShellEnvHashKey }}_GUARD=true
 eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
+# So that we do not invoke other bin-wrappers from
+# this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
+# should be in PATH.
+eval "$(devbox shellenv only-path-without-wrappers)"
+
 exec {{ .Command }} "$@"
