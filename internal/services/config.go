@@ -14,13 +14,13 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-func FromProcessComposeYaml(projectDir string) Services {
-	// TODO need to handle if a filepath is passed in
+func FromUserProcessCompose(projectDir string) Services {
 	processComposeYaml := lookupProcessCompose(projectDir, "")
 	if processComposeYaml == "" {
 		return nil
 	}
-	userSvcs, err := readProcessCompose(processComposeYaml)
+
+	userSvcs, err := FromProcessCompose(processComposeYaml)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading process-compose.yaml: %s, skipping", err)
 		return nil
@@ -28,7 +28,7 @@ func FromProcessComposeYaml(projectDir string) Services {
 	return userSvcs
 }
 
-func readProcessCompose(path string) (Services, error) {
+func FromProcessCompose(path string) (Services, error) {
 	processCompose := &types.Project{}
 	services := Services{}
 	err := errors.WithStack(cuecfg.ParseFile(path, processCompose))

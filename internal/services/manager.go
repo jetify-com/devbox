@@ -167,9 +167,7 @@ func StartProcessManager(
 	}
 
 	for _, s := range availableServices {
-		if file, hasComposeYaml := s.ProcessComposeYaml(); hasComposeYaml {
-			flags = append(flags, "-f", file)
-		}
+		flags = append(flags, "-f", s.ProcessComposePath)
 	}
 
 	if processComposeBackground {

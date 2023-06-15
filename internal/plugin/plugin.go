@@ -43,7 +43,6 @@ type config struct {
 	Packages    []string          `json:"packages"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
-	Services    services.Services `json:"services"`
 
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.
@@ -58,6 +57,13 @@ func (c *config) ProcessComposeYaml() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (c *config) Services() (services.Services, error) {
+	if file, ok := c.ProcessComposeYaml(); ok {
+		return services.FromProcessCompose(file)
+	}
+	return nil, nil
 }
 
 func (m *Manager) Include(included string) error {

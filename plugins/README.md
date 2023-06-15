@@ -38,20 +38,15 @@ Plugins are defined as JSON Template files, using the following schema:
     "<key>": "<value>"
   },
   "create_files": {
-    "<destination>": "<source>",
+    "<destination>": "<source>"
   },
   "init_hook": [
     "<bash commands>"
-  ],
-  "services": {
-    "service_name": {
-      "start": "<start_command>",
-      "stop": "<stop_command>",
-      "port": <number>
-    }
-  }
+  ]
 }
 ```
+
+A plugin can define services by adding a `process-compose.yaml` file in its `create_files` stanza. See process compose [docs](https://github.com/F1bonacc1/process-compose) or existing plugins in this directory for examples.
 
 ### Plugin Lifecycle
 
@@ -121,12 +116,6 @@ You should use this to copy starter config files or templates needed to run the 
 #### `init_hook` *string | string[]*
 
 A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
-
-#### `services` *object*
-
-A map of services that your plugin exposes to the user through `devbox services`. Services should have a `start` command and `stop` command defined so that Devbox can safely start and stop your service. You can optionally specify a `port` for Devbox to use along with automatic port forwarding in Devbox Cloud
-
-For more details, see our [Services Documentation](https://www.jetpack.io/devbox/docs/guides/services/)
 
 ## Tips for Writing Plugins
 

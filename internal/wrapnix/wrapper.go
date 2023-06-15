@@ -16,7 +16,6 @@ import (
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/services"
 )
 
 type devboxer interface {
@@ -24,7 +23,6 @@ type devboxer interface {
 	ShellEnvHash(ctx context.Context) (string, error)
 	ShellEnvHashKey() string
 	ProjectDir() string
-	Services() (services.Services, error)
 }
 
 //go:embed wrapper.sh.tmpl
@@ -38,11 +36,6 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	services, err := devbox.Services()
-	if err != nil {
-		return err
-	}
-
 	// Remove all old wrappers
 	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
 
@@ -51,28 +44,6 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	_ = os.MkdirAll(destPath, 0755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
-	for _, service := range services {
-		if err = createWrapper(&createWrapperArgs{
-			devboxer:     devbox,
-			BashPath:     bashPath,
-			Command:      service.Start,
-			Env:          service.Env,
-			ShellEnvHash: shellEnvHash,
-			destPath:     filepath.Join(destPath, service.StartName()),
-		}); err != nil {
-			return err
-		}
-		if err = createWrapper(&createWrapperArgs{
-			devboxer:     devbox,
-			BashPath:     bashPath,
-			Command:      service.Stop,
-			Env:          service.Env,
-			ShellEnvHash: shellEnvHash,
-			destPath:     filepath.Join(destPath, service.StopName()),
-		}); err != nil {
-			return err
-		}
-	}
 
 	bins, err := devbox.NixBins(ctx)
 	if err != nil {

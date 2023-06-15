@@ -501,7 +501,7 @@ func (d *Devbox) Services() (services.Services, error) {
 		return nil, err
 	}
 
-	userSvcs := services.FromProcessComposeYaml(d.projectDir)
+	userSvcs := services.FromUserProcessCompose(d.projectDir)
 
 	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
@@ -516,7 +516,6 @@ func (d *Devbox) Services() (services.Services, error) {
 	}
 
 	return result, nil
-
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {

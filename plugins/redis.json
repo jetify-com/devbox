@@ -1,6 +1,6 @@
 {
     "name": "redis",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "match": "^redis$",
     "readme": "Running `devbox services start redis` will start redis as a daemon in the background. \n\nYou can manually start Redis in the foreground by running `redis-server $REDIS_CONF --port $REDIS_PORT`. \n\nLogs, pidfile, and data dumps are stored in `.devbox/virtenv/redis`. You can change this by modifying the `dir` directive in `devbox.d/redis/redis.conf`",
     "env": {
@@ -10,11 +10,5 @@
     "create_files": {
         "{{ .DevboxDir }}/redis.conf": "redis/redis.conf",
         "{{ .Virtenv }}/process-compose.yaml": "redis/process-compose.yaml"
-    },
-    "services": {
-        "redis": {
-            "start": "redis-server $REDIS_CONF --port $REDIS_PORT --daemonize yes",
-            "stop": "redis-cli shutdown"
-        }
     }
 }

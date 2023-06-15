@@ -5,7 +5,6 @@
   "env": {
     "RUBY_CONFDIR": "{{ .Virtenv }}",
     "GEMRC": "{{ .Virtenv }}/.gemrc",
-    "GEM_HOME": "{{ .Virtenv }}",
-    "PATH": "{{ .Virtenv }}/bin:$PATH"
+    "GEM_HOME": "{{ .Virtenv }}"
   }
 }
