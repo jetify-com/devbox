@@ -1,8 +1,4 @@
-package shell
-
-import (
-	"path/filepath"
-)
+package shenv
 
 type Env map[string]string
 
@@ -33,36 +29,21 @@ func (e ShellExport) Remove(key string) {
 	e[key] = nil
 }
 
-// DetectShell returns a Shell instance from the given target.
-//
-// target is usually $0 and can also be prefixed by `-`
+// DetectShell returns a Shell instance from the given shell name
+// TODO: use a single common "enum" for both shenv and DevboxShell
 func DetectShell(target string) Shell {
-	target = filepath.Base(target)
-	// $0 starts with "-"
-	if target[0:1] == "-" {
-		target = target[1:]
-	}
-
 	switch target {
 	case "bash":
 		return Bash
-	//case "elvish":
-	//	return Elvish
 	case "fish":
 		return Fish
-	//case "gha":
-	//	return GitHubActions
-	//case "gzenv":
-	//	return GzEnv
-	//case "json":
-	//	return JSON
-	//case "tcsh":
-	//	return Tcsh
-	//case "vim":
-	//	return Vim
+	case "ksh":
+		return Ksh
+	case "posix":
+		return Posix
 	case "zsh":
 		return Zsh
+	default:
+		return UnknownSh
 	}
-
-	return nil
 }

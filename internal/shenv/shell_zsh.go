@@ -1,4 +1,4 @@
-package shell
+package shenv
 
 // ZSH is a singleton instance of ZSH_T
 type zsh struct{}
@@ -7,18 +7,14 @@ type zsh struct{}
 var Zsh Shell = zsh{}
 
 const zshHook = `
-_direnv_hook() {
+_devbox_hook() {
   trap -- '' SIGINT;
-  eval "$("{{.SelfPath}}" export zsh)";
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
   trap - SIGINT;
 }
 typeset -ag precmd_functions;
-if [[ -z "${precmd_functions[(r)_direnv_hook]+1}" ]]; then
-  precmd_functions=( _direnv_hook ${precmd_functions[@]} )
-fi
-typeset -ag chpwd_functions;
-if [[ -z "${chpwd_functions[(r)_direnv_hook]+1}" ]]; then
-  chpwd_functions=( _direnv_hook ${chpwd_functions[@]} )
+if [[ -z "${precmd_functions[(r)_devbox_hook]+1}" ]]; then
+  precmd_functions=( _devbox_hook ${precmd_functions[@]} )
 fi
 `
 

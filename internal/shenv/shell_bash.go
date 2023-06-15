@@ -1,4 +1,4 @@
-package shell
+package shenv
 
 import "fmt"
 
@@ -8,15 +8,15 @@ type bash struct{}
 var Bash Shell = bash{}
 
 const bashHook = `
-_direnv_hook() {
+_devbox_hook() {
   local previous_exit_status=$?;
   trap -- '' SIGINT;
-  eval "$("{{.SelfPath}}" export bash)";
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
   trap - SIGINT;
   return $previous_exit_status;
 };
-if ! [[ "${PROMPT_COMMAND:-}" =~ _direnv_hook ]]; then
-  PROMPT_COMMAND="_direnv_hook${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+if ! [[ "${PROMPT_COMMAND:-}" =~ _devbox_hook ]]; then
+  PROMPT_COMMAND="_devbox_hook${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
 fi
 `
 
@@ -94,9 +94,13 @@ func BashEscape(str string) string {
 	if str == "" {
 		return "''"
 	}
+	// var too short
+	//nolint:varnamelen
 	in := []byte(str)
 	out := ""
 	i := 0
+	// var too short
+	//nolint:varnamelen
 	l := len(in)
 	escape := false
 
