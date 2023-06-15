@@ -346,6 +346,22 @@ func (d *Devbox) PrintEnv(opts *devopt.PrintEnv) (string, error) {
 	return envStr, nil
 }
 
+func (d *Devbox) PrintEnvVars(ctx context.Context) ([]string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxPrintEnvVars")
+	defer task.End()
+	// this only returns env variables for the shell environment excluding hooks
+	// and excluding "export " prefix in "export key=value" format
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+		return nil, err
+	}
+
+	envs, err := d.nixEnv(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return keyEqualsValue(envs), nil
+}
+
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 	envs, err := d.nixEnv(ctx)
 	if err != nil {

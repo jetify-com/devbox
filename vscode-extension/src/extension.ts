@@ -3,6 +3,7 @@ import { workspace, window, commands, Uri, ExtensionContext } from 'vscode';
 import { posix } from 'path';
 
 import { handleOpenInVSCode } from './openinvscode';
+import { devboxReopen } from './devbox';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -83,6 +84,11 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox generate dockerfile', true);
 	});
 
+	const reopen = commands.registerCommand('devbox.reopen', async () => {
+		await devboxReopen();
+	});
+
+	context.subscriptions.push(reopen);
 	context.subscriptions.push(devboxAdd);
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
