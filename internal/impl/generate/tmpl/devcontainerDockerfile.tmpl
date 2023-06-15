@@ -25,6 +25,7 @@ ENV PATH="/home/${DEVBOX_USER}/.nix-profile/bin:/home/${DEVBOX_USER}/.devbox/nix
 # Step 5: Installing your devbox project
 WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
+{{if .IsDevcontainer}}
 COPY devbox.json devbox.json
 {{if len .LocalFlakeDirs}}
 # Step 6: Copying local flakes directories
@@ -32,6 +33,11 @@ COPY devbox.json devbox.json
 {{range $i, $element := .LocalFlakeDirs -}}
 COPY {{$element}} {{$element}}
 {{end}}
+{{- else}}
+# Add files/directories you want to exclude in .dockerignore
+COPY . .
+{{- end}}
+
 RUN devbox install
 {{if .IsDevcontainer}}
 RUN devbox shellenv --init-hook >> ~/.profile

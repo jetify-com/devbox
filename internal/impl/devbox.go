@@ -412,12 +412,14 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 	defer task.End()
 
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
+	dockerignorePath := filepath.Join(d.projectDir, ".dockerignore")
 	// check if Dockerfile doesn't exist
-	filesExist := fileutil.Exists(dockerfilePath)
-	if !force && filesExist {
+	dockerfileExist := fileutil.Exists(dockerfilePath)
+	dockerignoreExists := fileutil.Exists(dockerignorePath)
+	if !force && (dockerfileExist || dockerignoreExists) {
 		return usererr.New(
-			"Dockerfile is already present in the current directory. " +
-				"Remove it or use --force to overwrite it.",
+			"Dockerfile/.dockerignore are already present in the current directory. " +
+				"Remove them or use --force to overwrite them.",
 		)
 	}
 
