@@ -14,23 +14,19 @@ fi
 {{- end }}
 
 {{/*
+We use ShellEnvHashKey to prevent doing shellenv if the correct environment is
+already set. (perf optimization)
 
 We use the guard to prevent infinite loop if something in shellenv causes 
 another wrapped binary to be called. The guard is specific to this project so shellenv
 could still cause another project's shellenv to be called.
-Note, this guard can likely be removed since we use --omit-wrappers-from-path=true below,
-but leaving in to minimize change.
 
 DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
-
---omit-wrappers-from-path so that we do not invoke other bin-wrappers from
-this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
-should be in PATH.
 */ -}}
 
-if [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
+if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]] && [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
 export {{ .ShellEnvHashKey }}_GUARD=true
-eval "$(DO_NOT_TRACK=1 devbox shellenv --omit-wrappers-from-path=true -c {{ .ProjectDir }})"
+eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
 exec {{ .Command }} "$@"
