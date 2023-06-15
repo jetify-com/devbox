@@ -1,6 +1,6 @@
 ---
 title: Laravel
-description: Create a Laravel dev environment with PHP, MariaDB, and Redis with Devbox
+description: Create a Laravel dev environment with PHP, MariaDB, and Redis
 ---
 Laravel is a powerful web application framework built with PHP. It's a great choice for building web applications and APIs.
 
@@ -16,17 +16,17 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 1. Create a new Laravel App by running `devbox run create-project`. This will create a new Laravel project in your current directory.
 
-2. Start your MariaDB and Redis services by running `devbox services up`.
+1. Start your MariaDB and Redis services by running `devbox services up`.
    1. This step will also create an empty MariaDB Data Directory and initialize your database with the default settings
    2. This will also start the php-fpm service for serving your PHP project over fcgi. Learn more about [PHP-FPM](https://www.php.net/manual/en/install.fpm.php)
 
-3. Create the laravel database by running `devbox run db:create`, and then run Laravel's initial migrations using `devbox run db:migrate`
+1. Create the laravel database by running `devbox run db:create`, and then run Laravel's initial migrations using `devbox run db:migrate`
 
-4. You can now start the artisan server by running `devbox run serve:dev`. This will start the server on port 8000, which you can access at `localhost:8000`
+1. You can now start the artisan server by running `devbox run serve:dev`. This will start the server on port 8000, which you can access at `localhost:8000`
 
-5. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
+1. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
 
-6. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
+1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
 
 
 ## How to Recreate this Example
@@ -35,7 +35,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 1. Create a new project with `devbox init`
 
-2. Add the Nix packages using the command below. Installing the packages with `devbox add` will ensure that the plugins are activated:
+2. Add the packages using the command below. Installing the packages with `devbox add` will ensure that the plugins are activated:
 
     ```bash
     devbox add mariadb@latest, php@8.1, nodejs@18, redis@latest, php81Packages.composer@latest
