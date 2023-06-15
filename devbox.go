@@ -33,7 +33,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	PrintEnv(opts *devopt.PrintEnv) (string, error)
+	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintEnvVars(ctx context.Context) ([]string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
@@ -73,4 +73,8 @@ func GlobalDataPath() (string, error) {
 
 func PrintEnvrcContent(w io.Writer) error {
 	return impl.PrintEnvrcContent(w)
+}
+
+func OnlyPathWithoutWrappers() string {
+	return impl.OnlyPathWithoutWrappers()
 }
