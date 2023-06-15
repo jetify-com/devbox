@@ -19,8 +19,7 @@
       "init_db": "initdb",
       "run_test": [
         "mkdir -p /tmp/devbox/lapp",
-        "export PGHOST=/tmp/devbox/lapp",
-        "initdb",
+        "PGHOST=/tmp/devbox/lapp initdb",
         "devbox services start",
         "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
         "dropdb --if-exists devbox_lapp",
