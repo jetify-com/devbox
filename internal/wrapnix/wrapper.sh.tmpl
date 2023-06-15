@@ -1,6 +1,6 @@
 #!{{ .BashPath }}
 
-{{/* 
+{{/*
 # If env variable has never been set by devbox we set it, but also
 # default to env value set by user. This means plugin env variables behave a bit
 # differently than devbox.json env variables which are always set once.
@@ -29,9 +29,13 @@ export {{ .ShellEnvHashKey }}_GUARD=true
 eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
-# So that we do not invoke other bin-wrappers from
-# this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
-# should be in PATH.
-eval "$(devbox shellenv only-path-without-wrappers)"
+{{/*
+We call only-path-without-wrappers so that we do not invoke other bin-wrappers from
+this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
+should be in PATH.
+
+DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
+*/ -}}
+eval "$(DO_NOT_TRACK=1 devbox shellenv only-path-without-wrappers)"
 
 exec {{ .Command }} "$@"

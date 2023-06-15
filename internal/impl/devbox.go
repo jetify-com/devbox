@@ -293,7 +293,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
-	if _, err := d.PrintEnv(&devopt.PrintEnv{Ctx: ctx}); err != nil {
+	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
@@ -309,8 +309,8 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(opts *devopt.PrintEnv) (string, error) {
-	ctx, task := trace.NewTask(opts.Ctx, "devboxPrintEnv")
+func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
 	defer task.End()
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
@@ -322,23 +322,9 @@ func (d *Devbox) PrintEnv(opts *devopt.PrintEnv) (string, error) {
 		return "", err
 	}
 
-	if opts.OnlyPathWithoutWrappers {
-		path := []string{}
-		for _, p := range strings.Split(envs["PATH"], string(filepath.ListSeparator)) {
-			if !strings.Contains(p, plugin.WrapperPath) {
-				path = append(path, p)
-			}
-		}
-
-		// reset envs to be PATH only!
-		envs = map[string]string{
-			"PATH": strings.Join(path, string(filepath.ListSeparator)),
-		}
-	}
-
 	envStr := exportify(envs)
 
-	if opts.IncludeHooks {
+	if includeHooks {
 		hooksStr := ". " + d.scriptPath(hooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
@@ -1241,4 +1227,23 @@ func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error)
 		env["PATH"] = nixInPath
 	}
 	return env, nil
+}
+
+// ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
+func ExportifySystemPathWithoutWrappers() string {
+
+	path := []string{}
+	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
+		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
+		// we filter out bin-wrappers for devbox-global and devbox-project.
+		if !strings.Contains(p, plugin.WrapperBinPath) {
+			path = append(path, p)
+		}
+	}
+
+	envs := map[string]string{
+		"PATH": strings.Join(path, string(filepath.ListSeparator)),
+	}
+
+	return exportify(envs)
 }

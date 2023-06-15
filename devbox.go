@@ -33,7 +33,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	PrintEnv(opts *devopt.PrintEnv) (string, error)
+	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
 	PrintEnvVars(ctx context.Context) ([]string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
@@ -73,4 +73,13 @@ func GlobalDataPath() (string, error) {
 
 func PrintEnvrcContent(w io.Writer) error {
 	return impl.PrintEnvrcContent(w)
+}
+
+// ExportifySystemPathWithoutWrappers reads $PATH, removes `virtenv/.wrappers/bin` paths,
+// and returns a string of the form `export PATH=....`
+//
+// This small utility function could have been inlined in the boxcli caller, but
+// needed the impl.exportify functionality. It does not depend on core-devbox.
+func ExportifySystemPathWithoutWrappers() string {
+	return impl.ExportifySystemPathWithoutWrappers()
 }

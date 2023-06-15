@@ -1,7 +1,6 @@
 package devopt
 
 import (
-	"context"
 	"io"
 )
 
@@ -10,10 +9,4 @@ type Opts struct {
 	Pure           bool
 	IgnoreWarnings bool
 	Writer         io.Writer
-}
-
-type PrintEnv struct {
-	Ctx                     context.Context
-	IncludeHooks            bool
-	OnlyPathWithoutWrappers bool
 }
