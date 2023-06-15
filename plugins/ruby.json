@@ -6,10 +6,5 @@
     "RUBY_CONFDIR": "{{ .Virtenv }}",
     "GEMRC": "{{ .Virtenv }}/.gemrc",
     "GEM_HOME": "{{ .Virtenv }}"
-  },
-  "shell": {
-    "init_hook": [
-      "echo \"in the ruby init hook\""
-    ]
   }
 }
