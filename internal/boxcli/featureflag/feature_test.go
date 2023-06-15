@@ -11,7 +11,7 @@ import (
 
 func TestEnabledFeature(t *testing.T) {
 	name := "TestEnabledFeature"
-	enabled(name)
+	enable(name)
 	if !features[name].Enabled() {
 		t.Errorf("got %s.Enabled() = false, want true.", name)
 	}
@@ -19,7 +19,7 @@ func TestEnabledFeature(t *testing.T) {
 
 func TestDisabledFeature(t *testing.T) {
 	name := "TestDisabledFeature"
-	disabled(name)
+	disable(name)
 	if features[name].Enabled() {
 		t.Errorf("got %s.Enabled() = true, want false.", name)
 	}
@@ -27,7 +27,7 @@ func TestDisabledFeature(t *testing.T) {
 
 func TestEnabledFeatureEnv(t *testing.T) {
 	name := "TestEnabledFeatureEnv"
-	disabled(name)
+	disable(name)
 	t.Setenv(envir.DevboxFeaturePrefix+name, "1")
 	if !features[name].Enabled() {
 		t.Errorf("got %s.Enabled() = false, want true.", name)
