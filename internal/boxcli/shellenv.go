@@ -89,7 +89,7 @@ func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "only-path-without-wrappers",
 		Hidden:  true,
-		Short:   "Print shell commands that export PATH without the bin-wrappers",
+		Short:   "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -102,5 +102,5 @@ func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
 }
 
 func shellEnvOnlyPathWithoutWrappersFunc() string {
-	return devbox.OnlyPathWithoutWrappers()
+	return devbox.ExportifySystemPathWithoutWrappers()
 }

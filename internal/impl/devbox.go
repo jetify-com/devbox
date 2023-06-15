@@ -348,25 +348,6 @@ func (d *Devbox) PrintEnvVars(ctx context.Context) ([]string, error) {
 	return keyEqualsValue(envs), nil
 }
 
-// OnlyPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
-func OnlyPathWithoutWrappers() string {
-
-	path := []string{}
-	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
-		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
-		// we filter out bin-wrappers for devbox-global and devbox-project.
-		if !strings.Contains(p, plugin.WrapperBinPath) {
-			path = append(path, p)
-		}
-	}
-
-	envs := map[string]string{
-		"PATH": strings.Join(path, string(filepath.ListSeparator)),
-	}
-
-	return exportify(envs)
-}
-
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
@@ -1246,4 +1227,23 @@ func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error)
 		env["PATH"] = nixInPath
 	}
 	return env, nil
+}
+
+// ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
+func ExportifySystemPathWithoutWrappers() string {
+
+	path := []string{}
+	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
+		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
+		// we filter out bin-wrappers for devbox-global and devbox-project.
+		if !strings.Contains(p, plugin.WrapperBinPath) {
+			path = append(path, p)
+		}
+	}
+
+	envs := map[string]string{
+		"PATH": strings.Join(path, string(filepath.ListSeparator)),
+	}
+
+	return exportify(envs)
 }

@@ -75,6 +75,11 @@ func PrintEnvrcContent(w io.Writer) error {
 	return impl.PrintEnvrcContent(w)
 }
 
-func OnlyPathWithoutWrappers() string {
-	return impl.OnlyPathWithoutWrappers()
+// ExportifySystemPathWithoutWrappers reads $PATH, removes `virtenv/.wrappers/bin` paths,
+// and returns a string of the form `export PATH=....`
+//
+// This small utility function could have been inlined in the boxcli caller, but
+// needed the impl.exportify functionality. It does not depend on core-devbox.
+func ExportifySystemPathWithoutWrappers() string {
+	return impl.ExportifySystemPathWithoutWrappers()
 }
