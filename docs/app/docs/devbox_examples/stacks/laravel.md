@@ -14,7 +14,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/)
 
-1. Create a new Laravel App by running `devbox run create-project`. This will create a new Laravel project in your current directory.
+1. Create a new Laravel App by running `devbox create --template laravel`. This will create a new Laravel project in your current directory.
 
 1. Start your MariaDB and Redis services by running `devbox services up`.
    1. This step will also create an empty MariaDB Data Directory and initialize your database with the default settings
