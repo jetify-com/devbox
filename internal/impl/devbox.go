@@ -1238,12 +1238,14 @@ func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error)
 	// handling special case for PATH
 	if d.pure {
 		// Finding nix executables in path and passing it through
-		// Needed for devbox commands inside pure shell to work
-		nixInPath, err := findNixInPATH(env)
+		// As well as adding devbox itself to PATH
+		// Both are needed for devbox commands inside pure shell to work
+		includedInPath, err := findNixInPATH(env)
 		if err != nil {
 			return nil, err
 		}
-		env["PATH"] = nixInPath
+		includedInPath = append(includedInPath, wrapnix.DotdevboxBinPath(d))
+		env["PATH"] = JoinPathLists(includedInPath...)
 	}
 	return env, nil
 }
