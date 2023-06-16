@@ -1,6 +1,11 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "gcc@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#gcc",
+      "version": "12.2.0"
+    },
     "openssl@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#openssl",
@@ -8,7 +13,7 @@
     },
     "postgresql@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     },

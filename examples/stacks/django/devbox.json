@@ -3,7 +3,8 @@
     "python310",
     "openssl@latest",
     "python310Packages.pip",
-    "postgresql@latest"
+    "postgresql@latest",
+    "gcc@latest"
   ],
   "env": {
     "PGPORT": "5434"
@@ -28,7 +29,7 @@
       "server": [
         "python todo_project/manage.py runserver"
       ],
-      "test": [
+      "run_test": [
         "initdb",
         "devbox services start",
         "devbox run create_db",
