@@ -145,8 +145,13 @@ func createDevboxSymlink(devbox devboxer) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
-	// Create a symlink between devbox in .wrappers/bin
-	err = os.Symlink(devboxPath, filepath.Join(wrapperBinPath(devbox), "devbox"))
+	// ensure .devbox/bin directory exists
+	binPath := DotdevboxBinPath(devbox)
+	if err := os.MkdirAll(binPath, 0755); err != nil {
+		return errors.WithStack(err)
+	}
+	// Create a symlink between devbox and .devbox/bin
+	err = os.Symlink(devboxPath, filepath.Join(binPath, "devbox"))
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
@@ -155,4 +160,8 @@ func createDevboxSymlink(devbox devboxer) error {
 
 func wrapperBinPath(devbox devboxer) string {
 	return filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
+}
+
+func DotdevboxBinPath(devbox devboxer) string {
+	return filepath.Join(devbox.ProjectDir(), ".devbox/bin")
 }
