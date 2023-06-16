@@ -1,10 +1,10 @@
 {
   "packages": [
-    "python310",
     "openssl@latest",
-    "python310Packages.pip",
     "postgresql@latest",
-    "gcc@latest"
+    "gcc@latest",
+    "python310@latest",
+    "python310Packages.pip@latest"
   ],
   "env": {
     "PGPORT": "5434"
@@ -26,15 +26,15 @@
       "initdb": [
         "initdb"
       ],
-      "server": [
-        "python todo_project/manage.py runserver"
-      ],
       "run_test": [
         "initdb",
         "devbox services start",
         "devbox run create_db",
         "python todo_project/manage.py test",
         "devbox services stop"
+      ],
+      "server": [
+        "python todo_project/manage.py runserver"
       ]
     }
   }
