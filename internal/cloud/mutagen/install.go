@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/cavaliergopher/grab/v3"
+
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 )

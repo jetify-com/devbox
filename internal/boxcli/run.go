@@ -16,8 +16,9 @@ import (
 )
 
 type runCmdFlags struct {
-	config configFlags
-	pure   bool
+	config      configFlags
+	pure        bool
+	listScripts bool
 }
 
 func runCmd() *cobra.Command {
@@ -41,6 +42,8 @@ func runCmd() *cobra.Command {
 	flags.config.register(command)
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox runs the script in an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+	command.Flags().BoolVarP(
+		&flags.listScripts, "list", "l", false, "List all scripts defined in devbox.json")
 
 	command.ValidArgs = listScripts(command, flags)
 
@@ -63,7 +66,7 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 }
 
 func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
-	if len(args) == 0 {
+	if len(args) == 0 || flags.listScripts {
 		scripts := listScripts(cmd, flags)
 		if len(scripts) == 0 {
 			fmt.Fprintln(cmd.OutOrStdout(), "no scripts defined in devbox.json")
