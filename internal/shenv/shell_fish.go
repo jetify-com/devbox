@@ -12,7 +12,7 @@ var Fish Shell = fish{}
 
 const fishHook = `
 function __devbox_shellenv_eval --on-event fish_prompt;
-  devbox shellenv --config {{ .ProjectDir }} | source;
+  devbox export --config {{ .ProjectDir }} | source;
 end;
 `
 
