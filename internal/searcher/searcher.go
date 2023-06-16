@@ -17,7 +17,7 @@ func SearchAndPrint(w io.Writer, query string) error {
 	c := Client()
 	result, err := c.Search(query)
 	if err != nil {
-		return redact.Errorf("error getting search results: %v", redact.Safe(err))
+		return redact.Errorf("failed to get search results: %v", redact.Safe(err))
 	}
 	if len(result.Results) == 0 {
 		fmt.Fprintf(w, "No results found for %q\n", query)
@@ -38,13 +38,4 @@ func SearchAndPrint(w io.Writer, query string) error {
 		fmt.Fprintf(w, "* %s (%s)\n", r.Name, strings.Join(versions, ", "))
 	}
 	return nil
-}
-
-func Exists(name, version string) (bool, error) {
-	c := Client()
-	result, err := c.SearchVersion(name, version)
-	if err != nil {
-		return false, err
-	}
-	return len(result.Results) > 0, nil
 }
