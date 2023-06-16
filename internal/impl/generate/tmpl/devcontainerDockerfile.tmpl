@@ -26,16 +26,16 @@ ENV PATH="/home/${DEVBOX_USER}/.nix-profile/bin:/home/${DEVBOX_USER}/.devbox/nix
 WORKDIR /code
 RUN sudo chown $DEVBOX_USER:root /code
 {{if .IsDevcontainer}}
-COPY devbox.json devbox.json
+COPY --chown=$DEVBOX_USER:$DEVBOX_USER devbox.json devbox.json
 {{if len .LocalFlakeDirs}}
 # Step 6: Copying local flakes directories
 {{- end}}
 {{range $i, $element := .LocalFlakeDirs -}}
-COPY {{$element}} {{$element}}
+ADD --chown=$DEVBOX_USER:$DEVBOX_USER {{$element}} {{$element}}
 {{end}}
 {{- else}}
 # Add files/directories you want to exclude in .dockerignore
-COPY . .
+ADD --chown=$DEVBOX_USER:$DEVBOX_USER . .
 {{- end}}
 
 RUN devbox install
