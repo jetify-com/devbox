@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
 )

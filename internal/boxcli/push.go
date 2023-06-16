@@ -40,5 +40,5 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.Push(url)
+	return box.Push(cmd.Context(), url)
 }

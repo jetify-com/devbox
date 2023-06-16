@@ -144,7 +144,10 @@ func (d *Devbox) NixPkgsCommitHash() string {
 	return d.cfg.NixPkgsCommitHash()
 }
 
-func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
+func (d *Devbox) ShellPlan(ctx context.Context) (*plansdk.FlakePlan, error) {
+	ctx, task := trace.NewTask(ctx, "devboxShellPlan")
+	defer task.End()
+
 	// Create plugin directories first because inputs might depend on them
 	for _, pkg := range d.packagesAsInputs() {
 		if err := d.pluginManager.Create(pkg); err != nil {
@@ -166,7 +169,7 @@ func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 
 	shellPlan := &plansdk.FlakePlan{}
 	var err error
-	shellPlan.FlakeInputs, err = d.flakeInputs()
+	shellPlan.FlakeInputs, err = d.flakeInputs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -187,8 +190,11 @@ func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 	return shellPlan, nil
 }
 
-func (d *Devbox) Generate() error {
-	return errors.WithStack(d.generateShellFiles())
+func (d *Devbox) Generate(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerate")
+	defer task.End()
+
+	return errors.WithStack(d.generateShellFiles(ctx))
 }
 
 func (d *Devbox) Shell(ctx context.Context) error {
@@ -293,6 +299,9 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "devboxInstall")
+	defer task.End()
+
 	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
@@ -300,9 +309,10 @@ func (d *Devbox) Install(ctx context.Context) error {
 }
 
 func (d *Devbox) ListScripts() []string {
-	keys := make([]string, len(d.cfg.Scripts()))
+	scripts := d.cfg.Scripts()
+	keys := make([]string, len(scripts))
 	i := 0
-	for k := range d.cfg.Scripts() {
+	for k := range scripts {
 		keys[i] = k
 		i++
 	}
@@ -362,7 +372,10 @@ func (d *Devbox) ShellEnvHashKey() string {
 	return "__DEVBOX_SHELLENV_HASH_" + d.projectDirHash()
 }
 
-func (d *Devbox) Info(pkg string, markdown bool) error {
+func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxInfo")
+	defer task.End()
+
 	info := nix.PkgInfo(pkg, d.lockfile)
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
@@ -377,6 +390,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		return errors.WithStack(err)
 	}
 	return plugin.PrintReadme(
+		ctx,
 		nix.InputFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
@@ -386,7 +400,10 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(force bool) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
+	defer task.End()
+
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.projectDir, ".devcontainer/")
 	devContainerJSONPath := filepath.Join(devContainerPath, "devcontainer.json")
@@ -408,13 +425,13 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = generate.CreateDockerfile(tmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = generate.CreateDockerfile(ctx, tmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(devContainerPath, d.Packages())
+	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -423,7 +440,10 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(force bool) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
+	defer task.End()
+
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := fileutil.Exists(dockerfilePath)
@@ -435,7 +455,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(generate.CreateDockerfile(ctx, tmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
 func PrintEnvrcContent(w io.Writer) error {
@@ -446,8 +466,8 @@ func PrintEnvrcContent(w io.Writer) error {
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(force bool) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxGenerateEnvrc")
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
@@ -471,7 +491,7 @@ func (d *Devbox) GenerateEnvrcFile(force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(tmplFS, d.projectDir)
+	err := generate.CreateEnvrc(ctx, tmplFS, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}

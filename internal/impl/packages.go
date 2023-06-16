@@ -84,11 +84,11 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	for _, input := range pkgs {
 		if err := plugin.PrintReadme(
+			ctx,
 			input,
 			d.projectDir,
 			d.writer,
-			false, /*markdown*/
-		); err != nil {
+			false /*markdown*/); err != nil {
 			return err
 		}
 	}
@@ -179,7 +179,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return nil
 	}
 
-	if err := d.generateShellFiles(); err != nil {
+	if err := d.generateShellFiles(ctx); err != nil {
 		return err
 	}
 	if mode == ensure {

@@ -6,6 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
@@ -41,5 +42,5 @@ func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Info(pkg, flags.markdown)
+	return box.Info(cmd.Context(), pkg, flags.markdown)
 }

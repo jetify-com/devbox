@@ -4,8 +4,10 @@
 package pullbox
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"runtime/trace"
 
 	"github.com/pkg/errors"
 
@@ -27,7 +29,9 @@ func New(devbox devboxProject, url string, overwrite bool) *pullbox {
 	return &pullbox{devbox, overwrite, url}
 }
 
-func (p *pullbox) Pull() error {
+func (p *pullbox) Pull(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "Pull").End()
+
 	if git.IsRepoURL(p.url) {
 		tmpDir, err := git.CloneToTmp(p.url)
 		if err != nil {
@@ -62,6 +66,6 @@ func (p *pullbox) Pull() error {
 	return usererr.New("Could not determine how to pull %s", p.url)
 }
 
-func (p *pullbox) Push() error {
-	return git.Push(p.ProjectDir(), p.url)
+func (p *pullbox) Push(ctx context.Context) error {
+	return git.Push(ctx, p.ProjectDir(), p.url)
 }

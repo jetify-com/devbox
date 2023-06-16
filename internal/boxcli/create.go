@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/templates"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -55,11 +56,7 @@ func createCmd() *cobra.Command {
 	return command
 }
 
-func runCreateCmd(
-	cmd *cobra.Command,
-	args []string,
-	flags *createCmdFlags,
-) error {
+func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) error {
 	path := pathArg(args)
 	if path == "" {
 		wd, _ := os.Getwd()

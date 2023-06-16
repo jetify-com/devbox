@@ -11,6 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
@@ -43,11 +44,7 @@ func pullCmd() *cobra.Command {
 	return cmd
 }
 
-func pullCmdFunc(
-	cmd *cobra.Command,
-	url string,
-	flags *pullCmdFlags,
-) error {
+func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Writer: cmd.ErrOrStderr(),

@@ -4,12 +4,14 @@
 package generate
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime/trace"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -42,7 +44,9 @@ type dockerfileData struct {
 }
 
 // CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
-func CreateDockerfile(tmplFS embed.FS, path string, localFlakeDirs []string, isDevcontainer bool) error {
+func CreateDockerfile(ctx context.Context, tmplFS embed.FS, path string, localFlakeDirs []string, isDevcontainer bool) error {
+	defer trace.StartRegion(ctx, "createDockerfile").End()
+
 	// create dockerfile
 	file, err := os.Create(filepath.Join(path, "Dockerfile"))
 	if err != nil {
@@ -60,7 +64,9 @@ func CreateDockerfile(tmplFS embed.FS, path string, localFlakeDirs []string, isD
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
-func CreateDevcontainer(path string, pkgs []string) error {
+func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
+	defer trace.StartRegion(ctx, "createDevcontainer").End()
+
 	// create devcontainer.json file
 	file, err := os.Create(filepath.Join(path, "devcontainer.json"))
 	if err != nil {
@@ -78,7 +84,9 @@ func CreateDevcontainer(path string, pkgs []string) error {
 	return err
 }
 
-func CreateEnvrc(tmplFS embed.FS, path string) error {
+func CreateEnvrc(ctx context.Context, tmplFS embed.FS, path string) error {
+	defer trace.StartRegion(ctx, "createEnvrc").End()
+
 	// create .envrc file
 	file, err := os.Create(filepath.Join(path, ".envrc"))
 	if err != nil {
