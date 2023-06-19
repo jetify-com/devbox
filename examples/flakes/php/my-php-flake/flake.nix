@@ -15,7 +15,7 @@
         packages = {
           # Flakes can export multiple packages. To include specific packages in
           # devbox.json you can use url fragments (e.g. path:my-flake#my-package)
-          php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds ]));
+          php = pkgs.php.withExtensions ({ enabled, all }: enabled ++ (with all; [ ds memcached ]));
           hello = pkgs.hello;
 
           # If you only want to export a single package, you can name it default which allows

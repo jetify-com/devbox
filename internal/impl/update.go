@@ -42,7 +42,9 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 
 	for _, pkg := range pendingPackagesToUpdate {
 		if _, _, isVersioned := devpkg.ParseVersionedPackage(pkg.Raw); !isVersioned {
-			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
+			if err = d.attemptToUpgradeFlake(pkg); err != nil {
+				return err
+			}
 			continue
 		}
 		existing := d.lockfile.Packages[pkg.Raw]
@@ -51,16 +53,16 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			return err
 		}
 		if existing != nil && existing.Version != newEntry.Version {
-			fmt.Fprintf(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
+			ux.Finfo(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
 			if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
 				// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
 				// sync the profile so we don't need to do this manually.
 				ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 			}
 		} else if existing == nil {
-			fmt.Fprintf(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, newEntry.Resolved)
+			ux.Finfo(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, newEntry.Resolved)
 		} else {
-			fmt.Fprintf(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
+			ux.Finfo(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
 		}
 		// Set the new entry after we've removed the old package from the profile
 		d.lockfile.Packages[pkg.Raw] = newEntry
@@ -88,4 +90,31 @@ func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {
 	}
 
 	return nix.InputsFromStrings(pkgsToUpdate, d.lockfile), nil
+}
+
+// attemptToUpgradeFlake attempts to upgrade a flake using `nix profile upgrade`
+// and prints an error if it fails, but does not propagate upgrade errors.
+func (d *Devbox) attemptToUpgradeFlake(pkg *nix.Input) error {
+	profilePath, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+
+	ux.Finfo(
+		d.writer,
+		"Attempting to upgrade %s using `nix profile upgrade`\n",
+		pkg.Raw,
+	)
+
+	err = nix.Upgrade(profilePath, pkg, d.lockfile)
+	if err != nil {
+		ux.Ferror(
+			d.writer,
+			"Failed to upgrade %s using `nix profile upgrade`: %s\n",
+			pkg.Raw,
+			err,
+		)
+	}
+
+	return nil
 }
