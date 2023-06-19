@@ -277,7 +277,7 @@ func (i *Input) Hash() string {
 }
 
 func (i *Input) ValidateExists() (bool, error) {
-	if i.isVersioned() && i.version() == "" {
+	if i.isVersioned() && i.Version() == "" {
 		return false, usererr.New("No version specified for %q.", i.Path)
 	}
 	info, err := i.NormalizedPackageAttributePath()
@@ -341,9 +341,9 @@ func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {
 	return ensureNixpkgsPrefetched(w, hash)
 }
 
-// version returns the version of the package
+// Version returns the version of the package
 // it only applies to devbox packages
-func (i *Input) version() string {
+func (i *Input) Version() string {
 	if !i.IsDevboxPackage() {
 		return ""
 	}

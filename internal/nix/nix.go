@@ -64,6 +64,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 			args.FlakesFilePath,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		cmd.Args = append(cmd.Args, "--impure")
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
 		data, err = cmd.Output()
@@ -104,7 +105,7 @@ func FlakeNixpkgs(commit string) string {
 func ExperimentalFlags() []string {
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
-		"--option", "experimental-features", "nix-command flakes",
+		"--option", "experimental-features", "nix-command flakes fetch-closure",
 	}
 }
 

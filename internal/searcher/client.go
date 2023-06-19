@@ -54,6 +54,10 @@ func WithVersion(version string) func() string {
 	}
 }
 
+func (c *client) PackageInfo(pkgName string) ([]*PackageResult, error) {
+	return execPackageQuery(c.host, pkgName)
+}
+
 func (c *client) Resolve(pkg string) (*lock.Package, error) {
 	name, version, _ := devpkg.ParseVersionedPackage(pkg)
 	if version == "" {
@@ -87,6 +91,27 @@ func execSearch(url string) (*SearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("queried url %s\n and got response:\n %+v\n", url, string(data))
 	var result SearchResult
 	return &result, json.Unmarshal(data, &result)
+}
+
+func execPackageQuery(endpoint, pkgName string) ([]*PackageResult, error) {
+	url, err := url.JoinPath(endpoint, "pkg", pkgName)
+	if err != nil {
+		return nil, err
+	}
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*PackageResult
+	return result, json.Unmarshal(data, &result)
 }

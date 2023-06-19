@@ -17,14 +17,14 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
 //go:embed tmpl/*
 var tmplFS embed.FS
-
-var shellFiles = []string{"shell.nix"}
 
 // GenerateForPrintEnv will create all the files necessary for processing
 // devbox.PrintEnv, which is the core function from which devbox shell/run/direnv
@@ -39,15 +39,16 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 
 	outPath := filepath.Join(devbox.ProjectDir(), ".devbox/gen")
 
-	for _, file := range shellFiles {
-		err := writeFromTemplate(outPath, plan, file)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	// For now, we keep generating this old file because some older users have .envrc files
+	// that would check for its existence, and we don't want to break their
+	// direnv experience by removing it.
+	err = writeFromTemplate(outPath, plan, "shell.nix", "shell.nix")
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore")
+	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore", ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -69,7 +70,7 @@ var (
 	tmplOldBuf = bytes.NewBuffer(make([]byte, 0, 4096))
 )
 
-func writeFromTemplate(path string, plan any, tmplName string) error {
+func writeFromTemplate(path string, plan any, tmplName string, generatedFileName string) error {
 	tmplKey := tmplName + ".tmpl"
 	tmpl := tmplCache[tmplKey]
 	if tmpl == nil {
@@ -93,7 +94,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 	// changed. Blindly overwriting the file could invalidate Nix's cache
 	// every time, slowing down evaluation considerably.
 	var (
-		outPath = filepath.Join(path, tmplName)
+		outPath = filepath.Join(path, generatedFileName)
 		flag    = os.O_RDWR | os.O_CREATE
 		perm    = fs.FileMode(0644)
 	)
@@ -150,7 +151,12 @@ var templateFuncs = template.FuncMap{
 
 func makeFlakeFile(outPath string, plan *flakePlan) error {
 	flakeDir := filepath.Join(outPath, "flake")
-	err := writeFromTemplate(flakeDir, plan, "flake.nix")
+
+	templateName := "flake.nix"
+	if featureflag.RemoveNixpkgs.Enabled() {
+		templateName = "flake_alt.nix"
+	}
+	err := writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -1,0 +1,40 @@
+{
+  description = "A devbox shell";
+
+  inputs = {
+    {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */ -}}
+    nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+  }:
+      let
+         pkgs = nixpkgs.legacyPackages.x86_64-linux;
+         {{- range $_, $pkg := .Packages }}
+         {{- range $system, $fca := $pkg.FetchClosureArgs }}
+         {{- if eq $system "x86_64-linux" }}
+         {{ $pkg.Name }}.{{ $system }} = builtins.fetchClosure{
+            fromStore = "{{ $fca.FromStore }}";
+            fromPath = "{{ $fca.FromPath }}";
+         };
+         {{- end }}
+         {{- end }}
+         {{- end }}
+      in
+      {
+        {{/* TODO savil: generalize by system */}}
+        devShells.x86_64-linux.default = pkgs.mkShell {
+          buildInputs = [
+            {{- range $_, $pkg := .Packages }}
+            {{- range $system, $fca := $pkg.FetchClosureArgs }}
+            {{- if eq $system "x86_64-linux" }}
+            {{ $pkg.Name }}.{{ $system }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          ];
+        };
+      };
+}

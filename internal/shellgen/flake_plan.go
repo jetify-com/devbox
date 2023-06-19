@@ -10,6 +10,8 @@ import (
 type flakePlan struct {
 	NixpkgsInfo *NixpkgsInfo
 	FlakeInputs []*flakeInput
+	// Packages are used by "RemoveNixpkgs" feature
+	Packages []*Package
 }
 
 func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
@@ -38,6 +40,11 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	shellPlan := &flakePlan{}
 	var err error
 	shellPlan.FlakeInputs, err = flakeInputs(ctx, devbox)
+	if err != nil {
+		return nil, err
+	}
+
+	shellPlan.Packages, err = flakePackages(devbox)
 	if err != nil {
 		return nil, err
 	}
