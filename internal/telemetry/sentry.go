@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -23,7 +22,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/getsentry/sentry-go"
-	pkgerrors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -297,7 +296,7 @@ func newSentryException(err error) []sentry.Exception {
 		case interface{ StackTrace() []runtime.Frame }:
 			stFunc = stackErr.StackTrace
 		// Otherwise use the pkg/errors StackTracer interface.
-		case interface{ StackTrace() pkgerrors.StackTrace }:
+		case interface{ StackTrace() errors.StackTrace }:
 			// Normalize the pkgs/errors.StackTrace type to a slice of runtime.Frame.
 			stFunc = func() []runtime.Frame {
 				pkgStack := stackErr.StackTrace()
