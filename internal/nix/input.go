@@ -24,6 +24,8 @@ type Input struct {
 	url.URL
 	lockfile lock.Locker
 	Raw      string
+
+	normalizedAttributePath string // memoized value from normalizedPackageAttributePath()
 }
 
 func InputsFromStrings(names []string, l lock.Locker) []*Input {
@@ -45,7 +47,11 @@ func InputFromString(raw string, locker lock.Locker) *Input {
 		}
 		u, _ = url.Parse(normalizedURL)
 	}
-	return &Input{*u, locker, raw}
+	return &Input{*u, locker, raw, ""}
+}
+
+func InputFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Input {
+	return InputFromString(item.unlockedReference, locker)
 }
 
 func (i *Input) IsLocal() bool {
@@ -122,8 +128,6 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 			return "", err
 		}
 		path = entry.Resolved
-	} else if i.IsDevboxPackage() {
-		path = i.lockfile.LegacyNixpkgsPath(i.String())
 	}
 
 	if path != "" {
@@ -170,17 +174,41 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
 // search. This is useful for comparing different attribute paths that may
-// point to the same package. Note, it's an expensive call.
+// point to the same package. Note, it may be an expensive call (~150ms).
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
+	if i.normalizedAttributePath != "" {
+		fmt.Printf("    memoized: %s\n", i.normalizedAttributePath)
+		return i.normalizedAttributePath, nil
+	}
+	path, err := i.normalizePackageAttributePath()
+	if err != nil {
+		return path, err
+	}
+	i.normalizedAttributePath = path
+	fmt.Printf("    !! searched: %s\n", i.normalizedAttributePath)
+	return i.normalizedAttributePath, nil
+}
+
+func (i *Input) Resolved() string {
+	entry, err := i.lockfile.Resolve(i.Raw)
+	if err != nil {
+		return ""
+	}
+	return entry.Resolved
+}
+
+func (i *Input) normalizePackageAttributePath() (string, error) {
 	var query string
-	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.Raw)
-		if err != nil {
-			return "", err
+	if i.IsDevboxPackage() {
+		if i.isVersioned() {
+			entry, err := i.lockfile.Resolve(i.Raw)
+			if err != nil {
+				return "", err
+			}
+			query = entry.Resolved
+		} else {
+			query = i.lockfile.LegacyNixpkgsPath(i.String())
 		}
-		query = entry.Resolved
-	} else if i.IsDevboxPackage() {
-		query = i.lockfile.LegacyNixpkgsPath(i.String())
 	} else {
 		query = i.String()
 	}
@@ -262,7 +290,7 @@ func (i *Input) ValidateExists() (bool, error) {
 	return info != "", err
 }
 
-func (i *Input) equals(other *Input) bool {
+func (i *Input) Equals(other *Input) bool {
 	if i.String() == other.String() {
 		return true
 	}

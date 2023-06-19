@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -111,7 +110,7 @@ func searchSystem(url string, system string) map[string]*Info {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
 	cmd.Stderr = writer
-	debug.Log("running command: %s\n", cmd)
+	//debug.log("  running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		// for now, assume all errors are invalid packages.
