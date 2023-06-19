@@ -16,13 +16,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"golang.org/x/mod/semver"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/xdg"
-	"golang.org/x/mod/semver"
 )
 
 // Keep this in-sync with latest version in launch.sh.
@@ -73,8 +74,7 @@ func CheckVersion(w io.Writer, commandPath string) {
 	// check launcher version
 	launcherNotice := launcherVersionNotice()
 	if launcherNotice != "" {
-		// TODO: use ux.FNotice
-		color.New(color.FgYellow).Fprintf(w, launcherNotice)
+		ux.Finfo(w, launcherNotice)
 
 		// fallthrough to alert the user about a new Devbox CLI binary being possibly available
 	}
@@ -82,8 +82,7 @@ func CheckVersion(w io.Writer, commandPath string) {
 	// check devbox CLI version
 	devboxNotice := devboxVersionNotice()
 	if devboxNotice != "" {
-		// TODO: use ux.FNotice
-		color.New(color.FgYellow).Fprintf(w, devboxNotice)
+		ux.Finfo(w, devboxNotice)
 	}
 
 	os.Setenv(envName, "1")

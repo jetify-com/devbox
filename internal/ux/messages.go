@@ -15,6 +15,11 @@ func Fsuccess(w io.Writer, format string, a ...any) {
 	fmt.Fprintf(w, format, a...)
 }
 
+func Finfo(w io.Writer, format string, a ...any) {
+	color.New(color.FgYellow).Fprint(w, "Info: ")
+	fmt.Fprintf(w, format, a...)
+}
+
 func Fwarning(w io.Writer, format string, a ...any) {
 	color.New(color.FgHiYellow).Fprint(w, "Warning: ")
 	fmt.Fprintf(w, format, a...)
