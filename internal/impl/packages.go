@@ -223,11 +223,7 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 		return err
 	}
 
-	if err := d.tidyProfile(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return d.tidyProfile(ctx)
 }
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
