@@ -172,7 +172,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	if err != nil {
 		return err
 	}
-	if upToDate && false {
+	if upToDate {
 		return nil
 	}
 
@@ -183,10 +183,10 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
-	fmt.Println("ensure 4")
 	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
 		return err
 	}
+
 	if err := plugin.RemoveInvalidSymlinks(d.projectDir); err != nil {
 		return err
 	}
@@ -416,17 +416,13 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileL
 outer:
 	for _, item := range profileItems {
 		profileInput := nix.InputFromProfileItem(item, d.lockfile)
-		fmt.Printf("\nchecking profile input (unresolved): %s\n", profileInput.Raw)
 		for _, devboxInput := range devboxInputs {
-			fmt.Printf("  against: %s (resolved=%s) \n", devboxInput.Raw, devboxInput.Resolved())
 			if profileInput.Equals(devboxInput) {
 				continue outer
 			}
 		}
 		extras = append(extras, item)
 	}
-
-	fmt.Printf("found %d extras to remove\n", len(extras))
 
 	return extras, nil
 }

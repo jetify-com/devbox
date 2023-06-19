@@ -174,10 +174,9 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
 // search. This is useful for comparing different attribute paths that may
-// point to the same package. Note, it may be an expensive call (~150ms).
+// point to the same package. Note, it may be an expensive call.
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
 	if i.normalizedAttributePath != "" {
-		fmt.Printf("    memoized: %s\n", i.normalizedAttributePath)
 		return i.normalizedAttributePath, nil
 	}
 	path, err := i.normalizePackageAttributePath()
@@ -185,18 +184,11 @@ func (i *Input) NormalizedPackageAttributePath() (string, error) {
 		return path, err
 	}
 	i.normalizedAttributePath = path
-	fmt.Printf("    !! searched: %s\n", i.normalizedAttributePath)
 	return i.normalizedAttributePath, nil
 }
 
-func (i *Input) Resolved() string {
-	entry, err := i.lockfile.Resolve(i.Raw)
-	if err != nil {
-		return ""
-	}
-	return entry.Resolved
-}
-
+// normalizePackageAttributePath calls nix search to find the normalized attribute
+// path. It is an expensive call (~100ms).
 func (i *Input) normalizePackageAttributePath() (string, error) {
 	var query string
 	if i.IsDevboxPackage() {

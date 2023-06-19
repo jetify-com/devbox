@@ -104,7 +104,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	}
 
 	for _, item := range list {
-		existing := InputFromString(item.unlockedReference, args.Lockfile)
+		existing := InputFromProfileItem(item, args.Lockfile)
 
 		if args.Input.Equals(existing) {
 			return item.index, nil
