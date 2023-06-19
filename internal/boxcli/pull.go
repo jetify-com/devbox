@@ -28,6 +28,7 @@ func pullCmd() *cobra.Command {
 		Use:     "pull <file> | <url>",
 		Short:   "Pull a config from a file or URL",
 		Long:    "Pull a config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
+		Args:    cobra.MaximumNArgs(1),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return pullCmdFunc(cmd, goutil.GetDefaulted(args, 0), &flags)

@@ -22,6 +22,7 @@ func pushCmd() *cobra.Command {
 		Use: "push <git-repo>",
 		Short: "Push a [global] config. Leave empty to use jetpack cloud. Can " +
 			"be a git repo for self storage.",
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return pushCmdFunc(cmd, goutil.GetDefaulted(args, 0), flags)
 		},
