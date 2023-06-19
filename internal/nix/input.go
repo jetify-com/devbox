@@ -128,6 +128,8 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 			return "", err
 		}
 		path = entry.Resolved
+	} else if i.IsDevboxPackage() {
+		path = i.lockfile.LegacyNixpkgsPath(i.String())
 	}
 
 	if path != "" {
