@@ -7,7 +7,7 @@
         "nginx@1.24"
     ],
     "env": {
-      "PGPORT": "5433"
+        "PGPORT": "5433"
     },
     "shell": {
         "scripts": {
@@ -18,10 +18,14 @@
                 "psql devbox_lepp < setup_postgres_db.sql"
             ],
             "run_test": [
-                "devbox run init_db",
+                "mkdir -p /tmp/devbox/lepp",
+                "export PGHOST=/tmp/devbox/lepp",
+                "initdb",
                 "devbox services up -b",
                 "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
-                "devbox run create_db",
+                "dropdb --if-exists devbox_lepp",
+                "createdb devbox_lepp",
+                "psql devbox_lepp < setup_postgres_db.sql",
                 "curl localhost:8089",
                 "devbox services stop"
             ]

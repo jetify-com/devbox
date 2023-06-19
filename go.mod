@@ -7,7 +7,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/MicahParks/keyfunc/v2 v2.1.0
-	github.com/a8m/envsubst v1.4.2
 	github.com/alessio/shellescape v1.4.1
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.25
@@ -39,6 +38,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
+	github.com/zealic/go2node v0.1.0
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/mod v0.9.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -46,6 +46,9 @@ require (
 )
 
 require (
+	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
+	github.com/InVisionApp/go-logger v1.0.1 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.33 // indirect
@@ -59,14 +62,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.10 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/lib/pq v1.10.7 // indirect
-)
-
-require (
-	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
-	github.com/InVisionApp/go-logger v1.0.1 // indirect
-	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
@@ -75,9 +70,11 @@ require (
 	github.com/f1bonacc1/process-compose v0.43.1
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect

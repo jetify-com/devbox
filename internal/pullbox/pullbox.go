@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime/trace"
 
 	"github.com/pkg/errors"
 
@@ -39,6 +40,7 @@ func New(devbox devboxProject, url string, overwrite bool) *pullbox {
 // puller := getPullerForURL(url)
 // return puller.Pull()
 func (p *pullbox) Pull(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "Pull").End()
 	var err error
 
 	notEmpty, err := profileIsNotEmpty(p.ProjectDir())
@@ -110,5 +112,5 @@ func (p *pullbox) Push(ctx context.Context) error {
 		)
 		return s3.Push(ctx, user, p.ProjectDir(), profile)
 	}
-	return git.Push(p.ProjectDir(), p.url)
+	return git.Push(ctx, p.ProjectDir(), p.url)
 }

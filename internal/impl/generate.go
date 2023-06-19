@@ -5,12 +5,14 @@ package impl
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"io"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/trace"
 	"strings"
 	"text/template"
 
@@ -26,9 +28,10 @@ var tmplFS embed.FS
 
 var shellFiles = []string{"shell.nix"}
 
-func (d *Devbox) generateShellFiles() error {
+func (d *Devbox) generateShellFiles(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "generateShellFiles").End()
 
-	plan, err := d.ShellPlan()
+	plan, err := d.ShellPlan(ctx)
 	if err != nil {
 		return err
 	}

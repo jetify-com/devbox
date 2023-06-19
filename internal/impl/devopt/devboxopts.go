@@ -1,6 +1,8 @@
 package devopt
 
-import "io"
+import (
+	"io"
+)
 
 type Opts struct {
 	Dir            string

@@ -47,7 +47,7 @@ func runPlanCmd(cmd *cobra.Command, flags planCmdFlags) error {
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
 
-	shellPlan, err := box.ShellPlan()
+	shellPlan, err := box.ShellPlan(cmd.Context())
 	if err != nil {
 		return err
 	}

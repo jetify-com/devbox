@@ -144,10 +144,13 @@ func (d *Devbox) NixPkgsCommitHash() string {
 	return d.cfg.NixPkgsCommitHash()
 }
 
-func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
+func (d *Devbox) ShellPlan(ctx context.Context) (*plansdk.FlakePlan, error) {
+	ctx, task := trace.NewTask(ctx, "devboxShellPlan")
+	defer task.End()
+
 	// Create plugin directories first because inputs might depend on them
 	for _, pkg := range d.packagesAsInputs() {
-		if err := d.pluginManager.Create(d.writer, pkg); err != nil {
+		if err := d.pluginManager.Create(pkg); err != nil {
 			return nil, err
 		}
 	}
@@ -159,14 +162,14 @@ func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 		if err := d.lockfile.Add(included); err != nil {
 			return nil, err
 		}
-		if err := d.pluginManager.Include(d.writer, included); err != nil {
+		if err := d.pluginManager.Include(included); err != nil {
 			return nil, err
 		}
 	}
 
 	shellPlan := &plansdk.FlakePlan{}
 	var err error
-	shellPlan.FlakeInputs, err = d.flakeInputs()
+	shellPlan.FlakeInputs, err = d.flakeInputs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -187,8 +190,11 @@ func (d *Devbox) ShellPlan() (*plansdk.FlakePlan, error) {
 	return shellPlan, nil
 }
 
-func (d *Devbox) Generate() error {
-	return errors.WithStack(d.generateShellFiles())
+func (d *Devbox) Generate(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerate")
+	defer task.End()
+
+	return errors.WithStack(d.generateShellFiles(ctx))
 }
 
 func (d *Devbox) Shell(ctx context.Context) error {
@@ -263,6 +269,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
+	// wrap the arg in double-quotes, and escape any double-quotes inside it
+	for idx, arg := range cmdArgs {
+		cmdArgs[idx] = strconv.Quote(arg)
+	}
+
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
@@ -288,16 +299,20 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
-	if _, err := d.PrintEnv(ctx, false /* run init hooks */); err != nil {
+	ctx, task := trace.NewTask(ctx, "devboxInstall")
+	defer task.End()
+
+	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
 func (d *Devbox) ListScripts() []string {
-	keys := make([]string, len(d.cfg.Scripts()))
+	scripts := d.cfg.Scripts()
+	keys := make([]string, len(scripts))
 	i := 0
-	for k := range d.cfg.Scripts() {
+	for k := range scripts {
 		keys[i] = k
 		i++
 	}
@@ -327,6 +342,22 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	return envStr, nil
 }
 
+func (d *Devbox) PrintEnvVars(ctx context.Context) ([]string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxPrintEnvVars")
+	defer task.End()
+	// this only returns env variables for the shell environment excluding hooks
+	// and excluding "export " prefix in "export key=value" format
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+		return nil, err
+	}
+
+	envs, err := d.nixEnv(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return keyEqualsValue(envs), nil
+}
+
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
@@ -341,7 +372,10 @@ func (d *Devbox) ShellEnvHashKey() string {
 	return "__DEVBOX_SHELLENV_HASH_" + d.projectDirHash()
 }
 
-func (d *Devbox) Info(pkg string, markdown bool) error {
+func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxInfo")
+	defer task.End()
+
 	info := nix.PkgInfo(pkg, d.lockfile)
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
@@ -356,6 +390,7 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 		return errors.WithStack(err)
 	}
 	return plugin.PrintReadme(
+		ctx,
 		nix.InputFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
@@ -365,7 +400,10 @@ func (d *Devbox) Info(pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(force bool) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
+	defer task.End()
+
 	// construct path to devcontainer directory
 	devContainerPath := filepath.Join(d.projectDir, ".devcontainer/")
 	devContainerJSONPath := filepath.Join(devContainerPath, "devcontainer.json")
@@ -387,13 +425,13 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = generate.CreateDockerfile(tmplFS, devContainerPath, true /* isDevcontainer */)
+	err = generate.CreateDockerfile(ctx, tmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(devContainerPath, d.Packages())
+	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -402,7 +440,10 @@ func (d *Devbox) GenerateDevcontainer(force bool) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(force bool) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
+	defer task.End()
+
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := fileutil.Exists(dockerfilePath)
@@ -414,7 +455,7 @@ func (d *Devbox) GenerateDockerfile(force bool) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(generate.CreateDockerfile(tmplFS, d.projectDir, false /* isDevcontainer */))
+	return errors.WithStack(generate.CreateDockerfile(ctx, tmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
 func PrintEnvrcContent(w io.Writer) error {
@@ -425,8 +466,8 @@ func PrintEnvrcContent(w io.Writer) error {
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(force bool) error {
-	ctx, task := trace.NewTask(context.Background(), "devboxGenerateEnvrc")
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
+	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
 	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
@@ -450,7 +491,7 @@ func (d *Devbox) GenerateEnvrcFile(force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(tmplFS, d.projectDir)
+	err := generate.CreateEnvrc(ctx, tmplFS, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -480,7 +521,7 @@ func (d *Devbox) Services() (services.Services, error) {
 		return nil, err
 	}
 
-	userSvcs := services.FromProcessComposeYaml(d.projectDir)
+	userSvcs := services.FromUserProcessCompose(d.projectDir)
 
 	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
@@ -495,7 +536,6 @@ func (d *Devbox) Services() (services.Services, error) {
 	}
 
 	return result, nil
-
 }
 
 func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
@@ -735,22 +775,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
-	env := make(map[string]string, len(currentEnv))
-
-	for _, kv := range currentEnv {
-		key, val, found := strings.Cut(kv, "=")
-		if !found {
-			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
-		}
-		if ignoreCurrentEnvVar[key] {
-			continue
-		}
-		// Passing HOME USER and DISTPLAY for pure shell to leak through
-		// otherwise devbox binary won't work - this matches nix
-		if !d.pure || key == "HOME" || key == "USER" || key == "DISPLAY" {
-			env[key] = val
-		}
+	env, err := d.convertEnvToMap(currentEnv)
+	if err != nil {
+		return nil, err
 	}
+
 	// check if contents of .envrc is old and print warning
 	if !usePrintDevEnvCache {
 		err := d.checkOldEnvrc()
@@ -760,9 +789,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	currentEnvPath := env["PATH"]
-	if d.pure { // make nix available inside pure shell - necessary for devbox add to work
-		currentEnvPath = "/nix/var/nix/profiles/default/bin"
-	}
 	debug.Log("current environment PATH is: %s", currentEnvPath)
 	// Use the original path, if available. If not available, set it for future calls.
 	// See https://github.com/jetpack-io/devbox/issues/687
@@ -1189,4 +1215,56 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 		env[d.ShellEnvHashKey()] = hash
 	}
 	return err
+}
+
+func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error) {
+	env := make(map[string]string, len(currentEnv))
+	for _, kv := range currentEnv {
+		key, val, found := strings.Cut(kv, "=")
+		if !found {
+			return nil, errors.Errorf("expected \"=\" in keyval: %s", kv)
+		}
+		if ignoreCurrentEnvVar[key] {
+			continue
+		}
+		// handling special cases to for pure shell
+		// Passing HOME for pure shell to leak through otherwise devbox binary won't work
+		// We also include PATH to find the nix installation. It is cleaned for pure mode below
+		if !d.pure || key == "HOME" || key == "PATH" {
+			env[key] = val
+		}
+	}
+
+	// handling special case for PATH
+	if d.pure {
+		// Finding nix executables in path and passing it through
+		// As well as adding devbox itself to PATH
+		// Both are needed for devbox commands inside pure shell to work
+		includedInPath, err := findNixInPATH(env)
+		if err != nil {
+			return nil, err
+		}
+		includedInPath = append(includedInPath, wrapnix.DotdevboxBinPath(d))
+		env["PATH"] = JoinPathLists(includedInPath...)
+	}
+	return env, nil
+}
+
+// ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
+func ExportifySystemPathWithoutWrappers() string {
+
+	path := []string{}
+	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
+		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
+		// we filter out bin-wrappers for devbox-global and devbox-project.
+		if !strings.Contains(p, plugin.WrapperBinPath) {
+			path = append(path, p)
+		}
+	}
+
+	envs := map[string]string{
+		"PATH": strings.Join(path, string(filepath.ListSeparator)),
+	}
+
+	return exportify(envs)
 }

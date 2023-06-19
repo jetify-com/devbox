@@ -12,11 +12,10 @@ import (
 )
 
 type shellEnvCmdFlags struct {
-	config               configFlags
-	runInitHook          bool
-	install              bool
-	useCachedPrintDevEnv bool
-	pure                 bool
+	config      configFlags
+	runInitHook bool
+	install     bool
+	pure        bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -45,16 +44,10 @@ func shellEnvCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
-	// This is no longer used. Remove after 0.4.8 is released.
-	command.Flags().BoolVar(
-		&flags.useCachedPrintDevEnv,
-		"use-cached-print-dev-env",
-		false,
-		"[internal - not meant for general usage] Use the cached nix print-dev-env environment instead of the current environment",
-	)
-	// This is used by bin wrappers and not meant for end users.
-	command.Flag("use-cached-print-dev-env").Hidden = true
 	flags.config.register(command)
+
+	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
+
 	return command
 }
 
@@ -80,4 +73,24 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 	}
 
 	return envStr, nil
+}
+
+func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
+	command := &cobra.Command{
+		Use:     "only-path-without-wrappers",
+		Hidden:  true,
+		Short:   "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: ensureNixInstalled,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s := shellEnvOnlyPathWithoutWrappersFunc()
+			fmt.Fprintln(cmd.OutOrStdout(), s)
+			return nil
+		},
+	}
+	return command
+}
+
+func shellEnvOnlyPathWithoutWrappersFunc() string {
+	return devbox.ExportifySystemPathWithoutWrappers()
 }

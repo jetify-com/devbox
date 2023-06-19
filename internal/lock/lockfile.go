@@ -11,8 +11,10 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/devpkg"
 )
 
 const lockFileVersion = "1"
@@ -73,7 +75,7 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
-		if IsVersionedPackage(pkg) {
+		if _, _, versioned := devpkg.ParseVersionedPackage(pkg); versioned {
 			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
 				return nil, err
@@ -122,15 +124,11 @@ func (l *File) LegacyNixpkgsPath(pkg string) string {
 	)
 }
 
-func IsVersionedPackage(pkg string) bool {
-	name, version, found := strings.Cut(pkg, "@")
-	return found && name != "" && version != ""
-}
-
 // This probably belongs in input.go but can't add it there because it will
 // create a circular dependency. We could move Input into own package.
 func IsLegacyPackage(pkg string) bool {
-	return !IsVersionedPackage(pkg) &&
+	_, _, versioned := devpkg.ParseVersionedPackage(pkg)
+	return !versioned &&
 		!strings.Contains(pkg, ":") &&
 		// We don't support absolute paths without "path:" prefix, but adding here
 		// just in case we ever do.

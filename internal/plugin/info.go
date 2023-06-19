@@ -4,20 +4,25 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"runtime/trace"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func PrintReadme(
+func PrintReadme(ctx context.Context,
 	pkg *nix.Input,
 	projectDir string,
 	w io.Writer,
 	markdown bool,
 ) error {
+	defer trace.StartRegion(ctx, "PrintReadme").End()
+
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
 		return err
@@ -63,15 +68,19 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 }
 
 func printServices(cfg *config, w io.Writer, markdown bool) error {
-	if len(cfg.Services) == 0 {
+	svcs, err := cfg.Services()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if len(svcs) == 0 {
 		return nil
 	}
 	services := ""
-	for _, service := range cfg.Services {
+	for _, service := range svcs {
 		services += fmt.Sprintf("* %[1]s\n", service.Name)
 	}
 
-	_, err := fmt.Fprintf(
+	_, err = fmt.Fprintf(
 		w,
 		"%sServices:\n%s\nUse `devbox services start|stop [service]` to interact with services\n\n",
 		lo.Ternary(markdown, "### ", ""),

@@ -12,8 +12,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"golang.org/x/exp/slices"
+
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
 func Init(w io.Writer, template, dir string) error {

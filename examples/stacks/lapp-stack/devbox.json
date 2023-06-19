@@ -18,10 +18,14 @@
       ],
       "init_db": "initdb",
       "run_test": [
-        "devbox run init_db",
+        "mkdir -p /tmp/devbox/lapp",
+        "export PGHOST=/tmp/devbox/lapp",
+        "initdb",
         "devbox services start",
         "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
-        "devbox run create_db",
+        "dropdb --if-exists devbox_lapp",
+        "createdb devbox_lapp",
+        "psql devbox_lapp < setup_postgres_db.sql",
         "curl localhost:$HTTPD_PORT",
         "devbox services stop"
       ]

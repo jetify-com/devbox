@@ -25,15 +25,16 @@ type Devbox interface {
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
-	Generate() error
-	GenerateDevcontainer(force bool) error
-	GenerateDockerfile(force bool) error
-	GenerateEnvrcFile(force bool) error
-	Info(pkg string, markdown bool) error
+	Generate(ctx context.Context) error
+	GenerateDevcontainer(ctx context.Context, force bool) error
+	GenerateDockerfile(ctx context.Context, force bool) error
+	GenerateEnvrcFile(ctx context.Context, force bool) error
+	Info(ctx context.Context, pkg string, markdown bool) error
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
 	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
+	PrintEnvVars(ctx context.Context) ([]string, error)
 	PrintGlobalList() error
 	Pull(ctx context.Context, overwrite bool, path string) error
 	Push(ctx context.Context, url string) error
@@ -47,7 +48,7 @@ type Devbox interface {
 	Shell(ctx context.Context) error
 	// ShellPlan creates a plan of the actions that devbox will take to generate its
 	// shell environment.
-	ShellPlan() (*plansdk.FlakePlan, error)
+	ShellPlan(ctx context.Context) (*plansdk.FlakePlan, error)
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, allProjects bool, services ...string) error
@@ -72,4 +73,13 @@ func GlobalDataPath() (string, error) {
 
 func PrintEnvrcContent(w io.Writer) error {
 	return impl.PrintEnvrcContent(w)
+}
+
+// ExportifySystemPathWithoutWrappers reads $PATH, removes `virtenv/.wrappers/bin` paths,
+// and returns a string of the form `export PATH=....`
+//
+// This small utility function could have been inlined in the boxcli caller, but
+// needed the impl.exportify functionality. It does not depend on core-devbox.
+func ExportifySystemPathWithoutWrappers() string {
+	return impl.ExportifySystemPathWithoutWrappers()
 }

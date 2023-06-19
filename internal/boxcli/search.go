@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"github.com/spf13/cobra"
+
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
 )

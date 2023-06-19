@@ -13,11 +13,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/services"
 )
 
 type devboxer interface {
@@ -25,7 +23,6 @@ type devboxer interface {
 	ShellEnvHash(ctx context.Context) (string, error)
 	ShellEnvHashKey() string
 	ProjectDir() string
-	Services() (services.Services, error)
 }
 
 //go:embed wrapper.sh.tmpl
@@ -39,41 +36,14 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	services, err := devbox.Services()
-	if err != nil {
-		return err
-	}
-
 	// Remove all old wrappers
 	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
 
 	// Recreate the bin wrapper directory
-	destPath := filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
+	destPath := filepath.Join(wrapperBinPath(devbox))
 	_ = os.MkdirAll(destPath, 0755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
-	for _, service := range services {
-		if err = createWrapper(&createWrapperArgs{
-			devboxer:     devbox,
-			BashPath:     bashPath,
-			Command:      service.Start,
-			Env:          service.Env,
-			ShellEnvHash: shellEnvHash,
-			destPath:     filepath.Join(destPath, service.StartName()),
-		}); err != nil {
-			return err
-		}
-		if err = createWrapper(&createWrapperArgs{
-			devboxer:     devbox,
-			BashPath:     bashPath,
-			Command:      service.Stop,
-			Env:          service.Env,
-			ShellEnvHash: shellEnvHash,
-			destPath:     filepath.Join(destPath, service.StopName()),
-		}); err != nil {
-			return err
-		}
-	}
 
 	bins, err := devbox.NixBins(ctx)
 	if err != nil {
@@ -91,7 +61,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			return errors.WithStack(err)
 		}
 	}
-	if err = createDevboxSymlink(devbox.ProjectDir()); err != nil {
+	if err = createDevboxSymlink(devbox); err != nil {
 		return err
 	}
 
@@ -168,17 +138,30 @@ func createSymlinksForSupportDirs(projectDir string) error {
 
 // Creates a symlink for devbox in .devbox/virtenv/.wrappers/bin
 // so that devbox can be available inside a pure shell
-func createDevboxSymlink(projectDir string) error {
+func createDevboxSymlink(devbox devboxer) error {
 
 	// Get absolute path for where devbox is called
 	devboxPath, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
-	// Create a symlink between devbox in .wrappers/bin
-	err = os.Symlink(devboxPath, filepath.Join(projectDir, plugin.WrapperBinPath, "devbox"))
+	// ensure .devbox/bin directory exists
+	binPath := DotdevboxBinPath(devbox)
+	if err := os.MkdirAll(binPath, 0755); err != nil {
+		return errors.WithStack(err)
+	}
+	// Create a symlink between devbox and .devbox/bin
+	err = os.Symlink(devboxPath, filepath.Join(binPath, "devbox"))
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
 	return nil
+}
+
+func wrapperBinPath(devbox devboxer) string {
+	return filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
+}
+
+func DotdevboxBinPath(devbox devboxer) string {
+	return filepath.Join(devbox.ProjectDir(), ".devbox/bin")
 }
