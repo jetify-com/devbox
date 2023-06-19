@@ -20,6 +20,8 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
+var errExpiredOrInvalidRefreshToken = errors.New("refresh token is expired or invalid")
+
 const additionalSleepOnSlowDown = 1
 
 type codeResponse struct {
@@ -215,6 +217,12 @@ func (a *Authenticator) doRefreshToken(
 			body,
 		)
 	}
+
+	// Special case this, since it usually means refresh token is expired.
+	if tokenErrorBody.Error == "invalid_grant" {
+		return nil, errExpiredOrInvalidRefreshToken
+	}
+
 	return nil, errors.Errorf(
 		"refreshing access token returned an error (%s) with description: %s",
 		tokenErrorBody.Error,

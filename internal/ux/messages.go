@@ -29,8 +29,3 @@ func Ferror(w io.Writer, format string, a ...any) {
 	color.New(color.FgHiRed).Fprint(w, "Error: ")
 	fmt.Fprintf(w, format, a...)
 }
-
-func FInfo(w io.Writer, format string, a ...any) {
-	color.New(color.FgHiGreen).Fprint(w, "Info: ")
-	fmt.Fprintf(w, format, a...)
-}

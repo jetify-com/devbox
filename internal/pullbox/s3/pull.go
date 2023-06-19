@@ -28,7 +28,7 @@ func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, er
 	s3Client := manager.NewDownloader(s3.NewFromConfig(*config))
 	buf := manager.WriteAtBuffer{}
 
-	ux.FInfo(
+	ux.Finfo(
 		os.Stderr,
 		"Logged in as %s, pulling from jetpack cloud (profile: %s)\n",
 		user.Email(),

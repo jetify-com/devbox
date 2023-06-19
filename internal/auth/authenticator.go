@@ -83,6 +83,10 @@ func (a *Authenticator) RefreshTokens() (*tokenSet, error) {
 
 	tokens, err := a.doRefreshToken(tokens.RefreshToken)
 	if err != nil {
+		if errors.Is(err, errExpiredOrInvalidRefreshToken) {
+			return nil, usererr.New("Your refresh token is expired or invalid. " +
+				"Please log in again using `devbox auth login`")
+		}
 		return nil, err
 	}
 

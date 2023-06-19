@@ -19,10 +19,9 @@ type pushCmdFlags struct {
 func pushCmd() *cobra.Command {
 	flags := pushCmdFlags{}
 	cmd := &cobra.Command{
-		Use:     "push <git-repo>",
-		Short:   "Push a [global] config to a git repo",
-		PreRunE: ensureNixInstalled,
-		Args:    cobra.MaximumNArgs(0),
+		Use: "push <git-repo>",
+		Short: "Push a [global] config. Leave empty to use jetpack cloud. Can " +
+			"be a git repo for self storage.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return pushCmdFunc(cmd, goutil.GetDefaulted(args, 0), flags)
 		},

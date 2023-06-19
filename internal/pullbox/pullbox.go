@@ -50,6 +50,12 @@ func (p *pullbox) Pull(ctx context.Context) error {
 		return fs.ErrExist
 	}
 
+	if p.url != "" {
+		ux.Finfo(os.Stderr, "Pulling global config from %s\n", p.url)
+	} else {
+		ux.Finfo(os.Stderr, "Pulling global config\n")
+	}
+
 	var tmpDir string
 
 	if p.url == "" {
@@ -98,13 +104,19 @@ func (p *pullbox) Pull(ctx context.Context) error {
 }
 
 func (p *pullbox) Push(ctx context.Context) error {
+	if p.url != "" {
+		ux.Finfo(os.Stderr, "Pushing global config to %s\n", p.url)
+	} else {
+		ux.Finfo(os.Stderr, "Pushing global config\n")
+	}
+
 	if p.url == "" {
 		profile := "default" // TODO: make this editable
 		user, err := auth.GetUser()
 		if err != nil {
 			return err
 		}
-		ux.FInfo(
+		ux.Finfo(
 			os.Stderr,
 			"Logged in as %s, pushing to to devbox cloud (profile: %s)\n",
 			user.Email(),

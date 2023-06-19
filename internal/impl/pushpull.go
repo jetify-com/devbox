@@ -5,7 +5,6 @@ package impl
 
 import (
 	"context"
-	"fmt"
 	"runtime/trace"
 
 	"go.jetpack.io/devbox/internal/pullbox"
@@ -14,21 +13,11 @@ import (
 func (d *Devbox) Pull(ctx context.Context, force bool, path string) error {
 	ctx, task := trace.NewTask(ctx, "devboxPull")
 	defer task.End()
-
-	fmt.Fprintf(d.writer, "Pulling global config from %s\n", path)
 	return pullbox.New(d, path, force).Pull(ctx)
 }
 
 func (d *Devbox) Push(ctx context.Context, url string) error {
-	fmt.Fprintf(d.writer, "Pushing global config\n")
 	ctx, task := trace.NewTask(ctx, "devboxPush")
 	defer task.End()
-
-	if url != "" {
-		fmt.Fprintf(d.writer, "Pushing global config to %s\n", url)
-	} else {
-		fmt.Fprintf(d.writer, "Pushing global config\n")
-	}
-
 	return pullbox.New(d, url, false).Push(ctx)
 }

@@ -23,7 +23,9 @@ func GetUser() (*User, error) {
 	filesystemTokens := &tokenSet{}
 	if err := cuecfg.ParseFile(getAuthFilePath(), filesystemTokens); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, usererr.New("You must be logged in to use this command")
+			return nil, usererr.New(
+				"You must be logged in to use this command. Run `devbox auth login`",
+			)
 		}
 		return nil, err
 	}
