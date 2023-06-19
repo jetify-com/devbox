@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
@@ -40,6 +41,10 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
+		if _, _, isVersioned := devpkg.ParseVersionedPackage(pkg.Raw); !isVersioned {
+			fmt.Fprintf(d.writer, "Skipping %s because it is not a versioned package\n", pkg)
+			continue
+		}
 		existing := d.lockfile.Packages[pkg.Raw]
 		newEntry, err := searcher.Client().Resolve(pkg.Raw)
 		if err != nil {
