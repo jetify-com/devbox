@@ -216,6 +216,8 @@ func (d *Devbox) profilePath() (string, error) {
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0755))
 }
 
+// syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,
+// and no more.
 func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
 	// TODO: we can probably merge these two operations to be faster and minimize chances of
 	// the devbox.json and nix profile falling out of sync.
