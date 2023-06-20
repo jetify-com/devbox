@@ -1,0 +1,18 @@
+exec devbox run hello
+stdout 'Hello, world!'
+
+# Simulate deleting the packages manually.
+cp empty.json devbox.json
+
+! exec devbox run hello
+! stdout 'Hello, world!'
+
+-- devbox.json --
+{
+  "packages": ["hello"]
+}
+
+-- empty.json --
+{
+  "packages": []
+}

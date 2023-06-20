@@ -25,15 +25,12 @@ import (
 
 const DefaultPriority = 5
 
-// ProfileListItems returns a list of the installed packages
+// ProfileListItems returns a list of the installed packages.
 func ProfileListItems(
 	writer io.Writer,
 	profileDir string,
 ) (map[string]*NixProfileListItem, error) {
-	cmd := exec.Command(
-		"nix", "profile", "list",
-		"--profile", profileDir,
-	)
+	cmd := exec.Command("nix", "profile", "list", "--profile", profileDir)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 
 	// We set stderr to a different output than stdout
@@ -107,9 +104,9 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	}
 
 	for _, item := range list {
-		existing := InputFromString(item.unlockedReference, args.Lockfile)
+		existing := InputFromProfileItem(item, args.Lockfile)
 
-		if args.Input.equals(existing) {
+		if args.Input.Equals(existing) {
 			return item.index, nil
 		}
 	}
@@ -261,6 +258,32 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 
 	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
+	return nil
+}
+
+// ProfileRemoveItems removes the items from the profile, in a single call, using their indexes.
+// It is up to the caller to ensure that the underlying profile has not changed since the items
+// were queried.
+func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
+	if items == nil {
+		return nil
+	}
+
+	indexes := []string{}
+	for _, item := range items {
+		indexes = append(indexes, strconv.Itoa(item.index))
+	}
+	cmd := exec.Command("nix", append([]string{"profile", "remove",
+		"--profile", profilePath,
+		"--impure"}, // for NIXPKGS_ALLOW_UNFREE
+		indexes...)...,
+	)
+	cmd.Env = allowUnfreeEnv()
+	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
+	}
 	return nil
 }
 

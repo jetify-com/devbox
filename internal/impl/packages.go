@@ -72,10 +72,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	}
 
 	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
-		return usererr.WithUserMessage(
-			err,
-			"There was an error installing nix packages",
-		)
+		return usererr.WithUserMessage(err, "There was an error installing nix packages")
 	}
 
 	if err := d.saveCfg(); err != nil {
@@ -186,7 +183,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
-	if err := d.addPackagesToProfile(ctx, mode); err != nil {
+	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
 		return err
 	}
 
@@ -217,6 +214,18 @@ func (d *Devbox) profilePath() (string, error) {
 	}
 
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0755))
+}
+
+// syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,
+// and no more.
+func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
+	// TODO: we can probably merge these two operations to be faster and minimize chances of
+	// the devbox.json and nix profile falling out of sync.
+	if err := d.addPackagesToProfile(ctx, mode); err != nil {
+		return err
+	}
+
+	return d.tidyProfile(ctx)
 }
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
@@ -320,6 +329,24 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 	return nil
 }
 
+// tidyProfile removes any packages in the nix profile that are not in devbox.json.
+func (d *Devbox) tidyProfile(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "tidyProfile").End()
+
+	extras, err := d.extraPackagesInProfile(ctx)
+	if err != nil {
+		return err
+	}
+
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+
+	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
+	return nix.ProfileRemoveItems(profileDir, extras)
+}
+
 // pendingPackagesForInstallation returns a list of packages that are in
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
@@ -353,6 +380,49 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 		}
 	}
 	return pending, nil
+}
+
+// extraPkgsInProfile returns a list of packages that are in the nix profile,
+// but are NOT in devbox.json or global devbox.json.
+//
+// NOTE: as an optimization, this implementation assumes that all packages in
+// devbox.json have already been added to the nix profile.
+func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileListItem, error) {
+	defer trace.StartRegion(ctx, "extraPackagesInProfile").End()
+
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	profileItems, err := nix.ProfileListItems(d.writer, profileDir)
+	if err != nil {
+		return nil, err
+	}
+	devboxInputs := d.packagesAsInputs()
+
+	if len(devboxInputs) == len(profileItems) {
+		// Optimization: skip comparison if number of packages are the same. This only works
+		// because we assume that all packages in `devbox.json` have just been added to the
+		// profile.
+		return nil, nil
+	}
+
+	extras := []*nix.NixProfileListItem{}
+	// Note: because nix.Input uses memoization when normalizing attribute paths (slow operation),
+	// and since we're reusing the Input objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
+outer:
+	for _, item := range profileItems {
+		profileInput := nix.InputFromProfileItem(item, d.lockfile)
+		for _, devboxInput := range devboxInputs {
+			if profileInput.Equals(devboxInput) {
+				continue outer
+			}
+		}
+		extras = append(extras, item)
+	}
+
+	return extras, nil
 }
 
 var resetCheckDone = false

@@ -24,6 +24,8 @@ type Input struct {
 	url.URL
 	lockfile lock.Locker
 	Raw      string
+
+	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
 func InputsFromStrings(names []string, l lock.Locker) []*Input {
@@ -45,7 +47,11 @@ func InputFromString(raw string, locker lock.Locker) *Input {
 		}
 		u, _ = url.Parse(normalizedURL)
 	}
-	return &Input{*u, locker, raw}
+	return &Input{*u, locker, raw, ""}
+}
+
+func InputFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Input {
+	return InputFromString(item.unlockedReference, locker)
 }
 
 func (i *Input) IsLocal() bool {
@@ -170,17 +176,33 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
 // search. This is useful for comparing different attribute paths that may
-// point to the same package. Note, it's an expensive call.
+// point to the same package. Note, it may be an expensive call.
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
+	if i.normalizedPackageAttributePathCache != "" {
+		return i.normalizedPackageAttributePathCache, nil
+	}
+	path, err := i.normalizePackageAttributePath()
+	if err != nil {
+		return path, err
+	}
+	i.normalizedPackageAttributePathCache = path
+	return i.normalizedPackageAttributePathCache, nil
+}
+
+// normalizePackageAttributePath calls nix search to find the normalized attribute
+// path. It is an expensive call (~100ms).
+func (i *Input) normalizePackageAttributePath() (string, error) {
 	var query string
-	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.Raw)
-		if err != nil {
-			return "", err
+	if i.IsDevboxPackage() {
+		if i.isVersioned() {
+			entry, err := i.lockfile.Resolve(i.Raw)
+			if err != nil {
+				return "", err
+			}
+			query = entry.Resolved
+		} else {
+			query = i.lockfile.LegacyNixpkgsPath(i.String())
 		}
-		query = entry.Resolved
-	} else if i.IsDevboxPackage() {
-		query = i.lockfile.LegacyNixpkgsPath(i.String())
 	} else {
 		query = i.String()
 	}
@@ -262,7 +284,7 @@ func (i *Input) ValidateExists() (bool, error) {
 	return info != "", err
 }
 
-func (i *Input) equals(other *Input) bool {
+func (i *Input) Equals(other *Input) bool {
 	if i.String() == other.String() {
 		return true
 	}
