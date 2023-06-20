@@ -33,6 +33,7 @@ var templates = map[string]string{
 	"jekyll":          "examples/stacks/jekyll/",
 	"jupyter":         "examples/data_science/jupyter/",
 	"lapp-stack":      "examples/stacks/lapp-stack/",
+	"laravel":         "examples/stacks/laravel/",
 	"lepp-stack":      "examples/stacks/lepp-stack/",
 	"llama":           "examples/data_science/llama/",
 	"maelstrom":       "examples/cloud_development/maelstrom/",
