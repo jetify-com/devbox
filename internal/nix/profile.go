@@ -273,10 +273,10 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 	for _, item := range items {
 		indexes = append(indexes, strconv.Itoa(item.index))
 	}
-	cmd := exec.Command("nix", "profile", "remove",
+	cmd := exec.Command("nix", append([]string{"profile", "remove",
 		"--profile", profilePath,
-		"--impure", // for NIXPKGS_ALLOW_UNFREE
-		strings.Join(indexes, " "),
+		"--impure"}, // for NIXPKGS_ALLOW_UNFREE
+		indexes...)...,
 	)
 	cmd.Env = allowUnfreeEnv()
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)

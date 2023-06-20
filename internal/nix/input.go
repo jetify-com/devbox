@@ -25,7 +25,7 @@ type Input struct {
 	lockfile lock.Locker
 	Raw      string
 
-	normalizedAttributePath string // memoized value from normalizedPackageAttributePath()
+	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
 func InputsFromStrings(names []string, l lock.Locker) []*Input {
@@ -178,15 +178,15 @@ func (i *Input) FullPackageAttributePath() (string, error) {
 // search. This is useful for comparing different attribute paths that may
 // point to the same package. Note, it may be an expensive call.
 func (i *Input) NormalizedPackageAttributePath() (string, error) {
-	if i.normalizedAttributePath != "" {
-		return i.normalizedAttributePath, nil
+	if i.normalizedPackageAttributePathCache != "" {
+		return i.normalizedPackageAttributePathCache, nil
 	}
 	path, err := i.normalizePackageAttributePath()
 	if err != nil {
 		return path, err
 	}
-	i.normalizedAttributePath = path
-	return i.normalizedAttributePath, nil
+	i.normalizedPackageAttributePathCache = path
+	return i.normalizedPackageAttributePathCache, nil
 }
 
 // normalizePackageAttributePath calls nix search to find the normalized attribute
