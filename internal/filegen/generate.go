@@ -19,7 +19,6 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 //go:embed tmpl/*
@@ -33,7 +32,7 @@ var shellFiles = []string{"shell.nix"}
 func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 	defer trace.StartRegion(ctx, "generateShellFiles").End()
 
-	plan, err := devbox.FlakePlan(ctx)
+	plan, err := newFlakePlan(ctx, devbox)
 	if err != nil {
 		return err
 	}
@@ -149,7 +148,7 @@ var templateFuncs = template.FuncMap{
 	"debug":    debug.IsEnabled,
 }
 
-func makeFlakeFile(outPath string, plan *plansdk.FlakePlan) error {
+func makeFlakeFile(outPath string, plan *FlakePlan) error {
 	flakeDir := filepath.Join(outPath, "flake")
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {

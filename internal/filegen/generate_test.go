@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // update overwrites golden files with the new test results.
@@ -38,7 +37,7 @@ func TestWriteFromTemplate(t *testing.T) {
 			NixpkgsInfo struct {
 				URL string
 			}
-			FlakeInputs []plansdk.FlakeInput
+			FlakeInputs []flakeInput
 		}{}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
 		if err != nil {
@@ -82,14 +81,14 @@ var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
 	}
-	FlakeInputs []plansdk.FlakeInput
+	FlakeInputs []flakeInput
 }{
 	NixpkgsInfo: struct {
 		URL string
 	}{
 		URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
 	},
-	FlakeInputs: []plansdk.FlakeInput{
+	FlakeInputs: []flakeInput{
 		{
 			Name: "nixpkgs",
 			URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
