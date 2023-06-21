@@ -16,14 +16,12 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
-	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/filegen"
 	"golang.org/x/exp/slices"
 
-	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
@@ -421,14 +419,14 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = generate.CreateDockerfile(ctx,
-		filegen.TmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = filegen.CreateDockerfile(ctx,
+		devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = filegen.CreateDevcontainer(ctx, devContainerPath, d.Packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -452,15 +450,13 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(generate.CreateDockerfile(ctx,
-		filegen.TmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(
+		filegen.CreateDockerfile(ctx,
+			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
 func PrintEnvrcContent(w io.Writer) error {
-	tmplName := "envrcContent.tmpl"
-	t := template.Must(template.ParseFS(filegen.TmplFS, "tmpl/"+tmplName))
-	// write content into file
-	return t.Execute(w, nil)
+	return filegen.EnvrcContent(w)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
@@ -489,7 +485,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(ctx, filegen.TmplFS, d.projectDir)
+	err := filegen.CreateEnvrc(ctx, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}

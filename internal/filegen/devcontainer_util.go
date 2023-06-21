@@ -1,16 +1,13 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package generate
-
-// TODO move this to package filegen at impl/filegen
-// no need to be in `boxcli`.
+package filegen
 
 import (
 	"context"
-	"embed"
 	"encoding/json"
 	"html/template"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -47,7 +44,7 @@ type dockerfileData struct {
 }
 
 // CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
-func CreateDockerfile(ctx context.Context, tmplFS embed.FS, path string, localFlakeDirs []string, isDevcontainer bool) error {
+func CreateDockerfile(ctx context.Context, path string, localFlakeDirs []string, isDevcontainer bool) error {
 	defer trace.StartRegion(ctx, "createDockerfile").End()
 
 	// create dockerfile
@@ -87,7 +84,7 @@ func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, tmplFS embed.FS, path string) error {
+func CreateEnvrc(ctx context.Context, path string) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
@@ -151,4 +148,10 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		// TODO: add support for other common languages
 	}
 	return devcontainerContent
+}
+
+func EnvrcContent(w io.Writer) error {
+	tmplName := "envrcContent.tmpl"
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	return t.Execute(w, nil)
 }
