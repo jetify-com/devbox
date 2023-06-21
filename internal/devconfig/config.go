@@ -11,11 +11,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 const DefaultName = "devbox.json"
@@ -86,8 +84,11 @@ func (c *Config) Equals(other *Config) bool {
 }
 
 func (c *Config) NixPkgsCommitHash() string {
+	// The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
+	const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+
 	if c == nil || c.Nixpkgs == nil || c.Nixpkgs.Commit == "" {
-		return plansdk.DefaultNixpkgsCommit
+		return DefaultNixpkgsCommit
 	}
 	return c.Nixpkgs.Commit
 }
