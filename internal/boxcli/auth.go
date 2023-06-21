@@ -79,7 +79,7 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			user, err := auth.User()
+			user, err := auth.GetUser()
 			if err != nil {
 				return err
 			}

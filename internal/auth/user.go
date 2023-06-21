@@ -14,16 +14,18 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-type user struct {
+type User struct {
 	filesystemTokens *tokenSet
-	idToken          *jwt.Token
+	IDToken          *jwt.Token
 }
 
-func User() (*user, error) {
+func GetUser() (*User, error) {
 	filesystemTokens := &tokenSet{}
 	if err := cuecfg.ParseFile(getAuthFilePath(), filesystemTokens); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, usererr.New("You must be logged in to use this command")
+			return nil, usererr.New(
+				"You must be logged in to use this command. Run `devbox auth login`",
+			)
 		}
 		return nil, err
 	}
@@ -45,18 +47,25 @@ func User() (*user, error) {
 		}
 	}
 
-	return &user{filesystemTokens: filesystemTokens, idToken: IDToken}, nil
+	return &User{filesystemTokens: filesystemTokens, IDToken: IDToken}, nil
 }
 
-func (u *user) String() string {
+func (u *User) String() string {
 	return u.Email()
 }
 
-func (u *user) Email() string {
-	if u == nil || u.idToken == nil {
+func (u *User) Email() string {
+	if u == nil || u.IDToken == nil {
 		return ""
 	}
-	return u.idToken.Claims.(jwt.MapClaims)["email"].(string)
+	return u.IDToken.Claims.(jwt.MapClaims)["email"].(string)
+}
+
+func (u *User) ID() string {
+	if u == nil || u.IDToken == nil {
+		return ""
+	}
+	return u.IDToken.Claims.(jwt.MapClaims)["sub"].(string)
 }
 
 func parseToken(stringToken string) (*jwt.Token, error) {

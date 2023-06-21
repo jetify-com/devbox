@@ -1,0 +1,67 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package s3
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/auth"
+	"go.jetpack.io/devbox/internal/pullbox/tar"
+	"go.jetpack.io/devbox/internal/ux"
+)
+
+func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, error) {
+	config, err := assumeRole(ctx, user)
+
+	if err != nil {
+		return "", err
+	}
+
+	// TODO(landau), before pulling, ensure that the profile exists in the cloud
+	s3Client := manager.NewDownloader(s3.NewFromConfig(*config))
+	buf := manager.WriteAtBuffer{}
+
+	ux.Finfo(
+		os.Stderr,
+		"Logged in as %s, pulling from jetpack cloud (profile: %s)\n",
+		user.Email(),
+		profile,
+	)
+
+	if _, err = s3Client.Download(
+		ctx,
+		&buf,
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key: aws.String(
+				fmt.Sprintf(
+					"profiles/%s/%s.tar.gz",
+					user.ID(),
+					profile,
+				),
+			),
+		},
+	); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	dir, err := tar.Extract(buf.Bytes())
+	if err != nil {
+		return "", err
+	}
+
+	ux.Fsuccess(
+		os.Stderr,
+		"Profile successfully pulled (profile: %s)\n",
+		profile,
+	)
+
+	return dir, nil
+}

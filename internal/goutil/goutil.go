@@ -10,3 +10,11 @@ func PickByKeysSorted[K comparable, V any](in map[K]V, keys []K) []V {
 	}
 	return out
 }
+
+func GetDefaulted[T any](in []T, index int) T {
+	var t T
+	if index >= len(in) {
+		return t
+	}
+	return in[index]
+}

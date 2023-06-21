@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
@@ -18,12 +19,12 @@ type pushCmdFlags struct {
 func pushCmd() *cobra.Command {
 	flags := pushCmdFlags{}
 	cmd := &cobra.Command{
-		Use:     "push <git-repo>",
-		Short:   "Push a [global] config to a git repo",
-		PreRunE: ensureNixInstalled,
-		Args:    cobra.ExactArgs(1),
+		Use: "push <git-repo>",
+		Short: "Push a [global] config. Leave empty to use jetpack cloud. Can " +
+			"be a git repo for self storage.",
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pushCmdFunc(cmd, args[0], flags)
+			return pushCmdFunc(cmd, goutil.GetDefaulted(args, 0), flags)
 		},
 	}
 
