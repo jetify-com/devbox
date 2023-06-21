@@ -3,18 +3,16 @@ package filegen
 import (
 	"context"
 	"runtime/trace"
-
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-// FlakePlan contains the data to populate the top level flake.nix file
+// flakePlan contains the data to populate the top level flake.nix file
 // that builds the devbox environment
-type FlakePlan struct {
-	NixpkgsInfo *plansdk.NixpkgsInfo
+type flakePlan struct {
+	NixpkgsInfo *NixpkgsInfo
 	FlakeInputs []*flakeInput
 }
 
-func newFlakePlan(ctx context.Context, devbox devboxer) (*FlakePlan, error) {
+func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	ctx, task := trace.NewTask(ctx, "devboxFlakePlan")
 	defer task.End()
 
@@ -37,20 +35,20 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*FlakePlan, error) {
 		}
 	}
 
-	shellPlan := &FlakePlan{}
+	shellPlan := &flakePlan{}
 	var err error
 	shellPlan.FlakeInputs, err = flakeInputs(ctx, devbox)
 	if err != nil {
 		return nil, err
 	}
 
-	nixpkgsInfo := plansdk.GetNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
+	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 
 	// This is an optimization. Try to reuse the nixpkgs info from the flake
 	// inputs to avoid introducing a new one.
 	for _, input := range shellPlan.FlakeInputs {
 		if input.IsNixpkgs() {
-			nixpkgsInfo = plansdk.GetNixpkgsInfo(input.HashFromNixPkgsURL())
+			nixpkgsInfo = getNixpkgsInfo(input.HashFromNixPkgsURL())
 			break
 		}
 	}

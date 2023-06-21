@@ -8,7 +8,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 type flakeInput struct {
@@ -39,7 +38,7 @@ func (f *flakeInput) URLWithCaching() string {
 		return f.URL
 	}
 	hash := nix.HashFromNixPkgsURL(f.URL)
-	return plansdk.GetNixpkgsInfo(hash).URL
+	return getNixpkgsInfo(hash).URL
 }
 
 func (f *flakeInput) PkgImportName() string {

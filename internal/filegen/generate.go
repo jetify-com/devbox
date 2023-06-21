@@ -148,7 +148,7 @@ var templateFuncs = template.FuncMap{
 	"debug":    debug.IsEnabled,
 }
 
-func makeFlakeFile(outPath string, plan *FlakePlan) error {
+func makeFlakeFile(outPath string, plan *flakePlan) error {
 	flakeDir := filepath.Join(outPath, "flake")
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {

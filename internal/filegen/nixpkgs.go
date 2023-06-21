@@ -1,7 +1,7 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package plansdk
+package filegen
 
 import (
 	"fmt"
@@ -18,10 +18,7 @@ type NixpkgsInfo struct {
 	TarURL string
 }
 
-// The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
-const DefaultNixpkgsCommit = "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
-
-func GetNixpkgsInfo(commitHash string) *NixpkgsInfo {
+func getNixpkgsInfo(commitHash string) *NixpkgsInfo {
 	url := fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash)
 	if mirror := nixpkgsMirrorURL(commitHash); mirror != "" {
 		url = mirror
