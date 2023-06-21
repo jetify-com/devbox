@@ -13,8 +13,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
+	"go.jetpack.io/devbox/internal/pullbox/s3"
 )
 
 type pullCmdFlags struct {
@@ -69,6 +71,11 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 			return nil
 		}
 		err = box.Pull(cmd.Context(), flags.force, pullPath)
+	}
+	if errors.Is(err, s3.ErrProfileNotFound) {
+		return usererr.New(
+			"Profile not found. Use `devbox global push` to create a new profile.",
+		)
 	}
 	if err != nil {
 		return err
