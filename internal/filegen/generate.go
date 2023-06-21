@@ -22,11 +22,8 @@ import (
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
-// TmplFS docblock to satisfy silly linter.
-// TODO savil: move package generate in boxcli into this filegen package, and then make `TmplFS` internal
-//
 //go:embed tmpl/*
-var TmplFS embed.FS
+var tmplFS embed.FS
 
 var shellFiles = []string{"shell.nix"}
 
@@ -81,7 +78,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 		tmpl.Funcs(templateFuncs)
 
 		var err error
-		tmpl, err = tmpl.ParseFS(TmplFS, "tmpl/"+tmplKey)
+		tmpl, err = tmpl.ParseFS(tmplFS, "tmpl/"+tmplKey)
 		if err != nil {
 			return errors.WithStack(err)
 		}
