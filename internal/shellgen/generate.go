@@ -154,7 +154,7 @@ func makeFlakeFile(outPath string, plan *flakePlan) error {
 
 	templateName := "flake.nix"
 	if featureflag.RemoveNixpkgs.Enabled() {
-		templateName = "flake_alt.nix"
+		templateName = "flake_remove_nixpkgs_feature.nix"
 	}
 	err := writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
 	if err != nil {
