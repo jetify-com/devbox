@@ -8,7 +8,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/laravel)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=laravel)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox/?folder=examples/stacks/laravel)
 
 ## How to Run
 
