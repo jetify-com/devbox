@@ -20,9 +20,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/filegen"
 	"golang.org/x/exp/slices"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/generate"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -50,10 +50,6 @@ const (
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile = ".devbox/shell_history"
 
-	scriptsDir = ".devbox/gen/scripts"
-
-	// hooksFilename is the name of the file that contains the project's init-hooks and plugin hooks
-	hooksFilename        = ".hooks"
 	arbitraryCmdFilename = ".cmd"
 )
 
@@ -132,7 +128,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	hashes := lo.Map(d.packagesAsInputs(), func(i *nix.Input, _ int) string { return i.Hash() })
+	hashes := lo.Map(d.PackagesAsInputs(), func(i *nix.Input, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
 		return "", err
@@ -144,12 +140,12 @@ func (d *Devbox) NixPkgsCommitHash() string {
 	return d.cfg.NixPkgsCommitHash()
 }
 
-func (d *Devbox) ShellPlan(ctx context.Context) (*plansdk.FlakePlan, error) {
-	ctx, task := trace.NewTask(ctx, "devboxShellPlan")
+func (d *Devbox) FlakePlan(ctx context.Context) (*plansdk.FlakePlan, error) {
+	ctx, task := trace.NewTask(ctx, "devboxFlakePlan")
 	defer task.End()
 
 	// Create plugin directories first because inputs might depend on them
-	for _, pkg := range d.packagesAsInputs() {
+	for _, pkg := range d.PackagesAsInputs() {
 		if err := d.pluginManager.Create(pkg); err != nil {
 			return nil, err
 		}
@@ -194,7 +190,7 @@ func (d *Devbox) Generate(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerate")
 	defer task.End()
 
-	return errors.WithStack(d.generateShellFiles(ctx))
+	return errors.WithStack(filegen.GenerateForPrintEnv(ctx, d))
 }
 
 func (d *Devbox) Shell(ctx context.Context) error {
@@ -228,7 +224,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	)
 
 	opts := []ShellOption{
-		WithHooksFilePath(d.scriptPath(hooksFilename)),
+		WithHooksFilePath(filegen.ScriptPath(d.ProjectDir(), filegen.HooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
@@ -252,7 +248,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	if err := d.writeScriptsToFiles(); err != nil {
+	if err := filegen.WriteScriptsToFiles(d); err != nil {
 		return err
 	}
 
@@ -277,18 +273,18 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{d.scriptPath(cmdName)}, cmdArgs...)
+		cmdWithArgs = append([]string{filegen.ScriptPath(d.ProjectDir(), cmdName)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
-		err := d.writeScriptFile(arbitraryCmdFilename, d.scriptBody("eval $DEVBOX_RUN_CMD\n"))
+		err := filegen.WriteScriptFile(d, arbitraryCmdFilename, filegen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n"))
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{d.scriptPath(arbitraryCmdFilename)}
+		cmdWithArgs = []string{filegen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
@@ -335,7 +331,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	envStr := exportify(envs)
 
 	if includeHooks {
-		hooksStr := ". " + d.scriptPath(hooksFilename)
+		hooksStr := ". " + filegen.ScriptPath(d.ProjectDir(), filegen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
@@ -425,7 +421,8 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = generate.CreateDockerfile(ctx, tmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = generate.CreateDockerfile(ctx,
+		filegen.TmplFS, devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -455,12 +452,13 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(generate.CreateDockerfile(ctx, tmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(generate.CreateDockerfile(ctx,
+		filegen.TmplFS, d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
 func PrintEnvrcContent(w io.Writer) error {
 	tmplName := "envrcContent.tmpl"
-	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	t := template.Must(template.ParseFS(filegen.TmplFS, "tmpl/"+tmplName))
 	// write content into file
 	return t.Execute(w, nil)
 }
@@ -491,7 +489,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(ctx, tmplFS, d.projectDir)
+	err := generate.CreateEnvrc(ctx, filegen.TmplFS, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -514,7 +512,7 @@ func (d *Devbox) saveCfg() error {
 
 func (d *Devbox) Services() (services.Services, error) {
 	pluginSvcs, err := d.pluginManager.GetServices(
-		d.packagesAsInputs(),
+		d.PackagesAsInputs(),
 		d.cfg.Include,
 	)
 	if err != nil {
@@ -852,7 +850,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.packagesAsInputs(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(d.PackagesAsInputs(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -949,93 +947,6 @@ func (d *Devbox) ogPathKey() string {
 	return "DEVBOX_OG_PATH_" + d.projectDirHash()
 }
 
-// writeScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
-// Scripts (and hooks) are persisted so that we can easily call them from devbox run (inside or outside shell).
-func (d *Devbox) writeScriptsToFiles() error {
-	err := os.MkdirAll(filepath.Join(d.projectDir, scriptsDir), 0755) // Ensure directory exists.
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Read dir contents before writing, so we can clean up later.
-	entries, err := os.ReadDir(filepath.Join(d.projectDir, scriptsDir))
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Write all hooks to a file.
-	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(d.packagesAsInputs(), d.projectDir)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	hooks := strings.Join(append(pluginHooks, d.cfg.InitHook().String()), "\n\n")
-	// always write it, even if there are no hooks, because scripts will source it.
-	err = d.writeScriptFile(hooksFilename, hooks)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	written[d.scriptPath(hooksFilename)] = struct{}{}
-
-	// Write scripts to files.
-	for name, body := range d.cfg.Scripts() {
-		err = d.writeScriptFile(name, d.scriptBody(body.String()))
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		written[d.scriptPath(name)] = struct{}{}
-	}
-
-	// Delete any files that weren't written just now.
-	for _, entry := range entries {
-		if _, ok := written[entry.Name()]; !ok && !entry.IsDir() {
-			err := os.Remove(d.scriptPath(entry.Name()))
-			if err != nil {
-				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
-			}
-		}
-	}
-
-	return nil
-}
-
-func (d *Devbox) writeScriptFile(name string, body string) (err error) {
-	script, err := os.Create(d.scriptPath(name))
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer func() {
-		cerr := script.Close()
-		if err == nil {
-			err = cerr
-		}
-	}()
-	err = script.Chmod(0755)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if featureflag.ScriptExitOnError.Enabled() {
-		body = fmt.Sprintf("set -e\n\n%s", body)
-	}
-	_, err = script.WriteString(body)
-	return errors.WithStack(err)
-}
-
-func (d *Devbox) scriptPath(scriptName string) string {
-	return scriptPath(d.projectDir, scriptName)
-}
-
-// scriptPath is a helper function, refactored out for use in tests.
-// use `d.scriptPath` instead for production code.
-func scriptPath(projectDir string, scriptName string) string {
-	return filepath.Join(projectDir, scriptsDir, scriptName+".sh")
-}
-
-func (d *Devbox) scriptBody(body string) string {
-	return fmt.Sprintf(". %s\n\n%s", d.scriptPath(hooksFilename), body)
-}
-
 func (d *Devbox) nixPrintDevEnvCachePath() string {
 	return filepath.Join(d.projectDir, ".devbox/.nix-print-dev-env-cache")
 }
@@ -1049,12 +960,12 @@ func (d *Devbox) Packages() []string {
 	return d.cfg.Packages
 }
 
-func (d *Devbox) packagesAsInputs() []*nix.Input {
+func (d *Devbox) PackagesAsInputs() []*nix.Input {
 	return nix.InputsFromStrings(d.Packages(), d.lockfile)
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.packagesAsInputs() {
+	for _, pkg := range d.PackagesAsInputs() {
 		if pkg.IsLegacy() {
 			return true
 		}

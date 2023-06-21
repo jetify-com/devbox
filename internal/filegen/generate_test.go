@@ -1,9 +1,10 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package impl
+package filegen
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +13,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
+
+// update overwrites golden files with the new test results.
+var update = flag.Bool("update", false, "update the golden files with the test results")
 
 func TestWriteFromTemplate(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "makeme")

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/filegen"
 )
 
 // update overwrites golden files with the new test results.
@@ -47,7 +48,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 			test.env = pairsToMap(strings.Split(string(b), "\n"))
 		}
 
-		test.hooksFilePath = scriptPath(projectDir, hooksFilename)
+		test.hooksFilePath = filegen.ScriptPath(projectDir, filegen.HooksFilename)
 
 		test.shellrcPath = filepath.Join(path, "shellrc")
 		if _, err := os.Stat(test.shellrcPath); errors.Is(err, fs.ErrNotExist) {

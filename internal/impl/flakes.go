@@ -25,7 +25,7 @@ func (d *Devbox) flakeInputs(ctx context.Context) ([]*plansdk.FlakeInput, error)
 
 	inputs := map[string]*plansdk.FlakeInput{}
 
-	userPackages := d.packagesAsInputs()
+	userPackages := d.PackagesAsInputs()
 	pluginPackages, err := d.pluginManager.PluginPackages(userPackages)
 	if err != nil {
 		return nil, err
