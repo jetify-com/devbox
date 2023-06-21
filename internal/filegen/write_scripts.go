@@ -1,7 +1,6 @@
 package filegen
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,8 +10,8 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
@@ -23,8 +22,9 @@ const HooksFilename = ".hooks"
 
 type devboxer interface {
 	Config() *devconfig.Config
-	FlakePlan(context.Context) (*plansdk.FlakePlan, error)
+	Lockfile() *lock.File
 	PackagesAsInputs() []*nix.Input
+	PluginManager() *plugin.Manager
 	ProjectDir() string
 }
 

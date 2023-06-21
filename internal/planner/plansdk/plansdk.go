@@ -12,13 +12,6 @@ import (
 	"go.jetpack.io/devbox/internal/envir"
 )
 
-// FlakePlan contains the data to populate the top level flake.nix file
-// that builds the devbox environment
-type FlakePlan struct {
-	NixpkgsInfo *NixpkgsInfo
-	FlakeInputs []*FlakeInput
-}
-
 // Contains default nixpkgs used for mkShell
 type NixpkgsInfo struct {
 	URL    string
