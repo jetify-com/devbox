@@ -11,11 +11,11 @@ import (
 
 	"github.com/creekorful/mvnparser"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/initrec/analyzer"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // misc. nix packages
@@ -113,8 +113,8 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 	return defaultJava, nil
 }
 
-func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, error) {
-	sourceVersion, _ := plansdk.NewVersion("0")
+func parseJavaVersion(srcDir string, builderTool string) (*analyzer.Version, error) {
+	sourceVersion, _ := analyzer.NewVersion("0")
 
 	if builderTool == MavenType {
 		pomXMLPath := filepath.Join(srcDir, mavenFileName)
@@ -126,7 +126,7 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 		}
 		compilerSourceVersion, ok := parsedPom.Properties["maven.compiler.source"]
 		if ok {
-			sourceVersion, err = plansdk.NewVersion(compilerSourceVersion)
+			sourceVersion, err = analyzer.NewVersion(compilerSourceVersion)
 			if err != nil {
 				return nil, errors.WithMessage(err, "error parsing java version from pom file")
 			}
@@ -144,7 +144,7 @@ func parseJavaVersion(srcDir string, builderTool string) (*plansdk.Version, erro
 			line := fileScanner.Text()
 			if strings.Contains(line, "sourceCompatibility = ") {
 				compilerSourceVersion := strings.TrimSpace(strings.Split(line, "=")[1])
-				sourceVersion, err = plansdk.NewVersion(compilerSourceVersion)
+				sourceVersion, err = analyzer.NewVersion(compilerSourceVersion)
 				if err != nil {
 					return nil, errors.WithMessage(err, "error parsing java version from gradle file")
 				}
