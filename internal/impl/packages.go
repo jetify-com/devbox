@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/filegen"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -176,7 +177,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return nil
 	}
 
-	if err := d.generateShellFiles(ctx); err != nil {
+	if err := filegen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
 	if mode == ensure {
@@ -241,7 +242,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 	// If packages are in profile but nixpkgs has been purged, the experience
 	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
 	// prefetched for all our packages.
-	for _, input := range d.packagesAsInputs() {
+	for _, input := range d.PackagesAsInputs() {
 		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
 			return err
 		}
@@ -364,7 +365,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	if err != nil {
 		return nil, err
 	}
-	for _, input := range d.packagesAsInputs() {
+	for _, input := range d.PackagesAsInputs() {
 		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,
@@ -399,7 +400,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileL
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.packagesAsInputs()
+	devboxInputs := d.PackagesAsInputs()
 
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works

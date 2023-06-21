@@ -3,6 +3,9 @@
 
 package generate
 
+// TODO move this to package filegen at impl/filegen
+// no need to be in `boxcli`.
+
 import (
 	"context"
 	"embed"

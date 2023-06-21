@@ -1,7 +1,7 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package impl
+package filegen
 
 import (
 	"bytes"
@@ -17,26 +17,31 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
+// TmplFS docblock to satisfy silly linter.
+// TODO savil: move package generate in boxcli into this filegen package, and then make `TmplFS` internal
+//
 //go:embed tmpl/*
-var tmplFS embed.FS
+var TmplFS embed.FS
 
 var shellFiles = []string{"shell.nix"}
 
-func (d *Devbox) generateShellFiles(ctx context.Context) error {
+// GenerateForPrintEnv will create all the files necessary for processing
+// devbox.PrintEnv, which is the core function from which devbox shell/run/direnv
+// functionality is derived.
+func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 	defer trace.StartRegion(ctx, "generateShellFiles").End()
 
-	plan, err := d.ShellPlan(ctx)
+	plan, err := devbox.FlakePlan(ctx)
 	if err != nil {
 		return err
 	}
 
-	outPath := filepath.Join(d.projectDir, ".devbox/gen")
+	outPath := filepath.Join(devbox.ProjectDir(), ".devbox/gen")
 
 	for _, file := range shellFiles {
 		err := writeFromTemplate(outPath, plan, file)
@@ -46,7 +51,7 @@ func (d *Devbox) generateShellFiles(ctx context.Context) error {
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err = writeFromTemplate(filepath.Join(d.projectDir, ".devbox"), plan, ".gitignore")
+	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -56,7 +61,7 @@ func (d *Devbox) generateShellFiles(ctx context.Context) error {
 		return errors.WithStack(err)
 	}
 
-	return d.writeScriptsToFiles()
+	return WriteScriptsToFiles(devbox)
 }
 
 // Cache and buffers for generating templated files.
@@ -76,7 +81,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 		tmpl.Funcs(templateFuncs)
 
 		var err error
-		tmpl, err = tmpl.ParseFS(tmplFS, "tmpl/"+tmplKey)
+		tmpl, err = tmpl.ParseFS(TmplFS, "tmpl/"+tmplKey)
 		if err != nil {
 			return errors.WithStack(err)
 		}
