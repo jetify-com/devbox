@@ -1,10 +1,11 @@
-import { window, workspace, commands, ProgressLocation, Uri } from 'vscode';
+import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget, Progress } from 'vscode';
 import { spawn, spawnSync } from 'node:child_process';
 
 
 interface Message {
     status: string
 }
+
 export async function devboxReopen() {
     await window.withProgress({
         location: ProgressLocation.Notification,
@@ -21,16 +22,17 @@ export async function devboxReopen() {
                 if (workspace.workspaceFolders) {
                     const workingDir = workspace.workspaceFolders[0].uri;
                     const dotdevbox = Uri.joinPath(workingDir, '/.devbox');
-                    try {
-                        // check if .devbox exists
-                        await workspace.fs.stat(dotdevbox);
-                    } catch (error) {
-                        //.devbox doesn't exist
-                        // running devbox shellenv to create it
-                        spawnSync('devbox', ['shellenv'], {
-                            cwd: workingDir.path
-                        });
-                    }
+                    progress.report({ message: 'Installing devbox packages...', increment: 25 });
+                    await setupDotDevbox(workingDir, dotdevbox);
+
+                    // setup required vscode settings
+                    progress.report({ message: 'Updating configurations...', increment: 50 });
+                    updateVSCodeConf();
+                    setTimeout(() => { }, 1000);
+
+                    // Calling CLI to compute devbox env
+                    progress.report({ message: 'Calling Devbox to setup environment...', increment: 80 });
+                    // callDevboxIntegrate(workingDir, progress.report, resolve, reject);
                     // To use a custom compiled devbox when testing, change this to an absolute path.
                     const devbox = 'devbox';
                     // run devbox integrate and then close this window
@@ -49,8 +51,14 @@ export async function devboxReopen() {
                     // handle CLI finishing the env and sending  "finished"
                     child.on('message', function (msg: Message, handle) {
                         if (msg.status === "finished") {
+                            progress.report({ message: 'Finished setting up! Reloading the window...', increment: 100 });
                             resolve();
                             commands.executeCommand("workbench.action.closeWindow");
+                        }
+                        else {
+                            console.log(msg);
+                            window.showErrorMessage("Failed to setup devbox environment.");
+                            reject();
                         }
                     });
                 }
@@ -58,4 +66,28 @@ export async function devboxReopen() {
             return p;
         }
     );
+}
+
+async function setupDotDevbox(workingDir: Uri, dotdevbox: Uri) {
+    try {
+        // check if .devbox exists
+        await workspace.fs.stat(dotdevbox);
+    } catch (error) {
+        //.devbox doesn't exist
+        // running devbox shellenv to create it
+        spawnSync('devbox', ['shellenv'], {
+            cwd: workingDir.path
+        });
+    }
+}
+
+function updateVSCodeConf() {
+    const devboxCompatibleShell = {
+        "devboxCompatibleShell": {
+            "path": "/bin/zsh",
+            "args": []
+        }
+    };
+    workspace.getConfiguration().update('terminal.integrated.profiles.osx', devboxCompatibleShell, ConfigurationTarget.Workspace);
+    workspace.getConfiguration().update('terminal.integrated.defaultProfile.osx', 'devboxCompatibleShell', ConfigurationTarget.Workspace);
 }
