@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/envir"
@@ -19,25 +20,14 @@ import (
 
 const searchAPIEndpoint = "https://search.devbox.sh"
 
-func searchHost() string {
-	return envir.GetValueOrDefault(envir.DevboxSearchHost, searchAPIEndpoint)
-}
-
 type client struct {
-	endpoint string
+	host string
 }
-
-var cachedClient *client
 
 func Client() *client {
-	if cachedClient == nil {
-		endpoint, _ := url.JoinPath(searchHost(), "search")
-		// TODO: how to handle error
-		cachedClient = &client{
-			endpoint: endpoint,
-		}
+	return &client{
+		host: envir.GetValueOrDefault(envir.DevboxSearchHost, searchAPIEndpoint),
 	}
-	return cachedClient
 }
 
 func (c *client) Search(query string, options ...func() string) (*SearchResult, error) {
@@ -45,7 +35,11 @@ func (c *client) Search(query string, options ...func() string) (*SearchResult, 
 		return nil, fmt.Errorf("query should not be empty")
 	}
 
-	searchURL := c.endpoint + "?q=" + url.QueryEscape(query)
+	endpoint, err := url.JoinPath(c.host, "search")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	searchURL := endpoint + "?q=" + url.QueryEscape(query)
 
 	for _, op := range options {
 		searchURL += op()
