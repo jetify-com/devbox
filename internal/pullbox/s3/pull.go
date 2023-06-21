@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -16,6 +17,8 @@ import (
 	"go.jetpack.io/devbox/internal/pullbox/tar"
 	"go.jetpack.io/devbox/internal/ux"
 )
+
+var ErrProfileNotFound = errors.New("profile not found")
 
 func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, error) {
 	config, err := assumeRole(ctx, user)
@@ -48,7 +51,10 @@ func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, er
 				),
 			),
 		},
-	); err != nil {
+		// TODO, we can use an s3 list objects to make this more accurate
+	); err != nil && strings.Contains(err.Error(), "AccessDenied") {
+		return "", ErrProfileNotFound
+	} else if err != nil {
 		return "", errors.WithStack(err)
 	}
 
