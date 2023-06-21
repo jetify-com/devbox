@@ -2,7 +2,7 @@
 title: Using Packages from Nix Flakes
 ---
 
-Devbox supports installing packages with [Nix Flakes](https://nixos.wiki/wiki/Flakes). While Nixpkgs is a great
+Devbox supports installing packages with [Nix Flakes](https://nixos.wiki/wiki/Flakes).
 
 Devbox currently provides two ways to use Flakes to install packages in your project: 
 
