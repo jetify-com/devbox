@@ -8,8 +8,8 @@ import (
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetpack.io/devbox/internal/initrec/analyzer"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 type Recommender struct {
@@ -62,9 +62,9 @@ func (r *Recommender) nodePackage(project *nodeProject) string {
 	return defaultNodeJSPkg
 }
 
-func (r *Recommender) nodeVersion(project *nodeProject) *plansdk.Version {
+func (r *Recommender) nodeVersion(project *nodeProject) *analyzer.Version {
 	if r != nil {
-		if v, err := plansdk.NewVersion(project.Engines.Node); err == nil {
+		if v, err := analyzer.NewVersion(project.Engines.Node); err == nil {
 			return v
 		}
 	}

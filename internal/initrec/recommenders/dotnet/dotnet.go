@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/initrec/analyzer"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 type Project struct {
@@ -31,7 +31,7 @@ type Recommender struct {
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
-	a, err := plansdk.NewAnalyzer(r.SrcDir)
+	a, err := analyzer.NewAnalyzer(r.SrcDir)
 	if err != nil {
 		// We should log that an error has occurred.
 		return false
@@ -56,7 +56,7 @@ func (r *Recommender) Packages() []string {
 }
 
 func project(srcDir string) (*Project, error) {
-	a, err := plansdk.NewAnalyzer(srcDir)
+	a, err := analyzer.NewAnalyzer(srcDir)
 	if err != nil {
 		// We should log that an error has occurred.
 		return nil, err

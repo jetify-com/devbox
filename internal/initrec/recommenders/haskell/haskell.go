@@ -4,8 +4,8 @@
 package haskell
 
 import (
+	"go.jetpack.io/devbox/internal/initrec/analyzer"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 // This Project struct corresponds to the package.yaml generated during `stack new <project-name>`.
@@ -27,7 +27,7 @@ type Recommender struct {
 var _ recommenders.Recommender = (*Recommender)(nil)
 
 func (r *Recommender) IsRelevant() bool {
-	a, err := plansdk.NewAnalyzer(r.SrcDir)
+	a, err := analyzer.NewAnalyzer(r.SrcDir)
 	if err != nil {
 		// We should log that an error has occurred.
 		return false

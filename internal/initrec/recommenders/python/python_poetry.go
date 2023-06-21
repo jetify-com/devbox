@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
+	"go.jetpack.io/devbox/internal/initrec/analyzer"
 
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec/recommenders"
-	"go.jetpack.io/devbox/internal/planner/plansdk"
 )
 
 type RecommenderPoetry struct {
@@ -37,15 +37,15 @@ func (r *RecommenderPoetry) Packages() []string {
 }
 
 // TODO: This can be generalized to all python planners
-func (r *RecommenderPoetry) PythonVersion() *plansdk.Version {
-	defaultVersion, _ := plansdk.NewVersion("3.10.6")
+func (r *RecommenderPoetry) PythonVersion() *analyzer.Version {
+	defaultVersion, _ := analyzer.NewVersion("3.10.6")
 	project := r.pyProject()
 
 	if project == nil {
 		return defaultVersion
 	}
 
-	if v, err := plansdk.NewVersion(project.Tool.Poetry.Dependencies.Python); err == nil {
+	if v, err := analyzer.NewVersion(project.Tool.Poetry.Dependencies.Python); err == nil {
 		return v
 	}
 	return defaultVersion
