@@ -1,4 +1,4 @@
-package filegen
+package shellgen
 
 import (
 	"fmt"

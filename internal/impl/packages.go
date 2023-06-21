@@ -15,7 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/filegen"
+	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -177,7 +177,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return nil
 	}
 
-	if err := filegen.GenerateForPrintEnv(ctx, d); err != nil {
+	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
 	if mode == ensure {

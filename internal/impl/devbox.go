@@ -19,7 +19,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/filegen"
+	"go.jetpack.io/devbox/internal/impl/generate"
+	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -141,7 +142,7 @@ func (d *Devbox) Generate(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerate")
 	defer task.End()
 
-	return errors.WithStack(filegen.GenerateForPrintEnv(ctx, d))
+	return errors.WithStack(shellgen.GenerateForPrintEnv(ctx, d))
 }
 
 func (d *Devbox) Shell(ctx context.Context) error {
@@ -175,7 +176,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	)
 
 	opts := []ShellOption{
-		WithHooksFilePath(filegen.ScriptPath(d.ProjectDir(), filegen.HooksFilename)),
+		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
@@ -199,7 +200,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	if err := filegen.WriteScriptsToFiles(d); err != nil {
+	if err := shellgen.WriteScriptsToFiles(d); err != nil {
 		return err
 	}
 
@@ -224,18 +225,18 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{filegen.ScriptPath(d.ProjectDir(), cmdName)}, cmdArgs...)
+		cmdWithArgs = append([]string{shellgen.ScriptPath(d.ProjectDir(), cmdName)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
-		err := filegen.WriteScriptFile(d, arbitraryCmdFilename, filegen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n"))
+		err := shellgen.WriteScriptFile(d, arbitraryCmdFilename, shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n"))
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{filegen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)}
+		cmdWithArgs = []string{shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
@@ -282,7 +283,7 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	envStr := exportify(envs)
 
 	if includeHooks {
-		hooksStr := ". " + filegen.ScriptPath(d.ProjectDir(), filegen.HooksFilename)
+		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
@@ -372,14 +373,14 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate dockerfile
-	err = filegen.CreateDockerfile(ctx,
+	err = generate.CreateDockerfile(ctx,
 		devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = filegen.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -404,12 +405,12 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 
 	// generate dockerfile
 	return errors.WithStack(
-		filegen.CreateDockerfile(ctx,
+		generate.CreateDockerfile(ctx,
 			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
 func PrintEnvrcContent(w io.Writer) error {
-	return filegen.EnvrcContent(w)
+	return generate.EnvrcContent(w)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
@@ -438,7 +439,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
 	}
 
 	// .envrc file creation
-	err := filegen.CreateEnvrc(ctx, d.projectDir)
+	err := generate.CreateEnvrc(ctx, d.projectDir)
 	if err != nil {
 		return errors.WithStack(err)
 	}

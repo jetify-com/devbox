@@ -1,10 +1,13 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package filegen
+package generate
+
+// package generate has functionality to implement the `devbox generate` command
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"html/template"
 	"io"
@@ -16,6 +19,9 @@ import (
 
 	"go.jetpack.io/devbox/internal/debug"
 )
+
+//go:embed tmpl/*
+var tmplFS embed.FS
 
 type devcontainerObject struct {
 	Name           string          `json:"name"`
