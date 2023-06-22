@@ -1,0 +1,42 @@
+{
+   description = "A devbox shell";
+
+   inputs = {
+     {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */ -}}
+     nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+     {{- range .FlakeInputs }}
+     {{.Name}}.url = "{{.URLWithCaching}}";
+     {{- end }}
+   };
+
+   outputs = {
+     self,
+     nixpkgs,
+     {{- range .FlakeInputs }}
+     {{.Name}},
+     {{- end }}
+   }:
+       let
+          pkgs = nixpkgs.legacyPackages.{{ .System }};
+          {{- range $_, $pkg := .Packages }}
+          {{ $pkg.Name }}.{{ $.System }} = builtins.fetchClosure{
+             fromStore = "{{ $pkg.FromStore }}";
+             fromPath = "{{ $pkg.FromPath }}";
+          };
+          {{- end }}
+       in
+       {
+         devShells.{{ .System }}.default = pkgs.mkShell {
+           buildInputs = [
+             {{- range $_, $pkg := .Packages }}
+             {{ $pkg.Name }}.{{ $.System }}
+             {{- end }}
+             {{- range $_, $flake := .FlakeInputs }}
+             {{- range $flake.BuildInputs }}
+             {{.}}
+             {{- end }}
+             {{- end }}
+           ];
+         };
+       };
+ }

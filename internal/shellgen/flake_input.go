@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -77,11 +78,18 @@ func flakeInputs(ctx context.Context, devbox devboxer) ([]*flakeInput, error) {
 		return nil, err
 	}
 
-	order := []string{}
 	// We prioritize plugin packages so that the php plugin works. Not sure
 	// if this is behavior we want for user plugins. We may need to add an optional
 	// priority field to the config.
-	for _, input := range append(pluginInputs, userInputs...) {
+	allInputs := append(pluginInputs, userInputs...)
+	allInputs = lo.Filter(allInputs, func(item *nix.Package, _ int) bool {
+		// This is temporary, so that we can support the existing flake.nix.tmpl
+		// as well as the new flake_remove_nixpkgs.nix.tmpl.
+		return !featureflag.RemoveNixpkgs.Enabled() || item.SystemInfo() == nil
+	})
+
+	order := []string{}
+	for _, input := range allInputs {
 		AttributePath, err := input.FullPackageAttributePath()
 		if err != nil {
 			return nil, err

@@ -18,4 +18,5 @@ type Locker interface {
 	resolver
 	LegacyNixpkgsPath(string) string
 	ProjectDir() string
+	SystemInfo(pkg string) (*SystemInfo, error)
 }

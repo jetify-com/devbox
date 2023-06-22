@@ -19,14 +19,14 @@ var update = flag.Bool("update", false, "update the golden files with the test r
 func TestWriteFromTemplate(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "makeme")
 	outPath := filepath.Join(dir, "flake.nix")
-	err := writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
+	err := writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
 	if err != nil {
 		t.Fatal("got error writing flake template:", err)
 	}
 	cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 
 	t.Run("WriteUnmodified", func(t *testing.T) {
-		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix")
+		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
@@ -39,7 +39,7 @@ func TestWriteFromTemplate(t *testing.T) {
 			}
 			FlakeInputs []flakeInput
 		}{}
-		err = writeFromTemplate(dir, emptyPlan, "flake.nix")
+		err = writeFromTemplate(dir, emptyPlan, "flake.nix", "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
