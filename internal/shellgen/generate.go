@@ -17,14 +17,13 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
 //go:embed tmpl/*
 var tmplFS embed.FS
-
-var shellFiles = []string{"shell.nix"}
 
 // GenerateForPrintEnv will create all the files necessary for processing
 // devbox.PrintEnv, which is the core function from which devbox shell/run/direnv
@@ -39,15 +38,14 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 
 	outPath := genPath(devbox)
 
-	for _, file := range shellFiles {
-		err := writeFromTemplate(outPath, plan, file)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	// Preserving shell.nix to avoid breaking old-style .envrc users
+	err = writeFromTemplate(outPath, plan, "shell.nix", "shell.nix")
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore")
+	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore", ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -69,7 +67,7 @@ var (
 	tmplOldBuf = bytes.NewBuffer(make([]byte, 0, 4096))
 )
 
-func writeFromTemplate(path string, plan any, tmplName string) error {
+func writeFromTemplate(path string, plan any, tmplName string, generatedName string) error {
 	tmplKey := tmplName + ".tmpl"
 	tmpl := tmplCache[tmplKey]
 	if tmpl == nil {
@@ -93,7 +91,7 @@ func writeFromTemplate(path string, plan any, tmplName string) error {
 	// changed. Blindly overwriting the file could invalidate Nix's cache
 	// every time, slowing down evaluation considerably.
 	var (
-		outPath = filepath.Join(path, tmplName)
+		outPath = filepath.Join(path, generatedName)
 		flag    = os.O_RDWR | os.O_CREATE
 		perm    = fs.FileMode(0644)
 	)
@@ -150,7 +148,11 @@ var templateFuncs = template.FuncMap{
 
 func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
 	flakeDir := FlakePath(d)
-	err := writeFromTemplate(flakeDir, plan, "flake.nix")
+	templateName := "flake.nix"
+	if featureflag.RemoveNixpkgs.Enabled() {
+		templateName = "flake_remove_nixpkgs.nix"
+	}
+	err := writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
 	if err != nil {
 		return errors.WithStack(err)
 	}

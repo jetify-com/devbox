@@ -11,8 +11,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"strings"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -64,6 +66,9 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 			args.FlakesFilePath,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+		if featureflag.RemoveNixpkgs.Enabled() {
+			cmd.Args = append(cmd.Args, "--impure")
+		}
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
 		data, err = cmd.Output()
@@ -102,15 +107,27 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
+	options := []string{"nix-command", "flakes"}
+	if featureflag.RemoveNixpkgs.Enabled() {
+		options = append(options, "fetch-closure")
+	}
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
-		"--option", "experimental-features", "nix-command flakes",
+		"--option", "experimental-features", strings.Join(options, " "),
 	}
 }
 
 var cachedSystem string
 
 func System() (string, error) {
+	// For Savil to debug "remove nixpkgs" feature. The search api lacks x86-darwin info.
+	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
+	// and flake.nix files.
+	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
+	if override != "" {
+		return override, nil
+	}
+
 	if cachedSystem == "" {
 		cmd := exec.Command(
 			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",

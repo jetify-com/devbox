@@ -14,9 +14,9 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -42,6 +42,9 @@ type Package struct {
 	Raw string
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
+
+	// sysInfo contains system-specific information about this package in the nix store
+	sysInfo *lock.SystemInfo
 }
 
 // PackageFromStrings constructs Package from the list of package names provided.
@@ -73,7 +76,26 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		}
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
-	return &Package{*pkgURL, locker, raw, ""}
+
+	pkg := &Package{
+		URL:                                 *pkgURL,
+		lockfile:                            locker,
+		Raw:                                 raw,
+		normalizedPackageAttributePathCache: "",
+		sysInfo:                             nil,
+	}
+
+	if pkg.isVersioned() {
+		sysInfo, err := locker.SystemInfo(raw)
+		if err != nil {
+			// ignoring for coding convenience. TODO savil. handle error
+			debug.Log("ERROR: failed to get locker.SystemInfo for pkg %s. Error is %s", raw, err)
+		} else if sysInfo != nil {
+			pkg.sysInfo = sysInfo
+		}
+	}
+
+	return pkg
 }
 
 // PackageFromProfileItem constructs a package using the the unlocked reference
@@ -405,6 +427,10 @@ func (p *Package) isVersioned() bool {
 
 func (p *Package) hashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(p.URLForFlakeInput())
+}
+
+func (p *Package) SystemInfo() *lock.SystemInfo {
+	return p.sysInfo
 }
 
 // IsGithubNixpkgsURL returns true if the package is a flake of the form:
