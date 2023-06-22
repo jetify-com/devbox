@@ -16,7 +16,7 @@ import (
 )
 
 func PrintReadme(ctx context.Context,
-	pkg *nix.Input,
+	pkg *nix.Package,
 	projectDir string,
 	w io.Writer,
 	markdown bool,

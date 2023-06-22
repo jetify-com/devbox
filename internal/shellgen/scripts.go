@@ -23,7 +23,7 @@ const HooksFilename = ".hooks"
 type devboxer interface {
 	Config() *devconfig.Config
 	Lockfile() *lock.File
-	PackagesAsInputs() []*nix.Input
+	PackagesAsInputs() []*nix.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }

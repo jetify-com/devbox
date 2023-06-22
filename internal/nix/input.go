@@ -20,11 +20,10 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 )
 
-// Input represents a "package" added to the devbox.json config.
-// The word "input" is used because it will be referenced in a generated flake.nix.
+// Package represents a "package" added to the devbox.json config.
 // A unique feature of flakes is that they have well-defined "inputs" and "outputs".
-// This Input will be aggregated into a specific "flake input" (see shellgen.flakeInput).
-type Input struct {
+// This Package will be aggregated into a specific "flake input" (see shellgen.flakeInput).
+type Package struct {
 	url.URL
 	lockfile lock.Locker
 
@@ -45,95 +44,98 @@ type Input struct {
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
-// InputsFromStrings constructs Input from the list of package names provided.
+// PackageFromStrings constructs Package from the list of package names provided.
 // These names correspond to devbox packages from the devbox.json config.
-func InputsFromStrings(rawNames []string, l lock.Locker) []*Input {
-	inputs := []*Input{}
+func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
+	packages := []*Package{}
 	for _, rawName := range rawNames {
-		inputs = append(inputs, InputFromString(rawName, l))
+		packages = append(packages, PackageFromString(rawName, l))
 	}
-	return inputs
+	return packages
 }
 
-// InputsFromStrings constructs Input from the raw name provided.
+// PackageFromString constructs Package from the raw name provided.
 // The raw name corresponds to a devbox package from the devbox.json config.
-func InputFromString(raw string, locker lock.Locker) *Input {
-	// We ignore the error because... TODO @mikeland why?
-	inputURL, _ := url.Parse(raw)
+func PackageFromString(raw string, locker lock.Locker) *Package {
+	// TODO: We should handle this error
+	// TODO: URL might not be best representation since most packages are not urls
+	pkgURL, _ := url.Parse(raw)
 
 	// This handles local flakes in a relative path.
 	// `raw` will be of the form `path:./local_flake_subdir#myPackage`
 	// for which path:<empty>, opaque:./local_subdir, and scheme:path
-	if inputURL.Path == "" && inputURL.Opaque != "" && inputURL.Scheme == "path" {
+	if pkgURL.Path == "" && pkgURL.Opaque != "" && pkgURL.Scheme == "path" {
 		// This normalizes url paths to be absolute. It also ensures all
 		// path urls have a single slash (instead of possibly 3 slashes)
-		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), inputURL.Opaque)
-		if inputURL.Fragment != "" {
-			normalizedURL += "#" + inputURL.Fragment
+		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), pkgURL.Opaque)
+		if pkgURL.Fragment != "" {
+			normalizedURL += "#" + pkgURL.Fragment
 		}
-		inputURL, _ = url.Parse(normalizedURL)
+		pkgURL, _ = url.Parse(normalizedURL)
 	}
-	return &Input{*inputURL, locker, raw, ""}
+	return &Package{*pkgURL, locker, raw, ""}
 }
 
-// InputFromProfileItem sets the raw Input as the `item`'s unlockedReference i.e.
-// the flake reference and output attribute path used at install time.
-func InputFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Input {
-	return InputFromString(item.unlockedReference, locker)
+// PackageFromProfileItem constructs a package using the the unlocked reference
+// from profile list item.
+func PackageFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Package {
+	return PackageFromString(item.unlockedReference, locker)
 }
 
-// isLocal specifies whether this input is a local flake.
+// isLocal specifies whether this package is a local flake.
 // Usually, this is of the form: `path:./local_flake_subdir#myPackage`
-func (i *Input) isLocal() bool {
+func (p *Package) isLocal() bool {
 	// Technically flakes allows omitting the scheme for local absolute paths, but
 	// we don't support that (yet).
-	return i.Scheme == "path"
+	return p.Scheme == "path"
 }
 
-// isDevboxPackage specifies whether this input is a `canonicalName@version` nix
-// package defined in a devbox.json config. This is in contrast to a "nix" package
-// that can also be a flake or a legacy attribute path.
-func (i *Input) isDevboxPackage() bool {
-	return i.Scheme == ""
+// isDevboxPackage specifies whether this package is a devbox package. Devbox
+// packages have the format `canonicalName@version`and can be resolved by devbox
+// search. This also returns true for legacy packages which are just an
+// attribute path. An explicit flake reference is _not_ a devbox package.
+func (p *Package) isDevboxPackage() bool {
+	return p.Scheme == ""
 }
 
-// isGithub specifies whether this input is a remote flake hosted on a github repository.
+// isGithub specifies whether this Package is referenced by a remote flake
+// hosted on a github repository.
 // example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
-func (i *Input) isGithub() bool {
-	return i.Scheme == "github"
+func (p *Package) isGithub() bool {
+	return p.Scheme == "github"
 }
 
 var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 
-// FlakeInputName refers to the name of this Input that will be used in the
-// generated flake.nix. It is unique, and a slug is appended to avoid collisions.
-//
-// Note, that input name has nothing to do with the package name or flake name
-// that it may be referencing. That is the Input.raw field.
-func (i *Input) FlakeInputName() string {
+// FlakeInputName generates a name for the input that will be used in the
+// generated flake.nix to import this package. This name must be unique in that
+// flake so we attach a hash to (quasi) ensure uniqueness.
+// Input name will be different from raw package name
+func (p *Package) FlakeInputName() string {
 	result := ""
-	if i.isLocal() {
-		result = filepath.Base(i.Path) + "-" + i.Hash()
-	} else if i.isGithub() {
-		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
-	} else if url := i.URLForFlakeInput(); IsGithubNixpkgsURL(url) {
+	if p.isLocal() {
+		result = filepath.Base(p.Path) + "-" + p.Hash()
+	} else if p.isGithub() {
+		result = "gh-" + strings.Join(strings.Split(p.Opaque, "/"), "-")
+	} else if url := p.URLForFlakeInput(); IsGithubNixpkgsURL(url) {
 		commitHash := HashFromNixPkgsURL(url)
 		if len(commitHash) > 6 {
 			commitHash = commitHash[0:6]
 		}
 		result = "nixpkgs-" + commitHash
 	} else {
-		result = i.String() + "-" + i.Hash()
+		result = p.String() + "-" + p.Hash()
 	}
 
 	// replace all non-alphanumeric with dashes
 	return inputNameRegex.ReplaceAllString(result, "-")
 }
 
-// URLForFlakeInput is the url to be used as the input in the generated flake.nix
-func (i *Input) URLForFlakeInput() string {
-	if i.isDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.Raw)
+// URLForFlakeInput returns the input url to be used in a flake.nix file. This
+// input can be used to import the package.
+func (p *Package) URLForFlakeInput() string {
+	if p.isDevboxPackage() {
+		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			panic(err)
 			// TODO(landau): handle error
@@ -141,40 +143,41 @@ func (i *Input) URLForFlakeInput() string {
 		withoutFragment, _, _ := strings.Cut(entry.Resolved, "#")
 		return withoutFragment
 	}
-	return i.urlWithoutFragment()
+	return p.urlWithoutFragment()
 }
 
 // URLForInstall is used during `nix profile install`.
-// The key difference with URLForFlakeInput is that it has a suffix of `#attributePath`
-func (i *Input) URLForInstall() (string, error) {
-	if i.isDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.Raw)
+// The key difference with URLForFlakeInput is that it has a suffix of
+// `#attributePath`
+func (p *Package) URLForInstall() (string, error) {
+	if p.isDevboxPackage() {
+		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			return "", err
 		}
 		return entry.Resolved, nil
 	}
-	attrPath, err := i.FullPackageAttributePath()
+	attrPath, err := p.FullPackageAttributePath()
 	if err != nil {
 		return "", err
 	}
-	return i.urlWithoutFragment() + "#" + attrPath, nil
+	return p.urlWithoutFragment() + "#" + attrPath, nil
 }
 
-func (i *Input) normalizedDevboxPackageReference() (string, error) {
-	if !i.isDevboxPackage() {
+func (p *Package) normalizedDevboxPackageReference() (string, error) {
+	if !p.isDevboxPackage() {
 		return "", nil
 	}
 
 	path := ""
-	if i.isVersioned() {
-		entry, err := i.lockfile.Resolve(i.Raw)
+	if p.isVersioned() {
+		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			return "", err
 		}
 		path = entry.Resolved
-	} else if i.isDevboxPackage() {
-		path = i.lockfile.LegacyNixpkgsPath(i.String())
+	} else if p.isDevboxPackage() {
+		path = p.lockfile.LegacyNixpkgsPath(p.String())
 	}
 
 	if path != "" {
@@ -191,65 +194,65 @@ func (i *Input) normalizedDevboxPackageReference() (string, error) {
 
 // PackageAttributePath returns the short attribute path for a package which
 // does not include packages/legacyPackages or the system name.
-func (i *Input) PackageAttributePath() (string, error) {
-	if i.isDevboxPackage() {
-		entry, err := i.lockfile.Resolve(i.Raw)
+func (p *Package) PackageAttributePath() (string, error) {
+	if p.isDevboxPackage() {
+		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			return "", err
 		}
 		_, fragment, _ := strings.Cut(entry.Resolved, "#")
 		return fragment, nil
 	}
-	return i.Fragment, nil
+	return p.Fragment, nil
 }
 
 // FullPackageAttributePath returns the attribute path for a package. It is not
 // always normalized which means it should not be used to compare packages.
 // During happy paths (devbox packages and nix flakes that contains a fragment)
 // it is much faster than NormalizedPackageAttributePath
-func (i *Input) FullPackageAttributePath() (string, error) {
-	if i.isDevboxPackage() {
-		reference, err := i.normalizedDevboxPackageReference()
+func (p *Package) FullPackageAttributePath() (string, error) {
+	if p.isDevboxPackage() {
+		reference, err := p.normalizedDevboxPackageReference()
 		if err != nil {
 			return "", err
 		}
 		_, fragment, _ := strings.Cut(reference, "#")
 		return fragment, nil
 	}
-	return i.NormalizedPackageAttributePath()
+	return p.NormalizedPackageAttributePath()
 }
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
 // search. This is useful for comparing different attribute paths that may
 // point to the same package. Note, it may be an expensive call.
-func (i *Input) NormalizedPackageAttributePath() (string, error) {
-	if i.normalizedPackageAttributePathCache != "" {
-		return i.normalizedPackageAttributePathCache, nil
+func (p *Package) NormalizedPackageAttributePath() (string, error) {
+	if p.normalizedPackageAttributePathCache != "" {
+		return p.normalizedPackageAttributePathCache, nil
 	}
-	path, err := i.normalizePackageAttributePath()
+	path, err := p.normalizePackageAttributePath()
 	if err != nil {
 		return path, err
 	}
-	i.normalizedPackageAttributePathCache = path
-	return i.normalizedPackageAttributePathCache, nil
+	p.normalizedPackageAttributePathCache = path
+	return p.normalizedPackageAttributePathCache, nil
 }
 
 // normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It is an expensive call (~100ms).
-func (i *Input) normalizePackageAttributePath() (string, error) {
+func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
-	if i.isDevboxPackage() {
-		if i.isVersioned() {
-			entry, err := i.lockfile.Resolve(i.Raw)
+	if p.isDevboxPackage() {
+		if p.isVersioned() {
+			entry, err := p.lockfile.Resolve(p.Raw)
 			if err != nil {
 				return "", err
 			}
 			query = entry.Resolved
 		} else {
-			query = i.lockfile.LegacyNixpkgsPath(i.String())
+			query = p.lockfile.LegacyNixpkgsPath(p.String())
 		}
 	} else {
-		query = i.String()
+		query = p.String()
 	}
 
 	// We prefer search over just trying to parse the URL because search will
@@ -261,7 +264,7 @@ func (i *Input) normalizePackageAttributePath() (string, error) {
 	}
 
 	// If ambiguous, try to find a default output
-	if len(infos) > 1 && i.Fragment == "" {
+	if len(infos) > 1 && p.Fragment == "" {
 		for key := range infos {
 			if strings.HasSuffix(key, ".default") {
 				return key, nil
@@ -283,7 +286,7 @@ func (i *Input) normalizePackageAttributePath() (string, error) {
 		}
 		return "", usererr.New(
 			"Package \"%s\" is ambiguous. %s",
-			i.String(),
+			p.String(),
 			outputs,
 		)
 	}
@@ -292,54 +295,54 @@ func (i *Input) normalizePackageAttributePath() (string, error) {
 		return "", usererr.New(
 			"Package \"%s\" was found, but we're unable to build it for your system."+
 				" You may need to choose another version or write a custom flake.",
-			i.String(),
+			p.String(),
 		)
 	}
 
-	return "", usererr.New("Package \"%s\" was not found", i.String())
+	return "", usererr.New("Package \"%s\" was not found", p.String())
 }
 
-func (i *Input) urlWithoutFragment() string {
-	u := i.URL // get copy
+func (p *Package) urlWithoutFragment() string {
+	u := p.URL // get copy
 	u.Fragment = ""
 	return u.String()
 }
 
-func (i *Input) Hash() string {
+func (p *Package) Hash() string {
 	// For local flakes, use content hash of the flake.nix file to ensure
-	// user always gets newest input.
-	if i.isLocal() {
-		fileHash, _ := cuecfg.FileHash(filepath.Join(i.Path, "flake.nix"))
+	// user always gets newest flake.
+	if p.isLocal() {
+		fileHash, _ := cuecfg.FileHash(filepath.Join(p.Path, "flake.nix"))
 		if fileHash != "" {
 			return fileHash[:6]
 		}
 	}
 	hasher := md5.New()
-	hasher.Write([]byte(i.String()))
+	hasher.Write([]byte(p.String()))
 	hash := hasher.Sum(nil)
 	shortHash := hex.EncodeToString(hash)[:6]
 	return shortHash
 }
 
-func (i *Input) ValidateExists() (bool, error) {
-	if i.isVersioned() && i.version() == "" {
-		return false, usererr.New("No version specified for %q.", i.Path)
+func (p *Package) ValidateExists() (bool, error) {
+	if p.isVersioned() && p.version() == "" {
+		return false, usererr.New("No version specified for %q.", p.Path)
 	}
-	info, err := i.NormalizedPackageAttributePath()
+	info, err := p.NormalizedPackageAttributePath()
 	return info != "", err
 }
 
-func (i *Input) Equals(other *Input) bool {
-	if i.String() == other.String() {
+func (p *Package) Equals(other *Package) bool {
+	if p.String() == other.String() {
 		return true
 	}
 
 	// check inputs without fragments as optimization. Next step is expensive
-	if i.URLForFlakeInput() != other.URLForFlakeInput() {
+	if p.URLForFlakeInput() != other.URLForFlakeInput() {
 		return false
 	}
 
-	name, err := i.NormalizedPackageAttributePath()
+	name, err := p.NormalizedPackageAttributePath()
 	if err != nil {
 		return false
 	}
@@ -352,34 +355,34 @@ func (i *Input) Equals(other *Input) bool {
 
 // CanonicalName returns the name of the package without the version
 // it only applies to devbox packages
-func (i *Input) CanonicalName() string {
-	if !i.isDevboxPackage() {
+func (p *Package) CanonicalName() string {
+	if !p.isDevboxPackage() {
 		return ""
 	}
-	name, _, _ := strings.Cut(i.Path, "@")
+	name, _, _ := strings.Cut(p.Path, "@")
 	return name
 }
 
-func (i *Input) Versioned() string {
-	if i.isDevboxPackage() && !i.isVersioned() {
-		return i.Raw + "@latest"
+func (p *Package) Versioned() string {
+	if p.isDevboxPackage() && !p.isVersioned() {
+		return p.Raw + "@latest"
 	}
-	return i.Raw
+	return p.Raw
 }
 
-func (i *Input) IsLegacy() bool {
-	return i.isDevboxPackage() && !i.isVersioned()
+func (p *Package) IsLegacy() bool {
+	return p.isDevboxPackage() && !p.isVersioned()
 }
 
-func (i *Input) LegacyToVersioned() string {
-	if !i.IsLegacy() {
-		return i.Raw
+func (p *Package) LegacyToVersioned() string {
+	if !p.IsLegacy() {
+		return p.Raw
 	}
-	return i.Raw + "@latest"
+	return p.Raw + "@latest"
 }
 
-func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {
-	hash := i.hashFromNixPkgsURL()
+func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
+	hash := p.hashFromNixPkgsURL()
 	if hash == "" {
 		return nil
 	}
@@ -388,23 +391,23 @@ func (i *Input) EnsureNixpkgsPrefetched(w io.Writer) error {
 
 // version returns the version of the package
 // it only applies to devbox packages
-func (i *Input) version() string {
-	if !i.isDevboxPackage() {
+func (p *Package) version() string {
+	if !p.isDevboxPackage() {
 		return ""
 	}
-	_, version, _ := strings.Cut(i.Path, "@")
+	_, version, _ := strings.Cut(p.Path, "@")
 	return version
 }
 
-func (i *Input) isVersioned() bool {
-	return i.isDevboxPackage() && strings.Contains(i.Path, "@")
+func (p *Package) isVersioned() bool {
+	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
 }
 
-func (i *Input) hashFromNixPkgsURL() string {
-	return HashFromNixPkgsURL(i.URLForFlakeInput())
+func (p *Package) hashFromNixPkgsURL() string {
+	return HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-// IsGithubNixpkgsURL returns true if the input is a nixpkgs flake of the form:
+// IsGithubNixpkgsURL returns true if the package is a flake of the form:
 // github:NixOS/nixpkgs/...
 //
 // While there are many ways to specify this input, devbox always uses

@@ -10,7 +10,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-func ProfileUpgrade(ProfileDir string, pkg *Input, lock *lock.File) error {
+func ProfileUpgrade(ProfileDir string, pkg *Package, lock *lock.File) error {
 	idx, err := ProfileListIndex(&ProfileListIndexArgs{
 		Lockfile:   lock,
 		Writer:     os.Stderr,

@@ -38,8 +38,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := []*nix.Input{}
-	for _, pkg := range nix.InputsFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
+	pkgs := []*nix.Package{}
+	for _, pkg := range nix.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
 		versioned := pkg.Versioned()
 
 		// If exact versioned package is already in the config, skip.
@@ -57,7 +57,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			}
 		}
 
-		pkgs = append(pkgs, nix.InputFromString(versioned, d.lockfile))
+		pkgs = append(pkgs, nix.PackageFromString(versioned, d.lockfile))
 		d.cfg.Packages = append(d.cfg.Packages, versioned)
 	}
 
@@ -92,7 +92,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	}
 
 	if err := d.lockfile.Add(
-		lo.Map(pkgs, func(pkg *nix.Input, _ int) string { return pkg.Raw })...,
+		lo.Map(pkgs, func(pkg *nix.Package, _ int) string { return pkg.Raw })...,
 	); err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, input := range nix.InputsFromStrings(pkgs, d.lockfile) {
+	for _, input := range nix.PackageFromStrings(pkgs, d.lockfile) {
 		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
@@ -414,7 +414,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileL
 	// and since we're reusing the Input objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
 outer:
 	for _, item := range profileItems {
-		profileInput := nix.InputFromProfileItem(item, d.lockfile)
+		profileInput := nix.PackageFromProfileItem(item, d.lockfile)
 		for _, devboxInput := range devboxInputs {
 			if profileInput.Equals(devboxInput) {
 				continue outer
