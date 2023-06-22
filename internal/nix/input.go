@@ -58,7 +58,7 @@ func InputsFromStrings(rawNames []string, l lock.Locker) []*Input {
 // InputsFromStrings constructs Input from the raw name provided.
 // The raw name corresponds to a devbox package from the devbox.json config.
 func InputFromString(raw string, locker lock.Locker) *Input {
-	// We ignore the error because: TODO why?
+	// We ignore the error because... TODO @mikeland why?
 	u, _ := url.Parse(raw)
 
 	// This handles local flakes in a relative path.
@@ -116,8 +116,8 @@ func (i *Input) FlakeInputName() string {
 		result = filepath.Base(i.Path) + "-" + i.Hash()
 	} else if i.isGithub() {
 		result = "gh-" + strings.Join(strings.Split(i.Opaque, "/"), "-")
-	} else if url := i.URLForFlake(); IsGithubNixpkgsURL(url) {
-		commitHash := CommitHashFromNixPkgsURL(url)
+	} else if url := i.URLForFlakeInput(); IsGithubNixpkgsURL(url) {
+		commitHash := HashFromNixPkgsURL(url)
 		if len(commitHash) > 6 {
 			commitHash = commitHash[0:6]
 		}
@@ -130,8 +130,8 @@ func (i *Input) FlakeInputName() string {
 	return inputNameRegex.ReplaceAllString(result, "-")
 }
 
-// URLForFlake is the url to be used as the input in the generated flake.nix
-func (i *Input) URLForFlake() string {
+// URLForFlakeInput is the url to be used as the input in the generated flake.nix
+func (i *Input) URLForFlakeInput() string {
 	if i.isDevboxPackage() {
 		entry, err := i.lockfile.Resolve(i.Raw)
 		if err != nil {
@@ -145,7 +145,7 @@ func (i *Input) URLForFlake() string {
 }
 
 // URLForInstall is used during `nix profile install`.
-// The key difference with URLForFlake is that it has a suffix of `#attributePath`
+// The key difference with URLForFlakeInput is that it has a suffix of `#attributePath`
 func (i *Input) URLForInstall() (string, error) {
 	if i.isDevboxPackage() {
 		entry, err := i.lockfile.Resolve(i.Raw)
@@ -335,7 +335,7 @@ func (i *Input) Equals(other *Input) bool {
 	}
 
 	// check inputs without fragments as optimization. Next step is expensive
-	if i.URLForFlake() != other.URLForFlake() {
+	if i.URLForFlakeInput() != other.URLForFlakeInput() {
 		return false
 	}
 
@@ -401,7 +401,7 @@ func (i *Input) isVersioned() bool {
 }
 
 func (i *Input) hashFromNixPkgsURL() string {
-	return CommitHashFromNixPkgsURL(i.URLForFlake())
+	return HashFromNixPkgsURL(i.URLForFlakeInput())
 }
 
 // IsGithubNixpkgsURL returns true if the input is a nixpkgs flake of the form:
@@ -414,12 +414,12 @@ func IsGithubNixpkgsURL(url string) bool {
 	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
 }
 
-var nixPkgsCommitHashRegex = regexp.MustCompile(`github:NixOS/nixpkgs/([^#]+).*`)
+var hashFromNixPkgsRegex = regexp.MustCompile(`github:NixOS/nixpkgs/([^#]+).*`)
 
-// CommitHashFromNixPkgsURL will (for example) return 5233fd2ba76a3accb5aaa999c00509a11fd0793c
+// HashFromNixPkgsURL will (for example) return 5233fd2ba76a3accb5aaa999c00509a11fd0793c
 // from github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
-func CommitHashFromNixPkgsURL(url string) string {
-	matches := nixPkgsCommitHashRegex.FindStringSubmatch(url)
+func HashFromNixPkgsURL(url string) string {
+	matches := hashFromNixPkgsRegex.FindStringSubmatch(url)
 	if len(matches) == 2 {
 		return matches[1]
 	}

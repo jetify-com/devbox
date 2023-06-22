@@ -30,14 +30,14 @@ func (f *flakeInput) HashFromNixPkgsURL() string {
 	if !f.IsNixpkgs() {
 		return ""
 	}
-	return nix.CommitHashFromNixPkgsURL(f.URL)
+	return nix.HashFromNixPkgsURL(f.URL)
 }
 
 func (f *flakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
 		return f.URL
 	}
-	hash := nix.CommitHashFromNixPkgsURL(f.URL)
+	hash := nix.HashFromNixPkgsURL(f.URL)
 	return getNixpkgsInfo(hash).URL
 }
 
@@ -86,16 +86,16 @@ func flakeInputs(ctx context.Context, devbox devboxer) ([]*flakeInput, error) {
 		if err != nil {
 			return nil, err
 		}
-		if flkInput, ok := flakeInputs[input.URLForFlake()]; !ok {
-			order = append(order, input.URLForFlake())
-			flakeInputs[input.URLForFlake()] = &flakeInput{
+		if flkInput, ok := flakeInputs[input.URLForFlakeInput()]; !ok {
+			order = append(order, input.URLForFlakeInput())
+			flakeInputs[input.URLForFlakeInput()] = &flakeInput{
 				Name:     input.FlakeInputName(),
-				URL:      input.URLForFlake(),
+				URL:      input.URLForFlakeInput(),
 				Packages: []string{AttributePath},
 			}
 		} else {
 			flkInput.Packages = lo.Uniq(
-				append(flakeInputs[input.URLForFlake()].Packages, AttributePath),
+				append(flakeInputs[input.URLForFlakeInput()].Packages, AttributePath),
 			)
 		}
 	}

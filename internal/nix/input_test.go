@@ -92,8 +92,8 @@ func TestInput(t *testing.T) {
 		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
 			t.Errorf("URLWithoutFragment() = %v, want %v", urlWithoutFragment, testCase.urlWithoutFragment)
 		}
-		if urlForInput := i.URLForFlake(); testCase.urlForInput != urlForInput {
-			t.Errorf("URLForFlake() = %v, want %v", urlForInput, testCase.urlForInput)
+		if urlForInput := i.URLForFlakeInput(); testCase.urlForInput != urlForInput {
+			t.Errorf("URLForFlakeInput() = %v, want %v", urlForInput, testCase.urlForInput)
 		}
 	}
 }
@@ -167,7 +167,7 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := CommitHashFromNixPkgsURL(test.url)
+		result := HashFromNixPkgsURL(test.url)
 		if result != test.expected {
 			t.Errorf(
 				"Expected hash '%s' for URL '%s', but got '%s'",

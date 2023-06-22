@@ -99,7 +99,7 @@ func searchSystem(url string, system string) map[string]*Info {
 	// Search will download nixpkgs if it's not already downloaded. Adding this
 	// check here provides a slightly better UX.
 	if IsGithubNixpkgsURL(url) {
-		hash := CommitHashFromNixPkgsURL(url)
+		hash := HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
 		_ = ensureNixpkgsPrefetched(writer, hash)
