@@ -93,9 +93,9 @@ function updateVSCodeConf() {
                     // might cause confusion for users as to why their system installed packages
                     // show up when they type for example `which go` as opposed to the packages
                     // installed by devbox.
-                    return "--no-config";
+                    return ["--no-config"];
                 default:
-                    return "";
+                    return [];
             }
         };
         const shellTypeSlices = shell.split("/");
@@ -104,7 +104,7 @@ function updateVSCodeConf() {
         const devboxCompatibleShell = {
             "devboxCompatibleShell": {
                 "path": shell,
-                "args": [shellArgsMap(shellType)]
+                "args": shellArgsMap(shellType)
             }
         };
 
