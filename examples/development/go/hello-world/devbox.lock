@@ -1,7 +1,7 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "go@1.20": {
+    "go@1.20.3": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#go",
       "version": "1.20.3"

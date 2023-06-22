@@ -1,6 +1,6 @@
 {
     "packages": [
-        "go@1.20"
+        "go@1.20.3"
     ],
     "shell": {
         "init_hook": [

@@ -3,6 +3,8 @@ package shellgen
 import (
 	"context"
 	"runtime/trace"
+
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 // flakePlan contains the data to populate the top level flake.nix file
@@ -12,6 +14,7 @@ type flakePlan struct {
 	FlakeInputs []*flakeInput
 	// Packages are used by "RemoveNixpkgs" feature
 	Packages []*Package
+	System string
 }
 
 func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
@@ -37,14 +40,18 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	shellPlan := &flakePlan{}
 	var err error
-	shellPlan.FlakeInputs, err = flakeInputs(ctx, devbox)
+	flakeInputs, err := flakeInputs(ctx, devbox)
 	if err != nil {
 		return nil, err
 	}
 
-	shellPlan.Packages, err = flakePackages(devbox)
+	system, err := nix.System()
+	if err != nil {
+		return nil, err
+	}
+
+	packages, err := flakePackages(devbox, system)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +60,18 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 
 	// This is an optimization. Try to reuse the nixpkgs info from the flake
 	// inputs to avoid introducing a new one.
-	for _, input := range shellPlan.FlakeInputs {
+	for _, input := range flakeInputs {
 		if input.IsNixpkgs() {
 			nixpkgsInfo = getNixpkgsInfo(input.HashFromNixPkgsURL())
 			break
 		}
 	}
 
-	shellPlan.NixpkgsInfo = nixpkgsInfo
-
-	return shellPlan, nil
+	plan := &flakePlan {
+		FlakeInputs: flakeInputs,
+		NixpkgsInfo: nixpkgsInfo,
+		Packages: packages,
+		System: system,
+	}
+	return plan, nil
 }

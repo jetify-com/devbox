@@ -10,10 +10,10 @@ import (
 )
 
 type Package struct {
-	Name string // canonical name?
+	Name string
 
-	// FetchClosureArgs is keyed by System
-	FetchClosureArgs map[string]FetchClosureArgs
+	// FetchClosureArgs corresponding to the nix.System
+	FetchClosureArgs FetchClosureArgs
 }
 
 // Arguments for nix's builtins.FetchClosure
@@ -25,7 +25,7 @@ type FetchClosureArgs struct {
 	ToPath    string
 }
 
-func flakePackages(devbox devboxer) ([]*Package, error) {
+func flakePackages(devbox devboxer, system string) ([]*Package, error) {
 	packages := []*Package{}
 
 	// query the search API and get a parsed response
@@ -38,12 +38,12 @@ func flakePackages(devbox devboxer) ([]*Package, error) {
 		if err != nil {
 			return nil, err
 		}
-		packages = append(packages, NewPackage(results, in))
+		packages = append(packages, NewPackage(results, system, in))
 	}
 	return packages, nil
 }
 
-func NewPackage(results []*searcher.PackageResult, input *nix.Input) *Package {
+func NewPackage(results []*searcher.PackageResult, system string, input *nix.Input) *Package {
 	inVersion := input.Version()
 	if inVersion == "" {
 		return nil
@@ -58,25 +58,21 @@ func NewPackage(results []*searcher.PackageResult, input *nix.Input) *Package {
 	// nixosCacheURL is where we fetch package binaries from
 	const nixosCacheURL = "https://cache.nixos.org"
 
-	pkg := &Package{
-		Name:             input.CanonicalName(),
-		FetchClosureArgs: map[string]FetchClosureArgs{},
-	}
+	allFetchClosureArgs := map[string]FetchClosureArgs{}
 	for _, sysInfo := range result.Systems {
 		storeDir := strings.Join([]string{sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion}, "-")
-		fetchClosureArg := FetchClosureArgs{
+		allFetchClosureArgs[sysInfo.System] =  FetchClosureArgs{
 			System:    sysInfo.System,
 			FromStore: nixosCacheURL,
 			FromPath:  filepath.Join("/nix/store", storeDir),
 			// ToPath:    "TODO",
 		}
-		pkg.FetchClosureArgs[sysInfo.System] = fetchClosureArg
 	}
 
-	// ensure x86-64_darwin platform exists
-	if _, ok = pkg.FetchClosureArgs["x86_64-darwin"]; !ok {
-		if linuxFCA, ok := pkg.FetchClosureArgs["x86_64-linux"]; ok {
-			pkg.FetchClosureArgs["x86_64-darwin"] = FetchClosureArgs{
+	// Attempt to fill in missing x86-64_darwin information
+	if _, ok = allFetchClosureArgs["x86_64-darwin"]; !ok {
+		if linuxFCA, ok := allFetchClosureArgs["x86_64-linux"]; ok {
+			allFetchClosureArgs["x86_64-darwin"] = FetchClosureArgs{
 				System:    linuxFCA.System,
 				FromStore: linuxFCA.FromStore,
 				FromPath:  linuxFCA.FromPath,
@@ -84,5 +80,11 @@ func NewPackage(results []*searcher.PackageResult, input *nix.Input) *Package {
 			}
 		}
 	}
-	return pkg
+
+	fetchClosureArgs := allFetchClosureArgs[system]
+
+	return &Package {
+		Name: input.CanonicalName(),
+		FetchClosureArgs: fetchClosureArgs,
+	}
 }
