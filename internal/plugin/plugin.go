@@ -161,7 +161,7 @@ func (m *Manager) createFile(
 		"PackageAttributePath": attributePath,
 		"Packages":             m.Packages(),
 		"System":               system,
-		"URLForInput":          pkg.URLForInput(),
+		"URLForInput":          pkg.URLForFlakeInput(),
 		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return errors.WithStack(err)
