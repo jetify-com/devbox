@@ -37,7 +37,7 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
-	outPath := filepath.Join(devbox.ProjectDir(), ".devbox/gen")
+	outPath := genPath(devbox)
 
 	for _, file := range shellFiles {
 		err := writeFromTemplate(outPath, plan, file)
@@ -52,7 +52,7 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 
-	err = makeFlakeFile(outPath, plan)
+	err = makeFlakeFile(devbox, outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -148,8 +148,8 @@ var templateFuncs = template.FuncMap{
 	"debug":    debug.IsEnabled,
 }
 
-func makeFlakeFile(outPath string, plan *flakePlan) error {
-	flakeDir := filepath.Join(outPath, "flake")
+func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
+	flakeDir := FlakePath(d)
 	err := writeFromTemplate(flakeDir, plan, "flake.nix")
 	if err != nil {
 		return errors.WithStack(err)
