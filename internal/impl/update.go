@@ -10,6 +10,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
@@ -52,12 +53,15 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
-	// TODO(landau): Improve output
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
-	return wrapnix.CreateWrappers(ctx, d)
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+		return err
+	}
+
+	return nix.FlakeUpdate(shellgen.FlakePath(d))
 }
 
 func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Input, error) {
@@ -116,7 +120,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *nix.Input) error {
 		pkg.Raw,
 	)
 
-	err = nix.Upgrade(profilePath, pkg, d.lockfile)
+	err = nix.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
 		ux.Ferror(
 			d.writer,
