@@ -411,30 +411,3 @@ func filterPathList(pathList string, keep func(string) bool) string {
 	}
 	return strings.Join(filtered, string(filepath.ListSeparator))
 }
-
-// findNixInPATH looks for locations in PATH which nix might exist and
-// it returns a slice containing all paths that might contain nix.
-// For single-user, and multi-user installation there are default locations
-// unless XDG_* env variables are set. So we look for nix in 3 locations
-// to see if any of those exist in path.
-func findNixInPATH(env map[string]string) ([]string, error) {
-	defaultSingleUserNixBin := fmt.Sprintf("%s/.nix-profile/bin", env["HOME"])
-	defaultMultiUserNixBin := "/nix/var/nix/profiles/default/bin"
-	xdgNixBin := xdg.StateSubpath("/nix/profile/bin")
-	pathElements := strings.Split(env["PATH"], ":")
-	debug.Log("path elements: %v", pathElements)
-	nixBinsInPath := []string{}
-	for _, el := range pathElements {
-		if el == xdgNixBin ||
-			el == defaultSingleUserNixBin ||
-			el == defaultMultiUserNixBin {
-			nixBinsInPath = append(nixBinsInPath, el)
-		}
-	}
-
-	if len(nixBinsInPath) == 0 {
-		// did not find nix executable in PATH, return error
-		return nil, errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again")
-	}
-	return nixBinsInPath, nil
-}
