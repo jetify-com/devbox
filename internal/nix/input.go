@@ -59,21 +59,21 @@ func InputsFromStrings(rawNames []string, l lock.Locker) []*Input {
 // The raw name corresponds to a devbox package from the devbox.json config.
 func InputFromString(raw string, locker lock.Locker) *Input {
 	// We ignore the error because... TODO @mikeland why?
-	u, _ := url.Parse(raw)
+	inputURL, _ := url.Parse(raw)
 
 	// This handles local flakes in a relative path.
 	// `raw` will be of the form `path:./local_flake_subdir#myPackage`
 	// for which path:<empty>, opaque:./local_subdir, and scheme:path
-	if u.Path == "" && u.Opaque != "" && u.Scheme == "path" {
+	if inputURL.Path == "" && inputURL.Opaque != "" && inputURL.Scheme == "path" {
 		// This normalizes url paths to be absolute. It also ensures all
 		// path urls have a single slash (instead of possibly 3 slashes)
-		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), u.Opaque)
-		if u.Fragment != "" {
-			normalizedURL += "#" + u.Fragment
+		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), inputURL.Opaque)
+		if inputURL.Fragment != "" {
+			normalizedURL += "#" + inputURL.Fragment
 		}
-		u, _ = url.Parse(normalizedURL)
+		inputURL, _ = url.Parse(normalizedURL)
 	}
-	return &Input{*u, locker, raw, ""}
+	return &Input{*inputURL, locker, raw, ""}
 }
 
 // InputFromProfileItem sets the raw Input as the `item`'s unlockedReference i.e.
