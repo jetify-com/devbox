@@ -1,4 +1,4 @@
-import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget, Progress } from 'vscode';
+import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget } from 'vscode';
 import { spawn, spawnSync } from 'node:child_process';
 
 
@@ -82,12 +82,22 @@ async function setupDotDevbox(workingDir: Uri, dotdevbox: Uri) {
 }
 
 function updateVSCodeConf() {
+    const shell = process.env["SHELL"] ?? "/bin/zsh";
     const devboxCompatibleShell = {
         "devboxCompatibleShell": {
-            "path": "/bin/zsh",
+            "path": shell,
             "args": []
         }
     };
-    workspace.getConfiguration().update('terminal.integrated.profiles.osx', devboxCompatibleShell, ConfigurationTarget.Workspace);
-    workspace.getConfiguration().update('terminal.integrated.defaultProfile.osx', 'devboxCompatibleShell', ConfigurationTarget.Workspace);
+    if (process.platform === 'darwin') {
+        workspace.getConfiguration().update(
+            'terminal.integrated.profiles.osx',
+            devboxCompatibleShell,
+            ConfigurationTarget.Workspace
+        );
+        workspace.getConfiguration().update(
+            'terminal.integrated.defaultProfile.osx',
+            'devboxCompatibleShell',
+            ConfigurationTarget.Workspace);
+    }
 }
