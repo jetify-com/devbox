@@ -86,14 +86,14 @@ func TestInput(t *testing.T) {
 
 	for _, testCase := range cases {
 		i := testInputFromString(testCase.pkg, projectDir)
-		if name := i.InputName(); testCase.name != name {
+		if name := i.FlakeInputName(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
 		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
 			t.Errorf("URLWithoutFragment() = %v, want %v", urlWithoutFragment, testCase.urlWithoutFragment)
 		}
-		if urlForInput := i.URLForInput(); testCase.urlForInput != urlForInput {
-			t.Errorf("URLForInput() = %v, want %v", urlForInput, testCase.urlForInput)
+		if urlForInput := i.URLForFlake(); testCase.urlForInput != urlForInput {
+			t.Errorf("URLForFlake() = %v, want %v", urlForInput, testCase.urlForInput)
 		}
 	}
 }
@@ -167,7 +167,7 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := HashFromNixPkgsURL(test.url)
+		result := CommitHashFromNixPkgsURL(test.url)
 		if result != test.expected {
 			t.Errorf(
 				"Expected hash '%s' for URL '%s', but got '%s'",

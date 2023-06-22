@@ -30,14 +30,14 @@ func (f *flakeInput) HashFromNixPkgsURL() string {
 	if !f.IsNixpkgs() {
 		return ""
 	}
-	return nix.HashFromNixPkgsURL(f.URL)
+	return nix.CommitHashFromNixPkgsURL(f.URL)
 }
 
 func (f *flakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
 		return f.URL
 	}
-	hash := nix.HashFromNixPkgsURL(f.URL)
+	hash := nix.CommitHashFromNixPkgsURL(f.URL)
 	return getNixpkgsInfo(hash).URL
 }
 
@@ -67,10 +67,12 @@ func (f *flakeInput) BuildInputs() []string {
 func flakeInputs(ctx context.Context, devbox devboxer) ([]*flakeInput, error) {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
-	inputs := map[string]*flakeInput{}
+	// Use the verbose name flakeInputs to distinguish from `inputs`
+	// which refer to `nix.Input` in most of the codebase.
+	flakeInputs := map[string]*flakeInput{}
 
-	userPackages := devbox.PackagesAsInputs()
-	pluginPackages, err := devbox.PluginManager().PluginPackages(userPackages)
+	userInputs := devbox.PackagesAsInputs()
+	pluginInputs, err := devbox.PluginManager().PluginInputs(userInputs)
 	if err != nil {
 		return nil, err
 	}
@@ -79,24 +81,24 @@ func flakeInputs(ctx context.Context, devbox devboxer) ([]*flakeInput, error) {
 	// We prioritize plugin packages so that the php plugin works. Not sure
 	// if this is behavior we want for user plugins. We may need to add an optional
 	// priority field to the config.
-	for _, pkg := range append(pluginPackages, userPackages...) {
-		AttributePath, err := pkg.FullPackageAttributePath()
+	for _, input := range append(pluginInputs, userInputs...) {
+		AttributePath, err := input.FullPackageAttributePath()
 		if err != nil {
 			return nil, err
 		}
-		if input, ok := inputs[pkg.URLForInput()]; !ok {
-			order = append(order, pkg.URLForInput())
-			inputs[pkg.URLForInput()] = &flakeInput{
-				Name:     pkg.InputName(),
-				URL:      pkg.URLForInput(),
+		if flkInput, ok := flakeInputs[input.URLForFlake()]; !ok {
+			order = append(order, input.URLForFlake())
+			flakeInputs[input.URLForFlake()] = &flakeInput{
+				Name:     input.FlakeInputName(),
+				URL:      input.URLForFlake(),
 				Packages: []string{AttributePath},
 			}
 		} else {
-			input.Packages = lo.Uniq(
-				append(inputs[pkg.URLForInput()].Packages, AttributePath),
+			flkInput.Packages = lo.Uniq(
+				append(flakeInputs[input.URLForFlake()].Packages, AttributePath),
 			)
 		}
 	}
 
-	return goutil.PickByKeysSorted(inputs, order), nil
+	return goutil.PickByKeysSorted(flakeInputs, order), nil
 }
