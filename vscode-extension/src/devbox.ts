@@ -82,14 +82,32 @@ async function setupDotDevbox(workingDir: Uri, dotdevbox: Uri) {
 }
 
 function updateVSCodeConf() {
-    const shell = process.env["SHELL"] ?? "/bin/zsh";
-    const devboxCompatibleShell = {
-        "devboxCompatibleShell": {
-            "path": shell,
-            "args": []
-        }
-    };
     if (process.platform === 'darwin') {
+        const shell = process.env["SHELL"] ?? "/bin/zsh";
+        const shellArgsMap = (shellType: string) => {
+            switch (shellType) {
+                case "fish":
+                    // We special case fish here because fish's `fish_add_path` function
+                    // tends to prepend to PATH by default, hence sourcing the fish config after
+                    // vscode reopens in devbox environment, overwrites devbox packages and 
+                    // might cause confusion for users as to why their system installed packages
+                    // show up when they type for example `which go` as opposed to the packages
+                    // installed by devbox.
+                    return "--no-config";
+                default:
+                    return "";
+            }
+        };
+        const shellTypeSlices = shell.split("/");
+        const shellType = shellTypeSlices[shellTypeSlices.length - 1];
+        shellArgsMap(shellType);
+        const devboxCompatibleShell = {
+            "devboxCompatibleShell": {
+                "path": shell,
+                "args": [shellArgsMap(shellType)]
+            }
+        };
+
         workspace.getConfiguration().update(
             'terminal.integrated.profiles.osx',
             devboxCompatibleShell,
