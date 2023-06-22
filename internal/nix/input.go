@@ -109,9 +109,8 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 
 // FlakeInputName generates a name for the input that will be used in the
 // generated flake.nix to import this package. This name must be unique in that
-// flake
-// Note, that input name has nothing to do with the package name or flake name
-// that it may be referencing. That is the Input.raw field.
+// flake so we attach a hash to (quasi) ensure uniqueness.
+// Input name will be different from raw package name
 func (p *Package) FlakeInputName() string {
 	result := ""
 	if p.isLocal() {
