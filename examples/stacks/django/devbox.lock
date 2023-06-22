@@ -8,17 +8,21 @@
     },
     "postgresql@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     },
-    "python310": {
+    "python311Packages.pip@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310"
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311Packages.pip",
+      "version": "23.0.1"
     },
-    "python310Packages.pip": {
+    "python@latest": {
+      "last_modified": "2023-05-01T16:53:22Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310Packages.pip"
+      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311",
+      "version": "3.11.3"
     }
   }
 }

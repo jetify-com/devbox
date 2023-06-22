@@ -1,8 +1,8 @@
 {
   "packages": [
-    "python310",
+    "python@latest",
+    "python311Packages.pip@latest",
     "openssl@latest",
-    "python310Packages.pip",
     "postgresql@latest"
   ],
   "env": {
@@ -11,7 +11,7 @@
   "shell": {
     "init_hook": [
       ". $VENV_DIR/bin/activate",
-      "pip install -r requirements.txt"
+      "pip install -r requirements.txt --use-pep517"
     ],
     "scripts": {
       "create_db": [
