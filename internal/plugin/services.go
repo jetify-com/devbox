@@ -12,12 +12,12 @@ import (
 )
 
 func (m *Manager) GetServices(
-	pkgs []*nix.Input,
+	pkgs []*nix.Package,
 	includes []string,
 ) (services.Services, error) {
 	allSvcs := services.Services{}
 
-	allPkgs := append([]*nix.Input(nil), pkgs...)
+	allPkgs := append([]*nix.Package(nil), pkgs...)
 	for _, include := range includes {
 		name, err := m.parseInclude(include)
 		if err != nil {

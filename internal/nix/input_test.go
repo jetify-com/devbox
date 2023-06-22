@@ -99,7 +99,7 @@ func TestInput(t *testing.T) {
 }
 
 type testInput struct {
-	Input
+	Package
 }
 
 type lockfile struct {
@@ -132,7 +132,7 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 }
 
 func testInputFromString(s, projectDir string) *testInput {
-	return lo.ToPtr(testInput{Input: *InputFromString(s, &lockfile{projectDir})})
+	return lo.ToPtr(testInput{Package: *PackageFromString(s, &lockfile{projectDir})})
 }
 
 func TestHashFromNixPkgsURL(t *testing.T) {

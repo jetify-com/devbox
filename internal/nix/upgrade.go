@@ -9,7 +9,7 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 )
 
-func Upgrade(ProfileDir string, pkg *Input, lock *lock.File) error {
+func Upgrade(ProfileDir string, pkg *Package, lock *lock.File) error {
 	idx, err := ProfileListIndex(&ProfileListIndexArgs{
 		Lockfile:   lock,
 		Writer:     os.Stderr,

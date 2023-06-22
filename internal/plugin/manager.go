@@ -45,8 +45,8 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 	}
 }
 
-func (m *Manager) PluginInputs(inputs []*nix.Input) ([]*nix.Input, error) {
-	result := []*nix.Input{}
+func (m *Manager) PluginInputs(inputs []*nix.Package) ([]*nix.Package, error) {
+	result := []*nix.Package{}
 	for _, input := range inputs {
 		config, err := getConfigIfAny(input, m.ProjectDir())
 		if err != nil {
@@ -54,7 +54,7 @@ func (m *Manager) PluginInputs(inputs []*nix.Input) ([]*nix.Input, error) {
 		} else if config == nil {
 			continue
 		}
-		result = append(result, nix.InputsFromStrings(config.Packages, m.lockfile)...)
+		result = append(result, nix.PackageFromStrings(config.Packages, m.lockfile)...)
 	}
 	return result, nil
 }

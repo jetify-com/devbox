@@ -79,7 +79,7 @@ type ProfileListIndexArgs struct {
 	List       map[string]*NixProfileListItem
 	Lockfile   *lock.File
 	Writer     io.Writer
-	Input      *Input
+	Input      *Package
 	ProfileDir string
 }
 
@@ -104,7 +104,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	}
 
 	for _, item := range list {
-		existing := InputFromProfileItem(item, args.Lockfile)
+		existing := PackageFromProfileItem(item, args.Lockfile)
 
 		if args.Input.Equals(existing) {
 			return item.index, nil
@@ -210,7 +210,7 @@ type ProfileInstallArgs struct {
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
-	input := InputFromString(args.Package, args.Lockfile)
+	input := PackageFromString(args.Package, args.Lockfile)
 	if IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNixPkgsURL()); err != nil {
 			return err

@@ -126,7 +126,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	hashes := lo.Map(d.PackagesAsInputs(), func(i *nix.Input, _ int) string { return i.Hash() })
+	hashes := lo.Map(d.PackagesAsInputs(), func(i *nix.Package, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
 		return "", err
@@ -339,7 +339,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	}
 	return plugin.PrintReadme(
 		ctx,
-		nix.InputFromString(pkg, d.lockfile),
+		nix.PackageFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
 		markdown,
@@ -910,8 +910,8 @@ func (d *Devbox) Packages() []string {
 	return d.cfg.Packages
 }
 
-func (d *Devbox) PackagesAsInputs() []*nix.Input {
-	return nix.InputsFromStrings(d.Packages(), d.lockfile)
+func (d *Devbox) PackagesAsInputs() []*nix.Package {
+	return nix.PackageFromStrings(d.Packages(), d.lockfile)
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
@@ -926,7 +926,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 func (d *Devbox) findPackageByName(name string) (string, error) {
 	results := map[string]bool{}
 	for _, pkg := range d.cfg.Packages {
-		i := nix.InputFromString(pkg, d.lockfile)
+		i := nix.PackageFromString(pkg, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
 			results[i.String()] = true
 		}
