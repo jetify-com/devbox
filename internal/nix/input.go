@@ -90,8 +90,9 @@ func (i *Input) isLocal() bool {
 	return i.Scheme == "path"
 }
 
-// isDevboxPackage specifies whether this input is a nix package defined in a devbox.json config.
-// Usually, this is of the form: `name@version`.
+// isDevboxPackage specifies whether this input is a `canonicalName@version` nix
+// package defined in a devbox.json config. This is in contrast to a "nix" package
+// that can also be a flake or a legacy attribute path.
 func (i *Input) isDevboxPackage() bool {
 	return i.Scheme == ""
 }
