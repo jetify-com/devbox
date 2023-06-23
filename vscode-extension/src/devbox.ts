@@ -28,11 +28,9 @@ export async function devboxReopen() {
                     // setup required vscode settings
                     progress.report({ message: 'Updating configurations...', increment: 50 });
                     updateVSCodeConf();
-                    setTimeout(() => { }, 1000);
 
                     // Calling CLI to compute devbox env
                     progress.report({ message: 'Calling Devbox to setup environment...', increment: 80 });
-                    // callDevboxIntegrate(workingDir, progress.report, resolve, reject);
                     // To use a custom compiled devbox when testing, change this to an absolute path.
                     const devbox = 'devbox';
                     // run devbox integrate and then close this window
