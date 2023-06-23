@@ -4,6 +4,12 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.0]
+
+- Added reopen in devbox shell environment feature that allows projects with devbox.json
+  reopen vscode in devbox environment. Note: It requires devbox CLI v0.5.5 and above
+  installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetpack-io/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+
 ## [0.0.7]
 
 - Fixed a bug for `Open in VSCode` that ensures the directory in which
