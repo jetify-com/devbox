@@ -20,12 +20,14 @@ Go projects can be run in Devbox by adding the Go SDK to your project. If your p
 
 This will install the latest version of the Go SDK. You can find other installable versions of Go by running `devbox search go`.
 
-If you need additional C libraries, you can add them along with `gcc` to your package list. For example, if libcap is required for yoru project:
+If you need additional C libraries, you can add them along with `gcc` to your package list. For example, if libcap is required for your project:
 
 ```json
 "packages": [
-    "go",
-    "gcc",
-    "libcap"
+    "go@latest",
+    "gcc@latest",
+    "libcap@latest"
 ]
 ```
+
+Note: libcap is a Linux library, so the above example will only work on Linux.
