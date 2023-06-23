@@ -1,7 +1,6 @@
 {
   "packages": [
     "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
-    "github:nix-community/fenix#stable.toolchain",
     "github:F1bonacc1/process-compose"
   ],
   "shell": {
