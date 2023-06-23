@@ -181,6 +181,10 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
+	if err = createDevboxSymlink(d); err != nil {
+		return err
+	}
+
 	shellStartTime := envir.GetValueOrDefault(
 		envir.DevboxShellStartTime,
 		telemetry.UnixTimestampFromTime(telemetry.CommandStartTime()),
@@ -734,7 +738,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
-	env, err := d.convertEnvToMap(currentEnv)
+	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -1089,7 +1093,9 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 	return err
 }
 
-func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error) {
+// parseEnvAndExcludeSpecialCases converts env as []string to map[string]string
+// In case of pure shell, it leaks HOME and it leaks PATH with some modifications
+func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string]string, error) {
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
 		key, val, found := strings.Cut(kv, "=")
@@ -1116,7 +1122,7 @@ func (d *Devbox) convertEnvToMap(currentEnv []string) (map[string]string, error)
 		if err != nil {
 			return nil, err
 		}
-		includedInPath = append(includedInPath, wrapnix.DotdevboxBinPath(d))
+		includedInPath = append(includedInPath, dotdevboxBinPath(d))
 		env["PATH"] = JoinPathLists(includedInPath...)
 	}
 	return env, nil

@@ -61,9 +61,6 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			return errors.WithStack(err)
 		}
 	}
-	if err = createDevboxSymlink(devbox); err != nil {
-		return err
-	}
 
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
@@ -136,32 +133,6 @@ func createSymlinksForSupportDirs(projectDir string) error {
 	return nil
 }
 
-// Creates a symlink for devbox in .devbox/virtenv/.wrappers/bin
-// so that devbox can be available inside a pure shell
-func createDevboxSymlink(devbox devboxer) error {
-
-	// Get absolute path for where devbox is called
-	devboxPath, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
-	}
-	// ensure .devbox/bin directory exists
-	binPath := DotdevboxBinPath(devbox)
-	if err := os.MkdirAll(binPath, 0755); err != nil {
-		return errors.WithStack(err)
-	}
-	// Create a symlink between devbox and .devbox/bin
-	err = os.Symlink(devboxPath, filepath.Join(binPath, "devbox"))
-	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
-	}
-	return nil
-}
-
 func wrapperBinPath(devbox devboxer) string {
 	return filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
-}
-
-func DotdevboxBinPath(devbox devboxer) string {
-	return filepath.Join(devbox.ProjectDir(), ".devbox/bin")
 }
