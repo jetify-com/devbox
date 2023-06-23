@@ -1083,8 +1083,7 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 }
 
 // parseEnvAndExcludeSpecialCases converts env as []string to map[string]string
-// In case of pure shell, it excludes special env keys like HOME and PATH. As well as
-// creating a devbox binary symlink so that it is accessible in pure mode.
+// In case of pure shell, it leaks HOME and it leaks PATH with some modifications
 func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string]string, error) {
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
