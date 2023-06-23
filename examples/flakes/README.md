@@ -33,7 +33,6 @@ Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a G
 {
   "packages": [
     "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
-    "github:nix-community/fenix#stable.toolchain",
     "github:F1bonacc1/process-compose"
   ],
   "shell": {
@@ -45,4 +44,4 @@ Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a G
 }
 ```
 
-This installs the `hello` package from the 5233fd... commit of Nixpkgs, the `stable.toolchain` output from the `fenix` package in the `nix-community/fenix` repo, and the `default` output from the `F1bonacc1/process-compose` repo.
+This installs the `hello` package from the 5233fd... commit of Nixpkgs, and the `default` output from the `F1bonacc1/process-compose` repo.
