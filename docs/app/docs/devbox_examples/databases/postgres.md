@@ -1,11 +1,12 @@
 ---
 title: PostgreSQL
 ---
+
 PostgreSQL can be automatically configured by Devbox via the built-in Postgres Plugin. This plugin will activate automatically when you install Postgres using `devbox add postgresql`
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/postgres)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=postgres)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/postgres)
 
 ## Adding Postgres to your Shell
 
@@ -25,7 +26,8 @@ This will install the latest version of Postgres. You can find other installable
 Devbox will automatically create the following configuration when you run `devbox add postgresql`:
 
 ### Services
-* postgresql
+
+-   postgresql
 
 You can use `devbox services start|stop postgresql` to start or stop the Postgres server in the background.
 
@@ -39,4 +41,3 @@ This variable tells PostgreSQL which directory to use for creating and storing d
 ### Notes
 
 To initialize PostgreSQL run `initdb`. You also need to create a database using `createdb <db-name>`
-

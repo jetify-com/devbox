@@ -1,10 +1,10 @@
-# Django 
+# Django
 
 This example demonstrates how to configure and run a Django app using Devbox. It installs Python, PostgreSQL, and uses `pip` to install your Python dependencies in a virtual environment.
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/django)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=django)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/django)
 
 ## How to Use
 
@@ -24,13 +24,12 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 1. Copy the requirements.txt and `todo_project` directory into the root folder of your project
 1. Start a devbox shell with `devbox shell`, then activate your virtual environment and install your requirements using the commands below.
 
-   ```bash
-   source $VENV_DIR/bin/activate
-   pip install -r requirements.txt
-   ```
+    ```bash
+    source $VENV_DIR/bin/activate
+    pip install -r requirements.txt
+    ```
 
-   You can also add these lines to your `init_hook` to automatically activate your venv whenever you start your shell
-
+    You can also add these lines to your `init_hook` to automatically activate your venv whenever you start your shell
 
 ### Setting up the Database
 
@@ -42,19 +41,19 @@ The Django example uses a Postgres database. To set up the database, we will fir
 
 1. In your `devbox shell`, create the empty `todo_db` database and user with the following commands.
 
-   ```bash
-   createdb todo_db
-   psql todo_db -c "CREATE USER todo_user WITH PASSWORD 'secretpassword';"
-   ```
+    ```bash
+    createdb todo_db
+    psql todo_db -c "CREATE USER todo_user WITH PASSWORD 'secretpassword';"
+    ```
 
-   You can add this as a devbox script in your `devbox.json` file, so you can replicate the setup on other machines.
+    You can add this as a devbox script in your `devbox.json` file, so you can replicate the setup on other machines.
 
 1. Run the Django migrations to create the tables in your database.
 
-   ```bash
-   python todo_project/manage.py makemigrations
-   python todo_project/manage.py migrate
-   ```
+    ```bash
+    python todo_project/manage.py makemigrations
+    python todo_project/manage.py migrate
+    ```
 
 Your database is now ready to use. You can add these commands as a script in your `devbox.json` if you want to automate them for future use. See `create_db` in the projects `devbox.json` for an example.
 
@@ -62,8 +61,8 @@ Your database is now ready to use. You can add these commands as a script in you
 
 You can now start your Django server by running the following command.
 
-   ```bash
-   python todo_project/manage.py runserver
-   ```
+```bash
+python todo_project/manage.py runserver
+```
 
-This should start the development server. 
+This should start the development server.

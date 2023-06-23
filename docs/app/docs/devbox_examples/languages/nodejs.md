@@ -6,12 +6,12 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=node-npm)
-
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/node-npm)
 
 ## Adding NodeJS to your Shell
 
 `devbox add nodejs`, or in your `devbox.json`:
+
 ```json
   "packages": [
     "nodejs@18"
@@ -24,9 +24,10 @@ This will install NodeJS 18, and comes bundled with `npm`. You can find other in
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-yarn)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=node-yarn)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/node-yarn)
 
 `devbox add yarn`, or in your `devbox.json` add:
+
 ```json
   "packages": [
     "nodejs@18",

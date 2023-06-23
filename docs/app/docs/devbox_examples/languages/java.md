@@ -28,7 +28,7 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java/gradle/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=java-gradle)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/java-gradle)
 
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below:
 
@@ -54,26 +54,22 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
         ```
     - While in devbox shell, run `echo $JAVA_HOME` and take note of its value.
     - Create a `gradle.properties` file like below and put value of `$JAVA_HOME` instead of <JAVA_HOME_VALUE> in the file.
-      ```gradle
-      /* gradle.properties */
-      org.gradle.java.home=<JAVA_HOME_VALUE>
-      ```
+        ```gradle
+        /* gradle.properties */
+        org.gradle.java.home=<JAVA_HOME_VALUE>
+        ```
 4. `gradle build` should compile the package and create a `build/` directory that contains an executable jar file.
 5. `gradle run` should print "Hello World!".
 6. Add `build/` to `.gitignore`.
 
-
 An example `devbox.json` would look like the following:
+
 ```json
 {
-  "packages": [
-    "gradle",
-    "jdk",
-    "binutils"
-  ],
-  "shell": {
-    "init_hook": null
-  }
+    "packages": ["gradle", "jdk", "binutils"],
+    "shell": {
+        "init_hook": null
+    }
 }
 ```
 
@@ -81,7 +77,7 @@ An example `devbox.json` would look like the following:
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java/maven/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=java-maven)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/java-maven)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 
@@ -95,15 +91,12 @@ Maven is an all-in-one CI-CD tool for building testing and deploying Java projec
 6. Add `target/` to `.gitignore`.
 
 An example `devbox.json` would look like the following:
+
 ```json
 {
-  "packages": [
-    "maven",
-    "jdk",
-    "binutils"
-  ],
-  "shell": {
-    "init_hook": null
-  }
+    "packages": ["maven", "jdk", "binutils"],
+    "shell": {
+        "init_hook": null
+    }
 }
 ```

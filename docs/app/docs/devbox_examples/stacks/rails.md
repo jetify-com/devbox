@@ -2,11 +2,11 @@
 title: Ruby on Rails
 ---
 
-This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database. 
+This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database.
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/rails)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=rails)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/rails)
 
 ## How To Run
 
@@ -24,13 +24,13 @@ bin/rails server
 1. Create a new Devbox project with `devbox init`
 2. Add the packages using
 
-   ```bash
-   devbox add ruby_3_1 bundler nodejs-19_x yarn sqlite
-   ```
+    ```bash
+    devbox add ruby_3_1 bundler nodejs-19_x yarn sqlite
+    ```
 
 3. Start a devbox shell, and install the rails CLI with `gem install rails`
 4. Create your Rails app by running the following in your Devbox Shell
 
-   ```bash
-   rails new blog
-   ```
+    ```bash
+    rails new blog
+    ```

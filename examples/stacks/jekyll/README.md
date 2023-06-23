@@ -2,7 +2,7 @@
 
 [![Built with Devbox](https://jetpack.io/img/devbox/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=jekyll)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/jekyll)
 
 Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html
 
@@ -20,4 +20,4 @@ Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/ruby/)
+-   [Using Ruby with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/ruby/)

@@ -6,7 +6,7 @@ Apache can be automatically configured by Devbox via the built-in Apache Plugin.
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/servers/apache)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=apache)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/apache)
 
 ### Adding Apache to your Shell
 
@@ -25,19 +25,22 @@ This will install the latest version of Apache. You can find other installable v
 The Apache plugin will automatically create the following configuration when you install Apache with `devbox add`.
 
 ### Services
-* apache
+
+-   apache
 
 Use `devbox services start|stop apache` to start and stop httpd in the background.
 
 ### Helper Files
+
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/apache/httpd.conf
-* {PROJECT_DIR}/devbox.d/web/index.html
+-   {PROJECT_DIR}/devbox.d/apache/httpd.conf
+-   {PROJECT_DIR}/devbox.d/web/index.html
 
 Note that by default, Apache is configured with `./devbox.d/web` as the DocumentRoot. To change this, you should copy and modify the default `./devbox.d/apache/httpd.conf`.
 
 ### Environment Variables
+
 ```bash
 HTTPD_ACCESS_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apache/access.log
 HTTPD_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apache/error.log

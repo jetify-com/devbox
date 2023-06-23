@@ -10,7 +10,6 @@ Python by default will attempt to install your packages globally, or in the Nix 
 
 `devbox add python@3.10`, or in your `devbox.json` add:
 
-
 ```json
   "packages": [
     "python@3.10"
@@ -23,7 +22,7 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pip)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=python-pip)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/python-pip)
 
 [pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
 
@@ -33,10 +32,7 @@ Your virtual environment is created in the `.devbox/virtenv/pip` directory by de
 
 ```json
 {
-    "packages": [
-        "python310",
-        "python310Packages.pip"
-    ],
+    "packages": ["python310", "python310Packages.pip"],
     "shell": {
         "init_hook": ". $VENV_DIR/bin/activate"
     }
@@ -47,7 +43,7 @@ Your virtual environment is created in the `.devbox/virtenv/pip` directory by de
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pipenv)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=python-pipenv)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/python-pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 
@@ -55,22 +51,20 @@ You can install `pipenv` by adding it to the packages in your `devbox.json`. You
 
 ```json
 {
-    "packages": [
-        "python310",
-        "pipenv"
-    ],
+    "packages": ["python310", "pipenv"],
     "shell": {
         "init_hook": "pipenv shell"
     }
 }
 ```
+
 This init_hook will automatically start your virtualenv when you run `devbox shell`.
 
 ## Poetry
 
 [**Example Link**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/poetry/poetry-demo)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=python-poetry)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/python-poetry)
 
 [Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project.
 
@@ -78,13 +72,11 @@ You can install Poetry by adding it to the packages in your `devbox.json`. You c
 
 ```json
 {
-    "packages": [
-        "python3",
-        "poetry"
-    ],
+    "packages": ["python3", "poetry"],
     "shell": {
         "init_hook": "poetry shell"
     }
 }
 ```
+
 This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages.

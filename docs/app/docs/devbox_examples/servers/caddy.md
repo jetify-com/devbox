@@ -6,7 +6,7 @@ Caddy can be configured automatically using Devbox's built in Caddy plugin. This
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/servers/caddy)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=caddy)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/caddy)
 
 ### Adding Caddy to your Shell
 
@@ -25,19 +25,22 @@ This will install the latest version of Caddy. You can find other installable ve
 The Caddy plugin will automatically create the following configuration when you install Caddy with `devbox add`
 
 ### Services
-* caddy
+
+-   caddy
 
 Use `devbox services start|stop caddy` to start and stop httpd in the background
 
 ### Helper Files
+
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/caddy/Caddyfile
-* {PROJECT_DIR}/devbox.d/web/index.html
+-   {PROJECT_DIR}/devbox.d/caddy/Caddyfile
+-   {PROJECT_DIR}/devbox.d/web/index.html
 
 Note that by default, Caddy is configured with `./devbox.d/web` as the root. To change this, you should modify the default `./devbox.d/caddy/Caddyfile` or change the `CADDY_ROOT_DIR` environment variable
 
 ### Environment Variables
+
 ```bash
 * CADDY_CONFIG={PROJECT_DIR}/devbox.d/caddy/Caddyfile
 * CADDY_LOG_DIR={PROJECT_DIR}/.devbox/virtenv/caddy/log

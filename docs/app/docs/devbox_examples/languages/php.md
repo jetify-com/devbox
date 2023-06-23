@@ -6,7 +6,7 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/php8.1)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=php)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/php)
 
 ## Adding PHP to your Project
 
@@ -44,7 +44,8 @@ The PHP Plugin will provide the following configuration when you install a PHP r
 ```
 
 ### Services
-* php-fpm
+
+-   php-fpm
 
 Use `devbox services start|stop php-fpm` to start PHP-FPM in the background.
 
@@ -59,7 +60,7 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 
 ### Helper Files
 
-* {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
-* {PROJECT_DIR}/devbox.d/php81/php.ini
+-   {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
+-   {PROJECT_DIR}/devbox.d/php81/php.ini
 
 You can modify these files to configure PHP or your PHP-FPM server

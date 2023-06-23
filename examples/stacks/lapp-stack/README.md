@@ -2,7 +2,7 @@
 
 This example shows how to build a simple application using Apache, PHP, and PostgreSQL. It uses Devbox Plugins for all 3 packages to simplify configuration.
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=lapp-stack)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/templates/lapp-stack)
 
 ## How to Run
 
@@ -16,6 +16,7 @@ The following steps may be done inside or outside a devbox shell.
 ### How to Recreate this Example
 
 1. Create a new project with:
+
     ```bash
     devbox create --template lapp-stack
     devbox install
@@ -26,6 +27,6 @@ The following steps may be done inside or outside a devbox shell.
 
 ### Related Docs
 
-* [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)
-* [Using Apache with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/servers/apache/)
-* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/databases/postgres/)
+-   [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)
+-   [Using Apache with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/servers/apache/)
+-   [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/databases/postgres/)
