@@ -6,7 +6,7 @@ This example shows how to build a simple application using Apache, PHP, and Post
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/lapp-stack)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=lapp-stack)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/lapp-stack)
 
 ## How to Run
 

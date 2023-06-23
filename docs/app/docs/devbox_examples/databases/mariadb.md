@@ -5,7 +5,7 @@ MariaDB can be automatically configured for your dev environment by Devbox via t
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/mariadb)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=mariadb)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/mariadb)
 
 ## Adding MariaDB to your Shell
 

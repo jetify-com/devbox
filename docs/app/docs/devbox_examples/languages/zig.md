@@ -6,7 +6,7 @@ Zig projects can be run in Devbox by adding Zig and Nimble to your project.
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/zig/zig-hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=zig)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/zig)
 
 ## Adding Zig to your Project
 
