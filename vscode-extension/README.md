@@ -8,6 +8,9 @@ This is the official VSCode extension for [devbox](https://github.com/jetpack-io
 
 If a Devbox Cloud instance (from [devbox.sh](https://devbox.sh)) has an `Open In Desktop` button, this extension will make VSCode to be able to connect its workspace to the instance.
 
+NOTE: Requires devbox CLI v0.5.5 and above
+  installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetpack-io/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+
 ### Auto Shell on a devbox project
 
 When VSCode Terminal is opened on a devbox project, this extension detects `devbox.json` and runs `devbox shell` so terminal is automatically in devbox shell environment. Can be turned off in settings.
