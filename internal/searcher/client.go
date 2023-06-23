@@ -11,6 +11,8 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/envir"
@@ -66,6 +68,20 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 	if len(result.Results) == 0 {
 		return nil, nix.ErrPackageNotFound
 	}
+
+	searchVersion := result.Results[0].Packages[0].Version
+	sysInfos := map[string]*lock.SystemInfo{}
+	if featureflag.RemoveNixpkgs.Enabled() {
+		// we use searchVersion instead of version so that "latest" is resolved
+		// to a concrete version before we get the package's system info
+		sysInfosQueried, err := c.resolvePackageSystemInfoIfAny(name, searchVersion)
+		if err != nil {
+			return nil, err
+		}
+		if sysInfosQueried != nil {
+			sysInfos = sysInfosQueried
+		}
+	}
 	return &lock.Package{
 		LastModified: result.Results[0].Packages[0].Date,
 		Resolved: fmt.Sprintf(
@@ -73,8 +89,37 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 			result.Results[0].Packages[0].NixpkgCommit,
 			result.Results[0].Packages[0].AttributePath,
 		),
-		Version: result.Results[0].Packages[0].Version,
+		Version: searchVersion,
+		Systems: sysInfos,
 	}, nil
+}
+
+// resolvePackageSystemInfoIfAny is temporary, until the search API returns
+// the "system info" like the store-hash. This uses the /pkg api that is
+// for nixhub.io as a temporary workaround.
+func (c *client) resolvePackageSystemInfoIfAny(pkgName, version string) (map[string]*lock.SystemInfo, error) {
+	packageResults, err := execPackageQuery(c.host, pkgName)
+	if err != nil {
+		return nil, err
+	}
+
+	var ok bool
+	result, ok := lo.Find(
+		packageResults, func(result *PackageResult) bool { return result.Version == version })
+	if !ok {
+		return nil, nil
+	}
+
+	systemInfos := map[string]*lock.SystemInfo{}
+	for sysName, sysInfo := range result.Systems {
+		systemInfos[sysName] = &lock.SystemInfo{
+			System:       sysName,
+			FromHash:     sysInfo.StoreHash,
+			StoreName:    sysInfo.StoreName,
+			StoreVersion: sysInfo.StoreVersion,
+		}
+	}
+	return systemInfos, nil
 }
 
 func execSearch(url string) (*SearchResult, error) {
@@ -89,4 +134,24 @@ func execSearch(url string) (*SearchResult, error) {
 	}
 	var result SearchResult
 	return &result, json.Unmarshal(data, &result)
+}
+
+func execPackageQuery(endpoint, pkgName string) ([]*PackageResult, error) {
+	url, err := url.JoinPath(endpoint, "pkg", pkgName)
+	if err != nil {
+		return nil, err
+	}
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*PackageResult
+	return result, json.Unmarshal(data, &result)
 }

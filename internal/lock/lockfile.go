@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -24,8 +23,12 @@ type File struct {
 	devboxProject
 	resolver
 
-	LockFileVersion string              `json:"lockfile_version"`
-	Packages        map[string]*Package `json:"packages"`
+	LockFileVersion string `json:"lockfile_version"`
+
+	// Packages is keyed by "canonicalName@version"
+	Packages map[string]*Package `json:"packages"`
+
+	system string
 }
 
 type Package struct {
@@ -33,15 +36,28 @@ type Package struct {
 	PluginVersion string `json:"plugin_version,omitempty"`
 	Resolved      string `json:"resolved,omitempty"`
 	Version       string `json:"version,omitempty"`
+	// Systems is keyed by the system name
+	Systems map[string]*SystemInfo `json:"systems,omitempty"`
 }
 
-func GetFile(project devboxProject, resolver resolver) (*File, error) {
+type SystemInfo struct {
+	System   string // stored elsewhere in json: it's the key for the Package.Systems
+	FromHash string `json:"from_hash,omitempty"`
+	// StoreName may be different from the canonicalName so we store it separately
+	StoreName    string `json:"store_name,omitempty"`
+	StoreVersion string `json:"store_version,omitempty"`
+	ToHash       string `json:"to_hash,omitempty"`
+}
+
+func GetFile(project devboxProject, resolver resolver, system string) (*File, error) {
 	lockFile := &File{
 		devboxProject: project,
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
+
+		system: system,
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -72,7 +88,15 @@ func (l *File) Remove(pkgs ...string) error {
 // Resolve updates the in memory copy for performance but does not write to disk
 // This avoids writing values that may need to be removed in case of error.
 func (l *File) Resolve(pkg string) (*Package, error) {
-	if entry, ok := l.Packages[pkg]; !ok || entry.Resolved == "" {
+	entry, hasEntry := l.Packages[pkg]
+
+	// If the package's system info is missing, we need to resolve it again.
+	needsSysInfo := false
+	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
+		needsSysInfo = entry.Systems[l.system] == nil
+	}
+
+	if !hasEntry || entry.Resolved == "" || needsSysInfo {
 		locked := &Package{}
 		var err error
 		if _, _, versioned := devpkg.ParseVersionedPackage(pkg); versioned {
@@ -85,6 +109,19 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
+
+		// Merge the system info from the lockfile with the queried system info.
+		// This is necessary because a different system's info may previously have
+		// been added. For example: `aarch64-darwin` was already added, but
+		// current user is on `x86_64-linux`.
+		if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
+			for _, sysInfo := range entry.Systems {
+				if _, ok := locked.Systems[sysInfo.System]; !ok {
+					locked.Systems[sysInfo.System] = sysInfo
+				}
+			}
+		}
+
 		l.Packages[pkg] = locked
 	}
 
