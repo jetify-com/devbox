@@ -70,16 +70,16 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 	}
 
 	searchVersion := result.Results[0].Packages[0].Version
-	sysInfoMap := map[string]*lock.SystemInfo{}
+	sysInfos := map[string]*lock.SystemInfo{}
 	if featureflag.RemoveNixpkgs.Enabled() {
 		// we use searchVersion instead of version so that "latest" is resolved
 		// to a concrete version before we get the package's system info
-		sysInfo, err := c.resolvePackageSystemInfoIfAny(name, searchVersion)
+		sysInfosQueried, err := c.resolvePackageSystemInfoIfAny(name, searchVersion)
 		if err != nil {
 			return nil, err
 		}
-		if sysInfo != nil {
-			sysInfoMap[sysInfo.System] = sysInfo
+		if sysInfosQueried != nil {
+			sysInfos = sysInfosQueried
 		}
 	}
 	return &lock.Package{
@@ -90,14 +90,14 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 			result.Results[0].Packages[0].AttributePath,
 		),
 		Version: searchVersion,
-		Systems: sysInfoMap,
+		Systems: sysInfos,
 	}, nil
 }
 
 // resolvePackageSystemInfoIfAny is temporary, until the search API returns
 // the "system info" like the store-hash. This uses the /pkg api that is
 // for nixhub.io as a temporary workaround.
-func (c *client) resolvePackageSystemInfoIfAny(pkgName, version string) (*lock.SystemInfo, error) {
+func (c *client) resolvePackageSystemInfoIfAny(pkgName, version string) (map[string]*lock.SystemInfo, error) {
 	packageResults, err := execPackageQuery(c.host, pkgName)
 	if err != nil {
 		return nil, err
@@ -110,24 +110,16 @@ func (c *client) resolvePackageSystemInfoIfAny(pkgName, version string) (*lock.S
 		return nil, nil
 	}
 
-	userSystem, err := nix.System()
-	if err != nil {
-		return nil, err
-	}
-
-	var systemInfo *lock.SystemInfo
+	systemInfos := map[string]*lock.SystemInfo{}
 	for sysName, sysInfo := range result.Systems {
-		if sysName == userSystem {
-			systemInfo = &lock.SystemInfo{
-				System:       sysName,
-				FromHash:     sysInfo.StoreHash,
-				StoreName:    sysInfo.StoreName,
-				StoreVersion: sysInfo.StoreVersion,
-			}
-			break
+		systemInfos[sysName] = &lock.SystemInfo{
+			System:       sysName,
+			FromHash:     sysInfo.StoreHash,
+			StoreName:    sysInfo.StoreName,
+			StoreVersion: sysInfo.StoreVersion,
 		}
 	}
-	return systemInfo, nil
+	return systemInfos, nil
 }
 
 func execSearch(url string) (*SearchResult, error) {
