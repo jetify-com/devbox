@@ -14,7 +14,7 @@ When VSCode Terminal is opened on a devbox project, this extension detects `devb
 
 ### Reopen in Devbox shell environment
 
-If the opened workspace in VSCode has a devbox.json file, from command palatte, invoking the devbox command `Reopen in Devbox shell environment` will do the following:
+If the opened workspace in VSCode has a devbox.json file, from command palette, invoking the devbox command `Reopen in Devbox shell environment` will do the following:
 
 1. Installs devbox packages if missing.
 2. Update workspace settings for MacOS to create terminals without creating a login shell [learn more](https://code.visualstudio.com/docs/terminal/profiles#_why-are-there-duplicate-paths-in-the-terminals-path-environment-variable-andor-why-are-they-reversed-on-macos)
