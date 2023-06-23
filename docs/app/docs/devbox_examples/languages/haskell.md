@@ -6,8 +6,6 @@ Haskell projects that use the Stack Framework can be run in Devbox by adding the
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/haskell/)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=haskell)
-
 ## Adding Haskell and Stack to your Project
 
 `devbox add stack cabal-install zlib hpack`, or add the following to your `devbox.json`

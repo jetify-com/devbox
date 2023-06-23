@@ -26,7 +26,7 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 :::note
 If you want to try Devbox before installing it, you can open a cloud shell on your browser using the link below
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=tutorial)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/tutorial)
 :::
 
 ## Create a development environment
@@ -45,7 +45,7 @@ We'll create a new development environment with the packages we need. These pack
 
 3. Search for packages to add to your Devbox project with `devbox search`.  For example, to search for Python packages, you can run the `devbox search python3`
 
-3. You can add a package to your project by running `devbox add <package>`. For example, running the following will install the latest available version of Python in your project:
+4. You can add a package to your project by running `devbox add <package>`. For example, running the following will install the latest available version of Python in your project:
 
     ```bash
     devbox add ripgrep
@@ -57,7 +57,7 @@ We'll create a new development environment with the packages we need. These pack
     devbox add python@3.10
     ```
 
-4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
+5. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
     ```json
     {
@@ -68,7 +68,7 @@ We'll create a new development environment with the packages we need. These pack
     }
     ```
 
-5. Start a new shell that has your packages and tools installed:
+6. Start a new shell that has your packages and tools installed:
 
     ```bash
     devbox shell
@@ -80,7 +80,7 @@ We'll create a new development environment with the packages we need. These pack
 
     You can tell you're in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
 
-6. Use your favorite packages.
+7. Use your favorite packages.
 
     In this example we installed Python 3.10, so let's use it.
 
@@ -97,19 +97,19 @@ We'll create a new development environment with the packages we need. These pack
     -SIMD -AVX (compiled)
     ```
 
-7. Your regular tools are also available including environment variables and config settings.
+8. Your regular tools are also available including environment variables and config settings.
 
     ```bash
     git config --get user.name
     ```
 
-8. To exit the Devbox shell and return to your regular shell:
+9. To exit the Devbox shell and return to your regular shell:
 
     ```bash
     exit
     ```
 
-9. To share your project and shell,  make sure to check in your `devbox.json` and `devbox.lock` file into source control. These files will ensure that developers get the same packages and environment when they run your project.
+10. To share your project and shell,  make sure to check in your `devbox.json` and `devbox.lock` file into source control. These files will ensure that developers get the same packages and environment when they run your project.
 
 ## Add the Devbox Badge to your Repo
 

@@ -4,7 +4,7 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 
 [Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/django)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=django)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/django)
 
 ## How to Use
 

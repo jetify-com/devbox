@@ -6,7 +6,7 @@ Go projects can be run in Devbox by adding the Go SDK to your project. If your p
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/go/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new?template=go)
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/go)
 
 ## Adding Go to your Project
 
@@ -28,3 +28,4 @@ If you need additional C libraries, you can add them along with `gcc` to your pa
     "gcc",
     "libcap"
 ]
+```
