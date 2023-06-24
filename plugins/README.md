@@ -12,7 +12,7 @@ Before contributing, please consult our [Contributing Guide](../CONTRIBUTING.md)
 
 ### Building a Devbox CLI with your Plugin
 
-1. Follow the instructions in our [Contributing Guide](CONTRIBUTING.md) to set up your Devbox development environment
+1. Follow the instructions in our [Contributing Guide](../CONTRIBUTING.md) to set up your Devbox development environment
 2. Create a new JSON file with your plugin's name. For example, for a `mysql` plugin, you would create `mysql.json`.
 3. Add the configuration, then build a new version of Devbox with your plugin using `devbox run build`
 4. You can now test your plugin using the CLI in `dist/devbox`.
