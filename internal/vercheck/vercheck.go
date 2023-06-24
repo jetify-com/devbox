@@ -47,6 +47,7 @@ var isDevBuild = build.IsDev
 var commandSkipList = []string{
 	"devbox global shellenv",
 	"devbox shellenv",
+	"devbox version update",
 }
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
