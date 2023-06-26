@@ -1,0 +1,17 @@
+version: "0.5"
+
+processes:
+  mysql:
+    command: "mysqld 2> $MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mariadb_logs for details'"
+    is_daemon: true
+    shutdown:
+      command: "mysqladmin -u root shutdown"
+    availability:
+      restart: "always"
+    depends_on:
+      mysql_logs:
+        condition: "process_started"
+  mysql_logs:
+    command: "tail -f $MYSQL_HOME/mysql.log"
+    availability:
+      restart: "always"
