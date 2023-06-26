@@ -35,6 +35,14 @@
         "title": "Devbox: Reopen in Devbox shell environment"
       },
       {
+        "command": "devbox.install",
+        "title": "Devbox: Install - Install packages in your devbox project"
+      },
+      {
+        "command": "devbox.update",
+        "title": "Devbox: Update - Update packages in your devbox project"
+      },
+      {
         "command": "devbox.generateDockerfile",
         "title": "Devbox: Generate a Dockerfile from devbox.json"
       },
@@ -66,7 +74,16 @@
           "when": "devbox.configFileExists == true"
         },
         {
-          "command": "devbox.reopen"
+          "command": "devbox.reopen",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.install",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.update",
+          "when": "devbox.configFileExists == true"
         },
         {
           "command": "devbox.add",
