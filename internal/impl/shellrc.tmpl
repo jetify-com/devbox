@@ -68,7 +68,7 @@ if ! type refresh >/dev/null 2>&1; then
   export DEVBOX_REFRESH_ALIAS="refresh"
 fi
 
-{{ if .PromptHookEnabled }}
+{{- if .PromptHookEnabled }}
 # Ensure devbox shellenv is evaluated
 # TODO savil: how do I wrap ProjectDir in quotes?
 eval "$(devbox hook {{ .ShellName }} -c {{ .ProjectDir }})"
