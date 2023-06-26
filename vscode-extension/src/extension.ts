@@ -85,6 +85,11 @@ export function activate(context: ExtensionContext) {
 		await runInTerminal('devbox update', true);
 	});
 
+	const devboxSearch = commands.registerCommand('devbox.search', async () => {
+		const result = await window.showInputBox({ placeHolder: "Name or a subset of a name of a package to search" });
+		await runInTerminal(`devbox search ${result}`, true);
+	});
+
 	const setupDevcontainer = commands.registerCommand('devbox.setupDevContainer', async () => {
 		await runInTerminal('devbox generate devcontainer', true);
 	});
@@ -102,6 +107,7 @@ export function activate(context: ExtensionContext) {
 	context.subscriptions.push(devboxRun);
 	context.subscriptions.push(devboxInit);
 	context.subscriptions.push(devboxInstall);
+	context.subscriptions.push(devboxSearch);
 	context.subscriptions.push(devboxUpdate);
 	context.subscriptions.push(devboxRemove);
 	context.subscriptions.push(devboxShell);

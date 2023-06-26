@@ -43,6 +43,10 @@
         "title": "Devbox: Update - Update packages in your devbox project"
       },
       {
+        "command": "devbox.search",
+        "title": "Devbox: Search - Search for packages for your devbox project"
+      },
+      {
         "command": "devbox.generateDockerfile",
         "title": "Devbox: Generate a Dockerfile from devbox.json"
       },
@@ -83,6 +87,10 @@
         },
         {
           "command": "devbox.update",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.search",
           "when": "devbox.configFileExists == true"
         },
         {

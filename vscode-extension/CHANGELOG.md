@@ -9,6 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Fixed documentation
 - Added devbox install command
 - Added devbox update command
+- Added devbox search command
 
 ## [0.1.0]
 

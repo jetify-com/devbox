@@ -35,6 +35,7 @@ NOTE: Requires devbox CLI v0.5.5 and above
 - **Run:** Runs a script from devbox.json if specified
 - **Install** Install packages specified in devbox.json
 - **Update** Update packages specified in devbox.json
+- **Search** Search for packages to add to your devbox project
 - **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or GitHub Codespaces.
 - **Generate a Dockerfile from devbox.json:** Generates a Dockerfile a project's root directory. This allows for running the devbox project in a container.
 - **Reopen in Devbox shell environment:** Allows projects with devbox.json
