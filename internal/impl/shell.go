@@ -16,6 +16,8 @@ import (
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/shenv"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
@@ -314,21 +316,25 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 	}
 
 	err = tmpl.Execute(shellrcf, struct {
-		ProjectDir       string
-		OriginalInit     string
-		OriginalInitPath string
-		HooksFilePath    string
-		ShellStartTime   string
-		HistoryFile      string
-		ExportEnv        string
+		ProjectDir        string
+		OriginalInit      string
+		OriginalInitPath  string
+		HooksFilePath     string
+		ShellName         string
+		ShellStartTime    string
+		HistoryFile       string
+		ExportEnv         string
+		PromptHookEnabled bool
 	}{
-		ProjectDir:       s.projectDir,
-		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
-		OriginalInitPath: s.userShellrcPath,
-		HooksFilePath:    s.hooksFilePath,
-		ShellStartTime:   s.shellStartTime,
-		HistoryFile:      strings.TrimSpace(s.historyFile),
-		ExportEnv:        exportify(s.env),
+		ProjectDir:        s.projectDir,
+		OriginalInit:      string(bytes.TrimSpace(userShellrc)),
+		OriginalInitPath:  s.userShellrcPath,
+		HooksFilePath:     s.hooksFilePath,
+		ShellName:         string(s.name),
+		ShellStartTime:    s.shellStartTime,
+		HistoryFile:       strings.TrimSpace(s.historyFile),
+		ExportEnv:         exportify(s.env),
+		PromptHookEnabled: featureflag.PromptHook.Enabled(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -410,4 +416,24 @@ func filterPathList(pathList string, keep func(string) bool) string {
 		}
 	}
 	return strings.Join(filtered, string(filepath.ListSeparator))
+}
+
+func (d *Devbox) ExportHook(shellName string) (string, error) {
+	if !featureflag.PromptHook.Enabled() {
+		return "", nil
+	}
+
+	// TODO: use a single common "enum" for both shenv and DevboxShell
+	hookTemplate, err := shenv.DetectShell(shellName).Hook()
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	err = template.Must(template.New("hookTemplate").Parse(hookTemplate)).
+		Execute(&buf, struct{ ProjectDir string }{ProjectDir: d.projectDir})
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return buf.String(), nil
 }

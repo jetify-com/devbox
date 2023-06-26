@@ -70,3 +70,8 @@ if not type refresh >/dev/null 2>&1
     alias refresh='eval (devbox shellenv | string collect)'
     export DEVBOX_REFRESH_ALIAS="refresh"
 end
+
+{{ if .PromptHookEnabled }}
+# Ensure devbox shellenv is evaluated
+devbox hook fish -c "{{ .ProjectDir }}" | source
+{{ end }}

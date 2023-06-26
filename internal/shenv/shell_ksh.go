@@ -8,7 +8,7 @@ var Ksh Shell = ksh{}
 // um, this is ChatGPT writing it. I need to verify and test
 const kshHook = `
 _devbox_hook() {
-  eval "$(devbox shellenv --config {{ .ProjectDir }})";
+  eval "$(devbox export --config {{ .ProjectDir }})";
 }
 if [[ "$(typeset -f precmd)" != *"_devbox_hook"* ]]; then
   function precmd {

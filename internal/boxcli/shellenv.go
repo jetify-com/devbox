@@ -36,6 +36,14 @@ func shellEnvCmd() *cobra.Command {
 		},
 	}
 
+	registerShellEnvFlags(command, &flags)
+	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
+
+	return command
+}
+
+func registerShellEnvFlags(command *cobra.Command, flags *shellEnvCmdFlags) {
+
 	command.Flags().BoolVar(
 		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
 	command.Flags().BoolVar(
@@ -45,10 +53,6 @@ func shellEnvCmd() *cobra.Command {
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	flags.config.register(command)
-
-	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
-
-	return command
 }
 
 func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
