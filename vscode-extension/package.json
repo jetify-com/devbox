@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by jetpack.io",
   "description": "devbox integration for VSCode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
@@ -33,6 +33,18 @@
       {
         "command": "devbox.reopen",
         "title": "Devbox: Reopen in Devbox shell environment"
+      },
+      {
+        "command": "devbox.install",
+        "title": "Devbox: Install - Install packages in your devbox project"
+      },
+      {
+        "command": "devbox.update",
+        "title": "Devbox: Update - Update packages in your devbox project"
+      },
+      {
+        "command": "devbox.search",
+        "title": "Devbox: Search - Search for packages for your devbox project"
       },
       {
         "command": "devbox.generateDockerfile",
@@ -66,7 +78,20 @@
           "when": "devbox.configFileExists == true"
         },
         {
-          "command": "devbox.reopen"
+          "command": "devbox.reopen",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.install",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.update",
+          "when": "devbox.configFileExists == true"
+        },
+        {
+          "command": "devbox.search",
+          "when": "devbox.configFileExists == true"
         },
         {
           "command": "devbox.add",
