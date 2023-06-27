@@ -6,12 +6,8 @@ package envir
 import (
 	"os"
 	"strconv"
+	"time"
 )
-
-func IsCLICloudShell() bool { // TODO: not used any more
-	cliCloudShell, _ := strconv.ParseBool(os.Getenv(devboxCLICloudShell))
-	return cliCloudShell
-}
 
 func IsDevboxCloud() bool {
 	return os.Getenv(DevboxRegion) != ""
@@ -41,6 +37,28 @@ func IsInBrowser() bool { // TODO: a better name
 func IsCI() bool {
 	ci, err := strconv.ParseBool(os.Getenv("CI"))
 	return ci && err == nil
+}
+
+func ShellStart() time.Time {
+	return ParseShellStart(os.Getenv(DevboxShellStartTime))
+}
+
+func FormatShellStart(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return strconv.FormatInt(t.Unix(), 10)
+}
+
+func ParseShellStart(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
+	unix, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return time.Time{}
+	}
+	return time.Unix(unix, 0)
 }
 
 // GetValueOrDefault gets the value of an environment variable.

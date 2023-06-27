@@ -39,7 +39,6 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
-	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
@@ -185,18 +184,13 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	shellStartTime := envir.GetValueOrDefault(
-		envir.DevboxShellStartTime,
-		telemetry.UnixTimestampFromTime(telemetry.CommandStartTime()),
-	)
-
 	opts := []ShellOption{
 		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
-		WithShellStartTime(shellStartTime),
+		WithShellStartTime(envir.ShellStart()),
 	}
 
 	shell, err := NewDevboxShell(d, opts...)
@@ -985,7 +979,6 @@ func (d *Devbox) checkOldEnvrc() error {
 					"Run `devbox generate direnv --force` to update it.\n"+
 					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
 			)
-
 		}
 	}
 	return nil
@@ -1058,7 +1051,6 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	env, err := d.nixEnv(ctx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1132,7 +1124,6 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 
 // ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
 func ExportifySystemPathWithoutWrappers() string {
-
 	path := []string{}
 	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
 		// Intentionally do not include projectDir with plugin.WrapperBinPath so that

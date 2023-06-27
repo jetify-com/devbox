@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
@@ -65,7 +66,7 @@ type DevboxShell struct {
 	historyFile string
 
 	// shellStartTime is the unix timestamp for when the command was invoked
-	shellStartTime string
+	shellStartTime time.Time
 }
 
 type ShellOption func(*DevboxShell)
@@ -197,9 +198,9 @@ func WithProjectDir(projectDir string) ShellOption {
 	}
 }
 
-func WithShellStartTime(time string) ShellOption {
+func WithShellStartTime(t time.Time) ShellOption {
 	return func(s *DevboxShell) {
-		s.shellStartTime = time
+		s.shellStartTime = t
 	}
 }
 
@@ -331,7 +332,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath:  s.userShellrcPath,
 		HooksFilePath:     s.hooksFilePath,
 		ShellName:         string(s.name),
-		ShellStartTime:    s.shellStartTime,
+		ShellStartTime:    envir.FormatShellStart(s.shellStartTime),
 		HistoryFile:       strings.TrimSpace(s.historyFile),
 		ExportEnv:         exportify(s.env),
 		PromptHookEnabled: featureflag.PromptHook.Enabled(),

@@ -28,7 +28,6 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/services"
-	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux/stepper"
 )
 
@@ -445,7 +444,7 @@ func shell(username, hostname, projectDir string, shellStartTime time.Time) erro
 	cmd := &openssh.Cmd{
 		DestinationAddr: hostname,
 		PathInVM:        absoluteProjectPathInVM(username, projectPath),
-		ShellStartTime:  telemetry.UnixTimestampFromTime(shellStartTime),
+		ShellStartTime:  envir.FormatShellStart(shellStartTime),
 		Username:        username,
 	}
 	sessionErrors := newSSHSessionErrors()
