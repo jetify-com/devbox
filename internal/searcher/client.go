@@ -32,7 +32,7 @@ func Client() *client {
 	}
 }
 
-func (c *client) Search(query string, options ...func() string) (*SearchResult, error) {
+func (c *client) Search(query string, options ...SearchOption) (*SearchResult, error) {
 	if query == "" {
 		return nil, fmt.Errorf("query should not be empty")
 	}
@@ -50,7 +50,10 @@ func (c *client) Search(query string, options ...func() string) (*SearchResult, 
 	return execSearch(searchURL)
 }
 
-func WithVersion(version string) func() string {
+// SearchOption returns a string for query to be appended to the endpoint
+type SearchOption func() string
+
+func WithVersion(version string) SearchOption {
 	return func() string {
 		return "&v=" + url.QueryEscape(version)
 	}
