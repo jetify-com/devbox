@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"os"
 	"regexp"
 	"strings"
 
@@ -16,6 +17,14 @@ func getConfigIfAny(pkg *nix.Package, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	if pkg.IsLocal() {
+		content, err := os.ReadFile(pkg.Path)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return buildConfig(pkg, projectDir, string(content))
 	}
 
 	for _, file := range configFiles {

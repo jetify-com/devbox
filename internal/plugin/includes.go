@@ -9,10 +9,12 @@ import (
 
 func (m *Manager) parseInclude(include string) (*nix.Package, error) {
 	includeType, name, _ := strings.Cut(include, ":")
-	if includeType != "plugin" {
-		return nil, usererr.New("unknown include type %q", includeType)
-	} else if name == "" {
+	if name == "" {
 		return nil, usererr.New("include name is required")
+	} else if includeType == "plugin" {
+		return nix.PackageFromString(name, m.lockfile), nil
+	} else if includeType == "path" {
+		return nix.PackageFromString(include, m.lockfile), nil
 	}
-	return nix.PackageFromString(name, m.lockfile), nil
+	return nil, usererr.New("unknown include type %q", includeType)
 }
