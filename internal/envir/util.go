@@ -8,11 +8,6 @@ import (
 	"strconv"
 )
 
-func IsCLICloudShell() bool { // TODO: not used any more
-	cliCloudShell, _ := strconv.ParseBool(os.Getenv(devboxCLICloudShell))
-	return cliCloudShell
-}
-
 func IsDevboxCloud() bool {
 	return os.Getenv(DevboxRegion) != ""
 }

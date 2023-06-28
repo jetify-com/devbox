@@ -445,7 +445,7 @@ func shell(username, hostname, projectDir string, shellStartTime time.Time) erro
 	cmd := &openssh.Cmd{
 		DestinationAddr: hostname,
 		PathInVM:        absoluteProjectPathInVM(username, projectPath),
-		ShellStartTime:  telemetry.UnixTimestampFromTime(shellStartTime),
+		ShellStartTime:  telemetry.FormatShellStart(shellStartTime),
 		Username:        username,
 	}
 	sessionErrors := newSSHSessionErrors()

@@ -5,7 +5,6 @@ package envir
 
 const (
 	DevboxCache         = "DEVBOX_CACHE"
-	devboxCLICloudShell = "DEVBOX_CLI_CLOUD_SHELL"
 	DevboxDebug         = "DEVBOX_DEBUG"
 	DevboxFeaturePrefix = "DEVBOX_FEATURE_"
 	DevboxGateway       = "DEVBOX_GATEWAY"
@@ -21,7 +20,8 @@ const (
 	LauncherVersion = "LAUNCHER_VERSION"
 	LauncherPath    = "LAUNCHER_PATH"
 
-	SSHTTY = "SSH_TTY"
+	GitHubUsername = "GITHUB_USER_NAME"
+	SSHTTY         = "SSH_TTY"
 
 	XDGDataHome   = "XDG_DATA_HOME"
 	XDGConfigHome = "XDG_CONFIG_HOME"

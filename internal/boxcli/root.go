@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -110,8 +111,14 @@ func Main() {
 		os.Exit(sshshim.Execute(ctx, os.Args))
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "bug" {
-		telemetry.ReportErrors()
+	if len(os.Args) > 1 && os.Args[1] == "upload-telemetry" {
+		// This subcommand is hidden and only run by devbox itself as a
+		// child process. We need to really make sure that we always
+		// exit and don't leave orphaned processes laying around.
+		time.AfterFunc(5*time.Second, func() {
+			os.Exit(0)
+		})
+		telemetry.Upload()
 		return
 	}
 
