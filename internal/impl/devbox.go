@@ -819,6 +819,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	envPaths := []string{}
 	if !featureflag.PromptHook.Enabled() {
+		// Prepend the bin-wrappers directory to the PATH. This ensures that
+		// bin-wrappers execute before the unwrapped binaries.
 		envPaths = append(envPaths, filepath.Join(d.projectDir, plugin.WrapperBinPath))
 	}
 	// Adding profile bin path is a temporary hack. Some packages .e.g. curl
@@ -831,8 +833,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// nix recursive bin lookup.
 	envPaths = append(envPaths, nix.ProfileBinPath(d.projectDir), env["PATH"])
 
-	// Prepend virtenv bin path first so user can override it if needed. Virtenv
-	// is where the bin wrappers live
 	env["PATH"] = JoinPathLists(envPaths...)
 
 	// Include env variables in devbox.json
