@@ -12,6 +12,7 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devpkg"
 )
@@ -145,11 +146,6 @@ func (l *File) ResolveToCurrentNixpkgCommitHash(pkg string) error {
 }
 
 func (l *File) Save() error {
-	// Never write lockfile if versioned packages is not enabled
-	if !featureflag.LockFile.Enabled() {
-		return nil
-	}
-
 	return cuecfg.WriteFile(lockFilePath(l.devboxProject), l)
 }
 
@@ -185,8 +181,5 @@ func lockFilePath(project devboxProject) string {
 }
 
 func getLockfileHash(project devboxProject) (string, error) {
-	if !featureflag.LockFile.Enabled() {
-		return "", nil
-	}
 	return cuecfg.FileHash(lockFilePath(project))
 }

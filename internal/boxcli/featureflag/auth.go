@@ -3,4 +3,4 @@
 
 package featureflag
 
-var Auth = enabled("AUTH")
+var Auth = enable("AUTH")

@@ -18,7 +18,7 @@ type feature struct {
 
 var features = map[string]*feature{}
 
-func disabled(name string) *feature {
+func disable(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
 	}
@@ -26,7 +26,7 @@ func disabled(name string) *feature {
 	return features[name]
 }
 
-func enabled(name string) *feature {
+func enable(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
 	}
@@ -52,10 +52,6 @@ func (f *feature) Enabled() bool {
 		return on
 	}
 	return f.enabled
-}
-
-func (f *feature) Disabled() bool {
-	return !f.Enabled()
 }
 
 // All returns a map of all known features flags and whether they're enabled.
