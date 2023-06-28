@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -80,7 +81,7 @@ func Stop() {
 	// Report errors in a separate process so we don't block exiting.
 	exe, err := os.Executable()
 	if err == nil {
-		_ = exec.Command(exe, "bug").Start()
+		_ = exec.Command(exe, "upload-telemetry").Start()
 	}
 	started = false
 }
@@ -242,6 +243,8 @@ func Upload() {
 	wg := sync.WaitGroup{} //nolint:varnamelen
 	wg.Add(2)
 	go func() {
+		defer wg.Done()
+
 		if !initSentryClient(appName) {
 			return
 		}
@@ -251,9 +254,10 @@ func Upload() {
 			sentry.CaptureEvent(&e)
 		}
 		sentry.Flush(3 * time.Second)
-		wg.Done()
 	}()
 	go func() {
+		defer wg.Done()
+
 		if !initSegmentClient() {
 			return
 		}
@@ -262,7 +266,6 @@ func Upload() {
 			segmentClient.Enqueue(e) //nolint:errcheck
 		}
 		segmentClient.Close()
-		wg.Done()
 	}()
 	wg.Wait()
 }
@@ -326,4 +329,26 @@ func newEventID() string {
 	id[8] &= 0x3F
 	id[8] |= 0x80
 	return hex.EncodeToString(id)
+}
+
+func ShellStart() time.Time {
+	return ParseShellStart(os.Getenv(envir.DevboxShellStartTime))
+}
+
+func FormatShellStart(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return strconv.FormatInt(t.Unix(), 10)
+}
+
+func ParseShellStart(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
+	unix, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return time.Time{}
+	}
+	return time.Unix(unix, 0)
 }

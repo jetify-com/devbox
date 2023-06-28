@@ -22,6 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -190,7 +191,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
-		WithShellStartTime(envir.ShellStart()),
+		WithShellStartTime(telemetry.ShellStart()),
 	}
 
 	shell, err := NewDevboxShell(d, opts...)

@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/shenv"
+	"go.jetpack.io/devbox/internal/telemetry"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
@@ -332,7 +333,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath:  s.userShellrcPath,
 		HooksFilePath:     s.hooksFilePath,
 		ShellName:         string(s.name),
-		ShellStartTime:    envir.FormatShellStart(s.shellStartTime),
+		ShellStartTime:    telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:       strings.TrimSpace(s.historyFile),
 		ExportEnv:         exportify(s.env),
 		PromptHookEnabled: featureflag.PromptHook.Enabled(),
