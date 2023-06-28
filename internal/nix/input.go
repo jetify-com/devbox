@@ -419,12 +419,7 @@ func (p *Package) hashFromNixPkgsURL() string {
 
 // BinaryCacheStore is the store from which to fetch this package's binaries.
 // It is used as FromStore in builtins.fetchClosure.
-//
-// This could be a const, but is a method for convenience of invoking from the
-// flake template.
-func (p *Package) BinaryCacheStore() string {
-	return "https://cache.nixos.org"
-}
+const BinaryCacheStore = "https://cache.nixos.org"
 
 func (p *Package) IsInBinaryStore() bool {
 	return p.isVersioned()

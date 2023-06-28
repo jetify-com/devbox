@@ -15,27 +15,24 @@
      {{.Name}},
      {{- end }}
    }:
-       let
-          pkgs = nixpkgs.legacyPackages.{{ .System }};
-          {{- range $_, $pkg := .Packages }}
-          {{ $.System }}.{{ $pkg.PackageAttributePath }} = builtins.fetchClosure{
-             fromStore = "{{ $pkg.BinaryCacheStore }}";
-             fromPath = "{{ $pkg.PathInBinaryStore }}";
-          };
-          {{- end }}
-       in
-       {
-         devShells.{{ .System }}.default = pkgs.mkShell {
-           buildInputs = [
-             {{- range $_, $pkg := .Packages }}
-             {{ $.System }}.{{ $pkg.PackageAttributePath }}
-             {{- end }}
-             {{- range .FlakeInputs }}
-             {{- range .BuildInputs }}
-             {{.}}
-             {{- end }}
-             {{- end }}
-           ];
-         };
-       };
+      let
+        pkgs = nixpkgs.legacyPackages.{{ .System }};
+      in
+      {
+        devShells.{{ .System }}.default = pkgs.mkShell {
+          buildInputs = [
+            {{- range .Packages }}
+            (builtins.fetchClosure{
+              fromStore = "{{ $.BinaryCacheStore }}";
+              fromPath = "{{ .PathInBinaryStore }}";
+            })
+            {{- end }}
+            {{- range .FlakeInputs }}
+            {{- range .BuildInputs }}
+            {{.}}
+            {{- end }}
+            {{- end }}
+          ];
+        };
+      };
  }

@@ -11,6 +11,7 @@ import (
 // flakePlan contains the data to populate the top level flake.nix file
 // that builds the devbox environment
 type flakePlan struct {
+	BinaryCacheStore string
 	NixpkgsInfo *NixpkgsInfo
 	FlakeInputs []*flakeInput
 	Packages    []*nix.Package
@@ -76,6 +77,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	}
 
 	return &flakePlan{
+		BinaryCacheStore: nix.BinaryCacheStore,
 		FlakeInputs: flakeInputs,
 		NixpkgsInfo: nixpkgsInfo,
 		Packages:    versionedPackages,
