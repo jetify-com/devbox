@@ -131,10 +131,6 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 	}
 }
 
-func (l *lockfile) SystemInfo(pkg string) (*lock.SystemInfo, error) {
-	return nil, nil
-}
-
 func testInputFromString(s, projectDir string) *testInput {
 	return lo.ToPtr(testInput{Package: *PackageFromString(s, &lockfile{projectDir})})
 }

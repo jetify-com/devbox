@@ -13,10 +13,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -42,9 +42,6 @@ type Package struct {
 	Raw string
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
-
-	// sysInfo contains system-specific information about this package in the nix store
-	sysInfo *lock.SystemInfo
 }
 
 // PackageFromStrings constructs Package from the list of package names provided.
@@ -82,17 +79,6 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		lockfile:                            locker,
 		Raw:                                 raw,
 		normalizedPackageAttributePathCache: "",
-		sysInfo:                             nil,
-	}
-
-	if pkg.isVersioned() {
-		sysInfo, err := locker.SystemInfo(raw)
-		if err != nil {
-			// ignoring for coding convenience. TODO savil. handle error
-			debug.Log("ERROR: failed to get locker.SystemInfo for pkg %s. Error is %s", raw, err)
-		} else if sysInfo != nil {
-			pkg.sysInfo = sysInfo
-		}
 	}
 
 	return pkg
@@ -421,16 +407,51 @@ func (p *Package) version() string {
 	return version
 }
 
+// TODO savil. In next PR, change all callers to IsVersioned. Not doing it in
+// this PR to keep the diff scoped.
 func (p *Package) isVersioned() bool {
 	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
+}
+
+func (p *Package) IsVersioned() bool {
+	return p.isVersioned()
 }
 
 func (p *Package) hashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-func (p *Package) SystemInfo() *lock.SystemInfo {
-	return p.sysInfo
+// BinaryCacheStore is the store from which to fetch this package's binaries.
+// It is used as FromStore in builts.fetchClosure.
+const BinaryCacheStore = "https://cache.nixos.org"
+
+func (p *Package) IsInFromBinaryStore() bool {
+	return p.isVersioned()
+}
+
+// PathInBinaryStore is the key in the BinaryCacheStore for this package
+func (p *Package) PathInBinaryStore() (string, error) {
+	if !p.IsInFromBinaryStore() {
+		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return "", err
+	}
+
+	userSystem, err := System()
+	if err != nil {
+		return "", err
+	}
+
+	sysInfo := entry.Systems[userSystem]
+	storeDirParts := []string{sysInfo.FromHash, sysInfo.StoreName}
+	if sysInfo.StoreVersion != "" {
+		storeDirParts = append(storeDirParts, sysInfo.StoreVersion)
+	}
+	storeDir := strings.Join(storeDirParts, "-")
+	return filepath.Join("/nix/store", storeDir), nil
 }
 
 // IsGithubNixpkgsURL returns true if the package is a flake of the form:

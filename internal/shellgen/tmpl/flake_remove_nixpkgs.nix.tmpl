@@ -19,9 +19,9 @@
        let
           pkgs = nixpkgs.legacyPackages.{{ .System }};
           {{- range $_, $pkg := .Packages }}
-          {{ $pkg.Name }}.{{ $.System }} = builtins.fetchClosure{
-             fromStore = "{{ $pkg.FromStore }}";
-             fromPath = "{{ $pkg.FromPath }}";
+          {{ $pkg.PackageAttributePath }}.{{ $.System }} = builtins.fetchClosure{
+             fromStore = "{{ $pkg.BinaryCacheStore }}";
+             fromPath = "{{ $pkg.PathInBinaryStore }}";
           };
           {{- end }}
        in
@@ -29,7 +29,7 @@
          devShells.{{ .System }}.default = pkgs.mkShell {
            buildInputs = [
              {{- range $_, $pkg := .Packages }}
-             {{ $pkg.Name }}.{{ $.System }}
+             {{ $pkg.PackageAttributePath }}.{{ $.System }}
              {{- end }}
              {{- range $_, $flake := .FlakeInputs }}
              {{- range $flake.BuildInputs }}

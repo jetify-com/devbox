@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/trace"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -12,7 +13,7 @@ import (
 type flakePlan struct {
 	NixpkgsInfo *NixpkgsInfo
 	FlakeInputs []*flakeInput
-	Packages    []*flakePackage
+	Packages    []*nix.Package
 	System      string
 }
 
@@ -39,16 +40,24 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	var err error
-	flakeInputs, err := flakeInputs(ctx, devbox)
+	userPackages := devbox.PackagesAsInputs()
+	pluginPackages, err := devbox.PluginManager().PluginInputs(userPackages)
+	if err != nil {
+		return nil, err
+	}
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	packages := append(pluginPackages, userPackages...)
+
+	flakeInputs, err := flakeInputs(ctx, packages)
 	if err != nil {
 		return nil, err
 	}
 
-	flakePackages, err := flakePackages(devbox)
-	if err != nil {
-		return nil, err
-	}
+	versionedPackages := lo.Filter(packages, func(pkg *nix.Package, _ int) bool {
+		return pkg.IsInFromBinaryStore()
+	})
 
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 
@@ -69,7 +78,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	return &flakePlan{
 		FlakeInputs: flakeInputs,
 		NixpkgsInfo: nixpkgsInfo,
-		Packages:    flakePackages,
+		Packages:    versionedPackages,
 		System:      system,
 	}, nil
 }

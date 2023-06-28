@@ -129,33 +129,6 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 	return l.Packages[pkg], nil
 }
 
-func (l *File) SystemInfo(pkgVersionedName string) (*SystemInfo, error) {
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return nil, nil
-	}
-
-	pkg, ok := l.Packages[pkgVersionedName]
-	if !ok {
-		return nil, errors.Errorf("package %s not found in lockfile", pkgVersionedName)
-	}
-
-	if sysInfo, ok := pkg.Systems[l.system]; ok {
-		// Found it! We are done.
-		return sysInfo, nil
-	}
-
-	// If the systemInfo is missing, then resolve the package to get it from the search api.
-	var err error
-	pkg, err = l.Resolve(pkgVersionedName)
-	if err != nil {
-		return nil, err
-	}
-	if sysInfo, ok := pkg.Systems[l.system]; ok {
-		return sysInfo, nil
-	}
-	return nil, errors.Errorf("Unable to get system %s info for package %s", l.system, pkgVersionedName)
-}
-
 func (l *File) ForceResolve(pkg string) (*Package, error) {
 	delete(l.Packages, pkg)
 	return l.Resolve(pkg)
