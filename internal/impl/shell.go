@@ -113,7 +113,7 @@ func shellPath(devbox *Devbox) (path string, err error) {
 
 	cmd := exec.Command(
 		"nix", "eval", "--raw",
-		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
+		fmt.Sprintf("%s#bashInteractive", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
 	)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
@@ -121,6 +121,14 @@ func shellPath(devbox *Devbox) (path string, err error) {
 		return "", errors.WithStack(err)
 	}
 	bashNixStorePath = string(out)
+
+	// install bashInteractive in nix/store without creating a symlink to local directory (--no-link)
+	cmd = exec.Command("nix", "build", bashNixStorePath, "--no-link")
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
+	err = cmd.Run()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
 
 	if bashNixStorePath != "" {
 		// the output is the raw path to the bash installation in the /nix/store
