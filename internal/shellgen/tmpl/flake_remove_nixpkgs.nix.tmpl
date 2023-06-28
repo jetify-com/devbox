@@ -2,7 +2,6 @@
    description = "A devbox shell";
 
    inputs = {
-     {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */ -}}
      nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
      {{- range .FlakeInputs }}
      {{.Name}}.url = "{{.URLWithCaching}}";
@@ -31,8 +30,8 @@
              {{- range $_, $pkg := .Packages }}
              {{ $.System }}.{{ $pkg.PackageAttributePath }}
              {{- end }}
-             {{- range $_, $flake := .FlakeInputs }}
-             {{- range $flake.BuildInputs }}
+             {{- range .FlakeInputs }}
+             {{- range .BuildInputs }}
              {{.}}
              {{- end }}
              {{- end }}
