@@ -407,8 +407,6 @@ func (p *Package) version() string {
 	return version
 }
 
-// TODO savil. In next PR, change all callers to IsVersioned. Not doing it in
-// this PR to keep the diff scoped.
 func (p *Package) isVersioned() bool {
 	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
 }
