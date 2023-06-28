@@ -53,7 +53,7 @@ var (
 
 // Start enables telemetry for the current program.
 func Start() {
-	if started || envir.DoNotTrack() {
+	if started || envir.DoNotTrack() || build.SentryDSN == "" || build.TelemetryKey == "" {
 		return
 	}
 
@@ -87,6 +87,10 @@ func Stop() {
 }
 
 func Event(e EventName, meta Metadata) {
+	if !started {
+		return
+	}
+
 	switch e {
 	case EventCommandSuccess:
 		bufferSegmentMessage(commandEvent(meta))
