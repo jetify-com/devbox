@@ -56,7 +56,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	}
 
 	versionedPackages := lo.Filter(packages, func(pkg *nix.Package, _ int) bool {
-		return pkg.IsInFromBinaryStore()
+		return pkg.IsInBinaryStore()
 	})
 
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())

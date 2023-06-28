@@ -413,25 +413,27 @@ func (p *Package) isVersioned() bool {
 	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
 }
 
-func (p *Package) IsVersioned() bool {
-	return p.isVersioned()
-}
-
 func (p *Package) hashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
 // BinaryCacheStore is the store from which to fetch this package's binaries.
 // It is used as FromStore in builts.fetchClosure.
-const BinaryCacheStore = "https://cache.nixos.org"
+//
+// This could be a const, but is a method for convenience of invoking from the
+// flake template.
+func (p *Package) BinaryCacheStore() string {
+	return "https://cache.nixos.org"
+}
 
-func (p *Package) IsInFromBinaryStore() bool {
+
+func (p *Package) IsInBinaryStore() bool {
 	return p.isVersioned()
 }
 
 // PathInBinaryStore is the key in the BinaryCacheStore for this package
 func (p *Package) PathInBinaryStore() (string, error) {
-	if !p.IsInFromBinaryStore() {
+	if !p.IsInBinaryStore() {
 		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
