@@ -426,6 +426,7 @@ func (p *Package) IsInBinaryStore() bool {
 }
 
 // PathInBinaryStore is the key in the BinaryCacheStore for this package
+// This is used as FromPath in builtins.fetchClosure
 func (p *Package) PathInBinaryStore() (string, error) {
 	if !p.IsInBinaryStore() {
 		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
