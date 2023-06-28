@@ -4,7 +4,6 @@ import (
 	"context"
 	"runtime/trace"
 
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -56,10 +55,6 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		return nil, err
 	}
 
-	versionedPackages := lo.Filter(packages, func(pkg *nix.Package, _ int) bool {
-		return pkg.IsInBinaryStore()
-	})
-
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 
 	// This is an optimization. Try to reuse the nixpkgs info from the flake
@@ -80,7 +75,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		BinaryCacheStore: nix.BinaryCacheStore,
 		FlakeInputs: flakeInputs,
 		NixpkgsInfo: nixpkgsInfo,
-		Packages:    versionedPackages,
+		Packages:    packages,
 		System:      system,
 	}, nil
 }
