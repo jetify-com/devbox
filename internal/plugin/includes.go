@@ -12,7 +12,6 @@ import (
 
 type includable interface {
 	CanonicalName() string
-	IsLocal() bool
 }
 
 func (m *Manager) parseInclude(include string) (includable, error) {

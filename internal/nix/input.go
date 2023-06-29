@@ -82,9 +82,9 @@ func PackageFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Packa
 	return PackageFromString(item.unlockedReference, locker)
 }
 
-// IsLocal specifies whether this package is a local flake.
+// isLocal specifies whether this package is a local flake.
 // Usually, this is of the form: `path:./local_flake_subdir#myPackage`
-func (p *Package) IsLocal() bool {
+func (p *Package) isLocal() bool {
 	// Technically flakes allows omitting the scheme for local absolute paths, but
 	// we don't support that (yet).
 	return p.Scheme == "path"
@@ -113,7 +113,7 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 // Input name will be different from raw package name
 func (p *Package) FlakeInputName() string {
 	result := ""
-	if p.IsLocal() {
+	if p.isLocal() {
 		result = filepath.Base(p.Path) + "-" + p.Hash()
 	} else if p.isGithub() {
 		result = "gh-" + strings.Join(strings.Split(p.Opaque, "/"), "-")
@@ -311,7 +311,7 @@ func (p *Package) urlWithoutFragment() string {
 func (p *Package) Hash() string {
 	// For local flakes, use content hash of the flake.nix file to ensure
 	// user always gets newest flake.
-	if p.IsLocal() {
+	if p.isLocal() {
 		fileHash, _ := cuecfg.FileHash(filepath.Join(p.Path, "flake.nix"))
 		if fileHash != "" {
 			return fileHash[:6]
