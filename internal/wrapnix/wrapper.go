@@ -69,7 +69,6 @@ type createWrapperArgs struct {
 	devboxer
 	BashPath     string
 	Command      string
-	Env          map[string]string
 	ShellEnvHash string
 
 	destPath string
