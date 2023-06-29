@@ -9,7 +9,7 @@ var Zsh Shell = zsh{}
 const zshHook = `
 _devbox_hook() {
   trap -- '' SIGINT;
-  eval "$(devbox export --config {{ .ProjectDir }})";
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
   trap - SIGINT;
 }
 typeset -ag precmd_functions;

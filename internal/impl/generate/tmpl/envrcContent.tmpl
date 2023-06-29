@@ -1,9 +1,5 @@
 use_devbox() {
     watch_file devbox.json
-    {{ if .PromptHookEnabled }}
-    eval "$(devbox export --init-hook --install)"
-    {{ else }}
     eval "$(devbox shellenv --init-hook --install)"
-    {{ end }}
 }
 use devbox

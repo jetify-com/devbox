@@ -817,23 +817,21 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
-	envPaths := []string{}
-	if !featureflag.PromptHook.Enabled() {
+	env["PATH"] = JoinPathLists(
 		// Prepend the bin-wrappers directory to the PATH. This ensures that
 		// bin-wrappers execute before the unwrapped binaries.
-		envPaths = append(envPaths, filepath.Join(d.projectDir, plugin.WrapperBinPath))
-	}
-	// Adding profile bin path is a temporary hack. Some packages .e.g. curl
-	// don't export the correct bin in the package, instead they export
-	// as a propagated build input. This can be fixed in 2 ways:
-	// * have NixBins() recursively look for bins in propagated build inputs
-	// * Turn existing planners into flakes (i.e. php, haskell) and use the bins
-	// in the profile.
-	// Landau: I prefer option 2 because it doesn't require us to re-implement
-	// nix recursive bin lookup.
-	envPaths = append(envPaths, nix.ProfileBinPath(d.projectDir), env["PATH"])
-
-	env["PATH"] = JoinPathLists(envPaths...)
+		filepath.Join(d.projectDir, plugin.WrapperBinPath),
+		// Adding profile bin path is a temporary hack. Some packages .e.g. curl
+		// don't export the correct bin in the package, instead they export
+		// as a propagated build input. This can be fixed in 2 ways:
+		// * have NixBins() recursively look for bins in propagated build inputs
+		// * Turn existing planners into flakes (i.e. php, haskell) and use the bins
+		// in the profile.
+		// Landau: I prefer option 2 because it doesn't require us to re-implement
+		// nix recursive bin lookup.
+		nix.ProfileBinPath(d.projectDir),
+		env["PATH"],
+	)
 
 	// Include env variables in devbox.json
 	configEnv := d.configEnvs(env)
