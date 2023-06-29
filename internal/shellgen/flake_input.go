@@ -75,7 +75,16 @@ func flakeInputs(ctx context.Context, packages []*nix.Package) ([]*flakeInput, e
 	packages = lo.Filter(packages, func(item *nix.Package, _ int) bool {
 		// Include packages (like local or remote flakes) that cannot be
 		// fetched from a Binary Cache Store.
-		return !featureflag.RemoveNixpkgs.Enabled() || !item.IsInBinaryStore()
+		if !featureflag.RemoveNixpkgs.Enabled() {
+			return true
+		}
+		
+		inStore, err := item.IsInBinaryStore()
+		if err != nil {
+			// Ignore this error for now. TODO savil: return error?
+			return true
+		}
+		return !inStore
 	})
 
 	order := []string{}

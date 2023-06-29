@@ -74,14 +74,7 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
 
-	pkg := &Package{
-		URL:                                 *pkgURL,
-		lockfile:                            locker,
-		Raw:                                 raw,
-		normalizedPackageAttributePathCache: "",
-	}
-
-	return pkg
+	return &Package{*pkgURL, locker, raw, ""}
 }
 
 // PackageFromProfileItem constructs a package using the the unlocked reference
@@ -419,14 +412,36 @@ func (p *Package) hashFromNixPkgsURL() string {
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCacheStore = "https://cache.nixos.org"
 
-func (p *Package) IsInBinaryStore() bool {
-	return p.isVersioned()
+func (p *Package) IsInBinaryStore() (bool, error) {
+	if !p.isVersioned() {
+		return false, nil
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return false, err
+	}
+
+	userSystem, err := System()
+	if err != nil {
+		return false, err
+	}
+
+	if entry.Systems == nil {
+		return false, nil
+	}
+
+	// Check if the user's system's info is present in the lockfile
+	_, ok := entry.Systems[userSystem]
+	return ok, nil
 }
 
 // PathInBinaryStore is the key in the BinaryCacheStore for this package
 // This is used as FromPath in builtins.fetchClosure
 func (p *Package) PathInBinaryStore() (string, error) {
-	if !p.IsInBinaryStore() {
+	if isInStore, err := p.IsInBinaryStore(); err != nil {
+		return "", err
+	} else if !isInStore {
 		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
