@@ -11,10 +11,10 @@ import (
 // that builds the devbox environment
 type flakePlan struct {
 	BinaryCacheStore string
-	NixpkgsInfo *NixpkgsInfo
-	FlakeInputs []*flakeInput
-	Packages    []*nix.Package
-	System      string
+	NixpkgsInfo      *NixpkgsInfo
+	FlakeInputs      []*flakeInput
+	Packages         []*nix.Package
+	System           string
 }
 
 func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
@@ -73,9 +73,9 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 
 	return &flakePlan{
 		BinaryCacheStore: nix.BinaryCacheStore,
-		FlakeInputs: flakeInputs,
-		NixpkgsInfo: nixpkgsInfo,
-		Packages:    packages,
-		System:      system,
+		FlakeInputs:      flakeInputs,
+		NixpkgsInfo:      nixpkgsInfo,
+		Packages:         packages,
+		System:           system,
 	}, nil
 }
