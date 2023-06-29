@@ -11,7 +11,7 @@ const bashHook = `
 _devbox_hook() {
   local previous_exit_status=$?;
   trap -- '' SIGINT;
-  eval "$(devbox export --config {{ .ProjectDir }})";
+  eval "$(devbox shellenv --config {{ .ProjectDir }})";
   trap - SIGINT;
   return $previous_exit_status;
 };

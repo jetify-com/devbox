@@ -26,7 +26,6 @@ func globalCmd() *cobra.Command {
 	}
 
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
-	addCommandAndHideConfigFlag(globalCmd, hookCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
 	addCommandAndHideConfigFlag(globalCmd, pathCmd())
 	addCommandAndHideConfigFlag(globalCmd, pullCmd())
@@ -113,10 +112,7 @@ func setGlobalConfigForDelegatedCommands(
 }
 
 func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
-	// Skip checking this for shellenv and hook sub-commands of devbox global
-	// since these commands are what will enable the global environment when
-	// invoked from the user's shellrc
-	if cmd.Name() == "shellenv" || cmd.Name() == "hook" {
+	if cmd.Name() == "shellenv" {
 		return nil
 	}
 	path, err := ensureGlobalConfig(cmd)

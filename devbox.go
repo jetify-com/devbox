@@ -21,7 +21,6 @@ type Devbox interface {
 	// Adding duplicate packages is a no-op.
 	Add(ctx context.Context, pkgs ...string) error
 	Config() *devconfig.Config
-	ExportHook(shellName string) (string, error)
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
