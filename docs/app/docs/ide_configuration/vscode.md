@@ -2,10 +2,52 @@
 title: Visual Studio Code 
 ---
 
-
-## Java
+## Devbox Extension
 ___
-VS Code is a popular editor that supports many different programming languages. This guide covers how to configure VS Code to work with a devbox Java environment.
+
+Devbox has an accompanying [VSCode extension](vscode:extension/jetpack-io.devbox) that makes the experience of integrating your devbox environment in VSCode much simpler. 
+
+### Syncing VSCode with Devbox shell
+Follow the steps below to have VSCode's environment be in sync with Devbox shell:
+
+1. [Install](vscode:extension/jetpack-io.devbox) Devbox's VSCode extension
+2. Open a project that has a devbox.json file in VSCode
+3. Open command palette in VSCode (cmd+shift+p) and type: `Devbox: Reopen in Devbox shell environment`
+4. Press Enter and wait for VSCode to reload.
+5. The newly opened VSCode is now integrated with the environment defined your devbox.json. You can test it by checking if packages defined in devbox.json are available in VSCode integrated terminal.
+
+Keep in mind that if you make changes to your devbox.json, you need to re-run Step 3 to make VSCode pick up the new changes.
+
+**NOTE:** This integration feature requires Devbox CLI v0.5.5 and above installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetpack-io/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+
+**NOTE2:** This feature is not yet available for Windows and WSL.
+
+### Automatic Devbox shell in VSCode Terminal
+
+Devbox extension runs `devbox shell` automatically every time VSCode's integrated terminal is opened, **if the workspace opened in VSCode has a devbox.json file**. 
+
+This setting can be turned off in VSCode's settings. Simply search for `devbox.autoShellOnTerminal` in settings or add the following to VSCode's settings.json:
+```json
+"devbox.autoShellOnTerminal": false
+```
+Note that running `devbox shell` is not necessary if VSCode is reopened in Devbox shell environment via the steps described in [Syncing VSCode with Devbox shell](#syncing-vscode-with-devbox-shell)
+
+## Direnv Extension
+___
+Direnv is an open source environment management tool that allows setting unique environment variables per directory in your file system. For more details on how to set it and integrate it with Devbox visit [our Direnv setup guide](ide_configuration/direnv/).
+
+Once Direnv is installed and setup with Devbox, its [VSCode extension](vscode:extension/mkhl.direnv) can also be used to integrate the environment defined in your devbox.json to VSCode. To do that follow the steps below:
+
+1. Install Direnv ([link to guide](https://direnv.net/#basic-installation))
+2. Setup Devbox shell with Direnv ([link to guide](ide_configuration/direnv/#setting-up-devbox-shell-and-direnv))
+3. Install Direnv's [VSCode extension](vscode:extension/mkhl.direnv)
+4. Open your Devbox project in VSCode. Direnv extension should show a prompt notification to reload your environment.
+5. Click on reload.
+
+
+## Manual Setup
+___
+VS Code is a popular editor that supports many different programming languages. This section covers how to configure VS Code to work with a devbox Java environment as an example.
 
 ### Setting up Run and Debugger
 To create a devbox shell make sure to have devbox installed. If you don't have devbox installed follow the installation guide first. Then follow the steps below:
