@@ -78,7 +78,7 @@ func flakeInputs(ctx context.Context, packages []*nix.Package) ([]*flakeInput, e
 		if !featureflag.RemoveNixpkgs.Enabled() {
 			return true
 		}
-		
+
 		inStore, err := item.IsInBinaryStore()
 		if err != nil {
 			// Ignore this error for now. TODO savil: return error?
