@@ -868,10 +868,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
-		env["XDG_DATA_DIRS"] = JoinPathLists(
-			env["XDG_DATA_DIRS"],
-			os.Getenv("XDG_DATA_DIRS"),
-		)
+		env["XDG_DATA_DIRS"] = JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
 	}
 
 	return env, d.addHashToEnv(env)
@@ -1042,8 +1039,9 @@ var ignoreDevEnvVar = map[string]bool{
 // setCommonHelperEnvVars sets environment variables that are required by some
 // common setups (e.g. gradio, rust)
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
-	env["LD_LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LD_LIBRARY_PATH"]
-	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
+	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
+	env["LD_LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
+	env["LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
 // NixBins returns the paths to all the nix binaries that are installed by
