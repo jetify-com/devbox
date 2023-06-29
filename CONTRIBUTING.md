@@ -30,6 +30,7 @@ The easiest way to develop Devbox is with Devbox!
        dist/devbox shell
 
 Tip: you can also start VSCode from inside your Devbox shell with `devbox run code`.
+- If you are encountering an error similar to: `line 3: command 'code' not found`, this means you do not have the Visual Studio Code "Shell Command" installed. To do this, follow the official guide: https://code.visualstudio.com/docs/setup/mac. Please refer to the section under: "Launching from the command line".
 
 ### Setting up the Environment Without Devbox
 
