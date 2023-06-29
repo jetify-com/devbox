@@ -17,7 +17,10 @@ func (m *Manager) GetServices(
 ) (services.Services, error) {
 	allSvcs := services.Services{}
 
-	allPkgs := append([]*nix.Package(nil), pkgs...)
+	allPkgs := []includable{}
+	for _, pkg := range pkgs {
+		allPkgs = append(allPkgs, pkg)
+	}
 	for _, include := range includes {
 		name, err := m.parseInclude(include)
 		if err != nil {

@@ -79,7 +79,7 @@ func (m *Manager) Create(pkg *nix.Package) error {
 	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
 }
 
-func (m *Manager) create(pkg *nix.Package, locked *lock.Package) error {
+func (m *Manager) create(pkg includable, locked *lock.Package) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
 	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
@@ -128,12 +128,12 @@ func (m *Manager) create(pkg *nix.Package, locked *lock.Package) error {
 }
 
 func (m *Manager) createFile(
-	pkg *nix.Package,
+	pkg includable,
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
 	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
-	content, err := getFileContent(contentPath)
+	content, err := getFileContent(pkg, contentPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -147,9 +147,14 @@ func (m *Manager) createFile(
 		return err
 	}
 
-	attributePath, err := pkg.PackageAttributePath()
-	if err != nil {
-		return err
+	var urlForInput, attributePath string
+
+	if pkg, ok := pkg.(*nix.Package); ok {
+		attributePath, err = pkg.PackageAttributePath()
+		if err != nil {
+			return err
+		}
+		urlForInput = pkg.URLForFlakeInput()
 	}
 
 	var buf bytes.Buffer
@@ -161,7 +166,7 @@ func (m *Manager) createFile(
 		"PackageAttributePath": attributePath,
 		"Packages":             m.Packages(),
 		"System":               system,
-		"URLForInput":          pkg.URLForFlakeInput(),
+		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return errors.WithStack(err)
@@ -192,7 +197,10 @@ func (m *Manager) Env(
 	includes []string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
-	allPkgs := append([]*nix.Package(nil), pkgs...)
+	allPkgs := []includable{}
+	for _, pkg := range pkgs {
+		allPkgs = append(allPkgs, pkg)
+	}
 	for _, included := range includes {
 		input, err := m.parseInclude(included)
 		if err != nil {
@@ -217,7 +225,7 @@ func (m *Manager) Env(
 	return conf.OSExpandEnvMap(env, computedEnv, m.ProjectDir()), nil
 }
 
-func buildConfig(pkg *nix.Package, projectDir, content string) (*config, error) {
+func buildConfig(pkg includable, projectDir, content string) (*config, error) {
 	cfg := &config{}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)

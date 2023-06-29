@@ -9,19 +9,18 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg *nix.Package, projectDir string) (*config, error) {
+func getConfigIfAny(pkg includable, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if pkg.IsLocal() {
-		content, err := os.ReadFile(pkg.Path)
-		if err != nil {
+	if local, ok := pkg.(*localPlugin); ok {
+		content, err := os.ReadFile(local.path)
+		if err != nil && !os.IsNotExist(err) {
 			return nil, errors.WithStack(err)
 		}
 		return buildConfig(pkg, projectDir, string(content))
@@ -53,6 +52,9 @@ func getConfigIfAny(pkg *nix.Package, projectDir string) (*config, error) {
 	return nil, nil
 }
 
-func getFileContent(contentPath string) ([]byte, error) {
+func getFileContent(pkg includable, contentPath string) ([]byte, error) {
+	if local, ok := pkg.(*localPlugin); ok {
+		return os.ReadFile(local.contentPath(contentPath))
+	}
 	return plugins.BuiltIn.ReadFile(contentPath)
 }

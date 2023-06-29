@@ -1,0 +1,7 @@
+version: "0.5"
+
+processes:
+  my-plugin-service:
+    command: echo "success" && tail -f /dev/null
+    availability:
+      restart: "always"

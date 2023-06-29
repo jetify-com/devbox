@@ -6,6 +6,8 @@
     "MY_FOO_VAR": "BAR"
   },
   "create_files": {
-    
+    "{{ .Virtenv }}/empty-dir": "",
+    "{{ .Virtenv }}/some-file": "some-file.txt",
+    "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
   }
 }
