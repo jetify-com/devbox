@@ -17,6 +17,14 @@
    }:
       let
         pkgs = nixpkgs.legacyPackages.{{ .System }};
+        {{- range .FlakeInputs }}
+        {{- if .IsNixpkgs }}
+        {{.PkgImportName}} = (import {{.Name}} {
+          system = "{{ $.System }}";
+          config.allowUnfree = true;
+        });
+        {{- end }}
+        {{- end }}
       in
       {
         devShells.{{ .System }}.default = pkgs.mkShell {
