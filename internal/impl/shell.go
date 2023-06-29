@@ -13,11 +13,13 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/shenv"
+	"go.jetpack.io/devbox/internal/telemetry"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
@@ -65,7 +67,7 @@ type DevboxShell struct {
 	historyFile string
 
 	// shellStartTime is the unix timestamp for when the command was invoked
-	shellStartTime string
+	shellStartTime time.Time
 }
 
 type ShellOption func(*DevboxShell)
@@ -111,7 +113,7 @@ func shellPath(devbox *Devbox) (path string, err error) {
 
 	cmd := exec.Command(
 		"nix", "eval", "--raw",
-		fmt.Sprintf("%s#bash", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
+		fmt.Sprintf("%s#bashInteractive", nix.FlakeNixpkgs(devbox.cfg.NixPkgsCommitHash())),
 	)
 	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.Output()
@@ -119,6 +121,14 @@ func shellPath(devbox *Devbox) (path string, err error) {
 		return "", errors.WithStack(err)
 	}
 	bashNixStorePath = string(out)
+
+	// install bashInteractive in nix/store without creating a symlink to local directory (--no-link)
+	cmd = exec.Command("nix", "build", bashNixStorePath, "--no-link")
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
+	err = cmd.Run()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
 
 	if bashNixStorePath != "" {
 		// the output is the raw path to the bash installation in the /nix/store
@@ -197,9 +207,9 @@ func WithProjectDir(projectDir string) ShellOption {
 	}
 }
 
-func WithShellStartTime(time string) ShellOption {
+func WithShellStartTime(t time.Time) ShellOption {
 	return func(s *DevboxShell) {
-		s.shellStartTime = time
+		s.shellStartTime = t
 	}
 }
 
@@ -331,7 +341,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath:  s.userShellrcPath,
 		HooksFilePath:     s.hooksFilePath,
 		ShellName:         string(s.name),
-		ShellStartTime:    s.shellStartTime,
+		ShellStartTime:    telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:       strings.TrimSpace(s.historyFile),
 		ExportEnv:         exportify(s.env),
 		PromptHookEnabled: featureflag.PromptHook.Enabled(),

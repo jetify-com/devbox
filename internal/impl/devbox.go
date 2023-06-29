@@ -22,6 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -39,7 +40,6 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
-	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
@@ -185,18 +185,13 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	shellStartTime := envir.GetValueOrDefault(
-		envir.DevboxShellStartTime,
-		telemetry.UnixTimestampFromTime(telemetry.CommandStartTime()),
-	)
-
 	opts := []ShellOption{
 		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
 		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
-		WithShellStartTime(shellStartTime),
+		WithShellStartTime(telemetry.ShellStart()),
 	}
 
 	shell, err := NewDevboxShell(d, opts...)
@@ -824,6 +819,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	envPaths := []string{}
 	if !featureflag.PromptHook.Enabled() {
+		// Prepend the bin-wrappers directory to the PATH. This ensures that
+		// bin-wrappers execute before the unwrapped binaries.
 		envPaths = append(envPaths, filepath.Join(d.projectDir, plugin.WrapperBinPath))
 	}
 	// Adding profile bin path is a temporary hack. Some packages .e.g. curl
@@ -836,8 +833,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// nix recursive bin lookup.
 	envPaths = append(envPaths, nix.ProfileBinPath(d.projectDir), env["PATH"])
 
-	// Prepend virtenv bin path first so user can override it if needed. Virtenv
-	// is where the bin wrappers live
 	env["PATH"] = JoinPathLists(envPaths...)
 
 	// Include env variables in devbox.json
@@ -985,7 +980,6 @@ func (d *Devbox) checkOldEnvrc() error {
 					"Run `devbox generate direnv --force` to update it.\n"+
 					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
 			)
-
 		}
 	}
 	return nil
@@ -1058,7 +1052,6 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
 	env, err := d.nixEnv(ctx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1110,7 +1103,8 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		// handling special cases to for pure shell
 		// Passing HOME for pure shell to leak through otherwise devbox binary won't work
 		// We also include PATH to find the nix installation. It is cleaned for pure mode below
-		if !d.pure || key == "HOME" || key == "PATH" {
+		// TERM leaking through is to enable colored text in the pure shell
+		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
 	}
@@ -1132,7 +1126,6 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 
 // ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
 func ExportifySystemPathWithoutWrappers() string {
-
 	path := []string{}
 	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
 		// Intentionally do not include projectDir with plugin.WrapperBinPath so that

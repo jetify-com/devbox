@@ -15,9 +15,10 @@ type hookFlags struct {
 func hookCmd() *cobra.Command {
 	flags := hookFlags{}
 	cmd := &cobra.Command{
-		Use:   "hook [shell]",
-		Short: "Print shell command to setup the shell hook to ensure an up-to-date environment",
-		Args:  cobra.ExactArgs(1),
+		Use:    "hook [shell]",
+		Short:  "Print shell command to setup the shell hook to ensure an up-to-date environment",
+		Args:   cobra.ExactArgs(1),
+		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			output, err := hookFunc(cmd, args, flags)
 			if err != nil {

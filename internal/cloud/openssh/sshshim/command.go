@@ -14,7 +14,7 @@ import (
 
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
-	telemetry.Start(telemetry.AppSSHShim)
+	telemetry.Start()
 	defer telemetry.Stop()
 
 	if err := execute(ctx, args); err != nil {
