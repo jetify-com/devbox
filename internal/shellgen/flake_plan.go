@@ -3,13 +3,18 @@ package shellgen
 import (
 	"context"
 	"runtime/trace"
+
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 // flakePlan contains the data to populate the top level flake.nix file
 // that builds the devbox environment
 type flakePlan struct {
-	NixpkgsInfo *NixpkgsInfo
-	FlakeInputs []*flakeInput
+	BinaryCacheStore string
+	NixpkgsInfo      *NixpkgsInfo
+	FlakeInputs      []*flakeInput
+	Packages         []*nix.Package
+	System           string
 }
 
 func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
@@ -35,9 +40,17 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	shellPlan := &flakePlan{}
-	var err error
-	shellPlan.FlakeInputs, err = flakeInputs(ctx, devbox)
+	userPackages := devbox.PackagesAsInputs()
+	pluginPackages, err := devbox.PluginManager().PluginInputs(userPackages)
+	if err != nil {
+		return nil, err
+	}
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	packages := append(pluginPackages, userPackages...)
+
+	flakeInputs, err := flakeInputs(ctx, packages)
 	if err != nil {
 		return nil, err
 	}
@@ -46,14 +59,23 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 
 	// This is an optimization. Try to reuse the nixpkgs info from the flake
 	// inputs to avoid introducing a new one.
-	for _, input := range shellPlan.FlakeInputs {
+	for _, input := range flakeInputs {
 		if input.IsNixpkgs() {
 			nixpkgsInfo = getNixpkgsInfo(input.HashFromNixPkgsURL())
 			break
 		}
 	}
 
-	shellPlan.NixpkgsInfo = nixpkgsInfo
+	system, err := nix.System()
+	if err != nil {
+		return nil, err
+	}
 
-	return shellPlan, nil
+	return &flakePlan{
+		BinaryCacheStore: nix.BinaryCacheStore,
+		FlakeInputs:      flakeInputs,
+		NixpkgsInfo:      nixpkgsInfo,
+		Packages:         packages,
+		System:           system,
+	}, nil
 }

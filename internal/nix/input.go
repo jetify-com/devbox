@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -73,6 +73,7 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		}
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
+
 	return &Package{*pkgURL, locker, raw, ""}
 }
 
@@ -405,6 +406,62 @@ func (p *Package) isVersioned() bool {
 
 func (p *Package) hashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(p.URLForFlakeInput())
+}
+
+// BinaryCacheStore is the store from which to fetch this package's binaries.
+// It is used as FromStore in builtins.fetchClosure.
+const BinaryCacheStore = "https://cache.nixos.org"
+
+func (p *Package) IsInBinaryStore() (bool, error) {
+	if !p.isVersioned() {
+		return false, nil
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return false, err
+	}
+
+	userSystem, err := System()
+	if err != nil {
+		return false, err
+	}
+
+	if entry.Systems == nil {
+		return false, nil
+	}
+
+	// Check if the user's system's info is present in the lockfile
+	_, ok := entry.Systems[userSystem]
+	return ok, nil
+}
+
+// PathInBinaryStore is the key in the BinaryCacheStore for this package
+// This is used as FromPath in builtins.fetchClosure
+func (p *Package) PathInBinaryStore() (string, error) {
+	if isInStore, err := p.IsInBinaryStore(); err != nil {
+		return "", err
+	} else if !isInStore {
+		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return "", err
+	}
+
+	userSystem, err := System()
+	if err != nil {
+		return "", err
+	}
+
+	sysInfo := entry.Systems[userSystem]
+	storeDirParts := []string{sysInfo.FromHash, sysInfo.StoreName}
+	if sysInfo.StoreVersion != "" {
+		storeDirParts = append(storeDirParts, sysInfo.StoreVersion)
+	}
+	storeDir := strings.Join(storeDirParts, "-")
+	return filepath.Join("/nix/store", storeDir), nil
 }
 
 // IsGithubNixpkgsURL returns true if the package is a flake of the form:

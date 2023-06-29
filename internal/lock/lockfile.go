@@ -4,12 +4,12 @@
 package lock
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 

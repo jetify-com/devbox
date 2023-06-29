@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -64,24 +65,30 @@ func (f *flakeInput) BuildInputs() []string {
 // i.e. have a commit hash and always resolve to the same package/version.
 // Note: inputs returned by this function include plugin packages. (php only for now)
 // It's not entirely clear we always want to add plugin packages to the top level
-func flakeInputs(ctx context.Context, devbox devboxer) ([]*flakeInput, error) {
+func flakeInputs(ctx context.Context, packages []*nix.Package) ([]*flakeInput, error) {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
 	// Use the verbose name flakeInputs to distinguish from `inputs`
 	// which refer to `nix.Input` in most of the codebase.
 	flakeInputs := map[string]*flakeInput{}
 
-	userInputs := devbox.PackagesAsInputs()
-	pluginInputs, err := devbox.PluginManager().PluginInputs(userInputs)
-	if err != nil {
-		return nil, err
-	}
+	packages = lo.Filter(packages, func(item *nix.Package, _ int) bool {
+		// Include packages (like local or remote flakes) that cannot be
+		// fetched from a Binary Cache Store.
+		if !featureflag.RemoveNixpkgs.Enabled() {
+			return true
+		}
+
+		inStore, err := item.IsInBinaryStore()
+		if err != nil {
+			// Ignore this error for now. TODO savil: return error?
+			return true
+		}
+		return !inStore
+	})
 
 	order := []string{}
-	// We prioritize plugin packages so that the php plugin works. Not sure
-	// if this is behavior we want for user plugins. We may need to add an optional
-	// priority field to the config.
-	for _, input := range append(pluginInputs, userInputs...) {
+	for _, input := range packages {
 		AttributePath, err := input.FullPackageAttributePath()
 		if err != nil {
 			return nil, err
