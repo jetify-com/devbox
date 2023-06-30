@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -34,6 +35,8 @@ type localPlugin struct {
 	path string
 }
 
+var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
+
 func newLocalPlugin(path string) (*localPlugin, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -47,6 +50,12 @@ func newLocalPlugin(path string) (*localPlugin, error) {
 	if !ok || name == "" {
 		return nil,
 			usererr.New("plugin %s is missing a required field 'name'", path)
+	}
+	if !nameRegex.MatchString(name) {
+		return nil, usererr.New(
+			"plugin %s has an invalid name %q. Name must match %s",
+			path, name, nameRegex,
+		)
 	}
 	return &localPlugin{
 		name: name,
