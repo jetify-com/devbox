@@ -6,11 +6,12 @@ package nixprofile
 import (
 	"os"
 
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func ProfileUpgrade(ProfileDir string, pkg *nix.Package, lock *lock.File) error {
+func ProfileUpgrade(ProfileDir string, pkg *devpkg.Package, lock *lock.File) error {
 	idx, err := ProfileListIndex(
 		&ProfileListIndexArgs{
 			Lockfile:   lock,

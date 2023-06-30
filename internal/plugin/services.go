@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"os"
 
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/services"
 )
 
 func (m *Manager) GetServices(
-	pkgs []*nix.Package,
+	pkgs []*devpkg.Package,
 	includes []string,
 ) (services.Services, error) {
 	allSvcs := services.Services{}
 
-	allPkgs := append([]*nix.Package(nil), pkgs...)
+	allPkgs := append([]*devpkg.Package(nil), pkgs...)
 	for _, include := range includes {
 		name, err := m.parseInclude(include)
 		if err != nil {

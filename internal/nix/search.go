@@ -9,15 +9,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
-
-func PkgExists(pkg string, lock *lock.File) (bool, error) {
-	return PackageFromString(pkg, lock).ValidateExists()
-}
 
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
@@ -37,7 +34,7 @@ func PkgInfo(pkg string, lock lock.Locker) *Info {
 		return nil
 	}
 
-	results := search(locked.Resolved)
+	results := Search(locked.Resolved)
 	if len(results) == 0 {
 		return nil
 	}
@@ -45,7 +42,7 @@ func PkgInfo(pkg string, lock lock.Locker) *Info {
 	return lo.Values(results)[0]
 }
 
-func search(url string) map[string]*Info {
+func Search(url string) map[string]*Info {
 	return searchSystem(url, "")
 }
 
@@ -67,9 +64,9 @@ func parseSearchResults(data []byte) map[string]*Info {
 	return infos
 }
 
-// pkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
+// PkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
 // been an error and we want to provide a better error message.
-func pkgExistsForAnySystem(pkg string) bool {
+func PkgExistsForAnySystem(pkg string) bool {
 	systems := []string{
 		// Check most common systems first.
 		"x86_64-linux",
@@ -98,8 +95,8 @@ func searchSystem(url string, system string) map[string]*Info {
 	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this
 	// check here provides a slightly better UX.
-	if IsGithubNixpkgsURL(url) {
-		hash := HashFromNixPkgsURL(url)
+	if devpkgutil.IsGithubNixpkgsURL(url) {
+		hash := devpkgutil.HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
 		_ = EnsureNixpkgsPrefetched(writer, hash)

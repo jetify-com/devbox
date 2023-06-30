@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg *nix.Package, projectDir string) (*config, error) {
+func getConfigIfAny(pkg *devpkg.Package, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
