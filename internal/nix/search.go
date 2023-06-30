@@ -22,7 +22,7 @@ func PkgExists(pkg string, lock *lock.File) (bool, error) {
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
-	attributeKey string
+	AttributeKey string
 	PName        string
 	Version      string
 }
@@ -58,7 +58,7 @@ func parseSearchResults(data []byte) map[string]*Info {
 	infos := map[string]*Info{}
 	for key, result := range results {
 		infos[key] = &Info{
-			attributeKey: key,
+			AttributeKey: key,
 			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
 		}
@@ -102,7 +102,7 @@ func searchSystem(url string, system string) map[string]*Info {
 		hash := HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
-		_ = ensureNixpkgsPrefetched(writer, hash)
+		_ = EnsureNixpkgsPrefetched(writer, hash)
 	}
 
 	cmd := exec.Command("nix", "search", "--json", url)

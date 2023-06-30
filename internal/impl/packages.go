@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
 
@@ -276,7 +277,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 
-		if err := nix.ProfileInstall(&nix.ProfileInstallArgs{
+		if err := nixprofile.ProfileInstall(&nixprofile.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
 			Package:           pkg,
@@ -299,7 +300,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 	}
 
 	for _, input := range nix.PackageFromStrings(pkgs, d.lockfile) {
-		index, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
 			Input:      input,
@@ -345,7 +346,7 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 	}
 
 	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
-	return nix.ProfileRemoveItems(profileDir, extras)
+	return nixprofile.ProfileRemoveItems(profileDir, extras)
 }
 
 // pendingPackagesForInstallation returns a list of packages that are in
@@ -361,12 +362,12 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 	}
 
 	pending := []string{}
-	list, err := nix.ProfileListItems(d.writer, profileDir)
+	list, err := nixprofile.ProfileListItems(d.writer, profileDir)
 	if err != nil {
 		return nil, err
 	}
 	for _, input := range d.PackagesAsInputs() {
-		_, err := nix.ProfileListIndex(&nix.ProfileListIndexArgs{
+		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
@@ -388,7 +389,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 //
 // NOTE: as an optimization, this implementation assumes that all packages in
 // devbox.json have already been added to the nix profile.
-func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileListItem, error) {
+func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixProfileListItem, error) {
 	defer trace.StartRegion(ctx, "extraPackagesInProfile").End()
 
 	profileDir, err := d.profilePath()
@@ -396,7 +397,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileL
 		return nil, err
 	}
 
-	profileItems, err := nix.ProfileListItems(d.writer, profileDir)
+	profileItems, err := nixprofile.ProfileListItems(d.writer, profileDir)
 	if err != nil {
 		return nil, err
 	}
@@ -409,12 +410,12 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nix.NixProfileL
 		return nil, nil
 	}
 
-	extras := []*nix.NixProfileListItem{}
+	extras := []*nixprofile.NixProfileListItem{}
 	// Note: because nix.Input uses memoization when normalizing attribute paths (slow operation),
 	// and since we're reusing the Input objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
 outer:
 	for _, item := range profileItems {
-		profileInput := nix.PackageFromProfileItem(item, d.lockfile)
+		profileInput := item.ToPackage(d.lockfile)
 		for _, devboxInput := range devboxInputs {
 			if profileInput.Equals(devboxInput) {
 				continue outer

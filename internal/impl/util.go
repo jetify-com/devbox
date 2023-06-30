@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
@@ -24,7 +24,7 @@ func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
 		return err
 	}
 
-	return nix.ProfileInstall(&nix.ProfileInstallArgs{
+	return nixprofile.ProfileInstall(&nixprofile.ProfileInstallArgs{
 		Lockfile:    d.lockfile,
 		Package:     pkg,
 		ProfilePath: profilePath,

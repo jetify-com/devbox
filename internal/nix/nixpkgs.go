@@ -19,8 +19,8 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-// ensureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
-func ensureNixpkgsPrefetched(w io.Writer, commit string) error {
+// EnsureNixpkgsPrefetched runs the prefetch step to download the flake of the registry
+func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
 	// Look up the cached map of commitHash:nixStoreLocation
 	commitToLocation, err := nixpkgsCommitFileContents()
 	if err != nil {
