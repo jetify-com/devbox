@@ -15,7 +15,6 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
-	_ "go.jetpack.io/devbox/internal/nix"
 )
 
 const lockFileVersion = "1"

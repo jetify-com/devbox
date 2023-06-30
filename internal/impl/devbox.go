@@ -337,7 +337,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 	locked, err := d.lockfile.Resolve(pkg)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	results := nix.Search(locked.Resolved)
