@@ -4,8 +4,8 @@
 package plugin
 
 import (
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
 )
 
 type Manager struct {
@@ -45,8 +45,8 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 	}
 }
 
-func (m *Manager) PluginInputs(inputs []*nix.Package) ([]*nix.Package, error) {
-	result := []*nix.Package{}
+func (m *Manager) PluginInputs(inputs []*devpkg.Package) ([]*devpkg.Package, error) {
+	result := []*devpkg.Package{}
 	for _, input := range inputs {
 		config, err := getConfigIfAny(input, m.ProjectDir())
 		if err != nil {
@@ -54,7 +54,7 @@ func (m *Manager) PluginInputs(inputs []*nix.Package) ([]*nix.Package, error) {
 		} else if config == nil {
 			continue
 		}
-		result = append(result, nix.PackageFromStrings(config.Packages, m.lockfile)...)
+		result = append(result, devpkg.PackageFromStrings(config.Packages, m.lockfile)...)
 	}
 	return result, nil
 }

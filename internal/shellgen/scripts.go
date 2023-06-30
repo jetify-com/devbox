@@ -10,8 +10,8 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
@@ -23,7 +23,7 @@ const HooksFilename = ".hooks"
 type devboxer interface {
 	Config() *devconfig.Config
 	Lockfile() *lock.File
-	PackagesAsInputs() []*nix.Package
+	PackagesAsInputs() []*devpkg.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }

@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/devpkg"
 
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
@@ -75,11 +76,11 @@ func (m *Manager) Include(included string) error {
 	return err
 }
 
-func (m *Manager) Create(pkg *nix.Package) error {
+func (m *Manager) Create(pkg *devpkg.Package) error {
 	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
 }
 
-func (m *Manager) create(pkg *nix.Package, locked *lock.Package) error {
+func (m *Manager) create(pkg *devpkg.Package, locked *lock.Package) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
 	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
@@ -128,7 +129,7 @@ func (m *Manager) create(pkg *nix.Package, locked *lock.Package) error {
 }
 
 func (m *Manager) createFile(
-	pkg *nix.Package,
+	pkg *devpkg.Package,
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
@@ -188,11 +189,11 @@ func (m *Manager) createFile(
 // TODO: this should have PluginManager as receiver so we can build once with
 // pkgs, includes, etc
 func (m *Manager) Env(
-	pkgs []*nix.Package,
+	pkgs []*devpkg.Package,
 	includes []string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
-	allPkgs := append([]*nix.Package(nil), pkgs...)
+	allPkgs := append([]*devpkg.Package(nil), pkgs...)
 	for _, included := range includes {
 		input, err := m.parseInclude(included)
 		if err != nil {
@@ -217,7 +218,7 @@ func (m *Manager) Env(
 	return conf.OSExpandEnvMap(env, computedEnv, m.ProjectDir()), nil
 }
 
-func buildConfig(pkg *nix.Package, projectDir, content string) (*config, error) {
+func buildConfig(pkg *devpkg.Package, projectDir, content string) (*config, error) {
 	cfg := &config{}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)

@@ -11,12 +11,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/devpkg"
 )
 
 func PrintReadme(ctx context.Context,
-	pkg *nix.Package,
+	pkg *devpkg.Package,
 	projectDir string,
 	w io.Writer,
 	markdown bool,
