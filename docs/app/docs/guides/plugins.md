@@ -12,6 +12,7 @@ Plugins are available for the following packages. You can activate the plugins f
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
 * [Nginx](../devbox_examples/servers/nginx.md) (nginx)
 * [MariaDB](../devbox_examples/databases/mariadb.md) (mariadb, mariadb_10_6...)
+* [MySQL](../devbox_examples/databases/mysql.md) (mysql80, mysql57)
 * [PostgreSQL](../devbox_examples/databases/postgres.md) (postgresql)
 * [Redis](../devbox_examples/databases/redis.md) (redis)
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82...)
