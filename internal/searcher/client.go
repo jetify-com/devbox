@@ -17,7 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixsearch"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
@@ -69,7 +69,7 @@ func (c *client) Resolve(pkg string) (*lock.Package, error) {
 		return nil, err
 	}
 	if len(result.Results) == 0 {
-		return nil, nix.ErrPackageNotFound
+		return nil, nixsearch.ErrPackageNotFound
 	}
 
 	searchVersion := result.Results[0].Packages[0].Version

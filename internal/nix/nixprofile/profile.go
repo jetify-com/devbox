@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixsearch"
 
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
@@ -86,7 +87,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 			return item.index, nil
 		}
 	}
-	return -1, nix.ErrPackageNotFound
+	return -1, nixsearch.ErrPackageNotFound
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`

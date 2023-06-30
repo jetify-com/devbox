@@ -17,6 +17,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
+	"go.jetpack.io/devbox/internal/nix/nixsearch"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
 
@@ -70,7 +71,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			return err
 		}
 		if !ok {
-			return errors.WithMessage(nix.ErrPackageNotFound, pkg.Raw)
+			return errors.WithMessage(nixsearch.ErrPackageNotFound, pkg.Raw)
 		}
 	}
 
@@ -376,7 +377,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 			ProfileDir: profileDir,
 		})
 		if err != nil {
-			if !errors.Is(err, nix.ErrPackageNotFound) {
+			if !errors.Is(err, nixsearch.ErrPackageNotFound) {
 				return nil, err
 			}
 			pending = append(pending, input.Raw)

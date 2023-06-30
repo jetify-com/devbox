@@ -1,16 +1,15 @@
-package nix
+package nixsearch
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 var ErrPackageNotFound = errors.New("package not found")
@@ -99,17 +98,9 @@ func searchSystem(url string, system string) map[string]*Info {
 		hash := devpkgutil.HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
-		_ = EnsureNixpkgsPrefetched(writer, hash)
+		_ = nix.EnsureNixpkgsPrefetched(writer, hash)
 	}
-
-	cmd := exec.Command("nix", "search", "--json", url)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	if system != "" {
-		cmd.Args = append(cmd.Args, "--system", system)
-	}
-	cmd.Stderr = writer
-	debug.Log("running command: %s\n", cmd)
-	out, err := cmd.Output()
+	out, err := nix.Search(os.Stderr, url, system)
 	if err != nil {
 		// for now, assume all errors are invalid packages.
 		return nil

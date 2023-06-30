@@ -20,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixsearch"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -254,7 +255,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	// We prefer search over just trying to parse the URL because search will
 	// guarantee that the package exists for the current system.
-	infos := nix.Search(query)
+	infos := nixsearch.Search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
@@ -288,7 +289,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		)
 	}
 
-	if nix.PkgExistsForAnySystem(query) {
+	if nixsearch.PkgExistsForAnySystem(query) {
 		return "", usererr.New(
 			"Package \"%s\" was found, but we're unable to build it for your system."+
 				" You may need to choose another version or write a custom flake.",

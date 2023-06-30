@@ -21,6 +21,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/impl/generate"
+	"go.jetpack.io/devbox/internal/nix/nixsearch"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
@@ -325,7 +326,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
 
-	info := nix.PkgInfo(pkg, d.lockfile)
+	info := nixsearch.PkgInfo(pkg, d.lockfile)
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
