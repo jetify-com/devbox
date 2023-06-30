@@ -12,7 +12,6 @@ import (
 
 	"github.com/fatih/color"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/lock"
@@ -191,7 +190,7 @@ type ProfileInstallArgs struct {
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
 	input := devpkg.PackageFromString(args.Package, args.Lockfile)
-	if devpkgutil.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+	if nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
 		}

@@ -17,7 +17,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -114,8 +113,8 @@ func (p *Package) FlakeInputName() string {
 		result = filepath.Base(p.Path) + "-" + p.Hash()
 	} else if p.isGithub() {
 		result = "gh-" + strings.Join(strings.Split(p.Opaque, "/"), "-")
-	} else if url := p.URLForFlakeInput(); devpkgutil.IsGithubNixpkgsURL(url) {
-		commitHash := devpkgutil.HashFromNixPkgsURL(url)
+	} else if url := p.URLForFlakeInput(); nix.IsGithubNixpkgsURL(url) {
+		commitHash := nix.HashFromNixPkgsURL(url)
 		if len(commitHash) > 6 {
 			commitHash = commitHash[0:6]
 		}
@@ -401,7 +400,7 @@ func (p *Package) isVersioned() bool {
 }
 
 func (p *Package) HashFromNixPkgsURL() string {
-	return devpkgutil.HashFromNixPkgsURL(p.URLForFlakeInput())
+	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
 // BinaryCacheStore is the store from which to fetch this package's binaries.

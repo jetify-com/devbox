@@ -8,8 +8,8 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/goutil"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 type flakeInput struct {
@@ -25,21 +25,21 @@ type flakeInput struct {
 // github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func (f *flakeInput) IsNixpkgs() bool {
-	return devpkgutil.IsGithubNixpkgsURL(f.URL)
+	return nix.IsGithubNixpkgsURL(f.URL)
 }
 
 func (f *flakeInput) HashFromNixPkgsURL() string {
 	if !f.IsNixpkgs() {
 		return ""
 	}
-	return devpkgutil.HashFromNixPkgsURL(f.URL)
+	return nix.HashFromNixPkgsURL(f.URL)
 }
 
 func (f *flakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
 		return f.URL
 	}
-	hash := devpkgutil.HashFromNixPkgsURL(f.URL)
+	hash := nix.HashFromNixPkgsURL(f.URL)
 	return getNixpkgsInfo(hash).URL
 }
 

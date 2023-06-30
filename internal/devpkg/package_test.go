@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 const nixCommitHash = "hsdafkhsdafhas"
@@ -168,7 +168,7 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := devpkgutil.HashFromNixPkgsURL(test.url)
+		result := nix.HashFromNixPkgsURL(test.url)
 		if result != test.expected {
 			t.Errorf(
 				"Expected hash '%s' for URL '%s', but got '%s'",

@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 )
 
 var ErrPackageNotFound = errors.New("package not found")
@@ -79,8 +78,8 @@ func searchSystem(url string, system string) map[string]*Info {
 	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this
 	// check here provides a slightly better UX.
-	if devpkgutil.IsGithubNixpkgsURL(url) {
-		hash := devpkgutil.HashFromNixPkgsURL(url)
+	if IsGithubNixpkgsURL(url) {
+		hash := HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
 		_ = EnsureNixpkgsPrefetched(writer, hash)
