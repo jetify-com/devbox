@@ -34,12 +34,12 @@ Note that running `devbox shell` is not necessary if VSCode is reopened in Devbo
 
 ## Direnv Extension
 ___
-Direnv is an open source environment management tool that allows setting unique environment variables per directory in your file system. For more details on how to set it and integrate it with Devbox visit [our Direnv setup guide](ide_configuration/direnv/).
+Direnv is an open source environment management tool that allows setting unique environment variables per directory in your file system. For more details on how to set it and integrate it with Devbox visit [our Direnv setup guide](../direnv/).
 
 Once Direnv is installed and setup with Devbox, its [VSCode extension](vscode:extension/mkhl.direnv) can also be used to integrate the environment defined in your devbox.json to VSCode. To do that follow the steps below:
 
 1. Install Direnv ([link to guide](https://direnv.net/#basic-installation))
-2. Setup Devbox shell with Direnv ([link to guide](ide_configuration/direnv/#setting-up-devbox-shell-and-direnv))
+2. Setup Devbox shell with Direnv ([link to guide](../direnv/#setting-up-devbox-shell-and-direnv))
 3. Install Direnv's [VSCode extension](vscode:extension/mkhl.direnv)
 4. Open your Devbox project in VSCode. Direnv extension should show a prompt notification to reload your environment.
 5. Click on reload.
