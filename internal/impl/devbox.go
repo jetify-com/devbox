@@ -335,7 +335,18 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
 
-	info := nix.PkgInfo(pkg, d.lockfile)
+	locked, err := d.lockfile.Resolve(pkg)
+	if err != nil {
+		return nil
+	}
+
+	results := nix.Search(locked.Resolved)
+	if len(results) == 0 {
+		return nil
+	}
+	// we should only have one result
+	info := lo.Values(results)[0]
+
 	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)

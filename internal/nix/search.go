@@ -7,10 +7,8 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
-	"go.jetpack.io/devbox/internal/lock"
 )
 
 var ErrPackageNotFound = errors.New("package not found")
@@ -26,20 +24,6 @@ type Info struct {
 
 func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.PName, i.Version)
-}
-
-func PkgInfo(pkg string, lock lock.Locker) *Info {
-	locked, err := lock.Resolve(pkg)
-	if err != nil {
-		return nil
-	}
-
-	results := Search(locked.Resolved)
-	if len(results) == 0 {
-		return nil
-	}
-	// we should only have one result
-	return lo.Values(results)[0]
 }
 
 func Search(url string) map[string]*Info {
