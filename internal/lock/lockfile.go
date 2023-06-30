@@ -13,6 +13,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -28,8 +29,6 @@ type File struct {
 
 	// Packages is keyed by "canonicalName@version"
 	Packages map[string]*Package `json:"packages"`
-
-	system string
 }
 
 type Package struct {
@@ -50,15 +49,13 @@ type SystemInfo struct {
 	ToHash       string `json:"to_hash,omitempty"`
 }
 
-func GetFile(project devboxProject, resolver resolver, system string) (*File, error) {
+func GetFile(project devboxProject, resolver resolver) (*File, error) {
 	lockFile := &File{
 		devboxProject: project,
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
-
-		system: system,
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -91,10 +88,15 @@ func (l *File) Remove(pkgs ...string) error {
 func (l *File) Resolve(pkg string) (*Package, error) {
 	entry, hasEntry := l.Packages[pkg]
 
+	userSystem, err := nix.System()
+	if err != nil {
+		return nil, err
+	}
+
 	// If the package's system info is missing, we need to resolve it again.
 	needsSysInfo := false
 	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
-		needsSysInfo = entry.Systems[l.system] == nil
+		needsSysInfo = entry.Systems[userSystem] == nil
 	}
 
 	if !hasEntry || entry.Resolved == "" || needsSysInfo {
