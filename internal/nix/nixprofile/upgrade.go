@@ -1,13 +1,13 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
 package nixprofile
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/redact"
 )
 
 func ProfileUpgrade(ProfileDir string, pkg *nix.Package, lock *lock.File) error {
@@ -22,17 +22,6 @@ func ProfileUpgrade(ProfileDir string, pkg *nix.Package, lock *lock.File) error 
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(
-		"nix", "profile", "upgrade",
-		"--profile", ProfileDir,
-		fmt.Sprintf("%d", idx),
-	)
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf(
-			"error running \"nix profile upgrade\": %s: %w", out, err,
-		)
-	}
-	return nil
+
+	return nix.ProfileUpgrade(ProfileDir, idx)
 }
