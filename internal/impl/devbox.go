@@ -1145,3 +1145,7 @@ func (d *Devbox) PluginManager() *plugin.Manager {
 func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
 }
+
+func (d *Devbox) System() (string, error) {
+	return nix.System()
+}

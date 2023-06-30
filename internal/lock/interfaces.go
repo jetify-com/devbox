@@ -8,6 +8,7 @@ type devboxProject interface {
 	NixPkgsCommitHash() string
 	Packages() []string
 	ProjectDir() string
+	System() (string, error)
 }
 
 type resolver interface {

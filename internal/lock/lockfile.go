@@ -29,7 +29,6 @@ type File struct {
 	// Packages is keyed by "canonicalName@version"
 	Packages map[string]*Package `json:"packages"`
 
-	system string
 }
 
 type Package struct {
@@ -57,8 +56,6 @@ func GetFile(project devboxProject, resolver resolver, system string) (*File, er
 
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
-
-		system: system,
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -91,10 +88,15 @@ func (l *File) Remove(pkgs ...string) error {
 func (l *File) Resolve(pkg string) (*Package, error) {
 	entry, hasEntry := l.Packages[pkg]
 
+	userSys, err := l.devboxProject.System()
+	if err != nil {
+		return nil, err
+	}
+
 	// If the package's system info is missing, we need to resolve it again.
 	needsSysInfo := false
 	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
-		needsSysInfo = entry.Systems[l.system] == nil
+		needsSysInfo = entry.Systems[userSys] == nil
 	}
 
 	if !hasEntry || entry.Resolved == "" || needsSysInfo {
