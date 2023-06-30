@@ -342,15 +342,12 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 	results := nix.Search(locked.Resolved)
 	if len(results) == 0 {
-		return nil
-	}
-	// we should only have one result
-	info := lo.Values(results)[0]
-
-	if info == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
 	}
+
+	// we should only have one result
+	info := lo.Values(results)[0]
 	if _, err := fmt.Fprintf(
 		d.writer,
 		"%s%s\n",
