@@ -415,7 +415,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	// and since we're reusing the Input objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
 outer:
 	for _, item := range profileItems {
-		profileInput := item.PackageFromProfileItem(d.lockfile)
+		profileInput := item.ToPackage(d.lockfile)
 		for _, devboxInput := range devboxInputs {
 			if profileInput.Equals(devboxInput) {
 				continue outer

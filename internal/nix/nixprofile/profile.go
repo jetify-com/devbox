@@ -105,7 +105,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	}
 
 	for _, item := range list {
-		existing := item.PackageFromProfileItem(args.Lockfile)
+		existing := item.ToPackage(args.Lockfile)
 
 		if args.Input.Equals(existing) {
 			return item.index, nil
@@ -190,8 +190,8 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	return attrPath, nil
 }
 
-// PackageFromProfileItem constructs a nix.Package using the unlocked reference
-func (item *NixProfileListItem) PackageFromProfileItem(locker lock.Locker) *nix.Package {
+// ToPackage constructs a nix.Package using the unlocked reference
+func (item *NixProfileListItem) ToPackage(locker lock.Locker) *nix.Package {
 	return nix.PackageFromString(item.unlockedReference, locker)
 }
 
