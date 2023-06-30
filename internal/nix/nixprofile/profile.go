@@ -5,71 +5,44 @@ package nixprofile
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
-const DefaultPriority = 5
-
 // ProfileListItems returns a list of the installed packages.
 func ProfileListItems(
 	writer io.Writer,
 	profileDir string,
 ) (map[string]*NixProfileListItem, error) {
-	cmd := exec.Command("nix", "profile", "list", "--profile", profileDir)
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 
-	// We set stderr to a different output than stdout
-	// to ensure error output is not mingled with the stdout output
-	// that we need to parse.
-	cmd.Stderr = writer
+	lines, err := nix.ProfileList(writer, profileDir)
+	if err != nil {
+		return nil, err
+	}
 
-	// The `out` output is of the form:
+	// The `line` output is of the form:
 	// <index> <UnlockedReference> <LockedReference> <NixStorePath>
 	//
 	// Using an example:
 	// 0 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
 	// 1 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim /nix/store/gapbqxx1d49077jk8ay38z11wgr12p23-vim-9.0.0609
 
-	out, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, redact.Errorf("error creating stdout pipe: %w", redact.Safe(err))
-	}
-	if err := cmd.Start(); err != nil {
-		return nil, redact.Errorf("error starting \"nix profile list\" command: %w", err)
-	}
-
 	items := map[string]*NixProfileListItem{}
-	scanner := bufio.NewScanner(out)
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 		item, err := parseNixProfileListItem(line)
 		if err != nil {
 			return nil, err
 		}
 
 		items[item.unlockedReference] = item
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return items, redact.Errorf("error running \"nix profile list\": %w", err)
 	}
 	return items, nil
 }
@@ -207,7 +180,6 @@ func (item *NixProfileListItem) String() string {
 
 type ProfileInstallArgs struct {
 	CustomStepMessage string
-	ExtraFlags        []string
 	Lockfile          *lock.File
 	Package           string
 	ProfilePath       string
@@ -235,28 +207,8 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		return err
 	}
 
-	cmd := exec.Command(
-		"nix", "profile", "install",
-		"--profile", args.ProfilePath,
-		"--impure", // for NIXPKGS_ALLOW_UNFREE
-		// Using an arbitrary priority to avoid conflicts with other packages.
-		// Note that this is not really the priority we care about, since we
-		// use the flake.nix to specify the priority.
-		"--priority", nextPriority(args.ProfilePath),
-		urlForInstall,
-	)
-	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	cmd.Args = append(cmd.Args, args.ExtraFlags...)
-
-	// If nix profile install runs as tty, the output is much nicer. If we ever
-	// need to change this to our own writers, consider that you may need
-	// to implement your own nicer output. --print-build-logs flag may be useful.
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = args.Writer
-	cmd.Stderr = args.Writer
-
-	if err := cmd.Run(); err != nil {
+	err = nix.ProfileInstall(args.Writer, args.ProfilePath, urlForInstall)
+	if err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
 		return redact.Errorf("error running \"nix profile install\": %w", err)
@@ -274,80 +226,9 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 	if items == nil {
 		return nil
 	}
-
 	indexes := []string{}
 	for _, item := range items {
 		indexes = append(indexes, strconv.Itoa(item.index))
 	}
-	cmd := exec.Command("nix", append([]string{"profile", "remove",
-		"--profile", profilePath,
-		"--impure"}, // for NIXPKGS_ALLOW_UNFREE
-		indexes...)...,
-	)
-	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
-	}
-	return nil
-}
-
-func ProfileRemove(profilePath, pkg string, lock lock.Locker) error {
-	info := nix.PkgInfo(pkg, lock)
-	if info == nil {
-		return nix.ErrPackageNotFound
-	}
-	cmd := exec.Command("nix", "profile", "remove",
-		"--profile", profilePath,
-		"--impure", // for NIXPKGS_ALLOW_UNFREE
-		info.AttributeKey,
-	)
-	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-	out, err := cmd.CombinedOutput()
-	if bytes.Contains(out, []byte("does not match any packages")) {
-		return nix.ErrPackageNotInstalled
-	}
-	if err != nil {
-		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
-	}
-	return nil
-}
-
-func allowUnfreeEnv() []string {
-	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
-}
-
-type manifest struct {
-	Elements []struct {
-		Priority int `json:"priority"`
-	} `json:"elements"`
-}
-
-func readManifest(profilePath string) (manifest, error) {
-	data, err := os.ReadFile(filepath.Join(profilePath, "manifest.json"))
-	if errors.Is(err, fs.ErrNotExist) {
-		return manifest{}, nil
-	}
-	if err != nil {
-		return manifest{}, err
-	}
-
-	var m manifest
-	return m, json.Unmarshal(data, &m)
-}
-
-func nextPriority(profilePath string) string {
-	// error is ignored because it's ok if the file doesn't exist
-	m, _ := readManifest(profilePath)
-	max := DefaultPriority
-	for _, e := range m.Elements {
-		if e.Priority > max {
-			max = e.Priority
-		}
-	}
-	// Each subsequent package gets a lower priority. This matches how flake.nix
-	// behaves
-	return fmt.Sprintf("%d", max+1)
+	return nix.ProfileRemove(profilePath, indexes)
 }
