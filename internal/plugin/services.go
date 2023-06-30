@@ -17,12 +17,12 @@ func (m *Manager) GetServices(
 ) (services.Services, error) {
 	allSvcs := services.Services{}
 
-	allPkgs := []includable{}
+	allPkgs := []Includable{}
 	for _, pkg := range pkgs {
 		allPkgs = append(allPkgs, pkg)
 	}
 	for _, include := range includes {
-		name, err := m.parseInclude(include)
+		name, err := m.ParseInclude(include)
 		if err != nil {
 			return nil, err
 		}

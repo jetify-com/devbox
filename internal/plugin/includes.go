@@ -7,14 +7,16 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-type includable interface {
+type Includable interface {
 	CanonicalName() string
+	Hash() string
 }
 
-func (m *Manager) parseInclude(include string) (includable, error) {
+func (m *Manager) ParseInclude(include string) (Includable, error) {
 	includeType, name, _ := strings.Cut(include, ":")
 	if name == "" {
 		return nil, usererr.New("include name is required")
@@ -62,4 +64,9 @@ func (l *localPlugin) IsLocal() bool {
 
 func (l *localPlugin) contentPath(subpath string) string {
 	return filepath.Join(filepath.Dir(l.path), subpath)
+}
+
+func (l *localPlugin) Hash() string {
+	h, _ := cuecfg.FileHash(l.path)
+	return h
 }
