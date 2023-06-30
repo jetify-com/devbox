@@ -1,7 +1,7 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package nix
+package nixprofile
 
 import (
 	"bufio"
@@ -18,6 +18,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
@@ -31,7 +32,7 @@ func ProfileListItems(
 	profileDir string,
 ) (map[string]*NixProfileListItem, error) {
 	cmd := exec.Command("nix", "profile", "list", "--profile", profileDir)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 
 	// We set stderr to a different output than stdout
 	// to ensure error output is not mingled with the stdout output
@@ -79,7 +80,7 @@ type ProfileListIndexArgs struct {
 	List       map[string]*NixProfileListItem
 	Lockfile   *lock.File
 	Writer     io.Writer
-	Input      *Package
+	Input      *nix.Package
 	ProfileDir string
 }
 
@@ -95,7 +96,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 
 	// This is an optimization for happy path. A resolved devbox package
 	// should match the unlockedReference of an existing profile item.
-	ref, err := args.Input.normalizedDevboxPackageReference()
+	ref, err := args.Input.NormalizedDevboxPackageReference()
 	if err != nil {
 		return -1, err
 	}
@@ -104,13 +105,13 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	}
 
 	for _, item := range list {
-		existing := PackageFromProfileItem(item, args.Lockfile)
+		existing := item.PackageFromProfileItem(args.Lockfile)
 
 		if args.Input.Equals(existing) {
 			return item.index, nil
 		}
 	}
-	return -1, ErrPackageNotFound
+	return -1, nix.ErrPackageNotFound
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
@@ -189,6 +190,11 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 	return attrPath, nil
 }
 
+// PackageFromProfileItem constructs a nix.Package using the unlocked reference
+func (item *NixProfileListItem) PackageFromProfileItem(locker lock.Locker) *nix.Package {
+	return nix.PackageFromString(item.unlockedReference, locker)
+}
+
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
 func (item *NixProfileListItem) String() string {
 	return fmt.Sprintf("%d %s %s %s",
@@ -210,9 +216,9 @@ type ProfileInstallArgs struct {
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
-	input := PackageFromString(args.Package, args.Lockfile)
-	if IsGithubNixpkgsURL(input.URLForFlakeInput()) {
-		if err := ensureNixpkgsPrefetched(args.Writer, input.hashFromNixPkgsURL()); err != nil {
+	input := nix.PackageFromString(args.Package, args.Lockfile)
+	if nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
 		}
 	}
@@ -240,7 +246,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		urlForInstall,
 	)
 	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	cmd.Args = append(cmd.Args, args.ExtraFlags...)
 
 	// If nix profile install runs as tty, the output is much nicer. If we ever
@@ -279,7 +285,7 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 		indexes...)...,
 	)
 	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
@@ -288,20 +294,20 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 }
 
 func ProfileRemove(profilePath, pkg string, lock lock.Locker) error {
-	info := PkgInfo(pkg, lock)
+	info := nix.PkgInfo(pkg, lock)
 	if info == nil {
-		return ErrPackageNotFound
+		return nix.ErrPackageNotFound
 	}
 	cmd := exec.Command("nix", "profile", "remove",
 		"--profile", profilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
-		info.attributeKey,
+		info.AttributeKey,
 	)
 	cmd.Env = allowUnfreeEnv()
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
+	cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
 	out, err := cmd.CombinedOutput()
 	if bytes.Contains(out, []byte("does not match any packages")) {
-		return ErrPackageNotInstalled
+		return nix.ErrPackageNotInstalled
 	}
 	if err != nil {
 		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)

@@ -77,12 +77,6 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 	return &Package{*pkgURL, locker, raw, ""}
 }
 
-// PackageFromProfileItem constructs a package using the the unlocked reference
-// from profile list item.
-func PackageFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Package {
-	return PackageFromString(item.unlockedReference, locker)
-}
-
 // isLocal specifies whether this package is a local flake.
 // Usually, this is of the form: `path:./local_flake_subdir#myPackage`
 func (p *Package) isLocal() bool {
@@ -165,7 +159,7 @@ func (p *Package) URLForInstall() (string, error) {
 	return p.urlWithoutFragment() + "#" + attrPath, nil
 }
 
-func (p *Package) normalizedDevboxPackageReference() (string, error) {
+func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 	if !p.isDevboxPackage() {
 		return "", nil
 	}
@@ -213,7 +207,7 @@ func (p *Package) PackageAttributePath() (string, error) {
 // it is much faster than NormalizedPackageAttributePath
 func (p *Package) FullPackageAttributePath() (string, error) {
 	if p.isDevboxPackage() {
-		reference, err := p.normalizedDevboxPackageReference()
+		reference, err := p.NormalizedDevboxPackageReference()
 		if err != nil {
 			return "", err
 		}
@@ -383,11 +377,11 @@ func (p *Package) LegacyToVersioned() string {
 }
 
 func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
-	hash := p.hashFromNixPkgsURL()
+	hash := p.HashFromNixPkgsURL()
 	if hash == "" {
 		return nil
 	}
-	return ensureNixpkgsPrefetched(w, hash)
+	return EnsureNixpkgsPrefetched(w, hash)
 }
 
 // version returns the version of the package
@@ -404,7 +398,7 @@ func (p *Package) isVersioned() bool {
 	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
 }
 
-func (p *Package) hashFromNixPkgsURL() string {
+func (p *Package) HashFromNixPkgsURL() string {
 	return HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 

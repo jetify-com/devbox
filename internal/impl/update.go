@@ -9,6 +9,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/ux"
@@ -120,7 +121,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *nix.Package) error {
 		pkg.Raw,
 	)
 
-	err = nix.ProfileUpgrade(profilePath, pkg, d.lockfile)
+	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
 		ux.Ferror(
 			d.writer,
