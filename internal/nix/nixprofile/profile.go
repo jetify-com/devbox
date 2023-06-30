@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/lock"
@@ -53,7 +55,7 @@ type ProfileListIndexArgs struct {
 	List       map[string]*NixProfileListItem
 	Lockfile   *lock.File
 	Writer     io.Writer
-	Input      *nix.Package
+	Input      *devpkg.Package
 	ProfileDir string
 }
 
@@ -164,8 +166,8 @@ func (item *NixProfileListItem) AttributePath() (string, error) {
 }
 
 // ToPackage constructs a nix.Package using the unlocked reference
-func (item *NixProfileListItem) ToPackage(locker lock.Locker) *nix.Package {
-	return nix.PackageFromString(item.unlockedReference, locker)
+func (item *NixProfileListItem) ToPackage(locker lock.Locker) *devpkg.Package {
+	return devpkg.PackageFromString(item.unlockedReference, locker)
 }
 
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
@@ -188,8 +190,8 @@ type ProfileInstallArgs struct {
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
-	input := nix.PackageFromString(args.Package, args.Lockfile)
-	if nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+	input := devpkg.PackageFromString(args.Package, args.Lockfile)
+	if devpkgutil.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
 		}

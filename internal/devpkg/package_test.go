@@ -1,7 +1,7 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package nix
+package devpkg
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -167,7 +168,7 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := HashFromNixPkgsURL(test.url)
+		result := devpkgutil.HashFromNixPkgsURL(test.url)
 		if result != test.expected {
 			t.Errorf(
 				"Expected hash '%s' for URL '%s', but got '%s'",

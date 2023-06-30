@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
@@ -39,8 +40,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := []*nix.Package{}
-	for _, pkg := range nix.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
+	pkgs := []*devpkg.Package{}
+	for _, pkg := range devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
 		versioned := pkg.Versioned()
 
 		// If exact versioned package is already in the config, skip.
@@ -58,7 +59,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			}
 		}
 
-		pkgs = append(pkgs, nix.PackageFromString(versioned, d.lockfile))
+		pkgs = append(pkgs, devpkg.PackageFromString(versioned, d.lockfile))
 		d.cfg.Packages = append(d.cfg.Packages, versioned)
 	}
 
@@ -93,7 +94,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	}
 
 	if err := d.lockfile.Add(
-		lo.Map(pkgs, func(pkg *nix.Package, _ int) string { return pkg.Raw })...,
+		lo.Map(pkgs, func(pkg *devpkg.Package, _ int) string { return pkg.Raw })...,
 	); err != nil {
 		return err
 	}
@@ -299,7 +300,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, input := range nix.PackageFromStrings(pkgs, d.lockfile) {
+	for _, input := range devpkg.PackageFromStrings(pkgs, d.lockfile) {
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,

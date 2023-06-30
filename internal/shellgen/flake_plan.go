@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/trace"
 
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
@@ -13,7 +14,7 @@ type flakePlan struct {
 	BinaryCacheStore string
 	NixpkgsInfo      *NixpkgsInfo
 	FlakeInputs      []*flakeInput
-	Packages         []*nix.Package
+	Packages         []*devpkg.Package
 	System           string
 }
 
@@ -72,7 +73,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	}
 
 	return &flakePlan{
-		BinaryCacheStore: nix.BinaryCacheStore,
+		BinaryCacheStore: devpkg.BinaryCacheStore,
 		FlakeInputs:      flakeInputs,
 		NixpkgsInfo:      nixpkgsInfo,
 		Packages:         packages,
