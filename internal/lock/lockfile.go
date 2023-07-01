@@ -88,14 +88,13 @@ func (l *File) Remove(pkgs ...string) error {
 func (l *File) Resolve(pkg string) (*Package, error) {
 	entry, hasEntry := l.Packages[pkg]
 
-	userSystem, err := nix.System()
-	if err != nil {
-		return nil, err
-	}
-
 	// If the package's system info is missing, we need to resolve it again.
 	needsSysInfo := false
 	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
+		userSystem, err := nix.System()
+		if err != nil {
+			return nil, err
+		}
 		needsSysInfo = entry.Systems[userSystem] == nil
 	}
 
