@@ -19,7 +19,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/shellgen"
@@ -91,16 +90,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:          opts.Pure,
 	}
 
-	// TODO savil: this is bad for perf, and so remove before enabling feature.
-	// this hack is to workaround an import cycle: lock -> nix -> lock
-	userSystem := ""
-	if featureflag.RemoveNixpkgs.Enabled() {
-		userSystem, err = nix.System()
-		if err != nil {
-			return nil, err
-		}
-	}
-	lock, err := lock.GetFile(box, searcher.Client(), userSystem)
+	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
 		return nil, err
 	}
