@@ -14,17 +14,6 @@ type Package struct {
 	Versions    []PackageVersion `json:"versions,omitempty"`
 }
 
-// Package api:
-// https://search.devbox.sh/pkg/<name>
-type PackageResult struct {
-	Summary  string                 `json:"summary"`
-	Homepage string                 `json:"homepage"`
-	License  string                 `json:"license"`
-	Name     string                 `json:"name"`
-	Version  string                 `json:"version"`
-	Systems  map[string]PackageInfo `json:"systems"`
-}
-
 type PackageVersion struct {
 	PackageInfo
 
