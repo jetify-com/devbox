@@ -13,7 +13,6 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/searcher/model"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
@@ -66,7 +65,7 @@ func searchCmd() *cobra.Command {
 func printSearchResults(
 	w io.Writer,
 	query string,
-	results *model.SearchResults,
+	results *searcher.SearchResults,
 	showAll bool,
 ) error {
 	if len(results.Packages) == 0 {

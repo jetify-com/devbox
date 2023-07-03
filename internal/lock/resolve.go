@@ -11,7 +11,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/searcher/model"
 	"golang.org/x/exp/maps"
 )
 
@@ -52,10 +51,10 @@ func (l *File) ResolveToLockedPackage(pkg string) (*Package, error) {
 	}, nil
 }
 
-func selectForSystem(pkg model.PackageVersion) (model.PackageInfo, error) {
+func selectForSystem(pkg searcher.PackageVersion) (searcher.PackageInfo, error) {
 	currentSystem, err := nix.System()
 	if err != nil {
-		return model.PackageInfo{}, err
+		return searcher.PackageInfo{}, err
 	}
 	if pi, ok := pkg.Systems[currentSystem]; ok {
 		return pi, nil
@@ -64,13 +63,13 @@ func selectForSystem(pkg model.PackageVersion) (model.PackageInfo, error) {
 		return pi, nil
 	}
 	if len(pkg.Systems) == 0 {
-		return model.PackageInfo{},
+		return searcher.PackageInfo{},
 			fmt.Errorf("no systems found for package %q", pkg.Name)
 	}
 	return maps.Values(pkg.Systems)[0], nil
 }
 
-func buildLockSystemInfos(pkg model.PackageVersion) map[string]*SystemInfo {
+func buildLockSystemInfos(pkg searcher.PackageVersion) map[string]*SystemInfo {
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, sysInfo := range pkg.Systems {
 		sysInfos[sysName] = &SystemInfo{

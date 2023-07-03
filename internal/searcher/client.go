@@ -12,7 +12,6 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/searcher/model"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
@@ -27,7 +26,7 @@ func Client() *client {
 	}
 }
 
-func (c *client) Search(query string) (*model.SearchResults, error) {
+func (c *client) Search(query string) (*SearchResults, error) {
 	if query == "" {
 		return nil, fmt.Errorf("query should not be empty")
 	}
@@ -38,10 +37,10 @@ func (c *client) Search(query string) (*model.SearchResults, error) {
 	}
 	searchURL := endpoint + "?q=" + url.QueryEscape(query)
 
-	return execGet[model.SearchResults](searchURL)
+	return execGet[SearchResults](searchURL)
 }
 
-func (c *client) Resolve(name, version string) (*model.PackageVersion, error) {
+func (c *client) Resolve(name, version string) (*PackageVersion, error) {
 	if name == "" || version == "" {
 		return nil, fmt.Errorf("name and version should not be empty")
 	}
@@ -54,7 +53,7 @@ func (c *client) Resolve(name, version string) (*model.PackageVersion, error) {
 		"?name=" + url.QueryEscape(name) +
 		"&version=" + url.QueryEscape(version)
 
-	return execGet[model.PackageVersion](searchURL)
+	return execGet[PackageVersion](searchURL)
 }
 
 func execGet[T any](url string) (*T, error) {
