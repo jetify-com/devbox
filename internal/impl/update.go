@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -44,7 +43,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
-		if _, _, isVersioned := devpkgutil.ParseVersionedPackage(pkg.Raw); !isVersioned {
+		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
 			if err = d.attemptToUpgradeFlake(pkg); err != nil {
 				return err
 			}
@@ -87,7 +86,7 @@ func (d *Devbox) updateDevboxPackage(
 	pkg *devpkg.Package,
 ) error {
 	existing := d.lockfile.Packages[pkg.Raw]
-	newEntry, err := searcher.Client().Resolve(pkg.Raw)
+	newEntry, err := d.lockfile.ResolveToLockPackage(pkg.Raw)
 	if err != nil {
 		return err
 	}
