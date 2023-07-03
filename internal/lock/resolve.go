@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (l *File) ResolveToLockPackage(pkg string) (*Package, error) {
+func (l *File) ResolveToLockedPackage(pkg string) (*Package, error) {
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
 	if version == "" {
 		return nil, usererr.New("No version specified for %q.", name)

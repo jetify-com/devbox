@@ -131,7 +131,7 @@ func (p *Package) FlakeInputName() string {
 // input can be used to import the package.
 func (p *Package) URLForFlakeInput() string {
 	if p.isDevboxPackage() {
-		entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+		entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 		if err != nil {
 			panic(err)
 			// TODO(landau): handle error
@@ -147,7 +147,7 @@ func (p *Package) URLForFlakeInput() string {
 // `#attributePath`
 func (p *Package) URLForInstall() (string, error) {
 	if p.isDevboxPackage() {
-		entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+		entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -167,7 +167,7 @@ func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 
 	path := ""
 	if p.isVersioned() {
-		entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+		entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -192,7 +192,7 @@ func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 // does not include packages/legacyPackages or the system name.
 func (p *Package) PackageAttributePath() (string, error) {
 	if p.isDevboxPackage() {
-		entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+		entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 		if err != nil {
 			return "", err
 		}
@@ -239,7 +239,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
 	if p.isDevboxPackage() {
 		if p.isVersioned() {
-			entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+			entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 			if err != nil {
 				return "", err
 			}
@@ -412,7 +412,7 @@ func (p *Package) IsInBinaryStore() (bool, error) {
 		return false, nil
 	}
 
-	entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+	entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 	if err != nil {
 		return false, err
 	}
@@ -437,10 +437,11 @@ func (p *Package) PathInBinaryStore() (string, error) {
 	if isInStore, err := p.IsInBinaryStore(); err != nil {
 		return "", err
 	} else if !isInStore {
-		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+		return "",
+			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
-	entry, err := p.lockfile.ResolveToLockPackage(p.Raw)
+	entry, err := p.lockfile.ResolveToLockedPackage(p.Raw)
 	if err != nil {
 		return "", err
 	}

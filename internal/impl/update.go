@@ -86,7 +86,7 @@ func (d *Devbox) updateDevboxPackage(
 	pkg *devpkg.Package,
 ) error {
 	existing := d.lockfile.Packages[pkg.Raw]
-	newEntry, err := d.lockfile.ResolveToLockPackage(pkg.Raw)
+	newEntry, err := d.lockfile.ResolveToLockedPackage(pkg.Raw)
 	if err != nil {
 		return err
 	}
