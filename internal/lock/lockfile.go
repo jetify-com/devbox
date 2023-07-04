@@ -100,7 +100,7 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 		locked := &Package{}
 		var err error
 		if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
-			locked, err = l.ResolveToLockedPackage(pkg)
+			locked, err = l.FetchResolvedPackage(pkg)
 			if err != nil {
 				return nil, err
 			}

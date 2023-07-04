@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
@@ -14,7 +15,11 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (l *File) ResolveToLockedPackage(pkg string) (*Package, error) {
+// FetchResolvedPackage fetches a resolution but does not write it to the lock
+// struct. This allows testing new versions of packages without writing to the
+// lock. This is useful to avoid changing nixpkgs commit hashes when version has
+// not changed.
+func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
 	if version == "" {
 		return nil, usererr.New("No version specified for %q.", name)
@@ -22,7 +27,8 @@ func (l *File) ResolveToLockedPackage(pkg string) (*Package, error) {
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
 	if err != nil {
-		return nil, nix.ErrPackageNotFound
+		return nil, errors.Wrapf(
+			nix.ErrPackageNotFound, "for name %q, version %q", name, version)
 	}
 
 	sysInfos := map[string]*SystemInfo{}

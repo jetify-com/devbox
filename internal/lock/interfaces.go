@@ -13,5 +13,5 @@ type devboxProject interface {
 type Locker interface {
 	LegacyNixpkgsPath(string) string
 	ProjectDir() string
-	ResolveToLockedPackage(string) (*Package, error)
+	Resolve(string) (*Package, error)
 }
