@@ -27,8 +27,7 @@ func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
 	if err != nil {
-		return nil, errors.Wrapf(
-			nix.ErrPackageNotFound, "for name %q, version %q", name, version)
+		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
 	}
 
 	sysInfos := map[string]*SystemInfo{}
