@@ -54,7 +54,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	written[ScriptPath(devbox.ProjectDir(), HooksFilename)] = struct{}{}
+	written[HooksFilename] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range devbox.Config().Scripts() {
@@ -62,13 +62,14 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		written[ScriptPath(devbox.ProjectDir(), name)] = struct{}{}
+		written[name] = struct{}{}
 	}
 
 	// Delete any files that weren't written just now.
 	for _, entry := range entries {
-		if _, ok := written[entry.Name()]; !ok && !entry.IsDir() {
-			err := os.Remove(ScriptPath(devbox.ProjectDir(), entry.Name()))
+		scriptName := strings.TrimSuffix(entry.Name(), ".sh")
+		if _, ok := written[scriptName]; !ok && !entry.IsDir() {
+			err := os.Remove(ScriptPath(devbox.ProjectDir(), scriptName))
 			if err != nil {
 				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
 			}
