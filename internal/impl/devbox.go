@@ -251,10 +251,16 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
+
 	if err := shellgen.WriteScriptsToFiles(d); err != nil {
+		return err
+	}
+
+	_, err := d.nixEnv(ctx)
+	if err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
