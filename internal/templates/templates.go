@@ -39,6 +39,7 @@ var templates = map[string]string{
 	"maelstrom":       "examples/cloud_development/maelstrom/",
 	"minikube":        "examples/cloud_development/minikube/",
 	"mariadb":         "examples/databases/mariadb/",
+	"mysql":           "examples/databases/mysql/",
 	"nginx":           "examples/servers/nginx/",
 	"nim":             "examples/development/nim/spinnytest/",
 	"node-npm":        "examples/development/nodejs/nodejs-npm/",

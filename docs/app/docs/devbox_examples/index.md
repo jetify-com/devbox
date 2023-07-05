@@ -22,6 +22,7 @@ You can view the full list of examples in our [Example Repo](https://github.com/
 
 ## Databases
 * [MariaDB](databases/mariadb.md)
+* [MySQL](databases/mysql.md)
 * [PostgreSQL](databases/postgres.md)
 * [Redis](databases/redis.md)
 
