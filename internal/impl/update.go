@@ -8,7 +8,9 @@ import (
 	"fmt"
 
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/ux"
@@ -21,7 +23,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	pendingPackagesToUpdate := []*nix.Package{}
+	pendingPackagesToUpdate := []*devpkg.Package{}
 	for _, pkg := range inputs {
 		if pkg.IsLegacy() {
 			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
@@ -42,7 +44,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
-		if _, _, isVersioned := devpkg.ParseVersionedPackage(pkg.Raw); !isVersioned {
+		if _, _, isVersioned := devpkgutil.ParseVersionedPackage(pkg.Raw); !isVersioned {
 			if err = d.attemptToUpgradeFlake(pkg); err != nil {
 				return err
 			}
@@ -64,7 +66,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	return nix.FlakeUpdate(shellgen.FlakePath(d))
 }
 
-func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Package, error) {
+func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
 	var pkgsToUpdate []string
 	for _, pkg := range pkgs {
 		found, err := d.findPackageByName(pkg)
@@ -77,12 +79,12 @@ func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*nix.Package, error) {
 		pkgsToUpdate = d.Packages()
 	}
 
-	return nix.PackageFromStrings(pkgsToUpdate, d.lockfile), nil
+	return devpkg.PackageFromStrings(pkgsToUpdate, d.lockfile), nil
 }
 
 func (d *Devbox) updateDevboxPackage(
 	ctx context.Context,
-	pkg *nix.Package,
+	pkg *devpkg.Package,
 ) error {
 	existing := d.lockfile.Packages[pkg.Raw]
 	newEntry, err := searcher.Client().Resolve(pkg.Raw)
@@ -108,7 +110,7 @@ func (d *Devbox) updateDevboxPackage(
 
 // attemptToUpgradeFlake attempts to upgrade a flake using `nix profile upgrade`
 // and prints an error if it fails, but does not propagate upgrade errors.
-func (d *Devbox) attemptToUpgradeFlake(pkg *nix.Package) error {
+func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 	profilePath, err := d.profilePath()
 	if err != nil {
 		return err
@@ -120,7 +122,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *nix.Package) error {
 		pkg.Raw,
 	)
 
-	err = nix.ProfileUpgrade(profilePath, pkg, d.lockfile)
+	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
 		ux.Ferror(
 			d.writer,

@@ -17,7 +17,6 @@ import (
 	"runtime/trace"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -160,9 +159,5 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 func EnvrcContent(w io.Writer) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
-	return t.Execute(w, struct {
-		PromptHookEnabled bool
-	}{
-		PromptHookEnabled: featureflag.PromptHook.Enabled(),
-	})
+	return t.Execute(w, nil)
 }

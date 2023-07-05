@@ -1,0 +1,40 @@
+{
+   description = "A devbox shell";
+
+   inputs = {
+     nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+     {{- range .FlakeInputs }}
+     {{.Name}}.url = "{{.URLWithCaching}}";
+     {{- end }}
+   };
+
+   outputs = {
+     self,
+     nixpkgs,
+     {{- range .FlakeInputs }}
+     {{.Name}},
+     {{- end }}
+   }:
+      let
+        pkgs = nixpkgs.legacyPackages.{{ .System }};
+      in
+      {
+        devShells.{{ .System }}.default = pkgs.mkShell {
+          buildInputs = [
+            {{- range .Packages }}
+            {{- if .IsInBinaryStore }}
+            (builtins.fetchClosure{
+              fromStore = "{{ $.BinaryCacheStore }}";
+              fromPath = "{{ .PathInBinaryStore }}";
+            })
+            {{- end }}
+            {{- end }}
+            {{- range .FlakeInputs }}
+            {{- range .BuildInputs }}
+            {{.}}
+            {{- end }}
+            {{- end }}
+          ];
+        };
+      };
+ }

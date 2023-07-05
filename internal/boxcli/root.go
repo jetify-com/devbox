@@ -53,10 +53,8 @@ func RootCmd() *cobra.Command {
 		command.AddCommand(authCmd())
 	}
 	command.AddCommand(createCmd())
-	command.AddCommand(exportCmd())
 	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
-	command.AddCommand(hookCmd())
 	command.AddCommand(infoCmd())
 	command.AddCommand(initCmd())
 	command.AddCommand(installCmd())

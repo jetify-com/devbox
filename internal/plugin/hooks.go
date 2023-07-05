@@ -3,9 +3,11 @@
 
 package plugin
 
-import "go.jetpack.io/devbox/internal/nix"
+import (
+	"go.jetpack.io/devbox/internal/devpkg"
+)
 
-func InitHooks(pkgs []*nix.Package, projectDir string) ([]string, error) {
+func InitHooks(pkgs []*devpkg.Package, projectDir string) ([]string, error) {
 	hooks := []string{}
 	for _, pkg := range pkgs {
 		c, err := getConfigIfAny(pkg, projectDir)

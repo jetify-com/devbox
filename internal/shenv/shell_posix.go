@@ -12,7 +12,7 @@ const posixHook = `
 _devbox_hook() {
   local previous_exit_status=$?
   trap : INT
-  eval "$(devbox export --config {{ .ProjectDir }})"
+  eval "$(devbox shellenv --config {{ .ProjectDir }})"
   trap - INT
   return $previous_exit_status
 }

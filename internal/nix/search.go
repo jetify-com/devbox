@@ -7,22 +7,16 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lock"
 )
 
 var ErrPackageNotFound = errors.New("package not found")
 var ErrPackageNotInstalled = errors.New("package not installed")
 
-func PkgExists(pkg string, lock *lock.File) (bool, error) {
-	return PackageFromString(pkg, lock).ValidateExists()
-}
-
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
-	attributeKey string
+	AttributeKey string
 	PName        string
 	Version      string
 }
@@ -31,21 +25,7 @@ func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
-func PkgInfo(pkg string, lock lock.Locker) *Info {
-	locked, err := lock.Resolve(pkg)
-	if err != nil {
-		return nil
-	}
-
-	results := search(locked.Resolved)
-	if len(results) == 0 {
-		return nil
-	}
-	// we should only have one result
-	return lo.Values(results)[0]
-}
-
-func search(url string) map[string]*Info {
+func Search(url string) map[string]*Info {
 	return searchSystem(url, "")
 }
 
@@ -58,7 +38,7 @@ func parseSearchResults(data []byte) map[string]*Info {
 	infos := map[string]*Info{}
 	for key, result := range results {
 		infos[key] = &Info{
-			attributeKey: key,
+			AttributeKey: key,
 			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
 		}
@@ -67,9 +47,9 @@ func parseSearchResults(data []byte) map[string]*Info {
 	return infos
 }
 
-// pkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
+// PkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
 // been an error and we want to provide a better error message.
-func pkgExistsForAnySystem(pkg string) bool {
+func PkgExistsForAnySystem(pkg string) bool {
 	systems := []string{
 		// Check most common systems first.
 		"x86_64-linux",
@@ -102,7 +82,7 @@ func searchSystem(url string, system string) map[string]*Info {
 		hash := HashFromNixPkgsURL(url)
 		// purposely ignore error here. The function already prints an error.
 		// We don't want to panic or stop execution if we can't prefetch.
-		_ = ensureNixpkgsPrefetched(writer, hash)
+		_ = EnsureNixpkgsPrefetched(writer, hash)
 	}
 
 	cmd := exec.Command("nix", "search", "--json", url)

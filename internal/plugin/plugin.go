@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/devpkg"
 
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
@@ -75,7 +76,7 @@ func (m *Manager) Include(included string) error {
 	return err
 }
 
-func (m *Manager) Create(pkg *nix.Package) error {
+func (m *Manager) Create(pkg *devpkg.Package) error {
 	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
 }
 
@@ -149,7 +150,7 @@ func (m *Manager) createFile(
 
 	var urlForInput, attributePath string
 
-	if pkg, ok := pkg.(*nix.Package); ok {
+	if pkg, ok := pkg.(*devpkg.Package); ok {
 		attributePath, err = pkg.PackageAttributePath()
 		if err != nil {
 			return err
@@ -193,7 +194,7 @@ func (m *Manager) createFile(
 // TODO: this should have PluginManager as receiver so we can build once with
 // pkgs, includes, etc
 func (m *Manager) Env(
-	pkgs []*nix.Package,
+	pkgs []*devpkg.Package,
 	includes []string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {

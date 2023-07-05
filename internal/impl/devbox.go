@@ -19,7 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -90,16 +90,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:          opts.Pure,
 	}
 
-	// TODO savil: this is bad for perf, and so remove before enabling feature.
-	// this hack is to workaround an import cycle: lock -> nix -> lock
-	userSystem := ""
-	if featureflag.RemoveNixpkgs.Enabled() {
-		userSystem, err = nix.System()
-		if err != nil {
-			return nil, err
-		}
-	}
-	lock, err := lock.GetFile(box, searcher.Client(), userSystem)
+	lock, err := lock.GetFile(box, searcher.Client())
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +128,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *nix.Package, _ int) string { return i.Hash() })
+	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -337,11 +328,19 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
 
-	info := nix.PkgInfo(pkg, d.lockfile)
-	if info == nil {
+	locked, err := d.lockfile.Resolve(pkg)
+	if err != nil {
+		return err
+	}
+
+	results := nix.Search(locked.Resolved)
+	if len(results) == 0 {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
 	}
+
+	// we should only have one result
+	info := lo.Values(results)[0]
 	if _, err := fmt.Fprintf(
 		d.writer,
 		"%s%s\n",
@@ -352,7 +351,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	}
 	return plugin.PrintReadme(
 		ctx,
-		nix.PackageFromString(pkg, d.lockfile),
+		devpkg.PackageFromString(pkg, d.lockfile),
 		d.projectDir,
 		d.writer,
 		markdown,
@@ -820,23 +819,21 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
-	envPaths := []string{}
-	if !featureflag.PromptHook.Enabled() {
+	env["PATH"] = JoinPathLists(
 		// Prepend the bin-wrappers directory to the PATH. This ensures that
 		// bin-wrappers execute before the unwrapped binaries.
-		envPaths = append(envPaths, filepath.Join(d.projectDir, plugin.WrapperBinPath))
-	}
-	// Adding profile bin path is a temporary hack. Some packages .e.g. curl
-	// don't export the correct bin in the package, instead they export
-	// as a propagated build input. This can be fixed in 2 ways:
-	// * have NixBins() recursively look for bins in propagated build inputs
-	// * Turn existing planners into flakes (i.e. php, haskell) and use the bins
-	// in the profile.
-	// Landau: I prefer option 2 because it doesn't require us to re-implement
-	// nix recursive bin lookup.
-	envPaths = append(envPaths, nix.ProfileBinPath(d.projectDir), env["PATH"])
-
-	env["PATH"] = JoinPathLists(envPaths...)
+		filepath.Join(d.projectDir, plugin.WrapperBinPath),
+		// Adding profile bin path is a temporary hack. Some packages .e.g. curl
+		// don't export the correct bin in the package, instead they export
+		// as a propagated build input. This can be fixed in 2 ways:
+		// * have NixBins() recursively look for bins in propagated build inputs
+		// * Turn existing planners into flakes (i.e. php, haskell) and use the bins
+		// in the profile.
+		// Landau: I prefer option 2 because it doesn't require us to re-implement
+		// nix recursive bin lookup.
+		nix.ProfileBinPath(d.projectDir),
+		env["PATH"],
+	)
 
 	// Include env variables in devbox.json
 	configEnv := d.configEnvs(env)
@@ -871,10 +868,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
-		env["XDG_DATA_DIRS"] = JoinPathLists(
-			env["XDG_DATA_DIRS"],
-			os.Getenv("XDG_DATA_DIRS"),
-		)
+		env["XDG_DATA_DIRS"] = JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
 	}
 
 	return env, d.addHashToEnv(env)
@@ -925,8 +919,8 @@ func (d *Devbox) Packages() []string {
 	return d.cfg.Packages
 }
 
-func (d *Devbox) PackagesAsInputs() []*nix.Package {
-	return nix.PackageFromStrings(d.Packages(), d.lockfile)
+func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
+	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
@@ -951,7 +945,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 func (d *Devbox) findPackageByName(name string) (string, error) {
 	results := map[string]bool{}
 	for _, pkg := range d.cfg.Packages {
-		i := nix.PackageFromString(pkg, d.lockfile)
+		i := devpkg.PackageFromString(pkg, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
 			results[i.String()] = true
 		}
@@ -1055,8 +1049,9 @@ var ignoreDevEnvVar = map[string]bool{
 // setCommonHelperEnvVars sets environment variables that are required by some
 // common setups (e.g. gradio, rust)
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
-	env["LD_LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LD_LIBRARY_PATH"]
-	env["LIBRARY_PATH"] = filepath.Join(d.projectDir, nix.ProfilePath, "lib") + ":" + env["LIBRARY_PATH"]
+	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
+	env["LD_LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
+	env["LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
 // NixBins returns the paths to all the nix binaries that are installed by

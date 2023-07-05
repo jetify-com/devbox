@@ -9,7 +9,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/devpkg"
 )
 
 type Includable interface {
@@ -22,7 +22,7 @@ func (m *Manager) ParseInclude(include string) (Includable, error) {
 	if name == "" {
 		return nil, usererr.New("include name is required")
 	} else if includeType == "plugin" {
-		return nix.PackageFromString(name, m.lockfile), nil
+		return devpkg.PackageFromString(name, m.lockfile), nil
 	} else if includeType == "path" {
 		absPath := filepath.Join(m.ProjectDir(), name)
 		return newLocalPlugin(absPath)

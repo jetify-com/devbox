@@ -1,7 +1,7 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package nix
+package devpkg
 
 import (
 	"crypto/md5"
@@ -13,11 +13,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -73,13 +74,8 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		}
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
-	return &Package{*pkgURL, locker, raw, ""}
-}
 
-// PackageFromProfileItem constructs a package using the the unlocked reference
-// from profile list item.
-func PackageFromProfileItem(item *NixProfileListItem, locker lock.Locker) *Package {
-	return PackageFromString(item.unlockedReference, locker)
+	return &Package{*pkgURL, locker, raw, ""}
 }
 
 // isLocal specifies whether this package is a local flake.
@@ -117,8 +113,8 @@ func (p *Package) FlakeInputName() string {
 		result = filepath.Base(p.Path) + "-" + p.Hash()
 	} else if p.isGithub() {
 		result = "gh-" + strings.Join(strings.Split(p.Opaque, "/"), "-")
-	} else if url := p.URLForFlakeInput(); IsGithubNixpkgsURL(url) {
-		commitHash := HashFromNixPkgsURL(url)
+	} else if url := p.URLForFlakeInput(); nix.IsGithubNixpkgsURL(url) {
+		commitHash := nix.HashFromNixPkgsURL(url)
 		if len(commitHash) > 6 {
 			commitHash = commitHash[0:6]
 		}
@@ -164,7 +160,7 @@ func (p *Package) URLForInstall() (string, error) {
 	return p.urlWithoutFragment() + "#" + attrPath, nil
 }
 
-func (p *Package) normalizedDevboxPackageReference() (string, error) {
+func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 	if !p.isDevboxPackage() {
 		return "", nil
 	}
@@ -181,7 +177,7 @@ func (p *Package) normalizedDevboxPackageReference() (string, error) {
 	}
 
 	if path != "" {
-		s, err := System()
+		s, err := nix.System()
 		if err != nil {
 			return "", err
 		}
@@ -212,7 +208,7 @@ func (p *Package) PackageAttributePath() (string, error) {
 // it is much faster than NormalizedPackageAttributePath
 func (p *Package) FullPackageAttributePath() (string, error) {
 	if p.isDevboxPackage() {
-		reference, err := p.normalizedDevboxPackageReference()
+		reference, err := p.NormalizedDevboxPackageReference()
 		if err != nil {
 			return "", err
 		}
@@ -257,7 +253,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	// We prefer search over just trying to parse the URL because search will
 	// guarantee that the package exists for the current system.
-	infos := search(query)
+	infos := nix.Search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
@@ -291,7 +287,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		)
 	}
 
-	if pkgExistsForAnySystem(query) {
+	if nix.PkgExistsForAnySystem(query) {
 		return "", usererr.New(
 			"Package \"%s\" was found, but we're unable to build it for your system."+
 				" You may need to choose another version or write a custom flake.",
@@ -382,11 +378,11 @@ func (p *Package) LegacyToVersioned() string {
 }
 
 func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
-	hash := p.hashFromNixPkgsURL()
+	hash := p.HashFromNixPkgsURL()
 	if hash == "" {
 		return nil
 	}
-	return ensureNixpkgsPrefetched(w, hash)
+	return nix.EnsureNixpkgsPrefetched(w, hash)
 }
 
 // version returns the version of the package
@@ -403,28 +399,62 @@ func (p *Package) isVersioned() bool {
 	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
 }
 
-func (p *Package) hashFromNixPkgsURL() string {
-	return HashFromNixPkgsURL(p.URLForFlakeInput())
+func (p *Package) HashFromNixPkgsURL() string {
+	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-// IsGithubNixpkgsURL returns true if the package is a flake of the form:
-// github:NixOS/nixpkgs/...
-//
-// While there are many ways to specify this input, devbox always uses
-// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
-// themselves, this function may not return true.
-func IsGithubNixpkgsURL(url string) bool {
-	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
-}
+// BinaryCacheStore is the store from which to fetch this package's binaries.
+// It is used as FromStore in builtins.fetchClosure.
+const BinaryCacheStore = "https://cache.nixos.org"
 
-var hashFromNixPkgsRegex = regexp.MustCompile(`github:NixOS/nixpkgs/([^#]+).*`)
-
-// HashFromNixPkgsURL will (for example) return 5233fd2ba76a3accb5aaa999c00509a11fd0793c
-// from github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
-func HashFromNixPkgsURL(url string) string {
-	matches := hashFromNixPkgsRegex.FindStringSubmatch(url)
-	if len(matches) == 2 {
-		return matches[1]
+func (p *Package) IsInBinaryStore() (bool, error) {
+	if !p.isVersioned() {
+		return false, nil
 	}
-	return ""
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return false, err
+	}
+
+	userSystem, err := nix.System()
+	if err != nil {
+		return false, err
+	}
+
+	if entry.Systems == nil {
+		return false, nil
+	}
+
+	// Check if the user's system's info is present in the lockfile
+	_, ok := entry.Systems[userSystem]
+	return ok, nil
+}
+
+// PathInBinaryStore is the key in the BinaryCacheStore for this package
+// This is used as FromPath in builtins.fetchClosure
+func (p *Package) PathInBinaryStore() (string, error) {
+	if isInStore, err := p.IsInBinaryStore(); err != nil {
+		return "", err
+	} else if !isInStore {
+		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return "", err
+	}
+
+	userSystem, err := nix.System()
+	if err != nil {
+		return "", err
+	}
+
+	sysInfo := entry.Systems[userSystem]
+	storeDirParts := []string{sysInfo.FromHash, sysInfo.StoreName}
+	if sysInfo.StoreVersion != "" {
+		storeDirParts = append(storeDirParts, sysInfo.StoreVersion)
+	}
+	storeDir := strings.Join(storeDirParts, "-")
+	return filepath.Join("/nix/store", storeDir), nil
 }

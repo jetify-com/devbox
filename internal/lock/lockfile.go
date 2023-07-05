@@ -4,17 +4,18 @@
 package lock
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/devpkg"
 )
 
 const lockFileVersion = "1"
@@ -28,8 +29,6 @@ type File struct {
 
 	// Packages is keyed by "canonicalName@version"
 	Packages map[string]*Package `json:"packages"`
-
-	system string
 }
 
 type Package struct {
@@ -50,15 +49,13 @@ type SystemInfo struct {
 	ToHash       string `json:"to_hash,omitempty"`
 }
 
-func GetFile(project devboxProject, resolver resolver, system string) (*File, error) {
+func GetFile(project devboxProject, resolver resolver) (*File, error) {
 	lockFile := &File{
 		devboxProject: project,
 		resolver:      resolver,
 
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
-
-		system: system,
 	}
 	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -94,13 +91,17 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 	// If the package's system info is missing, we need to resolve it again.
 	needsSysInfo := false
 	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
-		needsSysInfo = entry.Systems[l.system] == nil
+		userSystem, err := nix.System()
+		if err != nil {
+			return nil, err
+		}
+		needsSysInfo = entry.Systems[userSystem] == nil
 	}
 
 	if !hasEntry || entry.Resolved == "" || needsSysInfo {
 		locked := &Package{}
 		var err error
-		if _, _, versioned := devpkg.ParseVersionedPackage(pkg); versioned {
+		if _, _, versioned := devpkgutil.ParseVersionedPackage(pkg); versioned {
 			locked, err = l.resolver.Resolve(pkg)
 			if err != nil {
 				return nil, err
@@ -160,7 +161,7 @@ func (l *File) LegacyNixpkgsPath(pkg string) string {
 // This probably belongs in input.go but can't add it there because it will
 // create a circular dependency. We could move Input into own package.
 func IsLegacyPackage(pkg string) bool {
-	_, _, versioned := devpkg.ParseVersionedPackage(pkg)
+	_, _, versioned := devpkgutil.ParseVersionedPackage(pkg)
 	return !versioned &&
 		!strings.Contains(pkg, ":") &&
 		// We don't support absolute paths without "path:" prefix, but adding here
