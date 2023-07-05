@@ -82,7 +82,7 @@ func WriteFile(path string, value any) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
+	data = append(data, '\n')
 	return errors.WithStack(os.WriteFile(path, data, 0644))
 }
 
