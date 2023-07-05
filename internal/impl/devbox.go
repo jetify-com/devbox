@@ -254,6 +254,9 @@ func (d *Devbox) Install(ctx context.Context) error {
 	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
+	if err := shellgen.WriteScriptsToFiles(d); err != nil {
+		return err
+	}
 	return wrapnix.CreateWrappers(ctx, d)
 }
 
