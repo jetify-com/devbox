@@ -69,6 +69,23 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		}
 	}
 
+	inStore, err := args.Input.IsInBinaryStore()
+	if err != nil {
+		return -1, err
+	}
+	if inStore {
+		pathInStore, err := args.Input.PathInBinaryStore()
+		if err != nil {
+			return -1, err
+		}
+		for _, item := range list {
+			if pathInStore == item.nixStorePath {
+				return item.index, nil
+			}
+		}
+	}
+	// else: fallback to checking if the Input matches an item's unlockedReference
+
 	// This is an optimization for happy path. A resolved devbox package
 	// should match the unlockedReference of an existing profile item.
 	ref, err := args.Input.NormalizedDevboxPackageReference()
@@ -191,7 +208,13 @@ type ProfileInstallArgs struct {
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(args *ProfileInstallArgs) error {
 	input := devpkg.PackageFromString(args.Package, args.Lockfile)
-	if nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+
+	isInBinaryStore, err := input.IsInBinaryStore()
+	if err != nil {
+		return err
+	}
+
+	if !isInBinaryStore && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
 		}
@@ -204,12 +227,24 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	urlForInstall, err := input.URLForInstall()
-	if err != nil {
-		return err
+	var installable string
+	if isInBinaryStore {
+		// TODO savil: change to ContentAddressablePath when that is implemented
+		var err error
+		installable, err = input.PathInBinaryStore()
+		if err != nil {
+			return err
+		}
+	} else if installable == "" {
+		// fallback if PathInBinaryStore is not applicable.
+		var err error
+		installable, err = input.URLForInstall()
+		if err != nil {
+			return err
+		}
 	}
 
-	err = nix.ProfileInstall(args.Writer, args.ProfilePath, urlForInstall)
+	err = nix.ProfileInstall(args.Writer, args.ProfilePath, installable)
 	if err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
