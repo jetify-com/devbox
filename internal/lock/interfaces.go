@@ -10,12 +10,8 @@ type devboxProject interface {
 	ProjectDir() string
 }
 
-type resolver interface {
-	Resolve(pkg string) (*Package, error)
-}
-
 type Locker interface {
-	resolver
 	LegacyNixpkgsPath(string) string
 	ProjectDir() string
+	Resolve(string) (*Package, error)
 }

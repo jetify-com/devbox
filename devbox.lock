@@ -7,9 +7,9 @@
       "version": "1.6.23"
     },
     "go@1.20": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#go",
-      "version": "1.20.3"
+      "last_modified": "2023-05-25T03:54:59Z",
+      "resolved": "github:NixOS/nixpkgs/8d4d822bc0efa9de6eddc79cb0d82897a9baa750#go",
+      "version": "1.20.4"
     },
     "golangci-lint@1.52.2": {
       "last_modified": "2023-05-01T16:53:22Z",

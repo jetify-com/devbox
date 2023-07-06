@@ -40,7 +40,7 @@ func addCmd() *cobra.Command {
 			}
 			err := addCmdFunc(cmd, args, flags)
 			if errors.Is(err, nix.ErrPackageNotFound) {
-				return usererr.New("%s\n\n%s", err, toSearchForPackages)
+				return usererr.WithUserMessage(err, toSearchForPackages)
 			}
 			return err
 		},

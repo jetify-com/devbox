@@ -3,45 +3,25 @@
 
 package searcher
 
-type NixPackageInfoList []*NixPackageInfo
-
-type NixPackageInfo struct {
-	AttributePath string  `json:"attribute_path,omitempty"`
-	Date          string  `json:"date,omitempty"`
-	NixpkgCommit  string  `json:"nixpkg_commit,omitempty"`
-	PName         string  `json:"pname,omitempty"`
-	Version       string  `json:"version,omitempty"`
-	Score         float64 `json:"score,omitempty"`
+type SearchResults struct {
+	NumResults int       `json:"num_results"`
+	Packages   []Package `json:"packages,omitempty"`
 }
 
-type Result struct {
-	Name     string             `json:"name"`
-	Packages NixPackageInfoList `json:"packages"`
-	Score    float64            `json:"score"`
+type Package struct {
+	Name        string           `json:"name"`
+	NumVersions int              `json:"num_versions"`
+	Versions    []PackageVersion `json:"versions,omitempty"`
 }
 
-type Metadata struct {
-	TotalResults int `json:"total_results"` // This will undercount if there are more than 1000 results per key
+type PackageVersion struct {
+	PackageInfo
+
+	Name    string                 `json:"name"`
+	Systems map[string]PackageInfo `json:"systems,omitempty"`
 }
 
-type SearchResult struct {
-	Metadata    Metadata `json:"metadata"`
-	Results     []Result `json:"results"`
-	Suggestions []Result `json:"suggestions"`
-}
-
-// Package api:
-// https://search.devbox.sh/pkg/<name>
-type PackageResult struct {
-	Summary  string                `json:"summary"`
-	Homepage string                `json:"homepage"`
-	License  string                `json:"license"`
-	Name     string                `json:"name"`
-	Version  string                `json:"version"`
-	Systems  map[string]SystemInfo `json:"systems"`
-}
-
-type SystemInfo struct {
+type PackageInfo struct {
 	ID           int      `json:"id"`
 	CommitHash   string   `json:"commit_hash"`
 	System       string   `json:"system"`
@@ -52,4 +32,5 @@ type SystemInfo struct {
 	MetaName     string   `json:"meta_name"`
 	MetaVersion  []string `json:"meta_version"`
 	AttrPaths    []string `json:"attr_paths"`
+	Version      string   `json:"version"`
 }
