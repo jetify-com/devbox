@@ -127,12 +127,15 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	hashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
 		return "", err
 	}
-	return cuecfg.Hash(h + strings.Join(hashes, ""))
+	return cuecfg.Hash(
+		h + strings.Join(pkgHashes, "") + strings.Join(includeHashes, ""),
+	)
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
@@ -917,6 +920,16 @@ func (d *Devbox) Packages() []string {
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
 	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+}
+
+func (d *Devbox) Includes() []plugin.Includable {
+	includes := []plugin.Includable{}
+	for _, includePath := range d.cfg.Include {
+		if include, err := d.pluginManager.ParseInclude(includePath); err == nil {
+			includes = append(includes, include)
+		}
+	}
+	return includes
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {

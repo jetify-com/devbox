@@ -4,18 +4,26 @@
 package plugin
 
 import (
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg *devpkg.Package, projectDir string) (*config, error) {
+func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 	configFiles, err := plugins.BuiltIn.ReadDir(".")
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	if local, ok := pkg.(*localPlugin); ok {
+		content, err := os.ReadFile(local.path)
+		if err != nil && !os.IsNotExist(err) {
+			return nil, errors.WithStack(err)
+		}
+		return buildConfig(pkg, projectDir, string(content))
 	}
 
 	for _, file := range configFiles {
@@ -44,6 +52,9 @@ func getConfigIfAny(pkg *devpkg.Package, projectDir string) (*config, error) {
 	return nil, nil
 }
 
-func getFileContent(contentPath string) ([]byte, error) {
+func getFileContent(pkg Includable, contentPath string) ([]byte, error) {
+	if local, ok := pkg.(*localPlugin); ok {
+		return os.ReadFile(local.contentPath(contentPath))
+	}
 	return plugins.BuiltIn.ReadFile(contentPath)
 }

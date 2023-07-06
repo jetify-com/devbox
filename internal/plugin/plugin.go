@@ -68,7 +68,7 @@ func (c *config) Services() (services.Services, error) {
 }
 
 func (m *Manager) Include(included string) error {
-	name, err := m.parseInclude(included)
+	name, err := m.ParseInclude(included)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (m *Manager) Create(pkg *devpkg.Package) error {
 	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
 }
 
-func (m *Manager) create(pkg *devpkg.Package, locked *lock.Package) error {
+func (m *Manager) create(pkg Includable, locked *lock.Package) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
 	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
 	if err != nil {
@@ -129,12 +129,12 @@ func (m *Manager) create(pkg *devpkg.Package, locked *lock.Package) error {
 }
 
 func (m *Manager) createFile(
-	pkg *devpkg.Package,
+	pkg Includable,
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
 	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
-	content, err := getFileContent(contentPath)
+	content, err := getFileContent(pkg, contentPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -148,21 +148,25 @@ func (m *Manager) createFile(
 		return err
 	}
 
-	attributePath, err := pkg.PackageAttributePath()
-	if err != nil {
-		return err
+	var urlForInput, attributePath string
+
+	if pkg, ok := pkg.(*devpkg.Package); ok {
+		attributePath, err = pkg.PackageAttributePath()
+		if err != nil {
+			return err
+		}
+		urlForInput = pkg.URLForFlakeInput()
 	}
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, map[string]any{
-		"DevboxConfigDir":      m.ProjectDir(),
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
 		"Packages":             m.Packages(),
 		"System":               system,
-		"URLForInput":          pkg.URLForFlakeInput(),
+		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return errors.WithStack(err)
@@ -193,9 +197,12 @@ func (m *Manager) Env(
 	includes []string,
 	computedEnv map[string]string,
 ) (map[string]string, error) {
-	allPkgs := append([]*devpkg.Package(nil), pkgs...)
+	allPkgs := []Includable{}
+	for _, pkg := range pkgs {
+		allPkgs = append(allPkgs, pkg)
+	}
 	for _, included := range includes {
-		input, err := m.parseInclude(included)
+		input, err := m.ParseInclude(included)
 		if err != nil {
 			return nil, err
 		}
@@ -218,7 +225,7 @@ func (m *Manager) Env(
 	return conf.OSExpandEnvMap(env, computedEnv, m.ProjectDir()), nil
 }
 
-func buildConfig(pkg *devpkg.Package, projectDir, content string) (*config, error) {
+func buildConfig(pkg Includable, projectDir, content string) (*config, error) {
 	cfg := &config{}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)
