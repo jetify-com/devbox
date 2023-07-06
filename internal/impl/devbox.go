@@ -38,7 +38,6 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/internal/wrapnix"
@@ -90,7 +89,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:          opts.Pure,
 	}
 
-	lock, err := lock.GetFile(box, searcher.Client())
+	lock, err := lock.GetFile(box)
 	if err != nil {
 		return nil, err
 	}

@@ -70,7 +70,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			return err
 		}
 		if !ok {
-			return errors.WithMessage(nix.ErrPackageNotFound, pkg.Raw)
+			return errors.Wrap(nix.ErrPackageNotFound, pkg.Raw)
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 
@@ -85,7 +86,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 			return item.index, nil
 		}
 	}
-	return -1, nix.ErrPackageNotFound
+	return -1, errors.Wrap(nix.ErrPackageNotFound, args.Input.String())
 }
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`

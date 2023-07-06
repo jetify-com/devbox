@@ -437,7 +437,8 @@ func (p *Package) PathInBinaryStore() (string, error) {
 	if isInStore, err := p.IsInBinaryStore(); err != nil {
 		return "", err
 	} else if !isInStore {
-		return "", errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+		return "",
+			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
 	entry, err := p.lockfile.Resolve(p.Raw)

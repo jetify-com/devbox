@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/devpkgutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -44,7 +43,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
-		if _, _, isVersioned := devpkgutil.ParseVersionedPackage(pkg.Raw); !isVersioned {
+		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
 			if err = d.attemptToUpgradeFlake(pkg); err != nil {
 				return err
 			}
@@ -87,7 +86,7 @@ func (d *Devbox) updateDevboxPackage(
 	pkg *devpkg.Package,
 ) error {
 	existing := d.lockfile.Packages[pkg.Raw]
-	newEntry, err := searcher.Client().Resolve(pkg.Raw)
+	newEntry, err := d.lockfile.FetchResolvedPackage(pkg.Raw)
 	if err != nil {
 		return err
 	}
@@ -98,13 +97,14 @@ func (d *Devbox) updateDevboxPackage(
 			// sync the profile so we don't need to do this manually.
 			ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 		}
+		d.lockfile.Packages[pkg.Raw] = newEntry
 	} else if existing == nil {
 		ux.Finfo(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, newEntry.Resolved)
+		d.lockfile.Packages[pkg.Raw] = newEntry
 	} else {
 		ux.Finfo(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
 	}
-	// Set the new entry after we've removed the old package from the profile
-	d.lockfile.Packages[pkg.Raw] = newEntry
+
 	return nil
 }
 
