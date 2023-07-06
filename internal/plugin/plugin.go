@@ -160,7 +160,6 @@ func (m *Manager) createFile(
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, map[string]any{
-		"DevboxConfigDir":      m.ProjectDir(),
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
