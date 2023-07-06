@@ -40,6 +40,8 @@ func (c *client) Search(query string) (*SearchResults, error) {
 	return execGet[SearchResults](searchURL)
 }
 
+// Resolve calls the /resolve endpoint of the search service. This returns
+// the latest version of the package that matches the version constraint.
 func (c *client) Resolve(name, version string) (*PackageVersion, error) {
 	if name == "" || version == "" {
 		return nil, fmt.Errorf("name and version should not be empty")

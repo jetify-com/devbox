@@ -18,7 +18,9 @@ import (
 // FetchResolvedPackage fetches a resolution but does not write it to the lock
 // struct. This allows testing new versions of packages without writing to the
 // lock. This is useful to avoid changing nixpkgs commit hashes when version has
-// not changed.
+// not changed. This can happen when doing `devbox update` and search has
+// a newer hash than the lock file but same version. In that case we don't want
+// to update because it would be slow and wasteful.
 func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
 	if version == "" {
@@ -32,9 +34,9 @@ func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 
 	sysInfos := map[string]*SystemInfo{}
 	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos = buildLockSystemInfos(*packageVersion)
+		sysInfos = buildLockSystemInfos(packageVersion)
 	}
-	packageInfo, err := selectForSystem(*packageVersion)
+	packageInfo, err := selectForSystem(packageVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +58,7 @@ func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	}, nil
 }
 
-func selectForSystem(pkg searcher.PackageVersion) (searcher.PackageInfo, error) {
+func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error) {
 	currentSystem, err := nix.System()
 	if err != nil {
 		return searcher.PackageInfo{}, err
@@ -74,7 +76,7 @@ func selectForSystem(pkg searcher.PackageVersion) (searcher.PackageInfo, error) 
 	return maps.Values(pkg.Systems)[0], nil
 }
 
-func buildLockSystemInfos(pkg searcher.PackageVersion) map[string]*SystemInfo {
+func buildLockSystemInfos(pkg *searcher.PackageVersion) map[string]*SystemInfo {
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, sysInfo := range pkg.Systems {
 		sysInfos[sysName] = &SystemInfo{

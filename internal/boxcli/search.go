@@ -45,7 +45,7 @@ func searchCmd() *cobra.Command {
 			}
 			fmt.Fprintf(
 				cmd.OutOrStdout(),
-				"%s results to: %s@%s\n",
+				"%s resolves to: %s@%s\n",
 				query,
 				packageVersion.Name,
 				packageVersion.Version,
