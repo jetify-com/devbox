@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -432,7 +434,7 @@ func (p *Package) IsInBinaryStore() (bool, error) {
 }
 
 // PathInBinaryStore is the key in the BinaryCacheStore for this package
-// This is used as FromPath in builtins.fetchClosure
+// This is used as BinaryStorePath in builtins.fetchClosure
 func (p *Package) PathInBinaryStore() (string, error) {
 	if isInStore, err := p.IsInBinaryStore(); err != nil {
 		return "", err
@@ -452,10 +454,40 @@ func (p *Package) PathInBinaryStore() (string, error) {
 	}
 
 	sysInfo := entry.Systems[userSystem]
-	storeDirParts := []string{sysInfo.FromHash, sysInfo.StoreName}
-	if sysInfo.StoreVersion != "" {
-		storeDirParts = append(storeDirParts, sysInfo.StoreVersion)
+	return sysInfo.BinaryStorePath, nil
+}
+
+func (p *Package) PathInLocalStore() (string, error) {
+
+	if isInStore, err := p.IsInBinaryStore(); err != nil {
+		return "", err
+	} else if !isInStore {
+		return "",
+			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
-	storeDir := strings.Join(storeDirParts, "-")
-	return filepath.Join("/nix/store", storeDir), nil
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return "", err
+	}
+
+	userSystem, err := nix.System()
+	if err != nil {
+		return "", err
+	}
+
+	sysInfo := entry.Systems[userSystem]
+	if sysInfo.LocalStorePath != "" {
+		return sysInfo.LocalStorePath, nil
+	}
+
+	ux.Fwarning(
+		os.Stderr, 
+		"calculating local_store_path. This may be slow.\n" +
+		"Run `devbox update` to speed this up for next time.")
+	localPath, err := nix.ContentAddressedStorePath(sysInfo.BinaryStorePath)
+	if err != nil {
+		return "", err
+	}
+	return localPath, err
 }
