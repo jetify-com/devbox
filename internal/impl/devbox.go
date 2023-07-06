@@ -259,11 +259,15 @@ func (d *Devbox) Install(ctx context.Context) error {
 		return err
 	}
 
-	_, err := d.nixEnv(ctx)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
-	return wrapnix.CreateWrappers(ctx, d)
+	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
+		return err
+	}
+
+	return nix.RunScript(d.projectDir, ":", env)
 }
 
 func (d *Devbox) ListScripts() []string {
