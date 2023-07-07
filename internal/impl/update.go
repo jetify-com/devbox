@@ -109,31 +109,29 @@ func (d *Devbox) updateDevboxPackage(
 	}
 
 	// Check if the package's system info is missing, or not complete.
-	userSystem, err := nix.System()
-	if err != nil {
-		return err
-	}
-	var needsSysInfo bool
-	var needsLocalStorePath bool
 	if featureflag.RemoveNixpkgs.Enabled() {
-		userSysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
-		needsSysInfo = userSysInfo == nil
-		if !needsSysInfo {
-			// Check if the LocalStorePath is missing for the user's system.
-			// Since any one user cannot add this field for all systems, 
-			// we'll need to progressively add it to a project's lockfile.
-			needsLocalStorePath = userSysInfo.LocalStorePath == ""
+		userSystem, err := nix.System()
+		if err != nil {
+			return err
 		}
-	}
-	if needsSysInfo {
-		d.lockfile.Packages[pkg.Raw] = newEntry
-		ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-		return nil
-	} else if needsLocalStorePath {
-		// Update the LocalStorePath for the user's system
-		d.lockfile.Packages[pkg.Raw].Systems[userSystem].LocalStorePath = newEntry.Systems[userSystem].LocalStorePath
-		ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-		return nil
+
+		// Check if the system info is missing for the user's system.
+		sysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
+		if sysInfo == nil {
+			d.lockfile.Packages[pkg.Raw] = newEntry
+			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
+			return nil
+		}
+
+		// Check if the LocalStorePath is missing for the user's system.
+		// Since any one user cannot add this field for all systems,
+		// we'll need to progressively add it to a project's lockfile.
+		if sysInfo.LocalStorePath == "" {
+			// Update the LocalStorePath for the user's system
+			d.lockfile.Packages[pkg.Raw].Systems[userSystem].LocalStorePath = newEntry.Systems[userSystem].LocalStorePath
+			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
+			return nil
+		}
 	}
 
 	ux.Finfo(d.writer, "Already up-to-date %s %s\n", pkg, existing.Version)
