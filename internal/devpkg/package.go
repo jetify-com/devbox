@@ -482,9 +482,10 @@ func (p *Package) PathInLocalStore() (string, error) {
 	}
 
 	ux.Fwarning(
-		os.Stderr, 
-		"calculating local_store_path. This may be slow.\n" +
-		"Run `devbox update` to speed this up for next time.")
+		os.Stderr,
+		"calculating local_store_path. This may be slow.\n"+
+			"Run `devbox update` to speed this up for next time.",
+	)
 	localPath, err := nix.ContentAddressedStorePath(sysInfo.BinaryStorePath)
 	if err != nil {
 		return "", err

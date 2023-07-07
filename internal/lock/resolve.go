@@ -87,7 +87,7 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, sysInfo := range pkg.Systems {
-		
+
 		// guard against missing search data
 		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" {
 			continue
