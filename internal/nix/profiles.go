@@ -48,7 +48,7 @@ func ProfileList(writer io.Writer, profilePath string) ([]string, error) {
 	return lines, nil
 }
 
-func ProfileInstall(writer io.Writer, profilePath string, urlForInstall string) error {
+func ProfileInstall(writer io.Writer, profilePath string, installable string) error {
 
 	cmd := command(
 		"profile", "install",
@@ -58,7 +58,7 @@ func ProfileInstall(writer io.Writer, profilePath string, urlForInstall string) 
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(profilePath),
-		urlForInstall,
+		installable,
 	)
 	cmd.Env = allowUnfreeEnv()
 

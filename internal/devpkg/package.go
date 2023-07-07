@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -324,6 +325,15 @@ func (p *Package) ValidateExists() (bool, error) {
 	if p.isVersioned() && p.version() == "" {
 		return false, usererr.New("No version specified for %q.", p.Path)
 	}
+
+	isInStore, err := p.IsInBinaryStore()
+	if err != nil {
+		return false, err
+	}
+	if isInStore {
+		return true, nil
+	}
+
 	info, err := p.NormalizedPackageAttributePath()
 	return info != "", err
 }
@@ -378,6 +388,17 @@ func (p *Package) LegacyToVersioned() string {
 }
 
 func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
+
+	isInStore, err := p.IsInBinaryStore()
+	if err != nil {
+		return err
+	}
+	if isInStore {
+		// We can skip prefetching nixpkgs, if this package is in the binary
+		// cache store.
+		return nil
+	}
+
 	hash := p.HashFromNixPkgsURL()
 	if hash == "" {
 		return nil
@@ -408,6 +429,10 @@ func (p *Package) HashFromNixPkgsURL() string {
 const BinaryCacheStore = "https://cache.nixos.org"
 
 func (p *Package) IsInBinaryStore() (bool, error) {
+	if !featureflag.RemoveNixpkgs.Enabled() {
+		return false, nil
+	}
+
 	if !p.isVersioned() {
 		return false, nil
 	}

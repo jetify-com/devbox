@@ -243,7 +243,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 	// If packages are in profile but nixpkgs has been purged, the experience
 	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
-	// prefetched for all our packages.
+	// prefetched for all relevant packages (those not in binary store).
 	for _, input := range d.PackagesAsInputs() {
 		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
 			return err
