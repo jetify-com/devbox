@@ -34,7 +34,10 @@ func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 
 	sysInfos := map[string]*SystemInfo{}
 	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos = buildLockSystemInfos(packageVersion)
+		sysInfos, err = buildLockSystemInfos(packageVersion)
+		if err != nil {
+			return nil, err
+		}
 	}
 	packageInfo, err := selectForSystem(packageVersion)
 	if err != nil {
@@ -76,15 +79,32 @@ func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error)
 	return maps.Values(pkg.Systems)[0], nil
 }
 
-func buildLockSystemInfos(pkg *searcher.PackageVersion) map[string]*SystemInfo {
+func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo, error) {
+	userSystem, err := nix.System()
+	if err != nil {
+		return nil, err
+	}
+
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, sysInfo := range pkg.Systems {
+
+		// guard against missing search data
+		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" {
+			continue
+		}
+
+		storePath := nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion)
+		caStorePath := ""
+		if sysName == userSystem {
+			caStorePath, err = nix.ContentAddressedStorePath(storePath)
+			if err != nil {
+				return nil, err
+			}
+		}
 		sysInfos[sysName] = &SystemInfo{
-			System:       sysName,
-			FromHash:     sysInfo.StoreHash,
-			StoreName:    sysInfo.StoreName,
-			StoreVersion: sysInfo.StoreVersion,
+			StorePath:   storePath,
+			CAStorePath: caStorePath,
 		}
 	}
-	return sysInfos
+	return sysInfos, nil
 }

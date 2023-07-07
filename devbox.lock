@@ -1,11 +1,6 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "actionlint@1.6.23": {
-      "last_modified": "2023-03-31T22:52:29Z",
-      "resolved": "github:NixOS/nixpkgs/242246ee1e58f54d2322227fc5eef53b4a616a31#actionlint",
-      "version": "1.6.23"
-    },
     "go@1.20": {
       "last_modified": "2023-05-25T03:54:59Z",
       "resolved": "github:NixOS/nixpkgs/8d4d822bc0efa9de6eddc79cb0d82897a9baa750#go",

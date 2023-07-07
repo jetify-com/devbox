@@ -11,8 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -40,12 +38,13 @@ type Package struct {
 }
 
 type SystemInfo struct {
-	System   string // stored elsewhere in json: it's the key for the Package.Systems
-	FromHash string `json:"from_hash,omitempty"`
-	// StoreName may be different from the canonicalName so we store it separately
-	StoreName    string `json:"store_name,omitempty"`
-	StoreVersion string `json:"store_version,omitempty"`
-	ToHash       string `json:"to_hash,omitempty"`
+	// StorePath is the cache key in the Binary Cache Store (cache.nixos.org)
+	// It is of the form <hash>-<name>-<version>
+	// <name> may be different from the canonicalName so we store the full store path.
+	StorePath string `json:"store_path,omitempty"`
+	// CAStorePath is the content-addressed path for the nix package in /nix/store
+	// It is of the form <hash>-<name>-<version>
+	CAStorePath string `json:"ca_store_path,omitempty"`
 }
 
 func GetFile(project devboxProject) (*File, error) {
@@ -86,17 +85,7 @@ func (l *File) Remove(pkgs ...string) error {
 func (l *File) Resolve(pkg string) (*Package, error) {
 	entry, hasEntry := l.Packages[pkg]
 
-	// If the package's system info is missing, we need to resolve it again.
-	needsSysInfo := false
-	if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
-		userSystem, err := nix.System()
-		if err != nil {
-			return nil, err
-		}
-		needsSysInfo = entry.Systems[userSystem] == nil
-	}
-
-	if !hasEntry || entry.Resolved == "" || needsSysInfo {
+	if !hasEntry || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
 		if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
@@ -109,19 +98,6 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
 		}
-
-		// Merge the system info from the lockfile with the queried system info.
-		// This is necessary because a different system's info may previously have
-		// been added. For example: `aarch64-darwin` was already added, but
-		// current user is on `x86_64-linux`.
-		if hasEntry && featureflag.RemoveNixpkgs.Enabled() {
-			for _, sysInfo := range entry.Systems {
-				if _, ok := locked.Systems[sysInfo.System]; !ok {
-					locked.Systems[sysInfo.System] = sysInfo
-				}
-			}
-		}
-
 		l.Packages[pkg] = locked
 	}
 

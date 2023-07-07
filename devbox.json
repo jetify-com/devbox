@@ -1,7 +1,6 @@
 {
   "packages": [
     "go@1.20",
-    "actionlint@1.6.23",
     "golangci-lint@1.52.2"
   ],
   "env": {
