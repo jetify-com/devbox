@@ -49,14 +49,21 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	if err != nil {
 		return err
 	}
+	// get absolute path of devbox binary that the launcher script invokes
+	// to avoid causing an infinite loop when coreutils gets installed
+	executablePath, err := os.Executable()
+	if err != nil {
+		return err
+	}
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
-			devboxer:     devbox,
-			BashPath:     bashPath,
-			Command:      bin,
-			ShellEnvHash: shellEnvHash,
-			destPath:     filepath.Join(destPath, filepath.Base(bin)),
+			devboxer:         devbox,
+			BashPath:         bashPath,
+			Command:          bin,
+			ShellEnvHash:     shellEnvHash,
+			DevboxBinaryPath: executablePath,
+			destPath:         filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -67,11 +74,11 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 type createWrapperArgs struct {
 	devboxer
-	BashPath     string
-	Command      string
-	ShellEnvHash string
-
-	destPath string
+	BashPath         string
+	Command          string
+	ShellEnvHash     string
+	DevboxBinaryPath string
+	destPath         string
 }
 
 func createWrapper(args *createWrapperArgs) error {
