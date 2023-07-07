@@ -227,21 +227,9 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	var installable string
-	if isInBinaryStore {
-		// TODO savil: change to ContentAddressablePath when that is implemented
-		var err error
-		installable, err = input.PathInBinaryStore()
-		if err != nil {
-			return err
-		}
-	} else if installable == "" {
-		// fallback if PathInBinaryStore is not applicable.
-		var err error
-		installable, err = input.URLForInstall()
-		if err != nil {
-			return err
-		}
+	installable, err := installableForPackage(input)
+	if err != nil {
+		return err
 	}
 
 	err = nix.ProfileInstall(args.Writer, args.ProfilePath, installable)
@@ -268,4 +256,29 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 		indexes = append(indexes, strconv.Itoa(item.index))
 	}
 	return nix.ProfileRemove(profilePath, indexes)
+}
+
+// installableForPackage determines how nix profile should install this package.
+// Keeping in `nixprofile` package since its specific to how nix profile works,
+// rather than a general property of devpkg.Package
+func installableForPackage(pkg *devpkg.Package) (string, error) {
+	isInBinaryStore, err := pkg.IsInBinaryStore()
+	if err != nil {
+		return "", err
+	}
+
+	if isInBinaryStore {
+		// TODO savil: change to ContentAddressablePath when that is implemented
+		installable, err := pkg.PathInBinaryStore()
+		if err != nil {
+			return "", err
+		}
+		return installable, nil
+	}
+
+	installable, err := pkg.URLForInstall()
+	if err != nil {
+		return "", err
+	}
+	return installable, nil
 }
