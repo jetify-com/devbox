@@ -145,10 +145,34 @@ func (p *Package) URLForFlakeInput() string {
 	return p.urlWithoutFragment()
 }
 
-// URLForInstall is used during `nix profile install`.
+// Installable for this package. Installable is a nix concept defined here:
+// https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
+func (p *Package) Installable() (string, error) {
+	inCache, err := p.IsInBinaryCache()
+	if err != nil {
+		return "", err
+	}
+
+	if inCache {
+		// TODO savil: change to ContentAddressablePath?
+		installable, err := p.InputAddressedPath()
+		if err != nil {
+			return "", err
+		}
+		return installable, nil
+	}
+
+	installable, err := p.urlForInstall()
+	if err != nil {
+		return "", err
+	}
+	return installable, nil
+}
+
+// urlForInstall is used during `nix profile install`.
 // The key difference with URLForFlakeInput is that it has a suffix of
 // `#attributePath`
-func (p *Package) URLForInstall() (string, error) {
+func (p *Package) urlForInstall() (string, error) {
 	if p.isDevboxPackage() {
 		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
