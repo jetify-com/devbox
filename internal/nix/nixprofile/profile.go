@@ -31,7 +31,7 @@ func ProfileListItems(
 	}
 
 	// The `line` output is of the form:
-	// <index> <UnlockedReference> <LockedReference> <InputAddressedPath>
+	// <index> <UnlockedReference> <LockedReference> <NixStorePath>
 	//
 	// Using an example:
 	// 0 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
