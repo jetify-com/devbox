@@ -30,11 +30,11 @@
         devShells.{{ .System }}.default = pkgs.mkShell {
           buildInputs = [
             {{- range .Packages }}
-            {{- if .IsInBinaryStore }}
+            {{- if .IsInBinaryCache }}
             (builtins.fetchClosure{
-              fromStore = "{{ $.BinaryCacheStore }}";
-              fromPath = "{{ .PathInBinaryStore }}";
-              toPath = "{{ .ContentAddressedStorePath }}";
+              fromStore = "{{ $.BinaryCache }}";
+              fromPath = "{{ .InputAddressedPath }}";
+              toPath = "{{ .ContentAddressedPath }}";
             })
             {{- end }}
             {{- end }}

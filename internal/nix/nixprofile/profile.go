@@ -69,12 +69,13 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		}
 	}
 
-	inStore, err := args.Input.IsInBinaryStore()
+	inCache, err := args.Input.IsInBinaryCache()
 	if err != nil {
 		return -1, err
 	}
-	if inStore {
-		pathInStore, err := args.Input.PathInBinaryStore()
+	if inCache {
+		// TODO savil: change to ContentAddressedPath?
+		pathInStore, err := args.Input.InputAddressedPath()
 		if err != nil {
 			return -1, err
 		}
@@ -209,12 +210,12 @@ type ProfileInstallArgs struct {
 func ProfileInstall(args *ProfileInstallArgs) error {
 	input := devpkg.PackageFromString(args.Package, args.Lockfile)
 
-	isInBinaryStore, err := input.IsInBinaryStore()
+	inCache, err := input.IsInBinaryCache()
 	if err != nil {
 		return err
 	}
 
-	if !isInBinaryStore && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+	if !inCache && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
 		}
@@ -262,14 +263,14 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 // Keeping in `nixprofile` package since its specific to how nix profile works,
 // rather than a general property of devpkg.Package
 func installableForPackage(pkg *devpkg.Package) (string, error) {
-	isInBinaryStore, err := pkg.IsInBinaryStore()
+	inCache, err := pkg.IsInBinaryCache()
 	if err != nil {
 		return "", err
 	}
 
-	if isInBinaryStore {
-		// TODO savil: change to ContentAddressablePath when that is implemented
-		installable, err := pkg.PathInBinaryStore()
+	if inCache {
+		// TODO savil: change to ContentAddressablePath?
+		installable, err := pkg.InputAddressedPath()
 		if err != nil {
 			return "", err
 		}

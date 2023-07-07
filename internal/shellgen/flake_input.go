@@ -80,12 +80,12 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput
 			return true
 		}
 
-		inStore, err := item.IsInBinaryStore()
+		inCache, err := item.IsInBinaryCache()
 		if err != nil {
 			// Ignore this error for now. TODO savil: return error?
 			return true
 		}
-		return !inStore
+		return !inCache
 	})
 
 	order := []string{}
