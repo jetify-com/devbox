@@ -228,7 +228,7 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	installable, err := installableForPackage(input)
+	installable, err := input.Installable()
 	if err != nil {
 		return err
 	}
@@ -257,29 +257,4 @@ func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
 		indexes = append(indexes, strconv.Itoa(item.index))
 	}
 	return nix.ProfileRemove(profilePath, indexes)
-}
-
-// installableForPackage determines how nix profile should install this package.
-// Keeping in `nixprofile` package since its specific to how nix profile works,
-// rather than a general property of devpkg.Package
-func installableForPackage(pkg *devpkg.Package) (string, error) {
-	inCache, err := pkg.IsInBinaryCache()
-	if err != nil {
-		return "", err
-	}
-
-	if inCache {
-		// TODO savil: change to ContentAddressablePath?
-		installable, err := pkg.InputAddressedPath()
-		if err != nil {
-			return "", err
-		}
-		return installable, nil
-	}
-
-	installable, err := pkg.URLForInstall()
-	if err != nil {
-		return "", err
-	}
-	return installable, nil
 }
