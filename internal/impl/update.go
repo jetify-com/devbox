@@ -9,6 +9,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -115,22 +116,30 @@ func (d *Devbox) updateDevboxPackage(
 			return err
 		}
 
-		// Check if the system info is missing for the user's system.
-		sysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
-		if sysInfo == nil {
-			d.lockfile.Packages[pkg.Raw] = newEntry
-			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-			return nil
-		}
+		// If the newEntry has a system info for the user's system,
+		// then check if we need to update system info
+		if newEntry.Systems[userSystem] != nil {
 
-		// Check if the CAStorePath is missing for the user's system.
-		// Since any one user cannot add this field for all systems,
-		// we'll need to progressively add it to a project's lockfile.
-		if sysInfo.CAStorePath == "" {
-			// Update the CAStorePath for the user's system
-			d.lockfile.Packages[pkg.Raw].Systems[userSystem].CAStorePath = newEntry.Systems[userSystem].CAStorePath
-			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-			return nil
+			// Check if the system info is missing for the user's system.
+			sysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
+			if sysInfo == nil {
+				if d.lockfile.Packages[pkg.Raw].Systems == nil {
+					d.lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+				}
+				d.lockfile.Packages[pkg.Raw].Systems[userSystem] = newEntry.Systems[userSystem]
+				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
+				return nil
+			}
+
+			// Check if the CAStorePath is missing for the user's system.
+			// Since any one user cannot add this field for all systems,
+			// we'll need to progressively add it to a project's lockfile.
+			if sysInfo.CAStorePath == "" {
+				// Update the CAStorePath for the user's system
+				d.lockfile.Packages[pkg.Raw].Systems[userSystem].CAStorePath = newEntry.Systems[userSystem].CAStorePath
+				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
+				return nil
+			}
 		}
 	}
 

@@ -533,8 +533,8 @@ func (p *Package) ContentAddressedPath() (string, error) {
 
 	ux.Fwarning(
 		os.Stderr,
-		"calculating local_store_path. This may be slow.\n"+
-			"Run `devbox update` to speed this up for next time.",
+		"calculating ca_store_path. This may be slow. "+
+			"Run `devbox update` to speed this up for next time.\n",
 	)
 	localPath, err := nix.ContentAddressedStorePath(sysInfo.StorePath)
 	if err != nil {
