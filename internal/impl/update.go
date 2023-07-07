@@ -9,6 +9,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -122,6 +123,9 @@ func (d *Devbox) updateDevboxPackage(
 			// Check if the system info is missing for the user's system.
 			sysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
 			if sysInfo == nil {
+				if d.lockfile.Packages[pkg.Raw].Systems == nil {
+					d.lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+				}
 				d.lockfile.Packages[pkg.Raw].Systems[userSystem] = newEntry.Systems[userSystem]
 				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
 				return nil
