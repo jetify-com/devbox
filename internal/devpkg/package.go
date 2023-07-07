@@ -328,11 +328,11 @@ func (p *Package) ValidateExists() (bool, error) {
 		return false, usererr.New("No version specified for %q.", p.Path)
 	}
 
-	isInStore, err := p.IsInBinaryStore()
+	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return false, err
 	}
-	if isInStore {
+	if inCache {
 		return true, nil
 	}
 
@@ -391,11 +391,11 @@ func (p *Package) LegacyToVersioned() string {
 
 func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
 
-	isInStore, err := p.IsInBinaryStore()
+	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return err
 	}
-	if isInStore {
+	if inCache {
 		// We can skip prefetching nixpkgs, if this package is in the binary
 		// cache store.
 		return nil
@@ -426,13 +426,11 @@ func (p *Package) HashFromNixPkgsURL() string {
 	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-// BinaryCacheStore is the store from which to fetch this package's binaries.
+// BinaryCache is the store from which to fetch this package's binaries.
 // It is used as FromStore in builtins.fetchClosure.
-// TODO savil: rename to BinaryCache
-const BinaryCacheStore = "https://cache.nixos.org"
+const BinaryCache = "https://cache.nixos.org"
 
-// TODO savil: rename to IsInBinaryCache
-func (p *Package) IsInBinaryStore() (bool, error) {
+func (p *Package) IsInBinaryCache() (bool, error) {
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return false, nil
 	}
@@ -460,13 +458,12 @@ func (p *Package) IsInBinaryStore() (bool, error) {
 	return ok, nil
 }
 
-// PathInBinaryStore is the key in the BinaryCacheStore for this package
-// This is used as StorePath in builtins.fetchClosure
-// TODO savil: rename to PathInBinaryCache
-func (p *Package) PathInBinaryStore() (string, error) {
-	if isInStore, err := p.IsInBinaryStore(); err != nil {
+// InputAddressedPath is the input-addressed path in /nix/store
+// It is also the key in the BinaryCache for this package
+func (p *Package) InputAddressedPath() (string, error) {
+	if inCache, err := p.IsInBinaryCache(); err != nil {
 		return "", err
-	} else if !isInStore {
+	} else if !inCache {
 		return "",
 			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
@@ -485,11 +482,12 @@ func (p *Package) PathInBinaryStore() (string, error) {
 	return sysInfo.StorePath, nil
 }
 
-func (p *Package) ContentAddressedStorePath() (string, error) {
+// ContentAddressedPath is the content-addressed form of Package.InputAddressedPath
+func (p *Package) ContentAddressedPath() (string, error) {
 
-	if isInStore, err := p.IsInBinaryStore(); err != nil {
+	if inCache, err := p.IsInBinaryCache(); err != nil {
 		return "", err
-	} else if !isInStore {
+	} else if !inCache {
 		return "",
 			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
