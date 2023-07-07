@@ -407,8 +407,10 @@ func (p *Package) HashFromNixPkgsURL() string {
 
 // BinaryCacheStore is the store from which to fetch this package's binaries.
 // It is used as FromStore in builtins.fetchClosure.
+// TODO savil: rename to BinaryCache
 const BinaryCacheStore = "https://cache.nixos.org"
 
+// TODO savil: rename to IsInBinaryCache
 func (p *Package) IsInBinaryStore() (bool, error) {
 	if !p.isVersioned() {
 		return false, nil
@@ -434,7 +436,8 @@ func (p *Package) IsInBinaryStore() (bool, error) {
 }
 
 // PathInBinaryStore is the key in the BinaryCacheStore for this package
-// This is used as BinaryStorePath in builtins.fetchClosure
+// This is used as StorePath in builtins.fetchClosure
+// TODO savil: rename to PathInBinaryCache
 func (p *Package) PathInBinaryStore() (string, error) {
 	if isInStore, err := p.IsInBinaryStore(); err != nil {
 		return "", err
@@ -454,10 +457,10 @@ func (p *Package) PathInBinaryStore() (string, error) {
 	}
 
 	sysInfo := entry.Systems[userSystem]
-	return sysInfo.BinaryStorePath, nil
+	return sysInfo.StorePath, nil
 }
 
-func (p *Package) PathInLocalStore() (string, error) {
+func (p *Package) ContentAddressedStorePath() (string, error) {
 
 	if isInStore, err := p.IsInBinaryStore(); err != nil {
 		return "", err
@@ -477,8 +480,8 @@ func (p *Package) PathInLocalStore() (string, error) {
 	}
 
 	sysInfo := entry.Systems[userSystem]
-	if sysInfo.LocalStorePath != "" {
-		return sysInfo.LocalStorePath, nil
+	if sysInfo.CAStorePath != "" {
+		return sysInfo.CAStorePath, nil
 	}
 
 	ux.Fwarning(
@@ -486,7 +489,7 @@ func (p *Package) PathInLocalStore() (string, error) {
 		"calculating local_store_path. This may be slow.\n"+
 			"Run `devbox update` to speed this up for next time.",
 	)
-	localPath, err := nix.ContentAddressedStorePath(sysInfo.BinaryStorePath)
+	localPath, err := nix.ContentAddressedStorePath(sysInfo.StorePath)
 	if err != nil {
 		return "", err
 	}

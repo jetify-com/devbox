@@ -38,13 +38,13 @@ type Package struct {
 }
 
 type SystemInfo struct {
-	// BinaryStorePath is the cache key in the Binary Cache Store (cache.nixos.org)
+	// StorePath is the cache key in the Binary Cache Store (cache.nixos.org)
 	// It is of the form <hash>-<name>-<version>
 	// <name> may be different from the canonicalName so we store the full store path.
-	BinaryStorePath string `json:"bin_store_path,omitempty"`
-	// LocalStorePath is the content-addressed path for the nix package in /nix/store
+	StorePath string `json:"store_path,omitempty"`
+	// CAStorePath is the content-addressed path for the nix package in /nix/store
 	// It is of the form <hash>-<name>-<version>
-	LocalStorePath string `json:"local_store_path,omitempty"`
+	CAStorePath string `json:"local_store_path,omitempty"`
 }
 
 func GetFile(project devboxProject) (*File, error) {

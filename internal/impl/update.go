@@ -123,12 +123,12 @@ func (d *Devbox) updateDevboxPackage(
 			return nil
 		}
 
-		// Check if the LocalStorePath is missing for the user's system.
+		// Check if the CAStorePath is missing for the user's system.
 		// Since any one user cannot add this field for all systems,
 		// we'll need to progressively add it to a project's lockfile.
-		if sysInfo.LocalStorePath == "" {
-			// Update the LocalStorePath for the user's system
-			d.lockfile.Packages[pkg.Raw].Systems[userSystem].LocalStorePath = newEntry.Systems[userSystem].LocalStorePath
+		if sysInfo.CAStorePath == "" {
+			// Update the CAStorePath for the user's system
+			d.lockfile.Packages[pkg.Raw].Systems[userSystem].CAStorePath = newEntry.Systems[userSystem].CAStorePath
 			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
 			return nil
 		}

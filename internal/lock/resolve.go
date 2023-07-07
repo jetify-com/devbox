@@ -93,17 +93,17 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 			continue
 		}
 
-		localStorePath := ""
+		storePath := nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion)
+		caStorePath := ""
 		if sysName == userSystem {
-			binaryStorePath := nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion)
-			localStorePath, err = nix.ContentAddressedStorePath(binaryStorePath)
+			caStorePath, err = nix.ContentAddressedStorePath(storePath)
 			if err != nil {
 				return nil, err
 			}
 		}
 		sysInfos[sysName] = &SystemInfo{
-			BinaryStorePath: nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion),
-			LocalStorePath:  localStorePath,
+			StorePath:   storePath,
+			CAStorePath: caStorePath,
 		}
 	}
 	return sysInfos, nil
