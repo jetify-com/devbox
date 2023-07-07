@@ -44,7 +44,7 @@ type SystemInfo struct {
 	StorePath string `json:"store_path,omitempty"`
 	// CAStorePath is the content-addressed path for the nix package in /nix/store
 	// It is of the form <hash>-<name>-<version>
-	CAStorePath string `json:"local_store_path,omitempty"`
+	CAStorePath string `json:"ca_store_path,omitempty"`
 }
 
 func GetFile(project devboxProject) (*File, error) {
