@@ -1,0 +1,22 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "gradle@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#gradle",
+      "version": "8.0.1"
+    },
+    "jdk@17": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#jdk17",
+      "version": "17.0.7+7"
+    },
+    "mysql80@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#mysql80",
+      "version": "8.0.33"
+    }
+  }
+}
