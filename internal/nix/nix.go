@@ -104,7 +104,7 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
-	options := []string{"nix-command", "flakes"}
+	options := []string{"nix-command", "flakes", "auto-allocate-uids"}
 	if featureflag.RemoveNixpkgs.Enabled() {
 		options = append(options, "fetch-closure")
 	}
