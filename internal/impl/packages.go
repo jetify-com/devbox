@@ -42,10 +42,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	// replace it.
 	pkgs := []*devpkg.Package{}
 	for _, pkg := range devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
-		versioned := pkg.Versioned()
-
 		// If exact versioned package is already in the config, skip.
-		if slices.Contains(d.cfg.Packages, versioned) {
+		if slices.Contains(d.cfg.Packages, pkg.Versioned()) {
 			continue
 		}
 
@@ -59,18 +57,15 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			}
 		}
 
-		pkgs = append(pkgs, devpkg.PackageFromString(versioned, d.lockfile))
-		d.cfg.Packages = append(d.cfg.Packages, versioned)
-	}
-
-	// Check packages are valid before adding.
-	for _, pkg := range pkgs {
-		ok, err := pkg.ValidateExists()
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return errors.Wrap(nix.ErrPackageNotFound, pkg.Raw)
+		// validate that the versioned package exists in the search endpoint.
+		// if not, fallback to legacy vanilla nix.
+		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
+		ok, err := versionedPkg.ValidateExists()
+		if err == nil && ok {
+			d.cfg.Packages = append(d.cfg.Packages, pkg.Versioned())
+		} else {
+			// fallthrough and treat package as a legacy package.
+			d.cfg.Packages = append(d.cfg.Packages, pkg.Raw)
 		}
 	}
 
