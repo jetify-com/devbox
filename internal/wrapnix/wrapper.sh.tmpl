@@ -19,7 +19,7 @@ DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 
 if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]] && [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
 export {{ .ShellEnvHashKey }}_GUARD=true
-eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
+eval "$(DO_NOT_TRACK=1 {{ .DevboxBinaryPath }} shellenv -c {{ .ProjectDir }})"
 fi
 
 {{/*
@@ -29,6 +29,6 @@ should be in PATH.
 
 DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
-eval "$(DO_NOT_TRACK=1 devbox shellenv only-path-without-wrappers)"
+eval "$(DO_NOT_TRACK=1 {{ .DevboxBinaryPath }} shellenv only-path-without-wrappers)"
 
 exec {{ .Command }} "$@"
