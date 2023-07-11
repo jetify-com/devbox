@@ -1,5 +1,5 @@
 ---
-title: Selecting a Specific Package Version
+title: Installing a Specific Package Version
 ---
 
 This document explains how to use `devbox search` and `devbox add` to install a specific package version in your Devbox project. It also explains how to pin a particular major or minor version for the package in your project.

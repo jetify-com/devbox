@@ -74,7 +74,7 @@ For more information, see the [Fleek for Devbox Docs](https://getfleek.dev/docs/
 
 If you want to make your global packages available in your host shell, you can add them to your shell PATH. Running `devbox global shellenv` will print the command necessary to source the packages.
 
-### Add Global Packages to your current Host Shell
+### Add Global Packages to your Current Host Shell
 To temporarily add the global packages to your current shell, run:
 
 ```bash

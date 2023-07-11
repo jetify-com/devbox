@@ -1,57 +1,55 @@
 ---
-title: Devbox Cloud
+title: Try Devbox in your Browser on Devbox.sh
 sidebar_position: 1
 ---
 
-Devbox Cloud is a new way to create and run your Devbox Project in an isolated cloud environment. Devbox Cloud lets you quickly spin up an on-demand Linux Edge VM with your Devbox dependencies and shell using your browser or ssh.
-
-:::info
-Devbox Cloud is currently available in Open Beta, and is under active development. Please see the information in our **[FAQ](beta_faq.md)** for more details.
-:::
+Devbox.sh provides a sandboxed playground environment for you to learn how Devbox works, try out example projects or templates, and experiment with using Devbox with your own projects.
 
 <figure className="text--center">
 
 [![Devbox Cloud](../../static/img/devbox_sh.png)](https://devbox.sh)
 
-<figcaption> Launch a Devbox Cloud instance at <a href="https://devbox.sh"> devbox.sh</a> </figcaption>
+<figcaption> Launch a Devbox playground at <a href="https://devbox.sh"> devbox.sh</a> </figcaption>
 </figure>
 
 ## Quickstart
 
-Try Devbox Cloud from your browser by visiting [devbox.sh](https://devbox.sh), or click the button below to launch a quickstart shell:
+You can launch a new playground from your browser by visiting [devbox.sh](https://devbox.sh), or click the button below to launch a quickstart shell:
 
 [![Open in Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
 
-Use Devbox Cloud to preview Github projects directly in your browser. Devbox Cloud comes with the Devbox CLI, Nix, and several common packages preinstalled, so you can easily run projects that include a `devbox.json`
+Each Devbox playground comes with the Devbox CLI, Nix, and several common packages preinstalled, so you can easily run projects that include a `devbox.json`
 
-![Devbox Cloud Browser](../../static/img/devbox_cloud_editor.png)
+![Devbox.sh Browser](../../static/img/devbox_cloud_editor.png)
 
 ### Open a GitHub Repository in devbox.sh
 
 :::note
-If you are trying to open a private repository in Devbox Cloud, we may ask you to install the [**Devbox Cloud app**](https://github.com/apps/devbox-cloud) from the Github Marketplace. This gives Devbox Cloud permissions to clone your repositories to the cloud VMs
+If you are trying to open a private repository on Devbox.sh, we may ask you to install the [**Devbox Cloud app**](https://github.com/apps/devbox-cloud) from the Github Marketplace. This grants permissions to clone your repositories to the cloud VMs
 :::
 
-1. Navigate to the Github Repo that you want to preview in Devbox Cloud
-2. Copy the URL, and prepend it with `https://devbox.sh/`. For example, to open the Devbox repo, you would enter [https://devbox.sh/github.com/jetpack-io/devbox](http://devbox.sh/github.com/jetpack-io/devbox). You can also enter the URL on [devbox.sh](https://devbox.sh) and click the `Go` button
+1. Navigate to the Github Repo that you want to preview on Devbox.sh
+2. Copy the URL, and prepend it with `https://devbox.sh/`.
+    1. For example, to open the Devbox repo, you would enter [https://devbox.sh/github.com/jetpack-io/devbox](http://devbox.sh/github.com/jetpack-io/devbox).
+    1. You can also enter the URL on [devbox.sh](https://devbox.sh) and click the `Go` button
 3. Follow the prompts to sign in with your Github Account.
 4. Your project should now launch in a terminal session in your browser
     1. If the project has a `devbox.json` in the root directory, then Devbox will automatically install your packages and launch you into a devbox shell.
     2. If the project does not have a `devbox.json`, a blank one will be automatically created using `devbox init`. You can add packages to the VM using `devbox add`.
 
-### Opening a specific branch of a project
+### Opening a Specific Branch
 
 You can open a specific branch of your project using the `branch` query parameter. This is useful when you want to preview a PR or WIP changes for your project.
 
 For example: https://devbox.sh/github.com/org/repo?branch=staging would clone the `staging` branch of your project, and open it in your Cloud Shell.
 
-### Opening a subfolder of a project
+### Opening a Subfolder
 
-You can start your Devbox Cloud Shell in a subfolder of your project, using the `folder` query parameter. This can be useful when working with a monorepo where your project's `devbox.json` lives in a subfolder.
+You can open a specific a subfolder of your project using the `folder` query parameter. This can be useful when working with a monorepo where your project's `devbox.json` lives in a subfolder.
 
-For example: https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/ruby will start your terminal in the Ruby example in the Devbox repo, load the configuration from the `devbox.json` in that folder, and then start a Devbox Shell.
+For example: https://devbox.sh/github.com/jetpack-io/devbox?folder=examples/development/ruby will start your terminal in the Ruby example in the Devbox repo, load the configuration from the `devbox.json` in that folder, and then start a Devbox shell.
 
-### Accessing a port
+### Accessing a Port
 
 To access any non-privileged port, simply append `/port/<port_number>` to the project url. For example, the following url opens up port 8080 on the VM:
 
@@ -61,11 +59,11 @@ https://devbox.sh/app/projects/<projectId>/port/8080
 
 This URL redirects to `<hostname>-<port>.svc.devbox.sh`, which points to the actual host and port of your project's VM machine.
 
-### Opening in desktop VS Code
+### Opening in Desktop VS Code
 
 Click on the `Open in Desktop` button on the top right corner, which will open up your local VS Code editor. Follow the prompt, and you should see the VS Code window refreshes and connects to the remote machine via ssh.
 
-### SSH via local terminal
+### Access your Playground via SSH
 
 If you already have a GitHub SSH private key configured in your local machine, you can use it directly to SSH into your remote VM following the steps below:
 
@@ -89,9 +87,9 @@ If you already have a GitHub SSH private key configured in your local machine, y
     ```
     Note: `<github_username>` is case-sensitive. Make sure it matches with the github profile you sign in with.
 
-### Open in Devbox Badge
+### Add Devbox Playground to your Project's README
 
-If your project uses Devbox, you can make it easy for developers to test your project in Devbox Cloud by adding the `Open in Devbox` badge to your repo
+If your project uses Devbox, you can make it easy for developers to test your project in a Devbox playground by adding the `Open in Devbox.sh` badge to your repo
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox)
 
@@ -100,8 +98,3 @@ Add the following code to your README.md:
 ```md
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/{path_to_repo})
 ```
-
-## More Info
-
--   To learn more about the Open Beta, visit our **[FAQ](beta_faq.md)**.
--   If you're interested in Early Access to future versions of Devbox Cloud, join our **[Early Access List](https://jetpack-io.typeform.com/devbox-cloud)**.

@@ -1,5 +1,5 @@
 ---
-title: "Adding Devbox to your Project"
+title: "Create a Dev Environment with Devbox"
 sidebar_position: 3
 ---
 
@@ -29,7 +29,7 @@ If you want to try Devbox before installing it, you can open a cloud shell on yo
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/tutorial)
 :::
 
-## Create a development environment
+## Create a Development Environment
 
 We'll create a new development environment with the packages we need. These packages will only be available when using this Devbox shell, ensuring we don’t pollute your machine.
 
@@ -68,7 +68,9 @@ We'll create a new development environment with the packages we need. These pack
     }
     ```
 
-6. Start a new shell that has your packages and tools installed:
+## Launch your Development Environment
+
+1. Start a new shell that has your packages and tools installed:
 
     ```bash
     devbox shell
@@ -80,7 +82,7 @@ We'll create a new development environment with the packages we need. These pack
 
     You can tell you're in a Devbox shell (and not your regular terminal) because the shell prompt and directory changed.
 
-7. Use your favorite packages.
+2. Use your favorite packages.
 
     In this example we installed Python 3.10, so let's use it.
 
@@ -97,19 +99,19 @@ We'll create a new development environment with the packages we need. These pack
     -SIMD -AVX (compiled)
     ```
 
-8. Your regular tools are also available including environment variables and config settings.
+3. Your regular tools are also available including environment variables and config settings.
 
     ```bash
     git config --get user.name
     ```
 
-9. To exit the Devbox shell and return to your regular shell:
+4. To exit the Devbox shell and return to your regular shell:
 
     ```bash
     exit
     ```
 
-10. To share your project and shell,  make sure to check in your `devbox.json` and `devbox.lock` file into source control. These files will ensure that developers get the same packages and environment when they run your project.
+5. To share your project and shell,  make sure to check in your `devbox.json` and `devbox.lock` file into source control. These files will ensure that developers get the same packages and environment when they run your project.
 
 ## Add the Devbox Badge to your Repo
 

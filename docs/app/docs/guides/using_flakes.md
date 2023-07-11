@@ -1,23 +1,23 @@
 ---
-title: Using Packages from Nix Flakes
+title: Installing Packages from Nix Flakes
 ---
 
 Devbox supports installing packages with [Nix Flakes](https://nixos.wiki/wiki/Flakes).
 
-Devbox currently provides two ways to use Flakes to install packages in your project: 
+Devbox currently provides two ways to use Flakes to install packages in your project:
 
 1. You can reference a Flake hosted in Github using the `github:` reference
 2. You can reference a local Flake using the `path:` reference
 
 ## What are Flakes?
 
-[Flakes](https://www.jetpack.io/blog/powered-by-flakes/) are a new feature in the Nix language that lets us package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments. 
+[Flakes](https://www.jetpack.io/blog/powered-by-flakes/) are a new feature in the Nix language that lets us package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments.
 
 Flakes are defined as a directory with a `flake.nix` and a `flake.lock` file. You import flakes to your project using a flake reference, which describes where to find the Flake, and what version or revision to use
 
 ## Using a Flake from Github
 
-You can add a Flake hosted on Github using the following string in your packages list: 
+You can add a Flake hosted on Github using the following string in your packages list:
 
 ```json
 "packages": [
