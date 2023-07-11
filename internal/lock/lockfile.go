@@ -17,10 +17,6 @@ import (
 )
 
 const lockFileVersion = "1"
-const (
-	nixpkgSource       string = "nixpkg"
-	devboxSearchSource string = "devbox-search"
-)
 
 // Lightly inspired by package-lock.json
 type File struct {
@@ -30,27 +26,6 @@ type File struct {
 
 	// Packages is keyed by "canonicalName@version"
 	Packages map[string]*Package `json:"packages"`
-}
-
-type Package struct {
-	LastModified  string `json:"last_modified,omitempty"`
-	PluginVersion string `json:"plugin_version,omitempty"`
-	Resolved      string `json:"resolved,omitempty"`
-	Source        string `json:"source,omitempty"`
-	Version       string `json:"version,omitempty"`
-	// Systems is keyed by the system name
-	Systems map[string]*SystemInfo `json:"systems,omitempty"`
-}
-
-type SystemInfo struct {
-	// StorePath is the input-addressed path for the nix package in /nix/store
-	// It is the cache key in the Binary Cache Store (cache.nixos.org)
-	// It is of the form <hash>-<name>-<version>
-	// <name> may be different from the canonicalName so we store the full store path.
-	StorePath string `json:"store_path,omitempty"`
-	// CAStorePath is the content-addressed path for the nix package in /nix/store
-	// It is of the form <hash>-<name>-<version>
-	CAStorePath string `json:"ca_store_path,omitempty"`
 }
 
 func GetFile(project devboxProject) (*File, error) {
@@ -130,12 +105,12 @@ func (l *File) LegacyNixpkgsPath(pkg string) string {
 	)
 }
 
-func (l *File) Source(pkg string) string {
+func (l *File) Get(pkg string) *Package {
 	entry, hasEntry := l.Packages[pkg]
 	if !hasEntry || entry.Resolved == "" {
-		return ""
+		return nil
 	}
-	return entry.Source
+	return entry
 }
 
 // This probably belongs in input.go but can't add it there because it will
