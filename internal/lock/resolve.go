@@ -57,6 +57,7 @@ func (l *File) FetchResolvedPackage(pkg string) (*Package, error) {
 			packageInfo.AttrPaths[0],
 		),
 		Version: packageInfo.Version,
+		Source:  DevboxSearchSource,
 		Systems: sysInfos,
 	}, nil
 }

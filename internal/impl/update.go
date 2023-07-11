@@ -31,12 +31,10 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 			if err := d.Remove(ctx, pkg.Raw); err != nil {
 				return err
 			}
-			if err := d.lockfile.ResolveToCurrentNixpkgCommitHash(
-				pkg.LegacyToVersioned(),
-			); err != nil {
-				return err
-			}
-			if err := d.Add(ctx, pkg.LegacyToVersioned()); err != nil {
+			// Calling Add function with the original package names, since
+			// Add will automatically append @latest if search is able to handle that.
+			// If not, it will fallback to the nixpkg format.
+			if err := d.Add(ctx, pkg.Raw); err != nil {
 				return err
 			}
 		} else {
