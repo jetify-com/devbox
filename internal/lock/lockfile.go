@@ -18,8 +18,8 @@ import (
 
 const lockFileVersion = "1"
 const (
-	NixpkgSource       string = "nixpkg"
-	DevboxSearchSource        = "devbox-search"
+	nixpkgSource       string = "nixpkg"
+	devboxSearchSource string = "devbox-search"
 )
 
 // Lightly inspired by package-lock.json
@@ -104,7 +104,7 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// whatever hash is in the devbox.json
 			locked = &Package{
 				Resolved: l.LegacyNixpkgsPath(pkg),
-				Source:   NixpkgSource,
+				Source:   nixpkgSource,
 			}
 		}
 		l.Packages[pkg] = locked
@@ -116,20 +116,6 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 func (l *File) ForceResolve(pkg string) (*Package, error) {
 	delete(l.Packages, pkg)
 	return l.Resolve(pkg)
-}
-
-func (l *File) ResolveToCurrentNixpkgCommitHash(pkg string) error {
-	name, version, found := strings.Cut(pkg, "@")
-	if found && version != "latest" {
-		return errors.New(
-			"only allowed version is @latest. Otherwise we can't guarantee the " +
-				"version will resolve")
-	}
-	l.Packages[pkg] = &Package{
-		Resolved: l.LegacyNixpkgsPath(name),
-		Source:   NixpkgSource,
-	}
-	return nil
 }
 
 func (l *File) Save() error {
