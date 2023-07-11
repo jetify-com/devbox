@@ -17,6 +17,10 @@ import (
 )
 
 const lockFileVersion = "1"
+const (
+	nixpkgSource       string = "nixpkg"
+	devboxSearchSource string = "devbox-search"
+)
 
 // Lightly inspired by package-lock.json
 type File struct {
@@ -32,6 +36,7 @@ type Package struct {
 	LastModified  string `json:"last_modified,omitempty"`
 	PluginVersion string `json:"plugin_version,omitempty"`
 	Resolved      string `json:"resolved,omitempty"`
+	Source        string `json:"source,omitempty"`
 	Version       string `json:"version,omitempty"`
 	// Systems is keyed by the system name
 	Systems map[string]*SystemInfo `json:"systems,omitempty"`
@@ -97,7 +102,10 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 		} else if IsLegacyPackage(pkg) {
 			// These are legacy packages without a version. Resolve to nixpkgs with
 			// whatever hash is in the devbox.json
-			locked = &Package{Resolved: l.LegacyNixpkgsPath(pkg)}
+			locked = &Package{
+				Resolved: l.LegacyNixpkgsPath(pkg),
+				Source:   nixpkgSource,
+			}
 		}
 		l.Packages[pkg] = locked
 	}
@@ -110,17 +118,6 @@ func (l *File) ForceResolve(pkg string) (*Package, error) {
 	return l.Resolve(pkg)
 }
 
-func (l *File) ResolveToCurrentNixpkgCommitHash(pkg string) error {
-	name, version, found := strings.Cut(pkg, "@")
-	if found && version != "latest" {
-		return errors.New(
-			"only allowed version is @latest. Otherwise we can't guarantee the " +
-				"version will resolve")
-	}
-	l.Packages[pkg] = &Package{Resolved: l.LegacyNixpkgsPath(name)}
-	return nil
-}
-
 func (l *File) Save() error {
 	return cuecfg.WriteFile(lockFilePath(l.devboxProject), l)
 }
@@ -131,6 +128,14 @@ func (l *File) LegacyNixpkgsPath(pkg string) string {
 		l.NixPkgsCommitHash(),
 		pkg,
 	)
+}
+
+func (l *File) Source(pkg string) string {
+	entry, hasEntry := l.Packages[pkg]
+	if !hasEntry || entry.Resolved == "" {
+		return ""
+	}
+	return entry.Source
 }
 
 // This probably belongs in input.go but can't add it there because it will

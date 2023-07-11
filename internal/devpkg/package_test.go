@@ -119,6 +119,10 @@ func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
 	)
 }
 
+func (l *lockfile) Source(pkg string) string {
+	return ""
+}
+
 func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 	switch {
 	case strings.Contains(pkg, "path:"):
