@@ -1,7 +1,6 @@
 package nix
 
 import (
-	"os"
 	"os/exec"
 )
 
@@ -12,6 +11,10 @@ func command(args ...string) *exec.Cmd {
 	return cmd
 }
 
-func allowUnfreeEnv() []string {
-	return append(os.Environ(), "NIXPKGS_ALLOW_UNFREE=1")
+func allowUnfreeEnv(curEnv []string) []string {
+	return append(curEnv, "NIXPKGS_ALLOW_UNFREE=1")
+}
+
+func allowInsecureEnv(curEnv []string) []string {
+	return append(curEnv, "NIXPKGS_ALLOW_INSECURE=1")
 }

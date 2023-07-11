@@ -24,6 +24,8 @@ type Config struct {
 	// its environment. Deliberately do not omitempty.
 	Packages []string `cue:"[...string]" json:"packages"`
 
+	PermittedInsecurePackages []string `json:"permitted_insecure_packages,omitempty"`
+
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 	// Shell configures the devbox shell environment.

@@ -14,7 +14,7 @@ import (
 
 type flakeInput struct {
 	Name     string
-	Packages []string
+	Packages []*devpkg.Package
 	URL      string
 }
 
@@ -47,17 +47,28 @@ func (f *flakeInput) PkgImportName() string {
 	return f.Name + "-pkgs"
 }
 
-func (f *flakeInput) BuildInputs() []string {
-	if !f.IsNixpkgs() {
-		return lo.Map(f.Packages, func(pkg string, _ int) string {
-			return f.Name + "." + pkg
-		})
+func (f *flakeInput) BuildInputs() ([]string, error) {
+	var err error
+	attributePaths := lo.Map(f.Packages, func(pkg *devpkg.Package, _ int) string {
+		attributePath, attributePathErr := pkg.FullPackageAttributePath()
+		if attributePathErr != nil {
+			err = attributePathErr
+		}
+		return attributePath
+	})
+	if err != nil {
+		return nil, err
 	}
-	return lo.Map(f.Packages, func(pkg string, _ int) string {
+	if !f.IsNixpkgs() {
+		return lo.Map(attributePaths, func(pkg string, _ int) string {
+			return f.Name + "." + pkg
+		}), nil
+	}
+	return lo.Map(attributePaths, func(pkg string, _ int) string {
 		parts := strings.Split(pkg, ".")
 		// Ugh, not sure if this is reliable?
 		return f.PkgImportName() + "." + strings.Join(parts[2:], ".")
-	})
+	}), nil
 }
 
 // flakeInputs returns a list of flake inputs for the top level flake.nix
@@ -90,20 +101,16 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput
 
 	order := []string{}
 	for _, input := range packages {
-		AttributePath, err := input.FullPackageAttributePath()
-		if err != nil {
-			return nil, err
-		}
 		if flkInput, ok := flakeInputs[input.URLForFlakeInput()]; !ok {
 			order = append(order, input.URLForFlakeInput())
 			flakeInputs[input.URLForFlakeInput()] = &flakeInput{
 				Name:     input.FlakeInputName(),
 				URL:      input.URLForFlakeInput(),
-				Packages: []string{AttributePath},
+				Packages: []*devpkg.Package{input},
 			}
 		} else {
 			flkInput.Packages = lo.Uniq(
-				append(flakeInputs[input.URLForFlakeInput()].Packages, AttributePath),
+				append(flakeInputs[input.URLForFlakeInput()].Packages, input),
 			)
 		}
 	}

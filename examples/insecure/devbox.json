@@ -1,0 +1,18 @@
+{
+  "packages": [
+    "nodejs@16"
+  ],
+  "permitted_insecure_packages": [
+    "nodejs@16"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "run_test": [
+        "node --version"
+      ]
+    }
+  }
+}

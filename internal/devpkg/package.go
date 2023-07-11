@@ -19,9 +19,11 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
+	"golang.org/x/exp/slices"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -44,6 +46,8 @@ type Package struct {
 	//    remote flakes with raw name starting with `Github:`
 	//    example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
 	Raw string
+
+	AllowInsecure bool
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
@@ -78,7 +82,20 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
 
-	return &Package{*pkgURL, locker, raw, ""}
+	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw}
+}
+
+func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
+	packages := []*Package{}
+	for _, rawName := range config.Packages {
+		pkg := PackageFromString(rawName, l)
+		if slices.Contains(config.PermittedInsecurePackages, pkg.String()) {
+			pkg.AllowInsecure = true
+			os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
+		}
+		packages = append(packages, pkg)
+	}
+	return packages
 }
 
 // isLocal specifies whether this package is a local flake.
@@ -541,4 +558,20 @@ func (p *Package) ContentAddressedPath() (string, error) {
 		return "", err
 	}
 	return localPath, err
+}
+
+// StoreName returns the last section of the store path. Example:
+// /nix/store/abc123-foo-1.0.0 -> foo-1.0.0
+// Warning, this is probably slowish. If you need to call this multiple times,
+// consider caching the result.
+func (p *Package) StoreName() (string, error) {
+	u, err := p.urlForInstall()
+	if err != nil {
+		return "", err
+	}
+	derivation, err := nix.DerivationShow(u)
+	if err != nil {
+		return "", err
+	}
+	return derivation.Name, nil
 }

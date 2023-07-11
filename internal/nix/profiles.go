@@ -60,7 +60,7 @@ func ProfileInstall(writer io.Writer, profilePath string, installable string) er
 		"--priority", nextPriority(profilePath),
 		installable,
 	)
-	cmd.Env = allowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	// If nix profile install runs as tty, the output is much nicer. If we ever
 	// need to change this to our own writers, consider that you may need
@@ -81,7 +81,7 @@ func ProfileRemove(profilePath string, indexes []string) error {
 			"--impure", // for NIXPKGS_ALLOW_UNFREE
 		}, indexes...)...,
 	)
-	cmd.Env = allowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

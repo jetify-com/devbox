@@ -919,7 +919,7 @@ func (d *Devbox) Packages() []string {
 }
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+	return devpkg.PackagesFromConfig(d.cfg, d.lockfile)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
