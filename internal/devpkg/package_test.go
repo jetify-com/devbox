@@ -119,8 +119,8 @@ func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
 	)
 }
 
-func (l *lockfile) Source(pkg string) string {
-	return ""
+func (l *lockfile) Get(pkg string) *lock.Package {
+	return nil
 }
 
 func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {

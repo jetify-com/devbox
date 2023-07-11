@@ -130,12 +130,12 @@ func (l *File) LegacyNixpkgsPath(pkg string) string {
 	)
 }
 
-func (l *File) Source(pkg string) string {
+func (l *File) Get(pkg string) *Package {
 	entry, hasEntry := l.Packages[pkg]
 	if !hasEntry || entry.Resolved == "" {
-		return ""
+		return nil
 	}
-	return entry.Source
+	return entry
 }
 
 // This probably belongs in input.go but can't add it there because it will
