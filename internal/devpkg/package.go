@@ -420,7 +420,7 @@ func (p *Package) Versioned() string {
 }
 
 func (p *Package) IsLegacy() bool {
-	return p.isDevboxPackage() && !p.isVersioned() && p.lockfile.Source(p.Raw) == ""
+	return p.isDevboxPackage() && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
 }
 
 func (p *Package) LegacyToVersioned() string {
