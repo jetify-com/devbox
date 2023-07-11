@@ -5,8 +5,9 @@ import (
 )
 
 type Opts struct {
-	Dir            string
-	Pure           bool
-	IgnoreWarnings bool
-	Writer         io.Writer
+	AllowInsecureAdds bool
+	Dir               string
+	Pure              bool
+	IgnoreWarnings    bool
+	Writer            io.Writer
 }

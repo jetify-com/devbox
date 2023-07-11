@@ -52,12 +52,13 @@ const (
 )
 
 type Devbox struct {
-	cfg           *devconfig.Config
-	lockfile      *lock.File
-	nix           nix.Nixer
-	projectDir    string
-	pluginManager *plugin.Manager
-	pure          bool
+	cfg               *devconfig.Config
+	lockfile          *lock.File
+	nix               nix.Nixer
+	projectDir        string
+	pluginManager     *plugin.Manager
+	pure              bool
+	allowInsecureAdds bool
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -81,17 +82,21 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:           cfg,
-		nix:           &nix.Nix{},
-		projectDir:    projectDir,
-		pluginManager: plugin.NewManager(),
-		writer:        opts.Writer,
-		pure:          opts.Pure,
+		cfg:               cfg,
+		nix:               &nix.Nix{},
+		projectDir:        projectDir,
+		pluginManager:     plugin.NewManager(),
+		writer:            opts.Writer,
+		pure:              opts.Pure,
+		allowInsecureAdds: opts.AllowInsecureAdds,
 	}
 
 	lock, err := lock.GetFile(box)
 	if err != nil {
 		return nil, err
+	}
+	if opts.AllowInsecureAdds || lock.HasAllowInsecurePackages() {
+		os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
 	}
 	box.pluginManager.ApplyOptions(
 		plugin.WithDevbox(box),
@@ -919,7 +924,7 @@ func (d *Devbox) Packages() []string {
 }
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackagesFromConfig(d.cfg, d.lockfile)
+	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {

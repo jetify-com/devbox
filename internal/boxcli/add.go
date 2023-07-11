@@ -18,7 +18,8 @@ import (
 const toSearchForPackages = "To search for packages, use the `devbox search` command"
 
 type addCmdFlags struct {
-	config configFlags
+	config        configFlags
+	allowInsecure bool
 }
 
 func addCmd() *cobra.Command {
@@ -47,13 +48,18 @@ func addCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().BoolVar(
+		&flags.allowInsecure, "allow-insecure", false,
+		"Allow adding packages marked as insecure.")
+
 	return command
 }
 
 func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Dir:               flags.config.path,
+		Writer:            cmd.ErrOrStderr(),
+		AllowInsecureAdds: flags.allowInsecure,
 	})
 	if err != nil {
 		return errors.WithStack(err)

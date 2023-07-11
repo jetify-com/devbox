@@ -40,8 +40,19 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := []*devpkg.Package{}
-	for _, pkg := range devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
+	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
+	for _, pkg := range pkgs {
+		// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled
+		// which will call print-dev-env. Resolving does not save the lockfile, we
+		// save at the end when everything has succeeded.
+		p, err := d.lockfile.Resolve(pkg.Raw)
+		if err != nil {
+			return err
+		}
+		if d.allowInsecureAdds {
+			p.AllowInsecure = true
+		}
+
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(d.cfg.Packages, pkg.Versioned()) {
 			continue
@@ -64,6 +75,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		if err == nil && ok {
 			d.cfg.Packages = append(d.cfg.Packages, pkg.Versioned())
 		} else {
+			// TODO (landau): use nix.Search to check if this package exists
 			// fallthrough and treat package as a legacy package.
 			d.cfg.Packages = append(d.cfg.Packages, pkg.Raw)
 		}
@@ -88,9 +100,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		}
 	}
 
-	if err := d.lockfile.Add(
-		lo.Map(pkgs, func(pkg *devpkg.Package, _ int) string { return pkg.Raw })...,
-	); err != nil {
+	if err := d.lockfile.Save(); err != nil {
 		return err
 	}
 

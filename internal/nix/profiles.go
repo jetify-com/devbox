@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -49,6 +50,16 @@ func ProfileList(writer io.Writer, profilePath string) ([]string, error) {
 }
 
 func ProfileInstall(writer io.Writer, profilePath string, installable string) error {
+
+	if !IsInsecureAllowed() && PackageIsInsecure(installable) {
+		knownVulnerabilities := PackageKnownVulnerabilities(installable)
+		errString := fmt.Sprintf("Package %s is insecure. \n\n", installable)
+		if len(knownVulnerabilities) > 0 {
+			errString += fmt.Sprintf("Known vulnerabilities: %s \n\n", knownVulnerabilities)
+		}
+		errString += "To override use `devbox add <pkg> --allow-insecure`"
+		return usererr.New(errString)
+	}
 
 	cmd := command(
 		"profile", "install",

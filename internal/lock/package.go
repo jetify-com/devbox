@@ -9,6 +9,7 @@ const (
 )
 
 type Package struct {
+	AllowInsecure bool   `json:"allow_insecure,omitempty"`
 	LastModified  string `json:"last_modified,omitempty"`
 	PluginVersion string `json:"plugin_version,omitempty"`
 	Resolved      string `json:"resolved,omitempty"`
@@ -34,4 +35,11 @@ func (p *Package) GetSource() string {
 		return ""
 	}
 	return p.Source
+}
+
+func (p *Package) IsAllowInsecure() bool {
+	if p == nil {
+		return false
+	}
+	return p.AllowInsecure
 }
