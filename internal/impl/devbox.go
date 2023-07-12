@@ -95,7 +95,9 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	if opts.AllowInsecureAdds {
+	// if lockfile has any allow insecure, we need to set the env var to ensure
+	// all nix commands work.
+	if opts.AllowInsecureAdds || lock.HasAllowInsecurePackages() {
 		nix.AllowInsecurePackages()
 	}
 	box.pluginManager.ApplyOptions(

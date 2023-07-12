@@ -113,6 +113,15 @@ func (l *File) Get(pkg string) *Package {
 	return entry
 }
 
+func (l *File) HasAllowInsecurePackages() bool {
+	for _, pkg := range l.Packages {
+		if pkg.AllowInsecure {
+			return true
+		}
+	}
+	return false
+}
+
 // This probably belongs in input.go but can't add it there because it will
 // create a circular dependency. We could move Input into own package.
 func IsLegacyPackage(pkg string) bool {
