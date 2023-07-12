@@ -7,7 +7,7 @@ sidebar_position: 4
 
 To start a Devbox playground from your Browser, you will need a Github Account.
 
-### Does my project need to use Devbox to use Devbox playgorund?
+### Does my project need to use Devbox to use Devbox playground?
 
 While you can open any Github Repo in a Devbox playground, you will need a `devbox.json` to install packages or configure the environment. You can add any packages in your shell by running `devbox add <pkg>`
 

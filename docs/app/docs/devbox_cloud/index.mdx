@@ -63,30 +63,6 @@ This URL redirects to `<hostname>-<port>.svc.devbox.sh`, which points to the act
 
 Click on the `Open in Desktop` button on the top right corner, which will open up your local VS Code editor. Follow the prompt, and you should see the VS Code window refreshes and connects to the remote machine via ssh.
 
-### Access your Playground via SSH
-
-If you already have a GitHub SSH private key configured in your local machine, you can use it directly to SSH into your remote VM following the steps below:
-
-1. Find out the hostname of your VM by appending `/port/8080` to your project's URL:
-
-    ```
-    https://devbox.sh/app/projects/<projectId>/port/8080
-    ```
-
-    This will redirect you to `<hostname>-8080.svc.devbox.sh`. Be sure to copy the `<hostname>` for the step below.
-
-1. Copy your keys to the right location:
-
-    ```
-    cp ~/.ssh/id_ed25519 ~/.config/devbox/ssh/keys/<hostname>.vm.devbox-vms.internal
-    ```
-
-1. SSH into your machine:
-    ```
-    ssh -J proxy@proxy.devbox.sh <github_username>@<hostname>.vm.devbox-vms.internal -p 2222
-    ```
-    Note: `<github_username>` is case-sensitive. Make sure it matches with the github profile you sign in with.
-
 ### Add Devbox Playground to your Project's README
 
 If your project uses Devbox, you can make it easy for developers to test your project in a Devbox playground by adding the `Open in Devbox.sh` badge to your repo
@@ -98,3 +74,7 @@ Add the following code to your README.md:
 ```md
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/{path_to_repo})
 ```
+
+## More Info
+
+You can learn more about using Devbox playgrounds in our **[FAQ](beta_faq.md)**.
