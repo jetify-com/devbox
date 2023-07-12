@@ -10,11 +10,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime/trace"
 	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -69,7 +71,9 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
 		data, err = cmd.Output()
-		if err != nil {
+		if insecure, insecureErr := isExitErrorInsecurePackage(err); insecure {
+			return nil, insecureErr
+		} else if err != nil {
 			return nil, errors.Wrapf(err, "Command: %s", cmd)
 		}
 
@@ -120,6 +124,7 @@ func System() (string, error) {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
 	// and flake.nix files.
+	// This is also used by unit tests.
 	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
 	if override != "" {
 		return override, nil
@@ -143,4 +148,20 @@ func System() (string, error) {
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {
 	return filepath.Join(projectDir, ProfilePath, "bin")
+}
+
+func isExitErrorInsecurePackage(err error) (bool, error) {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+		if strings.Contains(string(exitErr.Stderr), "is marked as insecure") {
+			re := regexp.MustCompile(`Package ([^ ]+)`)
+			match := re.FindStringSubmatch(string(exitErr.Stderr))
+			return true, usererr.New(
+				"Package %s is insecure. \n\n"+
+					"To override use `devbox add <pkg> --allow-insecure`",
+				match[0],
+			)
+		}
+	}
+	return false, nil
 }

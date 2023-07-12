@@ -40,10 +40,16 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := []*devpkg.Package{}
-	for _, pkg := range devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile) {
+	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
+
+	// addedPackageNames keeps track of the possibly transformed (versioned)
+	// names of added packages (even if they are already in config). We use this
+	// to know the exact name to mark as allowed insecure later on.
+	addedPackageNames := []string{}
+	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(d.cfg.Packages, pkg.Versioned()) {
+			addedPackageNames = append(addedPackageNames, pkg.Versioned())
 			continue
 		}
 
@@ -61,11 +67,30 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// if not, fallback to legacy vanilla nix.
 		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
 		ok, err := versionedPkg.ValidateExists()
+		packageNameForConfig := pkg.Raw
 		if err == nil && ok {
-			d.cfg.Packages = append(d.cfg.Packages, pkg.Versioned())
-		} else {
-			// fallthrough and treat package as a legacy package.
-			d.cfg.Packages = append(d.cfg.Packages, pkg.Raw)
+			// Only use versioned if it exists in search.
+			packageNameForConfig = pkg.Versioned()
+		}
+		// else {
+		// 	// TODO (landau): use nix.Search to check if this package exists
+		// 	// fallthrough and treat package as a legacy package.
+		// }
+
+		d.cfg.Packages = append(d.cfg.Packages, packageNameForConfig)
+		addedPackageNames = append(addedPackageNames, packageNameForConfig)
+	}
+
+	// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled
+	// which will call print-dev-env. Resolving does not save the lockfile, we
+	// save at the end when everything has succeeded.
+	if d.allowInsecureAdds {
+		for _, name := range addedPackageNames {
+			p, err := d.lockfile.Resolve(name)
+			if err != nil {
+				return err
+			}
+			p.AllowInsecure = true
 		}
 	}
 
@@ -88,9 +113,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		}
 	}
 
-	if err := d.lockfile.Add(
-		lo.Map(pkgs, func(pkg *devpkg.Package, _ int) string { return pkg.Raw })...,
-	); err != nil {
+	if err := d.lockfile.Save(); err != nil {
 		return err
 	}
 

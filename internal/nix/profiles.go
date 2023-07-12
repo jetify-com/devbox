@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -50,6 +51,16 @@ func ProfileList(writer io.Writer, profilePath string) ([]string, error) {
 
 func ProfileInstall(writer io.Writer, profilePath string, installable string) error {
 
+	if !IsInsecureAllowed() && PackageIsInsecure(installable) {
+		knownVulnerabilities := PackageKnownVulnerabilities(installable)
+		errString := fmt.Sprintf("Package %s is insecure. \n\n", installable)
+		if len(knownVulnerabilities) > 0 {
+			errString += fmt.Sprintf("Known vulnerabilities: %s \n\n", knownVulnerabilities)
+		}
+		errString += "To override use `devbox add <pkg> --allow-insecure`"
+		return usererr.New(errString)
+	}
+
 	cmd := command(
 		"profile", "install",
 		"--profile", profilePath,
@@ -60,7 +71,7 @@ func ProfileInstall(writer io.Writer, profilePath string, installable string) er
 		"--priority", nextPriority(profilePath),
 		installable,
 	)
-	cmd.Env = allowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	// If nix profile install runs as tty, the output is much nicer. If we ever
 	// need to change this to our own writers, consider that you may need
@@ -81,7 +92,7 @@ func ProfileRemove(profilePath string, indexes []string) error {
 			"--impure", // for NIXPKGS_ALLOW_UNFREE
 		}, indexes...)...,
 	)
-	cmd.Env = allowUnfreeEnv()
+	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

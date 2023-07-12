@@ -24,11 +24,18 @@
           inherit system;
           config.allowUnfree = true;
         });
-        {{- range .FlakeInputs }}
+        {{- range $_, $flake := .FlakeInputs }}
         {{- if .IsNixpkgs }}
         {{.PkgImportName}} = (import {{.Name}} {
           inherit system;
           config.allowUnfree = true;
+          config.permittedInsecurePackages = [
+            {{- range $flake.Packages }}
+            {{- if .AllowInsecure }}
+            "{{ .StoreName }}"
+            {{- end }}
+            {{- end }}
+          ];
         });
         {{- end }}
         {{- end }}

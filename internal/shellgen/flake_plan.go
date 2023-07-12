@@ -51,10 +51,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	// priority field to the config.
 	packages := append(pluginPackages, userPackages...)
 
-	flakeInputs, err := flakeInputs(ctx, packages)
-	if err != nil {
-		return nil, err
-	}
+	flakeInputs := flakeInputs(ctx, packages)
 
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 

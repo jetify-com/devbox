@@ -17,11 +17,18 @@
    }:
       let
         pkgs = nixpkgs.legacyPackages.{{ .System }};
-        {{- range .FlakeInputs }}
+        {{- range $_, $flake := .FlakeInputs }}
         {{- if .IsNixpkgs }}
         {{.PkgImportName}} = (import {{.Name}} {
           system = "{{ $.System }}";
           config.allowUnfree = true;
+          config.permittedInsecurePackages = [
+            {{- range $flake.Packages }}
+            {{- if .AllowInsecure }}
+            "{{ .StoreName }}"
+            {{- end }}
+            {{- end }}
+          ];
         });
         {{- end }}
         {{- end }}
