@@ -95,8 +95,8 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	if opts.AllowInsecureAdds || lock.HasAllowInsecurePackages() {
-		os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
+	if opts.AllowInsecureAdds {
+		nix.AllowInsecurePackages()
 	}
 	box.pluginManager.ApplyOptions(
 		plugin.WithDevbox(box),

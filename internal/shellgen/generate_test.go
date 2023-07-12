@@ -11,12 +11,16 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/searcher"
 )
 
 // update overwrites golden files with the new test results.
 var update = flag.Bool("update", false, "update the golden files with the test results")
 
 func TestWriteFromTemplate(t *testing.T) {
+	t.Setenv("__DEVBOX_NIX_SYSTEM", "x86_64-linux")
 	dir := filepath.Join(t.TempDir(), "makeme")
 	outPath := filepath.Join(dir, "flake.nix")
 	err := writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
@@ -77,6 +81,7 @@ If the new file is correct, you can update the golden file with:
 	}
 }
 
+var locker = &lockmock{}
 var testFlakeTmplPlan = &struct {
 	NixpkgsInfo struct {
 		URL string
@@ -92,30 +97,51 @@ var testFlakeTmplPlan = &struct {
 		{
 			Name: "nixpkgs",
 			URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
-			Packages: []string{
-				"legacyPackages.aarch64-darwin.php",
-				"legacyPackages.aarch64-darwin.php81Packages.composer",
-				"legacyPackages.aarch64-darwin.php81Extensions.blackfire",
-				"legacyPackages.aarch64-darwin.flyctl",
-				"legacyPackages.aarch64-darwin.postgresql",
-				"legacyPackages.aarch64-darwin.tree",
-				"legacyPackages.aarch64-darwin.git",
-				"legacyPackages.aarch64-darwin.zsh",
-				"legacyPackages.aarch64-darwin.openssh",
-				"legacyPackages.aarch64-darwin.vim",
-				"legacyPackages.aarch64-darwin.sqlite",
-				"legacyPackages.aarch64-darwin.jq",
-				"legacyPackages.aarch64-darwin.delve",
-				"legacyPackages.aarch64-darwin.ripgrep",
-				"legacyPackages.aarch64-darwin.shellcheck",
-				"legacyPackages.aarch64-darwin.terraform",
-				"legacyPackages.aarch64-darwin.xz",
-				"legacyPackages.aarch64-darwin.zstd",
-				"legacyPackages.aarch64-darwin.gnupg",
-				"legacyPackages.aarch64-darwin.go_1_20",
-				"legacyPackages.aarch64-darwin.python3",
-				"legacyPackages.aarch64-darwin.graphviz",
+			Packages: []*devpkg.Package{
+				devpkg.PackageFromString("php@latest", locker),
+				devpkg.PackageFromString("php81Packages.composer@latest", locker),
+				devpkg.PackageFromString("php81Extensions.blackfire@latest", locker),
+				devpkg.PackageFromString("flyctl@latest", locker),
+				devpkg.PackageFromString("postgresql@latest", locker),
+				devpkg.PackageFromString("tree@latest", locker),
+				devpkg.PackageFromString("git@latest", locker),
+				devpkg.PackageFromString("zsh@latest", locker),
+				devpkg.PackageFromString("openssh@latest", locker),
+				devpkg.PackageFromString("vim@latest", locker),
+				devpkg.PackageFromString("sqlite@latest", locker),
+				devpkg.PackageFromString("jq@latest", locker),
+				devpkg.PackageFromString("delve@latest", locker),
+				devpkg.PackageFromString("ripgrep@latest", locker),
+				devpkg.PackageFromString("shellcheck@latest", locker),
+				devpkg.PackageFromString("terraform@latest", locker),
+				devpkg.PackageFromString("xz@latest", locker),
+				devpkg.PackageFromString("zstd@latest", locker),
+				devpkg.PackageFromString("gnupg@latest", locker),
+				devpkg.PackageFromString("go_1_20@latest", locker),
+				devpkg.PackageFromString("python3@latest", locker),
+				devpkg.PackageFromString("graphviz@latest", locker),
 			},
 		},
 	},
+}
+
+type lockmock struct{}
+
+func (*lockmock) Resolve(pkg string) (*lock.Package, error) {
+	name, _, _ := searcher.ParseVersionedPackage(pkg)
+	return &lock.Package{
+		Resolved: "#" + name,
+	}, nil
+}
+
+func (*lockmock) Get(pkg string) *lock.Package {
+	return nil
+}
+
+func (*lockmock) LegacyNixpkgsPath(pkg string) string {
+	return ""
+}
+
+func (*lockmock) ProjectDir() string {
+	return ""
 }

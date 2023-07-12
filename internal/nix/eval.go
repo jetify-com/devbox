@@ -46,6 +46,10 @@ func PackageKnownVulnerabilities(path string) []string {
 	return vulnerabilities
 }
 
+func AllowInsecurePackages() {
+	os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
+}
+
 func IsInsecureAllowed() bool {
 	allowed, _ := strconv.ParseBool(os.Getenv("NIXPKGS_ALLOW_INSECURE"))
 	return allowed

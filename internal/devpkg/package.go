@@ -78,7 +78,7 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
 
-	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw}
+	return &Package{*pkgURL, locker, raw, ""}
 }
 
 // isLocal specifies whether this package is a local flake.
