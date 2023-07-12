@@ -77,7 +77,7 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 // i.e. have a commit hash and always resolve to the same package/version.
 // Note: inputs returned by this function include plugin packages. (php only for now)
 // It's not entirely clear we always want to add plugin packages to the top level
-func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput, error) {
+func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
 	// Use the verbose name flakeInputs to distinguish from `inputs`
@@ -115,5 +115,5 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput
 		}
 	}
 
-	return goutil.PickByKeysSorted(flakeInputs, order), nil
+	return goutil.PickByKeysSorted(flakeInputs, order)
 }
