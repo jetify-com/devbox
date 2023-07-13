@@ -1,14 +1,17 @@
-# Contributing a Plugin
+---
+title: Creating a Devbox Plugin
+---
 
 Plugins make it easier to get started with packages that require additional setup when installed with Nix, and they offer a familiar interface for configuring packages. They also help keep all of your project's configuration within your project directory, which helps maintain portability and isolation.
 
 ## Getting Started
 
-Before writing a plugin, we recommend reading the [User Documentation](https://www.jetpack.io/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in this directory. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
+Before writing a plugin, we recommend reading the [User Documentation](https://www.jetpack.io/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetpack-io/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
+
 
 If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetpack-io/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
-Before contributing, please consult our [Contributing Guide](../CONTRIBUTING.md) and [Code of Conduct](../CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
+Before contributing, please consult our [Contributing Guide](https://github.com/jetpack-io/devbox/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetpack-io/devbox/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
 
 ### Testing your Plugin
 
@@ -82,7 +85,7 @@ The version of your plugin. You should start your version at 0.0.1 and bump it w
 
 A regex expression that is used to identify when the plugin will be activated. Devbox will activate your plugin when a package installed with `devbox add` matches this regular expression.
 
-The regex you provide should match a package name. You can look up packages at `nixhub.io`
+The regex you provide should match a package name to automatically update. You can look up packages at `nixhub.io`
 
 #### `readme` *string*
 

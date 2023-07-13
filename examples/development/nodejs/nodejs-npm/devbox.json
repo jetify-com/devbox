@@ -1,13 +1,14 @@
 {
-    "packages": [
-        "nodejs@19.8"
+  "packages": [
+    "nodejs@16",
+    "devbox@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "npm install"
     ],
-    "shell": {
-        "init_hook": [
-            "npm install"
-        ],
-        "scripts": {
-            "run_test": "npm run start"
-        }
+    "scripts": {
+      "run_test": "npm run start"
     }
+  }
 }

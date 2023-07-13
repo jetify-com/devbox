@@ -7,7 +7,8 @@ This doc describes how to use Devbox Plugins with your project. **Plugins** prov
 If a plugin is available for your package, it will activate when you install the plugin using `devbox add <package name>`.
 
 ## Current Plugins
-Plugins are available for the following packages. You can activate the plugins for these packages by running `devbox add <package_name>`:
+Built-in plugins are available for the following packages. You can activate the plugins for these packages by running `devbox add <package_name>`
+
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
 * [Nginx](../devbox_examples/servers/nginx.md) (nginx)
