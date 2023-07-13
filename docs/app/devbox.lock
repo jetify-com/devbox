@@ -2,19 +2,10 @@
   "lockfile_version": "1",
   "packages": {
     "nodejs": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#nodejs",
-      "version": ""
-    },
-    "ripgrep@12.1.1": {
-      "last_modified": "2021-05-01T16:03:07Z",
-      "resolved": "github:NixOS/nixpkgs/17af7a98d2e7dfdfdae5292b8dbd7bab28eeaf8d#ripgrep",
-      "version": "12.1.1"
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#nodejs"
     },
     "yarn": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#yarn",
-      "version": ""
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#yarn"
     }
   }
 }

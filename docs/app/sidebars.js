@@ -52,6 +52,9 @@ const sidebars = {
             id: 'guides/plugins'
         }, {
             type: 'doc',
+            id: 'guides/creating_plugins'
+        },{
+            type: 'doc',
             id: 'guides/services'
         }, {
             type: 'doc',
