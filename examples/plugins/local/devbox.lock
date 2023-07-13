@@ -1,6 +1,4 @@
 {
   "lockfile_version": "1",
-  "packages": {
-    "path:my-plugin/my-plugin.json": {}
-  }
+  "packages": {}
 }

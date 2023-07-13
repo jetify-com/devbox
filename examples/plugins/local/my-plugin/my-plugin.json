@@ -8,6 +8,7 @@
   "create_files": {
     "{{ .Virtenv }}/empty-dir": "",
     "{{ .Virtenv }}/some-file": "some-file.txt",
+    "{{ .DevboxDir }}/some-file.txt": "some-file.txt",
     "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
   }
 }
