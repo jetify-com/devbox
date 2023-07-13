@@ -64,9 +64,9 @@ flowchart TD
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
-* `{{ .DevboxDirRoot }}` – replaced with the root folder of their project, where the user's `devbox.json` is stored.
-* `{{ .DevboxDir }}` – replaced with `{{ .DevboxDirRoot }}/devbox.d/{{ plugin.name }}`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
-* `{{ .Virtenv }}` – replaced with `{{ .DevboxDirRoot }}/.devbox/virtenv/{{ plugin.name }}` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
+* `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+* `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
+* `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 
 ### Fields
 
@@ -76,13 +76,13 @@ The name of your plugin. This is used to identify your plugin when a user runs `
 
 #### `version` *string*
 
-The version of your plugin. You should kstart your version at 0.0.1 and bump it whenever you merge an update to the plugin.
+The version of your plugin. You should start your version at 0.0.1 and bump it whenever you merge an update to the plugin.
 
 #### `match` *string*
 
 A regex expression that is used to identify when the plugin will be activated. Devbox will activate your plugin when a package installed with `devbox add` matches this regular expression.
 
-The regex you provide should match a plugin name in the `nixpkgs` repository. You can look up packages at `search.nixos.org`
+The regex you provide should match a package name. You can look up packages at `nixhub.io`
 
 #### `readme` *string*
 
