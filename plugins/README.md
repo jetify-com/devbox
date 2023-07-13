@@ -15,7 +15,7 @@ Before contributing, please consult our [Contributing Guide](../CONTRIBUTING.md)
 1. Create a new `devbox.json` in an empty directory using `devbox init`.
 2. Add your plugin to the `include` section of the `devbox.json` file. Add any expected packages using `devbox add <pkg>`.
 3. Check that your plugin creates the correct files and environment variables when running `devbox shell`
-4. If you are looking for sample projects to test your plugin with, check out our [examples repo](https://github.com/jetpack-io/devbox-examples).
+4. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
 
 ## Plugin Design
 
