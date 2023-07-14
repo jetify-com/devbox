@@ -11,6 +11,7 @@ devbox add <pkg>... [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+| `--allow-insecure` | Allows Devbox to install a package that is marked insecure by Nix |
 | `-c, --config string` | path to directory containing a devbox.json config file |
 | `-h, --help` | help for add |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
