@@ -1,6 +1,10 @@
-# Spring Boot Example
+---
+title: Spring Boot
+---
 
 This example combines Java, Spring Boot, and MySQL to expose a simple REST API. This example is based on the official [Spring Boot Documentation](https://spring.io/guides/gs/accessing-data-mysql/).
+
+[Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/spring)
 
 ## How to Run
 
