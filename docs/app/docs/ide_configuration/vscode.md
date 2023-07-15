@@ -44,6 +44,15 @@ Once Direnv is installed and setup with Devbox, its [VSCode extension](vscode:ex
 4. Open your Devbox project in VSCode. Direnv extension should show a prompt notification to reload your environment.
 5. Click on reload.
 
+## Windows Setup
+___
+Devbox CLI is not supported on Windows. However, it is possible to integrate VSCode with Devbox via Windows Subsystem for Linux ([WSL](https://learn.microsoft.com/en-us/windows/wsl/install)). If you have setup WSL, then follow the steps below to integrate your Devbox shell environment with VSCode:
+
+1. [Install](https://www.jetpack.io/devbox/docs/installing_devbox/) Devbox in WSL.
+2. Navigate to your project directory. (`C:\Users` is `/mnt/c/Users/` in WSL).
+3. Run `devbox init` if you don't have a devbox.json file.
+4. Run `devbox shell`
+5. Run `code .` this should open VSCode in Windows and remote connect it to your devbox shell in WSL.
 
 ## Manual Setup
 ___
