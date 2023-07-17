@@ -71,11 +71,9 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		if err == nil && ok {
 			// Only use versioned if it exists in search.
 			packageNameForConfig = pkg.Versioned()
+		} else if _, err := nix.Search(d.lockfile.LegacyNixpkgsPath(pkg.Raw)); err != nil {
+			return usererr.New("Package %s not found", pkg.Raw)
 		}
-		// else {
-		// 	// TODO (landau): use nix.Search to check if this package exists
-		// 	// fallthrough and treat package as a legacy package.
-		// }
 
 		d.cfg.Packages = append(d.cfg.Packages, packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)

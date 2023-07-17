@@ -280,7 +280,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	// We prefer search over just trying to parse the URL because search will
 	// guarantee that the package exists for the current system.
-	infos := nix.Search(query)
+	infos, _ := nix.Search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
