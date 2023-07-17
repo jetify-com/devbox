@@ -24,6 +24,7 @@ You can manually add the MariaDB Plugin to your `devbox.json` by adding it to yo
         "plugin:mariadb"
     ]
 ```
+This will install the latest version of MariaDB. You can find other installable versions of MariaDB by running `devbox search mariadb`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/mariadb)
 
 ## MariaDB Plugin Support
 

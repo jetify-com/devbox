@@ -18,7 +18,7 @@ Run `devbox add apache`, or add the following to your `devbox.json`
   ]
 ```
 
-This will install the latest version of Apache. You can find other installable versions of Apache by running `devbox search apache`.
+This will install the latest version of Apache. You can find other installable versions of Apache by running `devbox search apache`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/apache)
 
 ## Apache Plugin Details
 

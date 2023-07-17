@@ -18,7 +18,7 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
   ],
 ```
 
-This will install NodeJS 18, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`.
+This will install NodeJS 18, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/nodejs)
 
 ## Adding Yarn as your Package Manager
 

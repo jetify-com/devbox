@@ -18,7 +18,7 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
     ]
 ```
 
-This will install the latest version of Postgres. You can find other installable versions of Postgres by running `devbox search postgresql`.
+This will install the latest version of Postgres. You can find other installable versions of Postgres by running `devbox search postgresql`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/postgresql)
 
 ## PostgreSQL Plugin Support
 

@@ -20,7 +20,7 @@ Elixir can be configured to install Hex and Rebar dependencies in a local direct
     ],
 ```
 
-This will install the latest version of Elixir available. You can find other installable versions of Elixir by running `devbox search elixir`.
+This will install the latest version of Elixir available. You can find other installable versions of Elixir by running `devbox search elixir`. You can also search for Elixir on [Nixhub](https://www.nixhub.io/packages/elixir)
 
 ## Installing Hex and Rebar locally
 

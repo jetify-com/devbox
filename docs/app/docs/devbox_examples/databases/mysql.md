@@ -27,6 +27,8 @@ You can manually add the MySQL Plugin to your `devbox.json` by adding it to your
     ]
 ```
 
+This will install the latest version of MySQL. You can find other installable versions of MySQL by running `devbox search mysql80` or `devbox search mysql57`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/mysql80)
+
 ## MySQL Plugin Support
 
 Devbox will automatically create the following configuration when you run `devbox add mysql80` or `devbox add mysql57`. You can view the full configuration by running `devbox info mysql`

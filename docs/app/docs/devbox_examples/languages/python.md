@@ -17,7 +17,7 @@ Python by default will attempt to install your packages globally, or in the Nix 
   ],
 ```
 
-This will install Python 3.10 in your shell. You can find other versions of Python by running `devbox search python`.
+This will install Python 3.10 in your shell. You can find other versions of Python by running `devbox search python`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/python)
 
 ## Installing Packages with Pip
 

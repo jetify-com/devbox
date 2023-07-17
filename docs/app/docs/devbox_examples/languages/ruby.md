@@ -19,7 +19,7 @@ Run `devbox add ruby@3.1 bundler`, or add the following to your `devbox.json`
     ]
 ```
 
-This will install Ruby 3.1 to your shell. You can find other installable versions of Ruby by running `devbox search ruby`.
+This will install Ruby 3.1 to your shell. You can find other installable versions of Ruby by running `devbox search ruby`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/ruby)
 
 ## Ruby Plugin Support
 

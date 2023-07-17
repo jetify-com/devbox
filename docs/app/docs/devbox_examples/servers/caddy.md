@@ -18,7 +18,7 @@ Run `devbox add caddy`, or add the following to your `devbox.json`
   ]
 ```
 
-This will install the latest version of Caddy. You can find other installable versions of Caddy by running `devbox search caddy`.
+This will install the latest version of Caddy. You can find other installable versions of Caddy by running `devbox search caddy`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/caddy)
 
 ## Caddy Plugin Details
 

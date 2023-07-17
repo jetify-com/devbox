@@ -18,7 +18,7 @@ Redis can be configured automatically using Devbox's built in Redis plugin. This
     ],
 ```
 
-This will install the latest version of Redis. You can find other installable versions of Redis by running `devbox search redis`.
+This will install the latest version of Redis. You can find other installable versions of Redis by running `devbox search redis`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/redis)
 
 ## Redis Plugin Details
 

@@ -41,3 +41,4 @@ These examples combine configuration from multiple examples to create a full sta
 * [LAPP (Linux, Apache, PostgreSQL, PHP)](stacks/lapp.md)
 * [LEPP (Linux, NGINX, PostgreSQL, PHP)](stacks/lepp.md)
 * [Ruby on Rails](stacks/rails.md)
+* [Spring Boot](stacks/spring.md)
