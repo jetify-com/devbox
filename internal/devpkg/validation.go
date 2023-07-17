@@ -36,8 +36,8 @@ func (p *Package) ValidateInstallsOnSystem() (bool, error) {
 	if out, err := nix.Eval(u); err != nil &&
 		strings.Contains(string(out), "is not available on the requested hostPlatform") {
 		return false, nil
-	} else if err != nil {
-		return false, err
 	}
+	// There's other stuff that may cause this evaluation to fail, but we don't
+	// want to handle all of them here. (e.g. unfree packages)
 	return true, nil
 }
