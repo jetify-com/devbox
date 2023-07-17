@@ -17,7 +17,7 @@ F# and .NET projects can be easily generated in Devbox by adding the dotnet SDK 
     "dotnet-sdk@latest"
   ],
 ```
-This will install the latest version of the dotnet SDK. You can find other installable versions of the dotnet SDK by running `devbox search dotnet-sdk`.
+This will install the latest version of the dotnet SDK. You can find other installable versions of the dotnet SDK by running `devbox search dotnet-sdk`. You can also view the available versions on [Nixhub](https://www.nixhub.io/search?q=dotnet)
 
 ## Creating a new F# Project
 

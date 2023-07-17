@@ -18,7 +18,7 @@ Run `devbox add nginx`, or add the following to your `devbox.json`
   ]
 ```
 
-This will install the latest version of NGINX. You can find other installable versions of NGINX by running `devbox search nginx`.
+This will install the latest version of NGINX. You can find other installable versions of NGINX by running `devbox search nginx`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/nginx)
 
 ## NGINX Plugin Details
 

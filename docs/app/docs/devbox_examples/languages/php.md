@@ -19,6 +19,8 @@ Run `devbox add php php81Packages.composer`, or add the following to your `devbo
     ]
 ```
 
+If you want a different version of PHP for your project, you can search for available versions by running `devbox search php`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/php)
+
 ## Installing PHP Extensions
 
 You can compile additional extensions into PHP by adding them to `packages` in your `devbox.json`. Devbox will automatically ensure that your extensions are included in PHP at compile time.
