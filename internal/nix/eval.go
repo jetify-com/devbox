@@ -46,19 +46,12 @@ func PackageKnownVulnerabilities(path string) []string {
 	return vulnerabilities
 }
 
-func PackagePlatforms(path string) []string {
-	cmd := command("eval", path+".meta.platforms", "--json")
-	out, err := cmd.Output()
-	if err != nil {
-		// We can't know for sure, but probably not.
-		return nil
-	}
-	var platforms []string
-	if err := json.Unmarshal(out, &platforms); err != nil {
-		// We can't know for sure, but probably not.
-		return nil
-	}
-	return platforms
+// Eval is raw nix eval. Needs to be parsed. Useful for stuff like
+// nix eval --raw nixpkgs/9ef09e06806e79e32e30d17aee6879d69c011037#fuse3
+// to determine if a package if a package can be installed in system.
+func Eval(path string) ([]byte, error) {
+	cmd := command("eval", "--raw", path)
+	return cmd.CombinedOutput()
 }
 
 func AllowInsecurePackages() {
