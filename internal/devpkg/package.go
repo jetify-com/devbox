@@ -347,23 +347,6 @@ func (p *Package) Hash() string {
 	return shortHash
 }
 
-func (p *Package) ValidateExists() (bool, error) {
-	if p.isVersioned() && p.version() == "" {
-		return false, usererr.New("No version specified for %q.", p.Path)
-	}
-
-	inCache, err := p.IsInBinaryCache()
-	if err != nil {
-		return false, err
-	}
-	if inCache {
-		return true, nil
-	}
-
-	info, err := p.NormalizedPackageAttributePath()
-	return info != "", err
-}
-
 func (p *Package) Equals(other *Package) bool {
 	if p.String() == other.String() {
 		return true

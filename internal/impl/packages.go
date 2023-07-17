@@ -197,14 +197,15 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return nil
 	}
 
-	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
-		return err
-	}
 	if mode == ensure {
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
 	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
+		return err
+	}
+
+	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
 

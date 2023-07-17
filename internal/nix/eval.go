@@ -46,6 +46,21 @@ func PackageKnownVulnerabilities(path string) []string {
 	return vulnerabilities
 }
 
+func PackagePlatforms(path string) []string {
+	cmd := command("eval", path+".meta.platforms", "--json")
+	out, err := cmd.Output()
+	if err != nil {
+		// We can't know for sure, but probably not.
+		return nil
+	}
+	var platforms []string
+	if err := json.Unmarshal(out, &platforms); err != nil {
+		// We can't know for sure, but probably not.
+		return nil
+	}
+	return platforms
+}
+
 func AllowInsecurePackages() {
 	os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
 }
