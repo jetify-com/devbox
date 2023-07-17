@@ -19,6 +19,8 @@ C# and .NET projects can be easily generated in Devbox by adding the dotnet SDK 
 ```
 This will install the latest version of the dotnet SDK. You can find other installable versions of the dotnet SDK by running `devbox search dotnet-sdk`.
 
+If you need a specific version of the .NET SDK, you can search on [Nixhub](https://www.nixhub.io/search?q=dotnet)
+
 ## Creating a new C# Project
 
 `dotnet new console -lang "C#" -o <name>`

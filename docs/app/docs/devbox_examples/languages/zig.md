@@ -18,4 +18,4 @@ Zig projects can be run in Devbox by adding Zig and Nimble to your project.
     ]
 ```
 
-This will install the latest version of Zig. You can find other installable versions of Zig by running `devbox search zig`.
+This will install the latest version of Zig. You can find other installable versions of Zig by running `devbox search zig`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/zig)
