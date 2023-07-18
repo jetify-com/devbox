@@ -1,4 +1,4 @@
-import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget } from 'vscode';
+import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget, env } from 'vscode';
 import { spawn, spawnSync } from 'node:child_process';
 
 
@@ -7,6 +7,18 @@ interface Message {
 }
 
 export async function devboxReopen() {
+
+    if (process.platform === 'win32') {
+        const seeDocs = 'See Devbox docs';
+        const result = await window.showErrorMessage(
+            'This feature is not supported on your platform. \
+            Please open VSCode from inside devbox shell in WSL using the CLI.', seeDocs
+        );
+        if (result === seeDocs) {
+            env.openExternal(Uri.parse('https://www.jetpack.io/devbox/docs/ide_configuration/vscode/#windows-setup'));
+            return;
+        }
+    }
     await window.withProgress({
         location: ProgressLocation.Notification,
         title: "Setting up your Devbox environment. Please don't close vscode.",
@@ -64,6 +76,8 @@ export async function devboxReopen() {
             return p;
         }
     );
+
+
 }
 
 async function setupDotDevbox(workingDir: Uri, dotdevbox: Uri) {
