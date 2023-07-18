@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -74,5 +74,5 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		return nil,
 			usererr.New("failed to get %s. Status code %d", contentURL, res.StatusCode)
 	}
-	return ioutil.ReadAll(res.Body)
+	return io.ReadAll(res.Body)
 }
