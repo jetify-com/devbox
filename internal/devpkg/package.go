@@ -91,11 +91,11 @@ func (p *Package) isLocal() bool {
 	return p.Scheme == "path"
 }
 
-// isDevboxPackage specifies whether this package is a devbox package. Devbox
+// IsDevboxPackage specifies whether this package is a devbox package. Devbox
 // packages have the format `canonicalName@version`and can be resolved by devbox
 // search. This also returns true for legacy packages which are just an
 // attribute path. An explicit flake reference is _not_ a devbox package.
-func (p *Package) isDevboxPackage() bool {
+func (p *Package) IsDevboxPackage() bool {
 	return p.Scheme == ""
 }
 
@@ -135,7 +135,7 @@ func (p *Package) FlakeInputName() string {
 // URLForFlakeInput returns the input url to be used in a flake.nix file. This
 // input can be used to import the package.
 func (p *Package) URLForFlakeInput() string {
-	if p.isDevboxPackage() {
+	if p.IsDevboxPackage() {
 		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			panic(err)
@@ -175,7 +175,7 @@ func (p *Package) Installable() (string, error) {
 // The key difference with URLForFlakeInput is that it has a suffix of
 // `#attributePath`
 func (p *Package) urlForInstall() (string, error) {
-	if p.isDevboxPackage() {
+	if p.IsDevboxPackage() {
 		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			return "", err
@@ -190,7 +190,7 @@ func (p *Package) urlForInstall() (string, error) {
 }
 
 func (p *Package) NormalizedDevboxPackageReference() (string, error) {
-	if !p.isDevboxPackage() {
+	if !p.IsDevboxPackage() {
 		return "", nil
 	}
 
@@ -201,7 +201,7 @@ func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 			return "", err
 		}
 		path = entry.Resolved
-	} else if p.isDevboxPackage() {
+	} else if p.IsDevboxPackage() {
 		path = p.lockfile.LegacyNixpkgsPath(p.String())
 	}
 
@@ -220,7 +220,7 @@ func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 // PackageAttributePath returns the short attribute path for a package which
 // does not include packages/legacyPackages or the system name.
 func (p *Package) PackageAttributePath() (string, error) {
-	if p.isDevboxPackage() {
+	if p.IsDevboxPackage() {
 		entry, err := p.lockfile.Resolve(p.Raw)
 		if err != nil {
 			return "", err
@@ -236,7 +236,7 @@ func (p *Package) PackageAttributePath() (string, error) {
 // During happy paths (devbox packages and nix flakes that contains a fragment)
 // it is much faster than NormalizedPackageAttributePath
 func (p *Package) FullPackageAttributePath() (string, error) {
-	if p.isDevboxPackage() {
+	if p.IsDevboxPackage() {
 		reference, err := p.NormalizedDevboxPackageReference()
 		if err != nil {
 			return "", err
@@ -266,7 +266,7 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 // path. It is an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
-	if p.isDevboxPackage() {
+	if p.IsDevboxPackage() {
 		if p.isVersioned() {
 			entry, err := p.lockfile.Resolve(p.Raw)
 			if err != nil {
@@ -282,7 +282,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	// We prefer search over just trying to parse the URL because search will
 	// guarantee that the package exists for the current system.
-	infos := nix.Search(query)
+	infos, _ := nix.Search(query)
 
 	if len(infos) == 1 {
 		return lo.Keys(infos)[0], nil
@@ -349,23 +349,6 @@ func (p *Package) Hash() string {
 	return shortHash
 }
 
-func (p *Package) ValidateExists() (bool, error) {
-	if p.isVersioned() && p.version() == "" {
-		return false, usererr.New("No version specified for %q.", p.Path)
-	}
-
-	inCache, err := p.IsInBinaryCache()
-	if err != nil {
-		return false, err
-	}
-	if inCache {
-		return true, nil
-	}
-
-	info, err := p.NormalizedPackageAttributePath()
-	return info != "", err
-}
-
 func (p *Package) Equals(other *Package) bool {
 	if p.String() == other.String() {
 		return true
@@ -390,7 +373,7 @@ func (p *Package) Equals(other *Package) bool {
 // CanonicalName returns the name of the package without the version
 // it only applies to devbox packages
 func (p *Package) CanonicalName() string {
-	if !p.isDevboxPackage() {
+	if !p.IsDevboxPackage() {
 		return ""
 	}
 	name, _, _ := strings.Cut(p.Path, "@")
@@ -398,14 +381,14 @@ func (p *Package) CanonicalName() string {
 }
 
 func (p *Package) Versioned() string {
-	if p.isDevboxPackage() && !p.isVersioned() {
+	if p.IsDevboxPackage() && !p.isVersioned() {
 		return p.Raw + "@latest"
 	}
 	return p.Raw
 }
 
 func (p *Package) IsLegacy() bool {
-	return p.isDevboxPackage() && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
+	return p.IsDevboxPackage() && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
 }
 
 func (p *Package) LegacyToVersioned() string {
@@ -437,7 +420,7 @@ func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
 // version returns the version of the package
 // it only applies to devbox packages
 func (p *Package) version() string {
-	if !p.isDevboxPackage() {
+	if !p.IsDevboxPackage() {
 		return ""
 	}
 	_, version, _ := strings.Cut(p.Path, "@")
@@ -445,7 +428,7 @@ func (p *Package) version() string {
 }
 
 func (p *Package) isVersioned() bool {
-	return p.isDevboxPackage() && strings.Contains(p.Path, "@")
+	return p.IsDevboxPackage() && strings.Contains(p.Path, "@")
 }
 
 func (p *Package) HashFromNixPkgsURL() string {

@@ -119,10 +119,10 @@ func nixpkgsCommitFilePath() string {
 // github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func IsGithubNixpkgsURL(url string) bool {
-	return strings.HasPrefix(url, "github:NixOS/nixpkgs/")
+	return strings.HasPrefix(strings.ToLower(url), "github:nixos/nixpkgs/")
 }
 
-var hashFromNixPkgsRegex = regexp.MustCompile(`github:NixOS/nixpkgs/([^#]+).*`)
+var hashFromNixPkgsRegex = regexp.MustCompile(`(?i)github:nixos/nixpkgs/([^#]+).*`)
 
 // HashFromNixPkgsURL will (for example) return 5233fd2ba76a3accb5aaa999c00509a11fd0793c
 // from github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
