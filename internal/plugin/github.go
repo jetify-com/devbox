@@ -11,6 +11,7 @@ import (
 )
 
 type githubPlugin struct {
+	raw      string
 	org      string
 	repo     string
 	revision string
@@ -29,17 +30,18 @@ func newGithubPlugin(url string) (*githubPlugin, error) {
 		)
 	}
 
-	p := &githubPlugin{
+	plugin := &githubPlugin{
+		raw:      url,
 		org:      parts[0],
 		repo:     parts[1],
 		revision: "master",
 	}
 
 	if len(parts) == 3 {
-		p.revision = parts[2]
+		plugin.revision = parts[2]
 	}
 
-	return p, nil
+	return plugin, nil
 }
 
 func (p *githubPlugin) CanonicalName() string {
@@ -71,8 +73,12 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return nil,
-			usererr.New("failed to get %s. Status code %d", contentURL, res.StatusCode)
+		return nil, usererr.New(
+			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
+				"devbox.json file exists in the root of the repo.",
+			p.raw,
+			res.StatusCode,
+		)
 	}
 	return io.ReadAll(res.Body)
 }
