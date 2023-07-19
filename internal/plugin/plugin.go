@@ -134,7 +134,7 @@ func (m *Manager) createFile(
 ) error {
 	name := pkg.CanonicalName()
 	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
-	content, err := getFileContent(pkg, contentPath)
+	content, err := pkg.FileContent(contentPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}

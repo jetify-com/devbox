@@ -53,7 +53,7 @@ func NewWarning(msg string, args ...any) error {
 func WithUserMessage(source error, msg string, args ...any) error {
 	// We don't want to wrap the error if it already has a user message. Doing
 	// so would obscure the original error message which is likely more useful.
-	if source == nil || HasUserMessage(source) {
+	if source == nil || hasUserMessage(source) {
 		return source
 	}
 	return &combined{
@@ -63,7 +63,7 @@ func WithUserMessage(source error, msg string, args ...any) error {
 }
 
 func WithLoggedUserMessage(source error, msg string, args ...any) error {
-	if source == nil || HasUserMessage(source) {
+	if source == nil || hasUserMessage(source) {
 		return source
 	}
 	return &combined{
@@ -73,9 +73,13 @@ func WithLoggedUserMessage(source error, msg string, args ...any) error {
 	}
 }
 
-func HasUserMessage(err error) bool {
+// Extract unwraps and returns the user error if it exists.
+func Extract(err error) (error, bool) { // nolint: revive
 	c := &combined{}
-	return errors.As(err, &c) // note double pointer
+	if errors.As(err, &c) {
+		return c, true
+	}
+	return nil, false
 }
 
 // ShouldLogError returns true if the it's a logged user error or is a non-user error
@@ -125,4 +129,9 @@ func (c *combined) Format(s fmt.State, verb rune) {
 	errors.Wrap(c.source, c.userMessage).(interface { //nolint:errorlint
 		Format(s fmt.State, verb rune)
 	}).Format(s, verb)
+}
+
+func hasUserMessage(err error) bool {
+	_, hasUserMessage := Extract(err)
+	return hasUserMessage
 }
