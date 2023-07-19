@@ -12,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 
@@ -218,6 +219,14 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 	if !inCache && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
 		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
 			return err
+		}
+		if exists, err := input.ValidateInstallsOnSystem(); err != nil {
+			return err
+		} else if !exists {
+			return usererr.New(
+				"package %s cannot be installed on your system. It may be installable on other systems.",
+				input.String(),
+			)
 		}
 	}
 	stepMsg := args.Package

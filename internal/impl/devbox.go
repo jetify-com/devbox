@@ -339,7 +339,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 		return err
 	}
 
-	results := nix.Search(locked.Resolved)
+	results, _ := nix.Search(locked.Resolved)
 	if len(results) == 0 {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)

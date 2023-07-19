@@ -66,16 +66,20 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
 		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
-		ok, err := versionedPkg.ValidateExists()
+
 		packageNameForConfig := pkg.Raw
-		if err == nil && ok {
+		if ok, err := versionedPkg.ValidateExists(); err == nil && ok {
 			// Only use versioned if it exists in search.
 			packageNameForConfig = pkg.Versioned()
+		} else if !versionedPkg.IsDevboxPackage() {
+			// This means it didn't validate and we don't want to fallback to legacy
+			// Just propagate the error.
+			return err
+		} else if _, err := nix.Search(d.lockfile.LegacyNixpkgsPath(pkg.Raw)); err != nil {
+			// This means it looked like a devbox package or attribute path, but we
+			// could not find it in search or in the legacy nixpkgs path.
+			return usererr.New("Package %s not found", pkg.Raw)
 		}
-		// else {
-		// 	// TODO (landau): use nix.Search to check if this package exists
-		// 	// fallthrough and treat package as a legacy package.
-		// }
 
 		d.cfg.Packages = append(d.cfg.Packages, packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
@@ -197,14 +201,15 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return nil
 	}
 
-	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
-		return err
-	}
 	if mode == ensure {
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
 	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
+		return err
+	}
+
+	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -25,7 +26,7 @@ func (i *Info) String() string {
 	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
-func Search(url string) map[string]*Info {
+func Search(url string) (map[string]*Info, error) {
 	return searchSystem(url, "")
 }
 
@@ -66,14 +67,15 @@ func PkgExistsForAnySystem(pkg string) bool {
 		"riscv64-linux",
 	}
 	for _, system := range systems {
-		if len(searchSystem(pkg, system)) > 0 {
+		results, _ := searchSystem(pkg, system)
+		if len(results) > 0 {
 			return true
 		}
 	}
 	return false
 }
 
-func searchSystem(url string, system string) map[string]*Info {
+func searchSystem(url string, system string) (map[string]*Info, error) {
 	// Eventually we may pass a writer here, but for now it is safe to use stderr
 	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this
@@ -90,12 +92,11 @@ func searchSystem(url string, system string) map[string]*Info {
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
-	cmd.Stderr = writer
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		// for now, assume all errors are invalid packages.
-		return nil
+		return nil, usererr.NewExecError(err)
 	}
-	return parseSearchResults(out)
+	return parseSearchResults(out), nil
 }
