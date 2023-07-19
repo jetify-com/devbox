@@ -18,7 +18,7 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 	case *devpkg.Package:
 		return getBuiltinPluginConfig(pkg, projectDir)
 	case *githubPlugin:
-		return getConfigFromGithub(pkg, projectDir)
+		return pkg.buildConfig(projectDir)
 	case *localPlugin:
 		content, err := os.ReadFile(pkg.path)
 		if err != nil && !os.IsNotExist(err) {
@@ -59,12 +59,4 @@ func getBuiltinPluginConfig(pkg Includable, projectDir string) (*config, error) 
 		return cfg, nil
 	}
 	return nil, nil
-}
-
-func getConfigFromGithub(pkg *githubPlugin, projectDir string) (*config, error) {
-	content, err := pkg.FileContent("devbox.json")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buildConfig(pkg, projectDir, string(content))
 }

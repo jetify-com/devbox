@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -15,13 +17,17 @@ type githubPlugin struct {
 	org      string
 	repo     string
 	revision string
+	fragment string
 }
 
 // newGithubPlugin returns a plugin that is hosted on github.
-// url is of the form org/repo
-// The repo must have a devbox.json file in the root of the repo.
+// url is of the form org/repo#name
+// The repo must have a [name].json in the root of the repo. If fragment is
+// not set, it defaults to "default"
 func newGithubPlugin(url string) (*githubPlugin, error) {
-	parts := strings.Split(url, "/")
+	path, fragment, _ := strings.Cut(url, "#")
+
+	parts := strings.Split(path, "/")
 
 	if len(parts) < 2 || len(parts) > 3 {
 		return nil, usererr.New(
@@ -35,6 +41,7 @@ func newGithubPlugin(url string) (*githubPlugin, error) {
 		org:      parts[0],
 		repo:     parts[1],
 		revision: "master",
+		fragment: fragment,
 	}
 
 	if len(parts) == 3 {
@@ -75,10 +82,19 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
 			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
-				"devbox.json file exists in the root of the repo.",
+				"[name].json or default.json file exists in the root of the repo.",
 			p.raw,
 			res.StatusCode,
 		)
 	}
 	return io.ReadAll(res.Body)
+}
+
+func (p *githubPlugin) buildConfig(projectDir string) (*config, error) {
+	configName, _ := lo.Coalesce(p.fragment, "default")
+	content, err := p.FileContent(configName + ".json")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return buildConfig(p, projectDir, string(content))
 }
