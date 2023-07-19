@@ -15,6 +15,7 @@ import (
 type Includable interface {
 	CanonicalName() string
 	Hash() string
+	FileContent(subpath string) ([]byte, error)
 }
 
 func (m *Manager) ParseInclude(include string) (Includable, error) {
@@ -26,6 +27,8 @@ func (m *Manager) ParseInclude(include string) (Includable, error) {
 	} else if includeType == "path" {
 		absPath := filepath.Join(m.ProjectDir(), name)
 		return newLocalPlugin(absPath)
+	} else if includeType == "github" {
+		return newGithubPlugin(name)
 	}
 	return nil, usererr.New("unknown include type %q", includeType)
 }
@@ -71,11 +74,11 @@ func (l *localPlugin) IsLocal() bool {
 	return true
 }
 
-func (l *localPlugin) contentPath(subpath string) string {
-	return filepath.Join(filepath.Dir(l.path), subpath)
-}
-
 func (l *localPlugin) Hash() string {
 	h, _ := cuecfg.FileHash(l.path)
 	return h
+}
+
+func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(filepath.Dir(l.path), subpath))
 }

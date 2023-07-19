@@ -22,12 +22,14 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/plugins"
 )
 
 // Package represents a "package" added to the devbox.json config.
 // A unique feature of flakes is that they have well-defined "inputs" and "outputs".
 // This Package will be aggregated into a specific "flake input" (see shellgen.flakeInput).
 type Package struct {
+	plugins.BuiltIn
 	url.URL
 	lockfile lock.Locker
 
@@ -78,7 +80,7 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
 
-	return &Package{*pkgURL, locker, raw, ""}
+	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw}
 }
 
 // isLocal specifies whether this package is a local flake.
