@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [0.1.2]
 
-- Fixed error handling when using Reopen in Devbox shell command in Windows and WSL
+- Fixed error handling when using `Reopen in Devbox shell` command in Windows and WSL
 
 ## [0.1.1]
 
