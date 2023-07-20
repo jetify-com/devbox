@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"golang.org/x/exp/maps"
@@ -90,7 +91,8 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 	for sysName, sysInfo := range pkg.Systems {
 
 		// guard against missing search data
-		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" {
+		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" || sysInfo.StoreVersion == "" {
+			debug.Log("WARN: skipping %s in %s due to missing store name or hash or version\n", pkg.Name, sysName)
 			continue
 		}
 
@@ -99,7 +101,7 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 		if sysName == userSystem {
 			caStorePath, err = nix.ContentAddressedStorePath(storePath)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithMessagef(err, "failed to make content addressed path for %s", storePath)
 			}
 		}
 		sysInfos[sysName] = &SystemInfo{
