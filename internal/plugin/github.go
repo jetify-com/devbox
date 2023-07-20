@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -17,31 +16,33 @@ type githubPlugin struct {
 	org      string
 	repo     string
 	revision string
-	fragment string
+	dir      string
 }
 
 // newGithubPlugin returns a plugin that is hosted on github.
-// url is of the form org/repo#name
-// The repo must have a [name].json in the root of the repo. If fragment is
-// not set, it defaults to "default"
-func newGithubPlugin(url string) (*githubPlugin, error) {
-	path, fragment, _ := strings.Cut(url, "#")
+// url is of the form org/repo?dir=<dir>
+// The (optional) dir must have a plugin.json"
+func newGithubPlugin(rawURL string) (*githubPlugin, error) {
+	pluginURL, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
 
-	parts := strings.Split(path, "/")
+	parts := strings.Split(pluginURL.Path, "/")
 
 	if len(parts) < 2 || len(parts) > 3 {
 		return nil, usererr.New(
 			"invalid github plugin url %q. Must be of the form org/repo/[revision]",
-			url,
+			rawURL,
 		)
 	}
 
 	plugin := &githubPlugin{
-		raw:      url,
+		raw:      rawURL,
 		org:      parts[0],
 		repo:     parts[1],
 		revision: "master",
-		fragment: fragment,
+		dir:      pluginURL.Query().Get("dir"),
 	}
 
 	if len(parts) == 3 {
@@ -68,6 +69,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		p.org,
 		p.repo,
 		p.revision,
+		p.dir,
 		subpath,
 	)
 	if err != nil {
@@ -82,7 +84,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
 			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
-				"[name].json or default.json file exists in the root of the repo.",
+				"plugin.json file exists in plugin directory.",
 			p.raw,
 			res.StatusCode,
 		)
@@ -91,8 +93,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 }
 
 func (p *githubPlugin) buildConfig(projectDir string) (*config, error) {
-	configName, _ := lo.Coalesce(p.fragment, "default")
-	content, err := p.FileContent(configName + ".json")
+	content, err := p.FileContent("plugin.json")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

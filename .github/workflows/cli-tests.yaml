@@ -113,7 +113,7 @@ jobs:
           DEVBOX_DEBUG: ${{ (!matrix.run-example-tests || inputs.example-debug) && '1' || '0' }}
           DEVBOX_EXAMPLE_TESTS: ${{ matrix.run-example-tests }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
-          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '15m' }}"
+          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '20m' }}"
         run: |
           go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 

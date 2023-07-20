@@ -11,6 +11,6 @@
     }
   },
   "include": [
-    "github:jetpack-io/devbox-plugin-example/6ea0ef9e12ab58dbbb145ca8f3a465611cb603a9#devbox"
+    "github:jetpack-io/devbox-plugin-example/d9c00334353c9b1294c7bd5dbea128c149b2eb3a"
   ]
 }
