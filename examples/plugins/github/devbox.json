@@ -12,6 +12,6 @@
   },
   "include": [
     "github:jetpack-io/devbox-plugin-example",
-    "github:jetpack-io/devbox-plugin-example#custom-name"
+    "github:jetpack-io/devbox-plugin-example?dir=custom-dir"
   ]
 }
