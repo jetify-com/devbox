@@ -1,7 +1,6 @@
 {
   "packages": [
-    "nodejs@16",
-    "devbox@latest"
+    "nodejs@18"
   ],
   "shell": {
     "init_hook": [
