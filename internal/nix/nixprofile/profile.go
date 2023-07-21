@@ -75,8 +75,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		return -1, err
 	}
 	if inCache {
-		// TODO savil: change to ContentAddressedPath?
-		pathInStore, err := args.Input.InputAddressedPath()
+		pathInStore, err := args.Input.Installable()
 		if err != nil {
 			return -1, err
 		}
