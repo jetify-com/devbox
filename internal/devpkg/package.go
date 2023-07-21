@@ -156,8 +156,7 @@ func (p *Package) Installable() (string, error) {
 	}
 
 	if inCache {
-		// TODO savil: change to ContentAddressablePath?
-		installable, err := p.InputAddressedPath()
+		installable, err := p.ContentAddressedPath()
 		if err != nil {
 			return "", err
 		}
