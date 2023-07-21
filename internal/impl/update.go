@@ -54,6 +54,10 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
+	if err := d.lockfile.Save(); err != nil {
+		return err
+	}
+
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
@@ -107,34 +111,22 @@ func (d *Devbox) updateDevboxPackage(
 		return nil
 	}
 
-	// Check if the package's system info is missing, or not complete.
+	// Add any missing system infos for packages whose versions did not change.
 	if featureflag.RemoveNixpkgs.Enabled() {
 		userSystem, err := nix.System()
 		if err != nil {
 			return err
 		}
 
-		// If the newEntry has a system info for the user's system,
-		// then check if we need to update system info
-		if newEntry.Systems[userSystem] != nil {
-
-			// Check if the system info is missing for the user's system.
-			sysInfo := d.lockfile.Packages[pkg.Raw].Systems[userSystem]
-			if sysInfo == nil {
+		// If the newEntry has a system info for the user's system, then add/overwrite it. We don't overwrite
+		// other system infos because we don't want to clobber system-dependent CAStorePaths.
+		if newSysInfo, ok := newEntry.Systems[userSystem]; ok {
+			if !newSysInfo.Equals(existing.Systems[userSystem]) {
+				// We only guard this so that the ux messaging is accurate. We could overwrite every time.
 				if d.lockfile.Packages[pkg.Raw].Systems == nil {
 					d.lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 				}
-				d.lockfile.Packages[pkg.Raw].Systems[userSystem] = newEntry.Systems[userSystem]
-				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-				return nil
-			}
-
-			// Check if the CAStorePath is missing for the user's system.
-			// Since any one user cannot add this field for all systems,
-			// we'll need to progressively add it to a project's lockfile.
-			if sysInfo.CAStorePath == "" {
-				// Update the CAStorePath for the user's system
-				d.lockfile.Packages[pkg.Raw].Systems[userSystem].CAStorePath = newEntry.Systems[userSystem].CAStorePath
+				d.lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
 				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
 				return nil
 			}

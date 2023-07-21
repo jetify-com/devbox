@@ -22,11 +22,11 @@ type Package struct {
 type SystemInfo struct {
 	// StorePath is the input-addressed path for the nix package in /nix/store
 	// It is the cache key in the Binary Cache Store (cache.nixos.org)
-	// It is of the form <hash>-<name>-<version>
+	// It is of the form /nix/store/<hash>-<name>-<version>
 	// <name> may be different from the canonicalName so we store the full store path.
 	StorePath string `json:"store_path,omitempty"`
 	// CAStorePath is the content-addressed path for the nix package in /nix/store
-	// It is of the form <hash>-<name>-<version>
+	// It is of the form /nix/store/<hash>-<name>-<version>
 	CAStorePath string `json:"ca_store_path,omitempty"`
 }
 
@@ -42,4 +42,11 @@ func (p *Package) IsAllowInsecure() bool {
 		return false
 	}
 	return p.AllowInsecure
+}
+
+func (i *SystemInfo) Equals(other *SystemInfo) bool {
+	if i == nil || other == nil {
+		return i == other
+	}
+	return *i == *other
 }
