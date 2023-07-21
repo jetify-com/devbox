@@ -6,8 +6,8 @@ import (
 
 func TestBuiltInMap(t *testing.T) {
 	testCases := map[string]string{
-		"apache":                                 "apache",
-		"apacheHttpd":                            "apache",
+		"apache":                                 "apacheHttpd",
+		"apacheHttpd":                            "apacheHttpd",
 		"php":                                    "php",
 		"php81":                                  "php",
 		"php82":                                  "php",
