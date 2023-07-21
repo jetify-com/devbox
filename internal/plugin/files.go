@@ -4,9 +4,8 @@
 package plugin
 
 import (
+	"io/fs"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -16,7 +15,7 @@ import (
 func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 	switch pkg := pkg.(type) {
 	case *devpkg.Package:
-		return getBuiltinPluginConfig(pkg, projectDir)
+		return getBuiltinPluginConfigIfExists(pkg, projectDir)
 	case *githubPlugin:
 		return pkg.buildConfig(projectDir)
 	case *localPlugin:
@@ -29,34 +28,16 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 	return nil, errors.Errorf("unknown plugin type %T", pkg)
 }
 
-func getBuiltinPluginConfig(pkg Includable, projectDir string) (*config, error) {
-	builtins, err := plugins.Builtins()
+func getBuiltinPluginConfigIfExists(
+	pkg Includable,
+	projectDir string,
+) (*config, error) {
+	content, err := plugins.BuiltInForPackage(pkg.CanonicalName())
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-
-	for _, file := range builtins {
-		// We deserialize first so we can check the Match field. If it's there
-		// we use it, otherwise we use the name.
-		// TODO(landau): this is weird, hard to understand code. Fetching the file
-		// content of configs should probably not use FileContent()
-		content, err := pkg.FileContent(file.Name())
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		name := pkg.CanonicalName()
-		cfg, err := buildConfig(pkg, projectDir, string(content))
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		// if match regex is set we use it to check. Otherwise we assume it's a
-		// perfect match
-		if (cfg.Match != "" && !regexp.MustCompile(cfg.Match).MatchString(name)) ||
-			(cfg.Match == "" && strings.Split(file.Name(), ".")[0] != name) {
-			continue
-		}
-		return cfg, nil
-	}
-	return nil, nil
+	return buildConfig(pkg, projectDir, string(content))
 }

@@ -1,9 +1,8 @@
 {
   "name": "haskell",
   "version": "0.0.1",
-  "match": "^(ghc|haskell\\.compiler\\.(.*))$",
   "readme": "Haskell plugin",
-  "packages": [
+  "__packages": [
     "path:{{ .Virtenv }}"
   ],
   "create_files": {

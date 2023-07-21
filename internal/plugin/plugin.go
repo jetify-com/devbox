@@ -39,9 +39,8 @@ var (
 type config struct {
 	Name        string            `json:"name"`
 	Version     string            `json:"version"`
-	Match       string            `json:"match"`
 	CreateFiles map[string]string `json:"create_files"`
-	Packages    []string          `json:"packages"`
+	Packages    []string          `json:"__packages"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
 

@@ -1,0 +1,16 @@
+{
+  "packages": [],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "test": [
+        "test -n \"$PHPRC\" || exit 1"
+      ]
+    }
+  },
+  "include": [
+    "plugin:php8"
+  ]
+}

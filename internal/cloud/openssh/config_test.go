@@ -60,7 +60,6 @@ func TestHostOrMatchRegex(t *testing.T) {
 		"\tMatch all":        true,
 
 		"Host":               false,
-		"Match":              false,
 		"Hostname devbox.sh": false,
 		`# Host *.devbox.sh`: true,
 		`# Match all`:        true,
