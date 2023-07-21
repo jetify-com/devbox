@@ -91,8 +91,8 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 	for sysName, sysInfo := range pkg.Systems {
 
 		// guard against missing search data
-		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" || sysInfo.StoreVersion == "" {
-			debug.Log("WARN: skipping %s in %s due to missing store name or hash or version\n", pkg.Name, sysName)
+		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" {
+			debug.Log("WARN: skipping %s in %s due to missing store name or hash", pkg.Name, sysName)
 			continue
 		}
 
