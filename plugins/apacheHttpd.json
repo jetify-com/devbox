@@ -1,7 +1,6 @@
 {
   "name": "apache",
   "version": "0.0.2",
-  "match": "^(apache|apacheHttpd)$",
   "readme": "If you with to edit the config file, please copy it out of the .devbox directory.",
   "env": {
     "HTTPD_DEVBOX_CONFIG_DIR": "{{ .DevboxProjectDir }}",

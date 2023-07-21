@@ -1,7 +1,6 @@
 {
   "name": "ruby",
   "version": "0.0.2",
-  "match": "^ruby([0-9_]*[0-9]+)?$",
   "env": {
     "PATH": "{{ .Virtenv }}/bin/:$PATH",
     "RUBY_CONFDIR": "{{ .Virtenv }}",
