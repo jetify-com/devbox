@@ -45,13 +45,8 @@ func (p *Package) IsAllowInsecure() bool {
 }
 
 func (i *SystemInfo) Equals(other *SystemInfo) bool {
-	if i == nil {
-		return other == nil
+	if i == nil || other == nil {
+		return i == other
 	}
-	if other == nil {
-		return false
-	}
-
-	return i.StorePath == other.StorePath &&
-		i.CAStorePath == other.CAStorePath
+	return *i == *other
 }
