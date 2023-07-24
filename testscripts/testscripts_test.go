@@ -10,7 +10,7 @@ import (
 
 // When true, tests that `devbox run run_test` succeeds on every devbox.json
 // found in examples/.. and testscripts/..
-const runDevboxJSONTests = "DEVBOX_EXAMPLE_TESTS" // TODO: change name
+const runDevboxJSONTests = "DEVBOX_RUN_DEVBOX_JSON_TESTS"
 
 func TestScripts(t *testing.T) {
 	// To run a specific test, say, testscripts/foo/bar.test.text, then run
