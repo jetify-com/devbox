@@ -28,7 +28,7 @@ stdout 'directly'
 -- devbox.json --
 {
   "packages": [
-    "hello"
+    "hello@latest"
   ],
   "shell": {
     "init_hook": "export HOOK=hook",
