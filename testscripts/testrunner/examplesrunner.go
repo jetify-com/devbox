@@ -22,17 +22,18 @@ import (
 // virtenvs of devbox plugins in this directory. We need to use a custom
 // path that is intentionally short, since some plugins store unix sockets in
 // their virtenv and unix sockets require their paths to be short.
-const xdgStateHomeDir = "/tmp/devbox-example-testscripts"
+const xdgStateHomeDir = "/tmp/devbox-testscripts"
 
-// RunExamplesTestscripts generates testscripts for each example devbox-project.
-func RunExamplesTestscripts(t *testing.T, examplesDir string) {
+// RunDevboxTestscripts generates and runs a testscript test for each Devbox project in dir.
+// For each project, runs `devbox run run_test` (if script exists) and asserts it succeeds.
+func RunDevboxTestscripts(t *testing.T, dir string) {
 	// ensure the state home dir for devbox exists
 	err := os.MkdirAll(xdgStateHomeDir, 0700)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		t.Error(err)
 	}
 
-	err = filepath.WalkDir(examplesDir, func(path string, entry os.DirEntry, err error) error {
+	err = filepath.WalkDir(dir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -75,7 +76,7 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 		}
 
 		t.Logf("running testscript for example: %s\n", path)
-		runSingleExampleTestscript(t, examplesDir, path)
+		runSingleDevboxTestscript(t, dir, path)
 		return nil
 	})
 	if err != nil {
@@ -83,8 +84,8 @@ func RunExamplesTestscripts(t *testing.T, examplesDir string) {
 	}
 }
 
-func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
-	testscriptDir, err := generateTestscript(t, examplesDir, projectDir)
+func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
+	testscriptDir, err := generateTestscript(t, dir, projectDir)
 	if err != nil {
 		t.Error(err)
 	}
@@ -127,10 +128,10 @@ func runSingleExampleTestscript(t *testing.T, examplesDir, projectDir string) {
 }
 
 // generateTestscript will create a temp-directory and place the generic
-// testscript file (.test.txt) for all examples devbox-projects in it.
+// testscript file (.test.txt) for all devbox-projects in the dir.
 // It returns the directory containing the testscript file.
-func generateTestscript(t *testing.T, examplesDir, projectDir string) (string, error) {
-	testPath, err := filepath.Rel(examplesDir, projectDir)
+func generateTestscript(t *testing.T, dir, projectDir string) (string, error) {
+	testPath, err := filepath.Rel(dir, projectDir)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
