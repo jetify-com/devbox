@@ -2,7 +2,7 @@
   "packages": [
     "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
     "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay",
-    "github:F1bonacc1/process-compose"
+    "github:F1bonacc1/process-compose/v0.43.1"
   ],
   "shell": {
     "init_hook": null,
