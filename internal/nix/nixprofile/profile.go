@@ -42,7 +42,6 @@ func ProfileListItems(
 	}
 
 	if useJSON {
-		fmt.Printf("nix profile list json output:\n%v\n", output)
 		type ProfileListElement struct {
 			Active      bool     `json:"active"`
 			AttrPath    string   `json:"attrPath"`
@@ -82,10 +81,12 @@ func ProfileListItems(
 	// 0 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19 /nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3
 	// 1 github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.vim /nix/store/gapbqxx1d49077jk8ay38z11wgr12p23-vim-9.0.0609
 
-	fmt.Printf("nix profile list lines output:\n%v\n", lines)
-
 	items := map[string]*NixProfileListItem{}
 	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 		item, err := parseNixProfileListItem(line)
 		if err != nil {
 			return nil, err

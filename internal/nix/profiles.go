@@ -17,7 +17,6 @@ import (
 )
 
 func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, error) {
-
 	cmd := command("profile", "list", "--profile", profilePath)
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
@@ -27,39 +26,6 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 		return "", redact.Errorf("error running \"nix profile list\": %w", err)
 	}
 	return string(out), nil
-
-	/*
-		cmd := command("profile", "list", "--profile", profilePath)
-		if useJSON {
-		}
-
-		// We set stderr to a different output than stdout
-		// to ensure error output is not mingled with the stdout output
-		// that we need to parse.
-		cmd.Stderr = writer
-
-		out, err := cmd.StdoutPipe()
-		if err != nil {
-			return "", redact.Errorf("error creating stdout pipe: %w", redact.Safe(err))
-		}
-		if err := cmd.Start(); err != nil {
-			return "", redact.Errorf("error starting \"nix profile list\" command: %w", err)
-		}
-
-		scanner := bufio.NewScanner(out)
-		scanner.Split(bufio.ScanLines)
-
-		lines := []string{}
-		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
-		}
-
-		if err := cmd.Wait(); err != nil {
-			return "", redact.Errorf("error running \"nix profile list\": %w", err)
-		}
-		return lines, nil
-
-	*/
 }
 
 func ProfileInstall(writer io.Writer, profilePath string, installable string) error {
