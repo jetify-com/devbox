@@ -14,7 +14,7 @@ stdout 'Hello, world!'
 
 -- devbox.json --
 {
-  "packages": ["hello"],
+  "packages": ["hello@latest"],
   "env": {
     "FOO": "baz"
   }
