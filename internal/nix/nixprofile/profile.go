@@ -33,8 +33,8 @@ func ProfileListItems(
 		return nil, err
 	}
 
-	// if version is >= 2.17, we can use the json output
-	useJSON := vercheck.SemverCompare(version, "2.17") >= 0
+	// if version is >= 2.17.0, we can use the json output
+	useJSON := vercheck.SemverCompare(version, "2.17.0") >= 0
 
 	output, err := nix.ProfileList(writer, profileDir, useJSON)
 	if err != nil {
