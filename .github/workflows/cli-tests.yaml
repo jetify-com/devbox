@@ -139,8 +139,9 @@ jobs:
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
           devbox run echo "Installing packages..."
+          devbox rm go
   
-  old-nix-version:
+  test-with-old-nix-version:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -163,3 +164,4 @@ jobs:
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
           devbox run echo "Installing packages..."
+          devbox rm go
