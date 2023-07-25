@@ -2,6 +2,8 @@ package nix
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -28,5 +30,18 @@ func TestContentAddressedPath(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestNixVersion(t *testing.T) {
+	cmd := exec.Command("nix", "--version")
+	outBytes, err := cmd.Output()
+	if err != nil {
+		t.Errorf("got error: %v", err)
+	}
+	out := strings.TrimSpace(string(outBytes))
+	expected := "nix (Nix) 2.17.0"
+	if out != "expected" {
+		t.Errorf("got %s, want %s", out, expected)
 	}
 }
