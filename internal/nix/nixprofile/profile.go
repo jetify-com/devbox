@@ -5,6 +5,7 @@ package nixprofile
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -14,9 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
-
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -26,10 +26,48 @@ func ProfileListItems(
 	profileDir string,
 ) (map[string]*NixProfileListItem, error) {
 
-	lines, err := nix.ProfileList(writer, profileDir)
-	if err != nil {
-		return nil, err
+	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
+	if err == nil {
+		type ProfileListElement struct {
+			Active      bool     `json:"active"`
+			AttrPath    string   `json:"attrPath"`
+			OriginalURL string   `json:"originalUrl"`
+			Priority    int      `json:"priority"`
+			StorePaths  []string `json:"storePaths"`
+			URL         string   `json:"url"`
+		}
+		type ProfileListOutput struct {
+			Elements []ProfileListElement `json:"elements"`
+			Version  int                  `json:"version"`
+		}
+
+		var structOutput ProfileListOutput
+		if err := json.Unmarshal([]byte(output), &structOutput); err != nil {
+			return nil, err
+		}
+
+		result := map[string]*NixProfileListItem{}
+		for index, element := range structOutput.Elements {
+			// We use the unlocked reference as the key, since that is the format
+			// used for the `nix profile list` output of older nix versions
+			// (pre 2.17), which our code is designed to support.
+			unlockedReference := element.OriginalURL + "#" + element.AttrPath
+			result[unlockedReference] = &NixProfileListItem{
+				index:             index,
+				unlockedReference: unlockedReference,
+				lockedReference:   element.URL + "#" + element.AttrPath,
+				nixStorePath:      element.StorePaths[0],
+			}
+		}
+		return result, nil
 	}
+
+	output, err = nix.ProfileList(writer, profileDir, false /*useJSON*/)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	lines := strings.Split(output, "\n")
 
 	// The `line` output is of the form:
 	// <index> <UnlockedReference> <LockedReference> <NixStorePath>
@@ -40,6 +78,10 @@ func ProfileListItems(
 
 	items := map[string]*NixProfileListItem{}
 	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 		item, err := parseNixProfileListItem(line)
 		if err != nil {
 			return nil, err
@@ -133,6 +175,7 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	if !scanner.Scan() {
 		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing index: %s", line)
 	}
+
 	index, err := strconv.Atoi(scanner.Text())
 	if err != nil {
 		return nil, redact.Errorf("error parsing \"nix profile list\" output: %w: %s", err, line)
