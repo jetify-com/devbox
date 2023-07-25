@@ -48,10 +48,14 @@ func ProfileListItems(
 
 		result := map[string]*NixProfileListItem{}
 		for index, element := range structOutput.Elements {
-			result[element.OriginalURL] = &NixProfileListItem{
+			// We use the unlocked reference as the key, since that is the format
+			// used for the `nix profile list` output of older nix versions
+			// (pre 2.17), which our code is designed to support.
+			unlockedReference := element.OriginalURL + "#" + element.AttrPath
+			result[unlockedReference] = &NixProfileListItem{
 				index:             index,
-				unlockedReference: element.OriginalURL,
-				lockedReference:   element.URL,
+				unlockedReference: unlockedReference,
+				lockedReference:   element.URL + "#" + element.AttrPath,
 				nixStorePath:      element.StorePaths[0],
 			}
 		}
@@ -59,7 +63,7 @@ func ProfileListItems(
 	}
 
 	output, err = nix.ProfileList(writer, profileDir, false /*useJSON*/)
-	if err == nil {
+	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
