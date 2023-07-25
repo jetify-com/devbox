@@ -15,10 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/vercheck"
-
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -28,20 +26,8 @@ func ProfileListItems(
 	profileDir string,
 ) (map[string]*NixProfileListItem, error) {
 
-	version, err := nix.Version()
-	if err != nil {
-		return nil, err
-	}
-
-	// if version is >= 2.17.0, we can use the json output
-	useJSON := vercheck.SemverCompare(version, "2.17.0") >= 0
-
-	output, err := nix.ProfileList(writer, profileDir, useJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	if useJSON {
+	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
+	if err == nil {
 		type ProfileListElement struct {
 			Active      bool     `json:"active"`
 			AttrPath    string   `json:"attrPath"`
@@ -70,6 +56,11 @@ func ProfileListItems(
 			}
 		}
 		return result, nil
+	}
+
+	output, err = nix.ProfileList(writer, profileDir, false /*useJSON*/)
+	if err == nil {
+		return nil, errors.WithStack(err)
 	}
 
 	lines := strings.Split(output, "\n")

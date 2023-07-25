@@ -124,26 +124,3 @@ func TestCheckVersion(t *testing.T) {
 	})
 
 }
-
-func TestSemverCompare(t *testing.T) {
-	testCases := []struct {
-		version1 string
-		version2 string
-		expected int
-	}{
-		{"0.1.0", "0.1.0", 0},
-		{"2.17", "2.17", 0},
-		{"2.17", "2.17.0", 0},
-		{"2.17.1", "2.17", 1},
-		{"2.17", "2.17.1", -1},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.version1+"_"+testCase.version2, func(t *testing.T) {
-			result := SemverCompare(testCase.version1, testCase.version2)
-			if result != testCase.expected {
-				t.Errorf("expected %d, got %d", testCase.expected, result)
-			}
-		})
-	}
-}

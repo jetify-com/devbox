@@ -144,21 +144,6 @@ func System() (string, error) {
 	return cachedSystem, nil
 }
 
-func Version() (string, error) {
-	cmd := command("--version")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	// example output: nix (Nix) 2.13.3
-
-	if !strings.HasPrefix(string(out), "nix (Nix)") {
-		return "", errors.New("failed to parse nix version")
-	}
-
-	return strings.TrimSpace(strings.TrimPrefix(string(out), "nix (Nix)")), nil
-}
-
 // Warning: be careful using the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {

@@ -200,7 +200,7 @@ func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 
 func printSuccessMessage(w io.Writer, toolName, oldVersion, newVersion string) {
 	var msg string
-	if SemverCompare(oldVersion, newVersion) == 0 {
+	if semverCompare(oldVersion, newVersion) == 0 {
 		msg = fmt.Sprintf("already at %s version %s", toolName, newVersion)
 	} else {
 		msg = fmt.Sprintf("updated to %s version %s", toolName, newVersion)
@@ -241,7 +241,7 @@ func isNewLauncherAvailable() bool {
 	if launcherVersion == "" {
 		return false
 	}
-	return SemverCompare(launcherVersion, expectedLauncherVersion) < 0
+	return semverCompare(launcherVersion, expectedLauncherVersion) < 0
 }
 
 // isNewDevboxAvailable returns true if a new devbox CLI binary version is available.
@@ -250,7 +250,7 @@ func isNewDevboxAvailable() bool {
 	if latest == "" {
 		return false
 	}
-	return SemverCompare(currentDevboxVersion, latest) < 0
+	return semverCompare(currentDevboxVersion, latest) < 0
 }
 
 // currentLauncherAvailable returns launcher's version if it is
@@ -281,7 +281,7 @@ func removeCurrentVersionFile() error {
 	return nil
 }
 
-func SemverCompare(ver1, ver2 string) int {
+func semverCompare(ver1, ver2 string) int {
 	if !strings.HasPrefix(ver1, "v") {
 		ver1 = "v" + ver1
 	}
