@@ -100,10 +100,9 @@ func (d *Devbox) updateDevboxPackage(
 func (d *Devbox) mergeResolvedPackageToLockfile(
 	ctx context.Context,
 	pkg *devpkg.Package,
-	resolved *lock.Package, // TODO: rename
+	resolved *lock.Package,
 	lockfile *lock.File,
 ) error {
-	fmt.Println("merging")
 	existing := lockfile.Packages[pkg.Raw]
 	if existing == nil {
 		ux.Finfo(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
@@ -111,7 +110,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		return nil
 	}
 
-	if existing.Version != resolved.Version { // TODO: this is often empty though
+	if existing.Version != resolved.Version {
 		ux.Finfo(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
 		if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
 			// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
