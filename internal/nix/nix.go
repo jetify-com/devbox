@@ -144,6 +144,24 @@ func System() (string, error) {
 	return cachedSystem, nil
 }
 
+// versionRegex parses the output of `nix --version` to capture the semver version string
+// example output: nix (Nix) 2.13.3
+var versionRegex = regexp.MustCompile(`nix\s\(Nix\)\s([0-9]+.[0-9]+.[0-9]+)`)
+
+func Version() (string, error) {
+	cmd := command("--version")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	matches := versionRegex.FindStringSubmatch(string(out))
+	if matches == nil || len(matches) < 2 {
+		return "", errors.New("failed to parse nix version")
+	}
+	return matches[1], nil
+}
+
 // Warning: be careful using the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {
