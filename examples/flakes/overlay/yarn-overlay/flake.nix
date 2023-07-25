@@ -3,7 +3,7 @@
     "This flake outputs a modified version of Yarn that uses NodeJS 16";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-21.11";
+    nixpkgs.url = "nixpkgs/fc3de6da83863f8f36fdcac1c199c6066a6a0378";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -17,7 +17,7 @@
         yarn = prev.yarn.override { nodejs = final.pkgs.nodejs-16_x; };
       });
 
-      # 
+      #
       pkgs =
         import nixpkgs {
           inherit system;
@@ -25,14 +25,11 @@
           overlays = [ overlay ];
         };
 
-    in {
+    in rec {
       # For our outputs, we'll return the modified Yarn package from our overridden nixpkgs.
       packages = {
         yarn = pkgs.yarn;
       };
-
-      # [Optional] Set yarn as the default package output for this flake
-      defaultPackage = self.packages.yarn;
     }
   );
 }

@@ -1,7 +1,8 @@
 {
   "packages": [
-    "fnm",
-    "path:yarn-overlay#yarn"
+    "path:yarn-overlay#yarn",
+    "fnm@latest",
+    "nodejs@16.8"
   ],
   "shell": {
     "init_hook": [
