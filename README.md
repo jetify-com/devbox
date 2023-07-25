@@ -14,7 +14,7 @@
 
 [Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells for development. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
-In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`). With Devbox, you can install over [400,000 package versions](https://nixhub.io) from the Nix Package Registry
+In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`). With Devbox, you can install over [400,000 package versions](https://www.nixhub.io) from the Nix Package Registry
 
 Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`. 
 
@@ -87,7 +87,7 @@ In this quickstart we’ll create a development shell with specific tools instal
    devbox add python@3.10
    ```
 
-   Search for more packages on [Nixhub.io](https://nixhub.io)
+   Search for more packages on [Nixhub.io](https://www.nixhub.io)
 
 4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
