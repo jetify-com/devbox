@@ -1,5 +1,5 @@
 ---
-title: Running Background Services
+title: Running Services
 ---
 
 When working on an application, you often want some services or dependencies running in the background for testing. Take a web app as an example. While working on your application, you will want to test it against a running development server and database. Previously developers would manage these services via tools like Docker Compose or orchestrating them manually.
