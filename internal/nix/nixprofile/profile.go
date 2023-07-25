@@ -135,7 +135,7 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	}
 	index, err := strconv.Atoi(scanner.Text())
 	if err != nil {
-		return nil, redact.Errorf("error parsing \"nix profile list\" output: %w: %s", line)
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: %w: %s", err, line)
 	}
 
 	if !scanner.Scan() {
