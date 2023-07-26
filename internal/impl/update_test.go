@@ -10,7 +10,7 @@ import (
 )
 
 func TestUpdateNewPackageIsAdded(t *testing.T) {
-	d := devboxForTesting(t)
+	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
 	devPkg := &devpkg.Package{
@@ -23,7 +23,7 @@ func TestUpdateNewPackageIsAdded(t *testing.T) {
 		Packages: map[string]*lock.Package{}, // empty
 	}
 
-	err := d.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
+	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 
 	require.Contains(t, lockfile.Packages, raw)

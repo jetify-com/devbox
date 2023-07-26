@@ -76,21 +76,21 @@ func TestComputeNixEnv(t *testing.T) {
 }
 
 func TestComputeNixPathIsIdempotent(t *testing.T) {
-	d := devboxForTesting(t)
-	d.nix = &testNix{"/tmp/my/path"}
+	devbox := devboxForTesting(t)
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := d.computeNixEnv(ctx, false /*use cache*/)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
 
 	t.Setenv("PATH", path)
 	t.Setenv(
-		"DEVBOX_OG_PATH_"+d.projectDirHash(),
-		env["DEVBOX_OG_PATH_"+d.projectDirHash()],
+		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
+		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
 	)
 
-	env, err = d.computeNixEnv(ctx, false /*use cache*/)
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 
@@ -98,10 +98,10 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 }
 
 func TestComputeNixPathWhenRemoving(t *testing.T) {
-	d := devboxForTesting(t)
-	d.nix = &testNix{"/tmp/my/path"}
+	devbox := devboxForTesting(t)
+	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := d.computeNixEnv(ctx, false /*use cache*/)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -109,12 +109,12 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 
 	t.Setenv("PATH", path)
 	t.Setenv(
-		"DEVBOX_OG_PATH_"+d.projectDirHash(),
-		env["DEVBOX_OG_PATH_"+d.projectDirHash()],
+		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
+		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
 	)
 
-	d.nix.(*testNix).path = ""
-	env, err = d.computeNixEnv(ctx, false /*use cache*/)
+	devbox.nix.(*testNix).path = ""
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
