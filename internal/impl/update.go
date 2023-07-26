@@ -89,25 +89,35 @@ func (d *Devbox) updateDevboxPackage(
 	ctx context.Context,
 	pkg *devpkg.Package,
 ) error {
-	existing := d.lockfile.Packages[pkg.Raw]
-	newEntry, err := d.lockfile.FetchResolvedPackage(pkg.Raw)
+	resolved, err := d.lockfile.FetchResolvedPackage(pkg.Raw)
 	if err != nil {
 		return err
 	}
+
+	return d.mergeResolvedPackageToLockfile(ctx, pkg, resolved, d.lockfile)
+}
+
+func (d *Devbox) mergeResolvedPackageToLockfile(
+	ctx context.Context,
+	pkg *devpkg.Package,
+	resolved *lock.Package,
+	lockfile *lock.File,
+) error {
+	existing := lockfile.Packages[pkg.Raw]
 	if existing == nil {
-		ux.Finfo(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, newEntry.Resolved)
-		d.lockfile.Packages[pkg.Raw] = newEntry
+		ux.Finfo(d.writer, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
+		lockfile.Packages[pkg.Raw] = resolved
 		return nil
 	}
 
-	if existing.Version != newEntry.Version {
-		ux.Finfo(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, newEntry.Version)
+	if existing.Version != resolved.Version {
+		ux.Finfo(d.writer, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
 		if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
 			// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
 			// sync the profile so we don't need to do this manually.
 			ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 		}
-		d.lockfile.Packages[pkg.Raw] = newEntry
+		lockfile.Packages[pkg.Raw] = resolved
 		return nil
 	}
 
@@ -118,15 +128,15 @@ func (d *Devbox) updateDevboxPackage(
 			return err
 		}
 
-		// If the newEntry has a system info for the user's system, then add/overwrite it. We don't overwrite
+		// If the resolved has a system info for the user's system, then add/overwrite it. We don't overwrite
 		// other system infos because we don't want to clobber system-dependent CAStorePaths.
-		if newSysInfo, ok := newEntry.Systems[userSystem]; ok {
+		if newSysInfo, ok := resolved.Systems[userSystem]; ok {
 			if !newSysInfo.Equals(existing.Systems[userSystem]) {
 				// We only guard this so that the ux messaging is accurate. We could overwrite every time.
-				if d.lockfile.Packages[pkg.Raw].Systems == nil {
-					d.lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+				if lockfile.Packages[pkg.Raw].Systems == nil {
+					lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 				}
-				d.lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
+				lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
 				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
 				return nil
 			}
