@@ -139,3 +139,31 @@ jobs:
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
           devbox run echo "Installing packages..."
+      - name: Test removing package
+        run: devbox rm go
+  
+  test-with-old-nix-version:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        version: [2.15.1]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: ./go.mod
+      - name: Build devbox
+        run: go install ./cmd/devbox
+      - name: Install nix
+        run: sh <(curl -L https://releases.nixos.org/nix/nix-${{ matrix.version }}/install) --daemon
+      - name: Install devbox packages
+        run: |
+          # Setup github authentication to ensure Github's rate limits are not hit.
+          # If this works, we can consider refactoring this into a reusable github action helper.
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+
+          devbox run echo "Installing packages..."
+      - name: Test removing package
+        run: devbox rm go
