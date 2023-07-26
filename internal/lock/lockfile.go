@@ -45,32 +45,32 @@ func GetFile(project devboxProject) (*File, error) {
 	return lockFile, nil
 }
 
-func (l *File) Add(pkgs ...string) error {
+func (f *File) Add(pkgs ...string) error {
 	for _, p := range pkgs {
-		if _, err := l.Resolve(p); err != nil {
+		if _, err := f.Resolve(p); err != nil {
 			return err
 		}
 	}
-	return l.Save()
+	return f.Save()
 }
 
-func (l *File) Remove(pkgs ...string) error {
+func (f *File) Remove(pkgs ...string) error {
 	for _, p := range pkgs {
-		delete(l.Packages, p)
+		delete(f.Packages, p)
 	}
-	return l.Save()
+	return f.Save()
 }
 
 // Resolve updates the in memory copy for performance but does not write to disk
 // This avoids writing values that may need to be removed in case of error.
-func (l *File) Resolve(pkg string) (*Package, error) {
-	entry, hasEntry := l.Packages[pkg]
+func (f *File) Resolve(pkg string) (*Package, error) {
+	entry, hasEntry := f.Packages[pkg]
 
 	if !hasEntry || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
 		if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
-			locked, err = l.FetchResolvedPackage(pkg)
+			locked, err = f.FetchResolvedPackage(pkg)
 			if err != nil {
 				return nil, err
 			}
@@ -78,43 +78,46 @@ func (l *File) Resolve(pkg string) (*Package, error) {
 			// These are legacy packages without a version. Resolve to nixpkgs with
 			// whatever hash is in the devbox.json
 			locked = &Package{
-				Resolved: l.LegacyNixpkgsPath(pkg),
+				Resolved: f.LegacyNixpkgsPath(pkg),
 				Source:   nixpkgSource,
 			}
 		}
-		l.Packages[pkg] = locked
+		f.Packages[pkg] = locked
 	}
 
-	return l.Packages[pkg], nil
+	return f.Packages[pkg], nil
 }
 
-func (l *File) ForceResolve(pkg string) (*Package, error) {
-	delete(l.Packages, pkg)
-	return l.Resolve(pkg)
+func (f *File) ForceResolve(pkg string) (*Package, error) {
+	delete(f.Packages, pkg)
+	return f.Resolve(pkg)
 }
 
-func (l *File) Save() error {
-	return cuecfg.WriteFile(lockFilePath(l.devboxProject), l)
+func (f *File) Save() error {
+	if err := cuecfg.WriteFile(lockFilePath(f.devboxProject), f); err != nil {
+		return err
+	}
+	return updateLocal(f.devboxProject)
 }
 
-func (l *File) LegacyNixpkgsPath(pkg string) string {
+func (f *File) LegacyNixpkgsPath(pkg string) string {
 	return fmt.Sprintf(
 		"github:NixOS/nixpkgs/%s#%s",
-		l.NixPkgsCommitHash(),
+		f.NixPkgsCommitHash(),
 		pkg,
 	)
 }
 
-func (l *File) Get(pkg string) *Package {
-	entry, hasEntry := l.Packages[pkg]
+func (f *File) Get(pkg string) *Package {
+	entry, hasEntry := f.Packages[pkg]
 	if !hasEntry || entry.Resolved == "" {
 		return nil
 	}
 	return entry
 }
 
-func (l *File) HasAllowInsecurePackages() bool {
-	for _, pkg := range l.Packages {
+func (f *File) HasAllowInsecurePackages() bool {
+	for _, pkg := range f.Packages {
 		if pkg.AllowInsecure {
 			return true
 		}
@@ -137,8 +140,36 @@ func IsLegacyPackage(pkg string) bool {
 
 // Tidy ensures that the lockfile has the set of packages corresponding to the devbox.json config.
 // It gets rid of older packages that are no longer needed.
-func (l *File) Tidy() {
-	l.Packages = lo.PickByKeys(l.Packages, l.devboxProject.Packages())
+func (f *File) Tidy() {
+	f.Packages = lo.PickByKeys(f.Packages, f.devboxProject.Packages())
+}
+
+// IsUpToDateAndInstalled returns true if the lockfile is up to date and the
+// local hashes match, which generally indicates all packages are correctly
+// installed and print-dev-env has been computed and cached.
+func (f *File) IsUpToDateAndInstalled() (bool, error) {
+	if dirty, err := f.isDirty(); err != nil {
+		return false, err
+	} else if dirty {
+		return false, nil
+	}
+	return isLocalUpToDate(f.devboxProject)
+}
+
+func (f *File) isDirty() (bool, error) {
+	currentHash, err := cuecfg.Hash(f)
+	if err != nil {
+		return false, err
+	}
+	fileSystemLockFile, err := GetFile(f.devboxProject)
+	if err != nil {
+		return false, err
+	}
+	filesystemHash, err := cuecfg.Hash(fileSystemLockFile)
+	if err != nil {
+		return false, err
+	}
+	return currentHash != filesystemHash, nil
 }
 
 func lockFilePath(project devboxProject) string {

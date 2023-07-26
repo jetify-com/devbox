@@ -54,10 +54,6 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
-	if err := d.lockfile.Save(); err != nil {
-		return err
-	}
-
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}

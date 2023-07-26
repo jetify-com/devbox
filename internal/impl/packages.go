@@ -22,7 +22,6 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
@@ -188,17 +187,8 @@ const (
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 
-	localLock, err := lock.Local(d)
-	if err != nil {
+	if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
 		return err
-	}
-
-	upToDate, err := localLock.IsUpToDate()
-	if err != nil {
-		return err
-	}
-	if upToDate {
-		return nil
 	}
 
 	if mode == ensure {
@@ -218,18 +208,14 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Force print-dev-env cache to be recomputed.
-	if _, err = d.computeNixEnv(ctx, false /*use cache*/); err != nil {
+	if _, err := d.computeNixEnv(ctx, false /*use cache*/); err != nil {
 		return err
 	}
 
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
-	if err = d.lockfile.Save(); err != nil {
-		return err
-	}
-
-	return localLock.Update()
+	return d.lockfile.Save()
 }
 
 func (d *Devbox) profilePath() (string, error) {

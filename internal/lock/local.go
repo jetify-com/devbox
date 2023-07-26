@@ -34,16 +34,24 @@ func (l *localLockFile) equals(other *localLockFile) bool {
 		l.DevboxVersion == other.DevboxVersion
 }
 
-func (l *localLockFile) IsUpToDate() (bool, error) {
-	newLock, err := forProject(l.project)
+func isLocalUpToDate(project devboxProject) (bool, error) {
+	filesystemLock, err := readLocal(project)
+	if err != nil {
+		return false, err
+	}
+	newLock, err := forProject(project)
 	if err != nil {
 		return false, err
 	}
 
-	return l.equals(newLock), nil
+	return filesystemLock.equals(newLock), nil
 }
 
-func (l *localLockFile) Update() error {
+func updateLocal(project devboxProject) error {
+	l, err := readLocal(project)
+	if err != nil {
+		return err
+	}
 	newLock, err := forProject(l.project)
 	if err != nil {
 		return err
@@ -53,7 +61,7 @@ func (l *localLockFile) Update() error {
 	return cuecfg.WriteFile(localLockFilePath(l.project), l)
 }
 
-func Local(project devboxProject) (*localLockFile, error) {
+func readLocal(project devboxProject) (*localLockFile, error) {
 	lockFile := &localLockFile{project: project}
 	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
