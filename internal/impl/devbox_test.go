@@ -67,15 +67,7 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 }
 
 func TestComputeNixEnv(t *testing.T) {
-	path := t.TempDir()
-	_, err := devconfig.Init(path, os.Stdout)
-	require.NoError(t, err, "InitConfig should not fail")
-	d, err := Open(&devopt.Opts{
-		Dir:    path,
-		Writer: os.Stdout,
-		Pure:   false,
-	})
-	require.NoError(t, err, "Open should not fail")
+	d := devboxForTesting(t)
 	d.nix = &testNix{}
 	ctx := context.Background()
 	env, err := d.computeNixEnv(ctx, false /*use cache*/)
@@ -84,15 +76,7 @@ func TestComputeNixEnv(t *testing.T) {
 }
 
 func TestComputeNixPathIsIdempotent(t *testing.T) {
-	dir := t.TempDir()
-	_, err := devconfig.Init(dir, os.Stdout)
-	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(&devopt.Opts{
-		Dir:    dir,
-		Writer: os.Stdout,
-		Pure:   false,
-	})
-	require.NoError(t, err, "Open should not fail")
+	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
@@ -114,15 +98,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 }
 
 func TestComputeNixPathWhenRemoving(t *testing.T) {
-	dir := t.TempDir()
-	_, err := devconfig.Init(dir, os.Stdout)
-	require.NoError(t, err, "InitConfig should not fail")
-	devbox, err := Open(&devopt.Opts{
-		Dir:    dir,
-		Writer: os.Stdout,
-		Pure:   false,
-	})
-	require.NoError(t, err, "Open should not fail")
+	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
 	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
@@ -144,4 +120,18 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
 
 	assert.NotEqual(t, path, path2, "path should not be the same")
+}
+
+func devboxForTesting(t *testing.T) *Devbox {
+	path := t.TempDir()
+	_, err := devconfig.Init(path, os.Stdout)
+	require.NoError(t, err, "InitConfig should not fail")
+	d, err := Open(&devopt.Opts{
+		Dir:    path,
+		Writer: os.Stdout,
+		Pure:   false,
+	})
+	require.NoError(t, err, "Open should not fail")
+
+	return d
 }
