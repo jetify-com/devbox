@@ -16,7 +16,10 @@ func TestContentAddressedPath(t *testing.T) {
 		{
 			"/nix/store/r2jd6ygnmirm2g803mksqqjm4y39yi6i-git-2.33.1",
 			[]string{
+				// Hash from before Nix 2.17.0.
 				"/nix/store/ldbhlwhh39wha58rm61bkiiwm6j7211j-git-2.33.1",
+
+				// Hash after Nix 2.17.0.
 				"/nix/store/d49wyvsz5nkqa23qp4p0ikr04mw9n4h9-git-2.33.1",
 			},
 		},
