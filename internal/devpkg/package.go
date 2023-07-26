@@ -530,19 +530,3 @@ func (p *Package) ContentAddressedPath() (string, error) {
 func (p *Package) AllowInsecure() bool {
 	return p.lockfile.Get(p.Raw).IsAllowInsecure()
 }
-
-// StoreName returns the last section of the store path. Example:
-// /nix/store/abc123-foo-1.0.0 -> foo-1.0.0
-// Warning, this is probably slowish. If you need to call this multiple times,
-// consider caching the result.
-func (p *Package) StoreName() (string, error) {
-	u, err := p.urlForInstall()
-	if err != nil {
-		return "", err
-	}
-	name, err := nix.EvalPackageName(u)
-	if err != nil {
-		return "", err
-	}
-	return name, nil
-}
