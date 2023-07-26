@@ -128,18 +128,33 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			return err
 		}
 
-		// If the resolved has a system info for the user's system, then add/overwrite it. We don't overwrite
-		// other system infos because we don't want to clobber system-dependent CAStorePaths.
-		if newSysInfo, ok := resolved.Systems[userSystem]; ok {
-			if !newSysInfo.Equals(existing.Systems[userSystem]) {
-				// We only guard this so that the ux messaging is accurate. We could overwrite every time.
-				if lockfile.Packages[pkg.Raw].Systems == nil {
-					lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+		if lockfile.Packages[pkg.Raw].Systems == nil {
+			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+		}
+
+		updated := false
+		for sysName, newSysInfo := range resolved.Systems {
+			if sysName == userSystem {
+				// The resolved pkg has a system info for the user's system, so add/overwrite it.
+				if !newSysInfo.Equals(existing.Systems[userSystem]) {
+					// We only guard this so that the ux messaging is accurate. We could overwrite every time.
+					lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
+					updated = true
 				}
-				lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
-				ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
-				return nil
+			} else {
+				// Add other system infos if they don't exist, or if we have a different StorePath. This may
+				// overwrite an existing CAPath, but to ensure correctness we should ensure that all StorePaths
+				// come from the same package version.
+				existingSysInfo, exists := existing.Systems[sysName]
+				if !exists || existingSysInfo.StorePath != newSysInfo.StorePath {
+					lockfile.Packages[pkg.Raw].Systems[sysName] = newSysInfo
+					updated = true
+				}
 			}
+		}
+		if updated {
+			ux.Finfo(d.writer, "Updated system information for %s\n", pkg)
+			return nil
 		}
 	}
 

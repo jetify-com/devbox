@@ -6,6 +6,7 @@ package featureflag
 import (
 	"os"
 	"strconv"
+	"testing"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
@@ -52,6 +53,10 @@ func (f *feature) Enabled() bool {
 		return on
 	}
 	return f.enabled
+}
+
+func (f *feature) EnableForTest(t *testing.T) {
+	t.Setenv(envir.DevboxFeaturePrefix+f.name, "1")
 }
 
 // All returns a map of all known features flags and whether they're enabled.
