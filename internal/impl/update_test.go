@@ -5,8 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/nix"
 )
 
 func TestUpdateNewPackageIsAdded(t *testing.T) {
@@ -30,10 +32,11 @@ func TestUpdateNewPackageIsAdded(t *testing.T) {
 }
 
 func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
+	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
-	sys := "system1"
+	sys := currentSystem(t)
 	devPkg := &devpkg.Package{
 		Raw: raw,
 	}
@@ -50,7 +53,6 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 		Packages: map[string]*lock.Package{
 			raw: {
 				Resolved: "resolved-flake-reference",
-				Version:  "1",
 				// No system infos.
 			},
 		},
@@ -62,13 +64,15 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 	require.Contains(t, lockfile.Packages, raw)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys)
 	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys].StorePath)
+	require.Equal(t, "ca_path1", lockfile.Packages[raw].Systems[sys].CAStorePath)
 }
 
 func TestUpdateNewSysInfoIsAdded(t *testing.T) {
+	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
-	sys1 := "system1" // current system
+	sys1 := currentSystem(t)
 	sys2 := "system2"
 	devPkg := &devpkg.Package{
 		Raw: raw,
@@ -89,7 +93,6 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 		Packages: map[string]*lock.Package{
 			raw: {
 				Resolved: "resolved-flake-reference",
-				Version:  "1",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
 						StorePath:   "store_path1",
@@ -111,10 +114,11 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 }
 
 func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
+	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
-	sys1 := "system1" // current system
+	sys1 := currentSystem(t)
 	sys2 := "system2"
 	devPkg := &devpkg.Package{
 		Raw: raw,
@@ -135,7 +139,6 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 		Packages: map[string]*lock.Package{
 			raw: {
 				Resolved: "resolved-flake-reference",
-				Version:  "1",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
 						StorePath:   "store_path1",
@@ -162,10 +165,11 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 }
 
 func TestUpdateCAPathIsNotReplaced(t *testing.T) {
+	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
-	sys1 := "system1" // current system
+	sys1 := currentSystem(t)
 	sys2 := "system2"
 	devPkg := &devpkg.Package{
 		Raw: raw,
@@ -187,7 +191,6 @@ func TestUpdateCAPathIsNotReplaced(t *testing.T) {
 		Packages: map[string]*lock.Package{
 			raw: {
 				Resolved: "resolved-flake-reference",
-				Version:  "1",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
 						StorePath:   "store_path1",
@@ -210,4 +213,10 @@ func TestUpdateCAPathIsNotReplaced(t *testing.T) {
 	require.Contains(t, lockfile.Packages[raw].Systems, sys2)
 	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].StorePath)
 	require.Equal(t, "ca_path2", lockfile.Packages[raw].Systems[sys2].CAStorePath)
+}
+
+func currentSystem(t *testing.T) string {
+	sys, err := nix.System() // NOTE: we could mock this too, if it helps.
+	require.NoError(t, err)
+	return sys
 }
