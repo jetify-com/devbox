@@ -148,8 +148,10 @@ func (f *File) Tidy() {
 // local hashes match, which generally indicates all packages are correctly
 // installed and print-dev-env has been computed and cached.
 func (f *File) IsUpToDateAndInstalled() (bool, error) {
-	if dirty, err := f.isDirty(); err != nil || dirty {
-		return !dirty, err
+	if dirty, err := f.isDirty(); err != nil {
+		return false, err
+	} else if dirty {
+		return false, nil
 	}
 	return isLocalUpToDate(f.devboxProject)
 }

@@ -10,12 +10,7 @@
     "golangci-lint@1.52.2": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#golangci-lint",
-      "version": "1.52.2",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/rp380cz8gxv8pw5zq985yblym19vr9g8-golangci-lint-1.52.2",
-          "ca_store_path": "/nix/store/2lm73605ppky81a387rwxi1clzqd5133-golangci-lint-1.52.2"
-        }
+      "version": "1.52.2"
       }
     }
   }
