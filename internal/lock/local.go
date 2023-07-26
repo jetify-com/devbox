@@ -35,7 +35,7 @@ func (l *localLockFile) equals(other *localLockFile) bool {
 }
 
 func isLocalUpToDate(project devboxProject) (bool, error) {
-	filesystemLocal, err := readLocal(project)
+	filesystemLock, err := readLocal(project)
 	if err != nil {
 		return false, err
 	}
@@ -44,7 +44,7 @@ func isLocalUpToDate(project devboxProject) (bool, error) {
 		return false, err
 	}
 
-	return filesystemLocal.equals(newLock), nil
+	return filesystemLock.equals(newLock), nil
 }
 
 func updateLocal(project devboxProject) error {
