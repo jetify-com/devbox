@@ -893,11 +893,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	usePrintDevEnvCache := false
 
 	// If lockfile is up-to-date, we can use the print-dev-env cache.
-	lockFile, err := lock.Local(d)
-	if err != nil {
-		return nil, err
-	}
-	upToDate, err := lockFile.IsUpToDate()
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
 	if err != nil {
 		return nil, err
 	}
