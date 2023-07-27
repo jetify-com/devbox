@@ -4,8 +4,11 @@
 package fileutil
 
 import (
+	"io/fs"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // TODO: publish as it's own shared package that other binaries can use.
@@ -54,4 +57,16 @@ func FileContains(path string, substring string) (bool, error) {
 		return false, err
 	}
 	return strings.Contains(string(data), substring), nil
+}
+
+func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
+	if err := os.MkdirAll(path, perm); err != nil && !errors.Is(err, fs.ErrExist) {
+		return errors.WithStack(err)
+	}
+	if chmod {
+		if err := os.Chmod(path, perm); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }

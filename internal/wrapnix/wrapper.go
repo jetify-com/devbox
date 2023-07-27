@@ -14,8 +14,10 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 type devboxer interface {
@@ -49,9 +51,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	if err != nil {
 		return err
 	}
-	// get absolute path of devbox binary that the launcher script invokes
-	// to avoid causing an infinite loop when coreutils gets installed
-	executablePath, err := os.Executable()
+	devboxSymlinkPath, err := CreateDevboxSymlink()
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			BashPath:         bashPath,
 			Command:          bin,
 			ShellEnvHash:     shellEnvHash,
-			DevboxBinaryPath: executablePath,
+			DevboxSymlinkDir: filepath.Dir(devboxSymlinkPath),
 			destPath:         filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
@@ -72,12 +72,53 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
 
+// CreateDevboxSymlink creates a symlink to the devbox binary
+//
+// Needed because:
+//
+//  1. The bin-wrappers cannot invoke devbox via the Launcher. The Launcher script
+//     invokes some coreutils commands that may themselves be installed by devbox
+//     and so be bin-wrappers. This causes an infinite loop.
+//
+//     So, the bin-wrappers need to directly invoke the devbox binary.
+//
+//  2. The devbox binary's path will change when devbox is updated. Hence
+//     using absolute paths to the devbox binaries in the bin-wrappers
+//     will result in bin-wrappers invoking older devbox binaries.
+//
+//     So, the bin-wrappers need to use a symlink to the latest devbox binary. This
+//     symlink is updated when devbox is updated.
+func CreateDevboxSymlink() (string, error) {
+	curDir := xdg.CacheSubpath(filepath.Join("devbox", "bin", "current"))
+	if err := fileutil.EnsureDirExists(curDir, 0755, false /*chmod*/); err != nil {
+		return "", err
+	}
+	currentDevboxSymlinkPath := filepath.Join(curDir, "devbox")
+
+	devboxBinaryPath, err := os.Executable()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	// We will always re-create this symlink to ensure correctness.
+	if err := os.Remove(currentDevboxSymlinkPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", errors.WithStack(err)
+	}
+
+	// Don't return error if error is os.ErrExist to protect against race conditions.
+	if err := os.Symlink(devboxBinaryPath, currentDevboxSymlinkPath); err != nil && !errors.Is(err, os.ErrExist) {
+		return "", errors.WithStack(err)
+	}
+
+	return currentDevboxSymlinkPath, nil
+}
+
 type createWrapperArgs struct {
 	devboxer
 	BashPath         string
 	Command          string
 	ShellEnvHash     string
-	DevboxBinaryPath string
+	DevboxSymlinkDir string
 	destPath         string
 }
 

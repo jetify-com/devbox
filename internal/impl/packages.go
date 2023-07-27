@@ -215,6 +215,10 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+		return err
+	}
+
 	return d.lockfile.Save()
 }
 

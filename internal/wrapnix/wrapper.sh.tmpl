@@ -1,5 +1,7 @@
 #!{{ .BashPath }}
 
+export PATH="{{ .DevboxSymlinkDir }}:$PATH"
+
 {{/*
 # If env variable has never been set by devbox we set it, but also
 # default to env value set by user. This means plugin env variables behave a bit
@@ -19,7 +21,7 @@ DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 
 if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]] && [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
 export {{ .ShellEnvHashKey }}_GUARD=true
-eval "$(DO_NOT_TRACK=1 {{ .DevboxBinaryPath }} shellenv -c {{ .ProjectDir }})"
+eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
 fi
 
 {{/*
@@ -29,6 +31,6 @@ should be in PATH.
 
 DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
-eval "$(DO_NOT_TRACK=1 {{ .DevboxBinaryPath }} shellenv only-path-without-wrappers)"
+eval "$(DO_NOT_TRACK=1 devbox shellenv only-path-without-wrappers)"
 
 exec {{ .Command }} "$@"
