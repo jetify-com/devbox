@@ -8,10 +8,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -52,6 +55,12 @@ type Package struct {
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
+
+// isNarInfoInCache checks if the .narinfo for this package is in the `BinaryCache`.
+// The key is the `Package.Raw` string.
+// This cannot be a field on the Package struct, because that struct
+// is constructed multiple times in a request (TODO: we could fix that).
+var isNarInfoInCache = map[string]bool{}
 
 // PackageFromStrings constructs Package from the list of package names provided.
 // These names correspond to devbox packages from the devbox.json config.
@@ -481,7 +490,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	}
 
 	// Check if the user's system's info is present in the lockfile
-	_, ok := entry.Systems[nix.System()]
+	sysInfo, ok := entry.Systems[nix.System()]
 	if !ok {
 		return false, nil
 	}
@@ -492,7 +501,33 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	}
 
 	// enable for nix >= 2.17
-	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
+	if vercheck.SemverCompare(version, "2.17.0") < 0 {
+		return false, nil
+	}
+
+	// Check if the narinfo is present in the binary cache
+	if exists, ok := isNarInfoInCache[p.Raw]; ok {
+		fmt.Printf("narInfo cache hit: %v\n", exists)
+		return exists, nil
+	}
+
+	httpClient := &http.Client{
+		Timeout: time.Second * 5,
+	}
+	pathParts := newStorePathParts(sysInfo.StorePath)
+	reqURL := BinaryCache + "/" + pathParts.hash + ".narinfo"
+	res, err := httpClient.Head(reqURL)
+	if err != nil {
+		if os.IsTimeout(err) {
+			isNarInfoInCache[p.Raw] = false // set this to avoid re-tries
+			return false, nil
+		}
+		return false, err
+	}
+	fmt.Printf("res status code %d\n", res.StatusCode)
+
+	isNarInfoInCache[p.Raw] = res.StatusCode == 200
+	return isNarInfoInCache[p.Raw], nil
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store
@@ -541,4 +576,31 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	}
 	_, err := p.lockfile.Resolve(p.Raw)
 	return err
+}
+
+// storePath are the constituent parts of
+// /nix/store/<hash>-<name>-<version>
+//
+// This is a helper struct for analyzing the string representation
+type storePathParts struct {
+	hash    string
+	name    string
+	version string
+}
+
+func newStorePathParts(path string) *storePathParts {
+	path = strings.TrimPrefix(path, "/nix/store/")
+	// path is now <hash>-<name>-<version
+	parts := strings.Split(path, "-")
+
+	// writing this a bit defensively to avoid edge-cases that may break
+	var hash, name, version string
+	hash = parts[0]
+	if len(parts) > 1 {
+		name = parts[1]
+	}
+	if len(parts) > 2 {
+		version = parts[2]
+	}
+	return &storePathParts{hash, name, version}
 }
