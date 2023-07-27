@@ -128,7 +128,7 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 			},
 		},
 		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-		RemoteUser: "devbox",
+		RemoteUser: "root",
 	}
 
 	// match only python3 or python3xx as package names
