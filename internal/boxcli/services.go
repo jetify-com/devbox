@@ -45,8 +45,9 @@ func servicesCmd() *cobra.Command {
 	serviceUpFlags := serviceUpFlags{}
 	serviceStopFlags := serviceStopFlags{}
 	servicesCommand := &cobra.Command{
-		Use:   "services",
-		Short: "Interact with devbox services",
+		Use:               "services",
+		Short:             "Interact with devbox services",
+		PersistentPreRunE: ensureNixInstalled,
 	}
 
 	lsCommand := &cobra.Command{
