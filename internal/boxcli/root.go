@@ -99,7 +99,7 @@ func Execute(ctx context.Context, args []string) int {
 	exe.AddMiddleware(traceMiddleware)
 	exe.AddMiddleware(midcobra.Telemetry())
 	exe.AddMiddleware(debugMiddleware)
-	return exe.Execute(ctx, args)
+	return exe.Execute(ctx, wrapArgsForRun(args))
 }
 
 func Main() {

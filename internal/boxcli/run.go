@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -112,4 +113,26 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 	scriptArgs := args[1:]
 
 	return flags.config.path, script, scriptArgs, nil
+}
+
+func wrapArgsForRun(args []string) []string {
+	// if the first argument is not "run", we don't need to do anything. If there
+	// are 2 or fewer arguments, we also don't need to do anything because there
+	// are no flags after a non-run non-flag arg.
+	if len(args) <= 2 || args[0] != "run" {
+		return args
+	}
+	// typical args can be of the form [run python --version]
+	// after "run", we want to find the first non-flag argument and prepend "--"
+	// unless the first non-flag argument is "--" itself
+	for _, arg := range args[1:] {
+		if arg == "--" {
+			return args
+		}
+		if !strings.HasPrefix(arg, "-") {
+			return append([]string{"run", "--"}, args[1:]...)
+		}
+	}
+
+	return args
 }
