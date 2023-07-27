@@ -105,7 +105,7 @@ func CreateDevboxSymlink() (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	// Don't return error if error is os.ErrExist to protect against race conditions
+	// Don't return error if error is os.ErrExist to protect against race conditions.
 	if err := os.Symlink(devboxBinaryPath, currentDevboxSymlinkPath); err != nil && !errors.Is(err, os.ErrExist) {
 		return "", errors.WithStack(err)
 	}
