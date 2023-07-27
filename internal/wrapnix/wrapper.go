@@ -82,14 +82,14 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 //
 //     So, the bin-wrappers need to directly invoke the devbox binary.
 //
-//  2. The devbox binary's path will change when devbox is updated. This means
-//     that using absolute paths to the devbox binaries in the bin-wrappers
+//  2. The devbox binary's path will change when devbox is updated. Hence
+//     using absolute paths to the devbox binaries in the bin-wrappers
 //     will result in bin-wrappers invoking older devbox binaries.
 //
 //     So, the bin-wrappers need to use a symlink to the latest devbox binary. This
 //     symlink is updated when devbox is updated.
 func CreateDevboxSymlink() (string, error) {
-	curDir := xdg.CacheSubpath(filepath.Join("devbox", "current"))
+	curDir := xdg.CacheSubpath(filepath.Join("devbox", "bin", "current"))
 	if err := fileutil.EnsureDirExists(curDir, 0755, false /*chmod*/); err != nil {
 		return "", err
 	}
@@ -105,9 +105,11 @@ func CreateDevboxSymlink() (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	if err := os.Symlink(devboxBinaryPath, currentDevboxSymlinkPath); err != nil {
+	// Don't return error if error is os.ErrExist to protect against race conditions
+	if err := os.Symlink(devboxBinaryPath, currentDevboxSymlinkPath); err != nil && !errors.Is(err, os.ErrExist) {
 		return "", errors.WithStack(err)
 	}
+
 	return currentDevboxSymlinkPath, nil
 }
 

@@ -35,8 +35,11 @@ func versionCmd() *cobra.Command {
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value
 		"displays additional version information",
 	)
+	// Make this flag hidden because:
+	// This functionality doesn't strictly belong in this command, but we add it here
+	// since `devbox version update` calls `devbox version -v` to trigger an update.
 	command.Flags().BoolVarP(&flags.updateDevboxSymlink, "update-devbox-symlink", "u", false, // value
-		"update the devbox symlink to point to the current version",
+		"update the devbox symlink to point to the current binary",
 	)
 	_ = command.Flags().MarkHidden("update-devbox-symlink")
 
