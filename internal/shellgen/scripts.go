@@ -107,5 +107,5 @@ func ScriptPath(projectDir, scriptName string) string {
 }
 
 func ScriptBody(d devboxer, body string) string {
-	return fmt.Sprintf(". %s\n\n%s", ScriptPath(d.ProjectDir(), HooksFilename), body)
+	return fmt.Sprintf(". %s\n\n%s $@", ScriptPath(d.ProjectDir(), HooksFilename), body)
 }
