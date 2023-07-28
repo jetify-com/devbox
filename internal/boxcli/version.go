@@ -75,7 +75,7 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 		// Not doing for now, since users who have Devbox binary prior to this edit
 		// (before Devbox v0.5.9) will not invoke this flag in `devbox version update`.
 		// But we still want this to run for them.
-		if _, err := wrapnix.CreateDevboxSymlink(); err != nil {
+		if err := wrapnix.CreateDevboxSymlinkIfPossible(); err != nil {
 			return err
 		}
 	} else {
