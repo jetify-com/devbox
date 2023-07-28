@@ -1008,6 +1008,8 @@ func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
 // from the slice of [os.Environ] variables before sourcing them. These are
 // variables that are set automatically by a new shell.
 var ignoreCurrentEnvVar = map[string]bool{
+	envir.DevboxLatestVersion: true,
+
 	// Devbox may change the working directory of the shell, so using the
 	// original PWD and OLDPWD would be wrong.
 	"PWD":    true,
