@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -116,22 +117,52 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 }
 
 func wrapArgsForRun(args []string) []string {
-	// if the first argument is not "run", we don't need to do anything. If there
-	// are 2 or fewer arguments, we also don't need to do anything because there
-	// are no flags after a non-run non-flag arg.
-	if len(args) <= 2 || args[0] != "run" {
-		return args
-	}
-	// typical args can be of the form [run python --version]
-	// after "run", we want to find the first non-flag argument and prepend "--"
-	// unless the first non-flag argument is "--" itself
-	for _, arg := range args[1:] {
+	for _, arg := range args {
 		if arg == "--" {
 			return args
 		}
-		if !strings.HasPrefix(arg, "-") {
-			return append([]string{"run", "--"}, args[1:]...)
+	}
+
+	// if the first argument is not "run", we don't need to do anything. If there
+	// are 2 or fewer arguments, we also don't need to do anything because there
+	// are no flags after a non-run non-flag arg.
+	// IMPROVEMENT: technically users can pass a flag before the subcommand "run"
+	if len(args) <= 2 || args[0] != "run" {
+		return args
+	}
+
+	runFlags := runCmd().Flags()
+	// typical args can be of the form:
+	// run --flag1 val1 -f val2 --flag3=val3 --bool-flag python --version
+	// We handle each different type of flag
+	// (flag with equals, long-form, short-form, and defaulted flags)
+	// Note that defaulted does not mean initial value, it only means flags
+	// that don't require a value.
+	// For example, --bool-flag has NoOptDefVal set to "true".
+	i := 1
+	for i < len(args) {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-") {
+			if strings.Contains(arg, "=") {
+				i++
+				continue
+			}
+			var flag *pflag.Flag
+			if strings.HasPrefix(arg, "--") {
+				flag = runFlags.Lookup(strings.TrimLeft(arg, "-"))
+			} else {
+				flag = runFlags.ShorthandLookup(strings.TrimLeft(arg, "-"))
+			}
+			if flag != nil {
+				if flag.NoOptDefVal == "" {
+					i++
+				}
+				i++
+				continue
+			}
 		}
+
+		return append(args[:i+1], append([]string{"--"}, args[i+1:]...)...)
 	}
 
 	return args
