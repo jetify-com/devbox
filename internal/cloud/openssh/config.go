@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/fileutil"
 )
 
 // These must match what's in sshConfigTmpl. We should eventually make the hosts
@@ -211,17 +212,8 @@ func containsDevboxInclude(r io.Reader) bool {
 	return false
 }
 
-// move to a file utility
 func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
-	if err := os.Mkdir(path, perm); err != nil && !errors.Is(err, fs.ErrExist) {
-		return errors.WithStack(err)
-	}
-	if chmod {
-		if err := os.Chmod(path, perm); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	return nil
+	return fileutil.EnsureDirExists(path, perm, chmod)
 }
 
 // returns path to ~/.config/devbox/ssh
