@@ -82,11 +82,6 @@ func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error)
 }
 
 func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo, error) {
-	userSystem, err := nix.System()
-	if err != nil {
-		return nil, err
-	}
-
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, sysInfo := range pkg.Systems {
 
@@ -97,16 +92,8 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 		}
 
 		storePath := nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion)
-		caStorePath := ""
-		if sysName == userSystem {
-			caStorePath, err = nix.ContentAddressedStorePath(storePath)
-			if err != nil {
-				return nil, errors.WithMessagef(err, "failed to make content addressed path for %s", storePath)
-			}
-		}
 		sysInfos[sysName] = &SystemInfo{
-			StorePath:   storePath,
-			CAStorePath: caStorePath,
+			StorePath: storePath,
 		}
 	}
 	return sysInfos, nil

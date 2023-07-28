@@ -144,6 +144,20 @@ func System() (string, error) {
 	return cachedSystem, nil
 }
 
+func Version() (string, error) {
+	cmd := command("--version")
+	outBytes, err := cmd.Output()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	out := string(outBytes)
+	const prefix = "nix (Nix) "
+	if !strings.HasPrefix(out, prefix) {
+		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
+	}
+	return strings.TrimPrefix(out, prefix), nil
+}
+
 // Warning: be careful using the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {
