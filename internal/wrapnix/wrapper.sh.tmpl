@@ -1,6 +1,8 @@
 #!{{ .BashPath }}
 
-PATH="{{ .DevboxSymlinkDir }}:$PATH"
+{{ if ne .DevboxSymlinkDirIfExists "" }}
+PATH="{{ .DevboxSymlinkDirIfExists }}:$PATH"
+{{ end }}
 
 {{/*
 # If env variable has never been set by devbox we set it, but also
