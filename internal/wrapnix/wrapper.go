@@ -72,7 +72,8 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
 
-// CreateDevboxSymlink creates a symlink to the devbox binary.
+// CreateDevboxSymlink creates a symlink to the devbox binary. It may return
+// no error and the symlink path, even if it fails to create the actual symlink.
 //
 // Needed because:
 //
