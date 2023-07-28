@@ -55,19 +55,15 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	if err != nil {
 		return err
 	}
-	devboxSymlinkDir := ""
-	if devboxSymlinkPath != "" { // may be empty if not possible to create symlink
-		devboxSymlinkDir = filepath.Dir(devboxSymlinkPath)
-	}
 
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
-			devboxer:                 devbox,
-			BashPath:                 bashPath,
-			Command:                  bin,
-			ShellEnvHash:             shellEnvHash,
-			DevboxSymlinkDirIfExists: devboxSymlinkDir,
-			destPath:                 filepath.Join(destPath, filepath.Base(bin)),
+			devboxer:         devbox,
+			BashPath:         bashPath,
+			Command:          bin,
+			ShellEnvHash:     shellEnvHash,
+			DevboxSymlinkDir: filepath.Dir(devboxSymlinkPath),
+			destPath:         filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -76,8 +72,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	return createSymlinksForSupportDirs(devbox.ProjectDir())
 }
 
-// CreateDevboxSymlink creates a symlink to the devbox binary. It may return an
-// empty string if it could not create the symlink.
+// CreateDevboxSymlink creates a symlink to the devbox binary.
 //
 // Needed because:
 //
@@ -115,10 +110,14 @@ func CreateDevboxSymlink() (string, error) {
 	}
 
 	if evalSymlinkErr != nil {
-		// This may return an error due to symlink loops. In that case, we
-		// return an empty string, and the bin-wrapper should handle it accordingly.
+		// This may return an error due to symlink loops. In that case, we still
+		// return the symlink path so that the bin-wrappers add the symlink dir
+		// to PATH.
+		// A future devbox update may fix the symlink loop, and the bin-wrappers
+		// will start working without needing to be re-created.
+		//
 		// nolint:nilerr
-		return "", nil
+		return currentDevboxSymlinkPath, nil
 	}
 
 	// Don't return error if error is os.ErrExist to protect against race conditions.
@@ -131,11 +130,11 @@ func CreateDevboxSymlink() (string, error) {
 
 type createWrapperArgs struct {
 	devboxer
-	BashPath                 string
-	Command                  string
-	ShellEnvHash             string
-	DevboxSymlinkDirIfExists string
-	destPath                 string
+	BashPath         string
+	Command          string
+	ShellEnvHash     string
+	DevboxSymlinkDir string
+	destPath         string
 }
 
 func createWrapper(args *createWrapperArgs) error {
