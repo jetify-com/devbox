@@ -89,13 +89,19 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 //     So, the bin-wrappers need to use a symlink to the latest devbox binary. This
 //     symlink is updated when devbox is updated.
 func CreateDevboxSymlink() (string, error) {
+	// Get the symlink path; create the symlink directory if it doesn't exist.
 	curDir := xdg.CacheSubpath(filepath.Join("devbox", "bin", "current"))
 	if err := fileutil.EnsureDirExists(curDir, 0755, false /*chmod*/); err != nil {
 		return "", err
 	}
 	currentDevboxSymlinkPath := filepath.Join(curDir, "devbox")
 
-	devboxBinaryPath, err := os.Executable()
+	// Get the path to the devbox binary.
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	devboxBinaryPath, err := filepath.EvalSymlinks(execPath)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
