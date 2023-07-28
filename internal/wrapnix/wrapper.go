@@ -106,16 +106,19 @@ func CreateDevboxSymlink() (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	devboxBinaryPath, err := filepath.EvalSymlinks(execPath)
-	if err != nil {
-		// This may return an error due to symlink loops. In that case, we
-		// return an empty string, and the bin-wrapper should handle it accordingly.
-		return "", nil
-	}
+	devboxBinaryPath, evalSymlinkErr := filepath.EvalSymlinks(execPath)
+	// we check the error below, because we always want to remove the symlink
 
 	// We will always re-create this symlink to ensure correctness.
 	if err := os.Remove(currentDevboxSymlinkPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return "", errors.WithStack(err)
+	}
+
+	if evalSymlinkErr != nil {
+		// This may return an error due to symlink loops. In that case, we
+		// return an empty string, and the bin-wrapper should handle it accordingly.
+		// nolint:nilerr
+		return "", nil
 	}
 
 	// Don't return error if error is os.ErrExist to protect against race conditions.
