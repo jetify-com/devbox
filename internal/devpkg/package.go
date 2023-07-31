@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -588,19 +589,28 @@ type storePathParts struct {
 	version string
 }
 
+// newStorePathParts splits a Nix store path into its hash, name and version
+// components in the same way that Nix does.
+//
+// See https://nixos.org/manual/nix/stable/language/builtins.html#builtins-parseDrvName
 func newStorePathParts(path string) *storePathParts {
 	path = strings.TrimPrefix(path, "/nix/store/")
 	// path is now <hash>-<name>-<version
-	parts := strings.Split(path, "-")
 
-	// writing this a bit defensively to avoid edge-cases that may break
-	var hash, name, version string
-	hash = parts[0]
-	if len(parts) > 1 {
-		name = parts[1]
+	hash, name := path[:32], path[33:]
+	dashIndex := 0
+	for i, r := range name {
+		if dashIndex != 0 && !unicode.IsLetter(r) {
+			return &storePathParts{hash: hash, name: name[:dashIndex], version: name[i:]}
+		}
+		dashIndex = 0
+		if r == '-' {
+			dashIndex = i
+		}
 	}
-	if len(parts) > 2 {
-		version = parts[2]
-	}
-	return &storePathParts{hash, name, version}
+	return &storePathParts{hash, name, "" /*version*/}
+}
+
+func (p *storePathParts) Equal(other *storePathParts) bool {
+	return p.hash == other.hash && p.name == other.name && p.version == other.version
 }
