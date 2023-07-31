@@ -9,7 +9,7 @@ For example — if you use ripgrep as your preferred search tool, you can add it
 
 <figure>
 
-![Installing ripgrep using `devbox global add ripgrep](../../app/static/img/devbox_global.svg)
+![Installing ripgrep using `devbox global add ripgrep](../static/img/devbox_global.svg)
 
 <figcaption>Installing Packages with Devbox Global</figcaption>
 </figure>

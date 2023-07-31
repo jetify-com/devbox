@@ -5,7 +5,8 @@
     "scripts": {
         "docusaurus": "docusaurus",
         "start": "docusaurus start",
-        "build": "docusaurus build",
+        "build": "docusaurus build && yarn run postbuild",
+        "postbuild": "mkdir -p tmp && cp -r build/* tmp/ && mkdir -p build/devbox/docs && cp -r tmp/* build/devbox/docs/ && rm -rf tmp",
         "swizzle": "docusaurus swizzle",
         "deploy": "docusaurus deploy",
         "clear": "docusaurus clear",

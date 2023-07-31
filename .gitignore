@@ -33,3 +33,6 @@ __pycache__/
 
 # test specific files
 .test_tmp_*
+
+# deployment
+.vercel
