@@ -12,17 +12,33 @@
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     },
-    "python311Packages.pip@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+    "python310@latest": {
+      "last_modified": "2023-05-14T19:13:12Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311Packages.pip",
-      "version": "23.0.1"
+      "resolved": "github:NixOS/nixpkgs/3007746b3f5bfcb49e102b517bca891822a41b31#python3",
+      "source": "devbox-search",
+      "version": "3.10.11",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/xmxc0xc03fqq8b19sxfxwyd8k71kaz5m-python3-3.10.11"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/92gqjlhr98gf1hv68r6mg44i65a1yfkn-python3-3.10.11"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/na36han6xrh9kydc76q105gjb5915rkf-python3-3.10.11",
+          "ca_store_path": "/nix/store/bfrvzcij9rpa77zdxy0yfh85n7ak8gg5-python3-3.10.11"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/95cxzy2hpizr23343b8bskl4yacf4b3l-python3-3.10.11"
+        }
+      }
     },
-    "python@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311",
-      "version": "3.11.3"
+    "python310packages.pip@latest": {
+      "last_modified": "2023-05-14T19:13:12Z",
+      "resolved": "github:NixOS/nixpkgs/3007746b3f5bfcb49e102b517bca891822a41b31#python310Packages.pip",
+      "source": "devbox-search",
+      "version": "23.0.1"
     }
   }
 }
