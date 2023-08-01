@@ -1,0 +1,34 @@
+{
+  "packages": [
+    "python@latest",
+    "python311Packages.pip@latest",
+    "openssl@latest",
+    "postgresql@latest",
+    "python311Packages.numpy@latest",
+    "stdenv.cc.cc.lib"
+  ],
+  "env": {
+    "DJANGO_SETTINGS_MODULE": "radscheduler.settings",
+    "PGPORT": "5434"
+  },
+  "shell": {
+    "init_hook": [
+      ". $VENV_DIR/bin/activate",
+      "pip install -r requirements.txt --use-pep517"
+    ],
+    "scripts": {
+      "create_db": [
+        "echo \"Creating DB\"",
+        "dropdb --if-exists rs_db",
+        "createdb rs_db",
+        "psql rs_db -c \"CREATE USER rs_user WITH PASSWORD 'secretpassword';\"",
+        "python radscheduler/manage.py makemigrations",
+        "python radscheduler/manage.py migrate"
+      ],
+      "makemigrations": "radscheduler/manage.py makemigrations",
+      "migrate": "radscheduler/manage.py migrate",
+      "server": "radscheduler/manage.py runserver",
+      "test": "pytest radscheduler"
+    }
+  }
+}

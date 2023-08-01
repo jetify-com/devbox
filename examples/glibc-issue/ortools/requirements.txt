@@ -1,0 +1,7 @@
+django==4.2.2
+psycopg2==2.9.5
+sqlparse==0.4.4
+asgiref==3.6.0
+pytest==7.4.0
+pytest-django==4.5.2
+ortools==9.6.2534
