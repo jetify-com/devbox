@@ -1,0 +1,13 @@
+{
+  "packages": [
+    "path:emulator",
+    "python311",
+    "python311Packages.pip"
+  ],
+  "shell": {
+    "init_hook": [
+      "source $VENV_DIR/bin/activate",
+      "pip install -r requirements.txt"
+    ]
+  }
+}
