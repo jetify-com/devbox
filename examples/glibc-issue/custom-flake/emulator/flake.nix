@@ -27,7 +27,6 @@
                 };
                 sourceRoot = ".";
                 nativeBuildInputs = [
-                  pkgs.autoPatchelfHook
                 ];
                 buildInputs = [
                   pkgs.gcc-unwrapped

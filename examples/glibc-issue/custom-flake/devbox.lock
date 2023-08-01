@@ -1,0 +1,15 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "python310": {
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/e722007bf05802573b41701c49da6c8814878171#python310",
+      "source": "nixpkg"
+    },
+    "python310Packages.pip": {
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/e722007bf05802573b41701c49da6c8814878171#python310Packages.pip",
+      "source": "nixpkg"
+    }
+  }
+}

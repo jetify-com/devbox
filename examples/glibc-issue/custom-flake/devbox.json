@@ -1,8 +1,8 @@
 {
   "packages": [
     "path:emulator",
-    "python311",
-    "python311Packages.pip"
+    "python310",
+    "python310Packages.pip"
   ],
   "shell": {
     "init_hook": [
