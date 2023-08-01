@@ -12,17 +12,19 @@
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     },
-    "python311Packages.pip@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+    "python37Packages.pip@latest": {
+      "last_modified": "2021-02-27T20:39:16Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311Packages.pip",
-      "version": "23.0.1"
+      "resolved": "github:NixOS/nixpkgs/5df05c902cde398e056eb6271d5fe13e418db4c6#python37Packages.pip",
+      "source": "devbox-search",
+      "version": "20.3"
     },
-    "python@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+    "python@3.7": {
+      "last_modified": "2022-12-17T09:19:40Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311",
-      "version": "3.11.3"
+      "resolved": "github:NixOS/nixpkgs/80c24eeb9ff46aa99617844d0c4168659e35175f#python37",
+      "source": "devbox-search",
+      "version": "3.7.16"
     }
   }
 }
