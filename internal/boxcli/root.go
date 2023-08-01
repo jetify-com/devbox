@@ -95,11 +95,12 @@ func RootCmd() *cobra.Command {
 
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
-	exe := midcobra.New(RootCmd())
+	rootCmd := RootCmd()
+	exe := midcobra.New(rootCmd)
 	exe.AddMiddleware(traceMiddleware)
 	exe.AddMiddleware(midcobra.Telemetry())
 	exe.AddMiddleware(debugMiddleware)
-	return exe.Execute(ctx, args)
+	return exe.Execute(ctx, wrapArgsForRun(rootCmd, args))
 }
 
 func Main() {

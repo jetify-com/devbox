@@ -5,8 +5,12 @@ package boxcli
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -112,4 +116,71 @@ func parseScriptArgs(args []string, flags runCmdFlags) (string, string, []string
 	scriptArgs := args[1:]
 
 	return flags.config.path, script, scriptArgs, nil
+}
+
+func wrapArgsForRun(rootCmd *cobra.Command, args []string) []string {
+	// if the first argument is not "run", we don't need to do anything. If there
+	// are 2 or fewer arguments, we also don't need to do anything because there
+	// are no flags after a non-run non-flag arg.
+	// IMPROVEMENT: technically users can pass a flag before the subcommand "run"
+	if len(args) <= 2 || args[0] != "run" || slices.Contains(args, "--") {
+		return args
+	}
+
+	cmd, found := lo.Find(
+		rootCmd.Commands(),
+		func(item *cobra.Command) bool { return item.Name() == "run" },
+	)
+	if !found {
+		return args
+	}
+	_ = cmd.InheritedFlags() // bug in cobra requires this to be called to ensure flags contains inherited flags.
+	runFlags := cmd.Flags()
+	// typical args can be of the form:
+	// run --flag1 val1 -f val2 --flag3=val3 --bool-flag python --version
+	// We handle each different type of flag
+	// (flag with equals, long-form, short-form, and defaulted flags)
+	// Note that defaulted does not mean initial value, it only means flags
+	// that don't require a value.
+	// For example, --bool-flag has NoOptDefVal set to "true".
+	i := 1
+	for i < len(args) {
+		arg := args[i]
+		if !strings.HasPrefix(arg, "-") {
+			// We found and argument that is not part of the flags, so we can stop
+			// This inserts a "--" before the first non-flag argument
+			// Turning
+			// run --flag1 val1 command --flag2 val2
+			// into
+			// run --flag1 val1 -- command --flag2 val2
+			return append(args[:i+1], append([]string{"--"}, args[i+1:]...)...)
+		}
+
+		if strings.HasPrefix(arg, "-") && strings.Contains(arg, "=") {
+			// This is a flag with an equals sign, so we can skip it
+			i++
+			continue
+		}
+
+		var flag *pflag.Flag
+		if strings.HasPrefix(arg, "--") {
+			flag = runFlags.Lookup(strings.TrimLeft(arg, "-"))
+		} else {
+			flag = runFlags.ShorthandLookup(strings.TrimLeft(arg, "-"))
+		}
+		if flag == nil {
+			// found an invalid flag, just return args as-is
+			return args
+		}
+		if flag.NoOptDefVal == "" {
+			// This is a non-boolean flag, e.g. --flag1 val1
+			i += 2
+		} else {
+			// This is a boolean flag, e.g. --bool-flag
+			i++
+		}
+	}
+
+	// This means there is no non-flag command. Just return as is.
+	return args
 }

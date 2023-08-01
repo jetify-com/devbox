@@ -54,6 +54,9 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 		m.preRun(ex.cmd, args)
 	}
 
+	// set args (needed in case caller transforms args in any way)
+	ex.cmd.SetArgs(args)
+
 	// Execute the cobra command:
 	err := ex.cmd.Execute()
 
