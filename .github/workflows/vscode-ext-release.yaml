@@ -25,9 +25,9 @@ jobs:
         working-directory: vscode-extension
       - name: publish-vs
         run: |
-          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn
+          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
-          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn
+          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension
