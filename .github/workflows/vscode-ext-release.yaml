@@ -20,9 +20,14 @@ jobs:
         run: |
           npm install -g yarn
           npm install -g vsce
+          npm install -g ovsx
           yarn install
         working-directory: vscode-extension
-      - name: publish
+      - name: publish-vs
         run: |
           vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn
+        working-directory: vscode-extension
+      - name: publish-ovsx
+        run: |
+          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn
         working-directory: vscode-extension
