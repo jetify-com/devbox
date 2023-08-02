@@ -30,12 +30,5 @@ jobs:
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
-          mv package.json package-temp.json
-          jq 'del(.extensionDependencies[0])' package-temp.json > package.json
-          rm package-temp.json
           ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
-        working-directory: vscode-extension
-      - name: publish-ovsx
-        run: |
-          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn
         working-directory: vscode-extension
