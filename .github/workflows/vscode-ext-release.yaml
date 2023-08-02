@@ -35,3 +35,7 @@ jobs:
           rm package-temp.json
           ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension
+      - name: publish-ovsx
+        run: |
+          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn
+        working-directory: vscode-extension
