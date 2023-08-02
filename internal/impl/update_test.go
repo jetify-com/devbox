@@ -44,8 +44,7 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys: {
-				StorePath:   "store_path1",
-				CAStorePath: "ca_path1",
+				StorePath: "store_path1",
 			},
 		},
 	}
@@ -64,7 +63,6 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 	require.Contains(t, lockfile.Packages, raw)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys)
 	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys].StorePath)
-	require.Equal(t, "ca_path1", lockfile.Packages[raw].Systems[sys].CAStorePath)
 }
 
 func TestUpdateNewSysInfoIsAdded(t *testing.T) {
@@ -81,8 +79,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys1: {
-				StorePath:   "store_path1",
-				CAStorePath: "ca_path1",
+				StorePath: "store_path1",
 			},
 			sys2: {
 				StorePath: "store_path2",
@@ -95,8 +92,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 				Resolved: "resolved-flake-reference",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
-						StorePath:   "store_path1",
-						CAStorePath: "ca_path1",
+						StorePath: "store_path1",
 					},
 					// Missing sys2
 				},
@@ -127,8 +123,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys1: {
-				StorePath:   "store_path1",
-				CAStorePath: "ca_path1",
+				StorePath: "store_path1",
 			},
 			sys2: {
 				StorePath: "store_path2",
@@ -141,12 +136,10 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 				Resolved: "resolved-flake-reference",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
-						StorePath:   "store_path1",
-						CAStorePath: "ca_path1",
+						StorePath: "store_path1",
 					},
 					sys2: {
-						StorePath:   "mismatching_store_path",
-						CAStorePath: "ca_path2",
+						StorePath: "mismatching_store_path",
 					},
 				},
 			},
@@ -161,58 +154,6 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 	require.Contains(t, lockfile.Packages[raw].Systems, sys2)
 	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys1].StorePath)
 	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].StorePath)
-	require.Empty(t, lockfile.Packages[raw].Systems[sys2].CAStorePath)
-}
-
-func TestUpdateCAPathIsNotReplaced(t *testing.T) {
-	featureflag.RemoveNixpkgs.EnableForTest(t)
-	devbox := devboxForTesting(t)
-
-	raw := "hello@1.2.3"
-	sys1 := currentSystem(t)
-	sys2 := "system2"
-	devPkg := &devpkg.Package{
-		Raw: raw,
-	}
-	resolved := &lock.Package{
-		Resolved: "resolved-flake-reference",
-		Systems: map[string]*lock.SystemInfo{
-			sys1: {
-				StorePath:   "store_path1",
-				CAStorePath: "ca_path1",
-			},
-			sys2: {
-				StorePath: "store_path2",
-				// No CAPath here because this is not the current system.
-			},
-		},
-	}
-	lockfile := &lock.File{
-		Packages: map[string]*lock.Package{
-			raw: {
-				Resolved: "resolved-flake-reference",
-				Systems: map[string]*lock.SystemInfo{
-					sys1: {
-						StorePath:   "store_path1",
-						CAStorePath: "ca_path1",
-					},
-					sys2: {
-						StorePath:   "store_path2",
-						CAStorePath: "ca_path2", // we already have CAPath for this system; it should not be replaced
-					},
-				},
-			},
-		},
-	}
-
-	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
-	require.NoError(t, err, "update failed")
-
-	require.Contains(t, lockfile.Packages, raw)
-	require.Contains(t, lockfile.Packages[raw].Systems, sys1)
-	require.Contains(t, lockfile.Packages[raw].Systems, sys2)
-	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].StorePath)
-	require.Equal(t, "ca_path2", lockfile.Packages[raw].Systems[sys2].CAStorePath)
 }
 
 func currentSystem(t *testing.T) string {
