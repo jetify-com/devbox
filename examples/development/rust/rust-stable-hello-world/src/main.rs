@@ -6,6 +6,7 @@ fn hello_world() -> &'static str {
     return "Hello, world!";
 }
 
+#[cfg(test)]
 mod tests {
   use super::*;
 
