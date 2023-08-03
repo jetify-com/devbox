@@ -5,7 +5,7 @@ description = ""
 authors = ["John Lago <750845+Lagoja@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 emoji = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
