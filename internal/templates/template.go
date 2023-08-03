@@ -6,9 +6,11 @@ package templates
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -23,8 +25,15 @@ func Init(w io.Writer, template, dir string) error {
 	}
 
 	templatePath, ok := templates[template]
+	cloneURL := "https://github.com/jetpack-io/devbox.git"
 	if !ok {
-		return usererr.New("unknown template %q", template)
+		u, err := url.Parse(template)
+		splits := strings.Split(u.Path, "/")
+		if err != nil || u.Scheme != "https" || len(splits) == 0 {
+			return usererr.New("unknown template name or format %q", template)
+		}
+		templatePath = splits[len(splits)-1]
+		cloneURL = template
 	}
 
 	tmp, err := os.MkdirTemp("", "devbox-template")
@@ -32,7 +41,7 @@ func Init(w io.Writer, template, dir string) error {
 		return errors.WithStack(err)
 	}
 	cmd := exec.Command(
-		"git", "clone", "https://github.com/jetpack-io/devbox.git", tmp,
+		fmt.Sprintf("git clone %s %s", cloneURL, tmp),
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
