@@ -15,6 +15,7 @@ RUN wget --quiet --output-document=/dev/stdout https://get.jetpack.io/devbox   |
 # Step 4: Installing your devbox project
 WORKDIR /code
 COPY devbox.json devbox.json
+COPY devbox.lock devbox.lock
 {{if len .LocalFlakeDirs}}
 # Step 6: Copying local flakes directories
 {{- end}}
