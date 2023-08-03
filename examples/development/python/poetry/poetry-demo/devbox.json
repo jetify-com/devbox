@@ -1,6 +1,6 @@
 {
   "packages": [
-    "python@3.10",
+    "python@3.8",
     "poetry@1.4"
   ],
   "shell": {

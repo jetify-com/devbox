@@ -1,15 +1,19 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "poetry": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#poetry",
-      "version": ""
+    "poetry@1.4": {
+      "last_modified": "2023-05-19T19:44:39Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/4a22f6f0a4b4354778f786425babce9a56f6b5d8#poetry",
+      "source": "devbox-search",
+      "version": "1.4.2"
     },
-    "python310": {
-      "last_modified": "",
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310",
-      "version": ""
+    "python@3.8": {
+      "last_modified": "2023-06-30T04:44:22Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#python38",
+      "source": "devbox-search",
+      "version": "3.8.17"
     }
   }
 }

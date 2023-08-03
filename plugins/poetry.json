@@ -1,0 +1,15 @@
+{
+    "name": "poetry",
+    "version": "0.0.1",
+    "readme": "This plugin automatically configures poetry to use the version of python installed in your Devbox shell, instead of the Python version that it is bundled with.",
+    "env": {
+        "POETRY_VIRTUALENVS_IN_PROJECT": "true",
+        "POETRY_VIRTUALENVS_CREATE": "true",
+        "POETRY_VIRTUALENVS_PATH": "{{.Virtenv}}/.virtualenvs"
+    },
+    "shell": {
+        "init_hook": [
+            "poetry env use $(command -v python) --quiet --no-interaction"
+        ]
+    }
+}

@@ -33,6 +33,7 @@ var builtInMap = map[*regexp.Regexp]string{
 	regexp.MustCompile(`^mysql?[0-9]*$`):                               "mysql",
 	regexp.MustCompile(`^php[0-9]*$`):                                  "php",
 	regexp.MustCompile(`^python3[0-9]*Packages.pip$`):                  "pip",
+	regexp.MustCompile(`^(\w*\.)?poetry$`):                             "poetry",
 	regexp.MustCompile(`^postgresql(_[0-9]+)?$`):                       "postgresql",
 	regexp.MustCompile(`^python[0-9]*(Full|Minimal|-full|-minimal)?$`): "python",
 	regexp.MustCompile(`^redis$`):                                      "redis",

@@ -12,7 +12,7 @@
     "shell": {
         "init_hook": [
             "echo 'Setting flags to allow Python C extension compilation'",
-            "export NIX_CFLAGS_COMPILE=\"$NIX_CFLAGS_COMPILE $(cat $(dirname $(which clang))/../nix-support/libcxx-cxxflags)\"",
+            "export NIX_CFLAGS_COMPILE=\"$NIX_CFLAGS_COMPILE $(cat $(dirname $(command -v clang))/../nix-support/libcxx-cxxflags)\"",
             "echo 'Setting up virtual environment'",
             "source $VENV_DIR/bin/activate"
         ],
