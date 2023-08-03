@@ -59,9 +59,6 @@ const sidebars = {
         },{
             type: 'doc',
             id: 'guides/services'
-        }, {
-            type: 'doc',
-            id: 'guides/plugins'
         }]
     }, {
         type: 'category',
