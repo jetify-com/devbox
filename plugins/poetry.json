@@ -9,7 +9,7 @@
     },
     "shell": {
         "init_hook": [
-            "poetry env use $(which python) --quiet --no-interaction"
+            "poetry env use $(command -v python) --quiet --no-interaction"
         ]
     }
 }
