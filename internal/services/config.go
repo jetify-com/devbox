@@ -14,8 +14,8 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-func FromUserProcessCompose(projectDir string) Services {
-	processComposeYaml := lookupProcessCompose(projectDir, "")
+func FromUserProcessCompose(projectDir string, userProcessCompose string) Services {
+	processComposeYaml := lookupProcessCompose(projectDir, userProcessCompose)
 	if processComposeYaml == "" {
 		return nil
 	}

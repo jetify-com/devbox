@@ -42,7 +42,7 @@ type Devbox interface {
 	Remove(ctx context.Context, pkgs ...string) error
 	RestartServices(ctx context.Context, services ...string) error
 	RunScript(ctx context.Context, scriptName string, scriptArgs []string) error
-	Services() (services.Services, error)
+	Services(userProcessCompose string) (services.Services, error)
 	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell(ctx context.Context) error
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
