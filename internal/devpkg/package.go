@@ -474,7 +474,10 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 		return false, err
 	}
 
-	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
+
+	cmp := vercheck.SemverCompare(version, "2.17.0") >= 0
+	fmt.Printf("For Package%s, nix version %s, cmp is %v\n", p.Raw, version, cmp)
+	return cmp, nil
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store

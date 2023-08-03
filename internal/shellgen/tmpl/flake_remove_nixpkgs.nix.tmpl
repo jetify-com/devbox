@@ -41,6 +41,7 @@
             (builtins.fetchClosure{
               fromStore = "{{ $.BinaryCache }}";
               fromPath = "{{ .InputAddressedPath }}";
+              inputAddressed = true;
             })
             {{- end }}
             {{- end }}

@@ -155,7 +155,7 @@ func Version() (string, error) {
 	if !strings.HasPrefix(out, prefix) {
 		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
 	}
-	return strings.TrimPrefix(out, prefix), nil
+	return strings.TrimSpace(strings.TrimPrefix(out, prefix)), nil
 }
 
 // Warning: be careful using the bins in default/bin, they won't always match bins
