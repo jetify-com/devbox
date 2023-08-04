@@ -58,12 +58,13 @@ func createCmd() *cobra.Command {
 		&flags.repo, "repo", "r", "",
 		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
 	)
-	command.Flags().MarkHidden("repo")
 	command.Flags().StringVarP(
 		&flags.subdir, "subdir", "s", "",
 		"Subdirectory of the Git repository in which the template files reside. Example: examples/tutorial",
 	)
-	command.Flags().MarkHidden("subdir")
+	// this command marks a flag as hidden. Error handling for it is not necessary.
+	_ = command.Flags().MarkHidden("repo")
+	_ = command.Flags().MarkHidden("subdir")
 
 	return command
 }
