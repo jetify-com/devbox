@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTemplatesExist(t *testing.T) {
@@ -25,4 +26,57 @@ func TestTemplatesExist(t *testing.T) {
 			t.Errorf("Directory/devbox.json for %s does not exist", path)
 		}
 	}
+}
+
+func TestGetTemplateRepoAndSubdir(t *testing.T) {
+	// devbox create --template=nonexistenttemplate
+	_, _, err := GetTemplateRepoAndSubdir(
+		"nonexistenttemplate",
+		"",
+		"",
+	)
+	assert.Error(t, err)
+
+	// devbox create --template=apache --repo="https://example.com/org/repo.git" \
+	// --subdir="examples/test/should/ignore/repo/and/subdir"
+	repoURL, subdirPath, err := GetTemplateRepoAndSubdir(
+		"apache",
+		"https://example.com/org/repo.git",
+		"examples/test/should/ignore/repo/and/subdir",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "https://github.com/jetpack-io/devbox", repoURL)
+	assert.Equal(t, "examples/servers/apache/", subdirPath)
+
+	// devbox create --repo="https://github.com/jetpack-io/typeid.git"
+	repoURL, subdirPath, err = GetTemplateRepoAndSubdir(
+		"",
+		"https://github.com/jetpack-io/typeid.git",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "https://github.com/jetpack-io/typeid", repoURL)
+	assert.Equal(t, "", subdirPath)
+
+	// devbox create --repo="https://github.com/jetpack-io/devbox" \
+	// --subdir="examples/servers/apache"
+	repoURL, subdirPath, err = GetTemplateRepoAndSubdir(
+		"",
+		"https://github.com/jetpack-io/devbox",
+		"examples/servers/apache",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "https://github.com/jetpack-io/devbox", repoURL)
+	assert.Equal(t, "examples/servers/apache", subdirPath)
+
+	// devbox create --repo="git@github.com:jetpack-io/devbox.git" \
+	// --subdir="examples/servers/apache"
+	repoURL, subdirPath, err = GetTemplateRepoAndSubdir(
+		"",
+		"git@github.com:jetpack-io/devbox.git",
+		"examples/servers/apache",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, "git@github.com:jetpack-io/devbox", repoURL)
+	assert.Equal(t, "examples/servers/apache", subdirPath)
 }

@@ -19,30 +19,20 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-func Init(w io.Writer, template, dir string) error {
+func Init(w io.Writer, template, repo, subdir, dir string) error {
 	if err := createDirAndEnsureEmpty(dir); err != nil {
 		return err
 	}
-
-	templatePath, ok := templates[template]
-	cloneURL := "https://github.com/jetpack-io/devbox.git"
-	if !ok {
-		u, err := url.Parse(template)
-		splits := strings.Split(u.Path, "/")
-		if err != nil || u.Scheme != "https" || len(splits) == 0 {
-			return usererr.New("unknown template name or format %q", template)
-		}
-		templatePath = splits[len(splits)-1]
-		cloneURL = template
+	repoURL, subdirPath, err := GetTemplateRepoAndSubdir(template, repo, subdir)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	tmp, err := os.MkdirTemp("", "devbox-template")
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command(
-		fmt.Sprintf("git clone %s %s", cloneURL, tmp),
-	)
+	cmd := exec.Command("git", "clone", repoURL, tmp)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -52,7 +42,7 @@ func Init(w io.Writer, template, dir string) error {
 
 	cmd = exec.Command(
 		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, templatePath, "*"), dir),
+		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdirPath, "*"), dir),
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
@@ -88,4 +78,28 @@ func createDirAndEnsureEmpty(dir string) error {
 	}
 
 	return nil
+}
+
+func GetTemplateRepoAndSubdir(template string, repo string, subdir string) (string, string, error) {
+	repoURL := "https://github.com/jetpack-io/devbox"
+	subdirPath := ""
+	if template != "" {
+		tPath, ok := templates[template]
+		if !ok {
+			return "", "", usererr.New("unknown template name or format %q", template)
+		}
+		subdirPath = tPath
+	} else if repo != "" {
+		_, err := url.Parse(template)
+		if err != nil {
+			return "", "", usererr.New("Invalid URL format for --repo %s", repo)
+		}
+		subdirPath = subdir
+		// this is to handle cases where user puts repo url with .git at the end
+		// like: https://github.com/jetpack-io/devbox.git
+		repoURL, _ = strings.CutSuffix(repo, ".git")
+	} else {
+		return "", "", usererr.New("either --template or --repo need to be specified %q", template)
+	}
+	return repoURL, subdirPath, nil
 }

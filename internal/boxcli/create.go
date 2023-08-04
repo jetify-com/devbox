@@ -17,19 +17,21 @@ import (
 type createCmdFlags struct {
 	showAll  bool
 	template string
+	repo     string
+	subdir   string
 }
 
 func createCmd() *cobra.Command {
 	flags := &createCmdFlags{}
 	command := &cobra.Command{
-		Use:   "create [dir] --template <template>",
+		Use:   "create [dir] --template <template> | --repo <repo URL> --subdir <subdirectory>",
 		Short: "Initialize a directory as a devbox project using a template",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if flags.template == "" {
+			if flags.template == "" && flags.repo == "" {
 				fmt.Fprintf(
 					cmd.ErrOrStderr(),
-					"Usage: devbox create [dir] --template <template>\n\n",
+					"Usage: devbox create [dir] --template <template> | --repo <repo URL> --subdir <subdirectory>\n\n",
 				)
 				templates.List(cmd.ErrOrStderr(), flags.showAll)
 				if !flags.showAll {
@@ -52,6 +54,14 @@ func createCmd() *cobra.Command {
 		&flags.showAll, "show-all", false,
 		"show all available templates",
 	)
+	command.Flags().StringVarP(
+		&flags.repo, "repo", "r", "",
+		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
+	)
+	command.Flags().StringVarP(
+		&flags.subdir, "subdir", "s", "",
+		"Subdirectory of the Git repository in which the template files reside. Example: examples/tutorial",
+	)
 
 	return command
 }
@@ -63,7 +73,7 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 		path = filepath.Join(wd, flags.template)
 	}
 
-	err := templates.Init(cmd.ErrOrStderr(), flags.template, path)
+	err := templates.Init(cmd.ErrOrStderr(), flags.template, flags.repo, flags.subdir, path)
 	if err != nil {
 		return err
 	}
