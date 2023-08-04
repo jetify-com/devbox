@@ -24,14 +24,14 @@ type createCmdFlags struct {
 func createCmd() *cobra.Command {
 	flags := &createCmdFlags{}
 	command := &cobra.Command{
-		Use:   "create [dir] --template <template> | --repo <repo URL> --subdir <subdirectory>",
+		Use:   "create [dir] --template <template>",
 		Short: "Initialize a directory as a devbox project using a template",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if flags.template == "" && flags.repo == "" {
 				fmt.Fprintf(
 					cmd.ErrOrStderr(),
-					"Usage: devbox create [dir] --template <template> | --repo <repo URL> --subdir <subdirectory>\n\n",
+					"Usage: devbox create [dir] --template <template>\n\n",
 				)
 				templates.List(cmd.ErrOrStderr(), flags.showAll)
 				if !flags.showAll {
@@ -58,10 +58,12 @@ func createCmd() *cobra.Command {
 		&flags.repo, "repo", "r", "",
 		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
 	)
+	command.Flags().MarkHidden("repo")
 	command.Flags().StringVarP(
 		&flags.subdir, "subdir", "s", "",
 		"Subdirectory of the Git repository in which the template files reside. Example: examples/tutorial",
 	)
+	command.Flags().MarkHidden("subdir")
 
 	return command
 }
