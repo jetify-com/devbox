@@ -19,11 +19,19 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-func Init(w io.Writer, template, repo, subdir, dir string) error {
-	if err := createDirAndEnsureEmpty(dir); err != nil {
+func InitFromName(w io.Writer, template string, target string) error {
+	templatePath, ok := templates[template]
+	if !ok {
+		return usererr.New("unknown template name or format %q", template)
+	}
+	return InitFromRepo(w, "https://github.com/jetpack-io/devbox", templatePath, target)
+}
+
+func InitFromRepo(w io.Writer, repo string, subdir string, target string) error {
+	if err := createDirAndEnsureEmpty(target); err != nil {
 		return err
 	}
-	repoURL, subdirPath, err := GetTemplateRepoAndSubdir(template, repo, subdir)
+	parsedRepoURL, err := ParseRepoURL(repo)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -32,7 +40,7 @@ func Init(w io.Writer, template, repo, subdir, dir string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command("git", "clone", repoURL, tmp)
+	cmd := exec.Command("git", "clone", parsedRepoURL, tmp)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -42,7 +50,7 @@ func Init(w io.Writer, template, repo, subdir, dir string) error {
 
 	cmd = exec.Command(
 		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdirPath, "*"), dir),
+		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
@@ -80,26 +88,12 @@ func createDirAndEnsureEmpty(dir string) error {
 	return nil
 }
 
-func GetTemplateRepoAndSubdir(template string, repo string, subdir string) (string, string, error) {
-	repoURL := "https://github.com/jetpack-io/devbox"
-	subdirPath := ""
-	if template != "" {
-		tPath, ok := templates[template]
-		if !ok {
-			return "", "", usererr.New("unknown template name or format %q", template)
-		}
-		subdirPath = tPath
-	} else if repo != "" {
-		_, err := url.Parse(template)
-		if err != nil {
-			return "", "", usererr.New("Invalid URL format for --repo %s", repo)
-		}
-		subdirPath = subdir
-		// this is to handle cases where user puts repo url with .git at the end
-		// like: https://github.com/jetpack-io/devbox.git
-		repoURL, _ = strings.CutSuffix(repo, ".git")
-	} else {
-		return "", "", usererr.New("either --template or --repo need to be specified %q", template)
+func ParseRepoURL(repo string) (string, error) {
+	u, err := url.Parse(repo)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return "", usererr.New("Invalid URL format for --repo %s", repo)
 	}
-	return repoURL, subdirPath, nil
+	// this is to handle cases where user puts repo url with .git at the end
+	// like: https://github.com/jetpack-io/devbox.git
+	return strings.TrimSuffix(repo, ".git"), nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/templates"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -76,7 +77,14 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 		path = filepath.Join(wd, flags.template)
 	}
 
-	err := templates.Init(cmd.ErrOrStderr(), flags.template, flags.repo, flags.subdir, path)
+	var err error
+	if flags.template != "" {
+		err = templates.InitFromName(cmd.ErrOrStderr(), flags.template, path)
+	} else if flags.repo != "" {
+		err = templates.InitFromRepo(cmd.ErrOrStderr(), flags.repo, flags.subdir, path)
+	} else {
+		err = usererr.New("either --template or --repo need to be specified")
+	}
 	if err != nil {
 		return err
 	}
