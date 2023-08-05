@@ -71,11 +71,7 @@ func createCmd() *cobra.Command {
 }
 
 func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) error {
-	path := pathArg(args)
-	if path == "" {
-		wd, _ := os.Getwd()
-		path = filepath.Join(wd, flags.template)
-	}
+	path := handlePath(args, flags)
 
 	var err error
 	if flags.template != "" {
@@ -96,4 +92,19 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 	)
 
 	return nil
+}
+
+func handlePath(args []string, flags *createCmdFlags) string {
+	path := pathArg(args)
+	wd, _ := os.Getwd()
+	if path == "" {
+		if flags.template != "" {
+			path = filepath.Join(wd, flags.template)
+		} else if flags.repo != "" && flags.subdir == "" {
+			path = filepath.Join(wd, filepath.Base(flags.repo))
+		} else if flags.repo != "" && flags.subdir != "" {
+			path = filepath.Join(wd, filepath.Base(flags.subdir))
+		}
+	}
+	return path
 }
