@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTemplatesExist(t *testing.T) {
@@ -25,4 +26,23 @@ func TestTemplatesExist(t *testing.T) {
 			t.Errorf("Directory/devbox.json for %s does not exist", path)
 		}
 	}
+}
+
+func TestParseRepoURL(t *testing.T) {
+	// devbox create --repo="http:::/not.valid/a//a??a?b=&&c#hi"
+	_, err := ParseRepoURL("http:::/not.valid/a//a??a?b=&&c#hi")
+	assert.Error(t, err)
+	_, err = ParseRepoURL("http//github.com")
+	assert.Error(t, err)
+	_, err = ParseRepoURL("github.com")
+	assert.Error(t, err)
+	_, err = ParseRepoURL("/foo/bar")
+	assert.Error(t, err)
+	_, err = ParseRepoURL("http://")
+	assert.Error(t, err)
+	_, err = ParseRepoURL("git@github.com:jetpack-io/devbox.git")
+	assert.Error(t, err)
+	u, err := ParseRepoURL("http://github.com")
+	assert.NoError(t, err)
+	assert.Equal(t, "http://github.com", u)
 }

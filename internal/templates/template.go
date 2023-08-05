@@ -6,9 +6,11 @@ package templates
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -17,23 +19,28 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-func Init(w io.Writer, template, dir string) error {
-	if err := createDirAndEnsureEmpty(dir); err != nil {
-		return err
-	}
-
+func InitFromName(w io.Writer, template string, target string) error {
 	templatePath, ok := templates[template]
 	if !ok {
-		return usererr.New("unknown template %q", template)
+		return usererr.New("unknown template name or format %q", template)
+	}
+	return InitFromRepo(w, "https://github.com/jetpack-io/devbox", templatePath, target)
+}
+
+func InitFromRepo(w io.Writer, repo string, subdir string, target string) error {
+	if err := createDirAndEnsureEmpty(target); err != nil {
+		return err
+	}
+	parsedRepoURL, err := ParseRepoURL(repo)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	tmp, err := os.MkdirTemp("", "devbox-template")
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command(
-		"git", "clone", "https://github.com/jetpack-io/devbox.git", tmp,
-	)
+	cmd := exec.Command("git", "clone", parsedRepoURL, tmp)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -43,7 +50,7 @@ func Init(w io.Writer, template, dir string) error {
 
 	cmd = exec.Command(
 		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, templatePath, "*"), dir),
+		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
@@ -79,4 +86,14 @@ func createDirAndEnsureEmpty(dir string) error {
 	}
 
 	return nil
+}
+
+func ParseRepoURL(repo string) (string, error) {
+	u, err := url.Parse(repo)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return "", usererr.New("Invalid URL format for --repo %s", repo)
+	}
+	// this is to handle cases where user puts repo url with .git at the end
+	// like: https://github.com/jetpack-io/devbox.git
+	return strings.TrimSuffix(repo, ".git"), nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/templates"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -17,6 +18,8 @@ import (
 type createCmdFlags struct {
 	showAll  bool
 	template string
+	repo     string
+	subdir   string
 }
 
 func createCmd() *cobra.Command {
@@ -26,7 +29,7 @@ func createCmd() *cobra.Command {
 		Short: "Initialize a directory as a devbox project using a template",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if flags.template == "" {
+			if flags.template == "" && flags.repo == "" {
 				fmt.Fprintf(
 					cmd.ErrOrStderr(),
 					"Usage: devbox create [dir] --template <template>\n\n",
@@ -52,18 +55,32 @@ func createCmd() *cobra.Command {
 		&flags.showAll, "show-all", false,
 		"show all available templates",
 	)
+	command.Flags().StringVarP(
+		&flags.repo, "repo", "r", "",
+		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
+	)
+	command.Flags().StringVarP(
+		&flags.subdir, "subdir", "s", "",
+		"Subdirectory of the Git repository in which the template files reside. Example: examples/tutorial",
+	)
+	// this command marks a flag as hidden. Error handling for it is not necessary.
+	_ = command.Flags().MarkHidden("repo")
+	_ = command.Flags().MarkHidden("subdir")
 
 	return command
 }
 
 func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) error {
-	path := pathArg(args)
-	if path == "" {
-		wd, _ := os.Getwd()
-		path = filepath.Join(wd, flags.template)
-	}
+	path := handlePath(args, flags)
 
-	err := templates.Init(cmd.ErrOrStderr(), flags.template, path)
+	var err error
+	if flags.template != "" {
+		err = templates.InitFromName(cmd.ErrOrStderr(), flags.template, path)
+	} else if flags.repo != "" {
+		err = templates.InitFromRepo(cmd.ErrOrStderr(), flags.repo, flags.subdir, path)
+	} else {
+		err = usererr.New("either --template or --repo need to be specified")
+	}
 	if err != nil {
 		return err
 	}
@@ -75,4 +92,19 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 	)
 
 	return nil
+}
+
+func handlePath(args []string, flags *createCmdFlags) string {
+	path := pathArg(args)
+	wd, _ := os.Getwd()
+	if path == "" {
+		if flags.template != "" {
+			path = filepath.Join(wd, flags.template)
+		} else if flags.repo != "" && flags.subdir == "" {
+			path = filepath.Join(wd, filepath.Base(flags.repo))
+		} else if flags.repo != "" && flags.subdir != "" {
+			path = filepath.Join(wd, filepath.Base(flags.subdir))
+		}
+	}
+	return path
 }
