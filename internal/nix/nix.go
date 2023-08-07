@@ -128,7 +128,7 @@ func MustGetSystem() string {
 
 var cachedSystem string
 
-// TODO: rename to ComputeSystem
+// TODO: rename to ComputeSystem or ComputePlatform?
 func System() (string, error) {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
@@ -176,6 +176,28 @@ func Version() (string, error) {
 	}
 	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
 	return version, nil
+}
+
+var nixPlatforms = []string{
+	"aarch64-darwin",
+	"aarch64-linux",
+	"i686-linux",
+	"x86_64-darwin",
+	"x86_64-linux",
+	// not technically supported, but should work?
+	// ref.
+	"armv7l-linux",
+}
+
+// EnsureValidPlatform returns an error if the platform is not supported by nix.
+// https://nixos.org/manual/nix/stable/installation/supported-platforms.html
+func EnsureValidPlatform(platform string) error {
+	for _, p := range nixPlatforms {
+		if p == platform {
+			return nil
+		}
+	}
+	return usererr.New("Unsupported platform: %s. Valid platforms are: %v", platform, nixPlatforms)
 }
 
 // Warning: be careful using the bins in default/bin, they won't always match bins

@@ -74,6 +74,50 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "map-with-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":   "latest",
+						"platforms": []string{"x86_64-darwin", "aarch64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-excluded-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":            "latest",
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-platforms-and-excluded-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -163,5 +207,26 @@ func TestParseVersionedName(t *testing.T) {
 				t.Errorf("expected: %v, got: %v", testCase.expectedVersion, version)
 			}
 		})
+	}
+}
+
+func TestConvertToKind(t *testing.T) {
+	testCase := Packages{
+		jsonKind:   jsonList,
+		Collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
+	}
+
+	expected := Packages{
+		jsonKind: jsonMap,
+		Collection: []Package{
+			NewVersionOnlyPackage("python", "" /*version*/),
+			NewVersionOnlyPackage("hello", "latest"),
+			NewVersionOnlyPackage("go", "1.20"),
+		},
+	}
+
+	testCase.convertToKind(jsonMap)
+	if !reflect.DeepEqual(testCase, expected) {
+		t.Errorf("expected: %+v, got: %+v", expected, testCase)
 	}
 }

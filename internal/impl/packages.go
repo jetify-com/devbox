@@ -33,7 +33,8 @@ import (
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
-func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
+// nolint:revive // warns about cognitive complexity
+func (d *Devbox) Add(ctx context.Context, platform, excludePlatform string, pkgsNames ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
@@ -47,6 +48,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	addedPackageNames := []string{}
 	existingPackageNames := d.PackageNames()
 	for _, pkg := range pkgs {
+
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
@@ -84,6 +86,19 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 
 		d.cfg.Packages.Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
+	}
+
+	for _, pkg := range addedPackageNames {
+		if platform != "" {
+			if err := d.cfg.Packages.AddPlatform(pkg, platform); err != nil {
+				return err
+			}
+		}
+		if excludePlatform != "" {
+			if err := d.cfg.Packages.ExcludePlatform(pkg, excludePlatform); err != nil {
+				return err
+			}
+		}
 	}
 
 	// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled

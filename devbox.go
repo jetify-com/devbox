@@ -19,7 +19,7 @@ type Devbox interface {
 	// Add adds Nix packages to the config so that they're available in the devbox
 	// environment. It validates that the Nix packages exist, and install them.
 	// Adding duplicate packages is a no-op.
-	Add(ctx context.Context, pkgs ...string) error
+	Add(ctx context.Context, platform, excludePlatform string, pkgs ...string) error
 	Config() *devconfig.Config
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define

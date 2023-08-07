@@ -2,10 +2,14 @@ package devconfig
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/slices"
 )
 
@@ -26,6 +30,11 @@ type Packages struct {
 	// NOTE: this is not a pointer to make debugging failure cases easier
 	// (get dumps of the values, not memory addresses)
 	Collection []Package `json:"-,omitempty"`
+}
+
+// TODO savil: rm
+func (pkgs *Packages) Kind() int {
+	return int(pkgs.jsonKind)
 }
 
 // VersionedNames returns a list of package names with versions.
@@ -53,6 +62,84 @@ func (pkgs *Packages) Remove(versionedName string) {
 	pkgs.Collection = slices.DeleteFunc(pkgs.Collection, func(pkg Package) bool {
 		return pkg.name == name && pkg.Version == version
 	})
+}
+
+// AddPlatform adds a platform to the list of platforms for a given package
+func (pkgs *Packages) AddPlatform(versionedname, platform string) error {
+	if err := nix.EnsureValidPlatform(platform); err != nil {
+		return errors.WithStack(err)
+	}
+
+	name, version := parseVersionedName(versionedname)
+	for idx, pkg := range pkgs.Collection {
+		if pkg.name == name && pkg.Version == version {
+
+			// Check if the platform is already present
+			alreadyPresent := false
+			for _, existing := range pkg.Platforms {
+				if existing == platform {
+					alreadyPresent = true
+					break
+				}
+			}
+
+			// Add the platform if it's not already present
+			if !alreadyPresent {
+				pkg.Platforms = append(pkg.Platforms, platform)
+			}
+
+			// Adding any platform will restrict installation to it, so
+			// the ExcludedPlatforms are no longer needed
+			pkg.ExcludedPlatforms = nil
+
+			pkgs.jsonKind = jsonMap
+			pkg.kind = regular
+			pkgs.Collection[idx] = pkg
+			return nil
+		}
+	}
+	return errors.Errorf("package %s not found", versionedname)
+}
+
+// ExcludePlatform adds a platform to the list of excluded platforms for a given package
+func (pkgs *Packages) ExcludePlatform(versionedName, platform string) error {
+	if err := nix.EnsureValidPlatform(platform); err != nil {
+		return errors.WithStack(err)
+	}
+
+	name, version := parseVersionedName(versionedName)
+	for idx, pkg := range pkgs.Collection {
+		if pkg.name == name && pkg.Version == version {
+
+			// Check if the platform is already present
+			alreadyPresent := false
+			for _, existing := range pkg.ExcludedPlatforms {
+				if existing == platform {
+					alreadyPresent = true
+					break
+				}
+			}
+
+			if !alreadyPresent {
+				pkg.ExcludedPlatforms = append(pkg.ExcludedPlatforms, platform)
+			}
+			if len(pkg.Platforms) > 0 {
+				ux.Finfo(
+					os.Stderr,
+					"Excluding a platform for %[1]s is a bit redundant because it will only be installed on: %[2]v. "+
+						"Consider removing the `platform` field from %[1]s's definition in your devbox."+
+						"json if you intend for %[1]s to be installed on all platforms except %[3]s.\n",
+					versionedName, strings.Join(pkg.Platforms, ", "), platform,
+				)
+			}
+
+			pkgs.jsonKind = jsonMap
+			pkg.kind = regular
+			pkgs.Collection[idx] = pkg
+			return nil
+		}
+	}
+	return errors.Errorf("package %s not found", versionedName)
 }
 
 func (pkgs *Packages) UnmarshalJSON(data []byte) error {
@@ -123,7 +210,8 @@ type Package struct {
 	// deliberately not adding omitempty
 	Version string `json:"version"`
 
-	// TODO: add other fields like platforms
+	Platforms         []string `json:"platforms,omitempty"`
+	ExcludedPlatforms []string `json:"excluded_platforms,omitempty"`
 }
 
 func NewVersionOnlyPackage(name, version string) Package {
@@ -143,11 +231,32 @@ func NewPackage(name string, values map[string]any) Package {
 		version = ""
 	}
 
-	return Package{
-		kind:    regular,
-		name:    name,
-		Version: version.(string),
+	var platforms []string
+	if p, ok := values["platforms"]; ok {
+		platforms = p.([]string)
 	}
+	var excludedPlatforms []string
+	if e, ok := values["excluded_platforms"]; ok {
+		excludedPlatforms = e.([]string)
+	}
+
+	return Package{
+		kind:              regular,
+		name:              name,
+		Version:           version.(string),
+		Platforms:         platforms,
+		ExcludedPlatforms: excludedPlatforms,
+	}
+}
+
+// TODO savil: rm
+func (p *Package) Name() string {
+	return p.name
+}
+
+// TODO savil: rm
+func (p *Package) Kind() int {
+	return int(p.kind)
 }
 
 func (p *Package) VersionedName() string {
@@ -181,6 +290,10 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 
 	*p = Package(*alias)
 	p.kind = regular
+
+	// TODO savil. needed?
+	//p.Platforms = alias.Platforms
+	//p.ExcludedPlatforms = alias.ExcludedPlatforms
 	return nil
 }
 
