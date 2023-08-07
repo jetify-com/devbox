@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 type jsonKind int
@@ -22,6 +22,8 @@ type Packages struct {
 
 	// Collection contains the set of package definitions
 	// We don't want this key to be serialized automatically, hence the "key" in json is "-"
+	// NOTE: this is not a pointer to make debugging failure cases easier
+	// (get dumps of the values, not memory addresses)
 	Collection []Package `json:"-,omitempty"`
 }
 
@@ -74,31 +76,19 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	// We use orderedmap to preserve the order of the packages. While the JSON
 	// specification specifies that maps are unordered, we do rely on the order
 	// for certain functionality.
-	orderedMap := orderedmap.New()
+	orderedMap := orderedmap.New[string, Package]()
 	err := json.Unmarshal(data, &orderedMap)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
+	// Convert the ordered map to a list of packages, and set the name field
+	// from the map's key
 	packagesList := []Package{}
-	for _, name := range orderedMap.Keys() {
-		// The value may be a JSON object or a string
-		packageValue, _ := orderedMap.Get(name)
-
-		// Test if the value is a JSON object. Since the Collection was unmarshalled
-		// as an orderedmap, this JSON object will also be defaulted to an orderedmap.
-		if packageMap, ok := packageValue.(orderedmap.OrderedMap); ok {
-			p := NewPackage(name, &packageMap)
-			packagesList = append(packagesList, p)
-
-			// Test if the value is a string:
-		} else if packageString, ok := packageValue.(string); ok {
-			p := NewVersionOnlyPackage(name, packageString)
-			packagesList = append(packagesList, p)
-
-		} else {
-			return errors.Errorf("invalid package %packageValue of type: %T", packageValue, packageValue)
-		}
+	for pair := orderedMap.Oldest(); pair != nil; pair = pair.Next() {
+		pkg := pair.Value
+		pkg.name = pair.Key
+		packagesList = append(packagesList, pkg)
 	}
 	pkgs.Collection = packagesList
 	pkgs.jsonKind = jsonMap
@@ -120,7 +110,7 @@ func (pkgs *Packages) MarshalJSON() ([]byte, error) {
 		return json.Marshal(packagesList)
 	}
 
-	orderedMap := orderedmap.New()
+	orderedMap := orderedmap.New[string, Package]()
 	for _, p := range pkgs.Collection {
 		orderedMap.Set(p.name, p)
 	}
@@ -135,8 +125,9 @@ const (
 )
 
 type Package struct {
-	kind    packageKind
-	name    string
+	kind packageKind
+	name string
+	// deliberately not adding omitempty
 	Version string `json:"version"`
 
 	// TODO: add other fields like platforms
@@ -150,8 +141,8 @@ func NewVersionOnlyPackage(name, version string) Package {
 	}
 }
 
-func NewPackage(name string, packageMap *orderedmap.OrderedMap) Package {
-	version, ok := packageMap.Get("version")
+func NewPackage(name string, values map[string]any) Package {
+	version, ok := values["version"]
 	if !ok {
 		// For legacy packages, the version may not be specified. We leave it blank
 		// here, and code that consumes the Config is expected to handle this case
@@ -164,6 +155,28 @@ func NewPackage(name string, packageMap *orderedmap.OrderedMap) Package {
 		name:    name,
 		Version: version.(string),
 	}
+}
+
+func (p *Package) UnmarshalJSON(data []byte) error {
+	// First, attempt to unmarshal as a version-only string
+	var version string
+	if err := json.Unmarshal(data, &version); err == nil {
+		p.kind = versionOnly
+		p.Version = version
+		return nil
+	}
+
+	// Second, attempt to unmarshal as a Package struct
+	type Alias Package // Use an alias-type to avoid infinite recursion
+	alias := &Alias{}
+	if err := json.Unmarshal(data, alias); err != nil {
+		return errors.WithStack(err)
+	}
+
+	// more robust way to copy all fields from alias?
+	p.kind = regular
+	p.Version = alias.Version
+	return nil
 }
 
 func (p Package) MarshalJSON() ([]byte, error) {

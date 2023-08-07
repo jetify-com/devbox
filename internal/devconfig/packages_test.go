@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/iancoleman/orderedmap"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
@@ -35,10 +34,10 @@ func TestJsonifyConfigPackages(t *testing.T) {
 		},
 		{
 			name:       "flat-list",
-			jsonConfig: `{"packages":["python","go@1.20"]}`,
+			jsonConfig: `{"packages":["python","hello@latest","go@1.20"]}`,
 			expected: Packages{
 				jsonKind:   jsonList,
-				Collection: packagesFromLegacyList([]string{"python", "go@1.20"}),
+				Collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
 			},
 		},
 		{
@@ -59,7 +58,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			expected: Packages{
 				jsonKind: jsonMap,
 				Collection: []Package{
-					NewPackage("python", orderedMapFromPairs([][]string{{"version", "latest"}})),
+					NewPackage("python", map[string]any{"version": "latest"}),
 				},
 			},
 		},
@@ -71,7 +70,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				Collection: []Package{
 					NewVersionOnlyPackage("go", "1.20"),
 					NewVersionOnlyPackage("emacs", "latest"),
-					NewPackage("python", orderedMapFromPairs([][]string{{"version", "latest"}})),
+					NewPackage("python", map[string]any{"version": "latest"}),
 				},
 			},
 		},
@@ -113,15 +112,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			}
 		})
 	}
-}
-
-// orderedMapFromPairs takes a list of key-value pairs and returns an orderedmap
-func orderedMapFromPairs(fields [][]string) *orderedmap.OrderedMap {
-	m := orderedmap.New()
-	for _, field := range fields {
-		m.Set(field[0], field[1])
-	}
-	return m
 }
 
 func TestParseVersionedName(t *testing.T) {
