@@ -22,7 +22,7 @@ const DefaultName = "devbox.json"
 type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	Packages []string `cue:"[...string]" json:"packages"`
+	Packages []string `json:"packages"`
 
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
@@ -52,7 +52,7 @@ type NixpkgsConfig struct {
 
 // Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
-	Command string `cue:"string" json:"command"`
+	Command string `json:"command"`
 }
 
 func DefaultConfig() *Config {
