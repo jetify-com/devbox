@@ -25,9 +25,6 @@ type SystemInfo struct {
 	// It is of the form /nix/store/<hash>-<name>-<version>
 	// <name> may be different from the canonicalName so we store the full store path.
 	StorePath string `json:"store_path,omitempty"`
-	// CAStorePath is the content-addressed path for the nix package in /nix/store
-	// It is of the form /nix/store/<hash>-<name>-<version>
-	CAStorePath string `json:"ca_store_path,omitempty"`
 }
 
 func (p *Package) GetSource() string {

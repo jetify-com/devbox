@@ -122,11 +122,9 @@ func StartProcessManager(
 	availableServices Services,
 	projectDir string,
 	processComposeBinPath string,
-	processComposeFilePath string,
 	processComposeBackground bool,
 ) error {
 	// Check if process-compose is already running
-
 	if ProcessManagerIsRunning(projectDir) {
 		return fmt.Errorf("process-compose is already running. To stop it, run `devbox services stop`")
 	}

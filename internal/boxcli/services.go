@@ -190,9 +190,10 @@ func startProcessManager(
 		return err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    servicesFlags.config.path,
-		Env:    env,
-		Writer: cmd.ErrOrStderr(),
+		Dir:                      servicesFlags.config.path,
+		Env:                      env,
+		CustomProcessComposeFile: flags.processComposeFile,
+		Writer:                   cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

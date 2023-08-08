@@ -9,10 +9,19 @@ import (
 
 // ParseVersionedPackage checks if the given package is a versioned package
 // (`python@3.10`) and returns its name and version
-func ParseVersionedPackage(pkg string) (string, string, bool) {
-	lastIndex := strings.LastIndex(pkg, "@")
-	if lastIndex == -1 {
+func ParseVersionedPackage(versionedName string) (name string, version string, found bool) {
+	// use the last @ symbol as the version delimiter, some packages have @ in the name
+	atSymbolIndex := strings.LastIndex(versionedName, "@")
+	if atSymbolIndex == -1 {
 		return "", "", false
 	}
-	return pkg[:lastIndex], pkg[lastIndex+1:], true
+	if atSymbolIndex == len(versionedName)-1 {
+		// This case handles packages that end with `@` in the name
+		// example: `emacsPackages.@`
+		return "", "", false
+	}
+
+	// Common case: package@version
+	name, version = versionedName[:atSymbolIndex], versionedName[atSymbolIndex+1:]
+	return name, version, true
 }

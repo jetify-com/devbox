@@ -8,18 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"cuelang.org/go/cuego"
 	"github.com/pkg/errors"
 )
 
 // TODO: add support for .cue
 
 func Marshal(valuePtr any, extension string) ([]byte, error) {
-	err := cuego.Complete(valuePtr)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
 	switch extension {
 	case ".json", ".lock":
 		return MarshalJSON(valuePtr)

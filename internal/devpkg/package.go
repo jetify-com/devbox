@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -21,7 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/vercheck"
 	"go.jetpack.io/devbox/plugins"
 )
 
@@ -156,7 +155,7 @@ func (p *Package) Installable() (string, error) {
 	}
 
 	if inCache {
-		installable, err := p.ContentAddressedPath()
+		installable, err := p.InputAddressedPath()
 		if err != nil {
 			return "", err
 		}
@@ -466,7 +465,17 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 
 	// Check if the user's system's info is present in the lockfile
 	_, ok := entry.Systems[userSystem]
-	return ok, nil
+	if !ok {
+		return false, nil
+	}
+
+	version, err := nix.Version()
+	if err != nil {
+		return false, err
+	}
+
+	// enable for nix >= 2.17
+	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store
@@ -491,43 +500,6 @@ func (p *Package) InputAddressedPath() (string, error) {
 
 	sysInfo := entry.Systems[userSystem]
 	return sysInfo.StorePath, nil
-}
-
-// ContentAddressedPath is the content-addressed form of Package.InputAddressedPath
-func (p *Package) ContentAddressedPath() (string, error) {
-
-	if inCache, err := p.IsInBinaryCache(); err != nil {
-		return "", err
-	} else if !inCache {
-		return "",
-			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
-	}
-
-	entry, err := p.lockfile.Resolve(p.Raw)
-	if err != nil {
-		return "", err
-	}
-
-	userSystem, err := nix.System()
-	if err != nil {
-		return "", err
-	}
-
-	sysInfo := entry.Systems[userSystem]
-	if sysInfo.CAStorePath != "" {
-		return sysInfo.CAStorePath, nil
-	}
-
-	ux.Fwarning(
-		os.Stderr,
-		fmt.Sprintf("calculating ca_store_path for %s. This may be slow. "+
-			"Run `devbox update` to speed this up for next time.\n", sysInfo.StorePath),
-	)
-	localPath, err := nix.ContentAddressedStorePath(sysInfo.StorePath)
-	if err != nil {
-		return "", err
-	}
-	return localPath, err
 }
 
 func (p *Package) AllowInsecure() bool {
