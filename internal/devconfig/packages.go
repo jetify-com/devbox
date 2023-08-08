@@ -189,13 +189,10 @@ func (p Package) MarshalJSON() ([]byte, error) {
 func parseVersionedName(versionedName string) (name, version string) {
 	var found bool
 	name, version, found = searcher.ParseVersionedPackage(versionedName)
-	if found {
-		return name, version
-	} else {
+	if !found {
 		// Case without any @version in the versionedName
-		name = versionedName
 		// We deliberately do not set version to `latest`
-		version = ""
+		return versionedName, "" /*version*/
 	}
 	return name, version
 }
