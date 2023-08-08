@@ -144,6 +144,31 @@ func System() (string, error) {
 	return cachedSystem, nil
 }
 
+// version is the cached output of `nix --version`.
+var version = ""
+
+// Version returns the version of nix from `nix --version`. Usually in a semver
+// like format, but not strictly.
+func Version() (string, error) {
+
+	if version != "" {
+		return version, nil
+	}
+
+	cmd := command("--version")
+	outBytes, err := cmd.Output()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	out := string(outBytes)
+	const prefix = "nix (Nix) "
+	if !strings.HasPrefix(out, prefix) {
+		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
+	}
+	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
+	return version, nil
+}
+
 // Warning: be careful using the bins in default/bin, they won't always match bins
 // produced by the flakes.nix. Use devbox.NixBins() instead.
 func ProfileBinPath(projectDir string) string {
