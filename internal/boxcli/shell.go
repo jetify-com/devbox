@@ -16,6 +16,7 @@ import (
 )
 
 type shellCmdFlags struct {
+	envFlag
 	config   configFlags
 	printEnv bool
 	pure     bool
@@ -42,13 +43,19 @@ func shellCmd() *cobra.Command {
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	flags.config.register(command)
+	flags.envFlag.register(command)
 	return command
 }
 
 func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
+	env, err := flags.Env(flags.config.path)
+	if err != nil {
+		return err
+	}
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
+		Env:    env,
 		Pure:   flags.pure,
 		Writer: cmd.ErrOrStderr(),
 	})

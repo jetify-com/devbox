@@ -45,6 +45,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/joho/godotenv v1.5.1
+
 require (
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
