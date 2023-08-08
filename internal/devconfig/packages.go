@@ -2,10 +2,10 @@ package devconfig
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/pkg/errors"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"go.jetpack.io/devbox/internal/searcher"
 	"golang.org/x/exp/slices"
 )
 
@@ -187,25 +187,15 @@ func (p Package) MarshalJSON() ([]byte, error) {
 
 // parseVersionedName parses the name and version from package@version representation
 func parseVersionedName(versionedName string) (name, version string) {
-	// use the last @ symbol as the version delimiter, some packages have @ in the name
-	atSymbolIndex := strings.LastIndex(versionedName, "@")
-	if atSymbolIndex != -1 {
-		// Common case: package@version
-		if atSymbolIndex != len(versionedName)-1 {
-			name, version = versionedName[:atSymbolIndex], versionedName[atSymbolIndex+1:]
-		} else {
-			// This case handles packages that end with `@` in the name
-			// example: `emacsPackages.@`
-			name = versionedName[:atSymbolIndex] + "@"
-		}
+	var found bool
+	name, version, found = searcher.ParseVersionedPackage(versionedName)
+	if found {
+		return name, version
 	} else {
-		// Case without any @version: package
+		// Case without any @version in the versionedName
 		name = versionedName
-
-		// We deliberately do not set version to latest so that we don't
-		// automatically modify the devbox.json file. It should only be modified
-		// upon `devbox update`.
-		// version = "latest"
+		// We deliberately do not set version to `latest`
+		version = ""
 	}
 	return name, version
 }
