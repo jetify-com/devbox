@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const Indent = "  "
+
 // MarshalJSON marshals the given value to JSON. It does not HTML escape and
 // adds standard indentation.
 //
@@ -19,7 +21,7 @@ import (
 func MarshalJSON(v interface{}) ([]byte, error) {
 	buff := &bytes.Buffer{}
 	e := json.NewEncoder(buff)
-	e.SetIndent("", "  ")
+	e.SetIndent("", Indent)
 	e.SetEscapeHTML(false)
 	if err := e.Encode(v); err != nil {
 		return nil, errors.WithStack(err)

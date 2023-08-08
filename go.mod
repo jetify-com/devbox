@@ -3,7 +3,6 @@ module go.jetpack.io/devbox
 go 1.20
 
 require (
-	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/MicahParks/keyfunc/v2 v2.1.0
@@ -38,11 +37,19 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
+	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	golang.org/x/mod v0.9.0
+	golang.org/x/exp v0.0.0-20230807204917-050eac23e9de
+	golang.org/x/mod v0.11.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/bahlo/generic-list-go v0.2.0 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 )
 
 require (
@@ -63,7 +70,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.10 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
@@ -74,10 +80,8 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
-	github.com/lib/pq v1.10.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/nwaples/rardecode/v2 v2.0.0-beta.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -87,7 +91,6 @@ require (
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect

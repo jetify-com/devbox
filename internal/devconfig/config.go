@@ -22,7 +22,7 @@ const DefaultName = "devbox.json"
 type Config struct {
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	Packages []string `json:"packages"`
+	Packages Packages `json:"packages"`
 
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
@@ -57,7 +57,8 @@ type Stage struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Packages: []string{}, // initialize to empty slice instead of nil for consistent marshalling
+		// initialize to empty slice instead of nil for consistent marshalling
+		Packages: Packages{Collection: []Package{}},
 		Shell: &shellConfig{
 			Scripts: map[string]*shellcmd.Commands{
 				"test": {

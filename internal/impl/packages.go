@@ -45,9 +45,10 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
+	existingPackageNames := d.cfg.Packages.VersionedNames()
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, skip.
-		if slices.Contains(d.cfg.Packages, pkg.Versioned()) {
+		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
 			continue
 		}
@@ -80,7 +81,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 			return usererr.New("Package %s not found", pkg.Raw)
 		}
 
-		d.cfg.Packages = append(d.cfg.Packages, packageNameForConfig)
+		d.cfg.Packages.Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
@@ -135,7 +136,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		found, _ := d.findPackageByName(pkg)
 		if found != "" {
 			packagesToUninstall = append(packagesToUninstall, found)
-			d.cfg.Packages = lo.Without(d.cfg.Packages, found)
+			d.cfg.Packages.Remove(found)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}

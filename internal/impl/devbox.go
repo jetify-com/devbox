@@ -922,7 +922,7 @@ func (d *Devbox) nixFlakesFilePath() string {
 
 // Packages returns the list of Packages to be installed in the nix shell.
 func (d *Devbox) Packages() []string {
-	return d.cfg.Packages
+	return d.cfg.Packages.VersionedNames()
 }
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
@@ -950,7 +950,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
 	results := map[string]bool{}
-	for _, pkg := range d.cfg.Packages {
+	for _, pkg := range d.cfg.Packages.VersionedNames() {
 		i := devpkg.PackageFromString(pkg, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
 			results[i.String()] = true
