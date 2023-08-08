@@ -658,6 +658,19 @@ func (d *Devbox) StartProcessManager(
 	background bool,
 	processComposeFileOrDir string,
 ) error {
+
+	if !d.IsEnvEnabled() {
+		args := []string{"services", "up"}
+		args = append(args, requestedServices...)
+		if processComposeFileOrDir != "" {
+			args = append(args, "--process-compose-file", processComposeFileOrDir)
+		}
+		if background {
+			args = append(args, "--background")
+		}
+		return d.RunScript(ctx, "devbox", args)
+	}
+
 	svcs, err := d.Services()
 	if err != nil {
 		return err
@@ -687,21 +700,9 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "up"}
-		args = append(args, requestedServices...)
-		if processComposeFileOrDir != "" {
-			args = append(args, "--process-compose-file", processComposeFileOrDir)
-		}
-		if background {
-			args = append(args, "--background")
-		}
-		return d.RunScript(ctx, "devbox", args)
-	}
 
 	// Start the process manager
 
-	fmt.Printf("Starting with File or Dir: %s\n", processComposeFileOrDir)
 	return services.StartProcessManager(
 		ctx,
 		d.writer,
