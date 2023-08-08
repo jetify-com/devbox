@@ -52,13 +52,14 @@ const (
 )
 
 type Devbox struct {
-	cfg               *devconfig.Config
-	lockfile          *lock.File
-	nix               nix.Nixer
-	projectDir        string
-	pluginManager     *plugin.Manager
-	pure              bool
-	allowInsecureAdds bool
+	cfg                      *devconfig.Config
+	lockfile                 *lock.File
+	nix                      nix.Nixer
+	projectDir               string
+	pluginManager            *plugin.Manager
+	pure                     bool
+	allowInsecureAdds        bool
+	customProcessComposeFile string
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -82,13 +83,14 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:               cfg,
-		nix:               &nix.Nix{},
-		projectDir:        projectDir,
-		pluginManager:     plugin.NewManager(),
-		writer:            opts.Writer,
-		pure:              opts.Pure,
-		allowInsecureAdds: opts.AllowInsecureAdds,
+		cfg:                      cfg,
+		nix:                      &nix.Nix{},
+		projectDir:               projectDir,
+		pluginManager:            plugin.NewManager(),
+		writer:                   opts.Writer,
+		pure:                     opts.Pure,
+		customProcessComposeFile: opts.CustomProcessComposeFile,
+		allowInsecureAdds:        opts.AllowInsecureAdds,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -487,7 +489,7 @@ func (d *Devbox) Services() (services.Services, error) {
 		return nil, err
 	}
 
-	userSvcs := services.FromUserProcessCompose(d.projectDir)
+	userSvcs := services.FromUserProcessCompose(d.projectDir, d.customProcessComposeFile)
 
 	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
@@ -656,6 +658,19 @@ func (d *Devbox) StartProcessManager(
 	background bool,
 	processComposeFileOrDir string,
 ) error {
+
+	if !d.IsEnvEnabled() {
+		args := []string{"services", "up"}
+		args = append(args, requestedServices...)
+		if processComposeFileOrDir != "" {
+			args = append(args, "--process-compose-file", processComposeFileOrDir)
+		}
+		if background {
+			args = append(args, "--background")
+		}
+		return d.RunScript(ctx, "devbox", args)
+	}
+
 	svcs, err := d.Services()
 	if err != nil {
 		return err
@@ -685,17 +700,6 @@ func (d *Devbox) StartProcessManager(
 			return err
 		}
 	}
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "up"}
-		args = append(args, requestedServices...)
-		if processComposeFileOrDir != "" {
-			args = append(args, "--process-compose-file", processComposeFileOrDir)
-		}
-		if background {
-			args = append(args, "--background")
-		}
-		return d.RunScript(ctx, "devbox", args)
-	}
 
 	// Start the process manager
 
@@ -705,7 +709,7 @@ func (d *Devbox) StartProcessManager(
 		requestedServices,
 		svcs,
 		d.projectDir,
-		processComposePath, processComposeFileOrDir,
+		processComposePath,
 		background,
 	)
 }
