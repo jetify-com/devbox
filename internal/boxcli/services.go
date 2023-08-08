@@ -169,8 +169,9 @@ func startProcessManager(
 	flags serviceUpFlags,
 ) error {
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    servicesFlags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Dir:                      servicesFlags.config.path,
+		CustomProcessComposeFile: flags.processComposeFile,
+		Writer:                   cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

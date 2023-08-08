@@ -5,9 +5,10 @@ import (
 )
 
 type Opts struct {
-	AllowInsecureAdds bool
-	Dir               string
-	Pure              bool
-	IgnoreWarnings    bool
-	Writer            io.Writer
+	AllowInsecureAdds        bool
+	Dir                      string
+	Pure                     bool
+	IgnoreWarnings           bool
+	CustomProcessComposeFile string
+	Writer                   io.Writer
 }

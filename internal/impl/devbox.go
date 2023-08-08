@@ -52,13 +52,14 @@ const (
 )
 
 type Devbox struct {
-	cfg               *devconfig.Config
-	lockfile          *lock.File
-	nix               nix.Nixer
-	projectDir        string
-	pluginManager     *plugin.Manager
-	pure              bool
-	allowInsecureAdds bool
+	cfg                      *devconfig.Config
+	lockfile                 *lock.File
+	nix                      nix.Nixer
+	projectDir               string
+	pluginManager            *plugin.Manager
+	pure                     bool
+	allowInsecureAdds        bool
+	customProcessComposeFile string
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -82,13 +83,14 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:               cfg,
-		nix:               &nix.Nix{},
-		projectDir:        projectDir,
-		pluginManager:     plugin.NewManager(),
-		writer:            opts.Writer,
-		pure:              opts.Pure,
-		allowInsecureAdds: opts.AllowInsecureAdds,
+		cfg:                      cfg,
+		nix:                      &nix.Nix{},
+		projectDir:               projectDir,
+		pluginManager:            plugin.NewManager(),
+		writer:                   opts.Writer,
+		pure:                     opts.Pure,
+		customProcessComposeFile: opts.CustomProcessComposeFile,
+		allowInsecureAdds:        opts.AllowInsecureAdds,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -478,7 +480,7 @@ func (d *Devbox) saveCfg() error {
 	return d.cfg.SaveTo(d.ProjectDir())
 }
 
-func (d *Devbox) Services(userProcessCompose string) (services.Services, error) {
+func (d *Devbox) Services() (services.Services, error) {
 	pluginSvcs, err := d.pluginManager.GetServices(
 		d.PackagesAsInputs(),
 		d.cfg.Include,
@@ -487,7 +489,7 @@ func (d *Devbox) Services(userProcessCompose string) (services.Services, error) 
 		return nil, err
 	}
 
-	userSvcs := services.FromUserProcessCompose(d.projectDir, userProcessCompose)
+	userSvcs := services.FromUserProcessCompose(d.projectDir, d.customProcessComposeFile)
 
 	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
@@ -515,7 +517,7 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
-	svcSet, err := d.Services("")
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
@@ -563,7 +565,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		return services.StopProcessManager(ctx, d.projectDir, d.writer)
 	}
 
-	svcSet, err := d.Services("")
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
@@ -585,7 +587,7 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
 	}
 
-	svcSet, err := d.Services("")
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
@@ -631,7 +633,7 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
 
-	svcSet, err := d.Services("")
+	svcSet, err := d.Services()
 	if err != nil {
 		return err
 	}
@@ -656,7 +658,7 @@ func (d *Devbox) StartProcessManager(
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-	svcs, err := d.Services(processComposeFileOrDir)
+	svcs, err := d.Services()
 	if err != nil {
 		return err
 	}
