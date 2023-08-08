@@ -39,8 +39,8 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	golang.org/x/mod v0.9.0
+	golang.org/x/exp v0.0.0-20230807204917-050eac23e9de
+	golang.org/x/mod v0.11.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )

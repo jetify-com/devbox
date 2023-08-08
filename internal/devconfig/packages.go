@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"golang.org/x/exp/slices"
 )
 
 type jsonKind int
@@ -33,7 +34,7 @@ type Packages struct {
 // example:
 // ["package1", "package2@latest", "package3@1.20"]
 func (pkgs *Packages) VersionedNames() []string {
-	result := []string{}
+	result := make([]string, 0, len(pkgs.Collection))
 	for _, p := range pkgs.Collection {
 		name := p.name
 		if p.Version != "" {
@@ -51,15 +52,11 @@ func (pkgs *Packages) Add(versionedName string) {
 }
 
 // Remove removes a package from the list of packages
-func (pkgs *Packages) Remove(versionedName string) error {
+func (pkgs *Packages) Remove(versionedName string) {
 	name, version := parseVersionedName(versionedName)
-	for idx, pkg := range pkgs.Collection {
-		if pkg.name == name && pkg.Version == version {
-			pkgs.Collection = append(pkgs.Collection[:idx], pkgs.Collection[idx+1:]...)
-			return nil
-		}
-	}
-	return errors.Errorf("package %s not found", versionedName)
+	pkgs.Collection = slices.DeleteFunc(pkgs.Collection, func(pkg Package) bool {
+		return pkg.name == name && pkg.Version == version
+	})
 }
 
 func (pkgs *Packages) UnmarshalJSON(data []byte) error {
@@ -97,7 +94,7 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 
 func (pkgs *Packages) MarshalJSON() ([]byte, error) {
 	if pkgs.jsonKind == jsonList {
-		packagesList := []string{}
+		packagesList := make([]string, 0, len(pkgs.Collection))
 		for _, p := range pkgs.Collection {
 
 			// Version may be empty for unversioned packages
@@ -167,15 +164,14 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 	}
 
 	// Second, attempt to unmarshal as a Package struct
-	type Alias Package // Use an alias-type to avoid infinite recursion
-	alias := &Alias{}
+	type packageAlias Package // Use an alias-type to avoid infinite recursion
+	alias := &packageAlias{}
 	if err := json.Unmarshal(data, alias); err != nil {
 		return errors.WithStack(err)
 	}
 
-	// more robust way to copy all fields from alias?
+	*p = Package(*alias)
 	p.kind = regular
-	p.Version = alias.Version
 	return nil
 }
 
@@ -185,8 +181,8 @@ func (p Package) MarshalJSON() ([]byte, error) {
 	}
 
 	// If we have a regular package, we want to marshal the entire struct:
-	type Alias Package // Use an alias-type to avoid infinite recursion
-	return json.Marshal((Alias)(p))
+	type packageAlias Package // Use an alias-type to avoid infinite recursion
+	return json.Marshal((packageAlias)(p))
 }
 
 // parseVersionedName parses the name and version from package@version representation

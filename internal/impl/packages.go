@@ -136,9 +136,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		found, _ := d.findPackageByName(pkg)
 		if found != "" {
 			packagesToUninstall = append(packagesToUninstall, found)
-			if err := d.cfg.Packages.Remove(found); err != nil {
-				return errors.WithStack(err)
-			}
+			d.cfg.Packages.Remove(found)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
