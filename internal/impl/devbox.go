@@ -138,7 +138,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgHashes := lo.Map(d.ConfigPackages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -500,7 +500,7 @@ func (d *Devbox) saveCfg() error {
 
 func (d *Devbox) Services() (services.Services, error) {
 	pluginSvcs, err := d.pluginManager.GetServices(
-		d.PackagesAsInputs(),
+		d.PlatformPackages(),
 		d.cfg.Include,
 	)
 	if err != nil {
@@ -840,7 +840,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.PackagesAsInputs(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(d.PlatformPackages(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -944,28 +944,31 @@ func (d *Devbox) nixFlakesFilePath() string {
 
 // Refactoring steps:
 // 1. Change all users of Packages() to ConfigPackageNames() or PlatformPackageNames()
-// 2. PackagesAsInputs() consumes d.cfg.Packages
+// 2. ConfigPackages() consumes d.cfg.Packages
 // 3. Change d.cfg.Packages.VersionedNames() callers to Packages() variants
-// 3. Change PackagesAsInputs() consumers to ConfigPackages() or PlatformPackages()
+// 3. Change ConfigPackages() consumers to ConfigPackages() or PlatformPackages()
 
-// ConfigPackageNames returns the list of packages that are defined in devbox.json
+// ConfigPackageNames returns the package names as defined in devbox.json
 func (d *Devbox) ConfigPackageNames() []string {
-	pkgNames := []string{}
-	for _, pkg := range d.PackagesAsInputs() {
-		pkgNames = append(pkgNames, pkg.Raw)
-	}
-	return pkgNames
+	return d.cfg.Packages.VersionedNames()
 }
 
-// PlatformPackageNames returns the list of packages that are to be installed
+// PlatformPackageNames returns the names of packages that are to be installed
 // on the user's current platform.
 func (d *Devbox) PlatformPackageNames() []string {
 	// TODO: next PR replaces this implementation
-	return d.ConfigPackageNames()
+	return d.cfg.Packages.VersionedNamesForPlatform()
 }
 
-func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.cfg.Packages.VersionedNames(), d.lockfile)
+// ConfigPackages returns the packages that are defined in devbox.json
+// NOTE: the return type is different from devconfig.Packages
+func (d *Devbox) ConfigPackages() []*devpkg.Package {
+	return devpkg.PackageFromStrings(d.ConfigPackageNames(), d.lockfile)
+}
+
+// PlatformPackages returns the packages that are to be installed
+func (d *Devbox) PlatformPackages() []*devpkg.Package {
+	return devpkg.PackageFromStrings(d.PlatformPackageNames(), d.lockfile)
 }
 
 // AllPackages returns user packages and plugin packages concatenated in
@@ -993,7 +996,7 @@ func (d *Devbox) Includes() []plugin.Includable {
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.ConfigPackages() {
 		if pkg.IsLegacy() {
 			return true
 		}

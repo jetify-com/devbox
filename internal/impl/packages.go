@@ -197,7 +197,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Create plugin directories first because packages might need them
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.InstallablePackages() {
 		if err := d.PluginManager().Create(pkg); err != nil {
 			return err
 		}
@@ -375,7 +375,7 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 // pendingPackagesForInstallation returns a list of packages that are in
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
-// Devbox.packages() (higher priority first)
+// Devbox.AllPackages() (higher priority first)
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
@@ -428,7 +428,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.PackagesAsInputs()
+	devboxInputs := d.PlatformPackages()
 
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works

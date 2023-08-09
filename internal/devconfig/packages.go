@@ -45,6 +45,11 @@ func (pkgs *Packages) VersionedNames() []string {
 	return result
 }
 
+func (pkgs *Packages) VersionedNamesForPlatform() []string {
+	// TODO savil. Next PR will update this implementation
+	return pkgs.VersionedNames()
+}
+
 // Add adds a package to the list of packages
 func (pkgs *Packages) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
