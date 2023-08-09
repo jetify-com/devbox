@@ -434,7 +434,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool, rootUser bo
 
 	// Setup Generate parameters
 	g := generate.Open(
-		ctx, dockerfilePath, rootUser, isDevcontainer, d.Packages(), d.getLocalFlakesDirs(),
+		ctx, d.projectDir, rootUser, isDevcontainer, d.Packages(), d.getLocalFlakesDirs(),
 	)
 
 	// generate dockerfile

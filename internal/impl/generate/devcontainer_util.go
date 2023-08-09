@@ -85,7 +85,7 @@ func (g *Generate) CreateDockerfile() error {
 	defer trace.StartRegion(g.Ctx, "createDockerfile").End()
 
 	// create dockerfile
-	file, err := os.Create(g.Path)
+	file, err := os.Create(filepath.Join(g.Path, "Dockerfile"))
 	if err != nil {
 		return err
 	}
