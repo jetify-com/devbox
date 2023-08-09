@@ -23,12 +23,8 @@ const HooksFilename = ".hooks"
 type devboxer interface {
 	Config() *devconfig.Config
 	Lockfile() *lock.File
-<<<<<<< HEAD
-	PackagesAsInputs() []*devpkg.Package
 	AllPackages() ([]*devpkg.Package, error)
-=======
-	PlatformPackages() []*devpkg.Package
->>>>>>> 2079687d (Split PackagesAsInputs into ConfigPackages and PlatformPackages)
+	InstallablePackages() []*devpkg.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }
@@ -47,9 +43,14 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 
+	packages, err := devbox.InstallablePackages()
+	if err != nil {
+		return err
+	}
+
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(devbox.PlatformPackages(), devbox.ProjectDir())
+	pluginHooks, err := plugin.InitHooks(packages, devbox.ProjectDir())
 	if err != nil {
 		return errors.WithStack(err)
 	}

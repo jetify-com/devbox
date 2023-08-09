@@ -15,7 +15,7 @@ type Manager struct {
 }
 
 type devboxProject interface {
-	PlatformPackageNames() []string
+	InstallablePackageNames() ([]string, error)
 	ProjectDir() string
 }
 

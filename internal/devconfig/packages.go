@@ -45,9 +45,9 @@ func (pkgs *Packages) VersionedNames() []string {
 	return result
 }
 
-func (pkgs *Packages) VersionedNamesForPlatform() []string {
+func (pkgs *Packages) VersionedNamesForPlatform() ([]string, error) {
 	// TODO savil. Next PR will update this implementation
-	return pkgs.VersionedNames()
+	return pkgs.VersionedNames(), nil
 }
 
 // Add adds a package to the list of packages

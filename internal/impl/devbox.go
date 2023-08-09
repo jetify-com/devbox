@@ -499,10 +499,12 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := d.pluginManager.GetServices(
-		d.PlatformPackages(),
-		d.cfg.Include,
-	)
+	packages, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+
+	pluginSvcs, err := d.pluginManager.GetServices(packages, d.cfg.Include)
 	if err != nil {
 		return nil, err
 	}
@@ -840,7 +842,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.PlatformPackages(), d.cfg.Include, env)
+	installablePackages, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+	pluginEnv, err := d.pluginManager.Env(installablePackages, d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -942,20 +948,13 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// Refactoring steps:
-// 1. Change all users of Packages() to ConfigPackageNames() or PlatformPackageNames()
-// 2. ConfigPackages() consumes d.cfg.Packages
-// 3. Change d.cfg.Packages.VersionedNames() callers to Packages() variants
-// 3. Change ConfigPackages() consumers to ConfigPackages() or PlatformPackages()
-
 // ConfigPackageNames returns the package names as defined in devbox.json
 func (d *Devbox) ConfigPackageNames() []string {
 	return d.cfg.Packages.VersionedNames()
 }
 
-// PlatformPackageNames returns the names of packages that are to be installed
-// on the user's current platform.
-func (d *Devbox) PlatformPackageNames() []string {
+// InstallablePackageNames returns the names of packages that are to be installed
+func (d *Devbox) InstallablePackageNames() ([]string, error) {
 	// TODO: next PR replaces this implementation
 	return d.cfg.Packages.VersionedNamesForPlatform()
 }
@@ -966,9 +965,13 @@ func (d *Devbox) ConfigPackages() []*devpkg.Package {
 	return devpkg.PackageFromStrings(d.ConfigPackageNames(), d.lockfile)
 }
 
-// PlatformPackages returns the packages that are to be installed
-func (d *Devbox) PlatformPackages() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.PlatformPackageNames(), d.lockfile)
+// InstallablePackages returns the packages that are to be installed
+func (d *Devbox) InstallablePackages() ([]*devpkg.Package, error) {
+	names, err := d.InstallablePackageNames()
+	if err != nil {
+		return nil, err
+	}
+	return devpkg.PackageFromStrings(names, d.lockfile), nil
 }
 
 // AllPackages returns user packages and plugin packages concatenated in
