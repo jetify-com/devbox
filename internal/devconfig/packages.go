@@ -32,11 +32,6 @@ type Packages struct {
 	Collection []Package `json:"-,omitempty"`
 }
 
-// TODO savil: rm
-func (pkgs *Packages) Kind() int {
-	return int(pkgs.jsonKind)
-}
-
 // VersionedNames returns a list of package names with versions.
 // NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
 //
@@ -249,14 +244,25 @@ func NewPackage(name string, values map[string]any) Package {
 	}
 }
 
-// TODO savil: rm
-func (p *Package) Name() string {
-	return p.name
-}
-
-// TODO savil: rm
-func (p *Package) Kind() int {
-	return int(p.kind)
+// enabledOnPlatform returns whether the package is enabled on the given platform.
+// If the package has a list of platforms, it is enabled only on those platforms.
+// If the package has a list of excluded platforms, it is enabled on all platforms
+// except those.
+func (p *Package) enabledOnPlatform(platform string) bool {
+	if len(p.Platforms) > 0 {
+		for _, plt := range p.Platforms {
+			if plt == platform {
+				return true
+			}
+		}
+		return false
+	}
+	for _, plt := range p.ExcludedPlatforms {
+		if plt == platform {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *Package) VersionedName() string {
@@ -268,8 +274,7 @@ func (p *Package) VersionedName() string {
 }
 
 func (p *Package) IsEnabledOnPlatform() bool {
-	// TODO savil. Next PR will update this implementation
-	return true
+	return p.enabledOnPlatform(nix.MustGetSystem())
 }
 
 func (p *Package) UnmarshalJSON(data []byte) error {
@@ -290,10 +295,6 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 
 	*p = Package(*alias)
 	p.kind = regular
-
-	// TODO savil. needed?
-	//p.Platforms = alias.Platforms
-	//p.ExcludedPlatforms = alias.ExcludedPlatforms
 	return nil
 }
 

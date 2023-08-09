@@ -185,7 +185,8 @@ var nixPlatforms = []string{
 	"x86_64-darwin",
 	"x86_64-linux",
 	// not technically supported, but should work?
-	// ref.
+	// ref. https://nixos.wiki/wiki/Nix_on_ARM
+	// ref. https://github.com/jetpack-io/devbox/pull/1300
 	"armv7l-linux",
 }
 

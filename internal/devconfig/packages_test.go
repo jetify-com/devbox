@@ -209,24 +209,3 @@ func TestParseVersionedName(t *testing.T) {
 		})
 	}
 }
-
-func TestConvertToKind(t *testing.T) {
-	testCase := Packages{
-		jsonKind:   jsonList,
-		Collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
-	}
-
-	expected := Packages{
-		jsonKind: jsonMap,
-		Collection: []Package{
-			NewVersionOnlyPackage("python", "" /*version*/),
-			NewVersionOnlyPackage("hello", "latest"),
-			NewVersionOnlyPackage("go", "1.20"),
-		},
-	}
-
-	testCase.convertToKind(jsonMap)
-	if !reflect.DeepEqual(testCase, expected) {
-		t.Errorf("expected: %+v, got: %+v", expected, testCase)
-	}
-}

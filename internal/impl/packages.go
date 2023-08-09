@@ -48,7 +48,6 @@ func (d *Devbox) Add(ctx context.Context, platform, excludePlatform string, pkgs
 	addedPackageNames := []string{}
 	existingPackageNames := d.PackageNames()
 	for _, pkg := range pkgs {
-
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
