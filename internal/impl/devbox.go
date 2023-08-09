@@ -110,9 +110,14 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	)
 	box.lockfile = lock
 
+	hasDeprecated, err := box.HasDeprecatedPackages()
+	if err != nil {
+		return nil, err
+	}
+
 	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
-		box.HasDeprecatedPackages() {
+		hasDeprecated {
 		legacyPackagesWarningHasBeenShown = true
 		globalPath, err := GlobalDataPath()
 		if err != nil {
@@ -138,7 +143,11 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.ConfigPackages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgs, err := d.ConfigPackages()
+	if err != nil {
+		return "", err
+	}
+	pkgHashes := lo.Map(pkgs, func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -950,28 +959,41 @@ func (d *Devbox) nixFlakesFilePath() string {
 
 // ConfigPackageNames returns the package names as defined in devbox.json
 func (d *Devbox) ConfigPackageNames() []string {
+	// TODO savil: centralize implementation by calling d.ConfigPackages and getting pkg.Raw
+	// Skipping for now to avoid propagating the error value.
 	return d.cfg.Packages.VersionedNames()
 }
 
 // InstallablePackageNames returns the names of packages that are to be installed
 func (d *Devbox) InstallablePackageNames() ([]string, error) {
-	// TODO: next PR replaces this implementation
-	return d.cfg.Packages.VersionedNamesForPlatform()
+	pkgs, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+	return lo.Map(pkgs, func(pkg *devpkg.Package, _ int) string {
+		return pkg.Raw
+	}), nil
 }
 
 // ConfigPackages returns the packages that are defined in devbox.json
 // NOTE: the return type is different from devconfig.Packages
-func (d *Devbox) ConfigPackages() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.ConfigPackageNames(), d.lockfile)
+func (d *Devbox) ConfigPackages() ([]*devpkg.Package, error) {
+	pkgs, err := devpkg.PackagesFromConfig(d.cfg, d.lockfile)
+	if err != nil {
+		return nil, err
+	}
+	return pkgs, nil
 }
 
 // InstallablePackages returns the packages that are to be installed
 func (d *Devbox) InstallablePackages() ([]*devpkg.Package, error) {
-	names, err := d.InstallablePackageNames()
+	pkgs, err := d.ConfigPackages()
 	if err != nil {
 		return nil, err
 	}
-	return devpkg.PackageFromStrings(names, d.lockfile), nil
+	return lo.Filter(pkgs, func(pkg *devpkg.Package, _ int) bool {
+		return pkg.IsInstallable()
+	}), nil
 }
 
 // AllPackages returns user packages and plugin packages concatenated in
@@ -998,21 +1020,28 @@ func (d *Devbox) Includes() []plugin.Includable {
 	return includes
 }
 
-func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.ConfigPackages() {
+func (d *Devbox) HasDeprecatedPackages() (bool, error) {
+	pkgs, err := d.ConfigPackages()
+	if err != nil {
+		return false, err
+	}
+	for _, pkg := range pkgs {
 		if pkg.IsLegacy() {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
+	pkgs, err := d.ConfigPackages()
+	if err != nil {
+		return "", err
+	}
 	results := map[string]bool{}
-	for _, pkg := range d.ConfigPackageNames() {
-		i := devpkg.PackageFromString(pkg, d.lockfile)
-		if i.String() == name || i.CanonicalName() == name {
-			results[i.String()] = true
+	for _, pkg := range pkgs {
+		if pkg.String() == name || pkg.CanonicalName() == name {
+			results[pkg.String()] = true
 		}
 	}
 	if len(results) > 1 {

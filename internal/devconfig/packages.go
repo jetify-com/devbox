@@ -36,18 +36,9 @@ type Packages struct {
 func (pkgs *Packages) VersionedNames() []string {
 	result := make([]string, 0, len(pkgs.Collection))
 	for _, p := range pkgs.Collection {
-		name := p.name
-		if p.Version != "" {
-			name += "@" + p.Version
-		}
-		result = append(result, name)
+		result = append(result, p.VersionedName())
 	}
 	return result
-}
-
-func (pkgs *Packages) VersionedNamesForPlatform() ([]string, error) {
-	// TODO savil. Next PR will update this implementation
-	return pkgs.VersionedNames(), nil
 }
 
 // Add adds a package to the list of packages
@@ -157,6 +148,19 @@ func NewPackage(name string, values map[string]any) Package {
 		name:    name,
 		Version: version.(string),
 	}
+}
+
+func (p *Package) VersionedName() string {
+	name := p.name
+	if p.Version != "" {
+		name += "@" + p.Version
+	}
+	return name
+}
+
+func (p *Package) IsEnabledOnPlatform() (bool, error) {
+	// TODO savil. Next PR will update this implementation
+	return true, nil
 }
 
 func (p *Package) UnmarshalJSON(data []byte) error {
