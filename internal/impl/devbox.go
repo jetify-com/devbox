@@ -370,7 +370,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool, rootUser bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
 	defer task.End()
 
@@ -394,15 +394,21 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 		return redact.Errorf("error creating dev container directory in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
+	isDevcontainer := true
+
+	// Setup generate parameters
+	g := generate.Open(
+		ctx, devContainerPath, rootUser, isDevcontainer, d.Packages(), d.getLocalFlakesDirs(),
+	)
+
 	// generate dockerfile
-	err = generate.CreateDockerfile(ctx,
-		devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = g.CreateDockerfile()
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = g.CreateDevcontainer()
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -411,7 +417,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool, rootUser bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
 	defer task.End()
 
@@ -424,11 +430,15 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 				"Remove it or use --force to overwrite it.",
 		)
 	}
+	isDevcontainer := false
+
+	// Setup Generate parameters
+	g := generate.Open(
+		ctx, dockerfilePath, rootUser, isDevcontainer, d.Packages(), d.getLocalFlakesDirs(),
+	)
 
 	// generate dockerfile
-	return errors.WithStack(
-		generate.CreateDockerfile(ctx,
-			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(g.CreateDockerfile())
 }
 
 func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {

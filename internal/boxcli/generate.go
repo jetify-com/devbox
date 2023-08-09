@@ -18,6 +18,7 @@ type generateCmdFlags struct {
 	force             bool
 	printEnvrcContent bool
 	githubUsername    string
+	rootUser          bool
 }
 
 func generateCmd() *cobra.Command {
@@ -64,6 +65,8 @@ func devcontainerCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite on existing files")
+	command.Flags().BoolVarP(
+		&flags.rootUser, "root-user", "r", false, "Use root as default user inside the container")
 	return command
 }
 
@@ -81,6 +84,8 @@ func dockerfileCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
+	command.Flags().BoolVarP(
+		&flags.rootUser, "root-user", "r", false, "Use root as default user inside the container")
 	flags.config.register(command)
 	return command
 }
@@ -143,9 +148,9 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	case "debug":
 		return box.Generate(cmd.Context())
 	case "devcontainer":
-		return box.GenerateDevcontainer(cmd.Context(), flags.force)
+		return box.GenerateDevcontainer(cmd.Context(), flags.force, flags.rootUser)
 	case "dockerfile":
-		return box.GenerateDockerfile(cmd.Context(), flags.force)
+		return box.GenerateDockerfile(cmd.Context(), flags.force, flags.rootUser)
 	}
 	return nil
 }
