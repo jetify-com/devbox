@@ -53,6 +53,7 @@ const (
 
 type Devbox struct {
 	cfg                      *devconfig.Config
+	env                      map[string]string
 	lockfile                 *lock.File
 	nix                      nix.Nixer
 	projectDir               string
@@ -84,6 +85,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 
 	box := &Devbox{
 		cfg:                      cfg,
+		env:                      opts.Env,
 		nix:                      &nix.Nix{},
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
@@ -879,6 +881,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
+	}
+
+	for k, v := range d.env {
+		env[k] = v
 	}
 
 	return env, d.addHashToEnv(env)

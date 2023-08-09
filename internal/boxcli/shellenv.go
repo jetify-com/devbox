@@ -12,6 +12,7 @@ import (
 )
 
 type shellEnvCmdFlags struct {
+	envFlag
 	config      configFlags
 	runInitHook bool
 	install     bool
@@ -45,6 +46,7 @@ func shellEnvCmd() *cobra.Command {
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 
 	flags.config.register(command)
+	flags.envFlag.register(command)
 
 	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
 
@@ -52,10 +54,15 @@ func shellEnvCmd() *cobra.Command {
 }
 
 func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
+	env, err := flags.Env(flags.config.path)
+	if err != nil {
+		return "", err
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Writer: cmd.ErrOrStderr(),
 		Pure:   flags.pure,
+		Env:    env,
 	})
 	if err != nil {
 		return "", err

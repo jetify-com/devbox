@@ -20,6 +20,7 @@ import (
 )
 
 type runCmdFlags struct {
+	envFlag
 	config      configFlags
 	pure        bool
 	listScripts bool
@@ -43,6 +44,7 @@ func runCmd() *cobra.Command {
 		},
 	}
 
+	flags.envFlag.register(command)
 	flags.config.register(command)
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox runs the script in an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
@@ -90,11 +92,16 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	debug.Log("script: %s", script)
 	debug.Log("script args: %v", scriptArgs)
 
+	env, err := flags.Env(path)
+	if err != nil {
+		return err
+	}
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    path,
 		Writer: cmd.ErrOrStderr(),
 		Pure:   flags.pure,
+		Env:    env,
 	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)

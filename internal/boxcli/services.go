@@ -11,6 +11,7 @@ import (
 )
 
 type servicesCmdFlags struct {
+	envFlag
 	config configFlags
 }
 
@@ -92,6 +93,7 @@ func servicesCmd() *cobra.Command {
 		},
 	}
 
+	flags.envFlag.register(servicesCommand)
 	flags.config.registerPersistent(servicesCommand)
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
@@ -116,8 +118,13 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
+	env, err := flags.Env(flags.config.path)
+	if err != nil {
+		return err
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
+		Env:    env,
 		Writer: cmd.ErrOrStderr(),
 	})
 	if err != nil {
@@ -133,8 +140,13 @@ func stopServices(
 	servicesFlags servicesCmdFlags,
 	flags serviceStopFlags,
 ) error {
+	env, err := servicesFlags.Env(servicesFlags.config.path)
+	if err != nil {
+		return err
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    servicesFlags.config.path,
+		Env:    env,
 		Writer: cmd.ErrOrStderr(),
 	})
 	if err != nil {
@@ -151,8 +163,13 @@ func restartServices(
 	services []string,
 	flags servicesCmdFlags,
 ) error {
+	env, err := flags.Env(flags.config.path)
+	if err != nil {
+		return err
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
+		Env:    env,
 		Writer: cmd.ErrOrStderr(),
 	})
 	if err != nil {
@@ -168,8 +185,13 @@ func startProcessManager(
 	servicesFlags servicesCmdFlags,
 	flags serviceUpFlags,
 ) error {
+	env, err := servicesFlags.Env(servicesFlags.config.path)
+	if err != nil {
+		return err
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:                      servicesFlags.config.path,
+		Env:                      env,
 		CustomProcessComposeFile: flags.processComposeFile,
 		Writer:                   cmd.ErrOrStderr(),
 	})
