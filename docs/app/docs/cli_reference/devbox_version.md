@@ -3,8 +3,13 @@
 Print version information
 
 ```bash
-devbox version [flags]
+devbox version [update] [flags]
 ```
+
+## Subcommands
+
+* [devbox version update](devbox_version_update.md)	 - Check for a new version of devbox and update if available
+
 
 ## Options
 
