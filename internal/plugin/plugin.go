@@ -163,10 +163,11 @@ func (m *Manager) createFile(
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
-		"Packages":             m.Packages(),
-		"System":               system,
-		"URLForInput":          urlForInput,
-		"Virtenv":              filepath.Join(virtenvPath, name),
+		// TODO savil: not sure about this one.
+		"Packages":    m.PlatformPackageNames(),
+		"System":      system,
+		"URLForInput": urlForInput,
+		"Virtenv":     filepath.Join(virtenvPath, name),
 	}); err != nil {
 		return errors.WithStack(err)
 	}

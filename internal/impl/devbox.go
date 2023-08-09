@@ -400,7 +400,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 		Path:           devContainerPath,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: true,
-		Pkgs:           d.Packages(),
+		Pkgs:           d.PackageNames(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -942,13 +942,30 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// Packages returns the list of Packages to be installed in the nix shell.
-func (d *Devbox) Packages() []string {
-	return d.cfg.Packages.VersionedNames()
+// Refactoring steps:
+// 1. Change all users of Packages() to ConfigPackageNames() or PlatformPackageNames()
+// 2. PackagesAsInputs() consumes d.cfg.Packages
+// 3. Change d.cfg.Packages.VersionedNames() callers to Packages() variants
+// 3. Change PackagesAsInputs() consumers to ConfigPackages() or PlatformPackages()
+
+// ConfigPackageNames returns the list of packages that are defined in devbox.json
+func (d *Devbox) ConfigPackageNames() []string {
+	pkgNames := []string{}
+	for _, pkg := range d.PackagesAsInputs() {
+		pkgNames = append(pkgNames, pkg.Raw)
+	}
+	return pkgNames
+}
+
+// PlatformPackageNames returns the list of packages that are to be installed
+// on the user's current platform.
+func (d *Devbox) PlatformPackageNames() []string {
+	// TODO: next PR replaces this implementation
+	return d.ConfigPackageNames()
 }
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+	return devpkg.PackageFromStrings(d.cfg.Packages.VersionedNames(), d.lockfile)
 }
 
 // AllPackages returns user packages and plugin packages concatenated in
@@ -986,7 +1003,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 
 func (d *Devbox) findPackageByName(name string) (string, error) {
 	results := map[string]bool{}
-	for _, pkg := range d.cfg.Packages.VersionedNames() {
+	for _, pkg := range d.ConfigPackageNames() {
 		i := devpkg.PackageFromString(pkg, d.lockfile)
 		if i.String() == name || i.CanonicalName() == name {
 			results[i.String()] = true
