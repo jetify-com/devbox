@@ -431,12 +431,12 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
 			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
 }
 
-func PrintEnvrcContent(w io.Writer) error {
-	return generate.EnvrcContent(w)
+func PrintEnvrcContent(w io.Writer, additionalFlags []string) error {
+	return generate.EnvrcContent(w, additionalFlags)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, additionaFlags []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
@@ -461,7 +461,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(ctx, d.projectDir)
+	err := generate.CreateEnvrc(ctx, d.projectDir, additionaFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}

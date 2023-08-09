@@ -90,7 +90,7 @@ func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, path string) error {
+func CreateEnvrc(ctx context.Context, path string, additionalFlags []string) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
@@ -103,7 +103,9 @@ func CreateEnvrc(ctx context.Context, path string) error {
 	tmplName := "envrc.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
-	return t.Execute(file, nil)
+	return t.Execute(file, map[string]string{
+		"AdditionalFlags": strings.Join(additionalFlags, " "),
+	})
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
@@ -156,8 +158,10 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer) error {
+func EnvrcContent(w io.Writer, additionalFlags []string) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
-	return t.Execute(w, nil)
+	return t.Execute(w, map[string]string{
+		"AdditionalFlags": strings.Join(additionalFlags, " "),
+	})
 }

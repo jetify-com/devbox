@@ -13,6 +13,7 @@ import (
 )
 
 type generateCmdFlags struct {
+	envFlag           // only used by generate direnv command
 	config            configFlags
 	force             bool
 	printEnvrcContent bool
@@ -96,6 +97,7 @@ func direnvCmd() *cobra.Command {
 			return runGenerateDirenvCmd(cmd, flags)
 		},
 	}
+	flags.envFlag.register(command)
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
 	command.Flags().BoolVarP(
@@ -149,8 +151,18 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 }
 
 func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
+	additionalFlags := []string{}
+	if flags.envFile != "" {
+		additionalFlags = append(additionalFlags, "--env-file", flags.envFile)
+	}
+	if len(flags.env) > 0 {
+		for k, v := range flags.env {
+			additionalFlags = append(additionalFlags, "--env", k+"="+v)
+		}
+	}
+
 	if flags.printEnvrcContent {
-		return devbox.PrintEnvrcContent(cmd.OutOrStdout())
+		return devbox.PrintEnvrcContent(cmd.OutOrStdout(), additionalFlags)
 	}
 
 	box, err := devbox.Open(&devopt.Opts{
@@ -161,5 +173,5 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.GenerateEnvrcFile(cmd.Context(), flags.force)
+	return box.GenerateEnvrcFile(cmd.Context(), flags.force, additionalFlags)
 }
