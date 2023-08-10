@@ -65,8 +65,8 @@ func devcontainerCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite on existing files")
-	command.Flags().BoolVarP(
-		&flags.rootUser, "root-user", "r", false, "Use root as default user inside the container")
+	command.Flags().BoolVar(
+		&flags.rootUser, "root-user", false, "Use root as default user inside the container")
 	return command
 }
 
@@ -84,8 +84,8 @@ func dockerfileCmd() *cobra.Command {
 	}
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
-	command.Flags().BoolVarP(
-		&flags.rootUser, "root-user", "r", false, "Use root as default user inside the container")
+	command.Flags().BoolVar(
+		&flags.rootUser, "root-user", false, "Use root as default user inside the container")
 	flags.config.register(command)
 	return command
 }
@@ -140,6 +140,10 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Writer: cmd.ErrOrStderr(),
+		GenerateOpts: devopt.GenerateOpts{
+			Force:    flags.force,
+			RootUser: flags.rootUser,
+		},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -148,9 +152,9 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	case "debug":
 		return box.Generate(cmd.Context())
 	case "devcontainer":
-		return box.GenerateDevcontainer(cmd.Context(), flags.force, flags.rootUser)
+		return box.GenerateDevcontainer(cmd.Context())
 	case "dockerfile":
-		return box.GenerateDockerfile(cmd.Context(), flags.force, flags.rootUser)
+		return box.GenerateDockerfile(cmd.Context())
 	}
 	return nil
 }

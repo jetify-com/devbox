@@ -25,8 +25,7 @@ import (
 //go:embed tmpl/*
 var tmplFS embed.FS
 
-type Generate struct {
-	Ctx            context.Context
+type Options struct {
 	Path           string
 	RootUser       bool
 	IsDevcontainer bool
@@ -61,28 +60,9 @@ type dockerfileData struct {
 	LocalFlakeDirs []string
 }
 
-func Open(
-	ctx context.Context,
-	path string,
-	rootUser bool,
-	isDevcontainer bool,
-	pkgs []string,
-	localFlakeDirs []string,
-) *Generate {
-
-	return &Generate{
-		Ctx:            ctx,
-		Path:           path,
-		RootUser:       rootUser,
-		IsDevcontainer: isDevcontainer,
-		Pkgs:           pkgs,
-		LocalFlakeDirs: localFlakeDirs,
-	}
-}
-
 // CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
-func (g *Generate) CreateDockerfile() error {
-	defer trace.StartRegion(g.Ctx, "createDockerfile").End()
+func (g *Options) CreateDockerfile(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "createDockerfile").End()
 
 	// create dockerfile
 	file, err := os.Create(filepath.Join(g.Path, "Dockerfile"))
@@ -102,8 +82,8 @@ func (g *Generate) CreateDockerfile() error {
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
-func (g *Generate) CreateDevcontainer() error {
-	defer trace.StartRegion(g.Ctx, "createDevcontainer").End()
+func (g *Options) CreateDevcontainer(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "createDevcontainer").End()
 
 	// create devcontainer.json file
 	file, err := os.Create(filepath.Join(g.Path, "devcontainer.json"))
@@ -151,7 +131,7 @@ func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) err
 	})
 }
 
-func (g *Generate) getDevcontainerContent() *devcontainerObject {
+func (g *Options) getDevcontainerContent() *devcontainerObject {
 	// object that gets written in devcontainer.json
 	devcontainerContent := &devcontainerObject{
 		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
@@ -172,7 +152,6 @@ func (g *Generate) getDevcontainerContent() *devcontainerObject {
 				},
 			},
 		},
-		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 		RemoteUser: "devbox",
 	}
 	if g.RootUser {
