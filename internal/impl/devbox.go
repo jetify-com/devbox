@@ -401,7 +401,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
 	}
 
 	// Setup generate parameters
-	g := &generate.Options{
+	gen := &generate.Options{
 		Path:           devContainerPath,
 		RootUser:       d.GenerateOpts.RootUser,
 		IsDevcontainer: true,
@@ -410,13 +410,13 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
 	}
 
 	// generate dockerfile
-	err = g.CreateDockerfile(ctx)
+	err = gen.CreateDockerfile(ctx)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = g.CreateDevcontainer(ctx)
+	err = gen.CreateDevcontainer(ctx)
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -440,7 +440,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context) error {
 	}
 
 	// Setup Generate parameters
-	g := &generate.Options{
+	gen := &generate.Options{
 		Path:           d.projectDir,
 		RootUser:       d.GenerateOpts.RootUser,
 		IsDevcontainer: false,
@@ -449,7 +449,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context) error {
 	}
 
 	// generate dockerfile
-	return errors.WithStack(g.CreateDockerfile(ctx))
+	return errors.WithStack(gen.CreateDockerfile(ctx))
 }
 
 func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
