@@ -59,8 +59,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// match.
 		found, _ := d.findPackageByName(pkg.CanonicalName())
 		if found != nil {
-			name := found.String() // TODO savil: should name be found.Raw?
-			if err := d.Remove(ctx, name); err != nil {
+			if err := d.Remove(ctx, found.Raw); err != nil {
 				return err
 			}
 		}
@@ -137,9 +136,8 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
-			name := found.String() // TODO savil. should this be found.Raw?
-			packagesToUninstall = append(packagesToUninstall, name)
-			d.cfg.Packages.Remove(name)
+			packagesToUninstall = append(packagesToUninstall, found.Raw)
+			d.cfg.Packages.Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}

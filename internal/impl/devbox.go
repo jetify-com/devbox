@@ -995,7 +995,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 	results := map[*devpkg.Package]bool{}
 	for _, pkg := range d.configPackages() {
-		if pkg.String() == name || pkg.CanonicalName() == name {
+		if pkg.Raw == name || pkg.CanonicalName() == name {
 			results[pkg] = true
 		}
 	}
