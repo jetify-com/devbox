@@ -61,7 +61,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 	}
 
 	for _, bin := range bins {
-		if err = createWrapperIfNeeded(&createWrapperArgs{
+		if err = createWrapper(&createWrapperArgs{
 			devboxer:         devbox,
 			BashPath:         bashPath,
 			Command:          bin,
@@ -141,11 +141,7 @@ type createWrapperArgs struct {
 	destPath         string
 }
 
-func createWrapperIfNeeded(args *createWrapperArgs) error {
-	// If hash is already set, the env is up to date, no need for wrappers.
-	if args.ShellEnvHash == os.Getenv(args.ShellEnvHashKey()) {
-		return nil
-	}
+func createWrapper(args *createWrapperArgs) error {
 	buf := &bytes.Buffer{}
 	if err := wrapperTemplate.Execute(buf, args); err != nil {
 		return errors.WithStack(err)
