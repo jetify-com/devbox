@@ -3,7 +3,7 @@
 Top level command for generating Devcontainer and Dockerfiles for your Devbox Project. 
 
 ```bash
-devbox generate <devcontainer|dockerfile> [flags]
+devbox generate <devcontainer|dockerfile|direnv> [flags]
 ```
 
 ## Options

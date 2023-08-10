@@ -16,6 +16,7 @@ devbox generate devcontainer [flags]
 | Option | Description |
 | --- | --- |
 | `-f, --force` | force overwrite on existing files |
+| `--root-user` | use `root` as the user for container. Installs nix as single-user mode in Dockerfile |
 | `-h, --help` | help for devcontainer |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
