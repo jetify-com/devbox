@@ -98,10 +98,11 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	}
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    path,
-		Writer: cmd.ErrOrStderr(),
-		Pure:   flags.pure,
-		Env:    env,
+		Dir:                     path,
+		Writer:                  cmd.ErrOrStderr(),
+		Pure:                    flags.pure,
+		Env:                     env,
+		OmitBinWrappersFromPath: true,
 	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)
