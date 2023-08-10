@@ -34,7 +34,7 @@ import (
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
 // nolint:revive // warns about cognitive complexity
-func (d *Devbox) Add(ctx context.Context, platform, excludePlatform string, pkgsNames ...string) error {
+func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, pkgsNames ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
@@ -88,15 +88,11 @@ func (d *Devbox) Add(ctx context.Context, platform, excludePlatform string, pkgs
 	}
 
 	for _, pkg := range addedPackageNames {
-		if platform != "" {
-			if err := d.cfg.Packages.AddPlatform(pkg, platform); err != nil {
-				return err
-			}
+		if err := d.cfg.Packages.AddPlatforms(pkg, platforms); err != nil {
+			return err
 		}
-		if excludePlatform != "" {
-			if err := d.cfg.Packages.ExcludePlatform(pkg, excludePlatform); err != nil {
-				return err
-			}
+		if err := d.cfg.Packages.ExcludePlatforms(pkg, excludePlatforms); err != nil {
+			return err
 		}
 	}
 

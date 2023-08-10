@@ -18,10 +18,10 @@ import (
 const toSearchForPackages = "To search for packages, use the `devbox search` command"
 
 type addCmdFlags struct {
-	config          configFlags
-	allowInsecure   bool
-	platform        string
-	excludePlatform string
+	config           configFlags
+	allowInsecure    bool
+	platforms        []string
+	excludePlatforms []string
 }
 
 func addCmd() *cobra.Command {
@@ -53,11 +53,11 @@ func addCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.allowInsecure, "allow-insecure", false,
 		"allow adding packages marked as insecure.")
-	command.Flags().StringVar(
-		&flags.platform, "platform", "",
+	command.Flags().StringSliceVarP(
+		&flags.platforms, "platform", "p", []string{},
 		"add packages to run on only this platform.")
-	command.Flags().StringVar(
-		&flags.excludePlatform, "exclude-platform", "",
+	command.Flags().StringSliceVarP(
+		&flags.excludePlatforms, "exclude-platform", "e", []string{},
 		"exclude packages from a specific platform.")
 
 	return command
@@ -73,5 +73,5 @@ func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Add(cmd.Context(), flags.platform, flags.excludePlatform, args...)
+	return box.Add(cmd.Context(), flags.platforms, flags.excludePlatforms, args...)
 }

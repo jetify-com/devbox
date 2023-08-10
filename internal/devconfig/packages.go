@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
@@ -59,28 +60,26 @@ func (pkgs *Packages) Remove(versionedName string) {
 	})
 }
 
-// AddPlatform adds a platform to the list of platforms for a given package
-func (pkgs *Packages) AddPlatform(versionedname, platform string) error {
-	if err := nix.EnsureValidPlatform(platform); err != nil {
-		return errors.WithStack(err)
+// AddPlatforms adds a platform to the list of platforms for a given package
+func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) error {
+	if len(platforms) == 0 {
+		return nil
+	}
+	for _, platform := range platforms {
+		if err := nix.EnsureValidPlatform(platform); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	name, version := parseVersionedName(versionedname)
 	for idx, pkg := range pkgs.Collection {
 		if pkg.name == name && pkg.Version == version {
 
-			// Check if the platform is already present
-			alreadyPresent := false
-			for _, existing := range pkg.Platforms {
-				if existing == platform {
-					alreadyPresent = true
-					break
+			for _, platform := range platforms {
+				// Append if the platform is not already present
+				if !lo.SomeBy(pkg.Platforms, func(p string) bool { return p == platform }) {
+					pkg.Platforms = append(pkg.Platforms, platform)
 				}
-			}
-
-			// Add the platform if it's not already present
-			if !alreadyPresent {
-				pkg.Platforms = append(pkg.Platforms, platform)
 			}
 
 			// Adding any platform will restrict installation to it, so
@@ -96,27 +95,26 @@ func (pkgs *Packages) AddPlatform(versionedname, platform string) error {
 	return errors.Errorf("package %s not found", versionedname)
 }
 
-// ExcludePlatform adds a platform to the list of excluded platforms for a given package
-func (pkgs *Packages) ExcludePlatform(versionedName, platform string) error {
-	if err := nix.EnsureValidPlatform(platform); err != nil {
-		return errors.WithStack(err)
+// ExcludePlatforms adds a platform to the list of excluded platforms for a given package
+func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string) error {
+	if len(platforms) == 0 {
+		return nil
+	}
+	for _, platform := range platforms {
+		if err := nix.EnsureValidPlatform(platform); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	name, version := parseVersionedName(versionedName)
 	for idx, pkg := range pkgs.Collection {
 		if pkg.name == name && pkg.Version == version {
 
-			// Check if the platform is already present
-			alreadyPresent := false
-			for _, existing := range pkg.ExcludedPlatforms {
-				if existing == platform {
-					alreadyPresent = true
-					break
+			for _, platform := range platforms {
+				// Append if the platform is not already present
+				if !lo.SomeBy(pkg.ExcludedPlatforms, func(p string) bool { return p == platform }) {
+					pkg.ExcludedPlatforms = append(pkg.ExcludedPlatforms, platform)
 				}
-			}
-
-			if !alreadyPresent {
-				pkg.ExcludedPlatforms = append(pkg.ExcludedPlatforms, platform)
 			}
 			if len(pkg.Platforms) > 0 {
 				ux.Finfo(
@@ -124,7 +122,7 @@ func (pkgs *Packages) ExcludePlatform(versionedName, platform string) error {
 					"Excluding a platform for %[1]s is a bit redundant because it will only be installed on: %[2]v. "+
 						"Consider removing the `platform` field from %[1]s's definition in your devbox."+
 						"json if you intend for %[1]s to be installed on all platforms except %[3]s.\n",
-					versionedName, strings.Join(pkg.Platforms, ", "), platform,
+					versionedName, strings.Join(pkg.Platforms, ", "), strings.Join(platforms, ", "),
 				)
 			}
 
