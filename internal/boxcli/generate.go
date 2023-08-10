@@ -151,18 +151,9 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 }
 
 func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
-	additionalFlags := []string{}
-	if flags.envFile != "" {
-		additionalFlags = append(additionalFlags, "--env-file", flags.envFile)
-	}
-	if len(flags.env) > 0 {
-		for k, v := range flags.env {
-			additionalFlags = append(additionalFlags, "--env", k+"="+v)
-		}
-	}
-
 	if flags.printEnvrcContent {
-		return devbox.PrintEnvrcContent(cmd.OutOrStdout(), additionalFlags)
+		return devbox.PrintEnvrcContent(
+			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag))
 	}
 
 	box, err := devbox.Open(&devopt.Opts{
@@ -173,5 +164,6 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.GenerateEnvrcFile(cmd.Context(), flags.force, additionalFlags)
+	return box.GenerateEnvrcFile(
+		cmd.Context(), flags.force, devopt.EnvFlags(flags.envFlag))
 }
