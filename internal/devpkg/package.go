@@ -412,13 +412,7 @@ func (p *Package) Versioned() string {
 }
 
 func (p *Package) IsLegacy() bool {
-	if !p.IsDevboxPackage() || p.isVersioned() {
-		return false
-	}
-	if p.IsInstallable() {
-		return false
-	}
-	return p.lockfile.Get(p.Raw).GetSource() == ""
+	return p.IsDevboxPackage() && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
 }
 
 func (p *Package) LegacyToVersioned() string {
@@ -549,4 +543,13 @@ func (p *Package) StoreName() (string, error) {
 		return "", err
 	}
 	return name, nil
+}
+
+func (p *Package) EnsureUninstallableIsInLockfile() error {
+	// TODO savil: Do we need the IsDevboxPackage check here?
+	if !p.IsInstallable() || !p.IsDevboxPackage() {
+		return nil
+	}
+	_, err := p.lockfile.Resolve(p.Raw)
+	return err
 }
