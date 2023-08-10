@@ -9,6 +9,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 //go:embed tmpl/*
@@ -90,7 +92,7 @@ func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, path string) error {
+func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
@@ -99,11 +101,24 @@ func CreateEnvrc(ctx context.Context, path string) error {
 		return err
 	}
 	defer file.Close()
-	// get .envrc content
-	tmplName := "envrc.tmpl"
-	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+
+	flags := []string{}
+
+	if len(envFlags.EnvMap) > 0 {
+		for k, v := range envFlags.EnvMap {
+			flags = append(flags, fmt.Sprintf("--env %s=%s", k, v))
+		}
+	}
+	if envFlags.EnvFile != "" {
+		flags = append(flags, fmt.Sprintf("--env-file %s", envFlags.EnvFile))
+	}
+
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))
+
 	// write content into file
-	return t.Execute(file, nil)
+	return t.Execute(file, map[string]string{
+		"Flags": strings.Join(flags, " "),
+	})
 }
 
 func getDevcontainerContent(pkgs []string) *devcontainerObject {
@@ -156,8 +171,17 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer) error {
+func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
-	return t.Execute(w, nil)
+	envFlag := ""
+	if len(envFlags.EnvMap) > 0 {
+		for k, v := range envFlags.EnvMap {
+			envFlag += fmt.Sprintf("--env %s=%s ", k, v)
+		}
+	}
+	return t.Execute(w, map[string]string{
+		"EnvFlag": envFlag,
+		"EnvFile": envFlags.EnvFile,
+	})
 }

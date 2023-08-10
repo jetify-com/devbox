@@ -13,3 +13,8 @@ type Opts struct {
 	CustomProcessComposeFile string
 	Writer                   io.Writer
 }
+
+type EnvFlags struct {
+	EnvMap  map[string]string
+	EnvFile string
+}

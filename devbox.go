@@ -27,7 +27,7 @@ type Devbox interface {
 	Generate(ctx context.Context) error
 	GenerateDevcontainer(ctx context.Context, force bool) error
 	GenerateDockerfile(ctx context.Context, force bool) error
-	GenerateEnvrcFile(ctx context.Context, force bool) error
+	GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error
 	Info(ctx context.Context, pkg string, markdown bool) error
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
@@ -67,8 +67,8 @@ func GlobalDataPath() (string, error) {
 	return impl.GlobalDataPath()
 }
 
-func PrintEnvrcContent(w io.Writer) error {
-	return impl.PrintEnvrcContent(w)
+func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
+	return impl.PrintEnvrcContent(w, envFlags)
 }
 
 // ExportifySystemPathWithoutWrappers reads $PATH, removes `virtenv/.wrappers/bin` paths,

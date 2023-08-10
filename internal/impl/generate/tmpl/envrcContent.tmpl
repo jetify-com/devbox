@@ -1,5 +1,8 @@
 use_devbox() {
     watch_file devbox.json
-    eval "$(devbox shellenv --init-hook --install)"
+    eval "$(devbox shellenv --init-hook --install{{ if .EnvFlag }} {{ .EnvFlag }}{{ end }})"
 }
 use devbox
+{{ if .EnvFile }}
+dotenv_if_exists {{ .EnvFile }}
+{{ end }}
