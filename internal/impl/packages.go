@@ -58,8 +58,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// CanonicalName so any legacy or versioned packages will be removed if they
 		// match.
 		found, _ := d.findPackageByName(pkg.CanonicalName())
-		// TODO savil: should name be found.Raw?
-		if name := found.String(); name != "" {
+		if found != nil {
+			name := found.String() // TODO savil: should name be found.Raw?
 			if err := d.Remove(ctx, name); err != nil {
 				return err
 			}
