@@ -66,7 +66,11 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 }
 
 func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
-	var pkgsToUpdate []string
+	if len(pkgs) == 0 {
+		return d.configPackages(), nil
+	}
+
+	var pkgsToUpdate []*devpkg.Package
 	for _, pkg := range pkgs {
 		found, err := d.findPackageByName(pkg)
 		if err != nil {
@@ -74,11 +78,7 @@ func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
 		}
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
-	if len(pkgsToUpdate) == 0 {
-		pkgsToUpdate = d.PackageNames()
-	}
-
-	return devpkg.PackageFromStrings(pkgsToUpdate, d.lockfile), nil
+	return pkgsToUpdate, nil
 }
 
 func (d *Devbox) updateDevboxPackage(

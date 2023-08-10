@@ -57,7 +57,9 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// it. Ignore error (which is either missing or more than one). We search by
 		// CanonicalName so any legacy or versioned packages will be removed if they
 		// match.
-		if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
+		found, _ := d.findPackageByName(pkg.CanonicalName())
+		// TODO savil: should name be found.Raw?
+		if name := found.String(); name != "" {
 			if err := d.Remove(ctx, name); err != nil {
 				return err
 			}
@@ -134,9 +136,10 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	missingPkgs := []string{}
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
-		if found != "" {
-			packagesToUninstall = append(packagesToUninstall, found)
-			d.cfg.Packages.Remove(found)
+		if found != nil {
+			name := found.String() // TODO savil. should this be found.Raw?
+			packagesToUninstall = append(packagesToUninstall, name)
+			d.cfg.Packages.Remove(name)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
