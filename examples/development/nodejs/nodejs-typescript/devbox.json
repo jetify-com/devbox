@@ -1,6 +1,6 @@
 {
     "packages": [
-        "nodejs@18.16"
+        "nodejs@18"
     ],
     "shell": {
         "init_hook": [

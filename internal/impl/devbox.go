@@ -372,7 +372,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
 	defer task.End()
 
@@ -383,7 +383,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 
 	// check if devcontainer.json or Dockerfile exist
 	filesExist := fileutil.Exists(devContainerJSONPath) || fileutil.Exists(dockerfilePath)
-	if !force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
 				"Remove the files or use --force to overwrite them.",
@@ -396,15 +396,24 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 		return redact.Errorf("error creating dev container directory in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
+
+	// Setup generate parameters
+	gen := &generate.Options{
+		Path:           devContainerPath,
+		RootUser:       generateOpts.RootUser,
+		IsDevcontainer: true,
+		Pkgs:           d.Packages(),
+		LocalFlakeDirs: d.getLocalFlakesDirs(),
+	}
+
 	// generate dockerfile
-	err = generate.CreateDockerfile(ctx,
-		devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = gen.CreateDockerfile(ctx)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = gen.CreateDevcontainer(ctx)
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -413,32 +422,39 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
 	defer task.End()
 
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := fileutil.Exists(dockerfilePath)
-	if !force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
 	}
 
+	// Setup Generate parameters
+	gen := &generate.Options{
+		Path:           d.projectDir,
+		RootUser:       generateOpts.RootUser,
+		IsDevcontainer: false,
+		Pkgs:           d.Packages(),
+		LocalFlakeDirs: d.getLocalFlakesDirs(),
+	}
+
 	// generate dockerfile
-	return errors.WithStack(
-		generate.CreateDockerfile(ctx,
-			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(gen.CreateDockerfile(ctx))
 }
 
-func PrintEnvrcContent(w io.Writer) error {
-	return generate.EnvrcContent(w)
+func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
+	return generate.EnvrcContent(w, envFlags)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
@@ -463,7 +479,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool) error {
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(ctx, d.projectDir)
+	err := generate.CreateEnvrc(ctx, d.projectDir, envFlags)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -931,6 +947,20 @@ func (d *Devbox) Packages() []string {
 
 func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
 	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+}
+
+// AllPackages returns user packages and plugin packages concatenated in
+// correct order
+func (d *Devbox) AllPackages() ([]*devpkg.Package, error) {
+	userPackages := d.PackagesAsInputs()
+	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
+	if err != nil {
+		return nil, err
+	}
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	return append(pluginPackages, userPackages...), nil
 }
 
 func (d *Devbox) Includes() []plugin.Includable {

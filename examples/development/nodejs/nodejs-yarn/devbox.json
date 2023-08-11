@@ -1,6 +1,6 @@
 {
   "packages": [
-    "nodejs@19.8",
+    "nodejs@18",
     "yarn@1.22"
   ],
   "shell": {

@@ -196,6 +196,13 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		fmt.Fprintln(d.writer, "Ensuring packages are installed.")
 	}
 
+	// Create plugin directories first because packages might need them
+	for _, pkg := range d.PackagesAsInputs() {
+		if err := d.PluginManager().Create(pkg); err != nil {
+			return err
+		}
+	}
+
 	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
 		return err
 	}
@@ -255,15 +262,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return nil
 	}
 
-	// If packages are in profile but nixpkgs has been purged, the experience
-	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
-	// prefetched for all relevant packages (those not in binary cache).
-	for _, input := range d.PackagesAsInputs() {
-		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
-			return err
-		}
-	}
-
 	pkgs, err := d.pendingPackagesForInstallation(ctx)
 	if err != nil {
 		return err
@@ -273,11 +271,21 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return nil
 	}
 
+	// If packages are in profile but nixpkgs has been purged, the experience
+	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
+	// prefetched for all relevant packages (those not in binary cache).
+	for _, input := range pkgs {
+		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
+			return err
+		}
+	}
+
 	var msg string
 	if len(pkgs) == 1 {
 		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
 	} else {
-		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgs, ", "))
+		pkgNames := lo.Map(pkgs, func(p *devpkg.Package, _ int) string { return p.Raw })
+		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgNames, ", "))
 	}
 	fmt.Fprintf(d.writer, "\n%s\n\n", msg)
 
@@ -295,7 +303,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		if err := nixprofile.ProfileInstall(&nixprofile.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
-			Package:           pkg,
+			Package:           pkg.Raw,
 			ProfilePath:       profileDir,
 			Writer:            d.writer,
 		}); err != nil {
@@ -368,7 +376,7 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
 // Devbox.packages() (higher priority first)
-func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, error) {
+func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
 	profileDir, err := d.profilePath()
@@ -376,24 +384,28 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]string, 
 		return nil, err
 	}
 
-	pending := []string{}
+	pending := []*devpkg.Package{}
 	list, err := nixprofile.ProfileListItems(d.writer, profileDir)
 	if err != nil {
 		return nil, err
 	}
-	for _, input := range d.PackagesAsInputs() {
+	packages, err := d.AllPackages()
+	if err != nil {
+		return nil, err
+	}
+	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			Input:      input,
+			Input:      pkg,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
 			if !errors.Is(err, nix.ErrPackageNotFound) {
 				return nil, err
 			}
-			pending = append(pending, input.Raw)
+			pending = append(pending, pkg)
 		}
 	}
 	return pending, nil

@@ -15,6 +15,8 @@ devbox services start [service]... [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+|  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
+|  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `-h, --help` | help for start |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 

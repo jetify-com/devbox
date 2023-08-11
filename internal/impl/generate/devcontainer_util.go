@@ -9,6 +9,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -18,10 +19,19 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 //go:embed tmpl/*
 var tmplFS embed.FS
+
+type Options struct {
+	Path           string
+	RootUser       bool
+	IsDevcontainer bool
+	Pkgs           []string
+	LocalFlakeDirs []string
+}
 
 type devcontainerObject struct {
 	Name           string          `json:"name"`
@@ -46,15 +56,16 @@ type vscode struct {
 
 type dockerfileData struct {
 	IsDevcontainer bool
+	RootUser       bool
 	LocalFlakeDirs []string
 }
 
 // CreateDockerfile creates a Dockerfile in path and writes devcontainerDockerfile.tmpl's content into it
-func CreateDockerfile(ctx context.Context, path string, localFlakeDirs []string, isDevcontainer bool) error {
+func (g *Options) CreateDockerfile(ctx context.Context) error {
 	defer trace.StartRegion(ctx, "createDockerfile").End()
 
 	// create dockerfile
-	file, err := os.Create(filepath.Join(path, "Dockerfile"))
+	file, err := os.Create(filepath.Join(g.Path, "Dockerfile"))
 	if err != nil {
 		return err
 	}
@@ -64,23 +75,24 @@ func CreateDockerfile(ctx context.Context, path string, localFlakeDirs []string,
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	// write content into file
 	return t.Execute(file, &dockerfileData{
-		IsDevcontainer: isDevcontainer,
-		LocalFlakeDirs: localFlakeDirs,
+		IsDevcontainer: g.IsDevcontainer,
+		RootUser:       g.RootUser,
+		LocalFlakeDirs: g.LocalFlakeDirs,
 	})
 }
 
 // CreateDevcontainer creates a devcontainer.json in path and writes getDevcontainerContent's output into it
-func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
+func (g *Options) CreateDevcontainer(ctx context.Context) error {
 	defer trace.StartRegion(ctx, "createDevcontainer").End()
 
 	// create devcontainer.json file
-	file, err := os.Create(filepath.Join(path, "devcontainer.json"))
+	file, err := os.Create(filepath.Join(g.Path, "devcontainer.json"))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 	// get devcontainer.json's content
-	devcontainerContent := getDevcontainerContent(pkgs)
+	devcontainerContent := g.getDevcontainerContent()
 	devcontainerFileBytes, err := json.MarshalIndent(devcontainerContent, "", "  ")
 	if err != nil {
 		return err
@@ -90,7 +102,7 @@ func CreateDevcontainer(ctx context.Context, path string, pkgs []string) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, path string) error {
+func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
@@ -99,14 +111,27 @@ func CreateEnvrc(ctx context.Context, path string) error {
 		return err
 	}
 	defer file.Close()
-	// get .envrc content
-	tmplName := "envrc.tmpl"
-	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+
+	flags := []string{}
+
+	if len(envFlags.EnvMap) > 0 {
+		for k, v := range envFlags.EnvMap {
+			flags = append(flags, fmt.Sprintf("--env %s=%s", k, v))
+		}
+	}
+	if envFlags.EnvFile != "" {
+		flags = append(flags, fmt.Sprintf("--env-file %s", envFlags.EnvFile))
+	}
+
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))
+
 	// write content into file
-	return t.Execute(file, nil)
+	return t.Execute(file, map[string]string{
+		"Flags": strings.Join(flags, " "),
+	})
 }
 
-func getDevcontainerContent(pkgs []string) *devcontainerObject {
+func (g *Options) getDevcontainerContent() *devcontainerObject {
 	// object that gets written in devcontainer.json
 	devcontainerContent := &devcontainerObject{
 		// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
@@ -127,8 +152,10 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 				},
 			},
 		},
-		// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-		RemoteUser: "root",
+		RemoteUser: "devbox",
+	}
+	if g.RootUser {
+		devcontainerContent.RemoteUser = "root"
 	}
 
 	// match only python3 or python3xx as package names
@@ -137,7 +164,7 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 		debug.Log("Failed to compile regex")
 		return nil
 	}
-	for _, pkg := range pkgs {
+	for _, pkg := range g.Pkgs {
 		if py3pattern.MatchString(pkg) {
 			// Setup python3 interpreter path to devbox in the container
 			devcontainerContent.Customizations.Vscode.Settings = map[string]any{
@@ -156,8 +183,17 @@ func getDevcontainerContent(pkgs []string) *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer) error {
+func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
-	return t.Execute(w, nil)
+	envFlag := ""
+	if len(envFlags.EnvMap) > 0 {
+		for k, v := range envFlags.EnvMap {
+			envFlag += fmt.Sprintf("--env %s=%s ", k, v)
+		}
+	}
+	return t.Execute(w, map[string]string{
+		"EnvFlag": envFlag,
+		"EnvFile": envFlags.EnvFile,
+	})
 }

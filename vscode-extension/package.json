@@ -21,9 +21,7 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "extensionDependencies": [
-    "ms-vscode-remote.remote-ssh"
-  ],
+  "extensionDependencies": ["ms-vscode-remote.remote-ssh"],
   "contributes": {
     "commands": [
       {

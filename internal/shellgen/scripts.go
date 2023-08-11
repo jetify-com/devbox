@@ -24,6 +24,7 @@ type devboxer interface {
 	Config() *devconfig.Config
 	Lockfile() *lock.File
 	PackagesAsInputs() []*devpkg.Package
+	AllPackages() ([]*devpkg.Package, error)
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }

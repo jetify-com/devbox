@@ -9,28 +9,26 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 // to be composed into xyzCmdFlags structs
-type envFlag struct {
-	env     map[string]string
-	envFile string
-}
+type envFlag devopt.EnvFlags
 
 func (f *envFlag) register(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringToStringVarP(
-		&f.env, "env", "e", nil, "environment variables to set in the devbox environment",
+		&f.EnvMap, "env", "e", nil, "environment variables to set in the devbox environment",
 	)
 	cmd.PersistentFlags().StringVar(
-		&f.envFile, "env-file", "", "path to a file containing environment variables to set in the devbox environment",
+		&f.EnvFile, "env-file", "", "path to a file containing environment variables to set in the devbox environment",
 	)
 }
 
 func (f *envFlag) Env(path string) (map[string]string, error) {
 	envs := map[string]string{}
 	var err error
-	if f.envFile != "" {
-		envPath := f.envFile
+	if f.EnvFile != "" {
+		envPath := f.EnvFile
 		if !filepath.IsAbs(envPath) {
 			envPath = filepath.Join(path, envPath)
 		}
@@ -40,7 +38,7 @@ func (f *envFlag) Env(path string) (map[string]string, error) {
 		}
 	}
 
-	for k, v := range f.env {
+	for k, v := range f.EnvMap {
 		envs[k] = v
 	}
 
