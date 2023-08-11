@@ -2,15 +2,13 @@ package devconfig
 
 import (
 	"encoding/json"
-	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/slices"
 )
 
@@ -106,12 +104,10 @@ func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string)
 
 			pkg.ExcludedPlatforms = lo.Uniq(append(pkg.ExcludedPlatforms, platforms...))
 			if len(pkg.Platforms) > 0 {
-				ux.Finfo(
-					os.Stderr,
-					"Excluding a platform for %[1]s is a bit redundant because it will only be installed on: %[2]v. "+
-						"Consider removing the `platform` field from %[1]s's definition in your devbox."+
-						"json if you intend for %[1]s to be installed on all platforms except %[3]s.\n",
-					versionedName, strings.Join(pkg.Platforms, ", "), strings.Join(platforms, ", "),
+				return usererr.New(
+					"cannot exclude any platform for package %s because it already has `platforms` defined. "+
+						"Please delete the `platforms` for this package from devbox.json and re-try.",
+					pkg.VersionedName(),
 				)
 			}
 
