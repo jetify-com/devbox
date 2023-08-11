@@ -138,7 +138,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgHashes := lo.Map(d.Packages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -402,7 +402,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = generate.CreateDevcontainer(ctx, devContainerPath, d.PackageNames())
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -484,7 +484,7 @@ func (d *Devbox) saveCfg() error {
 
 func (d *Devbox) Services() (services.Services, error) {
 	pluginSvcs, err := d.pluginManager.GetServices(
-		d.PackagesAsInputs(),
+		d.Packages(),
 		d.cfg.Include,
 	)
 	if err != nil {
@@ -824,7 +824,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.PackagesAsInputs(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(d.Packages(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -927,12 +927,20 @@ func (d *Devbox) nixFlakesFilePath() string {
 }
 
 // Packages returns the list of Packages to be installed in the nix shell.
-func (d *Devbox) Packages() []string {
+func (d *Devbox) PackageNames() []string {
 	return d.cfg.Packages.VersionedNames()
 }
 
-func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+func (d *Devbox) Packages() []*devpkg.Package {
+	userPackages := devpkg.PackageFromStrings(d.PackageNames(), d.lockfile)
+	pluginPackages, err := d.PluginManager().PluginInputs(userPackages)
+	if err != nil {
+		panic(err)
+	}
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	return append(pluginPackages, userPackages...)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
@@ -946,7 +954,7 @@ func (d *Devbox) Includes() []plugin.Includable {
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.Packages() {
 		if pkg.IsLegacy() {
 			return true
 		}

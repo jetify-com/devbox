@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -59,6 +60,7 @@ func ProfileInstall(writer io.Writer, profilePath string, installable string) er
 	cmd.Stdout = writer
 	cmd.Stderr = writer
 
+	debug.Log("running command: %s\n", cmd)
 	return cmd.Run()
 }
 
