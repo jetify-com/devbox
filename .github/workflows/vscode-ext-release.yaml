@@ -18,7 +18,6 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: |
-          apt install jq
           npm install -g yarn
           npm install -g vsce
           npm install -g ovsx
@@ -30,8 +29,6 @@ jobs:
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
-          mv package.json package-temp.json
-          jq 'del(.extensionDependencies[0])' package-temp.json > package.json
-          rm package-temp.json
+          sed -i 's/"ms-vscode-remote.remote-ssh"//g' package.json
           ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension
