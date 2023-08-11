@@ -370,7 +370,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
 	defer task.End()
 
@@ -381,7 +381,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 
 	// check if devcontainer.json or Dockerfile exist
 	filesExist := fileutil.Exists(devContainerJSONPath) || fileutil.Exists(dockerfilePath)
-	if !force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
 				"Remove the files or use --force to overwrite them.",
@@ -394,15 +394,24 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 		return redact.Errorf("error creating dev container directory in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
+
+	// Setup generate parameters
+	gen := &generate.Options{
+		Path:           devContainerPath,
+		RootUser:       generateOpts.RootUser,
+		IsDevcontainer: true,
+		Pkgs:           d.Packages(),
+		LocalFlakeDirs: d.getLocalFlakesDirs(),
+	}
+
 	// generate dockerfile
-	err = generate.CreateDockerfile(ctx,
-		devContainerPath, d.getLocalFlakesDirs(), true /* isDevcontainer */)
+	err = gen.CreateDockerfile(ctx)
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
 	}
 	// generate devcontainer.json
-	err = generate.CreateDevcontainer(ctx, devContainerPath, d.Packages())
+	err = gen.CreateDevcontainer(ctx)
 	if err != nil {
 		return redact.Errorf("error generating devcontainer.json in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -411,24 +420,31 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, force bool) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(ctx context.Context, force bool) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
 	defer task.End()
 
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := fileutil.Exists(dockerfilePath)
-	if !force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
 	}
 
+	// Setup Generate parameters
+	gen := &generate.Options{
+		Path:           d.projectDir,
+		RootUser:       generateOpts.RootUser,
+		IsDevcontainer: false,
+		Pkgs:           d.Packages(),
+		LocalFlakeDirs: d.getLocalFlakesDirs(),
+	}
+
 	// generate dockerfile
-	return errors.WithStack(
-		generate.CreateDockerfile(ctx,
-			d.projectDir, d.getLocalFlakesDirs(), false /* isDevcontainer */))
+	return errors.WithStack(gen.CreateDockerfile(ctx))
 }
 
 func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {

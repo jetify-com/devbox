@@ -14,6 +14,11 @@ type Opts struct {
 	Writer                   io.Writer
 }
 
+type GenerateOpts struct {
+	Force    bool
+	RootUser bool
+}
+
 type EnvFlags struct {
 	EnvMap  map[string]string
 	EnvFile string

@@ -25,8 +25,8 @@ type Devbox interface {
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
 	Generate(ctx context.Context) error
-	GenerateDevcontainer(ctx context.Context, force bool) error
-	GenerateDockerfile(ctx context.Context, force bool) error
+	GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error
+	GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error
 	GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error
 	Info(ctx context.Context, pkg string, markdown bool) error
 	Install(ctx context.Context) error
