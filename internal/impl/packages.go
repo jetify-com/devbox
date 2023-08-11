@@ -45,7 +45,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
-	existingPackageNames := d.cfg.Packages.VersionedNames()
+	existingPackageNames := d.PackageNames()
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
@@ -197,7 +197,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Create plugin directories first because packages might need them
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.InstallablePackages() {
 		if err := d.PluginManager().Create(pkg); err != nil {
 			return err
 		}
@@ -375,7 +375,7 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 // pendingPackagesForInstallation returns a list of packages that are in
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
-// Devbox.packages() (higher priority first)
+// Devbox.AllPackages() (higher priority first)
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
@@ -389,7 +389,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
-	packages, err := d.AllPackages()
+	packages, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}
@@ -428,8 +428,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.PackagesAsInputs()
-
+	devboxInputs := d.InstallablePackages()
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works
 		// because we assume that all packages in `devbox.json` have just been added to the

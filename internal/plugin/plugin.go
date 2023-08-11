@@ -163,7 +163,7 @@ func (m *Manager) createFile(
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
-		"Packages":             m.Packages(),
+		"Packages":             m.PackageNames(),
 		"System":               system,
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),

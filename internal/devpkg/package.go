@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/vercheck"
@@ -46,6 +47,9 @@ type Package struct {
 	//    example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
 	Raw string
 
+	// isInstallable is true if the package may be enabled on the current platform.
+	isInstallable bool
+
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
@@ -59,9 +63,22 @@ func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
 	return packages
 }
 
+func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
+	result := []*Package{}
+	for _, pkg := range config.Packages.Collection {
+		result = append(result, newPackage(pkg.VersionedName(), pkg.IsEnabledOnPlatform(), l))
+	}
+	return result
+}
+
 // PackageFromString constructs Package from the raw name provided.
 // The raw name corresponds to a devbox package from the devbox.json config.
 func PackageFromString(raw string, locker lock.Locker) *Package {
+	// Packages are installable by default.
+	return newPackage(raw, true /*isInstallable*/, locker)
+}
+
+func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	// TODO: We should handle this error
 	// TODO: URL might not be best representation since most packages are not urls
 	pkgURL, _ := url.Parse(raw)
@@ -79,7 +96,7 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 		pkgURL, _ = url.Parse(normalizedURL)
 	}
 
-	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw}
+	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw, isInstallable: isInstallable}
 }
 
 // isLocal specifies whether this package is a local flake.
@@ -144,6 +161,12 @@ func (p *Package) URLForFlakeInput() string {
 		return withoutFragment
 	}
 	return p.urlWithoutFragment()
+}
+
+// IsInstallable returns whether this package is installable. Not to be confused
+// with the Installable() method which returns the corresponding nix concept.
+func (p *Package) IsInstallable() bool {
+	return p.isInstallable
 }
 
 // Installable for this package. Installable is a nix concept defined here:

@@ -18,7 +18,7 @@ import (
 const currentGlobalProfile = "default"
 
 func (d *Devbox) PrintGlobalList() error {
-	for _, p := range d.cfg.Packages.VersionedNames() {
+	for _, p := range d.PackageNames() {
 		fmt.Fprintf(d.writer, "* %s\n", p)
 	}
 	return nil

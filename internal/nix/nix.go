@@ -118,8 +118,17 @@ func ExperimentalFlags() []string {
 	}
 }
 
+// TODO: rename to System
+func MustGetSystem() string {
+	if cachedSystem == "" {
+		panic("MustGetSystem called before being initialized by System")
+	}
+	return cachedSystem
+}
+
 var cachedSystem string
 
+// TODO: rename to ComputeSystem
 func System() (string, error) {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
