@@ -389,7 +389,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
-	packages, err := d.AllPackages()
+	packages, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}

@@ -959,10 +959,9 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 	})
 }
 
-// AllPackages returns user packages and plugin packages concatenated in
-// correct order
-// TODO: rename AllPackages to InstallableAndPluginPackages
-func (d *Devbox) AllPackages() ([]*devpkg.Package, error) {
+// InstallableAndPluginPackages returns installable user packages and plugin
+// packages concatenated in correct order
+func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()
 	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
 	if err != nil {
