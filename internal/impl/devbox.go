@@ -992,22 +992,22 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 	return false
 }
 
-func (d *Devbox) findPackageByName(name string) (string, error) {
-	results := map[string]bool{}
+func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
+	results := map[*devpkg.Package]bool{}
 	for _, pkg := range d.configPackages() {
-		if pkg.String() == name || pkg.CanonicalName() == name {
-			results[pkg.String()] = true
+		if pkg.Raw == name || pkg.CanonicalName() == name {
+			results[pkg] = true
 		}
 	}
 	if len(results) > 1 {
-		return "", usererr.New(
+		return nil, usererr.New(
 			"found multiple packages with name %s: %s. Please specify version",
 			name,
 			lo.Keys(results),
 		)
 	}
 	if len(results) == 0 {
-		return "", usererr.New("no package found with name %s", name)
+		return nil, usererr.New("no package found with name %s", name)
 	}
 	return lo.Keys(results)[0], nil
 }
