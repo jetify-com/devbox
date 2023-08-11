@@ -429,7 +429,11 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.InstallablePackages()
+	devboxInputs, err := d.AllInstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works
 		// because we assume that all packages in `devbox.json` have just been added to the

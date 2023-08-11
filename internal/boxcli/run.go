@@ -5,6 +5,8 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/samber/lo"
@@ -96,12 +98,20 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	if err != nil {
 		return err
 	}
+
+	omitBinWrappersFromPath := true
+	// This is for testing. Once we completely remove bin wrappers we can remove
+	// this. It helps simulate shell using "run".
+	if ok, _ := strconv.ParseBool(os.Getenv("DEVBOX_INCLUDE_BIN_WRAPPERS_IN_PATH")); ok {
+		omitBinWrappersFromPath = false
+	}
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    path,
-		Writer: cmd.ErrOrStderr(),
-		Pure:   flags.pure,
-		Env:    env,
+		Dir:                     path,
+		Writer:                  cmd.ErrOrStderr(),
+		Pure:                    flags.pure,
+		Env:                     env,
+		OmitBinWrappersFromPath: omitBinWrappersFromPath,
 	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)
