@@ -243,11 +243,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Update lockfile with new packages that are not to be installed
-	cfgPkgs, err := d.ConfigPackages()
-	if err != nil {
-		return err
-	}
-	for _, pkg := range cfgPkgs {
+	for _, pkg := range d.configPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}

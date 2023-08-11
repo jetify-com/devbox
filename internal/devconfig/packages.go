@@ -248,7 +248,8 @@ func NewPackage(name string, values map[string]any) Package {
 // If the package has a list of platforms, it is enabled only on those platforms.
 // If the package has a list of excluded platforms, it is enabled on all platforms
 // except those.
-func (p *Package) enabledOnPlatform(platform string) bool {
+func (p *Package) IsEnabledOnPlatform() bool {
+	platform := nix.MustGetSystem()
 	if len(p.Platforms) > 0 {
 		for _, plt := range p.Platforms {
 			if plt == platform {
@@ -271,10 +272,6 @@ func (p *Package) VersionedName() string {
 		name += "@" + p.Version
 	}
 	return name
-}
-
-func (p *Package) IsEnabledOnPlatform() bool {
-	return p.enabledOnPlatform(nix.MustGetSystem())
 }
 
 func (p *Package) UnmarshalJSON(data []byte) error {
