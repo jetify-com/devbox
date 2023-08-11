@@ -140,7 +140,7 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.PackagesAsInputs(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgHashes := lo.Map(d.configPackages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -402,7 +402,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 		Path:           devContainerPath,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: true,
-		Pkgs:           d.Packages(),
+		Pkgs:           d.PackageNames(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -441,7 +441,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 		Path:           d.projectDir,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: false,
-		Pkgs:           d.Packages(),
+		Pkgs:           d.PackageNames(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -501,10 +501,7 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := d.pluginManager.GetServices(
-		d.PackagesAsInputs(),
-		d.cfg.Include,
-	)
+	pluginSvcs, err := d.pluginManager.GetServices(d.InstallablePackages(), d.cfg.Include)
 	if err != nil {
 		return nil, err
 	}
@@ -842,7 +839,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.PackagesAsInputs(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(d.InstallablePackages(), d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -940,19 +937,30 @@ func (d *Devbox) nixFlakesFilePath() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
 }
 
-// Packages returns the list of Packages to be installed in the nix shell.
-func (d *Devbox) Packages() []string {
+// ConfigPackageNames returns the package names as defined in devbox.json
+func (d *Devbox) PackageNames() []string {
+	// TODO savil: centralize implementation by calling d.configPackages and getting pkg.Raw
+	// Skipping for now to avoid propagating the error value.
 	return d.cfg.Packages.VersionedNames()
 }
 
-func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
-	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
+// configPackages returns the packages that are defined in devbox.json
+// NOTE: the return type is different from devconfig.Packages
+func (d *Devbox) configPackages() []*devpkg.Package {
+	return devpkg.PackagesFromConfig(d.cfg, d.lockfile)
 }
 
-// AllPackages returns user packages and plugin packages concatenated in
-// correct order
-func (d *Devbox) AllPackages() ([]*devpkg.Package, error) {
-	userPackages := d.PackagesAsInputs()
+// InstallablePackages returns the packages that are to be installed
+func (d *Devbox) InstallablePackages() []*devpkg.Package {
+	return lo.Filter(d.configPackages(), func(pkg *devpkg.Package, _ int) bool {
+		return pkg.IsInstallable()
+	})
+}
+
+// InstallableAndPluginPackages returns installable user packages and plugin
+// packages concatenated in correct order
+func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
+	userPackages := d.InstallablePackages()
 	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
 	if err != nil {
 		return nil, err
@@ -974,7 +982,7 @@ func (d *Devbox) Includes() []plugin.Includable {
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.configPackages() {
 		if pkg.IsLegacy() {
 			return true
 		}
@@ -982,23 +990,22 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 	return false
 }
 
-func (d *Devbox) findPackageByName(name string) (string, error) {
-	results := map[string]bool{}
-	for _, pkg := range d.cfg.Packages.VersionedNames() {
-		i := devpkg.PackageFromString(pkg, d.lockfile)
-		if i.String() == name || i.CanonicalName() == name {
-			results[i.String()] = true
+func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
+	results := map[*devpkg.Package]bool{}
+	for _, pkg := range d.configPackages() {
+		if pkg.Raw == name || pkg.CanonicalName() == name {
+			results[pkg] = true
 		}
 	}
 	if len(results) > 1 {
-		return "", usererr.New(
+		return nil, usererr.New(
 			"found multiple packages with name %s: %s. Please specify version",
 			name,
 			lo.Keys(results),
 		)
 	}
 	if len(results) == 0 {
-		return "", usererr.New("no package found with name %s", name)
+		return nil, usererr.New("no package found with name %s", name)
 	}
 	return lo.Keys(results)[0], nil
 }

@@ -45,7 +45,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
-	existingPackageNames := d.cfg.Packages.VersionedNames()
+	existingPackageNames := d.PackageNames()
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, skip.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
@@ -57,8 +57,9 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames ...string) error {
 		// it. Ignore error (which is either missing or more than one). We search by
 		// CanonicalName so any legacy or versioned packages will be removed if they
 		// match.
-		if name, _ := d.findPackageByName(pkg.CanonicalName()); name != "" {
-			if err := d.Remove(ctx, name); err != nil {
+		found, _ := d.findPackageByName(pkg.CanonicalName())
+		if found != nil {
+			if err := d.Remove(ctx, found.Raw); err != nil {
 				return err
 			}
 		}
@@ -134,9 +135,9 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	missingPkgs := []string{}
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
-		if found != "" {
-			packagesToUninstall = append(packagesToUninstall, found)
-			d.cfg.Packages.Remove(found)
+		if found != nil {
+			packagesToUninstall = append(packagesToUninstall, found.Raw)
+			d.cfg.Packages.Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
@@ -197,7 +198,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Create plugin directories first because packages might need them
-	for _, pkg := range d.PackagesAsInputs() {
+	for _, pkg := range d.InstallablePackages() {
 		if err := d.PluginManager().Create(pkg); err != nil {
 			return err
 		}
@@ -375,7 +376,7 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 // pendingPackagesForInstallation returns a list of packages that are in
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
-// Devbox.packages() (higher priority first)
+// Devbox.AllPackages() (higher priority first)
 func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
@@ -389,7 +390,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
-	packages, err := d.AllPackages()
+	packages, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +429,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs, err := d.AllPackages()
+	devboxInputs, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}

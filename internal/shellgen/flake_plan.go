@@ -34,7 +34,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	packages, err := devbox.AllPackages()
+	packages, err := devbox.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}

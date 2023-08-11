@@ -95,12 +95,19 @@ func isRoot() bool {
 	return os.Geteuid() == 0
 }
 
-func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) error {
+func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err error) {
+	defer func() {
+		if err == nil {
+			// call System to ensure its value is internally cached so we can rely on MustGetSystem
+			_, err = System()
+		}
+	}()
+
 	if BinaryInstalled() {
 		return nil
 	}
 	if dirExists() {
-		if err := SourceNixEnv(); err != nil {
+		if err = SourceNixEnv(); err != nil {
 			return err
 		} else if BinaryInstalled() {
 			return nil
@@ -122,12 +129,12 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) error {
 		fmt.Scanln()
 	}
 
-	if err := Install(writer, withDaemonFunc()); err != nil {
+	if err = Install(writer, withDaemonFunc()); err != nil {
 		return err
 	}
 
 	// Source again
-	if err := SourceNixEnv(); err != nil {
+	if err = SourceNixEnv(); err != nil {
 		return err
 	}
 
