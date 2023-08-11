@@ -4,7 +4,7 @@ Start a new shell or run a command with access to your packages
 
 ## Synopsis
 
-Start a new shell or run a command with access to your packages. The interactive shell will use the devbox.json in your current directory, or the directory provided with `dir`. 
+Start a new shell or run a command with access to your packages. The interactive shell will use the devbox.json in your current directory, or the directory provided with `dir`.
 
 ```bash
 devbox shell [<dir>] [flags]
@@ -15,6 +15,8 @@ devbox shell [<dir>] [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+|  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
+|  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `--print-env` | Print a script to setup a devbox shell environment |
 | `-h, --help` | help for shell |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |

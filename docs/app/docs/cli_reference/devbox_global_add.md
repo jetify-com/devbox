@@ -11,6 +11,7 @@ devbox global add <pkg>... [flags]
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+| `--allow-insecure` | Allow adding packages marked as insecure |
 | `-h, --help` | help for add |
 | `-q, --quiet` | suppresses logs |
 
