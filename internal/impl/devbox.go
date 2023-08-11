@@ -951,6 +951,20 @@ func (d *Devbox) PackagesAsInputs() []*devpkg.Package {
 	return devpkg.PackageFromStrings(d.Packages(), d.lockfile)
 }
 
+// AllPackages returns user packages and plugin packages concatenated in
+// correct order
+func (d *Devbox) AllPackages() ([]*devpkg.Package, error) {
+	userPackages := d.PackagesAsInputs()
+	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
+	if err != nil {
+		return nil, err
+	}
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	return append(pluginPackages, userPackages...), nil
+}
+
 func (d *Devbox) Includes() []plugin.Includable {
 	includes := []plugin.Includable{}
 	for _, includePath := range d.cfg.Include {

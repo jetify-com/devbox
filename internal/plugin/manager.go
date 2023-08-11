@@ -45,7 +45,7 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 	}
 }
 
-func (m *Manager) PluginInputs(inputs []*devpkg.Package) ([]*devpkg.Package, error) {
+func (m *Manager) PluginPackages(inputs []*devpkg.Package) ([]*devpkg.Package, error) {
 	result := []*devpkg.Package{}
 	for _, input := range inputs {
 		config, err := getConfigIfAny(input, m.ProjectDir())
