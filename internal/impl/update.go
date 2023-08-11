@@ -28,13 +28,20 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 	for _, pkg := range inputs {
 		if pkg.IsLegacy() {
 			fmt.Fprintf(d.writer, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
+
+			// Get the package from the config to get the Platforms and ExcludedPlatforms later
+			cfgPackage, ok := d.cfg.Packages.Get(pkg.Raw)
+			if !ok {
+				return fmt.Errorf("package %s not found in config", pkg.Raw)
+			}
+
 			if err := d.Remove(ctx, pkg.Raw); err != nil {
 				return err
 			}
 			// Calling Add function with the original package names, since
 			// Add will automatically append @latest if search is able to handle that.
 			// If not, it will fallback to the nixpkg format.
-			if err := d.Add(ctx, nil /*platforms*/, nil /*excludePlatforms*/, pkg.Raw); err != nil {
+			if err := d.Add(ctx, cfgPackage.Platforms, cfgPackage.ExcludedPlatforms, pkg.Raw); err != nil {
 				return err
 			}
 		} else {

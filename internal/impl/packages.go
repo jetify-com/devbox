@@ -70,8 +70,11 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
 
 		packageNameForConfig := pkg.Raw
-		if ok, err := versionedPkg.ValidateExists(); err == nil && ok {
-			// Only use versioned if it exists in search.
+		ok, err := versionedPkg.ValidateExists()
+		if (err == nil && ok) || errors.Is(err, devpkg.ErrCannotBuildPackageOnSystem) {
+			// Only use versioned if it exists in search. We can disregard the error
+			// about not building on the current system, since user's can continue
+			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
 		} else if !versionedPkg.IsDevboxPackage() {
 			// This means it didn't validate and we don't want to fallback to legacy

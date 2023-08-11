@@ -44,6 +44,17 @@ func (pkgs *Packages) VersionedNames() []string {
 	return result
 }
 
+// Get returns the package with the given versionedName
+func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
+	name, version := parseVersionedName(versionedName)
+	for _, pkg := range pkgs.Collection {
+		if pkg.name == name && pkg.Version == version {
+			return &pkg, true
+		}
+	}
+	return nil, false
+}
+
 // Add adds a package to the list of packages
 func (pkgs *Packages) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
