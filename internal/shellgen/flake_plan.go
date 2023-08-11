@@ -34,7 +34,10 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	packages := devbox.Packages()
+	packages, err := devbox.AllPackages()
+	if err != nil {
+		return nil, err
+	}
 	flakeInputs := flakeInputs(ctx, packages)
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 

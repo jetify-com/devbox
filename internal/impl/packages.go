@@ -389,7 +389,11 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
-	for _, pkg := range d.Packages() {
+	packages, err := d.AllPackages()
+	if err != nil {
+		return nil, err
+	}
+	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			List:       list,
 			Lockfile:   d.lockfile,
