@@ -15,7 +15,7 @@ type Manager struct {
 }
 
 type devboxProject interface {
-	PackageNames() []string
+	Packages() []string
 	ProjectDir() string
 }
 

@@ -75,7 +75,7 @@ func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	if len(pkgsToUpdate) == 0 {
-		pkgsToUpdate = d.PackageNames()
+		pkgsToUpdate = d.Packages()
 	}
 
 	return devpkg.PackageFromStrings(pkgsToUpdate, d.lockfile), nil

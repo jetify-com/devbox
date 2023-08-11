@@ -197,7 +197,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Create plugin directories first because packages might need them
-	for _, pkg := range d.Packages() {
+	for _, pkg := range d.PackagesAsInputs() {
 		if err := d.PluginManager().Create(pkg); err != nil {
 			return err
 		}
@@ -428,7 +428,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.Packages()
+	devboxInputs := d.PackagesAsInputs()
 
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works
