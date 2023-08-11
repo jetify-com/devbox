@@ -13,7 +13,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -272,16 +271,11 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 			} else {
 				platform = " " + platform
 			}
-			otherPlatforms := lo.Filter(nix.SupportedPlatforms(), func(p string, _ int) bool {
-				return p != strings.TrimSpace(platform)
-			})
 			return usererr.New(
 				"package %s cannot be installed on your platform%s. "+
-					"Consider using `--platform` or `--exclude-platform` with `devbox add` to install on a supported"+
-					" platform. Other available platforms are: %s.",
-				input.String(),
+					"Run `devbox add %[1]s --exclude-platform%[2]s` and re-try.",
+				input.Raw,
 				platform,
-				strings.Join(otherPlatforms, ", "),
 			)
 		}
 	}
