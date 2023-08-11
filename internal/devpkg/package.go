@@ -63,16 +63,12 @@ func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
 	return packages
 }
 
-func PackagesFromConfig(config *devconfig.Config, l lock.Locker) ([]*Package, error) {
+func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
 	for _, pkg := range config.Packages.Collection {
-		isInstallable, err := pkg.IsEnabledOnPlatform()
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, newPackage(pkg.VersionedName(), isInstallable, l))
+		result = append(result, newPackage(pkg.VersionedName(), pkg.IsEnabledOnPlatform(), l))
 	}
-	return result, nil
+	return result
 }
 
 // PackageFromString constructs Package from the raw name provided.

@@ -158,9 +158,9 @@ func (p *Package) VersionedName() string {
 	return name
 }
 
-func (p *Package) IsEnabledOnPlatform() (bool, error) {
+func (p *Package) IsEnabledOnPlatform() bool {
 	// TODO savil. Next PR will update this implementation
-	return true, nil
+	return true
 }
 
 func (p *Package) UnmarshalJSON(data []byte) error {

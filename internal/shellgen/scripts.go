@@ -43,14 +43,9 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 
-	packages, err := devbox.InstallablePackages()
-	if err != nil {
-		return err
-	}
-
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := plugin.InitHooks(packages, devbox.ProjectDir())
+	pluginHooks, err := plugin.InitHooks(devbox.InstallablePackages(), devbox.ProjectDir())
 	if err != nil {
 		return errors.WithStack(err)
 	}

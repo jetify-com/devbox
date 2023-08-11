@@ -157,18 +157,13 @@ func (m *Manager) createFile(
 		urlForInput = pkg.URLForFlakeInput()
 	}
 
-	packages, err := m.InstallablePackageNames()
-	if err != nil {
-		return err
-	}
-
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, map[string]any{
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
-		"Packages":             packages,
+		"Packages":             m.PackageNames(),
 		"System":               system,
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
