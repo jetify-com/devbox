@@ -29,6 +29,8 @@ Run a script (defined as `"moo": "cowsay moo"`) in your devbox.json:
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+|  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
+|  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `-h, --help` | help for global run |
 | `-q, --quiet` | suppresses logs |
 
