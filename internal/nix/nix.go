@@ -195,15 +195,24 @@ var nixPlatforms = []string{
 	"armv7l-linux",
 }
 
-// EnsureValidPlatform returns an error if the platform is not supported by nix.
+// ensureValidPlatform returns an error if the platform is not supported by nix.
 // https://nixos.org/manual/nix/stable/installation/supported-platforms.html
-func EnsureValidPlatform(platform string) error {
-	for _, p := range nixPlatforms {
-		if p == platform {
-			return nil
+func EnsureValidPlatform(platforms ...string) error {
+	ensureValid := func(platform string) error {
+		for _, p := range nixPlatforms {
+			if p == platform {
+				return nil
+			}
+		}
+		return usererr.New("Unsupported platform: %s. Valid platforms are: %v", platform, nixPlatforms)
+	}
+
+	for _, p := range platforms {
+		if err := ensureValid(p); err != nil {
+			return err
 		}
 	}
-	return usererr.New("Unsupported platform: %s. Valid platforms are: %v", platform, nixPlatforms)
+	return nil
 }
 
 // Warning: be careful using the bins in default/bin, they won't always match bins

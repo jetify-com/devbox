@@ -65,22 +65,16 @@ func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) err
 	if len(platforms) == 0 {
 		return nil
 	}
-	for _, platform := range platforms {
-		if err := nix.EnsureValidPlatform(platform); err != nil {
-			return errors.WithStack(err)
-		}
+	if err := nix.EnsureValidPlatform(platforms...); err != nil {
+		return errors.WithStack(err)
 	}
 
 	name, version := parseVersionedName(versionedname)
 	for idx, pkg := range pkgs.Collection {
 		if pkg.name == name && pkg.Version == version {
 
-			for _, platform := range platforms {
-				// Append if the platform is not already present
-				if !lo.SomeBy(pkg.Platforms, func(p string) bool { return p == platform }) {
-					pkg.Platforms = append(pkg.Platforms, platform)
-				}
-			}
+			// Append if the platform is not already present
+			pkg.Platforms = lo.Uniq(append(pkg.Platforms, platforms...))
 
 			// Adding any platform will restrict installation to it, so
 			// the ExcludedPlatforms are no longer needed
@@ -110,12 +104,7 @@ func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string)
 	for idx, pkg := range pkgs.Collection {
 		if pkg.name == name && pkg.Version == version {
 
-			for _, platform := range platforms {
-				// Append if the platform is not already present
-				if !lo.SomeBy(pkg.ExcludedPlatforms, func(p string) bool { return p == platform }) {
-					pkg.ExcludedPlatforms = append(pkg.ExcludedPlatforms, platform)
-				}
-			}
+			pkg.ExcludedPlatforms = lo.Uniq(append(pkg.ExcludedPlatforms, platforms...))
 			if len(pkg.Platforms) > 0 {
 				ux.Finfo(
 					os.Stderr,
