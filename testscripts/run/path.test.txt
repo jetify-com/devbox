@@ -7,6 +7,7 @@ stdout '/nix/var/nix/profiles/default/bin/nix'
 
 # Relative paths in PATH are removed, others are cleaned
 env PATH=./relative/path:/some//dirty/../clean/path:$PATH
+env DEVBOX_INCLUDE_BIN_WRAPPERS_IN_PATH=1
 exec devbox run echo '$PATH'
 ! stdout 'relative/path'
 ! stdout '/some//dirty/../clean/path'

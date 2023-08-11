@@ -428,7 +428,10 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
-	devboxInputs := d.PackagesAsInputs()
+	devboxInputs, err := d.AllPackages()
+	if err != nil {
+		return nil, err
+	}
 
 	if len(devboxInputs) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works
