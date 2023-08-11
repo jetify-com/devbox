@@ -20,9 +20,15 @@ jobs:
         run: |
           npm install -g yarn
           npm install -g vsce
+          npm install -g ovsx
           yarn install
         working-directory: vscode-extension
-      - name: publish
+      - name: publish-vs
         run: |
-          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn
+          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
+        working-directory: vscode-extension
+      - name: publish-ovsx
+        run: |
+          sed -i 's/"ms-vscode-remote.remote-ssh"//g' package.json
+          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension

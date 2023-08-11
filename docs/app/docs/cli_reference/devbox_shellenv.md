@@ -12,6 +12,8 @@ devbox shellenv [flags]
 | Option | Description |
 | --- | --- |
 | `-c, --config string` | path to directory containing a devbox.json config file |
+|  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
+|  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `-h, --help` | help for shellenv |
 | `-q, --quiet` | suppresses logs |
 
