@@ -4,11 +4,6 @@ import (
 	"io"
 )
 
-type GenerateOpts struct {
-	Force    bool
-	RootUser bool
-}
-
 type Opts struct {
 	AllowInsecureAdds        bool
 	Dir                      string
@@ -17,7 +12,11 @@ type Opts struct {
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
 	Writer                   io.Writer
-	GenerateOpts             GenerateOpts
+}
+
+type GenerateOpts struct {
+	Force    bool
+	RootUser bool
 }
 
 type EnvFlags struct {

@@ -61,7 +61,6 @@ type Devbox struct {
 	pure                     bool
 	allowInsecureAdds        bool
 	customProcessComposeFile string
-	GenerateOpts             *devopt.GenerateOpts
 
 	// Possible TODO: hardcode this to stderr. Allowing the caller to specify the
 	// writer is error prone. Since it is almost always stderr, we should default
@@ -94,10 +93,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
-		GenerateOpts: &devopt.GenerateOpts{
-			Force:    opts.GenerateOpts.Force,
-			RootUser: opts.GenerateOpts.RootUser,
-		},
 	}
 
 	lock, err := lock.GetFile(box)
@@ -375,7 +370,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 // GenerateDevcontainer generates devcontainer.json and Dockerfile for vscode run-in-container
 // and GitHub Codespaces
-func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
+func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDevcontainer")
 	defer task.End()
 
@@ -386,7 +381,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
 
 	// check if devcontainer.json or Dockerfile exist
 	filesExist := fileutil.Exists(devContainerJSONPath) || fileutil.Exists(dockerfilePath)
-	if !d.GenerateOpts.Force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Files devcontainer.json or Dockerfile are already present in .devcontainer/. " +
 				"Remove the files or use --force to overwrite them.",
@@ -403,7 +398,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
 	// Setup generate parameters
 	gen := &generate.Options{
 		Path:           devContainerPath,
-		RootUser:       d.GenerateOpts.RootUser,
+		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: true,
 		Pkgs:           d.Packages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
@@ -425,14 +420,14 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context) error {
 }
 
 // GenerateDockerfile generates a Dockerfile that replicates the devbox shell
-func (d *Devbox) GenerateDockerfile(ctx context.Context) error {
+func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateDockerfile")
 	defer task.End()
 
 	dockerfilePath := filepath.Join(d.projectDir, "Dockerfile")
 	// check if Dockerfile doesn't exist
 	filesExist := fileutil.Exists(dockerfilePath)
-	if !d.GenerateOpts.Force && filesExist {
+	if !generateOpts.Force && filesExist {
 		return usererr.New(
 			"Dockerfile is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
@@ -442,7 +437,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context) error {
 	// Setup Generate parameters
 	gen := &generate.Options{
 		Path:           d.projectDir,
-		RootUser:       d.GenerateOpts.RootUser,
+		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: false,
 		Pkgs:           d.Packages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),

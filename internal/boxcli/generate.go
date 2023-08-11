@@ -140,21 +140,21 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Writer: cmd.ErrOrStderr(),
-		GenerateOpts: devopt.GenerateOpts{
-			Force:    flags.force,
-			RootUser: flags.rootUser,
-		},
 	})
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	generateOpts := devopt.GenerateOpts{
+		Force:    flags.force,
+		RootUser: flags.rootUser,
 	}
 	switch cmd.Use {
 	case "debug":
 		return box.Generate(cmd.Context())
 	case "devcontainer":
-		return box.GenerateDevcontainer(cmd.Context())
+		return box.GenerateDevcontainer(cmd.Context(), generateOpts)
 	case "dockerfile":
-		return box.GenerateDockerfile(cmd.Context())
+		return box.GenerateDockerfile(cmd.Context(), generateOpts)
 	}
 	return nil
 }
