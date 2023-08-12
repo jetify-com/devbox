@@ -341,7 +341,8 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	}
 
 	if nix.PkgExistsForAnySystem(query) {
-		return "", usererr.New(
+		return "", usererr.WithUserMessage(
+			ErrCannotBuildPackageOnSystem,
 			"Package \"%s\" was found, but we're unable to build it for your system."+
 				" You may need to choose another version or write a custom flake.",
 			p.String(),
@@ -350,6 +351,8 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	return "", usererr.New("Package \"%s\" was not found", p.String())
 }
+
+var ErrCannotBuildPackageOnSystem = errors.New("unable to build for system")
 
 func (p *Package) urlWithoutFragment() string {
 	u := p.URL // get copy
