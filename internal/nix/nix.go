@@ -195,7 +195,7 @@ var nixPlatforms = []string{
 	"armv7l-linux",
 }
 
-// ensureValidPlatform returns an error if the platform is not supported by nix.
+// EnsureValidPlatform returns an error if the platform is not supported by nix.
 // https://nixos.org/manual/nix/stable/installation/supported-platforms.html
 func EnsureValidPlatform(platforms ...string) error {
 	ensureValid := func(platform string) error {
