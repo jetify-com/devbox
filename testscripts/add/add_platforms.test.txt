@@ -1,6 +1,7 @@
 # Testscript for exercising adding packages
 
-# exec devbox init
+#### Part 1: Adding with a single platform or exclude-platform
+
 exec devbox install
 ! exec rg --version
 ! exec vim --version
@@ -16,6 +17,14 @@ exec devbox add ripgrep --platform x86_64-linux
 exec devbox add vim --exclude-platform x86_64-linux
 
 json.superset devbox.json expected_devbox2.json
+
+#### Part 2: Adding with multiple platforms or exclude-platforms
+
+exec devbox add hello --platform x86_64-darwin,x86_64-linux --platform aarch64-darwin
+json.superset devbox.json expected_devbox3.json
+
+exec devbox add cowsay --exclude-platform x86_64-darwin,x86_64-linux --exclude-platform aarch64-darwin
+json.superset devbox.json expected_devbox4.json
 
 -- devbox.json --
 {
@@ -49,6 +58,51 @@ json.superset devbox.json expected_devbox2.json
     "vim": {
       "version": "latest",
       "excluded_platforms": ["x86_64-linux"]
+    }
+  }
+}
+
+-- expected_devbox3.json --
+
+{
+  "packages": {
+    "hello": "",
+    "cowsay": "latest",
+    "ripgrep": {
+      "version": "latest",
+      "platforms": ["x86_64-darwin", "x86_64-linux"]
+    },
+    "vim": {
+      "version": "latest",
+      "excluded_platforms": ["x86_64-linux"]
+    },
+    "hello": {
+        "version": "latest",
+        "platforms": ["x86_64-darwin", "x86_64-linux", "aarch64-darwin"]
+    }
+  }
+}
+
+-- expected_devbox4.json --
+
+{
+  "packages": {
+    "hello": "",
+    "cowsay": {
+      "version": "latest",
+      "excluded_platforms": ["x86_64-darwin", "x86_64-linux", "aarch64-darwin"]
+    },
+    "ripgrep": {
+      "version": "latest",
+      "platforms": ["x86_64-darwin", "x86_64-linux"]
+    },
+    "vim": {
+      "version": "latest",
+      "excluded_platforms": ["x86_64-linux"]
+    },
+    "hello": {
+        "version": "latest",
+        "platforms": ["x86_64-darwin", "x86_64-linux", "aarch64-darwin"]
     }
   }
 }
