@@ -121,7 +121,12 @@ func ExperimentalFlags() []string {
 // TODO: rename to System
 func MustGetSystem() string {
 	if cachedSystem == "" {
-		panic("MustGetSystem called before being initialized by System")
+		// For internal calls (during tests), this may not be initialized properly
+		// so do a best-effort attempt to initialize it.
+		_, err := System()
+		if err != nil {
+			panic("MustGetSystem called before being initialized by System")
+		}
 	}
 	return cachedSystem
 }
