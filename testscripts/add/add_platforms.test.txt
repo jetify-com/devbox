@@ -1,0 +1,54 @@
+# Testscript for exercising adding packages
+
+# exec devbox init
+exec devbox install
+! exec rg --version
+! exec vim --version
+
+# First, add a --platform, and verify that the []string packages
+# becomes a map[string]any packages
+exec devbox add ripgrep --platform x86_64-darwin
+json.superset devbox.json expected_devbox1.json
+
+# Second, add another platform: verify that it adds to the platforms array
+exec devbox add ripgrep --platform x86_64-linux
+# Third, add an excluded-platform too
+exec devbox add vim --exclude-platform x86_64-linux
+
+json.superset devbox.json expected_devbox2.json
+
+-- devbox.json --
+{
+  "packages": [
+    "hello",
+    "cowsay@latest"
+  ]
+}
+
+-- expected_devbox1.json --
+{
+  "packages": {
+    "hello": "",
+    "cowsay": "latest",
+    "ripgrep": {
+      "version": "latest",
+      "platforms": ["x86_64-darwin"]
+    }
+  }
+}
+
+-- expected_devbox2.json --
+{
+  "packages": {
+    "hello": "",
+    "cowsay": "latest",
+    "ripgrep": {
+      "version": "latest",
+      "platforms": ["x86_64-darwin", "x86_64-linux"]
+    },
+    "vim": {
+      "version": "latest",
+      "excluded_platforms": ["x86_64-linux"]
+    }
+  }
+}

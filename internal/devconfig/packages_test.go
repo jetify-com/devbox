@@ -74,6 +74,100 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "map-with-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":   "latest",
+						"platforms": []string{"x86_64-darwin", "aarch64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-excluded-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":            "latest",
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-platforms-and-excluded-platforms",
+			jsonConfig: `{"packages":{"python":{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("python", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-platforms-and-excluded-platforms-local-flake",
+			jsonConfig: `{"packages":{"path:my-php-flake#hello":{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("path:my-php-flake#hello", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-platforms-and-excluded-platforms-remote-flake",
+			jsonConfig: `{"packages":{"github:F1bonacc1/process-compose/v0.43.1":` +
+				`{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("github:F1bonacc1/process-compose/v0.43.1", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
+		{
+			name: "map-with-platforms-and-excluded-platforms-nixpkgs-reference",
+			jsonConfig: `{"packages":{"github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello":` +
+				`{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"]}}}`,
+			expected: Packages{
+				jsonKind: jsonMap,
+				Collection: []Package{
+					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+					}),
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -149,6 +243,24 @@ func TestParseVersionedName(t *testing.T) {
 			name:            "with-trailing-@-sign",
 			input:           "emacsPackages.@",
 			expectedName:    "emacsPackages.@",
+			expectedVersion: "",
+		},
+		{
+			name:            "local-flake",
+			input:           "path:my-php-flake#hello",
+			expectedName:    "path:my-php-flake#hello",
+			expectedVersion: "",
+		},
+		{
+			name:            "remote-flake",
+			input:           "github:F1bonacc1/process-compose/v0.43.1",
+			expectedName:    "github:F1bonacc1/process-compose/v0.43.1",
+			expectedVersion: "",
+		},
+		{
+			name:            "nixpkgs-reference",
+			input:           "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
+			expectedName:    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
 			expectedVersion: "",
 		},
 	}

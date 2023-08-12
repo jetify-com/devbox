@@ -544,3 +544,12 @@ func (p *Package) StoreName() (string, error) {
 	}
 	return name, nil
 }
+
+func (p *Package) EnsureUninstallableIsInLockfile() error {
+	// TODO savil: Do we need the IsDevboxPackage check here?
+	if !p.IsInstallable() || !p.IsDevboxPackage() {
+		return nil
+	}
+	_, err := p.lockfile.Resolve(p.Raw)
+	return err
+}
