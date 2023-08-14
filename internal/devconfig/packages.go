@@ -87,7 +87,13 @@ func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) err
 
 			// Adding any platform will restrict installation to it, so
 			// the ExcludedPlatforms are no longer needed
-			pkg.ExcludedPlatforms = nil
+			if len(pkg.ExcludedPlatforms) > 0 {
+				return usererr.New(
+					"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
+						"Please delete the `excludedPlatforms` for this package from devbox.json and re-try.",
+					pkg.VersionedName(),
+				)
+			}
 
 			pkgs.jsonKind = jsonMap
 			pkg.kind = regular

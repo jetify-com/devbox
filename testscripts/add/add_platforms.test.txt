@@ -26,6 +26,14 @@ json.superset devbox.json expected_devbox3.json
 exec devbox add cowsay --exclude-platform x86_64-darwin,x86_64-linux --exclude-platform aarch64-darwin
 json.superset devbox.json expected_devbox4.json
 
+### Part 3: Ensure we error to prevent inconsistent state
+
+! exec devbox add cowsay --platform x86_64-darwin
+stderr 'Error: cannot add any platform for package cowsay@latest because it already has `excluded_platforms` defined'
+
+! exec devbox add hello --exclude-platform x86_64-darwin
+stderr 'Error: cannot exclude any platform for package hello@latest because it already has `platforms` defined'
+
 -- devbox.json --
 {
   "packages": [
