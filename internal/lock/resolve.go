@@ -61,11 +61,7 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 }
 
 func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error) {
-	currentSystem, err := nix.System()
-	if err != nil {
-		return searcher.PackageInfo{}, err
-	}
-	if pi, ok := pkg.Systems[currentSystem]; ok {
+	if pi, ok := pkg.Systems[nix.System()]; ok {
 		return pi, nil
 	}
 	if pi, ok := pkg.Systems["x86_64-linux"]; ok {

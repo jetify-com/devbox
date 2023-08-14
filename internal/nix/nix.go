@@ -118,14 +118,13 @@ func ExperimentalFlags() []string {
 	}
 }
 
-// TODO: rename to System
-func MustGetSystem() string {
+func System() string {
 	if cachedSystem == "" {
-		// For internal calls (during tests), this may not be initialized properly
-		// so do a best-effort attempt to initialize it.
-		_, err := System()
+		// While this should have been initialized, we do a best-effort to avoid
+		// a panic.
+		_, err := ComputeSystem()
 		if err != nil {
-			panic("MustGetSystem called before being initialized by System")
+			panic("System called before being initialized by ComputeSystem")
 		}
 	}
 	return cachedSystem
@@ -133,8 +132,7 @@ func MustGetSystem() string {
 
 var cachedSystem string
 
-// TODO: rename to ComputeSystem or ComputePlatform?
-func System() (string, error) {
+func ComputeSystem() (string, error) {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
 	// and flake.nix files.
@@ -151,7 +149,7 @@ func System() (string, error) {
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		out, err := cmd.Output()
 		if err != nil {
-			return "", errors.WithStack(err)
+			return "", err
 		}
 		cachedSystem = string(out)
 	}

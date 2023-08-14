@@ -50,16 +50,11 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		}
 	}
 
-	system, err := nix.System()
-	if err != nil {
-		return nil, err
-	}
-
 	return &flakePlan{
 		BinaryCache: devpkg.BinaryCache,
 		FlakeInputs: flakeInputs,
 		NixpkgsInfo: nixpkgsInfo,
 		Packages:    packages,
-		System:      system,
+		System:      nix.System(),
 	}, nil
 }

@@ -126,15 +126,12 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 
 	// Add any missing system infos for packages whose versions did not change.
 	if featureflag.RemoveNixpkgs.Enabled() {
-		userSystem, err := nix.System()
-		if err != nil {
-			return err
-		}
 
 		if lockfile.Packages[pkg.Raw].Systems == nil {
 			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 		}
 
+		userSystem := nix.System()
 		updated := false
 		for sysName, newSysInfo := range resolved.Systems {
 			if sysName == userSystem {

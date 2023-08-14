@@ -157,7 +157,6 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 }
 
 func currentSystem(t *testing.T) string {
-	sys, err := nix.System() // NOTE: we could mock this too, if it helps.
-	require.NoError(t, err)
+	sys := nix.System() // NOTE: we could mock this too, if it helps.
 	return sys
 }

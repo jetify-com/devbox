@@ -227,12 +227,8 @@ func (p *Package) NormalizedDevboxPackageReference() (string, error) {
 	}
 
 	if path != "" {
-		s, err := nix.System()
-		if err != nil {
-			return "", err
-		}
 		url, fragment, _ := strings.Cut(path, "#")
-		return fmt.Sprintf("%s#legacyPackages.%s.%s", url, s, fragment), nil
+		return fmt.Sprintf("%s#legacyPackages.%s.%s", url, nix.System(), fragment), nil
 	}
 
 	return "", nil
@@ -480,17 +476,12 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 		return false, err
 	}
 
-	userSystem, err := nix.System()
-	if err != nil {
-		return false, err
-	}
-
 	if entry.Systems == nil {
 		return false, nil
 	}
 
 	// Check if the user's system's info is present in the lockfile
-	_, ok := entry.Systems[userSystem]
+	_, ok := entry.Systems[nix.System()]
 	if !ok {
 		return false, nil
 	}
@@ -519,12 +510,7 @@ func (p *Package) InputAddressedPath() (string, error) {
 		return "", err
 	}
 
-	userSystem, err := nix.System()
-	if err != nil {
-		return "", err
-	}
-
-	sysInfo := entry.Systems[userSystem]
+	sysInfo := entry.Systems[nix.System()]
 	return sysInfo.StorePath, nil
 }
 
