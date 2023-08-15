@@ -63,16 +63,16 @@ func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
 	return packages
 }
 
-func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
+func PackagesFromConfig(config *devconfig.Config, l lock.Locker) ([]*Package, error) {
 	result := []*Package{}
 	for _, pkg := range config.Packages.Collection {
 		isEnabled, err := pkg.IsEnabledOnPlatform()
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		result = append(result, newPackage(pkg.VersionedName(), isEnabled, l))
 	}
-	return result
+	return result, nil
 }
 
 // PackageFromString constructs Package from the raw name provided.
@@ -490,7 +490,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 
 	sys, err := nix.System()
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	// Check if the user's system's info is present in the lockfile

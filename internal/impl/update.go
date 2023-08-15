@@ -74,7 +74,11 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 
 func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
 	if len(pkgs) == 0 {
-		return d.configPackages(), nil
+		configPackages, err := d.configPackages()
+		if err != nil {
+			return nil, err
+		}
+		return configPackages, nil
 	}
 
 	var pkgsToUpdate []*devpkg.Package

@@ -211,7 +211,11 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Create plugin directories first because packages might need them
-	for _, pkg := range d.InstallablePackages() {
+	installablePackages, err := d.InstallablePackages()
+	if err != nil {
+		return err
+	}
+	for _, pkg := range installablePackages {
 		if err := d.PluginManager().Create(pkg); err != nil {
 			return err
 		}
@@ -241,8 +245,13 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	configPackages, err := d.configPackages()
+	if err != nil {
+		return err
+	}
+
 	// Update lockfile with new packages that are not to be installed
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range configPackages {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}

@@ -113,9 +113,14 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	)
 	box.lockfile = lock
 
+	hasDeprecated, err := box.HasDeprecatedPackages()
+	if err != nil {
+		return nil, err
+	}
+
 	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
-		box.HasDeprecatedPackages() {
+		hasDeprecated {
 		legacyPackagesWarningHasBeenShown = true
 		globalPath, err := GlobalDataPath()
 		if err != nil {
@@ -127,10 +132,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 				"Please run `devbox %supdate` to update your devbox.json.\n",
 			lo.Ternary(box.projectDir == globalPath, "global ", ""),
 		)
-	}
-
-	if err := nix.EnsureNixInstalled(box.writer, func() *bool { return nil } /*withDaemonFunc*/); err != nil {
-		return nil, err
 	}
 
 	return box, nil
@@ -145,7 +146,11 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.configPackages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
+	pkgs, err := d.configPackages()
+	if err != nil {
+		return "", err
+	}
+	pkgHashes := lo.Map(pkgs, func(i *devpkg.Package, _ int) string { return i.Hash() })
 	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
@@ -506,7 +511,11 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := d.pluginManager.GetServices(d.InstallablePackages(), d.cfg.Include)
+	installablePackages, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+	pluginSvcs, err := d.pluginManager.GetServices(installablePackages, d.cfg.Include)
 	if err != nil {
 		return nil, err
 	}
@@ -839,12 +848,17 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	debug.Log("nix environment PATH is: %s", env)
 
+	installablePackages, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+
 	// Add any vars defined in plugins.
 	// TODO: Now that we have bin wrappers, this may can eventually be removed.
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.InstallablePackages(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(installablePackages, d.cfg.Include, env)
 	if err != nil {
 		return nil, err
 	}
@@ -951,21 +965,32 @@ func (d *Devbox) PackageNames() []string {
 
 // configPackages returns the packages that are defined in devbox.json
 // NOTE: the return type is different from devconfig.Packages
-func (d *Devbox) configPackages() []*devpkg.Package {
-	return devpkg.PackagesFromConfig(d.cfg, d.lockfile)
+func (d *Devbox) configPackages() ([]*devpkg.Package, error) {
+	pkgs, err := devpkg.PackagesFromConfig(d.cfg, d.lockfile)
+	if err != nil {
+		return nil, err
+	}
+	return pkgs, nil
 }
 
 // InstallablePackages returns the packages that are to be installed
-func (d *Devbox) InstallablePackages() []*devpkg.Package {
-	return lo.Filter(d.configPackages(), func(pkg *devpkg.Package, _ int) bool {
+func (d *Devbox) InstallablePackages() ([]*devpkg.Package, error) {
+	configPackages, err := d.configPackages()
+	if err != nil {
+		return nil, err
+	}
+	return lo.Filter(configPackages, func(pkg *devpkg.Package, _ int) bool {
 		return pkg.IsInstallable()
-	})
+	}), nil
 }
 
 // InstallableAndPluginPackages returns installable user packages and plugin
 // packages concatenated in correct order
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
-	userPackages := d.InstallablePackages()
+	userPackages, err := d.InstallablePackages()
+	if err != nil {
+		return nil, err
+	}
 	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
 	if err != nil {
 		return nil, err
@@ -986,18 +1011,26 @@ func (d *Devbox) Includes() []plugin.Includable {
 	return includes
 }
 
-func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.configPackages() {
+func (d *Devbox) HasDeprecatedPackages() (bool, error) {
+	pkgs, err := d.configPackages()
+	if err != nil {
+		return false, err
+	}
+	for _, pkg := range pkgs {
 		if pkg.IsLegacy() {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
+	pkgs, err := d.configPackages()
+	if err != nil {
+		return nil, err
+	}
 	results := map[*devpkg.Package]bool{}
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range pkgs {
 		if pkg.Raw == name || pkg.CanonicalName() == name {
 			results[pkg] = true
 		}

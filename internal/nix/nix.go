@@ -118,6 +118,8 @@ func ExperimentalFlags() []string {
 	}
 }
 
+var cachedSystem string
+
 func System() (string, error) {
 	if cachedSystem == "" {
 		// While this should have been initialized, we do a best-effort to avoid
@@ -128,8 +130,6 @@ func System() (string, error) {
 	}
 	return cachedSystem, nil
 }
-
-var cachedSystem string
 
 func computeSystem() error {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
