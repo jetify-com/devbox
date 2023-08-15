@@ -16,6 +16,8 @@ import (
 
 const searchAPIEndpoint = "https://search.devbox.sh"
 
+var ErrNotFound = errors.New("Not found")
+
 type client struct {
 	host string
 }
@@ -67,6 +69,9 @@ func execGet[T any](url string) (*T, error) {
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
+	}
+	if response.StatusCode == http.StatusNotFound {
+		return nil, ErrNotFound
 	}
 	var result T
 	return &result, json.Unmarshal(data, &result)
