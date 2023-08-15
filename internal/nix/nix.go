@@ -122,8 +122,7 @@ func System() string {
 	if cachedSystem == "" {
 		// While this should have been initialized, we do a best-effort to avoid
 		// a panic.
-		_, err := ComputeSystem()
-		if err != nil {
+		if err := ComputeSystem(); err != nil {
 			panic("System called before being initialized by ComputeSystem")
 		}
 	}
@@ -132,28 +131,26 @@ func System() string {
 
 var cachedSystem string
 
-func ComputeSystem() (string, error) {
+func ComputeSystem() error {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
 	// and flake.nix files.
 	// This is also used by unit tests.
 	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
 	if override != "" {
-		return override, nil
-	}
-
-	if cachedSystem == "" {
+		cachedSystem = override
+	} else {
 		cmd := exec.Command(
 			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		out, err := cmd.Output()
 		if err != nil {
-			return "", err
+			return err
 		}
 		cachedSystem = string(out)
 	}
-	return cachedSystem, nil
+	return nil
 }
 
 // version is the cached output of `nix --version`.

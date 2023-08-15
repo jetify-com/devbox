@@ -100,7 +100,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 		if err == nil {
 			// call ComputeSystem to ensure its value is internally cached so other
 			// callers can rely on just calling System
-			_, err = ComputeSystem()
+			err = ComputeSystem()
 		}
 	}()
 
