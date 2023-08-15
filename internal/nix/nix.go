@@ -122,8 +122,6 @@ var cachedSystem string
 
 func System() (string, error) {
 	if cachedSystem == "" {
-		// While this should have been initialized, we do a best-effort to avoid
-		// a panic.
 		if err := computeSystem(); err != nil {
 			return "", err
 		}
