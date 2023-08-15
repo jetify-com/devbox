@@ -142,11 +142,6 @@ func (m *Manager) createFile(
 		return errors.WithStack(err)
 	}
 
-	system, err := nix.System()
-	if err != nil {
-		return err
-	}
-
 	var urlForInput, attributePath string
 
 	if pkg, ok := pkg.(*devpkg.Package); ok {
@@ -164,7 +159,7 @@ func (m *Manager) createFile(
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
 		"Packages":             m.PackageNames(),
-		"System":               system,
+		"System":               nix.System(),
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
 	}); err != nil {

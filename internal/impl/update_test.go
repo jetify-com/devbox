@@ -156,8 +156,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].StorePath)
 }
 
-func currentSystem(t *testing.T) string {
-	sys, err := nix.System() // NOTE: we could mock this too, if it helps.
-	require.NoError(t, err)
+func currentSystem(_t *testing.T) string {
+	sys := nix.System() // NOTE: we could mock this too, if it helps.
 	return sys
 }

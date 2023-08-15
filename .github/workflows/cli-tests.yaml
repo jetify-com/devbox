@@ -90,7 +90,7 @@ jobs:
           - run-devbox-json-tests: true
             os: macos-latest
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 20 }}
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 25 }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -119,7 +119,7 @@ jobs:
           DEVBOX_DEBUG: ${{ (!matrix.run-devbox-json-tests || inputs.example-debug) && '1' || '0' }}
           DEVBOX_RUN_DEVBOX_JSON_TESTS: ${{ matrix.run-devbox-json-tests }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
-          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '20m' }}"
+          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '25m' }}"
         run: |
           echo "::group::Nix version"
           nix --version

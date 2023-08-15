@@ -73,6 +73,7 @@ type Devbox struct {
 var legacyPackagesWarningHasBeenShown = false
 
 func Open(opts *devopt.Opts) (*Devbox, error) {
+
 	projectDir, err := findProjectDir(opts.Dir)
 	if err != nil {
 		return nil, err
@@ -126,6 +127,10 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 				"Please run `devbox %supdate` to update your devbox.json.\n",
 			lo.Ternary(box.projectDir == globalPath, "global ", ""),
 		)
+	}
+
+	if err := nix.EnsureNixInstalled(box.writer, func() *bool { return nil } /*withDaemonFunc*/); err != nil {
+		return nil, err
 	}
 
 	return box, nil
