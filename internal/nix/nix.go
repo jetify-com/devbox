@@ -118,20 +118,20 @@ func ExperimentalFlags() []string {
 	}
 }
 
-func System() string {
+func System() (string, error) {
 	if cachedSystem == "" {
 		// While this should have been initialized, we do a best-effort to avoid
 		// a panic.
-		if err := ComputeSystem(); err != nil {
-			panic("System called before being initialized by ComputeSystem")
+		if err := computeSystem(); err != nil {
+			return "", err
 		}
 	}
-	return cachedSystem
+	return cachedSystem, nil
 }
 
 var cachedSystem string
 
-func ComputeSystem() error {
+func computeSystem() error {
 	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
 	// and flake.nix files.

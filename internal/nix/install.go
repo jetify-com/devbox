@@ -96,14 +96,6 @@ func isRoot() bool {
 }
 
 func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err error) {
-	defer func() {
-		if err == nil {
-			// call ComputeSystem to ensure its value is internally cached so other
-			// callers can rely on just calling System
-			err = ComputeSystem()
-		}
-	}()
-
 	if BinaryInstalled() {
 		return nil
 	}

@@ -265,7 +265,11 @@ func ProfileInstall(args *ProfileInstallArgs) error {
 		if exists, err := input.ValidateInstallsOnSystem(); err != nil {
 			return err
 		} else if !exists {
-			platform := " " + nix.System()
+			platform := ""
+			sys, err := nix.System()
+			if err == nil {
+				platform = " " + sys
+			}
 			return usererr.New(
 				"package %s cannot be installed on your platform%s. "+
 					"Run `devbox add %[1]s --exclude-platform%[2]s` and re-try.",

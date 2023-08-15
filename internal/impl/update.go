@@ -131,7 +131,10 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 		}
 
-		userSystem := nix.System()
+		userSystem, err := nix.System()
+		if err != nil {
+			return err
+		}
 		updated := false
 		for sysName, newSysInfo := range resolved.Systems {
 			if sysName == userSystem {
