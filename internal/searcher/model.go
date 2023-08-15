@@ -33,4 +33,5 @@ type PackageInfo struct {
 	MetaVersion  []string `json:"meta_version"`
 	AttrPaths    []string `json:"attr_paths"`
 	Version      string   `json:"version"`
+	Summary      string   `json:"summary"`
 }

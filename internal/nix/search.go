@@ -19,6 +19,7 @@ type Info struct {
 	// if we know exactly which version we are using
 	AttributeKey string
 	PName        string
+	Summary      string
 	Version      string
 }
 

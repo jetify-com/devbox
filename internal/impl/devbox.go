@@ -21,6 +21,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/impl/generate"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"golang.org/x/exp/slices"
@@ -340,24 +341,32 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
 
-	locked, err := d.lockfile.Resolve(pkg)
-	if err != nil {
-		return err
+	name, version, isVersioned := searcher.ParseVersionedPackage(pkg)
+	if !isVersioned {
+		name = pkg
+		version = "latest"
 	}
 
-	results, _ := nix.Search(locked.Resolved)
-	if len(results) == 0 {
+	packageVersion, err := searcher.Client().Resolve(name, version)
+	if err != nil {
+		// This is not ideal. Search service should return valid response we
+		// can parse
+		return usererr.WithUserMessage(err, "No results found for %q\n", pkg)
+	}
+
+	if packageVersion == nil {
 		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
 		return errors.WithStack(err)
 	}
 
 	// we should only have one result
-	info := lo.Values(results)[0]
 	if _, err := fmt.Fprintf(
 		d.writer,
-		"%s%s\n",
+		"%s%s %s\n%s\n",
 		lo.Ternary(markdown, "## ", ""),
-		info,
+		packageVersion.Name,
+		packageVersion.Version,
+		packageVersion.Summary,
 	); err != nil {
 		return errors.WithStack(err)
 	}
