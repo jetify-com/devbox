@@ -136,6 +136,9 @@ func ComputeSystem() error {
 	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
 	// and flake.nix files.
 	// This is also used by unit tests.
+	if cachedSystem != "" {
+		return nil
+	}
 	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
 	if override != "" {
 		cachedSystem = override
