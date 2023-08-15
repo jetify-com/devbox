@@ -492,33 +492,33 @@ func (p *Package) HashFromNixPkgsURL() string {
 const BinaryCache = "https://cache.nixos.org"
 
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return false, nil
-	}
-
-	if !p.isVersioned() {
-		return false, nil
-	}
-
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
-	} else if sysInfo == nil {
-		return false, nil
 	}
-
-	version, err := nix.Version()
-	if err != nil {
-		return false, err
-	}
-
-	// enable for nix >= 2.17
-	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
+	return sysInfo != nil, nil
 }
 
 // sysInfoIfExists returns the system info for the user's system. If the sysInfo
 // is missing, then nil is returned
 func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
+	if !featureflag.RemoveNixpkgs.Enabled() {
+		return nil, nil
+	}
+
+	if !p.isVersioned() {
+		return nil, nil
+	}
+
+	version, err := nix.Version()
+	if err != nil {
+		return nil, err
+	}
+
+	// enable for nix >= 2.17
+	if vercheck.SemverCompare(version, "2.17.0") < 0 {
+		return nil, err
+	}
 
 	entry, err := p.lockfile.Resolve(p.Raw)
 	if err != nil {
@@ -540,7 +540,7 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 }
 
 // IsInBinaryCache returns true if the package is in the binary cache.
-// Callers should call FillNarInfoCache before calling this function.
+// ALERT: Callers must call FillNarInfoCache before calling this function.
 func (p *Package) IsInBinaryCache() (bool, error) {
 
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
@@ -684,19 +684,16 @@ func (p *storePathParts) Equal(other *storePathParts) bool {
 // package in the list, and caches the result.
 // Callers of IsInBinaryCache must call this function first.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
-	g, ctx := errgroup.WithContext(ctx)
-
+	group, _ := errgroup.WithContext(ctx)
 	for _, p := range packages {
 		// If the package's NarInfo status is already known, skip it
 		if _, ok := isNarInfoInCache[p.Raw]; ok {
 			continue
 		}
-		g.Go(func() error {
-			return p.fillNarInfoCache()
+		pkg := p
+		group.Go(func() error {
+			return pkg.fillNarInfoCache()
 		})
 	}
-	if err := g.Wait(); err != nil {
-		return err
-	}
-	return nil
+	return group.Wait()
 }

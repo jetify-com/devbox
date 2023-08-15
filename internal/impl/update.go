@@ -49,7 +49,7 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
-	if devpkg.FillNarInfoCache(ctx, pendingPackagesToUpdate...); err != nil {
+	if err := devpkg.FillNarInfoCache(ctx, pendingPackagesToUpdate...); err != nil {
 		return err
 	}
 
