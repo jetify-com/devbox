@@ -4,6 +4,7 @@
 package impl
 
 import (
+	"context"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -18,13 +19,13 @@ import (
 // It's used to install applications devbox might need, like process-compose
 // This is an alternative to a global install which would modify a user's
 // environment.
-func (d *Devbox) addDevboxUtilityPackage(pkg string) error {
+func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error {
 	profilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err
 	}
 
-	return nixprofile.ProfileInstall(&nixprofile.ProfileInstallArgs{
+	return nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
 		Lockfile:    d.lockfile,
 		Package:     pkg,
 		ProfilePath: profilePath,

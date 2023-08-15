@@ -42,6 +42,12 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	// replace it.
 	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
 
+	// Fill in narinfo cache for all packages, even if the package-names are bogus
+	// (we'll just not use the result later)
+	if err := devpkg.FillNarInfoCache(ctx, pkgs...); err != nil {
+		return err
+	}
+
 	// addedPackageNames keeps track of the possibly transformed (versioned)
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
@@ -295,10 +301,8 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 	// If packages are in profile but nixpkgs has been purged, the experience
 	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
 	// prefetched for all relevant packages (those not in binary cache).
-	for _, input := range pkgs {
-		if err := input.EnsureNixpkgsPrefetched(d.writer); err != nil {
-			return err
-		}
+	if err := devpkg.EnsureNixpkgsPrefetched(ctx, d.writer, pkgs); err != nil {
+		return err
 	}
 
 	var msg string
@@ -321,7 +325,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 
-		if err := nixprofile.ProfileInstall(&nixprofile.ProfileInstallArgs{
+		if err := nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
 			Package:           pkg.Raw,
@@ -343,7 +347,12 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, input := range devpkg.PackageFromStrings(pkgs, d.lockfile) {
+	packages := devpkg.PackageFromStrings(pkgs, d.lockfile)
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return err
+	}
+
+	for _, input := range packages {
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
@@ -412,6 +421,9 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	}
 	packages, err := d.AllInstallablePackages()
 	if err != nil {
+		return nil, err
+	}
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
 		return nil, err
 	}
 	for _, pkg := range packages {

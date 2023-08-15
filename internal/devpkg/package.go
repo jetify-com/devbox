@@ -4,6 +4,7 @@
 package devpkg
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/vercheck"
 	"go.jetpack.io/devbox/plugins"
+	"golang.org/x/sync/errgroup"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -182,6 +184,7 @@ func (p *Package) IsInstallable() bool {
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
 func (p *Package) Installable() (string, error) {
+
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return "", err
@@ -431,7 +434,23 @@ func (p *Package) LegacyToVersioned() string {
 	return p.Raw + "@latest"
 }
 
-func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
+// ensureNixpkgsPrefetched will prefetch flake for the nixpkgs registry for the package.
+// This is an internal method, and should not be called directly.
+func EnsureNixpkgsPrefetched(ctx context.Context, w io.Writer, pkgs []*Package) error {
+	if err := FillNarInfoCache(ctx, pkgs...); err != nil {
+		return err
+	}
+	for _, input := range pkgs {
+		if err := input.ensureNixpkgsPrefetched(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ensureNixpkgsPrefetched should be called via the public EnsureNixpkgsPrefetched.
+// See function comment there.
+func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
 
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
@@ -472,7 +491,7 @@ func (p *Package) HashFromNixPkgsURL() string {
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCache = "https://cache.nixos.org"
 
-func (p *Package) IsInBinaryCache() (bool, error) {
+func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return false, nil
 	}
@@ -481,18 +500,10 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 		return false, nil
 	}
 
-	entry, err := p.lockfile.Resolve(p.Raw)
+	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
-	}
-
-	if entry.Systems == nil {
-		return false, nil
-	}
-
-	// Check if the user's system's info is present in the lockfile
-	sysInfo, ok := entry.Systems[nix.System()]
-	if !ok {
+	} else if sysInfo == nil {
 		return false, nil
 	}
 
@@ -502,14 +513,68 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	}
 
 	// enable for nix >= 2.17
-	if vercheck.SemverCompare(version, "2.17.0") < 0 {
+	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
+}
+
+// sysInfoIfExists returns the system info for the user's system. If the sysInfo
+// is missing, then nil is returned
+func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return nil, err
+	}
+
+	userSystem := nix.System()
+
+	if entry.Systems == nil {
+		return nil, nil
+	}
+
+	// Check if the user's system's info is present in the lockfile
+	sysInfo, ok := entry.Systems[userSystem]
+	if !ok {
+		return nil, nil
+	}
+	return sysInfo, nil
+}
+
+// IsInBinaryCache returns true if the package is in the binary cache.
+// Callers should call FillNarInfoCache before calling this function.
+func (p *Package) IsInBinaryCache() (bool, error) {
+
+	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
+		return false, err
+	} else if !eligible {
 		return false, nil
 	}
 
 	// Check if the narinfo is present in the binary cache
-	if exists, ok := isNarInfoInCache[p.Raw]; ok {
-		fmt.Printf("narInfo cache hit: %v\n", exists)
-		return exists, nil
+	exists, ok := isNarInfoInCache[p.Raw]
+	if !ok {
+		return false, errors.Errorf("narInfo cache miss: %v. call XYZ before invoking IsInBinaryCache", p.Raw)
+	}
+	fmt.Printf("narInfo cache hit: %v\n", exists)
+	return exists, nil
+}
+
+// fillNarInfoCache fills the cache value for the narinfo of this package,
+// if it is eligible for the binary cache.
+func (p *Package) fillNarInfoCache() error {
+	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
+		return err
+	} else if !eligible {
+		return nil
+	}
+
+	sysInfo, err := p.sysInfoIfExists()
+	if err != nil {
+		return err
+	} else if sysInfo == nil {
+		return errors.New(
+			"sysInfo is nil, but should not be because" +
+				" the package is eligible for binary cache",
+		)
 	}
 
 	httpClient := &http.Client{
@@ -521,14 +586,14 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	if err != nil {
 		if os.IsTimeout(err) {
 			isNarInfoInCache[p.Raw] = false // set this to avoid re-tries
-			return false, nil
+			return nil
 		}
-		return false, err
+		return err
 	}
 	fmt.Printf("res status code %d\n", res.StatusCode)
 
 	isNarInfoInCache[p.Raw] = res.StatusCode == 200
-	return isNarInfoInCache[p.Raw], nil
+	return nil
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store
@@ -613,4 +678,25 @@ func newStorePathParts(path string) *storePathParts {
 
 func (p *storePathParts) Equal(other *storePathParts) bool {
 	return p.hash == other.hash && p.name == other.name && p.version == other.version
+}
+
+// FillNarInfoCache checks the remote binary cache for the narinfo of each
+// package in the list, and caches the result.
+// Callers of IsInBinaryCache must call this function first.
+func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+	g, ctx := errgroup.WithContext(ctx)
+
+	for _, p := range packages {
+		// If the package's NarInfo status is already known, skip it
+		if _, ok := isNarInfoInCache[p.Raw]; ok {
+			continue
+		}
+		g.Go(func() error {
+			return p.fillNarInfoCache()
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	return nil
 }
