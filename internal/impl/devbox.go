@@ -349,13 +349,16 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) error {
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
 	if err != nil {
-		// This is not ideal. Search service should return valid response we
-		// can parse
-		return usererr.WithUserMessage(err, "No results found for %q\n", pkg)
+		if !errors.Is(err, searcher.ErrNotFound) {
+			return usererr.WithUserMessage(err, "Package %q not found\n", pkg)
+		}
+
+		packageVersion = nil
+		// fallthrough to below
 	}
 
 	if packageVersion == nil {
-		_, err := fmt.Fprintf(d.writer, "Package %s not found\n", pkg)
+		_, err := fmt.Fprintf(d.writer, "Package %q not found\n", pkg)
 		return errors.WithStack(err)
 	}
 
