@@ -90,7 +90,7 @@ jobs:
           - run-devbox-json-tests: true
             os: macos-latest
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 20 }}
+    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 25 }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
