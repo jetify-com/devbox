@@ -509,6 +509,9 @@ func (p *Package) isEligibleForBinaryCache() (bool, error) {
 
 // sysInfoIfExists returns the system info for the user's system. If the sysInfo
 // is missing, then nil is returned
+// NOTE: this is called from multiple go-routines and needs to be concurrency safe.
+// Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
+// function from within a goroutine.
 func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return nil, nil
@@ -569,6 +572,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 
 // fillNarInfoCache fills the cache value for the narinfo of this package,
 // if it is eligible for the binary cache.
+// NOTE: this must be concurrency safe.
 func (p *Package) fillNarInfoCache() error {
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return err
@@ -588,8 +592,8 @@ func (p *Package) fillNarInfoCache() error {
 
 	pathParts := newStorePathParts(sysInfo.StorePath)
 	reqURL := BinaryCache + "/" + pathParts.hash + ".narinfo"
-	//nolint:govet
-	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
 	if err != nil {
 		return err
@@ -670,7 +674,7 @@ type storePathParts struct {
 // components in the same way that Nix does.
 //
 // See https://nixos.org/manual/nix/stable/language/builtins.html#builtins-parseDrvName
-func newStorePathParts(path string) *storePathParts {
+func newStorePathParts(path string) storePathParts {
 	path = strings.TrimPrefix(path, "/nix/store/")
 	// path is now <hash>-<name>-<version
 
@@ -678,24 +682,35 @@ func newStorePathParts(path string) *storePathParts {
 	dashIndex := 0
 	for i, r := range name {
 		if dashIndex != 0 && !unicode.IsLetter(r) {
-			return &storePathParts{hash: hash, name: name[:dashIndex], version: name[i:]}
+			return storePathParts{hash: hash, name: name[:dashIndex], version: name[i:]}
 		}
 		dashIndex = 0
 		if r == '-' {
 			dashIndex = i
 		}
 	}
-	return &storePathParts{hash, name, "" /*version*/}
-}
-
-func (p *storePathParts) Equal(other *storePathParts) bool {
-	return p.hash == other.hash && p.name == other.name && p.version == other.version
+	return storePathParts{hash: hash, name: name}
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
 // package in the list, and caches the result.
 // Callers of IsInBinaryCache must call this function first.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+
+	// Pre-compute values read in fillNarInfoCache
+	// so they can be read from multiple go-routines without locks
+	_, err := nix.Version()
+	if err != nil {
+		return err
+	}
+	_ = nix.System()
+	for _, p := range packages {
+		_, err := p.lockfile.Resolve(p.Raw)
+		if err != nil {
+			return err
+		}
+	}
+
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range packages {
 		// If the package's NarInfo status is already known, skip it

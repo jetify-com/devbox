@@ -187,12 +187,12 @@ func TestHashFromNixPkgsURL(t *testing.T) {
 func TestStorePathParts(t *testing.T) {
 	testCases := []struct {
 		storePath string
-		expected  *storePathParts
+		expected  storePathParts
 	}{
 		// simple case:
 		{
 			storePath: "/nix/store/cvrn84c1hshv2wcds7n1rhydi6lacqns-gnumake-4.4.1",
-			expected: &storePathParts{
+			expected: storePathParts{
 				hash:    "cvrn84c1hshv2wcds7n1rhydi6lacqns",
 				name:    "gnumake",
 				version: "4.4.1",
@@ -201,7 +201,7 @@ func TestStorePathParts(t *testing.T) {
 		// the package name can have dashes:
 		{
 			storePath: "/nix/store/q2xdxsswjqmqcbax81pmazm367s7jzyb-cctools-binutils-darwin-wrapper-973.0.1",
-			expected: &storePathParts{
+			expected: storePathParts{
 				hash:    "q2xdxsswjqmqcbax81pmazm367s7jzyb",
 				name:    "cctools-binutils-darwin-wrapper",
 				version: "973.0.1",
@@ -210,7 +210,7 @@ func TestStorePathParts(t *testing.T) {
 		// version is optional. This is an artificial example I constructed
 		{
 			storePath: "/nix/store/gfxwrd5nggc68pjj3g3jhlldim9rpg0p-coreutils",
-			expected: &storePathParts{
+			expected: storePathParts{
 				hash: "gfxwrd5nggc68pjj3g3jhlldim9rpg0p",
 				name: "coreutils",
 			},
@@ -220,7 +220,7 @@ func TestStorePathParts(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.storePath, func(t *testing.T) {
 			parts := newStorePathParts(testCase.storePath)
-			if !parts.Equal(testCase.expected) {
+			if parts != testCase.expected {
 				t.Errorf("Expected %v, got %v", testCase.expected, parts)
 			}
 		})
