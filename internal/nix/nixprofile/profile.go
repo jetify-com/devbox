@@ -5,6 +5,7 @@ package nixprofile
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -250,8 +251,14 @@ type ProfileInstallArgs struct {
 }
 
 // ProfileInstall calls nix profile install with default profile
-func ProfileInstall(args *ProfileInstallArgs) error {
+func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	input := devpkg.PackageFromString(args.Package, args.Lockfile)
+
+	// Fill in the narinfo cache for the input package. It's okay to call this for a single package
+	// because installing is a slow operation anyway.
+	if err := devpkg.FillNarInfoCache(ctx, input); err != nil {
+		return err
+	}
 
 	inCache, err := input.IsInBinaryCache()
 	if err != nil {

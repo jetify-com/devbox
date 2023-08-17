@@ -723,7 +723,7 @@ func (d *Devbox) StartProcessManager(
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.writer, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage("github:F1bonacc1/process-compose/v0.43.1"); err != nil {
+		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.43.1"); err != nil {
 			return err
 		}
 

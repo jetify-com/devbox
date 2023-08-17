@@ -45,13 +45,17 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/joho/godotenv v1.5.1
+require (
+	github.com/joho/godotenv v1.5.1
+	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
+)
 
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	golang.org/x/net v0.8.0 // indirect
 )
 
 require (

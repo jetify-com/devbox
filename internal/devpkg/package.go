@@ -4,14 +4,19 @@
 package devpkg
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
+	"unicode"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -23,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/vercheck"
 	"go.jetpack.io/devbox/plugins"
+	"golang.org/x/sync/errgroup"
 )
 
 // Package represents a "package" added to the devbox.json config.
@@ -51,6 +57,20 @@ type Package struct {
 	isInstallable bool
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
+}
+
+// isNarInfoInCache checks if the .narinfo for this package is in the `BinaryCache`.
+// The key is the `Package.Raw` string.
+// This cannot be a field on the Package struct, because that struct
+// is constructed multiple times in a request (TODO: we could fix that).
+var isNarInfoInCache = struct {
+	status map[string]bool
+	lock   sync.RWMutex
+	// re-use httpClient to re-use the connection
+	httpClient http.Client
+}{
+	status:     map[string]bool{},
+	httpClient: http.Client{},
 }
 
 // PackageFromStrings constructs Package from the list of package names provided.
@@ -172,6 +192,7 @@ func (p *Package) IsInstallable() bool {
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
 func (p *Package) Installable() (string, error) {
+
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return "", err
@@ -421,7 +442,23 @@ func (p *Package) LegacyToVersioned() string {
 	return p.Raw + "@latest"
 }
 
-func (p *Package) EnsureNixpkgsPrefetched(w io.Writer) error {
+// ensureNixpkgsPrefetched will prefetch flake for the nixpkgs registry for the package.
+// This is an internal method, and should not be called directly.
+func EnsureNixpkgsPrefetched(ctx context.Context, w io.Writer, pkgs []*Package) error {
+	if err := FillNarInfoCache(ctx, pkgs...); err != nil {
+		return err
+	}
+	for _, input := range pkgs {
+		if err := input.ensureNixpkgsPrefetched(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ensureNixpkgsPrefetched should be called via the public EnsureNixpkgsPrefetched.
+// See function comment there.
+func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
 
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
@@ -462,37 +499,117 @@ func (p *Package) HashFromNixPkgsURL() string {
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCache = "https://cache.nixos.org"
 
-func (p *Package) IsInBinaryCache() (bool, error) {
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return false, nil
-	}
-
-	if !p.isVersioned() {
-		return false, nil
-	}
-
-	entry, err := p.lockfile.Resolve(p.Raw)
+func (p *Package) isEligibleForBinaryCache() (bool, error) {
+	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
 	}
+	return sysInfo != nil, nil
+}
 
-	if entry.Systems == nil {
-		return false, nil
+// sysInfoIfExists returns the system info for the user's system. If the sysInfo
+// is missing, then nil is returned
+// NOTE: this is called from multiple go-routines and needs to be concurrency safe.
+// Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
+// function from within a goroutine.
+func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
+	if !featureflag.RemoveNixpkgs.Enabled() {
+		return nil, nil
 	}
 
-	// Check if the user's system's info is present in the lockfile
-	_, ok := entry.Systems[nix.System()]
-	if !ok {
-		return false, nil
+	if !p.isVersioned() {
+		return nil, nil
 	}
 
 	version, err := nix.Version()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	// enable for nix >= 2.17
-	return vercheck.SemverCompare(version, "2.17.0") >= 0, nil
+	if vercheck.SemverCompare(version, "2.17.0") < 0 {
+		return nil, err
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return nil, err
+	}
+
+	userSystem := nix.System()
+
+	if entry.Systems == nil {
+		return nil, nil
+	}
+
+	// Check if the user's system's info is present in the lockfile
+	sysInfo, ok := entry.Systems[userSystem]
+	if !ok {
+		return nil, nil
+	}
+	return sysInfo, nil
+}
+
+// IsInBinaryCache returns true if the package is in the binary cache.
+// ALERT: Callers must call FillNarInfoCache before calling this function.
+func (p *Package) IsInBinaryCache() (bool, error) {
+
+	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
+		return false, err
+	} else if !eligible {
+		return false, nil
+	}
+
+	// Check if the narinfo is present in the binary cache
+	isNarInfoInCache.lock.RLock()
+	exists, ok := isNarInfoInCache.status[p.Raw]
+	isNarInfoInCache.lock.RUnlock()
+	if !ok {
+		return false, errors.Errorf("narInfo cache miss: %v. call XYZ before invoking IsInBinaryCache", p.Raw)
+	}
+	return exists, nil
+}
+
+// fillNarInfoCache fills the cache value for the narinfo of this package,
+// if it is eligible for the binary cache.
+// NOTE: this must be concurrency safe.
+func (p *Package) fillNarInfoCache() error {
+	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
+		return err
+	} else if !eligible {
+		return nil
+	}
+
+	sysInfo, err := p.sysInfoIfExists()
+	if err != nil {
+		return err
+	} else if sysInfo == nil {
+		return errors.New(
+			"sysInfo is nil, but should not be because" +
+				" the package is eligible for binary cache",
+		)
+	}
+
+	pathParts := newStorePathParts(sysInfo.StorePath)
+	reqURL := BinaryCache + "/" + pathParts.hash + ".narinfo"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
+	if err != nil {
+		return err
+	}
+	res, err := isNarInfoInCache.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	// read the body fully, and close it to ensure the connection is reused.
+	_, _ = io.Copy(io.Discard, res.Body)
+	defer res.Body.Close()
+
+	isNarInfoInCache.lock.Lock()
+	isNarInfoInCache.status[p.Raw] = res.StatusCode == 200
+	isNarInfoInCache.lock.Unlock()
+	return nil
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store
@@ -541,4 +658,79 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	}
 	_, err := p.lockfile.Resolve(p.Raw)
 	return err
+}
+
+// storePath are the constituent parts of
+// /nix/store/<hash>-<name>-<version>
+//
+// This is a helper struct for analyzing the string representation
+type storePathParts struct {
+	hash    string
+	name    string
+	version string
+}
+
+// newStorePathParts splits a Nix store path into its hash, name and version
+// components in the same way that Nix does.
+//
+// See https://nixos.org/manual/nix/stable/language/builtins.html#builtins-parseDrvName
+func newStorePathParts(path string) storePathParts {
+	path = strings.TrimPrefix(path, "/nix/store/")
+	// path is now <hash>-<name>-<version
+
+	hash, name := path[:32], path[33:]
+	dashIndex := 0
+	for i, r := range name {
+		if dashIndex != 0 && !unicode.IsLetter(r) {
+			return storePathParts{hash: hash, name: name[:dashIndex], version: name[i:]}
+		}
+		dashIndex = 0
+		if r == '-' {
+			dashIndex = i
+		}
+	}
+	return storePathParts{hash: hash, name: name}
+}
+
+// FillNarInfoCache checks the remote binary cache for the narinfo of each
+// package in the list, and caches the result.
+// Callers of IsInBinaryCache must call this function first.
+func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+
+	// Pre-compute values read in fillNarInfoCache
+	// so they can be read from multiple go-routines without locks
+	_, err := nix.Version()
+	if err != nil {
+		return err
+	}
+	_ = nix.System()
+	for _, p := range packages {
+		_, err := p.lockfile.Resolve(p.Raw)
+		if err != nil {
+			return err
+		}
+	}
+
+	group, _ := errgroup.WithContext(ctx)
+	for _, p := range packages {
+		// If the package's NarInfo status is already known, skip it
+		isNarInfoInCache.lock.RLock()
+		_, ok := isNarInfoInCache.status[p.Raw]
+		isNarInfoInCache.lock.RUnlock()
+		if ok {
+			continue
+		}
+		pkg := p // copy the loop variable since its used in a closure below
+		group.Go(func() error {
+			err := pkg.fillNarInfoCache()
+			if err != nil {
+				// default to false if there was an error, so we don't re-try
+				isNarInfoInCache.lock.Lock()
+				isNarInfoInCache.status[pkg.Raw] = false
+				isNarInfoInCache.lock.Unlock()
+			}
+			return err
+		})
+	}
+	return group.Wait()
 }

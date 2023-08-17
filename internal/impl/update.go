@@ -49,6 +49,10 @@ func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
 		}
 	}
 
+	if err := devpkg.FillNarInfoCache(ctx, pendingPackagesToUpdate...); err != nil {
+		return err
+	}
+
 	for _, pkg := range pendingPackagesToUpdate {
 		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
 			if err = d.attemptToUpgradeFlake(pkg); err != nil {
