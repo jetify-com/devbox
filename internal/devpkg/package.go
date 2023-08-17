@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -70,10 +69,8 @@ var isNarInfoInCache = struct {
 	// re-use httpClient to re-use the connection
 	httpClient http.Client
 }{
-	status: map[string]bool{},
-	httpClient: http.Client{
-		Timeout: time.Second * 5,
-	},
+	status:     map[string]bool{},
+	httpClient: http.Client{},
 }
 
 // PackageFromStrings constructs Package from the list of package names provided.
@@ -563,11 +560,10 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	// Check if the narinfo is present in the binary cache
 	isNarInfoInCache.lock.RLock()
 	exists, ok := isNarInfoInCache.status[p.Raw]
-	defer isNarInfoInCache.lock.RUnlock()
+	isNarInfoInCache.lock.RUnlock()
 	if !ok {
 		return false, errors.Errorf("narInfo cache miss: %v. call XYZ before invoking IsInBinaryCache", p.Raw)
 	}
-	fmt.Printf("narInfo cache hit: %v\n", exists)
 	return exists, nil
 }
 
@@ -592,32 +588,23 @@ func (p *Package) fillNarInfoCache() error {
 
 	pathParts := newStorePathParts(sysInfo.StorePath)
 	reqURL := BinaryCache + "/" + pathParts.hash + ".narinfo"
-	res, err := isNarInfoInCache.httpClient.Head(reqURL)
+	//nolint:govet
 	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
-	req, err := http.NewRequestWithContext(ctx, "HEAD", reqURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
 	if err != nil {
 		return err
 	}
-	res, err = isNarInfoInCache.httpClient.Do(req)
+	res, err := isNarInfoInCache.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
 	// read the body fully, and close it to ensure the connection is reused.
-	io.Copy(io.Discard, res.Body)
+	_, _ = io.Copy(io.Discard, res.Body)
 	defer res.Body.Close()
 
 	isNarInfoInCache.lock.Lock()
-	defer isNarInfoInCache.lock.Unlock()
-	if err != nil {
-		if os.IsTimeout(err) {
-			isNarInfoInCache.status[p.Raw] = false // set this to avoid re-tries
-			return nil
-		}
-		return err
-	}
-	fmt.Printf("res status code %d\n", res.StatusCode)
-
 	isNarInfoInCache.status[p.Raw] = res.StatusCode == 200
+	isNarInfoInCache.lock.Unlock()
 	return nil
 }
 
@@ -719,7 +706,16 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 			continue
 		}
 		pkg := p // copy the loop variable since its used in a closure below
-		group.Go(pkg.fillNarInfoCache)
+		group.Go(func() error {
+			err := pkg.fillNarInfoCache()
+			if err != nil {
+				// default to false if there was an error, so we don't re-try
+				isNarInfoInCache.lock.Lock()
+				isNarInfoInCache.status[pkg.Raw] = false
+				isNarInfoInCache.lock.Unlock()
+			}
+			return err
+		})
 	}
 	return group.Wait()
 }
