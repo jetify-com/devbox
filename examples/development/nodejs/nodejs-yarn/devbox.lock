@@ -9,7 +9,7 @@
     },
     "yarn@1.22": {
       "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#yarn",
+      "resolved": "github:NixOS/nixpkgs/9356eead97d8d16956b0226d78f76bd66e06cb60#yarn",
       "version": "1.22.19"
     }
   }
