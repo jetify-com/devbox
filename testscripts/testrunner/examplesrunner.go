@@ -76,11 +76,11 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 		}
 
 		ignoredExampleDirs := []string{
-			//"cloud_development",
-			//"data_science",
-			//"databases",
+			"cloud_development",
+			"data_science",
+			"databases",
 			"development",
-			//"flakes",
+			"flakes",
 			//"insecure",
 			//"plugins",
 			//"servers",
