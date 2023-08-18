@@ -272,10 +272,14 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		if exists, err := input.ValidateInstallsOnSystem(); err != nil {
 			return err
 		} else if !exists {
-			platform := " " + nix.System()
+			platform := nix.System()
 			return usererr.New(
-				"package %s cannot be installed on your platform%s. "+
-					"Run `devbox add %[1]s --exclude-platform%[2]s` and re-try.",
+				"package %s cannot be installed on your platform %s.\n"+
+					"If you know this package is incompatible with %[2]s, then "+
+					"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+					"If you think this package should be compatible with %[2]s, then "+
+					"it's possible this particular version is not available yet from the nix registry. "+
+					"You could try `devbox add` with a different version for this package.\n",
 				input.Raw,
 				platform,
 			)
