@@ -88,10 +88,10 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			"stacks/drupal",
 			"stacks/jekyll",
 			"stacks/lapp-stack",
-			//"stacks/laravel",
-			//"stacks/lepp-stack",
+			"stacks/laravel",
+			"stacks/lepp-stack",
 			//"stacks/rails",
-			//"stacks/spring",
+			"stacks/spring",
 		}
 		for _, ignoredDir := range ignoredExampleDirs {
 			if strings.Contains(path, ignoredDir) {
