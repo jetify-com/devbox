@@ -84,7 +84,14 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			"insecure",
 			"plugins",
 			"servers",
-			//"stacks",
+			"stacks/django",
+			"stacks/drupal",
+			"stacks/jekyll",
+			"stacks/lapp-stack",
+			//"stacks/laravel",
+			//"stacks/lepp-stack",
+			//"stacks/rails",
+			//"stacks/spring",
 		}
 		for _, ignoredDir := range ignoredExampleDirs {
 			if strings.Contains(path, ignoredDir) {
