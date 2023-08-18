@@ -81,10 +81,10 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			//"databases",
 			"development",
 			//"flakes",
-			//"insecure",
-			//"plugins",
-			//"servers",
-			//"stacks",
+			"insecure",
+			"plugins",
+			"servers",
+			"stacks",
 		}
 		for _, ignoredDir := range ignoredExampleDirs {
 			if strings.Contains(path, ignoredDir) {
