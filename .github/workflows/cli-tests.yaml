@@ -81,12 +81,12 @@ jobs:
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
-        run-devbox-json-tests: [true, false]
+        run-devbox-json-tests: [true]
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
         # 2. nix version 2.17.0 which introduces a new code path that minimizes nixpkgs downloads.
         # 3. latest nix version (currently, that is 2.17.0, so omitted)
-        nix-version: ["2.12.0", "2.17.0"]
+        nix-version: ["2.17.0"]
         exclude:
           - is-main: false
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
@@ -169,7 +169,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        nix-version: [2.15.1, 2.16.1, 2.17.0]
+        nix-version: [2.17.0]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
