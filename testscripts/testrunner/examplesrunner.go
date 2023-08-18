@@ -76,15 +76,15 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 		}
 
 		ignoredExampleDirs := []string{
-			"cloud_development",
-			"data_science",
-			"databases",
+			//"cloud_development",
+			//"data_science",
+			//"databases",
 			"development",
-			"flakes",
-			"insecure",
-			"plugins",
-			"servers",
-			"stacks",
+			//"flakes",
+			//"insecure",
+			//"plugins",
+			//"servers",
+			//"stacks",
 		}
 		for _, ignoredDir := range ignoredExampleDirs {
 			if strings.Contains(path, ignoredDir) {
