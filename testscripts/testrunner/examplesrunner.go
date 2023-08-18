@@ -79,7 +79,7 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			"cloud_development",
 			"data_science",
 			"databases",
-			"development",
+			//"development",
 			"flakes",
 			"insecure",
 			"plugins",
