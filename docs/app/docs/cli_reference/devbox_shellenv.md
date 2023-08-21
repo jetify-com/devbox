@@ -14,6 +14,7 @@ devbox shellenv [flags]
 | `-c, --config string` | path to directory containing a devbox.json config file |
 |  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
 |  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
+| `--pure` | If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained. |
 | `-h, --help` | help for shellenv |
 | `-q, --quiet` | suppresses logs |
 

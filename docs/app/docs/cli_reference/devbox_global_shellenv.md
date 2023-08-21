@@ -19,6 +19,7 @@ Print shell commands that add global Devbox packages to your PATH
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
+| `--pure` | If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained. |
 | `-h, --help` | help for shellenv |
 | `-q, --quiet` | suppresses logs |
 

@@ -18,6 +18,7 @@ devbox shell [<dir>] [flags]
 |  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
 |  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `--print-env` | Print a script to setup a devbox shell environment |
+| `--pure` | If this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained. |
 | `-h, --help` | help for shell |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
