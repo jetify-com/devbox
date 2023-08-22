@@ -16,6 +16,10 @@ import (
 const (
 	roleArn = "arn:aws:iam::984256416385:role/JetpackS3Federated"
 	bucket  = "devbox.sh"
+	// this is a fixed value the bucket resides in this region, otherwise,
+	// user's default region will get pulled from config and region mismatch
+	// will result in user not being able to run global push
+	region = "us-east-2"
 )
 
 func assumeRole(ctx context.Context, user *auth.User) (*aws.Config, error) {
@@ -43,6 +47,7 @@ func assumeRole(ctx context.Context, user *auth.User) (*aws.Config, error) {
 			),
 		),
 	)
+	config.Region = region
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
