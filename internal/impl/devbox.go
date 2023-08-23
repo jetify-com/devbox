@@ -974,7 +974,7 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 	})
 }
 
-// InstallableAndPluginPackages returns installable user packages and plugin
+// AllInstallablePackages returns installable user packages and plugin
 // packages concatenated in correct order
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()

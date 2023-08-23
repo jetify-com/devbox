@@ -372,6 +372,9 @@ func (p *Package) Hash() string {
 	return shortHash
 }
 
+// Equals compares two Packages. This may be an expensive operation since it
+// may have to normalize a Package's attribute path, which may require a network
+// call.
 func (p *Package) Equals(other *Package) bool {
 	if p.String() == other.String() {
 		return true
