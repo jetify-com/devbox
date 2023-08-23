@@ -58,7 +58,7 @@ func ProfileListItems(
 			index:             index,
 			unlockedReference: element.OriginalURL + "#" + element.AttrPath,
 			lockedReference:   element.URL + "#" + element.AttrPath,
-			nixStorePath:      element.StorePaths[0],
+			nixStorePath:      element.StorePaths,
 		})
 	}
 	return items, nil
@@ -133,7 +133,8 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
 		for _, item := range items {
-			if pathInStore == item.nixStorePath {
+			if len(item.nixStorePath) == 1 && // this should always be true
+				pathInStore == item.nixStorePath[0] {
 				return item.index, nil
 			}
 		}
@@ -199,7 +200,7 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 		index:             index,
 		unlockedReference: unlockedReference,
 		lockedReference:   lockedReference,
-		nixStorePath:      nixStorePath,
+		nixStorePath:      []string{nixStorePath},
 	}, nil
 }
 

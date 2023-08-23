@@ -25,7 +25,7 @@ type NixProfileListItem struct {
 	lockedReference string
 
 	// The store path(s) of the package.
-	nixStorePath string // TODO: change to slice
+	nixStorePath []string
 }
 
 // AttributePath parses the package attribute from the NixProfileListItem.lockedReference
