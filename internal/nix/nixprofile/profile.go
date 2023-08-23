@@ -194,13 +194,13 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	if !scanner.Scan() {
 		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing nixStorePaths: %s", line)
 	}
-	nixStorePath := scanner.Text()
+	nixStorePaths := strings.Fields(scanner.Text())
 
 	return &NixProfileListItem{
 		index:             index,
 		unlockedReference: unlockedReference,
 		lockedReference:   lockedReference,
-		nixStorePaths:     []string{nixStorePath},
+		nixStorePaths:     nixStorePaths,
 	}, nil
 }
 
