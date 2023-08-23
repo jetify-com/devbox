@@ -28,39 +28,40 @@ func ProfileListItems(
 ) ([]*NixProfileListItem, error) {
 
 	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
-	if err == nil {
-		type ProfileListElement struct {
-			Active      bool     `json:"active"`
-			AttrPath    string   `json:"attrPath"`
-			OriginalURL string   `json:"originalUrl"`
-			Priority    int      `json:"priority"`
-			StorePaths  []string `json:"storePaths"`
-			URL         string   `json:"url"`
-		}
-		type ProfileListOutput struct {
-			Elements []ProfileListElement `json:"elements"`
-			Version  int                  `json:"version"`
-		}
-
-		var structOutput ProfileListOutput
-		if err := json.Unmarshal([]byte(output), &structOutput); err != nil {
-			return nil, err
-		}
-
-		items := []*NixProfileListItem{}
-		for index, element := range structOutput.Elements {
-			items = append(items, &NixProfileListItem{
-				index:             index,
-				unlockedReference: element.OriginalURL + "#" + element.AttrPath,
-				lockedReference:   element.URL + "#" + element.AttrPath,
-				nixStorePath:      element.StorePaths[0], // TODO: add all paths
-			})
-		}
-		return items, nil
-	} else { // fallback to legacy profile list
+	if err != nil {
+		// fallback to legacy profile list
 		// NOTE: maybe we should check the nix version first, instead of falling back on _any_ error.
 		return profileListLegacy(writer, profileDir)
 	}
+
+	type ProfileListElement struct {
+		Active      bool     `json:"active"`
+		AttrPath    string   `json:"attrPath"`
+		OriginalURL string   `json:"originalUrl"`
+		Priority    int      `json:"priority"`
+		StorePaths  []string `json:"storePaths"`
+		URL         string   `json:"url"`
+	}
+	type ProfileListOutput struct {
+		Elements []ProfileListElement `json:"elements"`
+		Version  int                  `json:"version"`
+	}
+
+	var structOutput ProfileListOutput
+	if err := json.Unmarshal([]byte(output), &structOutput); err != nil {
+		return nil, err
+	}
+
+	items := []*NixProfileListItem{}
+	for index, element := range structOutput.Elements {
+		items = append(items, &NixProfileListItem{
+			index:             index,
+			unlockedReference: element.OriginalURL + "#" + element.AttrPath,
+			lockedReference:   element.URL + "#" + element.AttrPath,
+			nixStorePath:      element.StorePaths[0],
+		})
+	}
+	return items, nil
 }
 
 // profileListLegacy lists the items in a nix profile before nix 2.17.0 introduced --json.
