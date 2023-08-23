@@ -5,6 +5,7 @@ package nixprofile
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestNixProfileListItem(t *testing.T) {
 					index:             0,
 					unlockedReference: "flake:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
 					lockedReference:   "github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19",
-					nixStorePath:      "/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3",
+					nixStorePaths:     []string{"/nix/store/w0lyimyyxxfl3gw40n46rpn1yjrl3q85-go-1.19.3"},
 				},
 				attrPath:    "legacyPackages.x86_64-darwin.go_1_19",
 				packageName: "go_1_19",
@@ -51,7 +52,7 @@ func TestNixProfileListItem(t *testing.T) {
 					2,
 					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
 					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
-					"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3",
+					[]string{"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3"},
 				},
 				attrPath:    "legacyPackages.x86_64-darwin.python39Packages.numpy",
 				packageName: "python39Packages.numpy",
@@ -75,7 +76,7 @@ func testItem(t *testing.T, line string, expected expectedTestData) {
 		t.Fatalf("expected NixProfileListItem to be non-nil")
 	}
 
-	if *item != *expected.item {
+	if !reflect.DeepEqual(item, expected.item) {
 		t.Fatalf("expected parsed NixProfileListItem to be %s but got %s",
 			expected.item,
 			item,
