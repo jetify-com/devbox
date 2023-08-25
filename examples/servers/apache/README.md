@@ -1,6 +1,4 @@
----
-title: Apache
----
+# Apache
 
 Apache can be automatically configured by Devbox via the built-in Apache Plugin. This plugin will activate automatically when you install Apache using `devbox add apache`.
 

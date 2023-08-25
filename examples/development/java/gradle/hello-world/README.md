@@ -1,6 +1,4 @@
----
-title: Java
----
+# Java
 
 In addition to installing the JDK, you'll need to install either the Maven or Gradle build systems in your shell.
 

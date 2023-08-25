@@ -1,6 +1,4 @@
----
-title: F# and .NET
----
+# F# and .NET
 
 F# and .NET projects can be easily generated in Devbox by adding the dotnet SDK to your project. You can then create new projects using `dotnet new`
 

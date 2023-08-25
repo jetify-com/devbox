@@ -1,6 +1,4 @@
----
-title: Caddy
----
+# Caddy
 
 Caddy can be configured automatically using Devbox's built in Caddy plugin. This plugin will activate automatically when you install Caddy using `devbox add caddy`
 

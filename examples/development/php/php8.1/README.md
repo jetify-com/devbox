@@ -1,6 +1,4 @@
----
-title: PHP
----
+# PHP
 
 PHP projects can manage most of their dependencies locally with `composer`. Some PHP extensions, however, need to be bundled with PHP at compile time.
 

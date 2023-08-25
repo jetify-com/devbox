@@ -1,6 +1,4 @@
----
-title: Nginx
----
+# Nginx
 
 NGINX can be automatically configured by Devbox via the built-in NGINX Plugin. This plugin will activate automatically when you install NGINX using `devbox add nginx`
 

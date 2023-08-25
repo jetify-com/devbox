@@ -1,6 +1,4 @@
----
-title: Ruby
----
+# Ruby
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/ruby)
 
