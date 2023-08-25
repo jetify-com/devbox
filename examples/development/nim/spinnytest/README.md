@@ -1,6 +1,6 @@
 # Nim Example
 
-Small test to demonstrate installing a package and running it with nim. 
+Small test to demonstrate installing a package and running it with nim.
 
 ## Building
 

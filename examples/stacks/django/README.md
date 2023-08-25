@@ -29,7 +29,6 @@
 
    These lines are already added to your `init_hook` to automatically activate your venv.
 
-
 ### Setting up the Database
 
 The Django example uses a database. To set up the database, we will first create a new PostgreSQL database cluster, create the `todo_db` and user, and run the Django migrations.

@@ -22,7 +22,7 @@ You can add new scripts by editing the `devbox.json` file
 
 You can run scripts using `devbox run <script>`
 
-For example: you can replay this help text with 
+For example: you can replay this help text with:
 
 ```bash
 devbox run readme
