@@ -1,6 +1,4 @@
----
-title: C# and .NET
----
+# C# and .NET
 
 C# and .NET projects can be easily generated in Devbox by adding the dotnet SDK to your project. You can then create new projects using `dotnet new`
 

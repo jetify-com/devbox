@@ -1,6 +1,4 @@
----
-title: Python
----
+# Python
 
 Python by default will attempt to install your packages globally, or in the Nix Store (which it does not have permissions to modify). To use Python with Devbox, we recommend setting up a Virtual Environment using pipenv or Poetry (see below).
 

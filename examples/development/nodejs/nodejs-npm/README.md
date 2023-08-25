@@ -1,6 +1,4 @@
----
-title: NodeJS
----
+# NodeJS
 
 Most NodeJS Projects will install their dependencies locally using NPM or Yarn, and thus can work with Devbox with minimal additional configuration. Per project packages can be managed via NPM or Yarn.
 

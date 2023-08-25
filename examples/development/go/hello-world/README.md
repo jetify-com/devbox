@@ -1,6 +1,4 @@
----
-title: Go
----
+# Go
 
 Go projects can be run in Devbox by adding the Go SDK to your project. If your project uses cgo or compiles against C libraries, you should also include them in your packages to ensure Go can compile successfully
 
