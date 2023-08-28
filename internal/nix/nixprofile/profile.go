@@ -125,41 +125,24 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if inCache {
-		// Packages in cache are added by store path, which means we only need to check
-		// for store path equality to find it.
-		pathInStore, err := args.Package.Installable()
+
+	if !inCache {
+		// This is an optimization for happy path when packages are added by flake reference. A resolved devbox
+		// package *which was added by flake reference* (not by store path) should match the unlockedReference
+		// of an existing profile item.
+		ref, err := args.Package.NormalizedDevboxPackageReference()
 		if err != nil {
-			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
+			return -1, err
 		}
 		for _, item := range items {
-			if len(item.nixStorePaths) == 1 && // this should always be true
-				pathInStore == item.nixStorePaths[0] {
+			if ref == item.unlockedReference {
 				return item.index, nil
 			}
 		}
-		return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
-	// else: check if the Package matches an item's unlockedReference.
-	// This is an optimization for happy path. A resolved devbox package *which was added by
-	// flake reference* (not by store path) should match the unlockedReference of an existing
-	// profile item.
-	ref, err := args.Package.NormalizedDevboxPackageReference()
-	if err != nil {
-		return -1, err
-	}
 	for _, item := range items {
-		if ref == item.unlockedReference {
-			return item.index, nil
-		}
-	}
-
-	// Still not found? Check for full pkg equality (may be expensive).
-	for _, item := range items {
-		existing := item.ToPackage(args.Lockfile)
-
-		if args.Package.Equals(existing) {
+		if item.Matches(args.Package, args.Lockfile) {
 			return item.index, nil
 		}
 	}
@@ -276,7 +259,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 // It is up to the caller to ensure that the underlying profile has not changed since the items
 // were queried.
 func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
-	if items == nil {
+	if items == nil || len(items) == 0 {
 		return nil
 	}
 	indexes := []string{}
