@@ -105,11 +105,11 @@ type ProfileListIndexArgs struct {
 	Items      []*NixProfileListItem
 	Lockfile   *lock.File
 	Writer     io.Writer
-	DevPkg     *devpkg.Package
+	Package    *devpkg.Package
 	ProfileDir string
 }
 
-// ProfileListIndex returns the index of args.DevPkg in the nix profile specified by args.ProfileDir,
+// ProfileListIndex returns the index of args.Package in the nix profile specified by args.ProfileDir,
 // or -1 if it's not found. Callers can pass in args.Items to avoid having to call `nix-profile list` again.
 func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	var err error
@@ -121,30 +121,30 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		}
 	}
 
-	inCache, err := args.DevPkg.IsInBinaryCache()
+	inCache, err := args.Package.IsInBinaryCache()
 	if err != nil {
 		return -1, err
 	}
 	if inCache {
 		// Packages in cache are added by store path, which means we only need to check
 		// for store path equality to find it.
-		pathInStore, err := args.DevPkg.Installable()
+		pathInStore, err := args.Package.Installable()
 		if err != nil {
-			return -1, errors.Wrapf(err, "failed to get installable for %s", args.DevPkg.String())
+			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
 		for _, item := range items {
 			if pathInStore == item.nixStorePath {
 				return item.index, nil
 			}
 		}
-		return -1, errors.Wrap(nix.ErrPackageNotFound, args.DevPkg.String())
+		return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
-	// else: check if the DevPkg matches an item's unlockedReference.
+	// else: check if the Package matches an item's unlockedReference.
 	// This is an optimization for happy path. A resolved devbox package *which was added by
 	// flake reference* (not by store path) should match the unlockedReference of an existing
 	// profile item.
-	ref, err := args.DevPkg.NormalizedDevboxPackageReference()
+	ref, err := args.Package.NormalizedDevboxPackageReference()
 	if err != nil {
 		return -1, err
 	}
@@ -158,11 +158,11 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 	for _, item := range items {
 		existing := item.ToPackage(args.Lockfile)
 
-		if args.DevPkg.Equals(existing) {
+		if args.Package.Equals(existing) {
 			return item.index, nil
 		}
 	}
-	return -1, errors.Wrap(nix.ErrPackageNotFound, args.DevPkg.String())
+	return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 }
 
 // parseNixProfileListItem reads each line of output (from `nix profile list`) and converts

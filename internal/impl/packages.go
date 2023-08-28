@@ -356,7 +356,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			DevPkg:     pkg,
+			Package:    pkg,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
@@ -431,7 +431,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 			Items:      items,
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			DevPkg:     pkg,
+			Package:    pkg,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
