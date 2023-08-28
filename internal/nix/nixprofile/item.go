@@ -65,9 +65,9 @@ func (i *NixProfileListItem) Matches(pkg *devpkg.Package, locker lock.Locker) bo
 			return false
 		}
 		return len(i.nixStorePaths) == 1 && i.nixStorePaths[0] == path
-	} else {
-		return pkg.Equals(devpkg.PackageFromString(i.unlockedReference, locker))
 	}
+
+	return pkg.Equals(devpkg.PackageFromString(i.unlockedReference, locker))
 }
 
 func (i *NixProfileListItem) addedByStorePath() bool {
