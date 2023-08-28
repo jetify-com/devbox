@@ -69,7 +69,11 @@ func CheckVersion(w io.Writer, commandPath string) {
 		return
 	}
 
-	if lo.Contains(commandSkipList, commandPath) {
+	hasSkipPrefix := lo.ContainsBy(
+		commandSkipList,
+		func(skipPath string) bool { return strings.HasPrefix(commandPath, skipPath) },
+	)
+	if hasSkipPrefix {
 		return
 	}
 
