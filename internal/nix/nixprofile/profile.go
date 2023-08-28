@@ -259,7 +259,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 // It is up to the caller to ensure that the underlying profile has not changed since the items
 // were queried.
 func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
-	if items == nil || len(items) == 0 {
+	if len(items) == 0 {
 		return nil
 	}
 	indexes := []string{}
