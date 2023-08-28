@@ -4,6 +4,7 @@
  <img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
 </picture>
 
+
 # Devbox
 
 ### Instant, easy, and predictable development environments
