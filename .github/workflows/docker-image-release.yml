@@ -21,7 +21,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: ./examples/docker/
-          file: ./examples/docker/Dockerfile
+          context: ./internal/impl/generate/tmpl/
+          file: ./internal/impl/generate/tmpl/Dockerfile
           push: true
           tags: jetpackio/devbox:latest
