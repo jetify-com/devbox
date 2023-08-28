@@ -48,6 +48,7 @@ var commandSkipList = []string{
 	"devbox global shellenv",
 	"devbox shellenv",
 	"devbox version update",
+	"devbox log",
 }
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
