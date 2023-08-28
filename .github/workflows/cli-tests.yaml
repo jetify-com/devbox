@@ -97,6 +97,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 25 }}
     steps:
+      - name: Maximize build disk space
+        uses: easimon/maximize-build-space@v8
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
