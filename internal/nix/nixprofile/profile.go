@@ -14,7 +14,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-  "github.com/samber/lo"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -51,14 +51,14 @@ func ProfileListItems(
 	var structOutput ProfileListOutput
 	if err := json.Unmarshal([]byte(output), &structOutput); err != nil {
 		return nil, err
-  }
+	}
 
 	items := []*NixProfileListItem{}
 	for index, element := range structOutput.Elements {
 		items = append(items, &NixProfileListItem{
 			index:             index,
- 			unlockedReference: lo.Ternary(element.OriginalURL != "", element.OriginalURL + "#" + element.AttrPath, ""),
-      lockedReference:   lo.Ternary(element.URL != "", element.URL + "#" + element.AttrPath, ""),
+			unlockedReference: lo.Ternary(element.OriginalURL != "", element.OriginalURL+"#"+element.AttrPath, ""),
+			lockedReference:   lo.Ternary(element.URL != "", element.URL+"#"+element.AttrPath, ""),
 			nixStorePaths:     element.StorePaths,
 		})
 	}
@@ -135,7 +135,13 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		if err != nil {
 			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
-  }
+		for _, item := range items {
+			if ref == item.unlockedReference {
+				return item.index, nil
+			}
+		}
+		return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
+	}
 
 	for _, item := range items {
 		if item.Matches(args.Package, args.Lockfile) {
