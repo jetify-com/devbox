@@ -58,7 +58,7 @@ func ProfileListItems(
 			index:             index,
 			unlockedReference: element.OriginalURL + "#" + element.AttrPath,
 			lockedReference:   element.URL + "#" + element.AttrPath,
-			nixStorePath:      element.StorePaths[0],
+			nixStorePaths:     element.StorePaths,
 		})
 	}
 	return items, nil
@@ -133,7 +133,8 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
 		for _, item := range items {
-			if pathInStore == item.nixStorePath {
+			if len(item.nixStorePaths) == 1 && // this should always be true
+				pathInStore == item.nixStorePaths[0] {
 				return item.index, nil
 			}
 		}
@@ -191,15 +192,15 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	lockedReference := scanner.Text()
 
 	if !scanner.Scan() {
-		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing nixStorePath: %s", line)
+		return nil, redact.Errorf("error parsing \"nix profile list\" output: line is missing nixStorePaths: %s", line)
 	}
-	nixStorePath := scanner.Text()
+	nixStorePaths := strings.Fields(scanner.Text())
 
 	return &NixProfileListItem{
 		index:             index,
 		unlockedReference: unlockedReference,
 		lockedReference:   lockedReference,
-		nixStorePath:      nixStorePath,
+		nixStorePaths:     nixStorePaths,
 	}, nil
 }
 

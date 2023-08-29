@@ -25,7 +25,7 @@ type NixProfileListItem struct {
 	lockedReference string
 
 	// The store path(s) of the package.
-	nixStorePath string // TODO: change to slice
+	nixStorePaths []string
 }
 
 // AttributePath parses the package attribute from the NixProfileListItem.lockedReference
@@ -62,6 +62,6 @@ func (item *NixProfileListItem) String() string {
 		item.index,
 		item.unlockedReference,
 		item.lockedReference,
-		item.nixStorePath,
+		item.nixStorePaths,
 	)
 }
