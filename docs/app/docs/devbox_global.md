@@ -50,10 +50,10 @@ devbox global list
 To remove a global package, use:
 
 ```bash
-devbox global remove ripgrep
+devbox global rm ripgrep
 
 # Output:
-ripgrep was removed
+removing 'github:NixOS/nixpkgs/ripgrep'
 ```
 
 ## Using Fleek with Devbox Global
