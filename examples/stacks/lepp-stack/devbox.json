@@ -7,7 +7,7 @@
     "nginx@1.24"
   ],
   "env": {
-    "NGINX_WEB_PORT": "8089",
+    "WEB_PORT": "8089",
     "PGPORT": "5433"
   },
   "shell": {
@@ -27,7 +27,7 @@
         "dropdb --if-exists devbox_lepp",
         "createdb devbox_lepp",
         "psql devbox_lepp < setup_postgres_db.sql",
-        "curl localhost:$NGINX_WEB_PORT",
+        "curl localhost:$WEB_PORT",
         "devbox services stop"
       ]
     }
