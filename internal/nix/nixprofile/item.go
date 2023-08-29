@@ -17,14 +17,15 @@ type NixProfileListItem struct {
 	index int
 
 	// The original ("unlocked") flake reference and output attribute path used at installation time.
-	// NOTE that this can be "#" if the package was added to the nix profile via store path.
+	// NOTE that this will be empty if the package was added to the nix profile via store path.
 	unlockedReference string
 
 	// The locked flake reference to which the unlocked flake reference was resolved.
-	// NOTE that this can be "#" if the package was added to the nix profile via store path.
+	// NOTE that this will be empty if the package was added to the nix profile via store path.
 	lockedReference string
 
-	// The store path(s) of the package.
+	// The store path(s) of the package. Should have at least 1 path, and should have exactly 1 path
+	// if the item was added to the profile through a store path.
 	nixStorePaths []string
 }
 
@@ -33,35 +34,52 @@ type NixProfileListItem struct {
 // For example:
 // if NixProfileListItem.lockedReference = github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 // then AttributePath = legacyPackages.x86_64-darwin.go_1_19
-func (item *NixProfileListItem) AttributePath() (string, error) {
+func (i *NixProfileListItem) AttributePath() (string, error) {
 	// lockedReference example:
 	// github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.go_1_19
 
 	// AttributePath example:
 	// legacyPackages.x86_64.go_1_19
-	_ /*nixpkgs*/, attrPath, found := strings.Cut(item.lockedReference, "#")
+	_ /*nixpkgs*/, attrPath, found := strings.Cut(i.lockedReference, "#")
 	if !found {
 		return "", redact.Errorf(
 			"expected to find # in lockedReference: %s from NixProfileListItem: %s",
-			redact.Safe(item.lockedReference),
-			item,
+			redact.Safe(i.lockedReference),
+			i,
 		)
 	}
 	return attrPath, nil
 }
 
-// ToPackage constructs a nix.Package using the unlocked reference.
-// TODO: this doesn't handle well the case where item.unlockedReference == "#"
-func (item *NixProfileListItem) ToPackage(locker lock.Locker) *devpkg.Package {
-	return devpkg.PackageFromString(item.unlockedReference, locker)
+// Matches compares a devpkg.Package with this profile item and returns true if the profile item
+// was the result of adding the Package to the nix profile.
+func (i *NixProfileListItem) Matches(pkg *devpkg.Package, locker lock.Locker) bool {
+	if i.addedByStorePath() {
+		// If an Item was added via store path, the best we can do when comparing to a Package is to check
+		// if its store path matches that of the Package. Note that the item should only have 1 store path.
+		path, err := pkg.InputAddressedPath()
+		if err != nil {
+			// pkg couldn't have been added by store path if we can't get the store path for it, so return
+			// false. There are some edge cases (e.g. cache is down, index changed, etc., but it's OK to
+			// err on the side of false).
+			return false
+		}
+		return len(i.nixStorePaths) == 1 && i.nixStorePaths[0] == path
+	}
+
+	return pkg.Equals(devpkg.PackageFromString(i.unlockedReference, locker))
+}
+
+func (i *NixProfileListItem) addedByStorePath() bool {
+	return i.unlockedReference == ""
 }
 
 // String serializes the NixProfileListItem back into the format printed by `nix profile list`
-func (item *NixProfileListItem) String() string {
-	return fmt.Sprintf("%d %s %s %s",
-		item.index,
-		item.unlockedReference,
-		item.lockedReference,
-		item.nixStorePaths,
+func (i *NixProfileListItem) String() string {
+	return fmt.Sprintf("{%d %s %s %s}",
+		i.index,
+		i.unlockedReference,
+		i.lockedReference,
+		i.nixStorePaths,
 	)
 }

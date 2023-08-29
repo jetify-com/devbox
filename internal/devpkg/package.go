@@ -424,7 +424,7 @@ func (p *Package) LegacyToVersioned() string {
 	return p.Raw + "@latest"
 }
 
-// ensureNixpkgsPrefetched will prefetch flake for the nixpkgs registry for the package.
+// EnsureNixpkgsPrefetched will prefetch flake for the nixpkgs registry for the package.
 // This is an internal method, and should not be called directly.
 func EnsureNixpkgsPrefetched(ctx context.Context, w io.Writer, pkgs []*Package) error {
 	if err := FillNarInfoCache(ctx, pkgs...); err != nil {
