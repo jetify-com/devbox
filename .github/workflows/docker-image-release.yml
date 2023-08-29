@@ -1,10 +1,6 @@
 name: docker-image-release
 
-# on: workflow_dispatch
-on:
-  push:
-    branches:
-      - "mohsen--devbox-default-image"
+on: workflow_dispatch
 
 jobs:
   docker-image-build-push:
