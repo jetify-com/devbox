@@ -1,0 +1,31 @@
+name: docker-image-release
+
+on: workflow_dispatch
+
+jobs:
+  docker-image-build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build and push default
+        uses: docker/build-push-action@v4
+        with:
+          context: ./internal/impl/generate/tmpl/
+          file: ./internal/impl/generate/tmpl/DevboxImageDockerfile
+          push: true
+          tags: jetpackio/devbox:latest
+      - name: Build and push root user
+        uses: docker/build-push-action@v4
+        with:
+          context: ./internal/impl/generate/tmpl/
+          file: ./internal/impl/generate/tmpl/DevboxImageDockerfileRootUser
+          push: true
+          tags: jetpackio/devbox-root-user:latest
