@@ -16,7 +16,7 @@ func ProfileUpgrade(ProfileDir string, pkg *devpkg.Package, lock *lock.File) err
 		&ProfileListIndexArgs{
 			Lockfile:   lock,
 			Writer:     os.Stderr,
-			Input:      pkg,
+			Package:    pkg,
 			ProfileDir: ProfileDir,
 		},
 	)

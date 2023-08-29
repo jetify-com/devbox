@@ -352,18 +352,18 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	for _, input := range packages {
+	for _, pkg := range packages {
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			Input:      input,
+			Package:    pkg,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
 			ux.Ferror(
 				d.writer,
 				"Package %s not found in profile. Skipping.\n",
-				input.Raw,
+				pkg.Raw,
 			)
 			continue
 		}
@@ -415,7 +415,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	}
 
 	pending := []*devpkg.Package{}
-	list, err := nixprofile.ProfileListItems(d.writer, profileDir)
+	items, err := nixprofile.ProfileListItems(d.writer, profileDir)
 	if err != nil {
 		return nil, err
 	}
@@ -428,10 +428,10 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	}
 	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
-			List:       list,
+			Items:      items,
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
-			Input:      pkg,
+			Package:    pkg,
 			ProfileDir: profileDir,
 		})
 		if err != nil {
@@ -444,7 +444,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	return pending, nil
 }
 
-// extraPkgsInProfile returns a list of packages that are in the nix profile,
+// extraPackagesInProfile returns a list of packages that are in the nix profile,
 // but are NOT in devbox.json or global devbox.json.
 //
 // NOTE: as an optimization, this implementation assumes that all packages in
