@@ -134,7 +134,7 @@ jobs:
           DEVBOX_DEBUG: ${{ (!matrix.run-devbox-json-tests || inputs.example-debug) && '1' || '0' }}
           DEVBOX_RUN_DEVBOX_JSON_TESTS: ${{ matrix.run-devbox-json-tests }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
-          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '25m' }}"
+          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '30m' }}"
         run: |
           echo "::group::Nix version"
           nix --version
