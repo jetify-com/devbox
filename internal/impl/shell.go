@@ -358,6 +358,11 @@ func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 	if s.name == shZsh {
 		// Useful explanation of zsh startup files: https://zsh.sourceforge.io/FAQ/zshfaq03.html#l20
 		filenames := []string{".zshenv", ".zprofile", ".zlogin"}
+
+		// zim framework
+		// https://zimfw.sh/docs/install/
+		filenames = append(filenames, ".zimrc")
+
 		for _, filename := range filenames {
 			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
 			_, err := os.Stat(fileOld)
