@@ -2,7 +2,5 @@
   "packages": [
     "nginx@latest"
   ],
-  "shell": {
-    "init_hook": null
-  }
+  "shell": {}
 }

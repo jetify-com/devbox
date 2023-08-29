@@ -1,15 +1,19 @@
 {
   "name": "nginx",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "readme": "nginx can be configured with env variables\n\nTo customize:\n* Use $NGINX_CONFDIR to change the configuration directory\n* Use $NGINX_LOGDIR to change the log directory\n* Use $NGINX_PIDDIR to change the pid directory\n* Use $NGINX_RUNDIR to change the run directory\n* Use $NGINX_SITESDIR to change the sites directory\n* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user\n* Use $NGINX_GROUP to customize.",
+  "__packages": ["envsubst"],
   "env": {
-    "NGINX_CONFDIR": "{{ .DevboxDir }}/nginx.conf",
+    "NGINX_CONFDIR": "{{ .DevboxDir }}",
+    "NGINX_CONF": "{{ .DevboxDir }}/nginx.conf",
     "NGINX_PATH_PREFIX": "{{ .Virtenv }}",
-    "NGINX_TMPDIR": "{{ .Virtenv }}/temp"
+    "NGINX_TMPDIR": "{{ .Virtenv }}/temp",
+    "NGINX_WEB_PORT": "8081"
   },
   "create_files": {
     "{{ .Virtenv }}/temp": "",
     "{{ .Virtenv }}/process-compose.yaml": "nginx/process-compose.yaml",
+    "{{ .DevboxDir }}/nginx.template": "nginx/nginx.template",
     "{{ .DevboxDir }}/nginx.conf": "nginx/nginx.conf",
     "{{ .DevboxDir }}/fastcgi.conf": "nginx/fastcgi.conf",
     "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
