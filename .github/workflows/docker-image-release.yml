@@ -19,10 +19,17 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Build and push
+      - name: Build and push default
         uses: docker/build-push-action@v4
         with:
           context: ./internal/impl/generate/tmpl/
-          file: ./internal/impl/generate/tmpl/Dockerfile
+          file: ./internal/impl/generate/tmpl/DevboxImageDockerfile
           push: true
           tags: jetpackio/devbox:latest
+      - name: Build and push root user
+        uses: docker/build-push-action@v4
+        with:
+          context: ./internal/impl/generate/tmpl/
+          file: ./internal/impl/generate/tmpl/DevboxImageDockerfileRootUser
+          push: true
+          tags: jetpackio/devbox-root-user:latest
