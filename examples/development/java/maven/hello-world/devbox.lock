@@ -4,17 +4,54 @@
     "binutils@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#binutils",
-      "version": "2.40"
+      "version": "2.40",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/9s260h7wxnb6lc5sdpm3mnkvnln9pymd-binutils-wrapper-2.40"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/1j5h9v08436jjm9lxpqyrcqbp40d13xi-binutils-wrapper-2.40"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/7bac4s1gyclv2sxczqqvj6bmdg0h4xz2-binutils-wrapper-2.40"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/cyb4bb44krf4ghw8qasa03sxi2k4g6a4-binutils-wrapper-2.40"
+        }
+      }
     },
     "jdk@19": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#jdk",
-      "version": "19.0.2+7"
+      "version": "19.0.2+7",
+      "systems": {
+        "aarch64-linux": {
+          "store_path": "/nix/store/bdqk85ckifa9xjnz6p2hznc6y54156nn-openjdk-19.0.2+7"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/i2j4s6qcjzlya4ssi2dpf7qnxw2vsaxm-openjdk-19.0.2+7"
+        }
+      }
     },
     "maven@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#maven",
-      "version": "3.8.6"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#maven",
+      "source": "devbox-search",
+      "version": "3.9.4",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/a9mn00rx76fhipjd6mvh1wpww94lwrnj-apache-maven-3.9.4"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/k3b451zvvcrwkj60ghnsn12vrdx6za2r-apache-maven-3.9.4"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/idjx4zav3bn5ykdb63k3n1z1jcraprzm-apache-maven-3.9.4"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/8a5s443s3hyzikd2jkgpfa7289xgd01z-apache-maven-3.9.4"
+        }
+      }
     }
   }
 }

@@ -2,32 +2,106 @@
   "lockfile_version": "1",
   "packages": {
     "git@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#git",
-      "version": "2.40.1"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#git",
+      "source": "devbox-search",
+      "version": "2.41.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/pr1wzd22phjv7h0vbmfdjn382axlw760-git-2.41.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/x1j8jz0db9v69h84p5immwg1529nsh5g-git-2.41.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/c433w6hab06q8jpnilng1vwzpf3hv06b-git-2.41.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/73mc3hjk8c0fa5njc9ynm5ngqmv04ysx-git-2.41.0"
+        }
+      }
     },
     "mariadb@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#mariadb",
-      "version": "10.6.12"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#mariadb_110",
+      "source": "devbox-search",
+      "version": "11.0.3",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/d5nb44vw8yy22lc21ld75nndmn9c3cgr-mariadb-server-11.0.3"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/sz5n9bkcjxklk4jd0p5h26yi5j79wh7h-mariadb-server-11.0.3"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/4l6h83flncplm3kmry1w08msyy7b7vdw-mariadb-server-11.0.3"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/047g9nxp6jb2bqj1f53qk86sjzrscbmj-mariadb-server-11.0.3"
+        }
+      }
     },
     "nginx@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nginx",
-      "version": "1.24.0"
+      "version": "1.24.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/prz9lx44d3hicpmsri5rm9qk44r79ng8-nginx-1.24.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/b2v5yw11gmywahlyhbqajml7hjdkhsar-nginx-1.24.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/1nyjvgj3hbhck80wkwi0h18561xbp3sy-nginx-1.24.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/vc66rk5b86lx1myxr18qkgzha0fjx2ks-nginx-1.24.0"
+        }
+      }
     },
     "php81Packages.composer@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Packages.composer",
-      "version": "2.5.5"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Packages.composer",
+      "source": "devbox-search",
+      "version": "2.5.8",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/7hxmkxa9bmaplyy1ixl0yxv3j0qvxvc3-php-composer-2.5.8"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/r9jy712s0bnjv6i8qxwrnm099im9ypir-php-composer-2.5.8"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/fjy357jpj9q2bfahsgnak4mrh8y07izw-php-composer-2.5.8"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/awwdg6ysllx23j7brikl7wxwaglkyr0i-php-composer-2.5.8"
+        }
+      }
     },
     "php@8.1": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php",
-      "version": "8.1.18"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81",
+      "source": "devbox-search",
+      "version": "8.1.22",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/24facqh0lqq9swy51xyvc763jvlwnylb-php-with-extensions-8.1.22"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/ic9rcrsfx0d9w84iz5sahin898zzkf0v-php-with-extensions-8.1.22"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/651lzjnchj12ngdf4hzldb71grbzzvhk-php-with-extensions-8.1.22"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/14icl7q3qwkcjl80a50bl06n8wn3yk1i-php-with-extensions-8.1.22"
+        }
+      }
     }
   }
 }

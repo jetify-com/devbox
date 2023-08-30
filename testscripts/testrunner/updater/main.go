@@ -31,9 +31,11 @@ func run() error {
 	}
 	examplesDir := filepath.Join(devboxRepoDir, "examples")
 
-	err = filepath.WalkDir(examplesDir, func(path string, d fs.DirEntry, err error) error {
-		return walkExampleDir(devboxRepoDir, path, d, err)
-	})
+	err = filepath.WalkDir(
+		examplesDir, func(path string, d fs.DirEntry, err error) error {
+			return walkExampleDir(devboxRepoDir, path, d, err)
+		},
+	)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -42,25 +44,27 @@ func run() error {
 
 var examplesToTry = 0
 
-func walkExampleDir(devboxRepoDir, path string, d fs.DirEntry, err error) error {
-	fmt.Printf("checking %s with name: %s\n", path, d.Name())
+func walkExampleDir(devboxRepoDir, path string, dirEntry fs.DirEntry, err error) error {
+	// fmt.Printf("checking %s with name: %s\n", path, dirEntry.Name())
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if examplesToTry > 3 {
-		return nil
-	}
+	// Uncomment to try out changes
+	// if examplesToTry > 3 {
+	//	return nil
+	// }
+	_ = examplesToTry // silence linter
 
-	if d.IsDir() {
+	if dirEntry.IsDir() {
 		skippedDirs := []string{".devbox", "node_modules"}
-		if lo.Contains(skippedDirs, d.Name()) {
+		if lo.Contains(skippedDirs, dirEntry.Name()) {
 			return filepath.SkipDir
 		}
 		return nil
 	}
 
-	if d.Name() != "devbox.json" {
+	if dirEntry.Name() != "devbox.json" {
 		return nil
 	}
 	contentBytes, err := os.ReadFile(path)
@@ -70,7 +74,7 @@ func walkExampleDir(devboxRepoDir, path string, d fs.DirEntry, err error) error 
 
 	content := string(contentBytes)
 	if !strings.Contains(content, "run_test") {
-		fmt.Printf("Skipping config at %s\n", path)
+		fmt.Printf("SKIP: config at %s lacks run_test\n", path)
 		return nil
 	}
 

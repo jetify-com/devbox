@@ -1,6 +1,6 @@
 {
     "packages": [
-        "python310",
+        "python@3.10",
         "python310Packages.pip@23.0.1"
     ],
     "shell": {

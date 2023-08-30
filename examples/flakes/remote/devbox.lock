@@ -1,4 +1,8 @@
 {
   "lockfile_version": "1",
-  "packages": {}
+  "packages": {
+    "github:F1bonacc1/process-compose/v0.43.1": {},
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay": {},
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello": {}
+  }
 }

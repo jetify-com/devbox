@@ -4,23 +4,82 @@
     "php81Extensions.imagick@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.imagick",
-      "version": "3.7.0"
+      "version": "3.7.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/3n0837726vzr2yn5lfl0p42sxz7qdgiv-php-imagick-3.7.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/9llz7ih1agz0ch2qhyawv0islbjdl266-php-imagick-3.7.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/kmqym77xc1f7mk3k3xl48vc0dikgj9pj-php-imagick-3.7.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/a165li19iqbf0rzb195hq1ffhjmhg2my-php-imagick-3.7.0"
+        }
+      }
     },
     "php81Extensions.xdebug@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.xdebug",
-      "version": "3.2.1"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Extensions.xdebug",
+      "source": "devbox-search",
+      "version": "3.2.2",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/isd181vs56d55xarvlzqr0cl2c65skq7-php-xdebug-3.2.2"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/c0ij58mr8mqcbx6kkrs1wa6x0m433hzc-php-xdebug-3.2.2"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/v4i2qbb7aivj3x4i7ipjg1vnfdc3ynvw-php-xdebug-3.2.2"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/vb8vyyjzjx5c0d71n1bqds19yncdwb1z-php-xdebug-3.2.2"
+        }
+      }
     },
     "php81Packages.composer@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Packages.composer",
-      "version": "2.5.5"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Packages.composer",
+      "source": "devbox-search",
+      "version": "2.5.8",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/7hxmkxa9bmaplyy1ixl0yxv3j0qvxvc3-php-composer-2.5.8"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/r9jy712s0bnjv6i8qxwrnm099im9ypir-php-composer-2.5.8"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/fjy357jpj9q2bfahsgnak4mrh8y07izw-php-composer-2.5.8"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/awwdg6ysllx23j7brikl7wxwaglkyr0i-php-composer-2.5.8"
+        }
+      }
     },
     "php@8.1": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-08-30T00:25:28Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php",
-      "version": "8.1.18"
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81",
+      "source": "devbox-search",
+      "version": "8.1.22",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/24facqh0lqq9swy51xyvc763jvlwnylb-php-with-extensions-8.1.22"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/ic9rcrsfx0d9w84iz5sahin898zzkf0v-php-with-extensions-8.1.22"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/651lzjnchj12ngdf4hzldb71grbzzvhk-php-with-extensions-8.1.22"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/14icl7q3qwkcjl80a50bl06n8wn3yk1i-php-with-extensions-8.1.22"
+        }
+      }
     }
   }
 }
