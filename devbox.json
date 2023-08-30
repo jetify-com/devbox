@@ -1,7 +1,7 @@
 {
   "packages": [
-    "go@1.20",
-    "golangci-lint@1.52.2"
+    "golangci-lint@1.52.2",
+    "go@latest"
   ],
   "env": {
     "PATH": "$PATH:$PWD/dist"
