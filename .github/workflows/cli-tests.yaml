@@ -67,7 +67,7 @@ jobs:
         with:
           go-version-file: ./go.mod
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.4.0
+        uses: golangci/golangci-lint-action@v3.7.0
         with:
           args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
           skip-cache: true
