@@ -53,12 +53,28 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
 	existingPackageNames := d.PackageNames()
+	newPackages := []*devpkg.Package{}
 	for _, pkg := range pkgs {
-		// If exact versioned package is already in the config, skip.
+		// If exact versioned package is already in the config, we can skip the
+		// next loop that only deals with newPackages.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
+			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
-			continue
+		} else {
+			newPackages = append(newPackages, pkg)
 		}
+	}
+
+	// Fill in the narinfo cache for versioned newPackages as well
+	versionedPackages := map[string]*devpkg.Package{}
+	for _, pkg := range newPackages {
+		versionedPackages[pkg.Versioned()] = devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
+	}
+	if err := devpkg.FillNarInfoCache(ctx, lo.Values(versionedPackages)...); err != nil {
+		return err
+	}
+
+	for _, pkg := range newPackages {
 
 		// On the other hand, if there's a package with same canonical name, replace
 		// it. Ignore error (which is either missing or more than one). We search by
@@ -73,7 +89,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
-		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
+		versionedPkg := versionedPackages[pkg.Versioned()]
 
 		packageNameForConfig := pkg.Raw
 		ok, err := versionedPkg.ValidateExists()
