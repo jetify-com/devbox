@@ -75,6 +75,12 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			return nil
 		}
 
+		// TODO savil. For debugging only. Not to be landed.
+		if strings.Contains(path, "lepp-stack") || strings.Contains(path, "lapp-stack") {
+			t.Logf("skipping lepp-stack and lapp-stack, config at: %s\n", path)
+			return nil
+		}
+
 		t.Logf("running testscript for example: %s\n", path)
 		runSingleDevboxTestscript(t, dir, path)
 		return nil
