@@ -13,17 +13,16 @@ import (
 	"github.com/samber/lo"
 )
 
+// updater is a tool that updates all examples/ in the devbox repo.
 func main() {
-
 	if err := run(); err != nil {
 		panic(err)
 	}
 }
 
+// run will loop over all examples that have run_test script
+// run `devbox update` on each such example
 func run() error {
-
-	// loop over all examples that have run_test script
-	// run `devbox update` on each such example
 
 	devboxRepoDir, err := devboxRepoDir()
 	if err != nil {
@@ -42,10 +41,10 @@ func run() error {
 	return nil
 }
 
+// examplesToTry is a counter for the number of examples to try. Useful for debugging.
 var examplesToTry = 0
 
 func walkExampleDir(devboxRepoDir, path string, dirEntry fs.DirEntry, err error) error {
-	// fmt.Printf("checking %s with name: %s\n", path, dirEntry.Name())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -56,7 +55,9 @@ func walkExampleDir(devboxRepoDir, path string, dirEntry fs.DirEntry, err error)
 	// }
 	_ = examplesToTry // silence linter
 
+	// If it is a directory, then we don't continue.
 	if dirEntry.IsDir() {
+		// Skip if it is a directory that we don't want to process at all.
 		skippedDirs := []string{".devbox", "node_modules"}
 		if lo.Contains(skippedDirs, dirEntry.Name()) {
 			return filepath.SkipDir
@@ -64,15 +65,19 @@ func walkExampleDir(devboxRepoDir, path string, dirEntry fs.DirEntry, err error)
 		return nil
 	}
 
+	// If it is not a devbox.json file, then we don't continue.
 	if dirEntry.Name() != "devbox.json" {
 		return nil
 	}
+
+	// Read the devbox.json file
 	contentBytes, err := os.ReadFile(path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
 	content := string(contentBytes)
+
+	// Skip if it doesn't have a run_test script
 	if !strings.Contains(content, "run_test") {
 		fmt.Printf("SKIP: config at %s lacks run_test\n", path)
 		return nil
