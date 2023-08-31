@@ -1,10 +1,126 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "cabal-install@latest": {
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#cabal-install",
+      "source": "devbox-search",
+      "version": "3.10.1.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/zx8c6zy7k4fvkzxbnz1gj4d9ib0slxcb-cabal-install-3.10.1.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/i2cfjzfivkd6qvgjhhb1wzj7wgrhzac6-cabal-install-3.10.1.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/j1i22rivhlqra7ajkzwnlw4rdv63p5sp-cabal-install-3.10.1.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/nb96882yc1jlx8li5m4xwyhr94n7nb21-cabal-install-3.10.1.0"
+        }
+      }
+    },
     "ghc@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#ghc",
-      "version": "9.2.7"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#ghc",
+      "source": "devbox-search",
+      "version": "9.4.6",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/1k85b7faqm8pc0k3y553zr8bfhb2dv2z-ghc-9.4.6"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/kw8dna2428nizqcij9rxcg8wdiyviiql-ghc-9.4.6"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/fdlmpnichh72gbvqxqib5dglsgqldyfp-ghc-9.4.6"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/kzn0hhns3y7khx6zjsnm9vdgnasc475j-ghc-9.4.6"
+        }
+      }
+    },
+    "gmp@latest": {
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#gmp",
+      "source": "devbox-search",
+      "version": "6.3.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/9v3j47bhq570p5mxb3qliakwxkimh6i9-gmp-with-cxx-6.3.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/kyxfqavfj53kmlmza9wlshc21v7vfvx3-gmp-with-cxx-6.3.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/75psalhvv51afhchymk9vn32f16qxb6b-gmp-with-cxx-6.3.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/44bqlp05nq9ymdjvngjx8fdjrfmgj63h-gmp-with-cxx-6.3.0"
+        }
+      }
+    },
+    "hpack@latest": {
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#hpack",
+      "source": "devbox-search",
+      "version": "0.35.2",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/b7snhj7r0fh1sl71cw93pbhissln6k9x-hpack-0.35.2"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/chm820695sg2cgaydmdz2a4mfpf3xhin-hpack-0.35.2"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/9376qjb2q0ivhgbgjagbdwgw1y3ap1j1-hpack-0.35.2"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/hm6h9vfhbg28vxphldz2czmr2iygz2bw-hpack-0.35.2"
+        }
+      }
+    },
+    "stack@latest": {
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#stack",
+      "source": "devbox-search",
+      "version": "2.11.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/vnrlr792q350sh9vdd9za6dd41d4iizg-stack-2.11.1"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/8xqxnhjq9x1cnbq5gmlx9c0sqzvnnf8y-stack-2.11.1"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/2nb8nvaydd6sv7cnb1yvyf31l8zwipmi-stack-2.11.1"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/57zyr8q733kksfd82f9fqlnl28s3c48m-stack-2.11.1"
+        }
+      }
+    },
+    "zlib@latest": {
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#zlib",
+      "source": "devbox-search",
+      "version": "1.2.13",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/j7a8wqyszcg3vlw0m9ra2jwiyl4hskwj-zlib-1.2.13"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/6ry5810krihf58jqm21zcn578km564kv-zlib-1.2.13"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/zlk4993fq3zbd23js5xziykz63a0iiyr-zlib-1.2.13"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/i039srr9s4li309rclbm3421ifavgl0g-zlib-1.2.13"
+        }
+      }
     }
   }
 }

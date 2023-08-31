@@ -4,7 +4,21 @@
     "go@1.19.8": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#go_1_19",
-      "version": "1.19.8"
+      "version": "1.19.8",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/7m99ip3616l3z670y83p34r3plwd4iq1-go-1.19.8"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/zpaj1y4iwmkk3ci43ab9k10rr9ilpa3a-go-1.19.8"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/m0fkw6wi5m73y78yqmwhd15y0fjfx5vq-go-1.19.8"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/r0x0agq0vwn0p6z99vkkvn8l8a8idzsb-go-1.19.8"
+        }
+      }
     }
   }
 }

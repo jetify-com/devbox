@@ -124,6 +124,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			// sync the profile so we don't need to do this manually.
 			ux.Fwarning(d.writer, "Failed to remove %s from profile: %s\n", pkg, err)
 		}
+		resolved.AllowInsecure = existing.AllowInsecure
 		lockfile.Packages[pkg.Raw] = resolved
 		return nil
 	}

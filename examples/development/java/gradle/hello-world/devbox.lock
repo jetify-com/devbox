@@ -4,17 +4,55 @@
     "binutils@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#binutils",
-      "version": "2.40"
+      "version": "2.40",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/9s260h7wxnb6lc5sdpm3mnkvnln9pymd-binutils-wrapper-2.40"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/1j5h9v08436jjm9lxpqyrcqbp40d13xi-binutils-wrapper-2.40"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/7bac4s1gyclv2sxczqqvj6bmdg0h4xz2-binutils-wrapper-2.40"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/cyb4bb44krf4ghw8qasa03sxi2k4g6a4-binutils-wrapper-2.40"
+        }
+      }
     },
     "gradle@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#gradle",
-      "version": "8.0.1"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#gradle",
+      "source": "devbox-search",
+      "version": "8.3",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/4xjjls354jr8w7083qxsrpfs1fgl80fj-gradle-8.3"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/f0l5fscvcl9yand9jfpk5icr2ac8qx2v-gradle-8.3"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/rxm9mpxswrd77fd6lafqcxaxizjlk1l4-gradle-8.3"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/qvp5jiik6q27qwlgiq80fx96wyh0r0nb-gradle-8.3"
+        }
+      }
     },
     "jdk@19": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#jdk",
-      "version": "19.0.2+7"
+      "version": "19.0.2+7",
+      "systems": {
+        "aarch64-linux": {
+          "store_path": "/nix/store/bdqk85ckifa9xjnz6p2hznc6y54156nn-openjdk-19.0.2+7"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/i2j4s6qcjzlya4ssi2dpf7qnxw2vsaxm-openjdk-19.0.2+7"
+        }
+      }
     }
   }
 }

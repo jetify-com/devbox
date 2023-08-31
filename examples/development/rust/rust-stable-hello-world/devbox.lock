@@ -2,14 +2,39 @@
   "lockfile_version": "1",
   "packages": {
     "libiconv@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#libiconv",
-      "version": "2.37"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#libiconv",
+      "source": "devbox-search",
+      "version": "50",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/43jk41xdl1z3f96yskrc6i7y8i0bp2dn-libiconv-50"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/lbz6562d7h0bnrab89pa9s6r1igw54ir-libiconv-50"
+        }
+      }
     },
     "rustup@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#rustup",
-      "version": "1.25.2"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#rustup",
+      "source": "devbox-search",
+      "version": "1.26.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/czgq818h808rv819mq84rj74b7kqxli6-rustup-1.26.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/fjpdncxs4bzhd2a46xc0khydj737zpgi-rustup-1.26.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/8ca304imc6101rii0l4vjfpfywc2vacq-rustup-1.26.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/hpjl2zcps8l0h928z0xmhzawanrks22j-rustup-1.26.0"
+        }
+      }
     }
   }
 }

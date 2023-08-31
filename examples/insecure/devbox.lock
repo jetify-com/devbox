@@ -3,10 +3,24 @@
   "packages": {
     "nodejs@16": {
       "allow_insecure": true,
-      "last_modified": "2023-06-29T16:20:38Z",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#nodejs_16",
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_16",
       "source": "devbox-search",
-      "version": "16.20.1"
+      "version": "16.20.2",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/xps0q3f7xbxqpdm4xmlz1drv6qyyb4a5-nodejs-16.20.2"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/qvxwbmwxacc1jlsnqyy45vnzdfbagns0-nodejs-16.20.2"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/6fipdgsh4vmixx3zficbknjmw7k4n4hm-nodejs-16.20.2"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/ds8p6kc8n165gy4f3x72dkpx4aizxjaw-nodejs-16.20.2"
+        }
+      }
     }
   }
 }

@@ -5,29 +5,102 @@
       "last_modified": "2023-05-01T16:53:22Z",
       "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#apacheHttpd",
-      "version": "2.4.57"
+      "version": "2.4.57",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/qr58izm7hncylf5zn66kghy3109rva4j-apache-httpd-2.4.57"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/iggdl8972rj3h6bm3mv4cqnjwvzi4p59-apache-httpd-2.4.57"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/b1xlj47n5pvassli9ggph09kk9xjmip6-apache-httpd-2.4.57"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/w0cbd5djp6ib3jyikqb2k06gzb9lp1hj-apache-httpd-2.4.57"
+        }
+      }
     },
     "curl@8.0": {
       "last_modified": "2023-05-01T16:53:22Z",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#curl",
-      "version": "8.0.1"
+      "version": "8.0.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/bbkz21vmx16wl0h3xk36g7gxpbymnm6d-curl-8.0.1"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/0xyi7w3cm3g7gzwfpwqzx0n7xks2sdc6-curl-8.0.1"
+        }
+      }
     },
     "php81Extensions.pgsql@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php81Extensions.pgsql",
-      "version": "8.1.18"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Extensions.pgsql",
+      "source": "devbox-search",
+      "version": "8.1.22",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/cp5m956xcqp9wnjkfkgx233sc2was375-php-pgsql-8.1.22"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/spfhyjimzzxv11b7b6hfawbl15p3rb86-php-pgsql-8.1.22"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/y6wgphymmrk800zmxmy7s1j360yzmdqz-php-pgsql-8.1.22"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/rhc05fbdkq52ms8xdh6fil3la0p21lq1-php-pgsql-8.1.22"
+        }
+      }
     },
     "php@8.1": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-08-30T00:25:28Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#php",
-      "version": "8.1.18"
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81",
+      "source": "devbox-search",
+      "version": "8.1.22",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/24facqh0lqq9swy51xyvc763jvlwnylb-php-with-extensions-8.1.22"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/ic9rcrsfx0d9w84iz5sahin898zzkf0v-php-with-extensions-8.1.22"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/651lzjnchj12ngdf4hzldb71grbzzvhk-php-with-extensions-8.1.22"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/14icl7q3qwkcjl80a50bl06n8wn3yk1i-php-with-extensions-8.1.22"
+        }
+      }
     },
     "postgresql@14": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-08-30T00:25:28Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
-      "version": "14.7"
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#postgresql",
+      "source": "devbox-search",
+      "version": "14.9",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/x6058p5djhvn57fqyqfs4hvf193m847j-postgresql-14.9"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/0gfagnjbaqlgzf17hrc5pzfr170s6wdl-postgresql-14.9"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/hd25shwpmqcki920ii1cxhh95qa51kfh-postgresql-14.9"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/vfcdf4n8f7mxx4rby11f7vhhpi62474m-postgresql-14.9"
+        }
+      }
     }
   }
 }

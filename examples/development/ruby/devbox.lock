@@ -1,19 +1,45 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "bundler": {
-      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#bundler"
-    },
     "bundler@2.4": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#bundler",
-      "version": "2.4.12"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#bundler",
+      "source": "devbox-search",
+      "version": "2.4.19",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/m0nc4b4sfk69k7592djvc9s2wff4437b-bundler-2.4.19"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/97g2pzvkmazra1gylk822gk7rcp3wj37-bundler-2.4.19"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/xz56ndp380slpv27r5xnm414fhflm71h-bundler-2.4.19"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/g37467pm0imf73z2wwrz30d0q8nzv0p4-bundler-2.4.19"
+        }
+      }
     },
     "ruby@3.1": {
       "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#ruby",
-      "version": "3.1.4"
+      "version": "3.1.4",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/2m9i5zrjir7j19lynyasliyv6ki27f9a-ruby-3.1.4"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/cym9rarnys76wi1gb6j77yh2j68jiam7-ruby-3.1.4"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/h6ac2glaif1iiy3ykdhisv4yysrm5niv-ruby-3.1.4"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/6iynbmq1yzx4ywicizda4g3q3fhmdf2k-ruby-3.1.4"
+        }
+      }
     }
   }
 }

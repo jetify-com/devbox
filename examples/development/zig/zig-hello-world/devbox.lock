@@ -1,0 +1,25 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "zig@0.10": {
+      "last_modified": "2023-08-09T23:50:43Z",
+      "resolved": "github:NixOS/nixpkgs/3d6ebeb283be256f008541ce2b089eb5fb0e4e01#zig",
+      "source": "devbox-search",
+      "version": "0.10.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/wdl373cbxsbsgkbrhcm8rsjxf1nyzda5-zig-0.10.1"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/kffa3f61affmlms4r8xmmrq7ksz7lx7k-zig-0.10.1"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/0a267lbl7hy45rlg5i9azxb3s5jggnkm-zig-0.10.1"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/rg6yk06fhxbnq9xm32v1ccfrdilwhx17-zig-0.10.1"
+        }
+      }
+    }
+  }
+}

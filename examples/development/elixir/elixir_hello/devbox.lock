@@ -2,9 +2,24 @@
   "lockfile_version": "1",
   "packages": {
     "elixir@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#elixir",
-      "version": "1.14.4"
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#elixir",
+      "source": "devbox-search",
+      "version": "1.14.5",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/bf8ck0j68kqxzlgxqf1cpqbyc9j2yhp6-elixir-1.14.5"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/v1lc7mljzi37b0fp1b787ybk2m45jsxd-elixir-1.14.5"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/07kcigpi96l15b09ydp4q9iwx4h0hkr0-elixir-1.14.5"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/y8ys05axra38n4my5x4c3fgs35c0glb1-elixir-1.14.5"
+        }
+      }
     }
   }
 }
