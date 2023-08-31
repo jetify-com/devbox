@@ -1,10 +1,10 @@
 events {}
 http{
 server {
-         listen       8089;
-         listen       [::]:8089;
-         server_name  localhost;
-         root         ../../../devbox.d/web;
+         listen       $NGINX_WEB_PORT;
+         listen       [::]:$NGINX_WEB_PORT;
+         server_name  $NGINX_WEB_SERVER_NAME;
+         root         $NGINX_WEB_ROOT;
 
          error_log error.log error;
          access_log access.log;

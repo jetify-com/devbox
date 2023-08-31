@@ -2,7 +2,9 @@ version: "0.5"
 
 processes:
   nginx:
-    command: "nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR -e error.log -g \"pid nginx.pid;daemon off;\""
+    command: |
+      if [ -f $NGINX_CONFDIR/nginx.template ]; then envsubst < $NGINX_CONFDIR/nginx.template > $NGINX_CONFDIR/nginx.conf; fi
+      nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR/nginx.conf -e error.log -g "pid nginx.pid;daemon off;"
     availability:
       restart: on_failure
       max_restarts: 5

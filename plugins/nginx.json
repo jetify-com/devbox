@@ -1,15 +1,21 @@
 {
   "name": "nginx",
-  "version": "0.0.2",
-  "readme": "nginx can be configured with env variables\n\nTo customize:\n* Use $NGINX_CONFDIR to change the configuration directory\n* Use $NGINX_LOGDIR to change the log directory\n* Use $NGINX_PIDDIR to change the pid directory\n* Use $NGINX_RUNDIR to change the run directory\n* Use $NGINX_SITESDIR to change the sites directory\n* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user\n* Use $NGINX_GROUP to customize.",
+  "version": "0.0.3",
+  "readme": "nginx can be configured with env variables\n\nTo customize:\n* Use $NGINX_CONFDIR to change the configuration directory\n* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user\n* Use $NGINX_WEB_PORT to change the port NGINX runs on. \n Note: This plugin uses envsubst when running `devbox services` to generate the nginx.conf file from the nginx.template file. To customize the nginx.conf file, edit the nginx.template file.\n",
+  "__packages": ["envsubst@latest"],
   "env": {
-    "NGINX_CONFDIR": "{{ .DevboxDir }}/nginx.conf",
+    "NGINX_CONF": "{{ .DevboxDir }}/nginx.conf",
+    "NGINX_CONFDIR": "{{ .DevboxDir }}",
     "NGINX_PATH_PREFIX": "{{ .Virtenv }}",
-    "NGINX_TMPDIR": "{{ .Virtenv }}/temp"
+    "NGINX_TMPDIR": "{{ .Virtenv }}/temp",
+    "NGINX_WEB_PORT": "8081",
+    "NGINX_WEB_ROOT": "../../../devbox.d/web",
+    "NGINX_WEB_SERVER_NAME": "localhost"
   },
   "create_files": {
     "{{ .Virtenv }}/temp": "",
     "{{ .Virtenv }}/process-compose.yaml": "nginx/process-compose.yaml",
+    "{{ .DevboxDir }}/nginx.template": "nginx/nginx.template",
     "{{ .DevboxDir }}/nginx.conf": "nginx/nginx.conf",
     "{{ .DevboxDir }}/fastcgi.conf": "nginx/fastcgi.conf",
     "{{ .DevboxDirRoot }}/web/index.html": "web/index.html"
