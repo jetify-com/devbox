@@ -8,9 +8,9 @@
     "NGINX_CONFDIR": "{{ .DevboxDir }}",
     "NGINX_PATH_PREFIX": "{{ .Virtenv }}",
     "NGINX_TMPDIR": "{{ .Virtenv }}/temp",
-    "WEB_PORT": "8081",
-    "WEB_ROOT": "../../../devbox.d/web",
-    "WEB_SERVER_NAME": "localhost"
+    "NGINX_WEB_PORT": "8081",
+    "NGINX_WEB_ROOT": "../../../devbox.d/web",
+    "NGINX_WEB_SERVER_NAME": "localhost"
   },
   "create_files": {
     "{{ .Virtenv }}/temp": "",
