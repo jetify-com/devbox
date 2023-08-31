@@ -200,10 +200,9 @@ const (
 )
 
 type Package struct {
-	kind packageKind
-	name string
-	// deliberately not adding omitempty
-	Version string `json:"version"`
+	kind    packageKind
+	name    string
+	Version string `json:"version,omitempty"`
 
 	Platforms         []string `json:"platforms,omitempty"`
 	ExcludedPlatforms []string `json:"excluded_platforms,omitempty"`

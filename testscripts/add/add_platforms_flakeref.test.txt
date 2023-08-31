@@ -1,0 +1,26 @@
+# Testscript for exercising adding packages using a flake ref
+
+exec devbox install
+
+exec devbox add github:F1bonacc1/process-compose/v0.40.2 --exclude-platform x86_64-darwin
+json.superset devbox.json expected_devbox1.json
+
+-- devbox.json --
+{
+  "packages": [
+    "hello",
+    "cowsay@latest"
+  ]
+}
+
+-- expected_devbox1.json --
+{
+  "packages": {
+    "hello": "",
+    "cowsay": "latest",
+    "github:F1bonacc1/process-compose/v0.40.2": {
+      "excluded_platforms": ["x86_64-darwin"]
+    }
+  }
+}
+
