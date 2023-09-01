@@ -99,6 +99,7 @@ jobs:
     steps:
       - name: Maximize build disk space
         uses: easimon/maximize-build-space@v8
+        if: matrix.os == 'ubuntu-latest'
         with:
           root-reserve-mb: 40000
           temp-reserve-mb: 10000
