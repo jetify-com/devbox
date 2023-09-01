@@ -27,6 +27,8 @@ jobs:
   tests:
     uses: ./.github/workflows/cli-tests.yaml
     with:
+      # This will run the basic testscript unit tests on MacOS.
+      # NOTE: cli-tests will NEVER run project-tests on MacOS.
       run-mac-tests: true
 
   edge:
