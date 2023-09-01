@@ -1,12 +1,16 @@
 package nix
 
 import (
+	"context"
 	"os/exec"
 )
 
 func command(args ...string) *exec.Cmd {
+	return commandContext(context.Background(), args...)
+}
 
-	cmd := exec.Command("nix", args...)
+func commandContext(ctx context.Context, args ...string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, "nix", args...)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	return cmd
 }

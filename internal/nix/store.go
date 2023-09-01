@@ -1,15 +1,15 @@
 package nix
 
 import (
-	"path/filepath"
+	"context"
 	"strings"
 )
 
-func StorePath(hash, name, version string) string {
-	storeDirParts := []string{hash, name}
-	if version != "" {
-		storeDirParts = append(storeDirParts, version)
+func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string, error) {
+	cmd := commandContext(ctx, "store", "path-from-hash-part", "--store", storeAddr, hash)
+	resultBytes, err := cmd.Output()
+	if err != nil {
+		return "", err
 	}
-	storeDir := strings.Join(storeDirParts, "-")
-	return filepath.Join("/nix/store", storeDir)
+	return strings.TrimSpace(string(resultBytes)), nil
 }
