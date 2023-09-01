@@ -27,16 +27,16 @@
       "version": "8.0.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1"
+          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1-bin"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1"
+          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1-bin"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/bbkz21vmx16wl0h3xk36g7gxpbymnm6d-curl-8.0.1"
+          "store_path": "/nix/store/bbkz21vmx16wl0h3xk36g7gxpbymnm6d-curl-8.0.1-bin"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/0xyi7w3cm3g7gzwfpwqzx0n7xks2sdc6-curl-8.0.1"
+          "store_path": "/nix/store/0xyi7w3cm3g7gzwfpwqzx0n7xks2sdc6-curl-8.0.1-bin"
         }
       }
     },
