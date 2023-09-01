@@ -59,6 +59,39 @@ For example, to use the latest version of `ripgrep,` run `devbox add ripgrep`, `
 
 Whenever you run `devbox update`, packages with the latest tag will be updated to the latest version available in our index.
 
+### Restricting Packages to Specific Platforms
+
+At times, you may need to install a package or library that is only available on a specific platform. For example, you may want to install a package that is only available on Linux, while still using the same Devbox configuration on your Mac.
+
+To avoid build or installation errors, you can tell Devbox to only install a package on specific platforms using the `--platforms` flag when you run `devbox add`. For example, to install the `busybox` package only on Linux systems, you can run:
+
+```bash
+devbox add busybox --platforms x86_64-linux,aarch64-linux
+```
+
+This will add ripgrep to your `devbox.json`, but will only install it when use devbox on a Linux machine.
+
+You can also tell Devbox to exclude a package from a specific platform using the `--exclude-platforms` flag. For example, to avoid installing `ripgrep` on an ARM-based Mac, you can run:
+
+
+```bash
+devbox add ripgrep --exclude-platforms aarch64-darwin
+```
+
+This will add ripgrep to your `devbox.json`, but will not install it when use devbox on an ARM-based Mac.
+
+Valid Platforms include:
+
+* `aarch64-darwin`
+* `aarch64-linux`
+* `x86_64-darwin`
+* `x86_64-linux`
+
+The platforms below are also supported, but will build packages from source
+
+* `i686-linux`
+* `armv7l-linux`
+
 ## Manually Pinning a Nixpkg Commit for a Package
 
 If you want to use a specific Nixpkg revision for a package, you can use a `github:nixos/nixpkgs/<commit_sha>#<pkg>` Flake reference. The example below shows how to install the `hello` package from a specific Nixpkg commit:
