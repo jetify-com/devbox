@@ -42,6 +42,8 @@ If you need to provide more options to your packages (such as limiting which pla
 ```json
 {
     "packages": {
+        // If only a version is specified, you can abbreviate the maps as "package_name": "version"
+        "package_name": string,
         "package_name": {
             // Version of the package to install. Defaults to "latest"
             "version": string,
@@ -59,12 +61,8 @@ For example:
 ```json
 {
     "packages": {
-        "go" {
-            "version": "latest"
-        },
-        "golangci-lint": {
-            "version": "latest",
-        },
+        "go" : "latest",
+        "golangci-lint": "latest",
         "glibcLocales": {
             "version": "latest",
             "platforms": ["x86_64-linux, aarch64-linux"]

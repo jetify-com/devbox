@@ -33,7 +33,7 @@ This will add busybox to your `devbox.json`, but will only install it when use d
             "platforms": ["x86_64-linux", "aarch64-linux"]
         }
     }
-
+}
 ```
 
 ## Excluding a Package from Specific Platforms

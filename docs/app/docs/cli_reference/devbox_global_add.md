@@ -10,7 +10,7 @@ devbox global add <pkg>... [flags]
 
 ```bash
 # Add the latest version of the `ripgrep` package
-devbox global add ripgrep@latest
+devbox global add ripgrep
 
 # Install glibcLocales only on x86_64-linux and aarch64-linux
 devbox global add glibcLocales --platform x86_64-linux,aarch64-linux
@@ -24,11 +24,11 @@ devbox global add busybox --exclude-platform aarch64-darwin,x86_64-darwin
 <!-- Markdown Table of Options -->
 | Option | Description |
 | --- | --- |
-| `--allow-insecure` | Allows Devbox to install a package that is marked insecure by Nix |
+| `--allow-insecure` | allows Devbox to install a package that is marked insecure by Nix |
 | `-c, --config string` | path to directory containing a devbox.json config file |
 | `-e, --exclude-platform strings` | exclude packages from a specific platform. |
 | `-h, --help` | help for add |
-| `-q, --quiet` | Quiet mode: Suppresses logs. |
+| `-q, --quiet` | quiet mode: suppresses logs. |
 | `-p`, `--platform strings` | install packages only on specific platforms. Defaults to the current platform|
 
 Valid Platforms include:

@@ -59,8 +59,6 @@ For example, to use the latest version of `ripgrep,` run `devbox add ripgrep`, `
 
 Whenever you run `devbox update`, packages with the latest tag will be updated to the latest version available in our index.
 
-
-
 ## Manually Pinning a Nixpkg Commit for a Package
 
 If you want to use a specific Nixpkg revision for a package, you can use a `github:nixos/nixpkgs/<commit_sha>#<pkg>` Flake reference. The example below shows how to install the `hello` package from a specific Nixpkg commit:
