@@ -4,16 +4,22 @@
 package lock
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/maps"
+	"golang.org/x/sync/errgroup"
 )
 
 // FetchResolvedPackage fetches a resolution but does not write it to the lock
@@ -35,7 +41,10 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 
 	sysInfos := map[string]*SystemInfo{}
 	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos = buildLockSystemInfos(packageVersion)
+		sysInfos, err = buildLockSystemInfos(packageVersion)
+		if err != nil {
+			return nil, err
+		}
 	}
 	packageInfo, err := selectForSystem(packageVersion)
 	if err != nil {
@@ -74,20 +83,57 @@ func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error)
 	return maps.Values(pkg.Systems)[0], nil
 }
 
-func buildLockSystemInfos(pkg *searcher.PackageVersion) map[string]*SystemInfo {
+func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo, error) {
+	// guard against missing search data
+	systems := lo.PickBy(pkg.Systems, func(sysName string, sysInfo searcher.PackageInfo) bool {
+		return sysInfo.StoreHash != "" && sysInfo.StoreName != ""
+	})
+
+	group, ctx := errgroup.WithContext(context.Background())
+
+	var storePathLock sync.RWMutex
+	sysStorePaths := map[string]string{}
+	for _sysName, _sysInfo := range systems {
+		sysName := _sysName // capture range variable
+		sysInfo := _sysInfo // capture range variable
+
+		group.Go(func() error {
+			// We should use devpkg.BinaryCache here, but it'll cause a circular reference
+			// Just hardcoding for now. Maybe we should move that to nix.DefaultBinaryCache?
+			path, err := nix.StorePathFromHashPart(ctx, sysInfo.StoreHash, "https://cache.nixos.org")
+			if err != nil {
+				// Should we report this to sentry to collect data?
+				ux.Fwarning(
+					os.Stderr,
+					"Failed to resolve store path for %s with storeHash %s. Installing will be a bit slower.\n",
+					sysName,
+					sysInfo.StoreHash,
+				)
+				debug.Log(
+					"Failed to resolve store path for %s with storeHash %s. Error is %s.\n",
+					sysName,
+					sysInfo.StoreHash,
+					err,
+				)
+				// Instead of erroring, we can just skip this package. It can install via the slow path.
+				return nil
+			}
+			storePathLock.Lock()
+			sysStorePaths[sysName] = path
+			storePathLock.Unlock()
+			return nil
+		})
+	}
+	err := group.Wait()
+	if err != nil {
+		return nil, err
+	}
+
 	sysInfos := map[string]*SystemInfo{}
-	for sysName, sysInfo := range pkg.Systems {
-
-		// guard against missing search data
-		if sysInfo.StoreHash == "" || sysInfo.StoreName == "" {
-			debug.Log("WARN: skipping %s in %s due to missing store name or hash", pkg.Name, sysName)
-			continue
-		}
-
-		storePath := nix.StorePath(sysInfo.StoreHash, sysInfo.StoreName, sysInfo.StoreVersion)
+	for sysName, storePath := range sysStorePaths {
 		sysInfos[sysName] = &SystemInfo{
 			StorePath: storePath,
 		}
 	}
-	return sysInfos
+	return sysInfos, nil
 }
