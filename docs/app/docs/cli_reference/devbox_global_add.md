@@ -13,10 +13,10 @@ devbox global add <pkg>... [flags]
 devbox global add ripgrep@latest
 
 # Install glibcLocales only on x86_64-linux and aarch64-linux
-devbox global add glibcLocales -p x86_64-linux,aarch64-linux
+devbox global add glibcLocales --platform x86_64-linux,aarch64-linux
 
 # Exclude busybox from installation on macOS
-devbox global add busybox -e aarch64-darwin,x86_64-darwin
+devbox global add busybox --exclude-platform aarch64-darwin,x86_64-darwin
 ```
 
 ## Options
