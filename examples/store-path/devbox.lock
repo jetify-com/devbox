@@ -1,0 +1,19 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "curl@8.0": {
+      "last_modified": "2023-05-31T02:09:55Z",
+      "resolved": "github:NixOS/nixpkgs/9cfaa8a1a00830d17487cb60a19bb86f96f09b27#curl",
+      "source": "devbox-search",
+      "version": "8.0.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1-bin"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1-bin"
+        }
+      }
+    }
+  }
+}
