@@ -1,20 +1,20 @@
 ---
-title: Using Devbox in CI/CD with Github Actions
+title: Using Devbox in CI/CD with GitHub Actions
 ---
 
-This guide explains how to use Devbox in CI/CD using Github Actions. The [devbox-install-action](https://github.com/marketplace/actions/devbox-installer) will install Devbox CLI and any packages + configuration defined in your `devbox.json` file. You can then run tasks or scripts within `devbox shell` to reproduce your environment.
+This guide explains how to use Devbox in CI/CD using GitHub Actions. The [devbox-install-action](https://github.com/marketplace/actions/devbox-installer) will install Devbox CLI and any packages + configuration defined in your `devbox.json` file. You can then run tasks or scripts within `devbox shell` to reproduce your environment.
 
-This Github Action also supports caching the packages and dependencies installed in your `devbox.json`, which can significantly improve CI build times. 
+This GitHub Action also supports caching the packages and dependencies installed in your `devbox.json`, which can significantly improve CI build times. 
 
 ## Usage
 
-`devbox-install-action` is available on the [Github Marketplace](https://github.com/marketplace/actions/devbox-installer) 
+`devbox-install-action` is available on the [GitHub Marketplace](https://github.com/marketplace/actions/devbox-installer) 
 
 In your project's workflow YAML, add the following step: 
 
 ```yaml
 - name: Install devbox
-  uses: jetpack-io/devbox-install-action@v0.2.0
+  uses: jetpack-io/devbox-install-action@v0.6.0
 ```
 
 ## Example Workflow
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.2.0
+        uses: jetpack-io/devbox-install-action@v0.6.0
 
       - name: Run arbitrary commands
         run: devbox run -- echo "done!"
@@ -42,23 +42,6 @@ jobs:
         run: devbox run test
 ```
 
-## Configuring the Github Action
+## Configuring the Action
 
-The `devbox-install-action` provides the following inputs: 
-
-| Input Argument| Description|  Default|
-| :- | :- | :- |
-|`project-path` | Path to the folder that contains a valid devbox.json	| Root directory of your repo
-|`enable-cache` | Caches the entire Nix store (your packages) in Github based on your `devbox.json`.|
-|`devbox-version`| Pins a specific version of the Devbox CLI for your action. Only supports >0.2.2| latest|
-
-An example of this configuration is below: 
-
-```yaml
-- name: Install devbox
-  uses: jetpack-io/devbox-install-action@v0.2.0
-  with:
-    project-path: 'path-to-folder'
-    enable-cache: true
-    devbox-version: '0.2.2'
-```
+See the [GitHub Marketplace page](https://github.com/marketplace/actions/devbox-installer) for the latest configuration settings and an example.
