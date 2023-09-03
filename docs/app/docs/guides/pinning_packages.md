@@ -64,10 +64,10 @@ Whenever you run `devbox update`, packages with the latest tag will be updated t
 If you want to use a specific Nixpkg revision for a package, you can use a `github:nixos/nixpkgs/<commit_sha>#<pkg>` Flake reference. The example below shows how to install the `hello` package from a specific Nixpkg commit:
 
 ```json
-}
-	"packages" : [
-"github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello"
-	]
+{
+  "packages" : [
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello"
+  ]
 }
 ```
 Using multiple nixpkg commits may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
