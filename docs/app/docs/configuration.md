@@ -85,7 +85,7 @@ Currently, you can only set values using string literals, `$PWD`, and `$PATH`. A
 
 ### Shell
 
-The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: *init_hooks*, which run a set of commands every time you start a devbox shell, and *scripts*, which are commands that can be run using `devbox run`
+The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: *init_hook*, which run a set of commands every time you start a devbox shell, and *scripts*, which are commands that can be run using `devbox run`
 
 #### Init Hook
 
