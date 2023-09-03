@@ -176,23 +176,24 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
 ```json
 {
     "packages": [
-        "rustc",
-        "cargo",
-        "libiconv"
+        "rustup@latest",
+        "libiconv@latest"
     ],
     "env": {
-        "RUST_BACKTRACE": "1"
+        "PROJECT_DIR": "$PWD"
     },
     "shell": {
         "init_hook": [
-            "source conf/set-environment.sh",
+            ". conf/set-env.sh",
             "rustup default stable",
             "cargo fetch"
         ],
         "scripts": {
-            "test": "cargo test -- --show-output",
-            "start" : "cargo run",
-            "build-docs": "cargo doc"
+            "build-docs": "cargo doc",
+            "start": "cargo run",
+            "run_test": [
+                "cargo test -- --show-output"
+            ]
         }
     }
 }
