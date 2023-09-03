@@ -17,21 +17,21 @@ Because the repository changes frequently, and new releases of Nixpkgs infrequen
 You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
 
 ```bash
-$ devbox search nodejs
+$ devbox search python
+Found 50+ results for "python":
 
-Found 168+ results for "nodejs":
+* python  (3.12.0b4, 3.12.0b3, 3.12.0b2, 3.12.0b1, 3.12.0a7, 3.12.0a6, 3.12.0a5, 3.12.0a3, 3.11.4, 3.11.3)
+* python-qt  (3.3.0, 3.2)
+* python-full  (3.11.4, 3.11.3, 3.11.2, 3.11.1, 3.10.12, 3.10.11, 3.10.10, 3.10.9, 3.10.8, 3.10.7)
+* python2nix  (20140927)
+* pythonSexy  (0.1.9)
+* pythonIRClib  (0.4.8)
+* pythonmagick  (0.9.16, 0.7)
+* python-minimal  (3.10.12, 3.10.11, 3.10.10, 3.10.9, 3.10.8, 3.10.7, 3.10.6, 3.10.5, 3.10.4, 3.9.13)
+* python-launcher  (1.0.0)
+* mate.python-caja  (1.26.0, 1.24.0, 1.22.1, 1.22.0, 1.20.2, 1.20.1)
 
-* nodejs (19.8.1, 19.7.0, 19.5.0, 19.2.0, 18.16.0, 18.15.0, 18.14.2, 18.13.0, 18.12.1, 18.10.0,
-18.8.0, 18.4.0, 18.0.0, 17.9.0, 17.5.0, 17.3.0, 17.0.1, 16.19.1, 16.19.0, 16.18.1, 16.17.1, 16.17.0,
-16.15.0, 16.14.0, 16.13.1, 16.13.0, 16.8.0, 16.4.0, 16.0.0, 15.14.0, 15.10.0, 15.5.0, 15.0.1,
-14.18.1, 14.18.0, 14.17.5, 14.17.1, 14.16.1, 14.16.0, 14.15.3, 14.15.0, 14.9.0, 14.4.0, 13.14.0,
-12.22.12, 12.22.10, 12.22.8, 12.22.7, 12.22.5, 12.22.1, 12.21.0, 12.20.0, 12.19.0, 12.18.3,
-12.18.1, 10.24.1, 10.24.0, 10.23.0, 10.22.0, 10.21.0)
-* nodejs_16 (16.20.0)
-* nodejs_18 (18.16.0)
-* nodejs_19 (19.9.0)
-* nodejs_20 (20.0.0)
-...
+Warning: Showing top 10 results and truncated versions. Use --show-all to show all.
 ```
 
 ### Adding a Specific Version to Devbox
