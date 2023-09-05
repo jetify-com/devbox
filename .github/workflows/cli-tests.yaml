@@ -89,7 +89,7 @@ jobs:
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
           - is-main: "is-main"
-            run-project-tests: "project-tests"
+            run-project-tests: "project-tests-off"
           - run-project-tests: "project-tests"
             os: macos-latest
 
@@ -130,7 +130,7 @@ jobs:
         env:
           # For devbox.json tests, we default to non-debug mode since the debug output is less useful than for unit testscripts.
           # But we allow overriding via inputs.example-debug
-          DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'not-project-tests' || inputs.example-debug) && '1' || '0' }}
+          DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
           DEVBOX_RUN_PROJECT_TESTS: ${{ matrix.run-project-tests == 'project-tests' && '1' || '0' }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
           DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '30m' }}"
