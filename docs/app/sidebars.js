@@ -44,7 +44,10 @@ const sidebars = {
         items: [{
             type: 'doc',
             id: 'guides/pinning_packages'
-        }, , {
+        }, {
+            type: 'doc',
+            id: 'guides/platform_specific_packages'
+        }, {
             type: 'doc',
             id: 'guides/using_flakes'
         },{

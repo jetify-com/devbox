@@ -7,7 +7,7 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
 
 ```json
 {
-    "packages": [],
+    "packages": [] | {},
     "env": {},
     "shell": {
         "init_hook": "...",
@@ -22,9 +22,56 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
 
 ### Packages
 
-This is a list of Nix packages that should be installed in your Devbox shell and containers. These packages will only be installed and available within your shell, and will have precedence over any packages installed in your local machine. You can search for Nix packages using [Nix Package Search](https://search.nixos.org/packages).
+This is a list or map of Nix packages that should be installed in your Devbox shell and containers. These packages will only be installed and available within your shell, and will have precedence over any packages installed in your local machine. You can search for Nix packages using [Nix Package Search](https://search.nixos.org/packages).
 
-You can add packages to your devbox.json using `devbox add <package_name>`, and remove them using `devbox rm <package_name>`
+You can add packages to your devbox.json using `devbox add <package_name>`, and remove them using `devbox rm <package_name>`.
+
+Packages can be structured as a list of package names (`<packages>@<version>`) or [flake references](#adding-packages-from-flakes):
+
+```json
+{
+    "packages": [
+        "go@latest"
+        "golangci-lint@latest"
+    ]
+}
+```
+
+If you need to provide more options to your packages (such as limiting which platforms will install the package), you can structure packages as a map, where each package follows the schema below:
+
+```json
+{
+    "packages": {
+        // If only a version is specified, you can abbreviate the maps as "package_name": "version"
+        "package_name": string,
+        "package_name": {
+            // Version of the package to install. Defaults to "latest"
+            "version": string,
+            // List of platforms to install the package on. Defaults to all platforms
+            "platforms": [string],
+            // List of platforms to exclude this package from. Defaults to no excluded platforms
+            "excluded_platforms": [string]
+        }
+    }
+}
+```
+
+For example:
+
+```json
+{
+    "packages": {
+        "go" : "latest",
+        "golangci-lint": "latest",
+        "glibcLocales": {
+            "version": "latest",
+            "platforms": ["x86_64-linux, aarch64-linux"]
+        }
+    }
+}
+```
+
+Note that `devbox add` will automatically format `packages` based on the options and packages that you provide.
 
 #### Pinning a Specific Version of a Package
 
@@ -65,6 +112,40 @@ You can add packages from flakes by adding a reference to the  flake in the `pac
 
 To learn more about using flakes, see the [Using Flakes](guides/using_flakes.md) guide.
 
+#### Adding Platform Specific Packages
+
+You can choose to include or exclude your packages on specific platforms by adding a `platforms` or `excluded_platforms` field to your package definition. This is useful if you need to install packages or libraries that are only available on specific platforms (such as `busybox` on Linux, or `utm` on macOS):
+
+```json
+{
+    "packages": {
+        // Only install busybox on linux
+        "busybox": {
+            "version": "latest",
+            "platforms": ["x86_64-linux", "aarch64-linux"]
+        },
+        // Exclude UTM on Linux
+        "utm": {
+            "version": "latest",
+            "excluded_platforms": ["x86_64-linux", "aarch64-linux"]
+        }
+    }
+}
+```
+
+Note that a package can only specify one of `platforms` or `excluded_platforms`.
+
+Valid Platforms include:
+
+* `aarch64-darwin`
+* `aarch64-linux`
+* `x86_64-darwin`
+* `x86_64-linux`
+
+The platforms below are also supported, but require you to build packages from source:
+
+* `i686-linux`
+* `armv7l-linux`
 
 ### Env
 
