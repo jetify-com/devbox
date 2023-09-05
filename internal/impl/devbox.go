@@ -130,10 +130,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		)
 	}
 
-	if err := nix.EnsureNixInstalled(box.writer, func() *bool { return nil } /*withDaemonFunc*/); err != nil {
-		return nil, err
-	}
-
 	return box, nil
 }
 
