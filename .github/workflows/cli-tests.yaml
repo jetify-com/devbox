@@ -19,8 +19,6 @@ on:
         type: boolean
   workflow_dispatch:
     inputs:
-      run-devbox-json-tests:
-        type: boolean
       run-mac-tests:
         type: boolean
       # run the example tests with DEVBOX_DEBUG=1
@@ -76,24 +74,25 @@ jobs:
     strategy:
       matrix:
         is-main:
-          - ${{ github.ref == 'refs/heads/main' }}
+          - ${{ github.ref == 'refs/heads/main' && 'is-main' || 'not-main' }}
         os: [ubuntu-latest, macos-latest]
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
-        run-devbox-json-tests: [true, false]
+        run-project-tests: ["project-tests", "project-tests-off"]
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
         # 2. nix version 2.17.0 which introduces a new code path that minimizes nixpkgs downloads.
         # 3. latest nix version (currently, that is 2.17.0, so omitted)
         nix-version: ["2.12.0", "2.17.0"]
         exclude:
-          - is-main: false
+          - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
-          - is-main: true
-            run-devbox-json-tests: false
-          - run-devbox-json-tests: true
+          - is-main: "is-main"
+            run-project-tests: "project-tests-off"
+          - run-project-tests: "project-tests"
             os: macos-latest
+
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 25 }}
     steps:
@@ -132,8 +131,8 @@ jobs:
         env:
           # For devbox.json tests, we default to non-debug mode since the debug output is less useful than for unit testscripts.
           # But we allow overriding via inputs.example-debug
-          DEVBOX_DEBUG: ${{ (!matrix.run-devbox-json-tests || inputs.example-debug) && '1' || '0' }}
-          DEVBOX_RUN_DEVBOX_JSON_TESTS: ${{ matrix.run-devbox-json-tests }}
+          DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
+          DEVBOX_RUN_PROJECT_TESTS: ${{ matrix.run-project-tests == 'project-tests' && '1' || '0' }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
           DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '30m' }}"
         run: |
