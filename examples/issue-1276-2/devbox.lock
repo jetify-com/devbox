@@ -1,0 +1,59 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "imagemagick@6.9.11-60": {
+      "last_modified": "2021-02-26T06:31:15Z",
+      "resolved": "github:NixOS/nixpkgs/870dbb751f4d851a3dfb554835a0c2f528386982#imagemagick",
+      "source": "devbox-search",
+      "version": "6.9.11-60"
+    },
+    "inkscape@1.1.2": {
+      "last_modified": "2022-06-08T05:14:48Z",
+      "resolved": "github:NixOS/nixpkgs/43ecbe7840d155fa933ee8a500fb00dbbc651fc8#inkscape",
+      "source": "devbox-search",
+      "version": "1.1.2"
+    },
+    "librsvg@2.52.5": {
+      "last_modified": "2022-03-15T13:16:03Z",
+      "resolved": "github:NixOS/nixpkgs/3eb07eeafb52bcbf02ce800f032f18d666a9498d#librsvg",
+      "source": "devbox-search",
+      "version": "2.52.5"
+    },
+    "plantuml@1.2023.9": {
+      "last_modified": "2023-07-17T21:59:53Z",
+      "resolved": "github:NixOS/nixpkgs/57695599bdc4f7bfe5d28cfa23f14b3d8bdf8a5f#plantuml",
+      "source": "devbox-search",
+      "version": "1.2023.9"
+    },
+    "python310@latest": {
+      "last_modified": "2023-02-24T18:08:35Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/806075be2bdde71895359ed18cb530c4d323e6f6#python3",
+      "source": "devbox-search",
+      "version": "3.10.9"
+    },
+    "python310Packages.pip@latest": {
+      "last_modified": "2023-09-04T16:24:30Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#python310Packages.pip",
+      "source": "devbox-search",
+      "version": "23.2.1"
+    },
+    "stdenv.cc.cc.lib": {
+      "resolved": "github:NixOS/nixpkgs/a16f7eb56e88c8985fcc6eb81dabd6cade4e425a#stdenv.cc.cc.lib",
+      "source": "nixpkg"
+    },
+    "texlive.combined.scheme-full@2022.20221227": {
+      "last_modified": "2023-05-01T00:19:33Z",
+      "resolved": "github:NixOS/nixpkgs/8b3bc690e201c8d3cbd14633dbf3462a820e73f2#texlive.combined.scheme-full",
+      "source": "devbox-search",
+      "version": "2022.20221227"
+    },
+    "xorg.xorgserver@latest": {
+      "last_modified": "2023-06-05T04:13:11Z",
+      "resolved": "github:NixOS/nixpkgs/31cd1b4afbaf0b1e81272ee9c31d1ab606503aed#xorg.xorgserver",
+      "source": "devbox-search",
+      "version": "21.1.8"
+    }
+  }
+}

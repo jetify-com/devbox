@@ -1,0 +1,22 @@
+{
+  "packages": [
+    "python310@latest",
+    "python310Packages.pip@latest",
+    "inkscape@1.1.2",
+    "librsvg@2.52.5",
+    "xorg.xorgserver@latest",
+    "plantuml@1.2023.9",
+    "imagemagick@6.9.11-60",
+    "stdenv.cc.cc.lib",
+    "texlive.combined.scheme-full@2022.20221227"
+  ],
+  "shell": {
+    "init_hook": [
+      ". $VENV_DIR/bin/activate",
+      "pip install -q -r requirements.txt"
+    ]
+  },
+  "nixpkgs": {
+    "commit": "a16f7eb56e88c8985fcc6eb81dabd6cade4e425a"
+  }
+}
