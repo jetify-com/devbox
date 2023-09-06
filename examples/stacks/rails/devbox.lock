@@ -2,16 +2,44 @@
   "lockfile_version": "1",
   "packages": {
     "bundler@latest": {
-      "last_modified": "2023-07-30T12:29:02Z",
-      "resolved": "github:NixOS/nixpkgs/3acb5c4264c490e7714d503c7166a3fde0c51324#bundler",
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#bundler",
       "source": "devbox-search",
-      "version": "2.4.17"
+      "version": "2.4.19",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/m0nc4b4sfk69k7592djvc9s2wff4437b-bundler-2.4.19"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/97g2pzvkmazra1gylk822gk7rcp3wj37-bundler-2.4.19"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/xz56ndp380slpv27r5xnm414fhflm71h-bundler-2.4.19"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/g37467pm0imf73z2wwrz30d0q8nzv0p4-bundler-2.4.19"
+        }
+      }
     },
     "curl@latest": {
-      "last_modified": "2023-08-08T03:07:33Z",
-      "resolved": "github:NixOS/nixpkgs/844ffa82bbe2a2779c86ab3a72ff1b4176cec467#curl",
+      "last_modified": "2023-08-30T00:25:28Z",
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#curl",
       "source": "devbox-search",
-      "version": "8.1.2"
+      "version": "8.2.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/aglnkhjcwigxd1kf6whaaj2gnb4svlsj-curl-8.2.1-bin"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/k2405n7xfl2wawjhlqlzkq44akdc3y9g-curl-8.2.1-bin"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/k2r18q0vbrxq9zlqgzzvl1dipzpxb0mb-curl-8.2.1-bin"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/c58hy8bh832hd9m4hkslk71zl98g7h7n-curl-8.2.1-bin"
+        }
+      }
     },
     "nodejs@19": {
       "last_modified": "2023-05-14T19:13:12Z",
@@ -23,19 +51,61 @@
       "last_modified": "2023-05-01T16:53:22Z",
       "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#ruby",
-      "version": "3.1.4"
+      "version": "3.1.4",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/2m9i5zrjir7j19lynyasliyv6ki27f9a-ruby-3.1.4"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/cym9rarnys76wi1gb6j77yh2j68jiam7-ruby-3.1.4"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/h6ac2glaif1iiy3ykdhisv4yysrm5niv-ruby-3.1.4"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/6iynbmq1yzx4ywicizda4g3q3fhmdf2k-ruby-3.1.4"
+        }
+      }
     },
     "sqlite@latest": {
       "last_modified": "2023-06-30T04:44:22Z",
       "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#sqlite",
       "source": "devbox-search",
-      "version": "3.42.0"
+      "version": "3.42.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/l49nwg4lwr7skvprdvhwzb0yc18b52xb-sqlite-3.42.0-bin"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/5v7n2akjma2gfkrm9bcrnvryd9ml1jgy-sqlite-3.42.0-bin"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/4gz9wyw3n9iym7kmrfih5h9d1b1c1ly1-sqlite-3.42.0-bin"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/29igbqdnp7ywb1ss1gb4fynv34mxmbg0-sqlite-3.42.0-bin"
+        }
+      }
     },
     "yarn@1.22": {
       "last_modified": "2023-05-21T19:52:09Z",
       "resolved": "github:NixOS/nixpkgs/9356eead97d8d16956b0226d78f76bd66e06cb60#yarn",
       "source": "devbox-search",
-      "version": "1.22.19"
+      "version": "1.22.19",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/4k8ij2dd4aq8hc6ifd1qjjibb94vv229-yarn-1.22.19"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/i9f46zs96v0qn439wznhkw8gg2ah69hb-yarn-1.22.19"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/l7h13xlijmzr8zkmm5qzs77z23c1dzyj-yarn-1.22.19"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/516xqbhfpvsjypq9gjwjngq20syyc1rh-yarn-1.22.19"
+        }
+      }
     }
   }
 }

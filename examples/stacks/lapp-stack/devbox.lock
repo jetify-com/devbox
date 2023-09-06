@@ -27,57 +27,57 @@
       "version": "8.0.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1"
+          "store_path": "/nix/store/7qwsslwdrjyg8hs654nsqpq7lly6dhq5-curl-8.0.1-bin"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1"
+          "store_path": "/nix/store/g9g1p4l9146kclnx4lv0hfbzhr9hk7n7-curl-8.0.1-bin"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/bbkz21vmx16wl0h3xk36g7gxpbymnm6d-curl-8.0.1"
+          "store_path": "/nix/store/bbkz21vmx16wl0h3xk36g7gxpbymnm6d-curl-8.0.1-bin"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/0xyi7w3cm3g7gzwfpwqzx0n7xks2sdc6-curl-8.0.1"
+          "store_path": "/nix/store/0xyi7w3cm3g7gzwfpwqzx0n7xks2sdc6-curl-8.0.1-bin"
         }
       }
     },
     "php81Extensions.pgsql@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Extensions.pgsql",
+      "last_modified": "2023-09-04T16:24:30Z",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81Extensions.pgsql",
       "source": "devbox-search",
-      "version": "8.1.22",
+      "version": "8.1.23",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/cp5m956xcqp9wnjkfkgx233sc2was375-php-pgsql-8.1.22"
+          "store_path": "/nix/store/k1kvsrl8bhbmxqdbx1xaxif2xcqm8p86-php-pgsql-8.1.23"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/spfhyjimzzxv11b7b6hfawbl15p3rb86-php-pgsql-8.1.22"
+          "store_path": "/nix/store/4ql85v8l6g2ld6imwlgny8blqy87ngbn-php-pgsql-8.1.23"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/y6wgphymmrk800zmxmy7s1j360yzmdqz-php-pgsql-8.1.22"
+          "store_path": "/nix/store/a43rm4l5yp51wdm7si8kc0hq670wpmw9-php-pgsql-8.1.23"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/rhc05fbdkq52ms8xdh6fil3la0p21lq1-php-pgsql-8.1.22"
+          "store_path": "/nix/store/r5909c1wis735ayha9h36vy6w1v7j1x4-php-pgsql-8.1.23"
         }
       }
     },
     "php@8.1": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2023-09-04T16:24:30Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81",
       "source": "devbox-search",
-      "version": "8.1.22",
+      "version": "8.1.23",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/24facqh0lqq9swy51xyvc763jvlwnylb-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/lb1kvhs6brfphpmxa36kn9fki89ijx7f-php-with-extensions-8.1.23"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/ic9rcrsfx0d9w84iz5sahin898zzkf0v-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/2f935v7hg56faxdp0myam0v8ppdidrd1-php-with-extensions-8.1.23"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/651lzjnchj12ngdf4hzldb71grbzzvhk-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/v5fdxi8pasc8mxacmg76q9qzqpsr04w6-php-with-extensions-8.1.23"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/14icl7q3qwkcjl80a50bl06n8wn3yk1i-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/ky5w9izkk4yyhni3nh31nicmcfch5ndz-php-with-extensions-8.1.23"
         }
       }
     },

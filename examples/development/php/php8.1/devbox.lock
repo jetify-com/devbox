@@ -10,13 +10,13 @@
           "store_path": "/nix/store/3n0837726vzr2yn5lfl0p42sxz7qdgiv-php-imagick-3.7.0"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/9llz7ih1agz0ch2qhyawv0islbjdl266-php-imagick-3.7.0"
+          "store_path": "/nix/store/63zmyraak7xw6vw6jmk1k4q6b34g0brr-php-imagick-3.7.0"
         },
         "x86_64-darwin": {
           "store_path": "/nix/store/kmqym77xc1f7mk3k3xl48vc0dikgj9pj-php-imagick-3.7.0"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/a165li19iqbf0rzb195hq1ffhjmhg2my-php-imagick-3.7.0"
+          "store_path": "/nix/store/wd1fbk4aydqpxmajy2qvp0c4qicxkc6s-php-imagick-3.7.0"
         }
       }
     },
@@ -36,7 +36,7 @@
           "store_path": "/nix/store/v4i2qbb7aivj3x4i7ipjg1vnfdc3ynvw-php-xdebug-3.2.2"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/vb8vyyjzjx5c0d71n1bqds19yncdwb1z-php-xdebug-3.2.2"
+          "store_path": "/nix/store/q6gp1rn2p6319l8rbwk0arvbbi8kx6bg-php-xdebug-3.2.2"
         }
       }
     },
@@ -50,34 +50,34 @@
           "store_path": "/nix/store/7hxmkxa9bmaplyy1ixl0yxv3j0qvxvc3-php-composer-2.5.8"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/r9jy712s0bnjv6i8qxwrnm099im9ypir-php-composer-2.5.8"
+          "store_path": "/nix/store/vwrbpz9wr7blr7alx0fl3x79ym3jbdqa-php-composer-2.5.8"
         },
         "x86_64-darwin": {
           "store_path": "/nix/store/fjy357jpj9q2bfahsgnak4mrh8y07izw-php-composer-2.5.8"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/awwdg6ysllx23j7brikl7wxwaglkyr0i-php-composer-2.5.8"
+          "store_path": "/nix/store/6w2vrfjdwhr3mj1magr2rmbycln379f8-php-composer-2.5.8"
         }
       }
     },
     "php@8.1": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2023-09-04T16:24:30Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81",
       "source": "devbox-search",
-      "version": "8.1.22",
+      "version": "8.1.23",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/24facqh0lqq9swy51xyvc763jvlwnylb-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/lb1kvhs6brfphpmxa36kn9fki89ijx7f-php-with-extensions-8.1.23"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/ic9rcrsfx0d9w84iz5sahin898zzkf0v-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/2f935v7hg56faxdp0myam0v8ppdidrd1-php-with-extensions-8.1.23"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/651lzjnchj12ngdf4hzldb71grbzzvhk-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/v5fdxi8pasc8mxacmg76q9qzqpsr04w6-php-with-extensions-8.1.23"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/14icl7q3qwkcjl80a50bl06n8wn3yk1i-php-with-extensions-8.1.22"
+          "store_path": "/nix/store/ky5w9izkk4yyhni3nh31nicmcfch5ndz-php-with-extensions-8.1.23"
         }
       }
     }

@@ -69,16 +69,16 @@
       "version": "0.35.2",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/b7snhj7r0fh1sl71cw93pbhissln6k9x-hpack-0.35.2"
+          "store_path": "/nix/store/6ylyxmdn3lrwl7n7y6vk7v299y6z300x-hpack-0.35.2"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/chm820695sg2cgaydmdz2a4mfpf3xhin-hpack-0.35.2"
+          "store_path": "/nix/store/0mgvagl5gxr9ysj4jhsx18bwcrc2gi66-hpack-0.35.2"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/9376qjb2q0ivhgbgjagbdwgw1y3ap1j1-hpack-0.35.2"
+          "store_path": "/nix/store/b73gqiazqa5inkhipyxgdjh3qigrxkyf-hpack-0.35.2"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/hm6h9vfhbg28vxphldz2czmr2iygz2bw-hpack-0.35.2"
+          "store_path": "/nix/store/sznqrslv0pz65iw9dy0d3hsmx06x7ssq-hpack-0.35.2"
         }
       }
     },
@@ -89,16 +89,16 @@
       "version": "2.11.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/vnrlr792q350sh9vdd9za6dd41d4iizg-stack-2.11.1"
+          "store_path": "/nix/store/vz1wlayssq6z458r4jczkiiq80nsfbas-stack-2.11.1"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/8xqxnhjq9x1cnbq5gmlx9c0sqzvnnf8y-stack-2.11.1"
+          "store_path": "/nix/store/7qkb9miw989md68q634vpcsl823k5wqk-stack-2.11.1"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/2nb8nvaydd6sv7cnb1yvyf31l8zwipmi-stack-2.11.1"
+          "store_path": "/nix/store/cv10967y0d15k38s1nvalbc0vx3z8pxk-stack-2.11.1"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/57zyr8q733kksfd82f9fqlnl28s3c48m-stack-2.11.1"
+          "store_path": "/nix/store/spkhqqdys80940kqmxsva47wmh1ji1jq-stack-2.11.1"
         }
       }
     },
