@@ -29,7 +29,7 @@ Warning: Showing top 10 results and truncated versions. Use --show-all to show a
 
 ### Adding a Specific Version to Devbox
 
-To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@19.9.0` or add `nodejs@19.9.0` to the packages list in your `devbox.json`:
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@20.1.0` or add `nodejs@20.1.0` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
