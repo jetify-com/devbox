@@ -14,37 +14,30 @@ Because the repository changes frequently, and new releases of Nixpkgs infrequen
 
 ### Searching for Available Packages
 
-You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
+You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `nodejs`, you can run `devbox search nodejs`:
 
 ```bash
-$ devbox search python
-Found 50+ results for "python":
+$ devbox search nodejs
 
-* python  (3.12.0b4, 3.12.0b3, 3.12.0b2, 3.12.0b1, 3.12.0a7, 3.12.0a6, 3.12.0a5, 3.12.0a3, 3.11.4, 3.11.3)
-* python-qt  (3.3.0, 3.2)
-* python-full  (3.11.4, 3.11.3, 3.11.2, 3.11.1, 3.10.12, 3.10.11, 3.10.10, 3.10.9, 3.10.8, 3.10.7)
-* python2nix  (20140927)
-* pythonSexy  (0.1.9)
-* pythonIRClib  (0.4.8)
-* pythonmagick  (0.9.16, 0.7)
-* python-minimal  (3.10.12, 3.10.11, 3.10.10, 3.10.9, 3.10.8, 3.10.7, 3.10.6, 3.10.5, 3.10.4, 3.9.13)
-* python-launcher  (1.0.0)
-* mate.python-caja  (1.26.0, 1.24.0, 1.22.1, 1.22.0, 1.20.2, 1.20.1)
+Found 2+ results for "nodejs":
+
+* nodejs  (20.5.1, 20.5.0, 20.4.0, 20.3.1, 20.3.0, 20.2.0, 20.1.0, 20.0.0, 19.9.0, 19.8.1)
+* nodejs-slim  (20.5.1, 20.5.0, 20.4.0, 20.3.1, 20.3.0, 20.2.0, 20.1.0, 20.0.0, 19.9.0, 19.8.1)
 
 Warning: Showing top 10 results and truncated versions. Use --show-all to show all.
 ```
 
 ### Adding a Specific Version to Devbox
 
-To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `python` package to version `3.11.1`, you can run `devbox add python@3.11.1` or add `python@3.11.1` to the packages list in your `devbox.json`:
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `19.9.0`, you can run `devbox add nodejs@19.9.0` or add `nodejs@19.9.0` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
-	"python@3.11.1"
+	"nodejs@19.9.0"
 ]
 ```
 
-For packages that use semver, you can pin a range of versions for your project. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
+For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@19`, it will install the latest minor and patch version of `nodejs >=19.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
 When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
