@@ -6,7 +6,6 @@ package lock
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/ux"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
@@ -103,12 +101,6 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 			path, err := nix.StorePathFromHashPart(ctx, sysInfo.StoreHash, "https://cache.nixos.org")
 			if err != nil {
 				// Should we report this to sentry to collect data?
-				ux.Fwarning(
-					os.Stderr,
-					"Failed to resolve store path for %s with storeHash %s. Installing will be a bit slower.\n",
-					sysName,
-					sysInfo.StoreHash,
-				)
 				debug.Log(
 					"Failed to resolve store path for %s with storeHash %s. Error is %s.\n",
 					sysName,
