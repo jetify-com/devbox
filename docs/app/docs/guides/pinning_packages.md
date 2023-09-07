@@ -29,15 +29,15 @@ Warning: Showing top 10 results and truncated versions. Use --show-all to show a
 
 ### Adding a Specific Version to Devbox
 
-To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `19.9.0`, you can run `devbox add nodejs@19.9.0` or add `nodejs@19.9.0` to the packages list in your `devbox.json`:
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@19.9.0` or add `nodejs@19.9.0` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
-	"nodejs@19.9.0"
+	"nodejs@20.1.0"
 ]
 ```
 
-For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@19`, it will install the latest minor and patch version of `nodejs >=19.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
+For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@20`, it will install the latest minor and patch version of `nodejs >=20.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
 When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
