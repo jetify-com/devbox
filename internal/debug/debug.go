@@ -15,12 +15,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-const devboxDebug = "DEVBOX_DEBUG"
+const DevboxDebug = "DEVBOX_DEBUG"
 
 var enabled bool
 
 func init() {
-	enabled, _ = strconv.ParseBool(os.Getenv(devboxDebug))
+	enabled, _ = strconv.ParseBool(os.Getenv(DevboxDebug))
 }
 
 func IsEnabled() bool { return enabled }

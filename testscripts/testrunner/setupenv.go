@@ -8,6 +8,7 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -22,7 +23,7 @@ func setupTestEnv(t *testing.T, envs *testscript.Env) error {
 		return err
 	}
 
-	envs.Setenv(envir.DevboxDebug, os.Getenv(envir.DevboxDebug))
+	envs.Setenv(debug.DevboxDebug, os.Getenv(debug.DevboxDebug))
 	return nil
 }
 
