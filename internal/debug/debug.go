@@ -7,18 +7,20 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"runtime"
+	"strconv"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
-
-	"go.jetpack.io/devbox/internal/envir"
 )
+
+const devboxDebug = "DEVBOX_DEBUG"
 
 var enabled bool
 
 func init() {
-	enabled = envir.IsDevboxDebugEnabled()
+	enabled, _ = strconv.ParseBool(os.Getenv(devboxDebug))
 }
 
 func IsEnabled() bool { return enabled }

@@ -23,11 +23,6 @@ func DoNotTrack() bool {
 	return doNotTrack
 }
 
-func IsDevboxDebugEnabled() bool {
-	enabled, _ := strconv.ParseBool(os.Getenv(DevboxDebug))
-	return enabled
-}
-
 func IsInBrowser() bool { // TODO: a better name
 	inBrowser, _ := strconv.ParseBool(os.Getenv("START_WEB_TERMINAL"))
 	return inBrowser
