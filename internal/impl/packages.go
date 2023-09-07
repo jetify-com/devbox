@@ -376,9 +376,8 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 			ProfileDir: profileDir,
 		})
 		if err != nil {
-			ux.Ferror(
-				d.writer,
-				"Package %s not found in profile. Skipping.\n",
+			debug.Log(
+				"Info: Package %s not found in nix profile. Skipping removing from profile.\n",
 				pkg.Raw,
 			)
 			continue
