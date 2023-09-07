@@ -3,8 +3,8 @@
     "git@latest",
     "php@8.1",
     "php81Packages.composer@latest",
-    "nginx@latest",
-    "mariadb@latest"
+    "mariadb@latest",
+    "nginx@latest"
   ],
   "shell": {
     "init_hook": [],

@@ -4,10 +4,11 @@
     "postgresql@14",
     "php@8.1",
     "php81Extensions.pgsql@latest",
-    "nginx@1.24"
+    "nginx@latest"
   ],
   "env": {
     "NGINX_WEB_PORT": "8089",
+    "NGINX_WEB_ROOT": "../../../my_app",
     "PGPORT": "5433"
   },
   "shell": {
