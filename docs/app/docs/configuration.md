@@ -166,7 +166,7 @@ Currently, you can only set values using string literals, `$PWD`, and `$PATH`. A
 
 ### Shell
 
-The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: *init_hooks*, which run a set of commands every time you start a devbox shell, and *scripts*, which are commands that can be run using `devbox run`
+The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: `init_hook`, which run a set of commands every time you start a devbox shell, and `scripts`, which are commands that can be run using `devbox run`
 
 #### Init Hook
 
@@ -257,23 +257,24 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
 ```json
 {
     "packages": [
-        "rustc",
-        "cargo",
-        "libiconv"
+        "rustup@latest",
+        "libiconv@latest"
     ],
     "env": {
-        "RUST_BACKTRACE": "1"
+        "PROJECT_DIR": "$PWD"
     },
     "shell": {
         "init_hook": [
-            "source conf/set-environment.sh",
+            ". conf/set-env.sh",
             "rustup default stable",
             "cargo fetch"
         ],
         "scripts": {
-            "test": "cargo test -- --show-output",
-            "start" : "cargo run",
-            "build-docs": "cargo doc"
+            "build-docs": "cargo doc",
+            "start": "cargo run",
+            "run_test": [
+                "cargo test -- --show-output"
+            ]
         }
     }
 }

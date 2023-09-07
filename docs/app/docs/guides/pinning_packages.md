@@ -14,37 +14,30 @@ Because the repository changes frequently, and new releases of Nixpkgs infrequen
 
 ### Searching for Available Packages
 
-You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `python`, you can run `devbox search python`:
+You can look up the available versions of a package by running `devbox search <package_name>`. For example, to see the available versions of `nodejs`, you can run `devbox search nodejs`:
 
 ```bash
 $ devbox search nodejs
 
-Found 168+ results for "nodejs":
+Found 2+ results for "nodejs":
 
-* nodejs (19.8.1, 19.7.0, 19.5.0, 19.2.0, 18.16.0, 18.15.0, 18.14.2, 18.13.0, 18.12.1, 18.10.0,
-18.8.0, 18.4.0, 18.0.0, 17.9.0, 17.5.0, 17.3.0, 17.0.1, 16.19.1, 16.19.0, 16.18.1, 16.17.1, 16.17.0,
-16.15.0, 16.14.0, 16.13.1, 16.13.0, 16.8.0, 16.4.0, 16.0.0, 15.14.0, 15.10.0, 15.5.0, 15.0.1,
-14.18.1, 14.18.0, 14.17.5, 14.17.1, 14.16.1, 14.16.0, 14.15.3, 14.15.0, 14.9.0, 14.4.0, 13.14.0,
-12.22.12, 12.22.10, 12.22.8, 12.22.7, 12.22.5, 12.22.1, 12.21.0, 12.20.0, 12.19.0, 12.18.3,
-12.18.1, 10.24.1, 10.24.0, 10.23.0, 10.22.0, 10.21.0)
-* nodejs_16 (16.20.0)
-* nodejs_18 (18.16.0)
-* nodejs_19 (19.9.0)
-* nodejs_20 (20.0.0)
-...
+* nodejs  (20.5.1, 20.5.0, 20.4.0, 20.3.1, 20.3.0, 20.2.0, 20.1.0, 20.0.0, 19.9.0, 19.8.1)
+* nodejs-slim  (20.5.1, 20.5.0, 20.4.0, 20.3.1, 20.3.0, 20.2.0, 20.1.0, 20.0.0, 19.9.0, 19.8.1)
+
+Warning: Showing top 10 results and truncated versions. Use --show-all to show all.
 ```
 
 ### Adding a Specific Version to Devbox
 
-To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `python` package to version `3.11.1`, you can run `devbox add python@3.11.1` or add `python@3.11.1` to the packages list in your `devbox.json`:
+To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@20.1.0` or add `nodejs@20.1.0` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
-	"python@3.11.1"
+	"nodejs@20.1.0"
 ]
 ```
 
-For packages that use semver, you can pin a range of versions for your project. For example, if you pin `python@3`, it will install the latest minor and patch version of `python >=3.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
+For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@20`, it will install the latest minor and patch version of `nodejs >=20.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
 When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
 
@@ -64,10 +57,10 @@ Whenever you run `devbox update`, packages with the latest tag will be updated t
 If you want to use a specific Nixpkg revision for a package, you can use a `github:nixos/nixpkgs/<commit_sha>#<pkg>` Flake reference. The example below shows how to install the `hello` package from a specific Nixpkg commit:
 
 ```json
-}
-	"packages" : [
-"github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello"
-	]
+{
+  "packages" : [
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello"
+  ]
 }
 ```
 Using multiple nixpkg commits may install duplicate packages and cause Nix Store bloat, so use this option sparingly.
