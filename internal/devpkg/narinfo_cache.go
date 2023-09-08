@@ -62,6 +62,9 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 // package in the list, and caches the result.
 // Callers of IsInBinaryCache must call this function first.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+	if !featureflag.RemoveNixpkgs.Enabled() {
+		return nil
+	}
 
 	// Pre-compute values read in fillNarInfoCache
 	// so they can be read from multiple go-routines without locks
