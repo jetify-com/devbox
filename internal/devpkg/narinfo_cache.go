@@ -80,7 +80,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 	eligiblePackages := []*Package{}
 	for _, p := range packages {
-		// NOTE: isElgibleForBinaryCache also ensures the package is
+		// NOTE: isEligibleForBinaryCache also ensures the package is
 		// resolved in the lockfile, which must be done before the concurrent
 		// section in this function below.
 		isEligible, err := p.isEligibleForBinaryCache()
@@ -164,7 +164,6 @@ func (p *Package) fillNarInfoCache() error {
 }
 
 // isEligibleForBinaryCache returns true if the package is eligible for the binary cache.
-// NOTE: package must be resolved.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {

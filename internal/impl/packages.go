@@ -47,19 +47,14 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
 	existingPackageNames := d.PackageNames()
-	newPackages := []*devpkg.Package{}
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
-		} else {
-			newPackages = append(newPackages, pkg)
+			continue
 		}
-	}
-
-	for _, pkg := range newPackages {
 
 		// On the other hand, if there's a package with same canonical name, replace
 		// it. Ignore error (which is either missing or more than one). We search by
