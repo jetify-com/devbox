@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -117,6 +118,11 @@ func Error(err error, meta Metadata) {
 		return
 	}
 
+	nixVersion, err := nix.Version()
+	if err != nil {
+		nixVersion = "unknown"
+	}
+
 	event := &sentry.Event{
 		EventID:   sentry.EventID(ExecutionID),
 		Level:     sentry.LevelError,
@@ -132,6 +138,9 @@ func Error(err error, meta Metadata) {
 			"runtime": {
 				"name":    "Go",
 				"version": strings.TrimPrefix(runtime.Version(), "go"),
+			},
+			"nix": {
+				"version": nixVersion,
 			},
 		},
 	}
