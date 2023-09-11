@@ -77,17 +77,12 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 // i.e. have a commit hash and always resolve to the same package/version.
 // Note: inputs returned by this function include plugin packages. (php only for now)
 // It's not entirely clear we always want to add plugin packages to the top level
-func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput, error) {
+func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
 	// Use the verbose name flakeInputs to distinguish from `inputs`
 	// which refer to `nix.Input` in most of the codebase.
 	flakeInputs := map[string]*flakeInput{}
-
-	// Fill the NarInfo Cache so we can check IsInBinaryCache() for each package, below.
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return nil, err
-	}
 
 	packages = lo.Filter(packages, func(item *devpkg.Package, _ int) bool {
 		// Include packages (like local or remote flakes) that cannot be
@@ -120,5 +115,5 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) ([]*flakeInput
 		}
 	}
 
-	return goutil.PickByKeysSorted(flakeInputs, order), nil
+	return goutil.PickByKeysSorted(flakeInputs, order)
 }

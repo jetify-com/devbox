@@ -38,10 +38,14 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	flakeInputs, err := flakeInputs(ctx, packages)
-	if err != nil {
+
+	// Fill the NarInfo Cache concurrently as a perf-optimization, prior to invoking
+	// IsInBinaryCache in flakeInputs() and in the flake.nix template.
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
 		return nil, err
 	}
+
+	flakeInputs := flakeInputs(ctx, packages)
 	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
 
 	// This is an optimization. Try to reuse the nixpkgs info from the flake
