@@ -5,7 +5,6 @@ package midcobra
 
 import (
 	"errors"
-	"os"
 	"os/exec"
 	"strconv"
 
@@ -15,7 +14,6 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
@@ -41,14 +39,11 @@ func (d *DebugMiddleware) preRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	strVal := ""
 	if d.flag.Changed {
-		strVal = d.flag.Value.String()
-	} else {
-		strVal = os.Getenv(envir.DevboxDebug)
-	}
-	if enabled, _ := strconv.ParseBool(strVal); enabled {
-		debug.Enable()
+		strVal := d.flag.Value.String()
+		if enabled, _ := strconv.ParseBool(strVal); enabled {
+			debug.Enable()
+		}
 	}
 }
 

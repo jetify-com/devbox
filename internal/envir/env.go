@@ -5,7 +5,6 @@ package envir
 
 const (
 	DevboxCache         = "DEVBOX_CACHE"
-	DevboxDebug         = "DEVBOX_DEBUG"
 	DevboxFeaturePrefix = "DEVBOX_FEATURE_"
 	DevboxGateway       = "DEVBOX_GATEWAY"
 	// DevboxLatestVersion is the latest version available of the devbox CLI binary.

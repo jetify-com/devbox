@@ -121,7 +121,11 @@ func Main() {
 		return
 	}
 
-	os.Exit(Execute(ctx, os.Args[1:]))
+	code := Execute(ctx, os.Args[1:])
+	// Run out here instead of as a middleware so we can capture any time we spend
+	// in middlewares as well.
+	debug.PrintExecutionTime()
+	os.Exit(code)
 }
 
 func listAllCommands(cmd *cobra.Command, indent string) {
