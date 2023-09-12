@@ -163,7 +163,8 @@ func (p *Package) fillNarInfoCache() error {
 	return nil
 }
 
-// isEligibleForBinaryCache returns true if the package is eligible for the binary cache.
+// isEligibleForBinaryCache returns true if we have additional metadata about
+// the package to query it from the binary cache.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
