@@ -121,9 +121,9 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	_, _ = io.Copy(io.Discard, res.Body)
 	defer res.Body.Close()
 
-	status := res.StatusCode == 200
-	isNarInfoInCache.Store(p.Raw, status)
-	return status, nil
+	// Use LoadOrStore to avoid ever changing an existing value.
+	status, _ := isNarInfoInCache.LoadOrStore(p.Raw, res.StatusCode == 200)
+	return status.(bool), nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
