@@ -135,12 +135,13 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		if err != nil {
 			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
-		for _, item := range items {
-			if ref == item.unlockedReference {
-				return item.index, nil
+		if ref != "" { // ref is empty when package is flake output (and not a devbox package)
+			for _, item := range items {
+				if ref == item.unlockedReference {
+					return item.index, nil
+				}
 			}
 		}
-		return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
 	for _, item := range items {
