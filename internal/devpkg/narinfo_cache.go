@@ -72,18 +72,9 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
-		// If the package's NarInfo status is already known, skip it
-		_, ok := isNarInfoInCache.Load(p.Raw)
-		if ok {
-			continue
-		}
 		pkg := p // copy the loop variable since its used in a closure below
 		group.Go(func() error {
 			_, err := pkg.fillNarInfoCacheIfNeeded()
-			if err != nil {
-				// default to false if there was an error, so we don't re-try
-				isNarInfoInCache.Store(pkg.Raw, false)
-			}
 			return err
 		})
 	}
@@ -100,6 +91,7 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	if status, alreadySet := isNarInfoInCache.Load(p.Raw); alreadySet {
 		return status.(bool), nil
 	}
+	isNarInfoInCache.Store(p.Raw, false) // store in case of failure
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
