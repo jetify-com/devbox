@@ -90,7 +90,11 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	if status, alreadySet := isNarInfoInCache.Load(p.Raw); alreadySet {
 		return status.(bool), nil
 	}
-	isNarInfoInCache.Store(p.Raw, false) // store in case of failure
+	defer func() {
+		// If there's an error and nothing got cached, just store false.
+		_, _ = isNarInfoInCache.LoadOrStore(p.Raw, false)
+	}()
+
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
