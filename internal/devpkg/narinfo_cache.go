@@ -39,35 +39,12 @@ var isNarInfoInCache = struct {
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
 // before calling this function.
 func (p *Package) IsInBinaryCache() (bool, error) {
-
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return false, err
 	} else if !eligible {
 		return false, nil
 	}
-
-	// Check if the narinfo is present in the binary cache
-	isNarInfoInCache.lock.RLock()
-	status, statusExists := isNarInfoInCache.status[p.Raw]
-	isNarInfoInCache.lock.RUnlock()
-	if !statusExists {
-		// Fallback to synchronously filling the nar info cache
-		if err := p.fillNarInfoCache(); err != nil {
-			return false, err
-		}
-
-		// Check again
-		isNarInfoInCache.lock.RLock()
-		status, statusExists = isNarInfoInCache.status[p.Raw]
-		isNarInfoInCache.lock.RUnlock()
-		if !statusExists {
-			return false, errors.Errorf(
-				"narInfo cache miss: %v. Should be filled by now",
-				p.Raw,
-			)
-		}
-	}
-	return status, nil
+	return p.fillNarInfoCacheIfNeeded()
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
@@ -112,7 +89,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 		}
 		pkg := p // copy the loop variable since its used in a closure below
 		group.Go(func() error {
-			err := pkg.fillNarInfoCache()
+			_, err := pkg.fillNarInfoCacheIfNeeded()
 			if err != nil {
 				// default to false if there was an error, so we don't re-try
 				isNarInfoInCache.lock.Lock()
@@ -125,17 +102,21 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	return group.Wait()
 }
 
-// fillNarInfoCache fills the cache value for the narinfo of this package,
+// fillNarInfoCacheIfNeeded fills the cache value for the narinfo of this package,
 // assuming it is eligible for the binary cache. Callers are responsible
 // for checking isEligibleForBinaryCache before calling this function.
 //
 // NOTE: this must be concurrency safe.
-func (p *Package) fillNarInfoCache() error {
+func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
+	// This check if fine to do without a lock, because we never remove/replace true values
+	if isNarInfoInCache.status[p.Raw] {
+		return true, nil
+	}
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
-		return err
+		return false, err
 	} else if sysInfo == nil {
-		return errors.New(
+		return false, errors.New(
 			"sysInfo is nil, but should not be because" +
 				" the package is eligible for binary cache",
 		)
@@ -147,11 +128,11 @@ func (p *Package) fillNarInfoCache() error {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	res, err := isNarInfoInCache.httpClient.Do(req)
 	if err != nil {
-		return err
+		return false, err
 	}
 	// read the body fully, and close it to ensure the connection is reused.
 	_, _ = io.Copy(io.Discard, res.Body)
@@ -160,7 +141,7 @@ func (p *Package) fillNarInfoCache() error {
 	isNarInfoInCache.lock.Lock()
 	isNarInfoInCache.status[p.Raw] = res.StatusCode == 200
 	isNarInfoInCache.lock.Unlock()
-	return nil
+	return isNarInfoInCache.status[p.Raw], nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
