@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/envir"
@@ -54,6 +53,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	}
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
+
 	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
 	meta.InShell = envir.IsDevboxShellEnabled()
 	meta.InBrowser = envir.IsInBrowser()

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	segment "github.com/segmentio/analytics-go"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -32,6 +33,11 @@ func initSegmentClient() bool {
 }
 
 func newTrackMessage(name string, meta Metadata) *segment.Track {
+	nixVersion, err := nix.Version()
+	if err != nil {
+		nixVersion = "unknown"
+	}
+
 	dur := time.Since(procStartTime)
 	if !meta.CommandStart.IsZero() {
 		dur = time.Since(meta.CommandStart)
@@ -63,6 +69,7 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),
+			"nix_version":  nixVersion,
 		},
 	}
 }

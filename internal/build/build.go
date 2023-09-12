@@ -17,8 +17,14 @@ var (
 	Commit     = "none"
 	CommitDate = "unknown"
 
-	SentryDSN    = "" // Disabled by default
-	TelemetryKey = "" // Disabled by default
+	// SentryDSN is injected in the build from
+	// https://jetpack-io.sentry.io/settings/projects/devbox/keys/
+	// It is disabled by default.
+	SentryDSN = ""
+	// TelemetryKey is the Segment Write Key
+	// https://segment.com/docs/connections/sources/catalog/libraries/server/go/quickstart/
+	// It is disabled by default.
+	TelemetryKey = ""
 )
 
 // User-presentable names of operating systems supported by Devbox.
