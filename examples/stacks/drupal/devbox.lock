@@ -43,9 +43,10 @@
       }
     },
     "nginx@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-09-04T16:24:30Z",
       "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#nginx",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#nginx",
+      "source": "devbox-search",
       "version": "1.24.0",
       "systems": {
         "aarch64-darwin": {

@@ -1,10 +1,10 @@
 events {}
 http{
 server {
-         listen       8081;
-         listen       [::]:8081;
-         server_name  localhost;
-         root         ../../../devbox.d/web;
+         listen       $NGINX_WEB_PORT;
+         listen       [::]:$NGINX_WEB_PORT;
+         server_name  $NGINX_WEB_SERVER_NAME;
+         root         $NGINX_WEB_ROOT;
 
          error_log error.log error;
          access_log access.log;
@@ -31,7 +31,7 @@ server {
         location ~ \.php$ {
             include fastcgi.conf;
             fastcgi_split_path_info ^(.+\.php)(/.+)$;
-            fastcgi_pass 127.0.0.1:8082;
+            fastcgi_pass 127.0.0.1:$PHPFPM_PORT;
             fastcgi_param PATH_INFO $fastcgi_path_info;
             fastcgi_index index.php;
         }

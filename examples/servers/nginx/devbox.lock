@@ -2,11 +2,25 @@
   "lockfile_version": "1",
   "packages": {
     "nginx@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2023-09-04T16:24:30Z",
       "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nginx",
+      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#nginx",
       "source": "devbox-search",
-      "version": "1.24.0"
+      "version": "1.24.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/prz9lx44d3hicpmsri5rm9qk44r79ng8-nginx-1.24.0"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/b2v5yw11gmywahlyhbqajml7hjdkhsar-nginx-1.24.0"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/1nyjvgj3hbhck80wkwi0h18561xbp3sy-nginx-1.24.0"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/vc66rk5b86lx1myxr18qkgzha0fjx2ks-nginx-1.24.0"
+        }
+      }
     }
   }
 }
