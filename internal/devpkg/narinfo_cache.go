@@ -24,16 +24,8 @@ const BinaryCache = "https://cache.nixos.org"
 // isNarInfoInCache checks if the .narinfo for this package is in the `BinaryCache`.
 // This cannot be a field on the Package struct, because that struct
 // is constructed multiple times in a request (TODO: we could fix that).
-var isNarInfoInCache = struct {
-	// The key is the `Package.Raw` string.
-	status map[string]bool
-	lock   sync.RWMutex
-	// re-use httpClient to re-use the connection
-	httpClient http.Client
-}{
-	status:     map[string]bool{},
-	httpClient: http.Client{},
-}
+var isNarInfoInCache = sync.Map{}
+var httpClient = http.Client{}
 
 // IsInBinaryCache returns true if the package is in the binary cache.
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
@@ -81,9 +73,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
 		// If the package's NarInfo status is already known, skip it
-		isNarInfoInCache.lock.RLock()
-		_, ok := isNarInfoInCache.status[p.Raw]
-		isNarInfoInCache.lock.RUnlock()
+		_, ok := isNarInfoInCache.Load(p.Raw)
 		if ok {
 			continue
 		}
@@ -92,9 +82,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 			_, err := pkg.fillNarInfoCacheIfNeeded()
 			if err != nil {
 				// default to false if there was an error, so we don't re-try
-				isNarInfoInCache.lock.Lock()
-				isNarInfoInCache.status[pkg.Raw] = false
-				isNarInfoInCache.lock.Unlock()
+				isNarInfoInCache.Store(pkg.Raw, false)
 			}
 			return err
 		})
@@ -109,8 +97,8 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 // NOTE: this must be concurrency safe.
 func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	// This check if fine to do without a lock, because we never remove/replace values
-	if status, alreadySet := isNarInfoInCache.status[p.Raw]; alreadySet {
-		return status, nil
+	if status, alreadySet := isNarInfoInCache.Load(p.Raw); alreadySet {
+		return status.(bool), nil
 	}
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
@@ -130,7 +118,7 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	res, err := isNarInfoInCache.httpClient.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return false, err
 	}
@@ -138,10 +126,9 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	_, _ = io.Copy(io.Discard, res.Body)
 	defer res.Body.Close()
 
-	isNarInfoInCache.lock.Lock()
-	isNarInfoInCache.status[p.Raw] = res.StatusCode == 200
-	isNarInfoInCache.lock.Unlock()
-	return isNarInfoInCache.status[p.Raw], nil
+	status := res.StatusCode == 200
+	isNarInfoInCache.Store(p.Raw, status)
+	return status, nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
