@@ -127,7 +127,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		return -1, err
 	}
 
-	if !inCache {
+	if !inCache && args.Package.IsDevboxPackage() {
 		// This is an optimization for happy path when packages are added by flake reference. A resolved devbox
 		// package *which was added by flake reference* (not by store path) should match the unlockedReference
 		// of an existing profile item.
@@ -135,6 +135,7 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		if err != nil {
 			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
+
 		for _, item := range items {
 			if ref == item.unlockedReference {
 				return item.index, nil
