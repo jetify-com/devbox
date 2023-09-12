@@ -108,9 +108,9 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 //
 // NOTE: this must be concurrency safe.
 func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
-	// This check if fine to do without a lock, because we never remove/replace true values
-	if isNarInfoInCache.status[p.Raw] {
-		return true, nil
+	// This check if fine to do without a lock, because we never remove/replace values
+	if alreadySet, status := isNarInfoInCache.status[p.Raw]; alreadySet {
+		return status, nil
 	}
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
