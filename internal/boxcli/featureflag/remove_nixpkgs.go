@@ -4,4 +4,4 @@ package featureflag
 // It leverages the search index to directly map <package>@<version> to
 // the /nix/store/<hash>-<package>-<version> that can be fetched from
 // cache.nixpkgs.org.
-var RemoveNixpkgs = disable("REMOVE_NIXPKGS")
+var RemoveNixpkgs = enable("REMOVE_NIXPKGS")

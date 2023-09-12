@@ -42,39 +42,19 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	// replace it.
 	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
 
-	// Fill in narinfo cache for all packages, even if the package-names are bogus
-	// (we'll just not use the result later)
-	if err := devpkg.FillNarInfoCache(ctx, pkgs...); err != nil {
-		return err
-	}
-
 	// addedPackageNames keeps track of the possibly transformed (versioned)
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
 	existingPackageNames := d.PackageNames()
-	newPackages := []*devpkg.Package{}
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
-		} else {
-			newPackages = append(newPackages, pkg)
+			continue
 		}
-	}
-
-	// Fill in the narinfo cache for versioned newPackages as well
-	versionedPackages := map[string]*devpkg.Package{}
-	for _, pkg := range newPackages {
-		versionedPackages[pkg.Versioned()] = devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
-	}
-	if err := devpkg.FillNarInfoCache(ctx, lo.Values(versionedPackages)...); err != nil {
-		return err
-	}
-
-	for _, pkg := range newPackages {
 
 		// On the other hand, if there's a package with same canonical name, replace
 		// it. Ignore error (which is either missing or more than one). We search by
@@ -89,7 +69,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
-		versionedPkg := versionedPackages[pkg.Versioned()]
+		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
 
 		packageNameForConfig := pkg.Raw
 		ok, err := versionedPkg.ValidateExists()
@@ -363,12 +343,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 		return err
 	}
 
-	packages := devpkg.PackageFromStrings(pkgs, d.lockfile)
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return err
-	}
-
-	for _, pkg := range packages {
+	for _, pkg := range devpkg.PackageFromStrings(pkgs, d.lockfile) {
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
 			Writer:     d.writer,
@@ -436,9 +411,6 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	}
 	packages, err := d.AllInstallablePackages()
 	if err != nil {
-		return nil, err
-	}
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
 		return nil, err
 	}
 	for _, pkg := range packages {

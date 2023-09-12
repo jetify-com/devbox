@@ -36,7 +36,8 @@ var isNarInfoInCache = struct {
 }
 
 // IsInBinaryCache returns true if the package is in the binary cache.
-// ALERT: Callers must call FillNarInfoCache before calling this function.
+// ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
+// before calling this function.
 func (p *Package) IsInBinaryCache() (bool, error) {
 
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
@@ -47,22 +48,48 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 
 	// Check if the narinfo is present in the binary cache
 	isNarInfoInCache.lock.RLock()
-	exists, ok := isNarInfoInCache.status[p.Raw]
+	status, statusExists := isNarInfoInCache.status[p.Raw]
 	isNarInfoInCache.lock.RUnlock()
-	if !ok {
-		return false, errors.Errorf(
-			"narInfo cache miss: %v. Call FillNarInfoCache before invoking IsInBinaryCache",
-			p.Raw,
-		)
+	if !statusExists {
+		// Fallback to synchronously filling the nar info cache
+		if err := p.fillNarInfoCache(); err != nil {
+			return false, err
+		}
+
+		// Check again
+		isNarInfoInCache.lock.RLock()
+		status, statusExists = isNarInfoInCache.status[p.Raw]
+		isNarInfoInCache.lock.RUnlock()
+		if !statusExists {
+			return false, errors.Errorf(
+				"narInfo cache miss: %v. Should be filled by now",
+				p.Raw,
+			)
+		}
 	}
-	return exists, nil
+	return status, nil
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
 // package in the list, and caches the result.
-// Callers of IsInBinaryCache must call this function first.
+// Callers of IsInBinaryCache may call this function first as a perf-optimization.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	if !featureflag.RemoveNixpkgs.Enabled() {
+		return nil
+	}
+
+	eligiblePackages := []*Package{}
+	for _, p := range packages {
+		// NOTE: isEligibleForBinaryCache also ensures the package is
+		// resolved in the lockfile, which must be done before the concurrent
+		// section in this function below.
+		isEligible, err := p.isEligibleForBinaryCache()
+		// If the package is not eligible or there is an error in determining that, then skip it.
+		if isEligible && err == nil {
+			eligiblePackages = append(eligiblePackages, p)
+		}
+	}
+	if len(eligiblePackages) == 0 {
 		return nil
 	}
 
@@ -73,15 +100,9 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 		return err
 	}
 	_ = nix.System()
-	for _, p := range packages {
-		_, err := p.lockfile.Resolve(p.Raw)
-		if err != nil {
-			return err
-		}
-	}
 
 	group, _ := errgroup.WithContext(ctx)
-	for _, p := range packages {
+	for _, p := range eligiblePackages {
 		// If the package's NarInfo status is already known, skip it
 		isNarInfoInCache.lock.RLock()
 		_, ok := isNarInfoInCache.status[p.Raw]
@@ -105,15 +126,11 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 }
 
 // fillNarInfoCache fills the cache value for the narinfo of this package,
-// if it is eligible for the binary cache.
+// assuming it is eligible for the binary cache. Callers are responsible
+// for checking isEligibleForBinaryCache before calling this function.
+//
 // NOTE: this must be concurrency safe.
 func (p *Package) fillNarInfoCache() error {
-	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
-		return err
-	} else if !eligible {
-		return nil
-	}
-
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return err
@@ -146,6 +163,8 @@ func (p *Package) fillNarInfoCache() error {
 	return nil
 }
 
+// isEligibleForBinaryCache returns true if we have additional metadata about
+// the package to query it from the binary cache.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
