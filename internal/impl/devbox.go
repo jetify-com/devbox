@@ -872,7 +872,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	}
 
 	// Include env variables in devbox.json
-	configEnv := d.configEnvs(env)
+	configEnv, err := d.configEnvs(env)
+	if err != nil {
+		return nil, err
+	}
 	addEnvIfNotPreviouslySetByDevbox(env, configEnv)
 
 	markEnvsAsSetByDevbox(pluginEnv, configEnv)
@@ -1052,14 +1055,18 @@ func (d *Devbox) checkOldEnvrc() error {
 	return nil
 }
 
-// configEnvs takes the computed env variables (nix + plugin) and adds env
+// configEnvs takes the existing environment (nix + plugin) and adds env
 // variables defined in Config. It also parses variables in config
 // that are referenced by $VAR or ${VAR} and replaces them with
-// their value in the computed env variables. Note, this doesn't
+// their value in the existing env variables. Note, this doesn't
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
-func (d *Devbox) configEnvs(computedEnv map[string]string) map[string]string {
-	return conf.OSExpandEnvMap(d.cfg.Env, computedEnv, d.ProjectDir())
+func (d *Devbox) configEnvs(existingEnv map[string]string) (map[string]string, error) {
+	env, err := d.cfg.ComputedEnv(d.ProjectDir())
+	if err != nil {
+		return nil, err
+	}
+	return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
 }
 
 // ignoreCurrentEnvVar contains environment variables that Devbox should remove
