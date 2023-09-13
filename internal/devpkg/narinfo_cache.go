@@ -96,7 +96,7 @@ func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
 // fetchNarInfoStatus fetches the cache status for the package. It returns
 // true if cache exists, false otherwise.
 // NOTE: This function always performs an HTTP request and should not be called
-// more than once.
+// more than once per package.
 func (p *Package) fetchNarInfoStatus() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
@@ -124,7 +124,6 @@ func (p *Package) fetchNarInfoStatus() (bool, error) {
 	_, _ = io.Copy(io.Discard, res.Body)
 	defer res.Body.Close()
 
-	// Use LoadOrStore to avoid ever changing an existing value.
 	return res.StatusCode == 200, nil
 }
 
