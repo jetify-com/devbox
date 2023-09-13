@@ -85,9 +85,7 @@ func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
 	type inCacheFunc func() (bool, error)
 	f, ok := narInfoStatusFnCache.Load(p.Raw)
 	if !ok {
-		f = inCacheFunc(sync.OnceValues(func() (bool, error) {
-			return p.fetchNarInfoStatus()
-		}))
+		f = inCacheFunc(sync.OnceValues(p.fetchNarInfoStatus))
 		f, _ = narInfoStatusFnCache.LoadOrStore(p.Raw, f)
 	}
 	return f.(inCacheFunc)()
