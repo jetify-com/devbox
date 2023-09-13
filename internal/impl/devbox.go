@@ -970,8 +970,21 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 	})
 }
 
+// libcPackages returns the packages used to aid libc-dynamic-linking compatibility
+func (d *Devbox) libcPackages() []*devpkg.Package {
+	return lo.Map(
+		[]string{"stdenv.cc.cc.lib", "stdenv.cc.libc_lib"},
+		func(pkgName string, _ int) *devpkg.Package {
+			return devpkg.PackageFromString(pkgName, d.lockfile)
+		},
+	)
+}
+
 // AllInstallablePackages returns installable user packages and plugin
 // packages concatenated in correct order
+// TODO savil: this is added to the main user profile as well. Do we want libcPackages in there?
+// Pros for having libcPackages in profile: no need to add more elements to PATH
+// Cons: duplicating state between libcProfile and regular Profile.
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()
 	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
@@ -981,7 +994,9 @@ func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	// We prioritize plugin packages so that the php plugin works. Not sure
 	// if this is behavior we want for user plugins. We may need to add an optional
 	// priority field to the config.
-	return append(pluginPackages, userPackages...), nil
+	result := append(pluginPackages, userPackages...)
+	//return append(result, d.libcPackages()...), nil
+	return result, nil
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
@@ -1111,9 +1126,14 @@ var ignoreDevEnvVar = map[string]bool{
 // setCommonHelperEnvVars sets environment variables that are required by some
 // common setups (e.g. gradio, rust)
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
-	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
-	env["LD_LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
-	env["LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
+	//profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
+	//libcProfileLibDir := filepath.Join(d.projectDir, nix.LibcProfilePath, "lib")
+	//env["LD_LIBRARY_PATH"] = JoinPathLists(libcProfileLibDir, env["LD_LIBRARY_PATH"])
+	//env["LIBRARY_PATH"] = JoinPathLists(libcProfileLibDir, env["LIBRARY_PATH"])
+
+	// TODO savil. Temporarily removing LD_LIBRARY_PATH to see if it resolves stack smashing error
+	env["LD_LIBRARY_PATH"] = JoinPathLists(env["LD_LIBRARY_PATH"])
+	env["LIBRARY_PATH"] = JoinPathLists(env["LIBRARY_PATH"])
 }
 
 // NixBins returns the paths to all the nix binaries that are installed by

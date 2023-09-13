@@ -26,6 +26,7 @@ type devboxer interface {
 	ShellEnvHash(ctx context.Context) (string, error)
 	ShellEnvHashKey() string
 	ProjectDir() string
+	LibcProfilePath() (string, error)
 }
 
 //go:embed wrapper.sh.tmpl
@@ -60,6 +61,9 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 		return err
 	}
 
+	sys := nix.System()
+	useLibcLinker := sys == "x86_64-linux" // TODO savil: generalize.
+
 	for _, bin := range bins {
 		if err = createWrapper(&createWrapperArgs{
 			devboxer:         devbox,
@@ -67,7 +71,8 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 			Command:          bin,
 			ShellEnvHash:     shellEnvHash,
 			DevboxSymlinkDir: devboxSymlinkDir,
-			destPath:         filepath.Join(destPath, filepath.Base(bin)),
+			UseLibcLinker:    useLibcLinker,
+			DestPath:         filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
@@ -138,7 +143,8 @@ type createWrapperArgs struct {
 	Command          string
 	ShellEnvHash     string
 	DevboxSymlinkDir string
-	destPath         string
+	UseLibcLinker    bool
+	DestPath         string
 }
 
 func createWrapper(args *createWrapperArgs) error {
@@ -147,7 +153,7 @@ func createWrapper(args *createWrapperArgs) error {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(os.WriteFile(args.destPath, buf.Bytes(), 0755))
+	return errors.WithStack(os.WriteFile(args.DestPath, buf.Bytes(), 0755))
 }
 
 // createSymlinksForSupportDirs creates symlinks for the support dirs

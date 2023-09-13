@@ -33,4 +33,9 @@ DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 */ -}}
 eval "$(DO_NOT_TRACK=1 devbox shellenv only-path-without-wrappers)"
 
+# Only if system is linux
+{{ if .UseLibcLinker }}
+LD_LIBRARY_PATH={{ .ProjectDir }}/.devbox/nix/libc/profile/default/lib exec {{ .LibcProfilePath }}/lib/ld-linux-x86-64.so.2 --argv0 {{ .DestPath }} {{ .Command }} "$@"
+{{ else }}
 exec {{ .Command }} "$@"
+{{ end }}

@@ -196,6 +196,7 @@ type ProfileInstallArgs struct {
 	Package           string
 	ProfilePath       string
 	Writer            io.Writer
+	Output            string
 }
 
 // ProfileInstall calls nix profile install with default profile
@@ -235,7 +236,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	installable, err := input.Installable()
+	installable, err := input.Installable(args.Output)
 	if err != nil {
 		return err
 	}

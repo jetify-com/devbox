@@ -170,7 +170,7 @@ func (p *Package) IsInstallable() bool {
 
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
-func (p *Package) Installable() (string, error) {
+func (p *Package) Installable(output string) (string, error) {
 
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
@@ -188,6 +188,10 @@ func (p *Package) Installable() (string, error) {
 	installable, err := p.urlForInstall()
 	if err != nil {
 		return "", err
+	}
+
+	if output != "" {
+		installable = installable + "^" + output
 	}
 	return installable, nil
 }

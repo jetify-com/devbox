@@ -6,6 +6,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -16,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"golang.org/x/exp/slices"
@@ -223,6 +225,10 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	if err := d.syncLibcProfile(ctx, mode); err != nil {
+		return err
+	}
+
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
@@ -273,6 +279,54 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 	}
 
 	return d.tidyProfile(ctx)
+}
+
+// syncLibcProfile ensures the nix profile to help with libc-dynamic-linking
+// compatibility is up-to-date
+func (d *Devbox) syncLibcProfile(ctx context.Context, mode installMode) error {
+	// Users cannot uninstall libc packages
+	if mode == uninstall {
+		return nil
+	}
+
+	pkgs, err := d.pendingLibcPackagesForInstallation(ctx)
+	if err != nil {
+		return err
+	}
+	if len(pkgs) == 0 {
+		return nil
+	}
+
+	profileDir, err := d.LibcProfilePath()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(d.writer, "Installing libc packages:\n")
+	total := len(pkgs)
+	for idx, pkg := range pkgs {
+		stepNum := idx + 1
+
+		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+
+		if err := nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+			CustomStepMessage: stepMsg,
+			Lockfile:          d.lockfile,
+			Package:           pkg.Raw,
+			ProfilePath:       profileDir,
+			Writer:            d.writer,
+			Output:            "out",
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *Devbox) LibcProfilePath() (string, error) {
+	absPath := filepath.Join(d.projectDir, nix.LibcProfilePath)
+
+	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0755))
 }
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
@@ -403,21 +457,53 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
-
-	pending := []*devpkg.Package{}
-	items, err := nixprofile.ProfileListItems(d.writer, profileDir)
+	packages, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
 	}
-	packages, err := d.AllInstallablePackages()
+
+	return pendingPackagesForInstallation(
+		d.writer,
+		profileDir,
+		packages,
+		d.lockfile,
+	)
+}
+
+func (d *Devbox) pendingLibcPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
+	defer trace.StartRegion(ctx, "pendingLibcPackages").End()
+
+	profileDir, err := d.LibcProfilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	return pendingPackagesForInstallation(
+		d.writer,
+		profileDir,
+		d.libcPackages(),
+		d.lockfile,
+	)
+}
+
+func pendingPackagesForInstallation(
+	writer io.Writer,
+	profileDir string,
+	packages []*devpkg.Package,
+	lockfile *lock.File,
+) ([]*devpkg.Package,
+	error) {
+
+	pending := []*devpkg.Package{}
+	items, err := nixprofile.ProfileListItems(writer, profileDir)
 	if err != nil {
 		return nil, err
 	}
 	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Items:      items,
-			Lockfile:   d.lockfile,
-			Writer:     d.writer,
+			Lockfile:   lockfile,
+			Writer:     writer,
 			Package:    pkg,
 			ProfileDir: profileDir,
 		})
@@ -480,6 +566,8 @@ var resetCheckDone = false
 
 // resetProfileDirForFlakes ensures the profileDir directory is cleared of old
 // state if the Flakes feature has been changed, from the previous execution of a devbox command.
+// TODO savil: This function was needed in Feb 2023 when we switched to flakes in Devbox.
+// It can likely be removed.
 func resetProfileDirForFlakes(profileDir string) (err error) {
 	if resetCheckDone {
 		return nil
