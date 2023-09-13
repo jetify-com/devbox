@@ -21,12 +21,6 @@ import (
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCache = "https://cache.nixos.org"
 
-// isNarInfoInCache checks if the .narinfo for this package is in the `BinaryCache`.
-// This cannot be a field on the Package struct, because that struct
-// is constructed multiple times in a request (TODO: we could fix that).
-var isNarInfoInCache = sync.Map{}
-var httpClient = http.Client{}
-
 // IsInBinaryCache returns true if the package is in the binary cache.
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
 // before calling this function.
@@ -36,7 +30,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	} else if !eligible {
 		return false, nil
 	}
-	return p.fillNarInfoCacheIfNeeded()
+	return p.fetchNarInfoStatusOnce()
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
@@ -49,9 +43,8 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 	eligiblePackages := []*Package{}
 	for _, p := range packages {
-		// NOTE: isEligibleForBinaryCache also ensures the package is
-		// resolved in the lockfile, which must be done before the concurrent
-		// section in this function below.
+		// IMPORTANT: isEligibleForBinaryCache will call resolve() which is NOT
+		// concurrency safe. Hence, we call it outside of the go-routine.
 		isEligible, err := p.isEligibleForBinaryCache()
 		// If the package is not eligible or there is an error in determining that, then skip it.
 		if isEligible && err == nil {
@@ -74,27 +67,37 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
 		group.Go(func() error {
-			_, err := pkg.fillNarInfoCacheIfNeeded()
+			_, err := pkg.fetchNarInfoStatusOnce()
 			return err
 		})
 	}
 	return group.Wait()
 }
 
-// fillNarInfoCacheIfNeeded fills the cache value for the narinfo of this package,
-// assuming it is eligible for the binary cache. Callers are responsible
-// for checking isEligibleForBinaryCache before calling this function.
-//
-// NOTE: this must be concurrency safe.
-func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
-	if status, alreadySet := isNarInfoInCache.Load(p.Raw); alreadySet {
-		return status.(bool), nil
-	}
-	defer func() {
-		// If there's an error and nothing got cached, just store false.
-		_, _ = isNarInfoInCache.LoadOrStore(p.Raw, false)
-	}()
+// narInfoStatusFnCache contains cached OnceValues functions that return cache
+// status for a package. In the future we can remove this cache by caching
+// package objects and ensuring packages are shared globally.
+var narInfoStatusFnCache = sync.Map{}
 
+// fetchNarInfoStatusOnce is like fetchNarInfoStatus, but will only ever run
+// once and cache the result.
+func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
+	type inCacheFunc func() (bool, error)
+	f, ok := narInfoStatusFnCache.Load(p.Raw)
+	if !ok {
+		f = inCacheFunc(sync.OnceValues(func() (bool, error) {
+			return p.fetchNarInfoStatus()
+		}))
+		f, _ = narInfoStatusFnCache.LoadOrStore(p.Raw, f)
+	}
+	return f.(inCacheFunc)()
+}
+
+// fetchNarInfoStatus fetches the cache status for the package. It returns
+// true if cache exists, false otherwise.
+// NOTE: This function always performs an HTTP request and should not be called
+// more than once.
+func (p *Package) fetchNarInfoStatus() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
@@ -113,7 +116,7 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	res, err := httpClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return false, err
 	}
@@ -122,8 +125,7 @@ func (p *Package) fillNarInfoCacheIfNeeded() (bool, error) {
 	defer res.Body.Close()
 
 	// Use LoadOrStore to avoid ever changing an existing value.
-	status, _ := isNarInfoInCache.LoadOrStore(p.Raw, res.StatusCode == 200)
-	return status.(bool), nil
+	return res.StatusCode == 200, nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
