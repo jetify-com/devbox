@@ -21,53 +21,16 @@ import (
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCache = "https://cache.nixos.org"
 
-// isNarInfoInCache checks if the .narinfo for this package is in the `BinaryCache`.
-// This cannot be a field on the Package struct, because that struct
-// is constructed multiple times in a request (TODO: we could fix that).
-var isNarInfoInCache = struct {
-	// The key is the `Package.Raw` string.
-	status map[string]bool
-	lock   sync.RWMutex
-	// re-use httpClient to re-use the connection
-	httpClient http.Client
-}{
-	status:     map[string]bool{},
-	httpClient: http.Client{},
-}
-
 // IsInBinaryCache returns true if the package is in the binary cache.
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
 // before calling this function.
 func (p *Package) IsInBinaryCache() (bool, error) {
-
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return false, err
 	} else if !eligible {
 		return false, nil
 	}
-
-	// Check if the narinfo is present in the binary cache
-	isNarInfoInCache.lock.RLock()
-	status, statusExists := isNarInfoInCache.status[p.Raw]
-	isNarInfoInCache.lock.RUnlock()
-	if !statusExists {
-		// Fallback to synchronously filling the nar info cache
-		if err := p.fillNarInfoCache(); err != nil {
-			return false, err
-		}
-
-		// Check again
-		isNarInfoInCache.lock.RLock()
-		status, statusExists = isNarInfoInCache.status[p.Raw]
-		isNarInfoInCache.lock.RUnlock()
-		if !statusExists {
-			return false, errors.Errorf(
-				"narInfo cache miss: %v. Should be filled by now",
-				p.Raw,
-			)
-		}
-	}
-	return status, nil
+	return p.fetchNarInfoStatusOnce()
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
@@ -80,9 +43,8 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 	eligiblePackages := []*Package{}
 	for _, p := range packages {
-		// NOTE: isEligibleForBinaryCache also ensures the package is
-		// resolved in the lockfile, which must be done before the concurrent
-		// section in this function below.
+		// IMPORTANT: isEligibleForBinaryCache will call resolve() which is NOT
+		// concurrency safe. Hence, we call it outside of the go-routine.
 		isEligible, err := p.isEligibleForBinaryCache()
 		// If the package is not eligible or there is an error in determining that, then skip it.
 		if isEligible && err == nil {
@@ -103,39 +65,42 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
-		// If the package's NarInfo status is already known, skip it
-		isNarInfoInCache.lock.RLock()
-		_, ok := isNarInfoInCache.status[p.Raw]
-		isNarInfoInCache.lock.RUnlock()
-		if ok {
-			continue
-		}
 		pkg := p // copy the loop variable since its used in a closure below
 		group.Go(func() error {
-			err := pkg.fillNarInfoCache()
-			if err != nil {
-				// default to false if there was an error, so we don't re-try
-				isNarInfoInCache.lock.Lock()
-				isNarInfoInCache.status[pkg.Raw] = false
-				isNarInfoInCache.lock.Unlock()
-			}
+			_, err := pkg.fetchNarInfoStatusOnce()
 			return err
 		})
 	}
 	return group.Wait()
 }
 
-// fillNarInfoCache fills the cache value for the narinfo of this package,
-// assuming it is eligible for the binary cache. Callers are responsible
-// for checking isEligibleForBinaryCache before calling this function.
-//
-// NOTE: this must be concurrency safe.
-func (p *Package) fillNarInfoCache() error {
+// narInfoStatusFnCache contains cached OnceValues functions that return cache
+// status for a package. In the future we can remove this cache by caching
+// package objects and ensuring packages are shared globally.
+var narInfoStatusFnCache = sync.Map{}
+
+// fetchNarInfoStatusOnce is like fetchNarInfoStatus, but will only ever run
+// once and cache the result.
+func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
+	type inCacheFunc func() (bool, error)
+	f, ok := narInfoStatusFnCache.Load(p.Raw)
+	if !ok {
+		f = inCacheFunc(sync.OnceValues(p.fetchNarInfoStatus))
+		f, _ = narInfoStatusFnCache.LoadOrStore(p.Raw, f)
+	}
+	return f.(inCacheFunc)()
+}
+
+// fetchNarInfoStatus fetches the cache status for the package. It returns
+// true if cache exists, false otherwise.
+// NOTE: This function always performs an HTTP request and should not be called
+// more than once per package.
+func (p *Package) fetchNarInfoStatus() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
-		return err
+		return false, err
 	} else if sysInfo == nil {
-		return errors.New(
+		return false, errors.New(
 			"sysInfo is nil, but should not be because" +
 				" the package is eligible for binary cache",
 		)
@@ -147,20 +112,17 @@ func (p *Package) fillNarInfoCache() error {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
-	res, err := isNarInfoInCache.httpClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return false, err
 	}
 	// read the body fully, and close it to ensure the connection is reused.
 	_, _ = io.Copy(io.Discard, res.Body)
 	defer res.Body.Close()
 
-	isNarInfoInCache.lock.Lock()
-	isNarInfoInCache.status[p.Raw] = res.StatusCode == 200
-	isNarInfoInCache.lock.Unlock()
-	return nil
+	return res.StatusCode == 200, nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
