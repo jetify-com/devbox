@@ -19,6 +19,9 @@ type feature struct {
 
 var features = map[string]*feature{}
 
+// Prevent lint complaining about unused function
+//
+//nolint:unparam
 func disable(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
@@ -27,6 +30,9 @@ func disable(name string) *feature {
 	return features[name]
 }
 
+// Prevent lint complaining about unused function
+//
+//nolint:unparam
 func enable(name string) *feature {
 	if features[name] == nil {
 		features[name] = &feature{name: name}
