@@ -26,6 +26,10 @@ type Config struct {
 
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
+
+	// Only allows "envsec" for now
+	FromEnv string `json:"from_env,omitempty"`
+
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
 	// Nixpkgs specifies the repository to pull packages from
