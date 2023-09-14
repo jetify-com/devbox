@@ -45,3 +45,5 @@ jobs:
 ## Configuring the Action
 
 See the [GitHub Marketplace page](https://github.com/marketplace/actions/devbox-installer) for the latest configuration settings and an example.
+
+For stability over new features and bug fixes, consider pinning `devbox-version`. Remember to update this pinned version when you update your local Devbox via `devbox version update`.
