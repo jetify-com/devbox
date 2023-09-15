@@ -1,6 +1,7 @@
 package envsec
 
 import (
+	"bytes"
 	"encoding/json"
 	"os/exec"
 
@@ -15,7 +16,7 @@ func Env(projectDir string) (map[string]string, error) {
 		return nil, err
 	}
 
-	if err := ensureEnvsecInitialized(); err != nil {
+	if err := ensureEnvsecInitialized(projectDir); err != nil {
 		return nil, err
 	}
 
@@ -29,22 +30,30 @@ func ensureEnvsecInstalled() error {
 	return nil
 }
 
-func ensureEnvsecInitialized() error {
-	cmd := exec.Command("envsec", "init")
-	// TODO handle user not logged in
-	// envsec init is currently broken in that it exits with 0 even if the user is not logged in
-	return cmd.Run()
+func ensureEnvsecInitialized(projectDir string) error {
+	cmd := exec.Command("envsec", "init", "--json-errors")
+	cmd.Dir = projectDir
+	var bufErr bytes.Buffer
+	cmd.Stderr = &bufErr
+
+	if err := cmd.Run(); err != nil {
+		return handleError(&bufErr, err)
+	}
+	return nil
 }
 
 func envsecList(projectDir string) (map[string]string, error) {
 	cmd := exec.Command(
 		"envsec", "ls", "--show",
 		"--format", "json",
-		"--environment", "dev")
+		"--environment", "dev",
+		"--json-errors")
 	cmd.Dir = projectDir
+	var bufErr bytes.Buffer
+	cmd.Stderr = &bufErr
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, handleError(&bufErr, err)
 	}
 	var values []struct {
 		Name  string `json:"name"`
@@ -52,7 +61,7 @@ func envsecList(projectDir string) (map[string]string, error) {
 	}
 
 	if err := json.Unmarshal(out, &values); err != nil {
-		return nil, errors.Wrap(err, "failed to parse envsec output")
+		return nil, errors.Wrapf(err, "failed to parse envsec output: %s", out)
 	}
 
 	m := map[string]string{}
@@ -60,4 +69,14 @@ func envsecList(projectDir string) (map[string]string, error) {
 		m[v.Name] = v.Value
 	}
 	return m, nil
+}
+
+func handleError(stderr *bytes.Buffer, err error) error {
+	var errResponse struct {
+		Error string `json:"error"`
+	}
+	if err := json.Unmarshal(stderr.Bytes(), &errResponse); err == nil {
+		return usererr.New(errResponse.Error)
+	}
+	return errors.WithStack(err)
 }

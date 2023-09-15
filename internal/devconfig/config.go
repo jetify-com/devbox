@@ -28,7 +28,7 @@ type Config struct {
 	Env map[string]string `json:"env,omitempty"`
 
 	// Only allows "envsec" for now
-	FromEnv string `json:"from_env,omitempty"`
+	EnvFrom string `json:"env_from,omitempty"`
 
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
