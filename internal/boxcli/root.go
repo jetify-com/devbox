@@ -21,6 +21,8 @@ import (
 	"go.jetpack.io/devbox/internal/vercheck"
 )
 
+type cobraFunc func(cmd *cobra.Command, args []string) error
+
 var (
 	debugMiddleware = &midcobra.DebugMiddleware{}
 	traceMiddleware = &midcobra.TraceMiddleware{}

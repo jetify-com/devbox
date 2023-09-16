@@ -15,13 +15,16 @@ import (
 )
 
 func globalCmd() *cobra.Command {
-
 	globalCmd := &cobra.Command{}
-
+	persistentPreRunE := setGlobalConfigForDelegatedCommands(globalCmd)
 	*globalCmd = cobra.Command{
-		Use:                "global",
-		Short:              "Manage global devbox packages",
-		PersistentPreRunE:  setGlobalConfigForDelegatedCommands(globalCmd),
+		Use:   "global",
+		Short: "Manage global devbox packages",
+		// PersistentPreRunE is inherited only if children do not implement it
+		// (i.e. it's not chained). So this is fragile. Ideally we stop
+		// using PersistentPreRunE. For now a hack is to pass it down to commands
+		// that declare their own.
+		PersistentPreRunE:  persistentPreRunE,
 		PersistentPostRunE: ensureGlobalEnvEnabled,
 	}
 
@@ -32,7 +35,7 @@ func globalCmd() *cobra.Command {
 	addCommandAndHideConfigFlag(globalCmd, pushCmd())
 	addCommandAndHideConfigFlag(globalCmd, removeCmd())
 	addCommandAndHideConfigFlag(globalCmd, runCmd())
-	addCommandAndHideConfigFlag(globalCmd, servicesCmd())
+	addCommandAndHideConfigFlag(globalCmd, servicesCmd(persistentPreRunE))
 	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd())
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 

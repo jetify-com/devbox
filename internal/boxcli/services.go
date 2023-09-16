@@ -41,14 +41,22 @@ func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
 }
 
-func servicesCmd() *cobra.Command {
+func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	flags := servicesCmdFlags{}
 	serviceUpFlags := serviceUpFlags{}
 	serviceStopFlags := serviceStopFlags{}
 	servicesCommand := &cobra.Command{
-		Use:               "services",
-		Short:             "Interact with devbox services",
-		PersistentPreRunE: ensureNixInstalled,
+		Use:   "services",
+		Short: "Interact with devbox services",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			preruns := append([]cobraFunc{ensureNixInstalled}, persistentPreRunE...)
+			for _, fn := range preruns {
+				if err := fn(cmd, args); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
 	}
 
 	lsCommand := &cobra.Command{
