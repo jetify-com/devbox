@@ -98,6 +98,10 @@ func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
 	}
 
 	if featureflag.ScriptExitOnError.Enabled() {
+		// Fish cannot run scripts with `set -e`.
+		// NOTE: Devbox scripts will run using `sh` for consistency. However,
+		// init_hooks in a fish shell will run using `fish` shell, and need this
+		// check.
 		isFish, err := devbox.IsUserShellFish()
 		if err != nil {
 			return errors.WithStack(err)
