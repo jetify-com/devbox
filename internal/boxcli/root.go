@@ -106,6 +106,7 @@ func Execute(ctx context.Context, args []string) int {
 }
 
 func Main() {
+	timer := debug.Timer(strings.Join(os.Args, " "))
 	ctx := context.Background()
 	if strings.HasSuffix(os.Args[0], "ssh") ||
 		strings.HasSuffix(os.Args[0], "scp") {
@@ -126,7 +127,7 @@ func Main() {
 	code := Execute(ctx, os.Args[1:])
 	// Run out here instead of as a middleware so we can capture any time we spend
 	// in middlewares as well.
-	debug.PrintExecutionTime()
+	timer.End()
 	os.Exit(code)
 }
 
