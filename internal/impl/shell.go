@@ -269,6 +269,12 @@ func (s *DevboxShell) Run() error {
 	return errors.WithStack(err)
 }
 
+// IsFish returns whether this DevboxShell wraps a fish shell. Fish shells are non-posix compatible,
+// and so sometimes we may need to switch logic based on this function's result.
+func (s *DevboxShell) IsFish() bool {
+	return s.name == shFish
+}
+
 func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]string, extraArgs []string) {
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set when launching the shell.
@@ -319,7 +325,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 	}()
 
 	tmpl := shellrcTmpl
-	if s.name == shFish {
+	if s.IsFish() {
 		tmpl = fishrcTmpl
 	}
 

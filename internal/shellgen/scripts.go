@@ -25,6 +25,7 @@ type devboxer interface {
 	Lockfile() *lock.File
 	AllInstallablePackages() ([]*devpkg.Package, error)
 	InstallablePackages() []*devpkg.Package
+	IsUserShellFish() (bool, error)
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }
@@ -80,8 +81,8 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
-func WriteScriptFile(d devboxer, name string, body string) (err error) {
-	script, err := os.Create(ScriptPath(d.ProjectDir(), name))
+func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
+	script, err := os.Create(ScriptPath(devbox.ProjectDir(), name))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -97,7 +98,17 @@ func WriteScriptFile(d devboxer, name string, body string) (err error) {
 	}
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		body = fmt.Sprintf("set -e\n\n%s", body)
+		// Fish cannot run scripts with `set -e`.
+		// NOTE: Devbox scripts will run using `sh` for consistency. However,
+		// init_hooks in a fish shell will run using `fish` shell, and need this
+		// check.
+		isFish, err := devbox.IsUserShellFish()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if !isFish {
+			body = fmt.Sprintf("set -e\n\n%s", body)
+		}
 	}
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
