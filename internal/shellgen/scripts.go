@@ -81,8 +81,8 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
-func WriteScriptFile(d devboxer, name string, body string) (err error) {
-	script, err := os.Create(ScriptPath(d.ProjectDir(), name))
+func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
+	script, err := os.Create(ScriptPath(devbox.ProjectDir(), name))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -98,7 +98,7 @@ func WriteScriptFile(d devboxer, name string, body string) (err error) {
 	}
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		isFish, err := d.IsUserShellFish()
+		isFish, err := devbox.IsUserShellFish()
 		if err != nil {
 			return errors.WithStack(err)
 		}
