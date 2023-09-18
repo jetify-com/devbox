@@ -1,0 +1,20 @@
+# Testscript to ensure that the script exits on error.
+
+! exec devbox run multi_line
+stdout 'first line'
+! stdout 'second line'
+
+-- devbox.json --
+{
+  "packages": [
+  ],
+  "shell": {
+    "scripts": {
+      "multi_line": [
+        "echo \"first line\"",
+        "exit 1",
+        "echo \"second line\""
+      ]
+    }
+  }
+}

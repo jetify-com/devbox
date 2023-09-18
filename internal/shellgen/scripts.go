@@ -25,6 +25,7 @@ type devboxer interface {
 	Lockfile() *lock.File
 	AllInstallablePackages() ([]*devpkg.Package, error)
 	InstallablePackages() []*devpkg.Package
+	IsUserShellFish() (bool, error)
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }
@@ -97,7 +98,13 @@ func WriteScriptFile(d devboxer, name string, body string) (err error) {
 	}
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		body = fmt.Sprintf("set -e\n\n%s", body)
+		isFish, err := d.IsUserShellFish()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if !isFish {
+			body = fmt.Sprintf("set -e\n\n%s", body)
+		}
 	}
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
