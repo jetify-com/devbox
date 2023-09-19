@@ -7,8 +7,14 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/auth"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/pkg/sandbox/auth"
+	"go.jetpack.io/pkg/sandbox/auth/session"
 )
+
+var issuer = envir.GetValueOrDefault("DEVBOX_AUTH_ISSUER", "https://accounts.jetpack.io")
+var clientID = envir.GetValueOrDefault("DEVBOX_AUTH_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
 
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -30,10 +36,16 @@ func loginCmd() *cobra.Command {
 		Short: "Login to devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return auth.NewAuthenticator().DeviceAuthFlow(
-				cmd.Context(),
-				cmd.OutOrStdout(),
-			)
+			c, err := auth.NewClient(issuer, clientID)
+			if err != nil {
+				return err
+			}
+			t, err := c.LoginFlow()
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.ErrOrStderr(), "Logged in as : %s\n", t.IDClaims().Email)
+			return nil
 		},
 	}
 
@@ -46,7 +58,11 @@ func logoutCmd() *cobra.Command {
 		Short: "logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := auth.NewAuthenticator().Logout()
+			c, err := auth.NewClient(issuer, clientID)
+			if err != nil {
+				return err
+			}
+			err = c.LogoutFlow()
 			if err == nil {
 				fmt.Fprintln(cmd.OutOrStdout(), "Logged out successfully")
 			}
@@ -65,8 +81,13 @@ func refreshCmd() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 		Hidden: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := auth.NewAuthenticator().RefreshTokens()
-			return err
+			c, err := auth.NewClient(issuer, clientID)
+			if err != nil {
+				return err
+			}
+			_ = c.RefreshSession()
+			fmt.Fprintln(cmd.OutOrStdout(), "Refreshed successfully")
+			return nil
 		},
 	}
 
@@ -79,14 +100,40 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			user, err := auth.GetUser()
+			tok, err := genSession()
 			if err != nil {
 				return err
+			} else if tok == nil {
+				return usererr.New("not logged in")
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), user)
+			idClaims := tok.IDClaims()
+
+			fmt.Fprintf(cmd.OutOrStdout(), "Logged in\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "User ID: %s\n", idClaims.Subject)
+
+			if idClaims.OrgID != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Org ID: %s\n", idClaims.OrgID)
+			}
+
+			if idClaims.Email != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Email: %s\n", idClaims.Email)
+			}
+
+			if idClaims.Name != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", idClaims.Name)
+			}
+
 			return nil
 		},
 	}
 
 	return cmd
+}
+
+func genSession() (*session.Token, error) {
+	c, err := auth.NewClient(issuer, clientID)
+	if err != nil {
+		return nil, err
+	}
+	return c.GetSession(), nil
 }

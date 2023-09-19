@@ -13,15 +13,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/auth"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox/tar"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
 var ErrProfileNotFound = errors.New("profile not found")
 
-func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, error) {
-	config, err := assumeRole(ctx, user)
+func PullToTmp(
+	ctx context.Context,
+	creds *devopt.Credentials,
+	profile string,
+) (string, error) {
+	config, err := assumeRole(ctx, creds)
 
 	if err != nil {
 		return "", err
@@ -34,7 +38,7 @@ func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, er
 	ux.Finfo(
 		os.Stderr,
 		"Logged in as %s, pulling from jetpack cloud (profile: %s)\n",
-		user.Email(),
+		creds.Email,
 		profile,
 	)
 
@@ -46,7 +50,7 @@ func PullToTmp(ctx context.Context, user *auth.User, profile string) (string, er
 			Key: aws.String(
 				fmt.Sprintf(
 					"profiles/%s/%s.tar.gz",
-					user.ID(),
+					creds.Sub,
 					profile,
 				),
 			),

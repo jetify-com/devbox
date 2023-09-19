@@ -12,18 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"go.jetpack.io/devbox/internal/auth"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox/tar"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-func Push(ctx context.Context, user *auth.User, dir, profile string) error {
+func Push(
+	ctx context.Context,
+	creds *devopt.Credentials,
+	dir, profile string,
+) error {
 	archivePath, err := tar.Compress(dir)
 	if err != nil {
 		return err
 	}
 
-	config, err := assumeRole(ctx, user)
+	config, err := assumeRole(ctx, creds)
 	if err != nil {
 		return err
 	}
@@ -39,7 +43,7 @@ func Push(ctx context.Context, user *auth.User, dir, profile string) error {
 		Key: aws.String(
 			fmt.Sprintf(
 				"profiles/%s/%s.tar.gz",
-				user.ID(),
+				creds.Sub,
 				profile,
 			),
 		),
