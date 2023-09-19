@@ -210,6 +210,17 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	return shell.Run()
 }
 
+// IsUserShellFish returns true if the user's shell is fish.
+// This wrapper function over DevboxShell enables querying from other packages that
+// make a devboxer interface.
+func (d *Devbox) IsUserShellFish() (bool, error) {
+	sh, err := NewDevboxShell(d)
+	if err != nil {
+		return false, err
+	}
+	return sh.IsFish(), nil
+}
+
 func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
@@ -923,6 +934,7 @@ var nixEnvCache map[string]string
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
 	}

@@ -203,6 +203,7 @@ const (
 // what operations are happening, because this function may take time to execute.
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
+	defer debug.FunctionTimer().End()
 
 	if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
 		return err
@@ -266,6 +267,7 @@ func (d *Devbox) profilePath() (string, error) {
 // syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,
 // and no more.
 func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
+	defer debug.FunctionTimer().End()
 	// TODO: we can probably merge these two operations to be faster and minimize chances of
 	// the devbox.json and nix profile falling out of sync.
 	if err := d.addPackagesToProfile(ctx, mode); err != nil {
