@@ -7,17 +7,18 @@ import (
 	"context"
 	"runtime/trace"
 
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox"
 )
 
-func (d *Devbox) Pull(ctx context.Context, force bool, path string) error {
+func (d *Devbox) Pull(ctx context.Context, opts devopt.PullboxOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxPull")
 	defer task.End()
-	return pullbox.New(d, path, force).Pull(ctx)
+	return pullbox.New(d, opts).Pull(ctx)
 }
 
-func (d *Devbox) Push(ctx context.Context, url string) error {
+func (d *Devbox) Push(ctx context.Context, opts devopt.PullboxOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxPush")
 	defer task.End()
-	return pullbox.New(d, url, false).Push(ctx)
+	return pullbox.New(d, opts).Push(ctx)
 }

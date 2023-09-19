@@ -61,7 +61,23 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	err = box.Pull(cmd.Context(), flags.force, pullPath)
+	var creds devopt.Credentials
+	t, err := genSession()
+	if err != nil {
+		return errors.WithStack(err)
+	} else if t != nil {
+		creds = devopt.Credentials{
+			IDToken: t.IDToken,
+			Email:   t.IDClaims().Email,
+			Sub:     t.IDClaims().ID,
+		}
+	}
+
+	err = box.Pull(cmd.Context(), devopt.PullboxOpts{
+		URL:         pullPath,
+		Overwrite:   flags.force,
+		Credentials: creds,
+	})
 	if prompt := pullErrorPrompt(err); prompt != "" {
 		prompt := &survey.Confirm{Message: prompt}
 		if err = survey.AskOne(prompt, &flags.force); err != nil {
@@ -70,7 +86,11 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 		if !flags.force {
 			return nil
 		}
-		err = box.Pull(cmd.Context(), flags.force, pullPath)
+		err = box.Pull(cmd.Context(), devopt.PullboxOpts{
+			URL:         pullPath,
+			Overwrite:   flags.force,
+			Credentials: creds,
+		})
 	}
 	if errors.Is(err, s3.ErrProfileNotFound) {
 		return usererr.New(

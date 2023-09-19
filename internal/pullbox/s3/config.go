@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/auth"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 // TODO(landau): We could make these customizable so folks can use their own
@@ -22,15 +22,15 @@ const (
 	region = "us-east-2"
 )
 
-func assumeRole(ctx context.Context, user *auth.User) (*aws.Config, error) {
+func assumeRole(ctx context.Context, c *devopt.Credentials) (*aws.Config, error) {
 	noPermsConfig, _ := config.LoadDefaultConfig(ctx)
 	stsClient := sts.NewFromConfig(noPermsConfig)
 	creds, err := stsClient.AssumeRoleWithWebIdentity(
 		ctx,
 		&sts.AssumeRoleWithWebIdentityInput{
 			RoleArn:          aws.String(roleArn),
-			RoleSessionName:  aws.String(user.Email()),
-			WebIdentityToken: aws.String(user.IDToken.Raw),
+			RoleSessionName:  aws.String(c.Email),
+			WebIdentityToken: aws.String(c.IDToken),
 		},
 	)
 	if err != nil {

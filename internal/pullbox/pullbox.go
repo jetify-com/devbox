@@ -12,8 +12,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/auth"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox/git"
 	"go.jetpack.io/devbox/internal/pullbox/s3"
 	"go.jetpack.io/devbox/internal/pullbox/tar"
@@ -26,12 +26,11 @@ type devboxProject interface {
 
 type pullbox struct {
 	devboxProject
-	overwrite bool
-	url       string
+	devopt.PullboxOpts
 }
 
-func New(devbox devboxProject, url string, overwrite bool) *pullbox {
-	return &pullbox{devbox, overwrite, url}
+func New(devbox devboxProject, opts devopt.PullboxOpts) *pullbox {
+	return &pullbox{devbox, opts}
 }
 
 // Pull
@@ -46,32 +45,31 @@ func (p *pullbox) Pull(ctx context.Context) error {
 	notEmpty, err := profileIsNotEmpty(p.ProjectDir())
 	if err != nil {
 		return err
-	} else if notEmpty && !p.overwrite {
+	} else if notEmpty && !p.Overwrite {
 		return fs.ErrExist
 	}
 
-	if p.url != "" {
-		ux.Finfo(os.Stderr, "Pulling global config from %s\n", p.url)
+	if p.URL != "" {
+		ux.Finfo(os.Stderr, "Pulling global config from %s\n", p.URL)
 	} else {
 		ux.Finfo(os.Stderr, "Pulling global config\n")
 	}
 
 	var tmpDir string
 
-	if p.url == "" {
-		user, err := auth.GetUser()
-		if err != nil {
-			return err
+	if p.URL == "" {
+		if p.Credentials.IDToken == "" {
+			return usererr.New("Not logged in")
 		}
 		profile := "default" // TODO: make this editable
-		if tmpDir, err = s3.PullToTmp(ctx, user, profile); err != nil {
+		if tmpDir, err = s3.PullToTmp(ctx, &p.Credentials, profile); err != nil {
 			return err
 		}
 		return p.copyToProfile(tmpDir)
 	}
 
-	if git.IsRepoURL(p.url) {
-		if tmpDir, err = git.CloneToTmp(p.url); err != nil {
+	if git.IsRepoURL(p.URL) {
+		if tmpDir, err = git.CloneToTmp(p.URL); err != nil {
 			return err
 		}
 		// Remove the .git directory, we don't want to keep state
@@ -85,10 +83,10 @@ func (p *pullbox) Pull(ctx context.Context) error {
 		return p.pullTextDevboxConfig()
 	}
 
-	if isArchive, err := urlIsArchive(p.url); err != nil {
+	if isArchive, err := urlIsArchive(p.URL); err != nil {
 		return err
 	} else if isArchive {
-		data, err := download(p.url)
+		data, err := download(p.URL)
 		if err != nil {
 			return err
 		}
@@ -100,29 +98,28 @@ func (p *pullbox) Pull(ctx context.Context) error {
 		return p.copyToProfile(tmpDir)
 	}
 
-	return usererr.New("Could not determine how to pull %s", p.url)
+	return usererr.New("Could not determine how to pull %s", p.URL)
 }
 
 func (p *pullbox) Push(ctx context.Context) error {
-	if p.url != "" {
-		ux.Finfo(os.Stderr, "Pushing global config to %s\n", p.url)
+	if p.URL != "" {
+		ux.Finfo(os.Stderr, "Pushing global config to %s\n", p.URL)
 	} else {
 		ux.Finfo(os.Stderr, "Pushing global config\n")
 	}
 
-	if p.url == "" {
+	if p.URL == "" {
 		profile := "default" // TODO: make this editable
-		user, err := auth.GetUser()
-		if err != nil {
-			return err
+		if p.Credentials.IDToken == "" {
+			return usererr.New("Not logged in")
 		}
 		ux.Finfo(
 			os.Stderr,
 			"Logged in as %s, pushing to to devbox cloud (profile: %s)\n",
-			user.Email(),
+			p.Credentials.Email,
 			profile,
 		)
-		return s3.Push(ctx, user, p.ProjectDir(), profile)
+		return s3.Push(ctx, &p.Credentials, p.ProjectDir(), profile)
 	}
-	return git.Push(ctx, p.ProjectDir(), p.url)
+	return git.Push(ctx, p.ProjectDir(), p.URL)
 }

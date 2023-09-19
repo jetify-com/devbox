@@ -14,21 +14,21 @@ import (
 )
 
 func (p *pullbox) IsTextDevboxConfig() bool {
-	if u, err := url.Parse(p.url); err == nil {
+	if u, err := url.Parse(p.URL); err == nil {
 		ext := filepath.Ext(u.Path)
 		return cuecfg.IsSupportedExtension(ext)
 	}
 	// For invalid URLS, just look at the extension
-	ext := filepath.Ext(p.url)
+	ext := filepath.Ext(p.URL)
 	return cuecfg.IsSupportedExtension(ext)
 }
 
 func (p *pullbox) pullTextDevboxConfig() error {
 	if p.isLocalConfig() {
-		return p.copyToProfile(p.url)
+		return p.copyToProfile(p.URL)
 	}
 
-	cfg, err := devconfig.LoadConfigFromURL(p.url)
+	cfg, err := devconfig.LoadConfigFromURL(p.URL)
 	if err != nil {
 		return err
 	}
@@ -45,6 +45,6 @@ func (p *pullbox) pullTextDevboxConfig() error {
 }
 
 func (p *pullbox) isLocalConfig() bool {
-	_, err := os.Stat(p.url)
+	_, err := os.Stat(p.URL)
 	return err == nil
 }

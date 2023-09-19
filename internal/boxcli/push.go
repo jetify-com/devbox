@@ -41,5 +41,19 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.Push(cmd.Context(), url)
+	t, err := genSession()
+	var creds devopt.Credentials
+	if err != nil {
+		return errors.WithStack(err)
+	} else if t != nil {
+		creds = devopt.Credentials{
+			IDToken: t.IDToken,
+			Email:   t.IDClaims().Email,
+			Sub:     t.IDClaims().ID,
+		}
+	}
+	return box.Push(cmd.Context(), devopt.PullboxOpts{
+		URL:         url,
+		Credentials: creds,
+	})
 }
