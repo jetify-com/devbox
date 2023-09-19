@@ -38,6 +38,7 @@ var devboxSymlinkDir = xdg.CacheSubpath(filepath.Join("devbox", "bin", "current"
 
 // CreateWrappers creates wrappers for all the executables in nix paths
 func CreateWrappers(ctx context.Context, devbox devboxer) error {
+	defer debug.FunctionTimer().End()
 	shellEnvHash, err := devbox.ShellEnvHash(ctx)
 	if err != nil {
 		return err

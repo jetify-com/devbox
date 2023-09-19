@@ -33,6 +33,7 @@ type devboxer interface {
 // WriteScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
 // Scripts (and hooks) are persisted so that we can easily call them from devbox run (inside or outside shell).
 func WriteScriptsToFiles(devbox devboxer) error {
+	defer debug.FunctionTimer().End()
 	err := os.MkdirAll(filepath.Join(devbox.ProjectDir(), scriptsDir), 0755) // Ensure directory exists.
 	if err != nil {
 		return errors.WithStack(err)

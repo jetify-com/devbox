@@ -934,6 +934,7 @@ var nixEnvCache map[string]string
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
 	}
