@@ -86,7 +86,7 @@ func writeHookFile(devbox devboxer, body string) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer func() { _ = script.Close() }() // best effort: close file
+	defer script.Close() // best effort: close file
 
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
@@ -97,7 +97,7 @@ func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer func() { _ = script.Close() }() // best effort: close file
+	defer script.Close() // best effort: close file
 
 	if featureflag.ScriptExitOnError.Enabled() {
 		// NOTE: Devbox scripts will run using `sh` for consistency.
