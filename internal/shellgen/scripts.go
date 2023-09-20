@@ -25,7 +25,6 @@ type devboxer interface {
 	Lockfile() *lock.File
 	AllInstallablePackages() ([]*devpkg.Package, error)
 	InstallablePackages() []*devpkg.Package
-	IsUserShellFish() (bool, error)
 	PluginManager() *plugin.Manager
 	ProjectDir() string
 }
@@ -53,7 +52,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	}
 	hooks := strings.Join(append(pluginHooks, devbox.Config().InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
-	err = WriteScriptFile(devbox, HooksFilename, hooks)
+	err = writeHookFile(devbox, hooks)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -82,37 +81,51 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
+func writeHookFile(devbox devboxer, body string) (err error) {
+	script, err := createScriptFile(devbox, HooksFilename)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer script.Close() // best effort: close file
+
+	_, err = script.WriteString(body)
+	return errors.WithStack(err)
+}
+
 func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
-	script, err := os.Create(ScriptPath(devbox.ProjectDir(), name))
+	script, err := createScriptFile(devbox, name)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer func() {
-		cerr := script.Close()
-		if err == nil {
-			err = cerr
-		}
-	}()
-	err = script.Chmod(0755)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	defer script.Close() // best effort: close file
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		// Fish cannot run scripts with `set -e`.
-		// NOTE: Devbox scripts will run using `sh` for consistency. However,
-		// init_hooks in a fish shell will run using `fish` shell, and need this
-		// check.
-		isFish, err := devbox.IsUserShellFish()
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		if !isFish {
-			body = fmt.Sprintf("set -e\n\n%s", body)
-		}
+		// NOTE: Devbox scripts will run using `sh` for consistency.
+		// However, we need to disable this for `fish` shell if/when we allow this for init_hooks,
+		// since init_hooks run in the host shell, and not `sh`.
+		body = fmt.Sprintf("set -e\n\n%s", body)
 	}
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
+}
+
+func createScriptFile(devbox devboxer, name string) (script *os.File, err error) {
+	script, err = os.Create(ScriptPath(devbox.ProjectDir(), name))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer func() {
+		// best effort: close file if there was some subsequent error
+		if err != nil {
+			_ = script.Close()
+		}
+	}()
+
+	err = script.Chmod(0755)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return script, nil
 }
 
 func ScriptPath(projectDir, scriptName string) string {
