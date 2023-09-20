@@ -178,7 +178,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        nix-version: [2.15.1, 2.16.1, 2.17.0]
+        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
