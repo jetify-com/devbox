@@ -39,7 +39,7 @@ func Env(projectDir string) (map[string]string, error) {
 
 func ensureEnvsecInstalled() error {
 	// In newer runx version this will return the paths
-	paths, err := runx.Install("jetpack-io/envsec@v0.0.2")
+	paths, err := runx.Install("jetpack-io/envsec@v0.0.3")
 	if err != nil {
 		return errors.Wrap(err, "failed to install envsec")
 	}
