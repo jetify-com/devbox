@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -40,14 +39,14 @@ func Env(projectDir string) (map[string]string, error) {
 
 func ensureEnvsecInstalled() error {
 	// In newer runx version this will return the paths
-	if err := runx.Install("jetpack-io/envsec"); err != nil {
+	paths, err := runx.Install("jetpack-io/envsec@v0.0.2")
+	if err != nil {
 		return errors.Wrap(err, "failed to install envsec")
 	}
 
-	// temporary, mac only
-	home, _ := os.UserHomeDir()
-	path := filepath.Join(home, "Library/Caches/jetpack.io/pkgs/jetpack-io/envsec/v0.0.1/darwin/arm64/")
-	os.Setenv("PATH", path+string(os.PathListSeparator)+os.Getenv("PATH"))
+	for _, path := range paths {
+		os.Setenv("PATH", path+string(os.PathListSeparator)+os.Getenv("PATH"))
+	}
 
 	if !cmdutil.Exists("envsec") {
 		return usererr.New("envsec is not installed or not in path")
