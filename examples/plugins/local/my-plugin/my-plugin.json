@@ -10,5 +10,10 @@
     "{{ .Virtenv }}/some-file": "some-file.txt",
     "{{ .DevboxDir }}/some-file.txt": "some-file.txt",
     "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
+  },
+  "shell": {
+      "init_hook": [
+          "export MY_INIT_HOOK_VAR=BAR"
+      ]
   }
 }
