@@ -9,6 +9,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
@@ -18,8 +19,12 @@ import (
 	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
-func (d *Devbox) Update(ctx context.Context, pkgs ...string) error {
-	inputs, err := d.inputsToUpdate(pkgs...)
+func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
+	if opts.Sync {
+		return lock.SyncLockfiles()
+	}
+
+	inputs, err := d.inputsToUpdate(opts.Pkgs...)
 	if err != nil {
 		return err
 	}
