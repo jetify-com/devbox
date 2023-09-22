@@ -14,9 +14,9 @@ type Package struct {
 	PluginVersion string `json:"plugin_version,omitempty"`
 	Resolved      string `json:"resolved,omitempty"`
 	Source        string `json:"source,omitempty"`
+	Version       string `json:"version,omitempty"`
 	// Systems is keyed by the system name
 	Systems map[string]*SystemInfo `json:"systems,omitempty"`
-	Version string                 `json:"version,omitempty"`
 
 	// NOTE: if you add more fields, please update SyncLockfiles
 }

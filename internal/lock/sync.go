@@ -36,8 +36,8 @@ func SyncLockfiles() error {
 						// PluginVersion is intentionally omitted
 						lockFile.Packages[key].Resolved = latestPkg.Resolved
 						lockFile.Packages[key].Source = latestPkg.Source
-						lockFile.Packages[key].Systems = latestPkg.Systems
 						lockFile.Packages[key].Version = latestPkg.Version
+						lockFile.Packages[key].Systems = latestPkg.Systems
 						changed = true
 					}
 				}
