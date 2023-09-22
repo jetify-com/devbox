@@ -31,7 +31,13 @@ func SyncLockfiles() error {
 			for key, latestPkg := range latestPackages {
 				if pkg, exists := lockFile.Packages[key]; exists {
 					if pkg.LastModified != latestPkg.LastModified {
-						lockFile.Packages[key] = latestPkg
+						lockFile.Packages[key].AllowInsecure = latestPkg.AllowInsecure
+						lockFile.Packages[key].LastModified = latestPkg.LastModified
+						// PluginVersion is intentionally omitted
+						lockFile.Packages[key].Resolved = latestPkg.Resolved
+						lockFile.Packages[key].Source = latestPkg.Source
+						lockFile.Packages[key].Systems = latestPkg.Systems
+						lockFile.Packages[key].Version = latestPkg.Version
 						changed = true
 					}
 				}
