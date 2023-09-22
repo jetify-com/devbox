@@ -126,9 +126,11 @@ Will copy the Caddyfile in the `plugins/caddy` folder to `devbox.d/caddy/Caddyfi
 
 You should use this to copy starter config files or templates needed to run the plugin's package.
 
-#### `init_hook` *string | string[]*
+#### `shell.init_hook` *string | string[]*
 
-A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
+A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. 
+
+This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
 
 ### Adding Services
 
