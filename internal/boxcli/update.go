@@ -36,7 +36,7 @@ func updateCmd() *cobra.Command {
 	flags.config.register(command)
 	command.Flags().BoolVar(
 		&flags.sync,
-		"sync",
+		"sync-lock",
 		false,
 		"Sync all devbox.lock dependencies in multiple projects. "+
 			"Dependencies will sync to the latest local version.",
