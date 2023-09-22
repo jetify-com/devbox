@@ -2,10 +2,25 @@
   "lockfile_version": "1",
   "packages": {
     "mariadb@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-08-30T00:25:28Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#mariadb",
-      "version": "10.6.12"
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#mariadb_110",
+      "source": "devbox-search",
+      "version": "11.0.3",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/d5nb44vw8yy22lc21ld75nndmn9c3cgr-mariadb-server-11.0.3"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/sz5n9bkcjxklk4jd0p5h26yi5j79wh7h-mariadb-server-11.0.3"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/4l6h83flncplm3kmry1w08msyy7b7vdw-mariadb-server-11.0.3"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/047g9nxp6jb2bqj1f53qk86sjzrscbmj-mariadb-server-11.0.3"
+        }
+      }
     }
   }
 }

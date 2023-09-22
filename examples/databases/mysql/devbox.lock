@@ -2,9 +2,9 @@
   "lockfile_version": "1",
   "packages": {
     "mysql80@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2023-06-29T16:20:38Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#mysql80",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#mysql80",
       "version": "8.0.33"
     }
   }

@@ -22,8 +22,9 @@
       }
     },
     "yarn@1.22": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/844ffa82bbe2a2779c86ab3a72ff1b4176cec467#yarn",
+      "last_modified": "2023-05-21T19:52:09Z",
+      "resolved": "github:NixOS/nixpkgs/9356eead97d8d16956b0226d78f76bd66e06cb60#yarn",
+      "source": "devbox-search",
       "version": "1.22.19",
       "systems": {
         "aarch64-darwin": {
