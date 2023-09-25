@@ -17,6 +17,8 @@ type Package struct {
 	Version       string `json:"version,omitempty"`
 	// Systems is keyed by the system name
 	Systems map[string]*SystemInfo `json:"systems,omitempty"`
+
+	// NOTE: if you add more fields, please update SyncLockfiles
 }
 
 type SystemInfo struct {

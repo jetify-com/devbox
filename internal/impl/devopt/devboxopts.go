@@ -37,3 +37,8 @@ type Credentials struct {
 	Email string
 	Sub   string
 }
+
+type UpdateOpts struct {
+	Pkgs []string
+	Sync bool
+}

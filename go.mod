@@ -50,7 +50,6 @@ require (
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/adrg/xdg v0.4.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3 // indirect

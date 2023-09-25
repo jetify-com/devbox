@@ -8,11 +8,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type updateCmdFlags struct {
 	config configFlags
+	sync   bool
 }
 
 func updateCmd() *cobra.Command {
@@ -32,6 +34,13 @@ func updateCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().BoolVar(
+		&flags.sync,
+		"sync-lock",
+		false,
+		"Sync all devbox.lock dependencies in multiple projects. "+
+			"Dependencies will sync to the latest local version.",
+	)
 	return command
 }
 
@@ -44,5 +53,12 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 		return errors.WithStack(err)
 	}
 
-	return box.Update(cmd.Context(), args...)
+	if len(args) > 0 && flags.sync {
+		return usererr.New("cannot specify both a package and --sync")
+	}
+
+	return box.Update(cmd.Context(), devopt.UpdateOpts{
+		Pkgs: args,
+		Sync: flags.sync,
+	})
 }

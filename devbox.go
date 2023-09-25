@@ -50,7 +50,7 @@ type Devbox interface {
 	StopServices(ctx context.Context, allProjects bool, services ...string) error
 	ListServices(ctx context.Context) error
 
-	Update(ctx context.Context, pkgs ...string) error
+	Update(ctx context.Context, opts devopt.UpdateOpts) error
 }
 
 // Open opens a devbox by reading the config file in dir.

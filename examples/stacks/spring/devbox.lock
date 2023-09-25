@@ -2,10 +2,25 @@
   "lockfile_version": "1",
   "packages": {
     "gradle@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
+      "last_modified": "2023-08-30T00:25:28Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#gradle",
-      "version": "8.0.1"
+      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#gradle",
+      "source": "devbox-search",
+      "version": "8.3",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/4xjjls354jr8w7083qxsrpfs1fgl80fj-gradle-8.3"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/f0l5fscvcl9yand9jfpk5icr2ac8qx2v-gradle-8.3"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/rxm9mpxswrd77fd6lafqcxaxizjlk1l4-gradle-8.3"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/qvp5jiik6q27qwlgiq80fx96wyh0r0nb-gradle-8.3"
+        }
+      }
     },
     "jdk@17": {
       "last_modified": "2023-06-29T16:20:38Z",
