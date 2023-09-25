@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	ignore "github.com/sabhiram/go-gitignore"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -88,27 +85,6 @@ func latestPackages(lockfilePaths []string) (map[string]*Package, error) {
 func collectLockfiles() ([]string, error) {
 	defer debug.FunctionTimer().End()
 
-	type filterFuncStackEntry struct {
-		filterFunc func(string) bool
-		path       string
-	}
-
-	var filterFuncStack []filterFuncStackEntry
-
-	var filterFunc = func(path string) bool {
-		// Start at the top of the stack which has most specific gitignore.
-		for i := len(filterFuncStack) - 1; i >= 0; i-- {
-			if strings.HasPrefix(path, filterFuncStack[i].path) {
-				// Any gitignore that is not a prefix can be popped off the stack
-				// because WalkDir is depth first which means we're already in a
-				// different branch
-				filterFuncStack = filterFuncStack[:i+1]
-				return filterFuncStack[i].filterFunc(path)
-			}
-		}
-		return false
-	}
-
 	var lockfiles []string
 	err := filepath.WalkDir(
 		".",
@@ -117,25 +93,7 @@ func collectLockfiles() ([]string, error) {
 				return err
 			}
 
-			filename := filepath.Base(path)
-
-			if filename == ".gitignore" {
-				ignoreMatcher, err := ignore.CompileIgnoreFile(path)
-				if err != nil {
-					return errors.WithStack(err)
-				}
-				// push a new filterFunc onto the stack
-				filterFuncStack = append(filterFuncStack, filterFuncStackEntry{
-					ignoreMatcher.MatchesPath,
-					filepath.Dir(path),
-				})
-			}
-
-			if filterFunc(path) {
-				if dirEntry.IsDir() {
-					return filepath.SkipDir
-				}
-			} else if !dirEntry.IsDir() && filename == "devbox.lock" {
+			if !dirEntry.IsDir() && filepath.Base(path) == "devbox.lock" {
 				lockfiles = append(lockfiles, path)
 			}
 
