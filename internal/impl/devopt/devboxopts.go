@@ -39,6 +39,7 @@ type Credentials struct {
 }
 
 type UpdateOpts struct {
-	Pkgs []string
-	Sync bool
+	Pkgs                  []string
+	ReferenceLockFilePath string
+	Sync                  bool
 }

@@ -13,8 +13,9 @@ import (
 )
 
 type updateCmdFlags struct {
-	config configFlags
-	sync   bool
+	config                configFlags
+	sync                  bool
+	ReferenceLockFilePath string
 }
 
 func updateCmd() *cobra.Command {
@@ -39,7 +40,15 @@ func updateCmd() *cobra.Command {
 		"sync-lock",
 		false,
 		"Sync all devbox.lock dependencies in multiple projects. "+
-			"Dependencies will sync to the latest local version.",
+			"Dependencies will sync to the latest resolved local version.",
+	)
+	command.Flags().StringVar(
+		&flags.ReferenceLockFilePath,
+		"sync-lock-reference",
+		"",
+		"Path to a devbox.lock file to use as a reference when syncing lockfiles. "+
+			"If none is provided then most recent last modified dependency is used. "+
+			"Must be used with --sync-lock flag.",
 	)
 	return command
 }
@@ -58,7 +67,8 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	}
 
 	return box.Update(cmd.Context(), devopt.UpdateOpts{
-		Pkgs: args,
-		Sync: flags.sync,
+		Pkgs:                  args,
+		ReferenceLockFilePath: flags.ReferenceLockFilePath,
+		Sync:                  flags.sync,
 	})
 }

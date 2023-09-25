@@ -8,17 +8,28 @@ import (
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
-func SyncLockfiles() error {
+func SyncLockfiles(opts devopt.UpdateOpts) error {
 	lockfilePaths, err := collectLockfiles()
 	if err != nil {
 		return err
 	}
 
-	latestPackages, err := latestPackages(lockfilePaths)
+	preferredPackages, err := latestPackages(lockfilePaths)
 	if err != nil {
 		return err
+	}
+
+	if opts.ReferenceLockFilePath != "" {
+		var referenceLockFile File
+		if err := cuecfg.ParseFile(opts.ReferenceLockFilePath, &referenceLockFile); err != nil {
+			return err
+		}
+		for key, pkg := range referenceLockFile.Packages {
+			preferredPackages[key] = pkg
+		}
 	}
 
 	for _, lockfilePath := range lockfilePaths {
@@ -28,16 +39,16 @@ func SyncLockfiles() error {
 		}
 
 		changed := false
-		for key, latestPkg := range latestPackages {
+		for key, preferredPkg := range preferredPackages {
 			if pkg, exists := lockFile.Packages[key]; exists {
-				if pkg.LastModified != latestPkg.LastModified {
-					lockFile.Packages[key].AllowInsecure = latestPkg.AllowInsecure
-					lockFile.Packages[key].LastModified = latestPkg.LastModified
+				if pkg.LastModified != preferredPkg.LastModified {
+					lockFile.Packages[key].AllowInsecure = preferredPkg.AllowInsecure
+					lockFile.Packages[key].LastModified = preferredPkg.LastModified
 					// PluginVersion is intentionally omitted
-					lockFile.Packages[key].Resolved = latestPkg.Resolved
-					lockFile.Packages[key].Source = latestPkg.Source
-					lockFile.Packages[key].Version = latestPkg.Version
-					lockFile.Packages[key].Systems = latestPkg.Systems
+					lockFile.Packages[key].Resolved = preferredPkg.Resolved
+					lockFile.Packages[key].Source = preferredPkg.Source
+					lockFile.Packages[key].Version = preferredPkg.Version
+					lockFile.Packages[key].Systems = preferredPkg.Systems
 					changed = true
 				}
 			}

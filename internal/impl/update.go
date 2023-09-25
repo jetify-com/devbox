@@ -21,7 +21,7 @@ import (
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	if opts.Sync {
-		return lock.SyncLockfiles()
+		return lock.SyncLockfiles(opts)
 	}
 
 	inputs, err := d.inputsToUpdate(opts.Pkgs...)
