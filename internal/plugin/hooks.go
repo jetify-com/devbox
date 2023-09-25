@@ -7,10 +7,24 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 )
 
-func InitHooks(pkgs []*devpkg.Package, projectDir string) ([]string, error) {
+func (m *Manager) InitHooks(
+	pkgs []*devpkg.Package,
+	includes []string,
+) ([]string, error) {
 	hooks := []string{}
+	allPkgs := []Includable{}
 	for _, pkg := range pkgs {
-		c, err := getConfigIfAny(pkg, projectDir)
+		allPkgs = append(allPkgs, pkg)
+	}
+	for _, include := range includes {
+		name, err := m.ParseInclude(include)
+		if err != nil {
+			return nil, err
+		}
+		allPkgs = append(allPkgs, name)
+	}
+	for _, pkg := range allPkgs {
+		c, err := getConfigIfAny(pkg, m.ProjectDir())
 		if err != nil {
 			return nil, err
 		}

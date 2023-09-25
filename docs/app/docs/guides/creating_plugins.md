@@ -8,40 +8,33 @@ Plugins make it easier to get started with packages that require additional setu
 
 Before writing a plugin, we recommend reading the [User Documentation](https://www.jetpack.io/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetpack-io/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
 
-
 If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetpack-io/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
 Before contributing, please consult our [Contributing Guide](https://github.com/jetpack-io/devbox/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetpack-io/devbox/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
 
-### Testing your Plugin
+## Creating a Plugin
 
-1. Create a new `devbox.json` in an empty directory using `devbox init`.
-2. Add your plugin to the `include` section of the `devbox.json` file. Add any expected packages using `devbox add <pkg>`.
-3. Check that your plugin creates the correct files and environment variables when running `devbox shell`
-4. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
+We recommend organizing your plugin with the following directory structure, where the top-level folder matches the name of your plugin: 
 
-## Plugin Design
-
-Plugins are defined as Go JSON Template files, using the following schema:
-
-```json
-{
-  "name": "",
-  "version": "",
-  "readme": "",
-  "env": {
-    "<key>": "<value>"
-  },
-  "create_files": {
-    "<destination>": "<source>"
-  },
-  "init_hook": [
-    "<bash commands>"
-  ]
-}
+```
+my-plugin/
+├── README.md
+├── plugin.json
+├── config/
+│   ├── my-plugin.conf
+│   └── process-compose.yaml
+└── test/
+    ├── devbox.json
+    └── devbox.lock
 ```
 
-A plugin can define services by adding a `process-compose.yaml` file in its `create_files` stanza.
+* **README.md** -- Should contain a description of how your plugin works, and what files, variables, and services it adds to Devbox Projects
+* **plugin.json** -- This file is a Go JSON Template that defines your plugin. See the sections below for more detail
+* **config/** -- This folder contains any support or configuration files required by your plugin, as well as the process-compose.yaml for defining services
+* **test/** -- This directory contains an example project for testing your plugin
+
+
+## Plugin Design
 
 ### Plugin Lifecycle
 
@@ -61,6 +54,31 @@ flowchart TD
    G[Run Scripts]
    H[Start Services]
 ```
+
+### Plugin.json Schema
+
+Plugins are defined as Go JSON Template files, using the following schema:
+
+```json
+{
+  "name": "",
+  "version": "",
+  "readme": "",
+  "env": {
+    "<key>": "<value>"
+  },
+  "create_files": {
+    "<destination>": "<source>"
+  },
+  "shell": {
+    "init_hook": [
+      "<bash commands>"
+    ]
+  }
+}
+```
+
+A plugin can define services by adding a `process-compose.yaml` file in its `create_files` stanza.
 
 ### Template Placeholders
 
@@ -108,9 +126,11 @@ Will copy the Caddyfile in the `plugins/caddy` folder to `devbox.d/caddy/Caddyfi
 
 You should use this to copy starter config files or templates needed to run the plugin's package.
 
-#### `init_hook` *string | string[]*
+#### `shell.init_hook` *string | string[]*
 
-A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
+A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. 
+
+This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
 
 ### Adding Services
 
@@ -119,6 +139,39 @@ Devbox uses [Process Compose](https://github.com/F1bonacc1/process-compose) to r
 Plugins can add services to a user's project by adding a `process-compose.yaml` file to the `create_files` stanza. This file will be automatically detected by Devbox, and started when a user runs `devbox services up` or `devbox services start`.
 
 See the process compose [docs](https://github.com/F1bonacc1/process-compose) for details on how to write define services in `process-compose.yaml`. You can also check the plugins in this directory for examples on how to write services.
+
+## Testing your Plugin
+
+Testing plugins can be done using an example Devbox project. Follow the steps below to create a new test project
+
+1. Create a new `devbox.json` in an empty directory using `devbox init`.
+2. Add your plugin to the `include` section of the `devbox.json` file. 
+2. Add any expected packages using `devbox add <pkg>`.
+3. Check that your plugin creates the correct files and environment variables when running `devbox shell`
+4. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
+
+
+## Example: MongoDB
+
+The plugin.json below sets the environment variables and config needed to run MongoDB in Devbox. You can view the full example at 
+
+```json
+{
+  "name": "mongodb",
+  "version": "0.0.1",
+  "readme": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
+  "env": {
+    "MONGODB_DATA": "{{.Virtenv}}/data",
+    "MONGODB_CONFIG": "{{.DevboxDir}}/mongod.conf"
+  },
+  "create_files": {
+    "{{.Virtenv}}/data": "",
+    "{{.Virtenv}}/process-compose.yaml": "config/process-compose.yaml",
+    "{{.DevboxDir}}/mongod.conf": "config/mongod.conf"
+  }
+}
+
+```
 
 ## Tips for Writing Plugins
 
