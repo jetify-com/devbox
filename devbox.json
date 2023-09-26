@@ -1,5 +1,6 @@
 {
   "packages": [
+    "path:./local-flake",
     "golangci-lint@1.52.2",
     "go@latest"
   ],
