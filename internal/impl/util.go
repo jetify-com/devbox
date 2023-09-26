@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/integrations/envsec"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
 	"go.jetpack.io/devbox/internal/xdg"
@@ -31,6 +32,21 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 		ProfilePath: profilePath,
 		Writer:      d.writer,
 	})
+}
+
+// addDevboxUtilityPackages adds binaries that we want the user to have access
+// to (e.g. envsec).
+// Question: Should we add utilityBinPath here? That would allow user to use
+// process-compose, etc
+func (d *Devbox) addUtilitiesToPath(path string) (string, error) {
+	if d.cfg.IsEnvsecEnabled() {
+		envsecPath, err := envsec.EnsureInstalled()
+		if err != nil {
+			return "", err
+		}
+		path = path + string(os.PathListSeparator) + filepath.Dir(envsecPath)
+	}
+	return path, nil
 }
 
 func utilityLookPath(binName string) (string, error) {

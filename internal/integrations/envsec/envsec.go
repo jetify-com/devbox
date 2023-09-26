@@ -3,17 +3,17 @@ package envsec
 import (
 	"bytes"
 	"encoding/json"
-	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/pkg/sandbox/runx"
 )
 
 var envCache map[string]string
+var binPathCache string
 
 func Env(projectDir string) (map[string]string, error) {
 
@@ -23,11 +23,7 @@ func Env(projectDir string) (map[string]string, error) {
 		return envCache, nil
 	}
 
-	if err := ensureEnvsecInstalled(); err != nil {
-		return nil, err
-	}
-
-	if err := ensureEnvsecInitialized(projectDir); err != nil {
+	if err := ensureInitialized(projectDir); err != nil {
 		return nil, err
 	}
 
@@ -37,25 +33,35 @@ func Env(projectDir string) (map[string]string, error) {
 	return envCache, err
 }
 
-func ensureEnvsecInstalled() error {
-	// In newer runx version this will return the paths
+func EnsureInstalled() (string, error) {
+	if binPathCache != "" {
+		return binPathCache, nil
+	}
+
+	if path, err := exec.LookPath("envsec"); err == nil {
+		binPathCache = path
+		return binPathCache, nil
+	}
+
 	paths, err := runx.Install("jetpack-io/envsec")
 	if err != nil {
-		return errors.Wrap(err, "failed to install envsec")
+		return "", errors.Wrap(err, "failed to install envsec")
 	}
 
-	for _, path := range paths {
-		os.Setenv("PATH", path+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if len(paths) == 0 {
+		return "", usererr.New("envsec is not installed or not in path")
 	}
 
-	if !cmdutil.Exists("envsec") {
-		return usererr.New("envsec is not installed or not in path")
-	}
-	return nil
+	binPathCache = filepath.Join(paths[0], "envsec")
+	return binPathCache, nil
 }
 
-func ensureEnvsecInitialized(projectDir string) error {
-	cmd := exec.Command("envsec", "init", "--json-errors")
+func ensureInitialized(projectDir string) error {
+	binPath, err := EnsureInstalled()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(binPath, "init", "--json-errors")
 	cmd.Dir = projectDir
 	var bufErr bytes.Buffer
 	cmd.Stderr = &bufErr
@@ -67,8 +73,12 @@ func ensureEnvsecInitialized(projectDir string) error {
 }
 
 func envsecList(projectDir string) (map[string]string, error) {
+	binPath, err := EnsureInstalled()
+	if err != nil {
+		return nil, err
+	}
 	cmd := exec.Command(
-		"envsec", "ls", "--show",
+		binPath, "ls", "--show",
 		"--format", "json",
 		"--environment", "dev",
 		"--json-errors")

@@ -871,6 +871,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		)
 	}
 
+	env["PATH"], err = d.addUtilitiesToPath(env["PATH"])
+	if err != nil {
+		return nil, err
+	}
+
 	// Include env variables in devbox.json
 	configEnv, err := d.configEnvs(env)
 	if err != nil {
