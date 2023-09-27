@@ -66,7 +66,7 @@ func addCmd() *cobra.Command {
 func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:               flags.config.path,
-		Writer:            cmd.ErrOrStderr(),
+		Stderr:            cmd.ErrOrStderr(),
 		AllowInsecureAdds: flags.allowInsecure,
 	})
 	if err != nil {

@@ -75,7 +75,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 	// todo: add error handling - consider sending error message to parent process
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    message.ConfigDir,
-		Writer: cmd.OutOrStdout(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return err

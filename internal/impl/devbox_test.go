@@ -44,7 +44,7 @@ func testShellPlan(t *testing.T, testPath string) {
 
 		_, err := Open(&devopt.Opts{
 			Dir:    baseDir,
-			Writer: os.Stdout,
+			Stderr: os.Stderr,
 			Pure:   false,
 		})
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
@@ -128,7 +128,7 @@ func devboxForTesting(t *testing.T) *Devbox {
 	require.NoError(t, err, "InitConfig should not fail")
 	d, err := Open(&devopt.Opts{
 		Dir:    path,
-		Writer: os.Stdout,
+		Stderr: os.Stderr,
 		Pure:   false,
 	})
 	require.NoError(t, err, "Open should not fail")

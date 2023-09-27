@@ -12,7 +12,7 @@ type Opts struct {
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
 	OmitBinWrappersFromPath  bool
-	Writer                   io.Writer
+	Stderr                   io.Writer
 }
 
 type GenerateOpts struct {

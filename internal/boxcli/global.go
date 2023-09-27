@@ -68,12 +68,15 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    path,
-		Writer: cmd.OutOrStdout(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return box.PrintGlobalList()
+	for _, p := range box.PackageNames() {
+		fmt.Fprintf(cmd.OutOrStdout(), "* %s\n", p)
+	}
+	return nil
 }
 
 var globalConfigPath string
@@ -125,7 +128,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return err

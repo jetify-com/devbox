@@ -57,7 +57,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		Dir:    flags.config.path,
 		Env:    env,
 		Pure:   flags.pure,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
