@@ -16,41 +16,36 @@ import (
 
 // Devbox provides an isolated development environment.
 type Devbox interface {
-	// Add adds Nix packages to the config so that they're available in the devbox
-	// environment. It validates that the Nix packages exist, and install them.
-	// Adding duplicate packages is a no-op.
 	Add(ctx context.Context, platforms, excludePlatforms []string, pkgs ...string) error
 	Config() *devconfig.Config
-	ProjectDir() string
-	// Generate creates the directory of Nix files and the Dockerfile that define
-	// the devbox environment.
 	EnvVars(ctx context.Context) ([]string, error)
-	Generate(ctx context.Context) error
-	GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error
-	GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error
-	GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error
 	Info(ctx context.Context, pkg string, markdown bool) (string, error)
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
 	NixEnv(ctx context.Context, includeHooks bool) (string, error)
 	PackageNames() []string
+	ProjectDir() string
 	Pull(ctx context.Context, opts devopt.PullboxOpts) error
 	Push(ctx context.Context, opts devopt.PullboxOpts) error
-	// Remove removes Nix packages from the config so that it no longer exists in
-	// the devbox environment.
 	Remove(ctx context.Context, pkgs ...string) error
-	RestartServices(ctx context.Context, services ...string) error
 	RunScript(ctx context.Context, scriptName string, scriptArgs []string) error
-	Services() (services.Services, error)
-	// Shell generates the devbox environment and launches nix-shell as a child process.
 	Shell(ctx context.Context) error
+	Update(ctx context.Context, opts devopt.UpdateOpts) error
+
+	// Interact with services
+	ListServices(ctx context.Context) error
+	RestartServices(ctx context.Context, services ...string) error
+	Services() (services.Services, error)
 	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, services ...string) error
 	StopServices(ctx context.Context, allProjects bool, services ...string) error
-	ListServices(ctx context.Context) error
 
-	Update(ctx context.Context, opts devopt.UpdateOpts) error
+	// Generate files
+	Generate(ctx context.Context) error
+	GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error
+	GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error
+	GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error
 }
 
 // Open opens a devbox by reading the config file in dir.
