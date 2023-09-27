@@ -74,7 +74,7 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		}
 	}
 
-	envStr, err := box.PrintEnv(cmd.Context(), flags.runInitHook)
+	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook)
 	if err != nil {
 		return "", err
 	}

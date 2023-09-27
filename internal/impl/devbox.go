@@ -265,7 +265,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	if _, err := d.PrintEnv(ctx, false /*includeHooks*/); err != nil {
+	if _, err := d.NixEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
@@ -282,8 +282,8 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error) {
-	ctx, task := trace.NewTask(ctx, "devboxPrintEnv")
+func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
@@ -305,8 +305,8 @@ func (d *Devbox) PrintEnv(ctx context.Context, includeHooks bool) (string, error
 	return envStr, nil
 }
 
-func (d *Devbox) PrintEnvVars(ctx context.Context) ([]string, error) {
-	ctx, task := trace.NewTask(ctx, "devboxPrintEnvVars")
+func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
 	// and excluding "export " prefix in "export key=value" format

@@ -24,6 +24,7 @@ type Devbox interface {
 	ProjectDir() string
 	// Generate creates the directory of Nix files and the Dockerfile that define
 	// the devbox environment.
+	EnvVars(ctx context.Context) ([]string, error)
 	Generate(ctx context.Context) error
 	GenerateDevcontainer(ctx context.Context, generateOpts devopt.GenerateOpts) error
 	GenerateDockerfile(ctx context.Context, generateOpts devopt.GenerateOpts) error
@@ -32,9 +33,8 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
+	NixEnv(ctx context.Context, includeHooks bool) (string, error)
 	PackageNames() []string
-	PrintEnv(ctx context.Context, includeHooks bool) (string, error)
-	PrintEnvVars(ctx context.Context) ([]string, error)
 	Pull(ctx context.Context, opts devopt.PullboxOpts) error
 	Push(ctx context.Context, opts devopt.PullboxOpts) error
 	// Remove removes Nix packages from the config so that it no longer exists in

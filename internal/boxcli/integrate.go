@@ -81,7 +81,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 		return err
 	}
 	// Get env variables of a devbox shell
-	envVars, err := box.PrintEnvVars(cmd.Context())
+	envVars, err := box.EnvVars(cmd.Context())
 	if err != nil {
 		return err
 	}
