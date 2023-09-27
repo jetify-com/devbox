@@ -94,7 +94,7 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:            path,
-		Writer:         os.Stdout,
+		Stderr:         os.Stderr,
 		IgnoreWarnings: true,
 	})
 	if err != nil {

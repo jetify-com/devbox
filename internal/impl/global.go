@@ -4,7 +4,6 @@
 package impl
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -16,13 +15,6 @@ import (
 
 // In the future we will support multiple global profiles
 const currentGlobalProfile = "default"
-
-func (d *Devbox) PrintGlobalList() error {
-	for _, p := range d.PackageNames() {
-		fmt.Fprintf(d.writer, "* %s\n", p)
-	}
-	return nil
-}
 
 func GlobalDataPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))

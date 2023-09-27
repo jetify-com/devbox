@@ -57,7 +57,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		Dir:    flags.config.path,
 		Env:    env,
 		Pure:   flags.pure,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -66,7 +66,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	if flags.printEnv {
 		// false for includeHooks is because init hooks is not compatible with .envrc files generated
 		// by versions older than 0.4.6
-		script, err := box.PrintEnv(cmd.Context(), false /*includeHooks*/)
+		script, err := box.NixEnv(cmd.Context(), false /*includeHooks*/)
 		if err != nil {
 			return err
 		}

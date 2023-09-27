@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -36,11 +38,16 @@ func infoCmd() *cobra.Command {
 func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.OutOrStdout(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return box.Info(cmd.Context(), pkg, flags.markdown)
+	info, err := box.Info(cmd.Context(), pkg, flags.markdown)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Fprint(cmd.OutOrStdout(), info)
+	return nil
 }

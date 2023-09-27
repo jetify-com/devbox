@@ -142,7 +142,7 @@ func runCloudShellCmd(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -158,7 +158,7 @@ func runCloudInit(cmd *cobra.Command, flags *cloudShellCmdFlags) error {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

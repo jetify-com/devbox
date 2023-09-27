@@ -61,7 +61,7 @@ func runCmd() *cobra.Command {
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:            flags.config.path,
-		Writer:         cmd.ErrOrStderr(),
+		Stderr:         cmd.ErrOrStderr(),
 		Pure:           flags.pure,
 		IgnoreWarnings: true,
 	})
@@ -108,7 +108,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:                     path,
-		Writer:                  cmd.ErrOrStderr(),
+		Stderr:                  cmd.ErrOrStderr(),
 		Pure:                    flags.pure,
 		Env:                     env,
 		OmitBinWrappersFromPath: omitBinWrappersFromPath,

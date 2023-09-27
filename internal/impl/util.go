@@ -30,7 +30,7 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 		Lockfile:    d.lockfile,
 		Package:     pkg,
 		ProfilePath: profilePath,
-		Writer:      d.writer,
+		Writer:      d.stderr,
 	})
 }
 

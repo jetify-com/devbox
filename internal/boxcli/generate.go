@@ -139,7 +139,7 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -167,7 +167,7 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

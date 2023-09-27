@@ -37,6 +37,9 @@ func RootCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
+		// Warning, PersistentPreRunE is not called if a subcommand also declares
+		// it. TODO: Figure out a better way to implement this so that subcommands
+		// can't accidentally override it.
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
@@ -49,6 +52,7 @@ func RootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
+
 	// Stable commands
 	command.AddCommand(addCmd())
 	if featureflag.Auth.Enabled() {

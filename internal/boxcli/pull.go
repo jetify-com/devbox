@@ -50,7 +50,7 @@ func pullCmd() *cobra.Command {
 func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

@@ -36,7 +36,7 @@ func pushCmd() *cobra.Command {
 func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
-		Writer: cmd.ErrOrStderr(),
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

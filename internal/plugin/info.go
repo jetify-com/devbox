@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -14,42 +15,47 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 )
 
-func PrintReadme(ctx context.Context,
+func Readme(ctx context.Context,
 	pkg *devpkg.Package,
 	projectDir string,
-	w io.Writer,
 	markdown bool,
-) error {
-	defer trace.StartRegion(ctx, "PrintReadme").End()
+) (string, error) {
+	defer trace.StartRegion(ctx, "Readme").End()
 
 	cfg, err := getConfigIfAny(pkg, projectDir)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if cfg == nil {
-		return nil
+		return "", nil
 	}
 
-	_, _ = fmt.Fprintln(w, "")
+	buf := bytes.NewBuffer(nil)
 
-	if err = printReadme(cfg, w, markdown); err != nil {
-		return err
+	_, _ = fmt.Fprintln(buf, "")
+
+	if err = printReadme(cfg, buf, markdown); err != nil {
+		return "", err
 	}
 
-	if err = printServices(cfg, w, markdown); err != nil {
-		return err
+	if err = printServices(cfg, buf, markdown); err != nil {
+		return "", err
 	}
 
-	if err = printCreateFiles(cfg, w, markdown); err != nil {
-		return err
+	if err = printCreateFiles(cfg, buf, markdown); err != nil {
+		return "", err
 	}
 
-	if err = printEnv(cfg, w, markdown); err != nil {
-		return err
+	if err = printEnv(cfg, buf, markdown); err != nil {
+		return "", err
 	}
 
-	return printInfoInstructions(pkg.CanonicalName(), w)
+	if err = printInfoInstructions(pkg.CanonicalName(), buf); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func printReadme(cfg *config, w io.Writer, markdown bool) error {
