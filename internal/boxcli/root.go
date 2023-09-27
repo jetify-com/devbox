@@ -52,7 +52,6 @@ func RootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	command.SetOut(os.Stdout)
 
 	// Stable commands
 	command.AddCommand(addCmd())

@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -46,6 +48,6 @@ func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd.Print(info)
+	fmt.Fprint(cmd.OutOrStdout(), info)
 	return nil
 }

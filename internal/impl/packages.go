@@ -130,7 +130,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			false /*markdown*/); err != nil {
 			return err
 		} else if readme != "" {
-			fmt.Fprintf(d.Stderr, "%s\n", readme)
+			fmt.Fprintf(d.stderr, "%s\n", readme)
 		}
 	}
 
@@ -161,7 +161,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 
 	if len(missingPkgs) > 0 {
 		ux.Fwarning(
-			d.Stderr,
+			d.stderr,
 			"the following packages were not found in your devbox.json: %s\n",
 			strings.Join(missingPkgs, ", "),
 		)
@@ -211,7 +211,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	if mode == ensure {
-		fmt.Fprintln(d.Stderr, "Ensuring packages are installed.")
+		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
 	// Create plugin directories first because packages might need them
@@ -300,7 +300,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 	// If packages are in profile but nixpkgs has been purged, the experience
 	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
 	// prefetched for all relevant packages (those not in binary cache).
-	if err := devpkg.EnsureNixpkgsPrefetched(ctx, d.Stderr, pkgs); err != nil {
+	if err := devpkg.EnsureNixpkgsPrefetched(ctx, d.stderr, pkgs); err != nil {
 		return err
 	}
 
@@ -311,7 +311,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		pkgNames := lo.Map(pkgs, func(p *devpkg.Package, _ int) string { return p.Raw })
 		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgNames, ", "))
 	}
-	fmt.Fprintf(d.Stderr, "\n%s\n\n", msg)
+	fmt.Fprintf(d.stderr, "\n%s\n\n", msg)
 
 	profileDir, err := d.profilePath()
 	if err != nil {
@@ -329,7 +329,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 			Lockfile:          d.lockfile,
 			Package:           pkg.Raw,
 			ProfilePath:       profileDir,
-			Writer:            d.Stderr,
+			Writer:            d.stderr,
 		}); err != nil {
 			return err
 		}
@@ -349,7 +349,7 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 	for _, pkg := range devpkg.PackageFromStrings(pkgs, d.lockfile) {
 		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Lockfile:   d.lockfile,
-			Writer:     d.Stderr,
+			Writer:     d.stderr,
 			Package:    pkg,
 			ProfileDir: profileDir,
 		})
@@ -367,8 +367,8 @@ func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) e
 			fmt.Sprintf("%d", index),
 		)
 		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-		cmd.Stdout = d.Stderr
-		cmd.Stderr = d.Stderr
+		cmd.Stdout = d.stderr
+		cmd.Stderr = d.stderr
 		err = cmd.Run()
 		if err != nil {
 			return err
@@ -408,7 +408,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	}
 
 	pending := []*devpkg.Package{}
-	items, err := nixprofile.ProfileListItems(d.Stderr, profileDir)
+	items, err := nixprofile.ProfileListItems(d.stderr, profileDir)
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +420,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Items:      items,
 			Lockfile:   d.lockfile,
-			Writer:     d.Stderr,
+			Writer:     d.stderr,
 			Package:    pkg,
 			ProfileDir: profileDir,
 		})
@@ -447,7 +447,7 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 		return nil, err
 	}
 
-	profileItems, err := nixprofile.ProfileListItems(d.Stderr, profileDir)
+	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
 	if err != nil {
 		return nil, err
 	}

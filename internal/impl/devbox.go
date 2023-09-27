@@ -65,7 +65,7 @@ type Devbox struct {
 	OmitBinWrappersFromPath  bool
 
 	// This is needed because of the --quiet flag.
-	Stderr io.Writer
+	stderr io.Writer
 }
 
 var legacyPackagesWarningHasBeenShown = false
@@ -89,7 +89,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		nix:                      &nix.Nix{},
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
-		Stderr:                   opts.Stderr,
+		stderr:                   opts.Stderr,
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
@@ -168,7 +168,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
-	fmt.Fprintln(d.Stderr, "Starting a devbox shell...")
+	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
 
 	profileDir, err := d.profilePath()
 	if err != nil {
@@ -477,7 +477,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
 	if err := nix.EnsureNixInstalled(
-		d.Stderr, func() *bool { return lo.ToPtr(false) },
+		d.stderr, func() *bool { return lo.ToPtr(false) },
 	); err != nil {
 		return err
 	}
@@ -492,14 +492,14 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ux.Fsuccess(d.Stderr, "generated .envrc file\n")
+	ux.Fsuccess(d.stderr, "generated .envrc file\n")
 	if cmdutil.Exists("direnv") {
 		cmd := exec.Command("direnv", "allow")
 		err := cmd.Run()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		ux.Fsuccess(d.Stderr, "ran `direnv allow`\n")
+		ux.Fsuccess(d.stderr, "ran `direnv allow`\n")
 	}
 	return nil
 }
@@ -538,8 +538,8 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.Stderr, "Process-compose is not running. Starting it now...")
-		fmt.Fprintln(d.Stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
+		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
+		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
@@ -559,11 +559,11 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	}
 
 	for _, s := range serviceNames {
-		err := services.StartServices(ctx, d.Stderr, s, d.projectDir)
+		err := services.StartServices(ctx, d.stderr, s, d.projectDir)
 		if err != nil {
-			fmt.Fprintf(d.Stderr, "Error starting service %s: %s", s, err)
+			fmt.Fprintf(d.stderr, "Error starting service %s: %s", s, err)
 		} else {
-			fmt.Fprintf(d.Stderr, "Service %s started successfully", s)
+			fmt.Fprintf(d.stderr, "Service %s started successfully", s)
 		}
 	}
 	return nil
@@ -580,7 +580,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 	}
 
 	if allProjects {
-		return services.StopAllProcessManagers(ctx, d.Stderr)
+		return services.StopAllProcessManagers(ctx, d.stderr)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
@@ -588,7 +588,7 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 	}
 
 	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.projectDir, d.Stderr)
+		return services.StopProcessManager(ctx, d.projectDir, d.stderr)
 	}
 
 	svcSet, err := d.Services()
@@ -600,9 +600,9 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
 		}
-		err := services.StopServices(ctx, s, d.projectDir, d.Stderr)
+		err := services.StopServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
-			fmt.Fprintf(d.Stderr, "Error stopping service %s: %s", s, err)
+			fmt.Fprintf(d.stderr, "Error stopping service %s: %s", s, err)
 		}
 	}
 	return nil
@@ -619,24 +619,24 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 	}
 
 	if len(svcSet) == 0 {
-		fmt.Fprintln(d.Stderr, "No services found in your project")
+		fmt.Fprintln(d.stderr, "No services found in your project")
 		return nil
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.Stderr, "No services currently running. Run `devbox services up` to start them:")
-		fmt.Fprintln(d.Stderr, "")
+		fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
+		fmt.Fprintln(d.stderr, "")
 		for _, s := range svcSet {
-			fmt.Fprintf(d.Stderr, "  %s\n", s.Name)
+			fmt.Fprintf(d.stderr, "  %s\n", s.Name)
 		}
 		return nil
 	}
-	tw := tabwriter.NewWriter(d.Stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
-	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.Stderr)
+	tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
+	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
 	if err != nil {
-		fmt.Fprintln(d.Stderr, "Error listing services: ", err)
+		fmt.Fprintln(d.stderr, "Error listing services: ", err)
 	} else {
-		fmt.Fprintln(d.Stderr, "Services running in process-compose:")
+		fmt.Fprintln(d.stderr, "Services running in process-compose:")
 		fmt.Fprintln(tw, "NAME\tSTATUS\tEXIT CODE")
 		for _, s := range pcSvcs {
 			fmt.Fprintf(tw, "%s\t%s\t%d\n", s.Name, s.Status, s.ExitCode)
@@ -652,8 +652,8 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.Stderr, "Process-compose is not running. Starting it now...")
-		fmt.Fprintln(d.Stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
+		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
+		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
 		return d.StartProcessManager(ctx, serviceNames, true, "")
 	}
 
@@ -668,7 +668,7 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
 		}
-		err := services.RestartServices(ctx, s, d.projectDir, d.Stderr)
+		err := services.RestartServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
 			fmt.Printf("Error restarting service %s: %s", s, err)
 		} else {
@@ -714,7 +714,7 @@ func (d *Devbox) StartProcessManager(
 
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
-		fmt.Fprintln(d.Stderr, "Installing process-compose. This may take a minute but will only happen once.")
+		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
 		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.43.1"); err != nil {
 			return err
 		}
@@ -722,7 +722,7 @@ func (d *Devbox) StartProcessManager(
 		// re-lookup the path to process-compose
 		processComposePath, err = utilityLookPath("process-compose")
 		if err != nil {
-			fmt.Fprintln(d.Stderr, "failed to find process-compose after installing it.")
+			fmt.Fprintln(d.stderr, "failed to find process-compose after installing it.")
 			return err
 		}
 	}
@@ -731,7 +731,7 @@ func (d *Devbox) StartProcessManager(
 
 	return services.StartProcessManager(
 		ctx,
-		d.Stderr,
+		d.stderr,
 		requestedServices,
 		svcs,
 		d.projectDir,
@@ -1042,7 +1042,7 @@ func (d *Devbox) checkOldEnvrc() error {
 		}
 		if !isNewEnvrc {
 			ux.Fwarning(
-				d.Stderr,
+				d.stderr,
 				"Your .envrc file seems to be out of date. "+
 					"Run `devbox generate direnv --force` to update it.\n"+
 					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
