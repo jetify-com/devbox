@@ -89,6 +89,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
 		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
 	)
+	t.Setenv("PATH_STACK", env["PATH_STACK"])
 
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
@@ -112,6 +113,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
 		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
 	)
+	t.Setenv("PATH_STACK", env["PATH_STACK"])
 
 	devbox.nix.(*testNix).path = ""
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
