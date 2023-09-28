@@ -23,7 +23,6 @@ func main() {
 // run will loop over all examples that have run_test script
 // run `devbox update` on each such example
 func run() error {
-
 	devboxRepoDir, err := devboxRepoDir()
 	if err != nil {
 		return errors.WithStack(err)

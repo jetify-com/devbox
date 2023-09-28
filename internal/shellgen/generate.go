@@ -67,7 +67,7 @@ var (
 	tmplOldBuf = bytes.NewBuffer(make([]byte, 0, 4096))
 )
 
-func writeFromTemplate(path string, plan any, tmplName string, generatedName string) error {
+func writeFromTemplate(path string, plan any, tmplName, generatedName string) error {
 	tmplKey := tmplName + ".tmpl"
 	tmpl := tmplCache[tmplKey]
 	if tmpl == nil {
@@ -93,11 +93,11 @@ func writeFromTemplate(path string, plan any, tmplName string, generatedName str
 	var (
 		outPath = filepath.Join(path, generatedName)
 		flag    = os.O_RDWR | os.O_CREATE
-		perm    = fs.FileMode(0644)
+		perm    = fs.FileMode(0o644)
 	)
 	outFile, err := os.OpenFile(outPath, flag, perm)
 	if errors.Is(err, fs.ErrNotExist) {
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0o755); err != nil {
 			return errors.WithStack(err)
 		}
 		outFile, err = os.OpenFile(outPath, flag, perm)

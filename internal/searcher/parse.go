@@ -9,7 +9,7 @@ import (
 
 // ParseVersionedPackage checks if the given package is a versioned package
 // (`python@3.10`) and returns its name and version
-func ParseVersionedPackage(versionedName string) (name string, version string, found bool) {
+func ParseVersionedPackage(versionedName string) (name, version string, found bool) {
 	// use the last @ symbol as the version delimiter, some packages have @ in the name
 	atSymbolIndex := strings.LastIndex(versionedName, "@")
 	if atSymbolIndex == -1 {

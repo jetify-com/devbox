@@ -22,8 +22,7 @@ func Builtins() ([]fs.DirEntry, error) {
 	}), nil
 }
 
-type BuiltIn struct {
-}
+type BuiltIn struct{}
 
 var builtInMap = map[*regexp.Regexp]string{
 	regexp.MustCompile(`^(apache|apacheHttpd)$`):                       "apacheHttpd",

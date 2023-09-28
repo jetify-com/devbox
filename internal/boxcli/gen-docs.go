@@ -15,7 +15,7 @@ import (
 )
 
 func genDocsCmd() *cobra.Command {
-	var genDocsCmd = &cobra.Command{
+	genDocsCmd := &cobra.Command{
 		Use:   "gen-docs <path>",
 		Short: "[Internal] Generate documentation for the CLI",
 		Long: "[Internal] Generates the documentation for the CLI's Cobra commands. " +

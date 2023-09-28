@@ -49,7 +49,6 @@ func TestWriteFromTemplate(t *testing.T) {
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake-empty.nix.golden")
 	})
-
 }
 
 func cmpGoldenFile(t *testing.T, gotPath, wantGoldenPath string) {
@@ -58,7 +57,7 @@ func cmpGoldenFile(t *testing.T, gotPath, wantGoldenPath string) {
 		t.Fatal("got error reading generated file:", err)
 	}
 	if *update {
-		err = os.WriteFile(wantGoldenPath, got, 0666)
+		err = os.WriteFile(wantGoldenPath, got, 0o666)
 		if err != nil {
 			t.Error("got error updating golden file:", err)
 		}
@@ -81,49 +80,51 @@ If the new file is correct, you can update the golden file with:
 	}
 }
 
-var locker = &lockmock{}
-var testFlakeTmplPlan = &struct {
-	NixpkgsInfo struct {
-		URL string
-	}
-	FlakeInputs []flakeInput
-}{
-	NixpkgsInfo: struct {
-		URL string
+var (
+	locker            = &lockmock{}
+	testFlakeTmplPlan = &struct {
+		NixpkgsInfo struct {
+			URL string
+		}
+		FlakeInputs []flakeInput
 	}{
-		URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
-	},
-	FlakeInputs: []flakeInput{
-		{
-			Name: "nixpkgs",
-			URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
-			Packages: []*devpkg.Package{
-				devpkg.PackageFromString("php@latest", locker),
-				devpkg.PackageFromString("php81Packages.composer@latest", locker),
-				devpkg.PackageFromString("php81Extensions.blackfire@latest", locker),
-				devpkg.PackageFromString("flyctl@latest", locker),
-				devpkg.PackageFromString("postgresql@latest", locker),
-				devpkg.PackageFromString("tree@latest", locker),
-				devpkg.PackageFromString("git@latest", locker),
-				devpkg.PackageFromString("zsh@latest", locker),
-				devpkg.PackageFromString("openssh@latest", locker),
-				devpkg.PackageFromString("vim@latest", locker),
-				devpkg.PackageFromString("sqlite@latest", locker),
-				devpkg.PackageFromString("jq@latest", locker),
-				devpkg.PackageFromString("delve@latest", locker),
-				devpkg.PackageFromString("ripgrep@latest", locker),
-				devpkg.PackageFromString("shellcheck@latest", locker),
-				devpkg.PackageFromString("terraform@latest", locker),
-				devpkg.PackageFromString("xz@latest", locker),
-				devpkg.PackageFromString("zstd@latest", locker),
-				devpkg.PackageFromString("gnupg@latest", locker),
-				devpkg.PackageFromString("go_1_20@latest", locker),
-				devpkg.PackageFromString("python3@latest", locker),
-				devpkg.PackageFromString("graphviz@latest", locker),
+		NixpkgsInfo: struct {
+			URL string
+		}{
+			URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
+		},
+		FlakeInputs: []flakeInput{
+			{
+				Name: "nixpkgs",
+				URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
+				Packages: []*devpkg.Package{
+					devpkg.PackageFromString("php@latest", locker),
+					devpkg.PackageFromString("php81Packages.composer@latest", locker),
+					devpkg.PackageFromString("php81Extensions.blackfire@latest", locker),
+					devpkg.PackageFromString("flyctl@latest", locker),
+					devpkg.PackageFromString("postgresql@latest", locker),
+					devpkg.PackageFromString("tree@latest", locker),
+					devpkg.PackageFromString("git@latest", locker),
+					devpkg.PackageFromString("zsh@latest", locker),
+					devpkg.PackageFromString("openssh@latest", locker),
+					devpkg.PackageFromString("vim@latest", locker),
+					devpkg.PackageFromString("sqlite@latest", locker),
+					devpkg.PackageFromString("jq@latest", locker),
+					devpkg.PackageFromString("delve@latest", locker),
+					devpkg.PackageFromString("ripgrep@latest", locker),
+					devpkg.PackageFromString("shellcheck@latest", locker),
+					devpkg.PackageFromString("terraform@latest", locker),
+					devpkg.PackageFromString("xz@latest", locker),
+					devpkg.PackageFromString("zstd@latest", locker),
+					devpkg.PackageFromString("gnupg@latest", locker),
+					devpkg.PackageFromString("go_1_20@latest", locker),
+					devpkg.PackageFromString("python3@latest", locker),
+					devpkg.PackageFromString("graphviz@latest", locker),
+				},
 			},
 		},
-	},
-}
+	}
+)
 
 type lockmock struct{}
 

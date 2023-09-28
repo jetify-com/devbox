@@ -12,11 +12,12 @@ import (
 	"go.jetpack.io/pkg/sandbox/runx"
 )
 
-var envCache map[string]string
-var binPathCache string
+var (
+	envCache     map[string]string
+	binPathCache string
+)
 
 func Env(projectDir string) (map[string]string, error) {
-
 	defer debug.FunctionTimer().End()
 
 	if envCache != nil {

@@ -18,7 +18,7 @@ const currentGlobalProfile = "default"
 
 func GlobalDataPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox/global", currentGlobalProfile))
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		return "", errors.WithStack(err)
 	}
 

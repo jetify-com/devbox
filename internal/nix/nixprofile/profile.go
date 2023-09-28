@@ -27,7 +27,6 @@ func ProfileListItems(
 	writer io.Writer,
 	profileDir string,
 ) ([]*NixProfileListItem, error) {
-
 	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
 	if err != nil {
 		// fallback to legacy profile list

@@ -14,7 +14,6 @@ func TestParseUsernameFromErrorMessage(t *testing.T) {
 		username   string
 	}{
 		{
-
 			"success_case",
 			"Hi myDearUsername! You've successfully authenticated, but GitHub does not provide shell access.",
 			"myDearUsername",

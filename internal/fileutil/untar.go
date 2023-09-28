@@ -42,7 +42,7 @@ func Untar(archive io.Reader, destPath string) error {
 		case mode.IsRegular():
 			return untarFile(fromFile, abs)
 		case mode.IsDir():
-			return os.MkdirAll(abs, 0755)
+			return os.MkdirAll(abs, 0o755)
 		default:
 			return fmt.Errorf("archive contained entry %s of unsupported file type %v", fromFile.Name(), mode)
 		}

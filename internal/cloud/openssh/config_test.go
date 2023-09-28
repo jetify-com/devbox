@@ -79,23 +79,23 @@ var goldenDevboxSSHConfig []byte
 
 func TestSetupDevbox(t *testing.T) {
 	want := fstest.MapFS{
-		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 		".config/devbox/ssh/config": &fstest.MapFile{
 			Data: goldenDevboxSSHConfig,
-			Mode: 0644,
+			Mode: 0o644,
 		},
 		".config/devbox/ssh/known_hosts": &fstest.MapFile{
 			Data: sshKnownHosts,
-			Mode: 0644,
+			Mode: 0o644,
 		},
-		".config/devbox/ssh/sockets": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config/devbox/ssh/sockets": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 
-		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 		".ssh/config": &fstest.MapFile{
 			Data: []byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
-			Mode: 0644,
+			Mode: 0o644,
 		},
 	}
 
@@ -112,10 +112,10 @@ func TestSetupDevbox(t *testing.T) {
 	t.Run("ExistingSSHConfig", func(t *testing.T) {
 		existingSSHConfig := []byte("Host example.com\n\tUser example\n\tPort 1234\n")
 		input := fstest.MapFS{
-			".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+			".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 			".ssh/config": &fstest.MapFile{
 				Data: existingSSHConfig,
-				Mode: 0644,
+				Mode: 0o644,
 			},
 		}
 		// Temporarily change the desired ~/.ssh/config so it contains
@@ -128,7 +128,7 @@ func TestSetupDevbox(t *testing.T) {
 				[]byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
 				existingSSHConfig...,
 			),
-			Mode: 0644,
+			Mode: 0o644,
 		}
 
 		workdir := fsToDir(t, input)
@@ -157,24 +157,24 @@ var goldenDevboxSSHDebugConfig []byte
 func TestSetupInsecureDebug(t *testing.T) {
 	wantAddr := "127.0.0.1:2222"
 	want := fstest.MapFS{
-		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config":            &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox":     &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox/ssh": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 		".config/devbox/ssh/config": &fstest.MapFile{
 			Data: goldenDevboxSSHDebugConfig,
-			Mode: 0644,
+			Mode: 0o644,
 		},
 		".config/devbox/ssh/known_hosts": &fstest.MapFile{
 			Data: sshKnownHosts,
-			Mode: 0644,
+			Mode: 0o644,
 		},
-		".config/devbox/ssh/known_hosts_debug": &fstest.MapFile{Mode: 0644},
-		".config/devbox/ssh/sockets":           &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config/devbox/ssh/known_hosts_debug": &fstest.MapFile{Mode: 0o644},
+		".config/devbox/ssh/sockets":           &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 
-		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".ssh": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 		".ssh/config": &fstest.MapFile{
 			Data: []byte("Include \"$HOME/.config/devbox/ssh/config\"\n"),
-			Mode: 0644,
+			Mode: 0o644,
 		},
 	}
 
@@ -198,14 +198,14 @@ func TestSetupInsecureDebug(t *testing.T) {
 		// can check that it gets changed back to 127.0.0.1.
 		input[".config/devbox/ssh/config"] = &fstest.MapFile{
 			Data: bytes.ReplaceAll(goldenDevboxSSHDebugConfig, []byte("127.0.0.1"), []byte("127.0.0.2")),
-			Mode: 0644,
+			Mode: 0o644,
 		}
 
 		// Put something in known_hosts_debug so we can check that it
 		// gets cleared out.
 		input[".config/devbox/ssh/known_hosts_debug"] = &fstest.MapFile{
 			Data: []byte("[127.0.0.1]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAPY1ms2jt+QPvhq89J8KF7rfTCFUi6X6Ik4O9EIAT/c\n"),
-			Mode: 0644,
+			Mode: 0o644,
 		}
 
 		workdir := fsToDir(t, input)
@@ -225,14 +225,14 @@ func TestAddVMKey(t *testing.T) {
 	host := "test.vm.devbox-vms.internal"
 	input := fstest.MapFS{}
 	want := fstest.MapFS{
-		".config":                 &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox":          &fstest.MapFile{Mode: fs.ModeDir | 0755},
-		".config/devbox/ssh":      &fstest.MapFile{Mode: fs.ModeDir | 0700},
-		".config/devbox/ssh/keys": &fstest.MapFile{Mode: fs.ModeDir | 0700},
+		".config":                 &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox":          &fstest.MapFile{Mode: fs.ModeDir | 0o755},
+		".config/devbox/ssh":      &fstest.MapFile{Mode: fs.ModeDir | 0o700},
+		".config/devbox/ssh/keys": &fstest.MapFile{Mode: fs.ModeDir | 0o700},
 
 		".config/devbox/ssh/keys/" + host: &fstest.MapFile{
 			Data: goldenVMKey,
-			Mode: 0600,
+			Mode: 0o600,
 		},
 	}
 
@@ -300,7 +300,7 @@ func fsEqual(t *testing.T, got, want fs.FS) {
 // golden files with dynamic content. For example, a test can create an
 // fstest.MapFile with the data {"name": "$USER"} and compare it to some test
 // results to make sure there's a JSON file containing the current username.
-func fsPathsEqual(t *testing.T, gotFS fs.FS, wantFS fs.FS, path string) {
+func fsPathsEqual(t *testing.T, gotFS, wantFS fs.FS, path string) {
 	t.Helper()
 
 	gotInfo, err := fs.Stat(gotFS, path)

@@ -101,7 +101,7 @@ func (r *Recommender) devPackages(builderTool string) ([]string, error) {
 	return devPackagesMap[builderTool], nil
 }
 
-func getJavaPackage(srcDir string, builderTool string) (string, error) {
+func getJavaPackage(srcDir, builderTool string) (string, error) {
 	javaVersion, err := parseJavaVersion(srcDir, builderTool)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -113,7 +113,7 @@ func getJavaPackage(srcDir string, builderTool string) (string, error) {
 	return defaultJava, nil
 }
 
-func parseJavaVersion(srcDir string, builderTool string) (*analyzer.Version, error) {
+func parseJavaVersion(srcDir, builderTool string) (*analyzer.Version, error) {
 	sourceVersion, _ := analyzer.NewVersion("0")
 
 	if builderTool == MavenType {

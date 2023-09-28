@@ -13,8 +13,10 @@ import (
 	"go.jetpack.io/pkg/sandbox/auth/session"
 )
 
-var issuer = envir.GetValueOrDefault("DEVBOX_AUTH_ISSUER", "https://accounts.jetpack.io")
-var clientID = envir.GetValueOrDefault("DEVBOX_AUTH_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
+var (
+	issuer   = envir.GetValueOrDefault("DEVBOX_AUTH_ISSUER", "https://accounts.jetpack.io")
+	clientID = envir.GetValueOrDefault("DEVBOX_AUTH_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
+)
 
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{

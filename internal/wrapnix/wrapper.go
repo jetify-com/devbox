@@ -49,7 +49,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 
 	// Recreate the bin wrapper directory
 	destPath := filepath.Join(wrapperBinPath(devbox))
-	_ = os.MkdirAll(destPath, 0755)
+	_ = os.MkdirAll(destPath, 0o755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
 
@@ -95,7 +95,7 @@ func CreateWrappers(ctx context.Context, devbox devboxer) error {
 //     symlink is updated when devbox is updated.
 func CreateDevboxSymlinkIfPossible() error {
 	// Get the symlink path; create the symlink directory if it doesn't exist.
-	if err := fileutil.EnsureDirExists(devboxSymlinkDir, 0755, false /*chmod*/); err != nil {
+	if err := fileutil.EnsureDirExists(devboxSymlinkDir, 0o755, false /*chmod*/); err != nil {
 		return err
 	}
 	currentDevboxSymlinkPath := filepath.Join(devboxSymlinkDir, "devbox")
@@ -148,7 +148,7 @@ func createWrapper(args *createWrapperArgs) error {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(os.WriteFile(args.destPath, buf.Bytes(), 0755))
+	return errors.WithStack(os.WriteFile(args.destPath, buf.Bytes(), 0o755))
 }
 
 // createSymlinksForSupportDirs creates symlinks for the support dirs

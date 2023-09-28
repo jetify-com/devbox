@@ -35,7 +35,7 @@ func ClearDir(dir string) error {
 	if err == nil {
 		mode = f.Mode()
 	} else if errors.Is(err, fs.ErrNotExist) {
-		mode = 0755
+		mode = 0o755
 	} else {
 		return errors.WithStack(err)
 	}

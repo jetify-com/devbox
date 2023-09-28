@@ -14,7 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(projectDir string, cmdWithArgs string, env map[string]string) error {
+func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 	if cmdWithArgs == "" {
 		return errors.New("attempted to run an empty command or script")
 	}

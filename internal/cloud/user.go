@@ -25,7 +25,6 @@ func queryGithubUsername() (string, error) {
 	cmd.Stdout = &bufOut
 	cmd.Stderr = &bufErr
 	err := cmd.Run()
-
 	if err != nil {
 		if e := (&exec.ExitError{}); errors.As(err, &e) && e.ExitCode() == 1 {
 			// This is the Happy case, and we can parse out the error message

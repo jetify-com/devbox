@@ -26,6 +26,7 @@ func (r *RecommenderPoetry) IsRelevant() bool {
 	return fileutil.Exists(filepath.Join(r.SrcDir, "poetry.lock")) ||
 		fileutil.Exists(filepath.Join(r.SrcDir, "pyproject.toml"))
 }
+
 func (r *RecommenderPoetry) Packages() []string {
 	version := r.PythonVersion()
 	pythonPkg := fmt.Sprintf("python%s", version.MajorMinorConcatenated())

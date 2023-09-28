@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -18,7 +19,6 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
-	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -262,7 +262,7 @@ func (d *Devbox) profilePath() (string, error) {
 		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
 	}
 
-	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0755))
+	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
 }
 
 // syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,

@@ -10,16 +10,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 )
 
-func InitFromName(w io.Writer, template string, target string) error {
+func InitFromName(w io.Writer, template, target string) error {
 	templatePath, ok := templates[template]
 	if !ok {
 		return usererr.New("unknown template name or format %q", template)
@@ -27,7 +27,7 @@ func InitFromName(w io.Writer, template string, target string) error {
 	return InitFromRepo(w, "https://github.com/jetpack-io/devbox", templatePath, target)
 }
 
-func InitFromRepo(w io.Writer, repo string, subdir string, target string) error {
+func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 	if err := createDirAndEnsureEmpty(target); err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func List(w io.Writer, showAll bool) {
 func createDirAndEnsureEmpty(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if errors.Is(err, os.ErrNotExist) {
-		if err = os.MkdirAll(dir, 0755); err != nil {
+		if err = os.MkdirAll(dir, 0o755); err != nil {
 			return errors.WithStack(err)
 		}
 	} else if err != nil {

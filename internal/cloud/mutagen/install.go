@@ -30,9 +30,9 @@ func InstallMutagenOnce(binPath string) error {
 	return Install(url, installDir)
 }
 
-func Install(url string, installDir string) error {
+func Install(url, installDir string) error {
 	debug.Log("installing mutagen from %s to %s", url, installDir)
-	err := os.MkdirAll(installDir, 0755)
+	err := os.MkdirAll(installDir, 0o755)
 	if err != nil {
 		return err
 	}

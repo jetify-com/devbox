@@ -11,8 +11,10 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-var ErrPackageNotFound = errors.New("package not found")
-var ErrPackageNotInstalled = errors.New("package not installed")
+var (
+	ErrPackageNotFound     = errors.New("package not found")
+	ErrPackageNotInstalled = errors.New("package not installed")
+)
 
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
@@ -44,7 +46,6 @@ func parseSearchResults(data []byte) map[string]*Info {
 			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
 		}
-
 	}
 	return infos
 }
@@ -76,7 +77,7 @@ func PkgExistsForAnySystem(pkg string) bool {
 	return false
 }
 
-func searchSystem(url string, system string) (map[string]*Info, error) {
+func searchSystem(url, system string) (map[string]*Info, error) {
 	// Eventually we may pass a writer here, but for now it is safe to use stderr
 	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this

@@ -20,8 +20,10 @@ type Project struct {
 	} `xml:"PropertyGroup,omitempty"`
 }
 
-const CSharpExtension = "csproj"
-const FSharpExtension = "fsproj"
+const (
+	CSharpExtension = "csproj"
+	FSharpExtension = "fsproj"
+)
 
 type Recommender struct {
 	SrcDir string
