@@ -784,16 +784,14 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	currentEnvPath := env["PATH"]
 	debug.Log("current environment PATH is: %s", currentEnvPath)
-	// Use the original path, if available. If not available, set it for future calls.
-	// See https://github.com/jetpack-io/devbox/issues/687
-	// We add the project dir hash to ensure that we don't have conflicts
-	// between different projects (including global)
-	// (moving a project would change the hash and that's fine)
-	originalPath, ok := env[d.ogPathKey()]
+
+	pathStackEnv, ok := env["PATH_STACK"]
 	if !ok {
+		// if path stack is empty, then set the first element
+		pathStackEnv = d.ogPathKey()
 		env[d.ogPathKey()] = currentEnvPath
-		originalPath = currentEnvPath
 	}
+	debug.Log("path stack is: %s", pathStackEnv)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
@@ -899,7 +897,25 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	env["PATH"] = JoinPathLists(nixEnvPath, originalPath)
+	// The PathStack enables:
+	// 1. Tracking which sub-paths in PATH come from which devbox-project
+	// 2. The priority order of these sub-paths: devbox-projects encountered later get higher priority.
+	pathStack := strings.Split(pathStackEnv, ":")
+	nixEnvPathKey := "DEVBOX_NIX_ENV_PATH_" + d.projectDirHash()
+	if !lo.Contains(pathStack, nixEnvPathKey) {
+		// if pathStack does not contain this project's nixEnvPath already,
+		// then we add it
+		pathStack = append(pathStack, nixEnvPathKey)
+	}
+	// Store the nixEnvPath for this devbox-project. This lets us replace this sub-path in the eventual PATH,
+	// without affecting the sub-paths from other devbox-projects.
+	env[nixEnvPathKey] = nixEnvPath
+	env["PATH_STACK"] = strings.Join(pathStack, ":")
+
+	// Look up the path-list for each path-stack element, and join them together to get the final PATH.
+	pathLists := lo.Map(pathStack, func(part string, idx int) string { return env[part] })
+	env["PATH"] = JoinPathLists(lo.Reverse(pathLists)...) // reverse to give priority to the most recent project
+
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
 	d.setCommonHelperEnvVars(env)
