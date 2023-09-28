@@ -83,7 +83,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 			// set, and then proceed normally. The test should
 			// always pass in this case.
 			if *update {
-				err = os.WriteFile(test.goldShellrcPath, gotShellrc, 0666)
+				err = os.WriteFile(test.goldShellrcPath, gotShellrc, 0o666)
 				if err != nil {
 					t.Error("Error updating golden files:", err)
 				}

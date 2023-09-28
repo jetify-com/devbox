@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"os/exec"
+	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
@@ -54,7 +56,6 @@ type parentMessage struct {
 }
 
 func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
-
 	// Setup process communication with node as parent
 	channel, err := go2node.RunAsNodeChild()
 	if err != nil {
@@ -85,6 +86,14 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	envVars = slices.DeleteFunc(envVars, func(s string) bool {
+		k, _, ok := strings.Cut(s, "=")
+		// DEVBOX_OG_PATH_<hash> being set causes devbox global shellenv to overwrite the
+		// PATH after VSCode opens and resets it to global shellenv. This causes the VSCode
+		// terminal to not be able to find devbox packages after the reopen in devbox
+		// environment action is called.
+		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "HOME" || k == "NODE_CHANNEL_FD")
+	})
 
 	// Send message to parent process to terminate
 	err = channel.Write(&go2node.NodeMessage{
