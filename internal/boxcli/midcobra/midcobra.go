@@ -81,6 +81,7 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 		var exitErr *exec.ExitError
 		var userExecErr *usererr.ExitError
 		if errors.As(err, &userExecErr) {
+			ux.Ferror(ex.cmd.ErrOrStderr(), userExecErr.Error()+"\n")
 			return userExecErr.ExitCode()
 		}
 		if errors.As(err, &exitErr) {
