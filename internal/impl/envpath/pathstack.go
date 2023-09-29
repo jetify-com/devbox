@@ -64,7 +64,7 @@ func (s *Stack) AddToEnv(
 	env map[string]string,
 	projectHash string,
 	nixEnvPath string,
-	pathStackInPlace bool,
+	preservePathStack bool,
 ) map[string]string {
 	key := Key(projectHash)
 
@@ -72,8 +72,8 @@ func (s *Stack) AddToEnv(
 	env[key] = nixEnvPath
 
 	// Common case: ensure this key is at the top of the stack
-	if !pathStackInPlace ||
-		// Case pathStackInPlace == true, usually from bin-wrapper or (in future) shell hook.
+	if !preservePathStack ||
+		// Case preservePathStack == true, usually from bin-wrapper or (in future) shell hook.
 		// Add this key only if absent from the stack
 		!lo.Contains(s.keys, key) {
 
@@ -81,7 +81,7 @@ func (s *Stack) AddToEnv(
 	}
 	env[PathStackEnv] = s.String()
 
-	// Look up the paths-list for each paths-stack element, and join them together to get the final PATH.
+	// Look up the paths-list for each Stack element, and join them together to get the final PATH.
 	pathLists := lo.Map(s.keys, func(part string, idx int) string { return env[part] })
 	env["PATH"] = JoinPathLists(pathLists...)
 	return env

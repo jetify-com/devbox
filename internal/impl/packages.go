@@ -234,7 +234,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Force print-dev-env cache to be recomputed.
-	if _, err := d.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/); err != nil {
+	if _, err := d.computeNixEnv(ctx, false /*use cache*/); err != nil {
 		return err
 	}
 

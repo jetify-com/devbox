@@ -71,7 +71,7 @@ func TestComputeNixEnv(t *testing.T) {
 	d := devboxForTesting(t)
 	d.nix = &testNix{}
 	ctx := context.Background()
-	env, err := d.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/)
+	env, err := d.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	assert.NotNil(t, env, "computeNixEnv should return a valid env")
 }
@@ -80,7 +80,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -90,7 +90,7 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
 	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
-	env, err = devbox.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/)
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 
@@ -101,7 +101,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/)
+	env, err := devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -113,7 +113,7 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
 	devbox.nix.(*testNix).path = ""
-	env, err = devbox.computeNixEnv(ctx, false /*use cache*/, false /*pathStackInPlace*/)
+	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")

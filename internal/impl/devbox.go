@@ -60,6 +60,7 @@ type Devbox struct {
 	nix                      nix.Nixer
 	projectDir               string
 	pluginManager            *plugin.Manager
+	preservePathStack        bool
 	pure                     bool
 	allowInsecureAdds        bool
 	customProcessComposeFile string
@@ -90,6 +91,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,
+		preservePathStack:        opts.PreservePathStack,
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
@@ -175,7 +177,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -219,7 +221,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -290,7 +292,7 @@ func (d *Devbox) NixEnv(ctx context.Context, includeHooks, pathStackInPlace bool
 		return "", err
 	}
 
-	envs, err := d.nixEnv(ctx, pathStackInPlace)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -314,7 +316,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +325,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
 	// TODO savil: correct?
-	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
+	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -766,11 +768,7 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv(
-	ctx context.Context,
-	usePrintDevEnvCache bool,
-	pathStackInPlace bool,
-) (map[string]string, error) {
+func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
 	// Append variables from current env if --pure is not passed
@@ -897,7 +895,7 @@ func (d *Devbox) computeNixEnv(
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath, pathStackInPlace)
+	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
 	debug.Log("New path stack is: %s", pathStack)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
@@ -921,7 +919,7 @@ var nixEnvCache map[string]string
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context, pathStackInPlace bool) (map[string]string, error) {
+func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
@@ -938,7 +936,7 @@ func (d *Devbox) nixEnv(ctx context.Context, pathStackInPlace bool) (map[string]
 		usePrintDevEnvCache = true
 	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache, pathStackInPlace)
+	return d.computeNixEnv(ctx, usePrintDevEnvCache)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1125,7 +1123,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
+	env, err := d.nixEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
