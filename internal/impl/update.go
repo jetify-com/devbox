@@ -20,10 +20,6 @@ import (
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
-	if opts.Sync {
-		return lock.SyncLockfiles()
-	}
-
 	inputs, err := d.inputsToUpdate(opts.Pkgs...)
 	if err != nil {
 		return err

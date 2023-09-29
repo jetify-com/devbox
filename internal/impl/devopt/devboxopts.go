@@ -40,5 +40,4 @@ type Credentials struct {
 
 type UpdateOpts struct {
 	Pkgs []string
-	Sync bool
 }

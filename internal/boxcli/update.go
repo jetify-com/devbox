@@ -53,9 +53,18 @@ func updateCmd() *cobra.Command {
 }
 
 func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
-	if flags.allProjects {
-		return updateAllProjects(cmd, args, flags)
+	if len(args) > 0 && flags.sync {
+		return usererr.New("cannot specify both a package and --sync")
 	}
+
+	if flags.allProjects {
+		return updateAllProjects(cmd, args)
+	}
+
+	if flags.sync {
+		return multi.SyncLockfiles(args)
+	}
+
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Stderr: cmd.ErrOrStderr(),
@@ -64,17 +73,12 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 		return errors.WithStack(err)
 	}
 
-	if len(args) > 0 && flags.sync {
-		return usererr.New("cannot specify both a package and --sync")
-	}
-
 	return box.Update(cmd.Context(), devopt.UpdateOpts{
 		Pkgs: args,
-		Sync: flags.sync,
 	})
 }
 
-func updateAllProjects(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
+func updateAllProjects(cmd *cobra.Command, args []string) error {
 	boxes, err := multi.Open(&devopt.Opts{
 		Stderr: cmd.ErrOrStderr(),
 	})
@@ -84,10 +88,9 @@ func updateAllProjects(cmd *cobra.Command, args []string, flags *updateCmdFlags)
 	for _, box := range boxes {
 		if err := box.Update(cmd.Context(), devopt.UpdateOpts{
 			Pkgs: args,
-			Sync: flags.sync,
 		}); err != nil {
 			return err
 		}
 	}
-	return nil
+	return multi.SyncLockfiles(args)
 }
