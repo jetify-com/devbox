@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/impl/envpath"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
@@ -782,16 +783,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 	}
 
-	currentEnvPath := env["PATH"]
-	debug.Log("current environment PATH is: %s", currentEnvPath)
+	debug.Log("current environment PATH is: %s", env["PATH"])
 
-	pathStackEnv, ok := env["PATH_STACK"]
-	if !ok {
-		// if path stack is empty, then set the first element
-		pathStackEnv = d.ogPathKey()
-		env[d.ogPathKey()] = currentEnvPath
-	}
-	debug.Log("path stack is: %s", pathStackEnv)
+	pathStack := envpath.NewStack(env)
+	debug.Log("path stack is: %s", pathStack)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
@@ -851,13 +846,13 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
-	env["PATH"] = JoinPathLists(
+	env["PATH"] = envpath.JoinPathLists(
 		nix.ProfileBinPath(d.projectDir),
 		env["PATH"],
 	)
 
 	if !d.OmitBinWrappersFromPath {
-		env["PATH"] = JoinPathLists(
+		env["PATH"] = envpath.JoinPathLists(
 			filepath.Join(d.projectDir, plugin.WrapperBinPath),
 			env["PATH"],
 		)
@@ -897,24 +892,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	// The PathStack enables:
-	// 1. Tracking which sub-paths in PATH come from which devbox-project
-	// 2. The priority order of these sub-paths: devbox-projects encountered later get higher priority.
-	pathStack := strings.Split(pathStackEnv, ":")
-	nixEnvPathKey := "DEVBOX_NIX_ENV_PATH_" + d.projectDirHash()
-	if !lo.Contains(pathStack, nixEnvPathKey) {
-		// if pathStack does not contain this project's nixEnvPath already,
-		// then we add it
-		pathStack = append(pathStack, nixEnvPathKey)
-	}
-	// Store the nixEnvPath for this devbox-project. This lets us replace this sub-path in the eventual PATH,
-	// without affecting the sub-paths from other devbox-projects.
-	env[nixEnvPathKey] = nixEnvPath
-	env["PATH_STACK"] = strings.Join(pathStack, ":")
-
-	// Look up the path-list for each path-stack element, and join them together to get the final PATH.
-	pathLists := lo.Map(pathStack, func(part string, idx int) string { return env[part] })
-	env["PATH"] = JoinPathLists(lo.Reverse(pathLists)...) // reverse to give priority to the most recent project
+	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
@@ -922,7 +900,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
-		env["XDG_DATA_DIRS"] = JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
+		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
 	}
 
 	for k, v := range d.env {
@@ -955,10 +933,6 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	}
 
 	return d.computeNixEnv(ctx, usePrintDevEnvCache)
-}
-
-func (d *Devbox) ogPathKey() string {
-	return "DEVBOX_OG_PATH_" + d.projectDirHash()
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1136,8 +1110,8 @@ var ignoreDevEnvVar = map[string]bool{
 // common setups (e.g. gradio, rust)
 func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
-	env["LD_LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
-	env["LIBRARY_PATH"] = JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
+	env["LD_LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
+	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
 // NixBins returns the paths to all the nix binaries that are installed by
@@ -1213,7 +1187,7 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 			return nil, err
 		}
 		includedInPath = append(includedInPath, dotdevboxBinPath(d))
-		env["PATH"] = JoinPathLists(includedInPath...)
+		env["PATH"] = envpath.JoinPathLists(includedInPath...)
 	}
 	return env, nil
 }

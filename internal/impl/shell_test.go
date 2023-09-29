@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/impl/envpath"
 	"go.jetpack.io/devbox/internal/shellgen"
 )
 
@@ -125,7 +126,7 @@ func TestCleanEnvPath(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := JoinPathLists(test.inPath)
+			got := envpath.JoinPathLists(test.inPath)
 			if got != test.outPath {
 				t.Errorf("Got incorrect cleaned PATH.\ngot:  %s\nwant: %s", got, test.outPath)
 			}

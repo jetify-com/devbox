@@ -7,6 +7,8 @@ import (
 	"os"
 	"slices"
 	"strings"
+
+	"go.jetpack.io/devbox/internal/impl/envpath"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
@@ -98,5 +100,11 @@ func markEnvsAsSetByDevbox(envs ...map[string]string) {
 // as a proxy for this. This allows us to differentiate between global and
 // individual project shells.
 func (d *Devbox) IsEnvEnabled() bool {
-	return os.Getenv(d.ogPathKey()) != ""
+	env := map[string]string{}
+	for _, keyVal := range os.Environ() {
+		parts := strings.Split(keyVal, "=")
+		env[parts[0]] = parts[1]
+	}
+	pathStack := envpath.NewStack(env)
+	return pathStack.Has(envpath.Key(d.projectDirHash()))
 }
