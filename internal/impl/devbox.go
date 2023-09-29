@@ -324,7 +324,6 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
-	// TODO savil: correct?
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
