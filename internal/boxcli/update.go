@@ -87,7 +87,8 @@ func updateAllProjects(cmd *cobra.Command, args []string) error {
 	}
 	for _, box := range boxes {
 		if err := box.Update(cmd.Context(), devopt.UpdateOpts{
-			Pkgs: args,
+			Pkgs:                  args,
+			IgnoreMissingPackages: true,
 		}); err != nil {
 			return err
 		}
