@@ -4,24 +4,31 @@
 package impl
 
 import (
-	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
 
+// mapToPairs creates a slice of environment variable "key=value" pairs from a
+// map.
 func mapToPairs(m map[string]string) []string {
-	pairs := []string{}
+	pairs := make([]string, len(m))
+	i := 0
 	for k, v := range m {
-		pairs = append(pairs, fmt.Sprintf("%s=%s", k, v))
+		pairs[i] = k + "=" + v
+		i++
 	}
+	slices.Sort(pairs) // for reproducibility
 	return pairs
 }
 
+// pairsToMap creates a map from a slice of "key=value" environment variable
+// pairs. Note that maps are not ordered, which can affect the final variable
+// values when pairs contains duplicate keys.
 func pairsToMap(pairs []string) map[string]string {
-	vars := map[string]string{}
+	vars := make(map[string]string, len(pairs))
 	for _, p := range pairs {
 		k, v, ok := strings.Cut(p, "=")
 		if !ok {
@@ -32,14 +39,19 @@ func pairsToMap(pairs []string) map[string]string {
 	return vars
 }
 
-// exportify takes a map of [string]string and returns a single string
-// of the form export KEY="VAL"; and escapes all the vals from special characters.
+// exportify formats vars as a line-separated string of shell export statements.
+// Each line is of the form `export key="value";` with any special characters in
+// value escaped. This means that the shell will always interpret values as
+// literal strings; no variable expansion or command substitution will take
+// place.
 func exportify(vars map[string]string) string {
-	keys := make([]string, 0, len(vars))
+	keys := make([]string, len(vars))
+	i := 0
 	for k := range vars {
-		keys = append(keys, k)
+		keys[i] = k
+		i++
 	}
-	sort.Strings(keys)
+	slices.Sort(keys) // for reproducibility
 
 	strb := strings.Builder{}
 	for _, k := range keys {
@@ -58,56 +70,6 @@ func exportify(vars map[string]string) string {
 		strb.WriteString("\";\n")
 	}
 	return strings.TrimSpace(strb.String())
-}
-
-// exportify takes a map of [string]string and returns an array of string
-// of the form KEY="VAL" and escapes all the vals from special characters.
-func keyEqualsValue(vars map[string]string) []string {
-	keys := make([]string, 0, len(vars))
-	for k := range vars {
-		keys = append(keys, k)
-	}
-	keyValues := make([]string, 0, len(vars))
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		if isApproved(k) {
-			strb := strings.Builder{}
-			strb.WriteString(k)
-			strb.WriteString(`=`)
-			for _, r := range vars[k] {
-				switch r {
-				// Special characters inside double quotes:
-				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-				case '$', '`', '"', '\\', '\n':
-					strb.WriteRune('\\')
-				}
-				strb.WriteRune(r)
-			}
-			keyValues = append(keyValues, strb.String())
-		}
-	}
-	return keyValues
-}
-
-func isApproved(key string) bool {
-	// list to keys
-	// should find the corrupt key
-	troublingEnvKeys := []string{
-		"HOME",
-		"NODE_CHANNEL_FD",
-	}
-	approved := true
-	for _, ak := range troublingEnvKeys {
-		// DEVBOX_OG_PATH_<hash> being set causes devbox global shellenv or overwrite
-		// the PATH after vscode opens and resets it to global shellenv
-		// This causes vscode terminal to not be able to find devbox packages
-		// after reopen in devbox environment action is called
-		if key == ak || strings.HasPrefix(key, "DEVBOX_OG_PATH") {
-			approved = false
-		}
-	}
-	return approved
 }
 
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,

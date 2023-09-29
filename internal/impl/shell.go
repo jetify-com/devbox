@@ -244,6 +244,7 @@ func (s *DevboxShell) Run() error {
 	for k, v := range extraEnv {
 		env[k] = v
 	}
+	env["SHELL"] = s.binPath
 
 	cmd = exec.Command(s.binPath)
 	cmd.Env = mapToPairs(env)

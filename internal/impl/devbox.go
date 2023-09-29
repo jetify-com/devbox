@@ -71,7 +71,6 @@ type Devbox struct {
 var legacyPackagesWarningHasBeenShown = false
 
 func Open(opts *devopt.Opts) (*Devbox, error) {
-
 	projectDir, err := findProjectDir(opts.Dir)
 	if err != nil {
 		return nil, err
@@ -318,7 +317,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return keyEqualsValue(envs), nil
+	return mapToPairs(envs), nil
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
@@ -684,7 +683,6 @@ func (d *Devbox) StartProcessManager(
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-
 	if !d.IsEnvEnabled() {
 		args := []string{"services", "up"}
 		args = append(args, requestedServices...)
