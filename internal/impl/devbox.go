@@ -263,11 +263,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // Install ensures that all the packages in the config are installed and
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
-func (d *Devbox) Install(ctx context.Context, pathStackInPlace bool) error {
+func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	if _, err := d.NixEnv(ctx, false /*includeHooks*/, pathStackInPlace); err != nil {
+	if _, err := d.NixEnv(ctx, false /*includeHooks*/); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
@@ -284,7 +284,7 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, includeHooks, pathStackInPlace bool) (string, error) {
+func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 

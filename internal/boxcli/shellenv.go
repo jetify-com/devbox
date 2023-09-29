@@ -80,12 +80,12 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 	}
 
 	if flags.install {
-		if err := box.Install(cmd.Context(), flags.preservePathStack); err != nil {
+		if err := box.Install(cmd.Context()); err != nil {
 			return "", err
 		}
 	}
 
-	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook, flags.preservePathStack)
+	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook)
 	if err != nil {
 		return "", err
 	}
