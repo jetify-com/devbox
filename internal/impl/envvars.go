@@ -105,6 +105,6 @@ func (d *Devbox) IsEnvEnabled() bool {
 		parts := strings.Split(keyVal, "=")
 		env[parts[0]] = parts[1]
 	}
-	pathStack := envpath.NewStack(env)
+	pathStack := envpath.Stack(env)
 	return pathStack.Has(envpath.Key(d.projectDirHash()))
 }

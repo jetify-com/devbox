@@ -787,7 +787,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	debug.Log("current environment PATH is: %s", env["PATH"])
 
-	pathStack := envpath.NewStack(env)
+	pathStack := envpath.Stack(env)
 	debug.Log("Original path stack is: %s", pathStack)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
@@ -894,7 +894,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
+	env = pathStack.PushAndUpdateEnv(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
 	debug.Log("New path stack is: %s", pathStack)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
