@@ -175,7 +175,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	env, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
 	if err != nil {
 		return err
 	}
@@ -261,11 +261,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 // Install ensures that all the packages in the config are installed and
 // creates all wrappers, but does not run init hooks. It is used to power
 // devbox install cli command.
-func (d *Devbox) Install(ctx context.Context) error {
+func (d *Devbox) Install(ctx context.Context, pathStackInPlace bool) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	if _, err := d.NixEnv(ctx, false /*includeHooks*/); err != nil {
+	if _, err := d.NixEnv(ctx, false /*includeHooks*/, pathStackInPlace); err != nil {
 		return err
 	}
 	return wrapnix.CreateWrappers(ctx, d)
@@ -282,7 +282,7 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) NixEnv(ctx context.Context, includeHooks, pathStackInPlace bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
@@ -290,7 +290,7 @@ func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) 
 		return "", err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, pathStackInPlace)
 	if err != nil {
 		return "", err
 	}
@@ -314,7 +314,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,8 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
-	envs, err := d.nixEnv(ctx)
+	// TODO savil: correct?
+	envs, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
 	if err != nil {
 		return "", err
 	}
@@ -765,7 +766,11 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+func (d *Devbox) computeNixEnv(
+	ctx context.Context,
+	usePrintDevEnvCache bool,
+	pathStackInPlace bool,
+) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
 	// Append variables from current env if --pure is not passed
@@ -786,7 +791,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	debug.Log("current environment PATH is: %s", env["PATH"])
 
 	pathStack := envpath.NewStack(env)
-	debug.Log("path stack is: %s", pathStack)
+	debug.Log("Original path stack is: %s", pathStack)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
@@ -892,7 +897,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath)
+	env = pathStack.AddToEnv(env, d.projectDirHash(), nixEnvPath, pathStackInPlace)
+	debug.Log("New path stack is: %s", pathStack)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
@@ -915,7 +921,7 @@ var nixEnvCache map[string]string
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+func (d *Devbox) nixEnv(ctx context.Context, pathStackInPlace bool) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 	if nixEnvCache != nil {
 		return nixEnvCache, nil
@@ -932,7 +938,7 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 		usePrintDevEnvCache = true
 	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache)
+	return d.computeNixEnv(ctx, usePrintDevEnvCache, pathStackInPlace)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1119,7 +1125,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
 func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.nixEnv(ctx)
+	env, err := d.nixEnv(ctx, false /*pathStackInPlace*/)
 	if err != nil {
 		return nil, err
 	}

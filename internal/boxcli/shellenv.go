@@ -15,10 +15,11 @@ import (
 
 type shellEnvCmdFlags struct {
 	envFlag
-	config      configFlags
-	runInitHook bool
-	install     bool
-	pure        bool
+	config           configFlags
+	runInitHook      bool
+	install          bool
+	pure             bool
+	pathStackInPlace bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -48,6 +49,11 @@ func shellEnvCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+	command.Flags().BoolVar(
+		&flags.pure, "path-stack-in-place", true,
+		"If true, Devbox will not give top priority to the PATH of this project's shellenv. "+
+			"This project's place in the path stack will be unchanged.")
+	_ = command.Flags().MarkHidden("path-stack-in-place")
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
@@ -73,12 +79,12 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 	}
 
 	if flags.install {
-		if err := box.Install(cmd.Context()); err != nil {
+		if err := box.Install(cmd.Context(), flags.pathStackInPlace); err != nil {
 			return "", err
 		}
 	}
 
-	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook)
+	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook, flags.pathStackInPlace)
 	if err != nil {
 		return "", err
 	}

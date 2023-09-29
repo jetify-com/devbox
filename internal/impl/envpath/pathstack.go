@@ -58,14 +58,27 @@ func Key(projectHash string) string {
 // 1. nixEnvPath key
 // 2. PathStack
 // 3. PATH
-func (s *Stack) AddToEnv(env map[string]string, projectHash, nixEnvPath string) map[string]string {
+//
+// Returns the modified env map
+func (s *Stack) AddToEnv(
+	env map[string]string,
+	projectHash string,
+	nixEnvPath string,
+	pathStackInPlace bool,
+) map[string]string {
 	key := Key(projectHash)
 
 	// Add this nixEnvPath to env
 	env[key] = nixEnvPath
 
-	// Add this key to the stack b/c earlier keys get priority
-	s.keys = lo.Uniq(slices.Insert(s.keys, 0, key))
+	// Common case: ensure this key is at the top of the stack
+	if !pathStackInPlace ||
+		// Case pathStackInPlace == true, usually from bin-wrapper or (in future) shell hook.
+		// Add this key only if absent from the stack
+		!lo.Contains(s.keys, key) {
+
+		s.keys = lo.Uniq(slices.Insert(s.keys, 0, key))
+	}
 	env[PathStackEnv] = s.String()
 
 	// Look up the paths-list for each paths-stack element, and join them together to get the final PATH.

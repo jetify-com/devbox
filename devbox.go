@@ -20,10 +20,10 @@ type Devbox interface {
 	Config() *devconfig.Config
 	EnvVars(ctx context.Context) ([]string, error)
 	Info(ctx context.Context, pkg string, markdown bool) (string, error)
-	Install(ctx context.Context) error
+	Install(ctx context.Context, pathStackInPlace bool) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	NixEnv(ctx context.Context, includeHooks bool) (string, error)
+	NixEnv(ctx context.Context, includeHooks, pathStackInPlace bool) (string, error)
 	PackageNames() []string
 	ProjectDir() string
 	Pull(ctx context.Context, opts devopt.PullboxOpts) error
