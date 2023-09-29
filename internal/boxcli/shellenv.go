@@ -51,8 +51,8 @@ func shellEnvCmd() *cobra.Command {
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 	command.Flags().BoolVar(
 		&flags.preservePathStack, "preserve-path-stack", false,
-		"If true, Devbox will not give top priority to the PATH of this project's shellenv. "+
-			"This project's place in the path stack will be unchanged.")
+		"Preserves existing PATH order if this project's environment is already in PATH. "+
+			"Useful if you want to avoid overshadowing another devbox project that is already active")
 	_ = command.Flags().MarkHidden("preserve-path-stack")
 
 	flags.config.register(command)
