@@ -8,13 +8,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/boxcli/multi"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type updateCmdFlags struct {
-	config configFlags
-	sync   bool
+	config      configFlags
+	sync        bool
+	allProjects bool
 }
 
 func updateCmd() *cobra.Command {
@@ -41,10 +43,19 @@ func updateCmd() *cobra.Command {
 		"Sync all devbox.lock dependencies in multiple projects. "+
 			"Dependencies will sync to the latest local version.",
 	)
+	command.Flags().BoolVar(
+		&flags.allProjects,
+		"all-projects",
+		false,
+		"Update all projects in the working directory, recursively.",
+	)
 	return command
 }
 
 func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
+	if flags.allProjects {
+		return updateAllProjects(cmd, args, flags)
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Stderr: cmd.ErrOrStderr(),
@@ -61,4 +72,22 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 		Pkgs: args,
 		Sync: flags.sync,
 	})
+}
+
+func updateAllProjects(cmd *cobra.Command, args []string, flags *updateCmdFlags) error {
+	boxes, err := multi.Open(&devopt.Opts{
+		Stderr: cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, box := range boxes {
+		if err := box.Update(cmd.Context(), devopt.UpdateOpts{
+			Pkgs: args,
+			Sync: flags.sync,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
