@@ -32,7 +32,7 @@ type stack struct {
 
 func Stack(env map[string]string) *stack {
 	stackEnv, ok := env[PathStackEnv]
-	if !ok {
+	if !ok || strings.TrimSpace(stackEnv) == "" {
 		// if path stack is empty, then push the current PATH, which is the
 		// external environment prior to any devbox-shellenv being applied to it.
 		stackEnv = InitPathEnv
@@ -48,6 +48,12 @@ func (s *stack) String() string {
 	return strings.Join(s.keys, ":")
 }
 
+func (s *stack) Path(env map[string]string) string {
+	// Look up the paths-list for each stack element, and join them together to get the final PATH.
+	pathLists := lo.Map(s.keys, func(part string, idx int) string { return env[part] })
+	return JoinPathLists(pathLists...)
+}
+
 // Key is the element stored in the stack for a devbox-project. It represents
 // a pointer to the nixEnvPath value stored in its own env-var, also using this same
 // Key.
@@ -55,22 +61,20 @@ func Key(projectHash string) string {
 	return "DEVBOX_NIX_ENV_PATH_" + projectHash
 }
 
-// PushAndUpdateEnv adds the new nixEnvPath for the devbox-project identified by projectHash.
-// The nixEnvPath is pushed to the top of the stack (given highest priority), unless preservePathStack
-// is enabled.
+// Push adds the new nixEnvPath for the devbox-project identified by projectHash.
+// The nixEnvPath is pushed to the top of the stack (given highest priority),
+// unless preservePathStack is enabled.
 //
-// It also updated the env by modifying the following env-vars:
+// It also updates the env by modifying the following env-vars:
 // 1. nixEnvPath key
 // 2. PathStack
 // 3. PATH
-//
-// Returns the modified env map
-func (s *stack) PushAndUpdateEnv(
+func (s *stack) Push(
 	env map[string]string,
 	projectHash string,
 	nixEnvPath string,
 	preservePathStack bool,
-) map[string]string {
+) {
 	key := Key(projectHash)
 
 	// Add this nixEnvPath to env
@@ -85,15 +89,10 @@ func (s *stack) PushAndUpdateEnv(
 		s.keys = lo.Uniq(slices.Insert(s.keys, 0, key))
 	}
 	env[PathStackEnv] = s.String()
-
-	// Look up the paths-list for each stack element, and join them together to get the final PATH.
-	pathLists := lo.Map(s.keys, func(part string, idx int) string { return env[part] })
-	env["PATH"] = JoinPathLists(pathLists...)
-	return env
 }
 
 // Has tests if the stack has the specified key. Refer to the Key function for constructing
 // the appropriate key for any devbox-project.
-func (s *stack) Has(key string) bool {
-	return lo.Contains(s.keys, key)
+func (s *stack) Has(projectHash string) bool {
+	return lo.Contains(s.keys, Key(projectHash))
 }

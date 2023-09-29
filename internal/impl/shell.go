@@ -247,7 +247,7 @@ func (s *DevboxShell) Run() error {
 	env["SHELL"] = s.binPath
 
 	cmd = exec.Command(s.binPath)
-	cmd.Env = mapToPairs(env)
+	cmd.Env = envir.MapToPairs(env)
 	cmd.Args = append(cmd.Args, extraArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

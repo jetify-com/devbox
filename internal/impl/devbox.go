@@ -13,10 +13,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
-	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
+
+	"slices"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -26,6 +27,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"golang.org/x/exp/maps"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -320,7 +322,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return mapToPairs(envs), nil
+	return envir.MapToPairs(envs), nil
 }
 
 func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
@@ -787,8 +789,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	debug.Log("current environment PATH is: %s", env["PATH"])
 
-	pathStack := envpath.Stack(env)
-	debug.Log("Original path stack is: %s", pathStack)
+	originalEnv := make(map[string]string, len(env))
+	maps.Copy(originalEnv, env)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakesFilePath:       d.nixFlakesFilePath(),
@@ -894,7 +896,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	env = pathStack.PushAndUpdateEnv(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
+	pathStack := envpath.Stack(originalEnv)
+	pathStack.Push(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
+	env["PATH"] = pathStack.Path(env)
+
 	debug.Log("New path stack is: %s", pathStack)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])

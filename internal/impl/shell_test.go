@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/shellgen"
 )
 
@@ -45,7 +46,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 		test := &tests[i]
 		test.name = filepath.Base(path)
 		if b, err := os.ReadFile(filepath.Join(path, "env")); err == nil {
-			test.env = pairsToMap(strings.Split(string(b), "\n"))
+			test.env = envir.PairsToMap(strings.Split(string(b), "\n"))
 		}
 
 		test.hooksFilePath = shellgen.ScriptPath(projectDir, shellgen.HooksFilename)
