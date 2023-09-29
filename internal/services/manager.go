@@ -64,7 +64,7 @@ func newGlobalProcessComposeConfig() *globalProcessComposeConfig {
 
 func globalProcessComposeJSONPath() (string, error) {
 	path := xdg.DataSubpath(filepath.Join("devbox", "global"))
-	return filepath.Join(path, "process-compose.json"), errors.WithStack(os.MkdirAll(path, 0755))
+	return filepath.Join(path, "process-compose.json"), errors.WithStack(os.MkdirAll(path, 0o755))
 }
 
 func readGlobalProcessComposeJSON(file *os.File) *globalProcessComposeConfig {
@@ -102,7 +102,7 @@ func openGlobalConfigFile() (*os.File, error) {
 		return nil, fmt.Errorf("failed to get config path: %w", err)
 	}
 
-	globalConfigFile, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0664)
+	globalConfigFile, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0o664)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
@@ -179,7 +179,6 @@ func StartProcessManager(
 }
 
 func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string, w io.Writer) error {
-
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
@@ -220,8 +219,7 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 }
 
 func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string) error {
-
-	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0664)
+	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0o664)
 	if err != nil {
 		return fmt.Errorf("failed to open process-compose log file: %w", err)
 	}
@@ -307,7 +305,6 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 }
 
 func ProcessManagerIsRunning(projectDir string) bool {
-
 	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return false

@@ -64,7 +64,7 @@ func utilityLookPath(binName string) (string, error) {
 
 func utilityDataPath() (string, error) {
 	path := xdg.DataSubpath("devbox/util")
-	return path, errors.WithStack(os.MkdirAll(path, 0755))
+	return path, errors.WithStack(os.MkdirAll(path, 0o755))
 }
 
 func utilityNixProfilePath() (string, error) {

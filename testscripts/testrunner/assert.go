@@ -135,7 +135,7 @@ func assertPathOrder(script *testscript.TestScript, neg bool, args []string) {
 	}
 }
 
-func containsInOrder(subpaths []string, expected []string) bool {
+func containsInOrder(subpaths, expected []string) bool {
 	if len(expected) == 0 {
 		return true // no parts passed in, assertion trivially holds.
 	}

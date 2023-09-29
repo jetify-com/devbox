@@ -28,7 +28,7 @@ const xdgStateHomeDir = "/tmp/devbox-testscripts"
 // For each project, runs `devbox run run_test` (if script exists) and asserts it succeeds.
 func RunDevboxTestscripts(t *testing.T, dir string) {
 	// ensure the state home dir for devbox exists
-	err := os.MkdirAll(xdgStateHomeDir, 0700)
+	err := os.MkdirAll(xdgStateHomeDir, 0o700)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		t.Error(err)
 	}
@@ -95,7 +95,6 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 	// save a reference to the original params.Setup so that we can wrap it below
 	setup := params.Setup
 	params.Setup = func(envs *testscript.Env) error {
-
 		// We set a custom XDG_STATE_HOME to an intentionally short path.
 		// Reason: devbox plugins like postgres store unix socket files in their state dir.
 		envs.Setenv(envir.XDGStateHome, xdgStateHomeDir)

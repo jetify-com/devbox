@@ -171,7 +171,6 @@ func (p *Package) IsInstallable() bool {
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
 func (p *Package) Installable() (string, error) {
-
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return "", err
@@ -438,7 +437,6 @@ func EnsureNixpkgsPrefetched(ctx context.Context, w io.Writer, pkgs []*Package) 
 // ensureNixpkgsPrefetched should be called via the public EnsureNixpkgsPrefetched.
 // See function comment there.
 func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
-
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return err

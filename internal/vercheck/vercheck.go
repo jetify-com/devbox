@@ -172,7 +172,6 @@ type updatedVersions struct {
 // version is available. It parses the output to get the new launcher and
 // devbox versions.
 func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
-
 	exePath := os.Getenv(envir.LauncherPath)
 	if exePath == "" {
 		ux.Fwarning(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")

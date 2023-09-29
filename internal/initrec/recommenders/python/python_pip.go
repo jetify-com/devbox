@@ -20,6 +20,7 @@ var _ recommenders.Recommender = (*RecommenderPip)(nil)
 func (r *RecommenderPip) IsRelevant() bool {
 	return fileutil.Exists(filepath.Join(r.SrcDir, "requirements.txt"))
 }
+
 func (r *RecommenderPip) Packages() []string {
 	return []string{
 		"python3",

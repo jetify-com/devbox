@@ -15,7 +15,7 @@ func Exists(command string) bool {
 
 // GetPathOrDefault gets the path for the given command.
 // If it's not found, it will return the given value instead.
-func GetPathOrDefault(command string, def string) string {
+func GetPathOrDefault(command, def string) string {
 	path, err := exec.LookPath(command)
 	if err != nil {
 		path = def

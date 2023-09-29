@@ -171,12 +171,10 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 				"python.defaultInterpreterPath": "/code/.devbox/nix/profile/default/bin/python3",
 			}
 			// add python extension if a python3 package is installed
-			devcontainerContent.Customizations.Vscode.Extensions =
-				append(devcontainerContent.Customizations.Vscode.Extensions, "ms-python.python")
+			devcontainerContent.Customizations.Vscode.Extensions = append(devcontainerContent.Customizations.Vscode.Extensions, "ms-python.python")
 		}
 		if strings.Contains(pkg, "go_1_") || pkg == "go" {
-			devcontainerContent.Customizations.Vscode.Extensions =
-				append(devcontainerContent.Customizations.Vscode.Extensions, "golang.go")
+			devcontainerContent.Customizations.Vscode.Extensions = append(devcontainerContent.Customizations.Vscode.Extensions, "golang.go")
 		}
 		// TODO: add support for other common languages
 	}

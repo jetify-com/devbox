@@ -94,13 +94,13 @@ func cloudFilePath(projectDir string) string {
 // initCloudDir creates the service status directory and a .gitignore file
 func initCloudDir(projectDir, hostID string) error {
 	cloudDirPath := cloudFilePath(projectDir)
-	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0755)
+	_ = os.MkdirAll(filepath.Join(cloudDirPath, hostID), 0o755)
 	gitignorePath := filepath.Join(cloudDirPath, ".gitignore")
 	_, err := os.Stat(gitignorePath)
 	if !errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
-	return errors.WithStack(os.WriteFile(gitignorePath, []byte("*"), 0644))
+	return errors.WithStack(os.WriteFile(gitignorePath, []byte("*"), 0o644))
 }
 
 type ServiceStatus struct {
@@ -115,8 +115,8 @@ func writeServiceStatusFile(path string, status *ServiceStatus) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	_ = os.MkdirAll(filepath.Dir(path), 0755) // create path, ignore error
-	return errors.WithStack(os.WriteFile(path, content, 0644))
+	_ = os.MkdirAll(filepath.Dir(path), 0o755) // create path, ignore error
+	return errors.WithStack(os.WriteFile(path, content, 0o644))
 }
 
 //lint:ignore U1000 Ignore unused function temporarily for debugging

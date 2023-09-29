@@ -35,7 +35,6 @@ func FlakeUpdate(ProfileDir string) error {
 	if err != nil {
 		return redact.Errorf(
 			"error running \"nix flake update\": %s: %w", out, err)
-
 	}
 	return nil
 }

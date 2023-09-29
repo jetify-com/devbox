@@ -21,7 +21,7 @@ func Setup() error {
 		return errors.WithStack(err)
 	}
 
-	if err := openssh.EnsureDirExists(shimDir, 0744, true /*chmod*/); err != nil {
+	if err := openssh.EnsureDirExists(shimDir, 0o744, true /*chmod*/); err != nil {
 		return err
 	}
 
@@ -41,7 +41,7 @@ func Setup() error {
 	return errors.WithStack(makeSymlink(scpSymlink, devboxExecutablePath))
 }
 
-func makeSymlink(from string, target string) error {
+func makeSymlink(from, target string) error {
 	err := os.Remove(from)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return errors.WithStack(err)

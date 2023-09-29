@@ -29,8 +29,7 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 	return string(out), nil
 }
 
-func ProfileInstall(writer io.Writer, profilePath string, installable string) error {
-
+func ProfileInstall(writer io.Writer, profilePath, installable string) error {
 	if !IsInsecureAllowed() && PackageIsInsecure(installable) {
 		knownVulnerabilities := PackageKnownVulnerabilities(installable)
 		errString := fmt.Sprintf("Package %s is insecure. \n\n", installable)
@@ -65,7 +64,6 @@ func ProfileInstall(writer io.Writer, profilePath string, installable string) er
 }
 
 func ProfileRemove(profilePath string, indexes []string) error {
-
 	cmd := command(
 		append([]string{
 			"profile", "remove",

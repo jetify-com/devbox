@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -24,7 +25,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"golang.org/x/exp/slices"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"

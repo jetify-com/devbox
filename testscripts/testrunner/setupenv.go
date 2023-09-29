@@ -52,7 +52,7 @@ func setupCacheHome(envs *testscript.Env) error {
 	// test set it to a location within the test's working directory:
 	cacheHome := filepath.Join(envs.WorkDir, ".cache")
 	envs.Setenv(envir.XDGCacheHome, cacheHome)
-	err := os.MkdirAll(cacheHome, 0755) // Ensure dir exists.
+	err := os.MkdirAll(cacheHome, 0o755) // Ensure dir exists.
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func setupCacheHome(envs *testscript.Env) error {
 	// nixpkgs every time.
 	// Here we create a shared location for nix's cache, and symlink from
 	// the test's working directory.
-	err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0755) // Ensure dir exists.
+	err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0o755) // Ensure dir exists.
 	if err != nil {
 		return err
 	}

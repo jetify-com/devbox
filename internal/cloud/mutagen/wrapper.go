@@ -72,7 +72,6 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 
 	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
-
 	if err != nil {
 		debug.Log("List error: %s, and out: %s", err, string(out))
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
@@ -119,7 +118,7 @@ func Reset(envVars map[string]string, names ...string) error {
 	return execMutagenEnv(args, envVars)
 }
 
-func Terminate(env map[string]string, labels map[string]string, names ...string) error {
+func Terminate(env, labels map[string]string, names ...string) error {
 	args := []string{"sync", "terminate"}
 
 	for k, v := range labels {

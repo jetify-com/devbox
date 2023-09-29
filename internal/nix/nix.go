@@ -95,7 +95,7 @@ func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {
 		return errors.WithStack(err)
 	}
 
-	_ = os.WriteFile(path, data, 0644)
+	_ = os.WriteFile(path, data, 0o644)
 	return nil
 }
 
@@ -162,7 +162,6 @@ var version = ""
 // Version returns the version of nix from `nix --version`. Usually in a semver
 // like format, but not strictly.
 func Version() (string, error) {
-
 	if version != "" {
 		return version, nil
 	}

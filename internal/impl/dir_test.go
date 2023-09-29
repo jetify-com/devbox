@@ -50,12 +50,12 @@ func TestFindProjectDirFromParentDirSearch(t *testing.T) {
 			root, err := filepath.Abs(t.TempDir())
 			assert.NoError(err)
 
-			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0777)
+			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0o777)
 			assert.NoError(err)
 
 			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
 			assert.NoError(err)
-			err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
+			err = os.WriteFile(absProjectPath, []byte("{}"), 0o666)
 			assert.NoError(err)
 
 			absSearchPath := filepath.Join(root, testCase.searchPath)
@@ -116,14 +116,14 @@ func TestFindParentDirAtPath(t *testing.T) {
 			root, err := filepath.Abs(t.TempDir())
 			assert.NoError(err)
 
-			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0777)
+			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0o777)
 			assert.NoError(err)
 
 			var absProjectPath string
 			if testCase.projectDir != "" {
 				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
 				assert.NoError(err)
-				err = os.WriteFile(absProjectPath, []byte("{}"), 0666)
+				err = os.WriteFile(absProjectPath, []byte("{}"), 0o666)
 				assert.NoError(err)
 			}
 

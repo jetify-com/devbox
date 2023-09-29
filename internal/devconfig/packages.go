@@ -2,6 +2,7 @@ package devconfig
 
 import (
 	"encoding/json"
+	"slices"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -9,7 +10,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
-	"golang.org/x/exp/slices"
 )
 
 type jsonKind int
@@ -138,7 +138,6 @@ func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string)
 }
 
 func (pkgs *Packages) UnmarshalJSON(data []byte) error {
-
 	// First, attempt to unmarshal as a list of strings (legacy format)
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {

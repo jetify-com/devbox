@@ -92,7 +92,7 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 
 	// Ensure the nixpkgs commit file path exists so we can write an update to it
 	path := nixpkgsCommitFilePath()
-	err = os.MkdirAll(filepath.Dir(path), 0755)
+	err = os.MkdirAll(filepath.Dir(path), 0o755)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.WithStack(err)
 	}
@@ -104,7 +104,7 @@ func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) 
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(os.WriteFile(path, serialized, 0644))
+	return errors.WithStack(os.WriteFile(path, serialized, 0o644))
 }
 
 func nixpkgsCommitFilePath() string {

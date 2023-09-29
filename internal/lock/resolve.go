@@ -16,7 +16,6 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
-	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -74,11 +73,10 @@ func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error)
 	if pi, ok := pkg.Systems["x86_64-linux"]; ok {
 		return pi, nil
 	}
-	if len(pkg.Systems) == 0 {
-		return searcher.PackageInfo{},
-			fmt.Errorf("no systems found for package %q", pkg.Name)
+	for _, v := range pkg.Systems {
+		return v, nil
 	}
-	return maps.Values(pkg.Systems)[0], nil
+	return searcher.PackageInfo{}, fmt.Errorf("no systems found for package %q", pkg.Name)
 }
 
 func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo, error) {

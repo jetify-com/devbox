@@ -4,23 +4,42 @@
     "go@latest"
   ],
   "env": {
+    "GOENV": "off",
     "PATH": "$PATH:$PWD/dist"
   },
   "shell": {
     "init_hook": [
-      "export \"GOROOT=$(go env GOROOT)\""
+      "unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK"
     ],
     "scripts": {
-      "build": "go build -o dist/devbox cmd/devbox/main.go",
-      "build-linux": "GOOS=linux go build -o dist/devbox-linux cmd/devbox/main.go",
-      "build-linux-amd64": "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 cmd/devbox/main.go",
+      "build": "go build -o dist/devbox ./cmd/devbox",
+      "build-all": [
+        "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
+        "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
+        "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
+        "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox"
+      ],
       "code": "code .",
       "lint": "golangci-lint run",
+      "fmt": [
+        "mkdir -p dist/tools",
+        "export GOBIN=\"$PWD/dist/tools\"",
+        "go install mvdan.cc/gofumpt@latest",
+        "if [ -n \"${CI:-}\" ]; then",
+        "    unformatted=\"$(find . -name '*.go' -exec \"$GOBIN/gofumpt\" -l {} \\+ | awk '{ print \"\t\" $0 }')\"",
+        "    if [ -n \"$unformatted\" ]; then",
+        "        echo 'The following files need to be formatted with gofumpt:'",
+        "        echo",
+        "        echo \"$unformatted\"",
+        "        echo",
+        "        echo 'Run `devbox run fmt` to format them.'",
+        "        exit 1",
+        "    fi",
+        "fi",
+        "find . -name '*.go' -exec \"$GOBIN/gofumpt\" -extra -w {} \\+"
+      ],
       "test": "go test -race -cover ./...",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go"
     }
-  },
-  "nixpkgs": {
-    "commit": "3364b5b117f65fe1ce65a3cdd5612a078a3b31e3"
   }
 }

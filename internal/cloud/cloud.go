@@ -87,7 +87,7 @@ func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *op
 	return vmHostname, nil
 }
 
-func Shell(ctx context.Context, w io.Writer, projectDir string, githubUsername string) error {
+func Shell(ctx context.Context, w io.Writer, projectDir, githubUsername string) error {
 	color.New(color.FgMagenta, color.Bold).Fprint(w, "Devbox Cloud\n")
 	fmt.Fprint(w, "Remote development environments powered by Nix\n\n")
 	fmt.Fprint(w, "This is an open developer preview and may have some rough edges. Please report any issues to https://github.com/jetpack-io/devbox/issues\n\n")
@@ -495,7 +495,7 @@ func absoluteProjectPathInVM(sshUser, relativeProjectPath string) string {
 	return fmt.Sprintf("%s/%s/", vmHomeDir, relativeProjectPath)
 }
 
-func parseVMEnvVar() (username string, vmHostname string) {
+func parseVMEnvVar() (username, vmHostname string) {
 	vmEnvVar := os.Getenv(envir.DevboxVM)
 	if vmEnvVar == "" {
 		return "", ""

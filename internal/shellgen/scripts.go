@@ -33,7 +33,7 @@ type devboxer interface {
 // Scripts (and hooks) are persisted so that we can easily call them from devbox run (inside or outside shell).
 func WriteScriptsToFiles(devbox devboxer) error {
 	defer debug.FunctionTimer().End()
-	err := os.MkdirAll(filepath.Join(devbox.ProjectDir(), scriptsDir), 0755) // Ensure directory exists.
+	err := os.MkdirAll(filepath.Join(devbox.ProjectDir(), scriptsDir), 0o755) // Ensure directory exists.
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -95,7 +95,7 @@ func writeHookFile(devbox devboxer, body string) (err error) {
 	return errors.WithStack(err)
 }
 
-func WriteScriptFile(devbox devboxer, name string, body string) (err error) {
+func WriteScriptFile(devbox devboxer, name, body string) (err error) {
 	script, err := createScriptFile(devbox, name)
 	if err != nil {
 		return errors.WithStack(err)
@@ -124,7 +124,7 @@ func createScriptFile(devbox devboxer, name string) (script *os.File, err error)
 		}
 	}()
 
-	err = script.Chmod(0755)
+	err = script.Chmod(0o755)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

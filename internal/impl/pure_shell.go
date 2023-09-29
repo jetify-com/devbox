@@ -45,7 +45,6 @@ func findNixInPATH(env map[string]string) ([]string, error) {
 // Creates a symlink for devbox in .devbox/virtenv/.wrappers/bin
 // so that devbox can be available inside a pure shell
 func createDevboxSymlink(d *Devbox) error {
-
 	// Get absolute path for where devbox is called
 	devboxPath, err := filepath.Abs(os.Args[0])
 	if err != nil {
@@ -53,7 +52,7 @@ func createDevboxSymlink(d *Devbox) error {
 	}
 	// ensure .devbox/bin directory exists
 	binPath := dotdevboxBinPath(d)
-	if err := os.MkdirAll(binPath, 0755); err != nil {
+	if err := os.MkdirAll(binPath, 0o755); err != nil {
 		return errors.WithStack(err)
 	}
 	// Create a symlink between devbox and .devbox/bin

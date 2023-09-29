@@ -167,7 +167,7 @@ func exportedErrType(err error) string {
 
 // splitPkgFunc splits a fully-qualified function or method name into its
 // package path and base name components.
-func splitPkgFunc(name string) (pkgPath string, funcName string) {
+func splitPkgFunc(name string) (pkgPath, funcName string) {
 	// Using the following fully-qualified function name as an example:
 	// go.jetpack.io/devbox/internal/impl.(*Devbox).RunScript
 

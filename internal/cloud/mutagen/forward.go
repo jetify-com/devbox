@@ -28,12 +28,12 @@ func ForwardCreate(env map[string]string, local, remote string, labels map[strin
 	return execMutagenEnv(append(args, labelFlag(labels)...), env)
 }
 
-func ForwardTerminate(env map[string]string, labels map[string]string) error {
+func ForwardTerminate(env, labels map[string]string) error {
 	args := []string{"forward", "terminate"}
 	return execMutagenEnv(append(args, labelSelectorFlag(labels)...), env)
 }
 
-func ForwardList(env map[string]string, labels map[string]string) ([]Forward, error) {
+func ForwardList(env, labels map[string]string) ([]Forward, error) {
 	args := []string{"forward", "list", "--template", "{{json .}}"}
 	out, err := execMutagenOut(append(args, labelSelectorFlag(labels)...), env)
 	if err != nil {

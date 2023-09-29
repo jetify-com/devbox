@@ -67,7 +67,7 @@ func setupDevbox(debugHost string, debugPort int) error {
 	_ = os.Remove(devboxKnownHostsDebug)
 
 	devboxKnownHostsPath := filepath.Join(devboxSSHDir, "known_hosts")
-	devboxKnownHosts, err := editFile(devboxKnownHostsPath, 0644)
+	devboxKnownHosts, err := editFile(devboxKnownHostsPath, 0o644)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func setupDevbox(debugHost string, debugPort int) error {
 	}
 
 	devboxIncludePath := filepath.Join(devboxSSHDir, "config")
-	devboxSSHConfig, err := editFile(devboxIncludePath, 0644)
+	devboxSSHConfig, err := editFile(devboxIncludePath, 0o644)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func setupDevbox(debugHost string, debugPort int) error {
 	// debug gateway is configured. It's okay if this fails because it's
 	// only used for debugging.
 	if debugHost != "" {
-		f, err := os.OpenFile(devboxKnownHostsDebug, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(devboxKnownHostsDebug, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 		if err == nil {
 			f.Close()
 		}
@@ -133,7 +133,7 @@ func AddVMKey(hostname, key string) error {
 	if err != nil {
 		return err
 	}
-	keyFile, err := editFile(filepath.Join(keysDir, hostname), 0600)
+	keyFile, err := editFile(filepath.Join(keysDir, hostname), 0o600)
 	if err != nil {
 		return err
 	}
@@ -151,11 +151,11 @@ func updateUserSSHConfig(devboxIncludePath string) (err error) {
 		return errors.WithStack(err)
 	}
 	dotSSH := filepath.Join(home, ".ssh")
-	if err := EnsureDirExists(dotSSH, 0700, true); err != nil {
+	if err := EnsureDirExists(dotSSH, 0o700, true); err != nil {
 		return err
 	}
 
-	sshConfig, err := editFile(filepath.Join(dotSSH, "config"), 0644)
+	sshConfig, err := editFile(filepath.Join(dotSSH, "config"), 0o644)
 	if err != nil {
 		return err
 	}
@@ -225,19 +225,19 @@ func devboxSSHDir() (string, error) {
 
 	// Ensure ~/.config exists but don't touch existing permissions.
 	dotConfig := filepath.Join(home, ".config")
-	if err := EnsureDirExists(dotConfig, 0755, false); err != nil {
+	if err := EnsureDirExists(dotConfig, 0o755, false); err != nil {
 		return "", err
 	}
 
 	// Ensure ~/.config/devbox exists and force permissions to 0755.
 	devboxConfigDir := filepath.Join(dotConfig, "devbox")
-	if err := EnsureDirExists(devboxConfigDir, 0755, true); err != nil {
+	if err := EnsureDirExists(devboxConfigDir, 0o755, true); err != nil {
 		return "", err
 	}
 
 	// Ensure ~/.config/devbox/ssh exists and force permissions to 0700.
 	devboxSSHDir := filepath.Join(devboxConfigDir, "ssh")
-	if err := EnsureDirExists(devboxSSHDir, 0700, true); err != nil {
+	if err := EnsureDirExists(devboxSSHDir, 0o700, true); err != nil {
 		return "", err
 	}
 	return devboxSSHDir, nil
@@ -249,7 +249,7 @@ func devboxKeysDir() (string, error) {
 		return "", err
 	}
 	keysDir := filepath.Join(sshDir, "keys")
-	if err := EnsureDirExists(keysDir, 0700, true); err != nil {
+	if err := EnsureDirExists(keysDir, 0o700, true); err != nil {
 		return "", err
 	}
 	return keysDir, nil
@@ -261,7 +261,7 @@ func devboxSocketsDir() (string, error) {
 		return "", err
 	}
 	sockets := filepath.Join(sshDir, "sockets")
-	if err := EnsureDirExists(sockets, 0700, true); err != nil {
+	if err := EnsureDirExists(sockets, 0o700, true); err != nil {
 		return "", err
 	}
 	return sockets, nil

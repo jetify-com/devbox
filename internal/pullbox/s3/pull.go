@@ -26,7 +26,6 @@ func PullToTmp(
 	profile string,
 ) (string, error) {
 	config, err := assumeRole(ctx, creds)
-
 	if err != nil {
 		return "", err
 	}

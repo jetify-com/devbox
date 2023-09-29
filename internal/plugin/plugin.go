@@ -165,15 +165,15 @@ func (m *Manager) createFile(
 	}); err != nil {
 		return errors.WithStack(err)
 	}
-	var fileMode fs.FileMode = 0644
+	var fileMode fs.FileMode = 0o644
 	if strings.Contains(filePath, "bin/") {
-		fileMode = 0755
+		fileMode = 0o755
 	}
 
 	if err := os.WriteFile(filePath, buf.Bytes(), fileMode); err != nil {
 		return errors.WithStack(err)
 	}
-	if fileMode == 0755 {
+	if fileMode == 0o755 {
 		if err := createSymlink(m.ProjectDir(), filePath); err != nil {
 			return err
 		}
@@ -244,7 +244,7 @@ func createDir(path string) error {
 	if path == "" {
 		return nil
 	}
-	return errors.WithStack(os.MkdirAll(path, 0755))
+	return errors.WithStack(os.MkdirAll(path, 0o755))
 }
 
 func createSymlink(root, filePath string) error {
@@ -252,7 +252,7 @@ func createSymlink(root, filePath string) error {
 	newname := filepath.Join(root, VirtenvBinPath, name)
 
 	// Create bin path just in case it doesn't exist
-	if err := os.MkdirAll(filepath.Join(root, VirtenvBinPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, VirtenvBinPath), 0o755); err != nil {
 		return errors.WithStack(err)
 	}
 

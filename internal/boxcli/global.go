@@ -45,7 +45,7 @@ func globalCmd() *cobra.Command {
 	return globalCmd
 }
 
-func addCommandAndHideConfigFlag(parent *cobra.Command, child *cobra.Command) {
+func addCommandAndHideConfigFlag(parent, child *cobra.Command) {
 	parent.AddCommand(child)
 	_ = child.Flags().MarkHidden("config")
 }

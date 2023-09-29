@@ -62,7 +62,7 @@ func ParseFile(path string, valuePtr any) error {
 
 // ParseFileWithExtension lets the caller override the extension of the `path` filename
 // For example, project.csproj files should be treated as having extension .xml
-func ParseFileWithExtension(path string, ext string, valuePtr any) error {
+func ParseFileWithExtension(path, ext string, valuePtr any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return errors.WithStack(err)
@@ -77,7 +77,7 @@ func WriteFile(path string, value any) error {
 		return errors.WithStack(err)
 	}
 	data = append(data, '\n')
-	return errors.WithStack(os.WriteFile(path, data, 0644))
+	return errors.WithStack(os.WriteFile(path, data, 0o644))
 }
 
 func IsSupportedExtension(ext string) bool {

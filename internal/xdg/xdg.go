@@ -31,7 +31,7 @@ func configDir() string { return resolveDir(envir.XDGConfigHome, ".config") }
 func cacheDir() string  { return resolveDir(envir.XDGCacheHome, ".cache") }
 func stateDir() string  { return resolveDir(envir.XDGStateHome, ".local/state") }
 
-func resolveDir(envvar string, defaultPath string) string {
+func resolveDir(envvar, defaultPath string) string {
 	dir := os.Getenv(envvar)
 	if dir != "" {
 		return dir
