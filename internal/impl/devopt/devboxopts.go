@@ -39,6 +39,6 @@ type Credentials struct {
 }
 
 type UpdateOpts struct {
-	Pkgs []string
-	Sync bool
+	Pkgs                  []string
+	IgnoreMissingPackages bool
 }

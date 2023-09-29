@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/impl/devopt"
@@ -20,11 +21,7 @@ import (
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
-	if opts.Sync {
-		return lock.SyncLockfiles()
-	}
-
-	inputs, err := d.inputsToUpdate(opts.Pkgs...)
+	inputs, err := d.inputsToUpdate(opts)
 	if err != nil {
 		return err
 	}
@@ -77,15 +74,19 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	return nix.FlakeUpdate(shellgen.FlakePath(d))
 }
 
-func (d *Devbox) inputsToUpdate(pkgs ...string) ([]*devpkg.Package, error) {
-	if len(pkgs) == 0 {
+func (d *Devbox) inputsToUpdate(
+	opts devopt.UpdateOpts,
+) ([]*devpkg.Package, error) {
+	if len(opts.Pkgs) == 0 {
 		return d.configPackages(), nil
 	}
 
 	var pkgsToUpdate []*devpkg.Package
-	for _, pkg := range pkgs {
+	for _, pkg := range opts.Pkgs {
 		found, err := d.findPackageByName(pkg)
-		if err != nil {
+		if opts.IgnoreMissingPackages && errors.Is(err, searcher.ErrNotFound) {
+			continue
+		} else if err != nil {
 			return nil, err
 		}
 		pkgsToUpdate = append(pkgsToUpdate, found)

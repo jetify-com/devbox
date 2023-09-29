@@ -1,4 +1,4 @@
-package lock
+package multi
 
 import (
 	"fmt"
@@ -8,9 +8,11 @@ import (
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/searcher"
 )
 
-func SyncLockfiles() error {
+func SyncLockfiles(pkgs []string) error {
 	lockfilePaths, err := collectLockfiles()
 	if err != nil {
 		return err
@@ -21,8 +23,13 @@ func SyncLockfiles() error {
 		return err
 	}
 
+	pkgMap := make(map[string]bool)
+	for _, pkg := range pkgs {
+		pkgMap[pkg] = true
+	}
+
 	for _, lockfilePath := range lockfilePaths {
-		var lockFile File
+		var lockFile lock.File
 		if err := cuecfg.ParseFile(lockfilePath, &lockFile); err != nil {
 			return err
 		}
@@ -30,6 +37,10 @@ func SyncLockfiles() error {
 		changed := false
 		for key, latestPkg := range latestPackages {
 			if pkg, exists := lockFile.Packages[key]; exists {
+				name, _, found := searcher.ParseVersionedPackage(key)
+				if len(pkgMap) > 0 && (!pkgMap[key] && (found && !pkgMap[name])) {
+					continue
+				}
 				if pkg.LastModified != latestPkg.LastModified {
 					lockFile.Packages[key].AllowInsecure = latestPkg.AllowInsecure
 					lockFile.Packages[key].LastModified = latestPkg.LastModified
@@ -54,11 +65,11 @@ func SyncLockfiles() error {
 	return nil
 }
 
-func latestPackages(lockfilePaths []string) (map[string]*Package, error) {
-	latestPackages := make(map[string]*Package)
+func latestPackages(lockfilePaths []string) (map[string]*lock.Package, error) {
+	latestPackages := make(map[string]*lock.Package)
 
 	for _, lockFilePath := range lockfilePaths {
-		var lockFile File
+		var lockFile lock.File
 		if err := cuecfg.ParseFile(lockFilePath, &lockFile); err != nil {
 			return nil, err
 		}
