@@ -5,6 +5,8 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox"
@@ -32,7 +34,9 @@ func shellEnvCmd() *cobra.Command {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), s)
-			fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
+			if !strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+				fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
+			}
 			return nil
 		},
 	}
