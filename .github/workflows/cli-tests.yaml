@@ -64,6 +64,18 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
+          cache: false
+
+      # Cache independently to include golangci-lint files
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
+
       - run:  go run ./cmd/devbox run fmt
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.7.0
