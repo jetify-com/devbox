@@ -65,10 +65,8 @@ func Key(projectHash string) string {
 // The nixEnvPath is pushed to the top of the stack (given highest priority),
 // unless preservePathStack is enabled.
 //
-// It also updates the env by modifying the following env-vars:
-// 1. nixEnvPath key
-// 2. PathStack
-// 3. PATH
+// It also updates the env by modifying the PathStack env-var, and the env-var
+// for storing the nixEnvPath.
 func (s *stack) Push(
 	env map[string]string,
 	projectHash string,

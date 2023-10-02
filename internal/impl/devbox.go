@@ -17,6 +17,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"maps"
 	"slices"
 
 	"github.com/pkg/errors"
@@ -27,7 +28,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"golang.org/x/exp/maps"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
