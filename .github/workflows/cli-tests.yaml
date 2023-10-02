@@ -61,12 +61,18 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
+
+      # We can remove this once we fix nix golangci-lint issue and move to devbox
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: false
 
-      # Cache independently to include golangci-lint files
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.7.0
+        with:
+          enable-cache: true
+
       - name: Mount golang cache
         uses: actions/cache@v3
         with:
@@ -76,7 +82,8 @@ jobs:
             ~/go/pkg
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
-      - run:  go run ./cmd/devbox run fmt
+      - run:  devbox run fmt
+      
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.7.0
         with:
