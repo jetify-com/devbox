@@ -21,23 +21,7 @@
       ],
       "code": "code .",
       "lint": "golangci-lint run",
-      "fmt": [
-        "mkdir -p dist/tools",
-        "export GOBIN=\"$PWD/dist/tools\"",
-        "go install mvdan.cc/gofumpt@latest",
-        "if [ -n \"${CI:-}\" ]; then",
-        "    unformatted=\"$(find . -name '*.go' -exec \"$GOBIN/gofumpt\" -l {} \\+ | awk '{ print \"\t\" $0 }')\"",
-        "    if [ -n \"$unformatted\" ]; then",
-        "        echo 'The following files need to be formatted with gofumpt:'",
-        "        echo",
-        "        echo \"$unformatted\"",
-        "        echo",
-        "        echo 'Run `devbox run fmt` to format them.'",
-        "        exit 1",
-        "    fi",
-        "fi",
-        "find . -name '*.go' -exec \"$GOBIN/gofumpt\" -extra -w {} \\+"
-      ],
+      "fmt": "scripts/gofumpt.sh",
       "test": "go test -race -cover ./...",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go"
     }
