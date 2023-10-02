@@ -64,12 +64,23 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
-      - run: go run ./cmd/devbox run fmt && git diff --exit-code
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.7.0
+
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.7.0
         with:
-          args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
-          skip-cache: true
+         enable-cache: true
+
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/golangci-lint
+            ~/.cache/go-build
+            ~/go/pkg
+          key: ${{ runner.os }}-${{ hashFiles('go.work.sum') }}
+
+      - run: devbox run fmt && git diff --exit-code
+      - run: devbox run lint
 
   test:
     strategy:
