@@ -30,13 +30,15 @@ type stack struct {
 	keys []string
 }
 
-func Stack(env map[string]string) *stack {
-	stackEnv, ok := env[PathStackEnv]
+// Stack initializes the path stack in the `env` environment.
+// It relies on old state stored in the `originalEnv` environment.
+func Stack(env, originalEnv map[string]string) *stack {
+	stackEnv, ok := originalEnv[PathStackEnv]
 	if !ok || strings.TrimSpace(stackEnv) == "" {
 		// if path stack is empty, then push the current PATH, which is the
 		// external environment prior to any devbox-shellenv being applied to it.
 		stackEnv = InitPathEnv
-		env[InitPathEnv] = env["PATH"]
+		env[InitPathEnv] = originalEnv["PATH"]
 	}
 	return &stack{
 		keys: strings.Split(stackEnv, ":"),

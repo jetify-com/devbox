@@ -5,9 +5,8 @@ package impl
 
 import (
 	"os"
-	"strings"
-
 	"slices"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/impl/envpath"
@@ -74,6 +73,8 @@ func markEnvsAsSetByDevbox(envs ...map[string]string) {
 // as a proxy for this. This allows us to differentiate between global and
 // individual project shells.
 func (d *Devbox) IsEnvEnabled() bool {
-	pathStack := envpath.Stack(envir.PairsToMap(os.Environ()))
+	fakeEnv := map[string]string{}
+	// the Stack is initialized in the fakeEnv, from the state in the real os.Environ
+	pathStack := envpath.Stack(fakeEnv, envir.PairsToMap(os.Environ()))
 	return pathStack.Has(d.projectDirHash())
 }

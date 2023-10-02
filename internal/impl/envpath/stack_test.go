@@ -1,6 +1,7 @@
 package envpath
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -8,10 +9,11 @@ import (
 func TestNewStack(t *testing.T) {
 
 	// Initialize a new Stack from the existing env
-	env := map[string]string{
+	originalEnv := map[string]string{
 		"PATH": "/init-path",
 	}
-	stack := Stack(env)
+	env := make(map[string]string)
+	stack := Stack(env, originalEnv)
 	if len(stack.keys) == 0 {
 		t.Errorf("Stack has no keys but should have %s", InitPathEnv)
 	}
@@ -81,9 +83,9 @@ func TestNewStack(t *testing.T) {
 		},
 	}
 
-	for _, testStep := range testSteps {
+	for idx, testStep := range testSteps {
 		t.Run(
-			testStep.nixEnvPath, func(t *testing.T) {
+			fmt.Sprintf("step_%d", idx), func(t *testing.T) {
 
 				// Push to stack and update PATH env
 				stack.Push(env, testStep.projectHash, testStep.nixEnvPath, testStep.preservePathStack)

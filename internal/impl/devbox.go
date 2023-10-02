@@ -9,16 +9,15 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime/trace"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
-
-	"maps"
-	"slices"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -896,10 +895,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	pathStack := envpath.Stack(originalEnv)
+	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
-
 	debug.Log("New path stack is: %s", pathStack)
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
