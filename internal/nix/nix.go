@@ -6,6 +6,7 @@ package nix
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -62,6 +63,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
+		fmt.Fprintf(os.Stderr, "Recomputing the devbox environment.\n")
 		cmd := exec.CommandContext(
 			ctx,
 			"nix", "print-dev-env",
