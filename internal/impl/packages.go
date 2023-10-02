@@ -234,16 +234,13 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	}
 
 	// Force print-dev-env cache to be recomputed.
+	fmt.Fprintln(d.stderr, "Re-computing the devbox environment.")
 	if _, err := d.computeNixEnv(ctx, false /*use cache*/); err != nil {
 		return err
 	}
 
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
-
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
-		return err
-	}
 
 	// Update lockfile with new packages that are not to be installed
 	for _, pkg := range d.configPackages() {
@@ -252,7 +249,17 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		}
 	}
 
-	return d.lockfile.Save()
+	if err := d.lockfile.Save(); err != nil {
+		return err
+	}
+
+	// Create wrappers after saving the lockfile, so that we can get nixEnv
+	// values using the print-dev-env cache.
+	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *Devbox) profilePath() (string, error) {
