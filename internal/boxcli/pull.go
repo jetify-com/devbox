@@ -62,7 +62,7 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 	}
 
 	var creds devopt.Credentials
-	t, err := genSession()
+	t, err := genSession(cmd.Context())
 	if err != nil {
 		return errors.WithStack(err)
 	} else if t != nil {
