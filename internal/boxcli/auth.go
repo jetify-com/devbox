@@ -4,6 +4,7 @@
 package boxcli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,6 @@ func authCmd() *cobra.Command {
 
 	cmd.AddCommand(loginCmd())
 	cmd.AddCommand(logoutCmd())
-	cmd.AddCommand(refreshCmd())
 	cmd.AddCommand(whoAmICmd())
 
 	return cmd
@@ -75,34 +75,13 @@ func logoutCmd() *cobra.Command {
 	return cmd
 }
 
-// This is for debugging purposes only. Hidden.
-func refreshCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "refresh",
-		Short:  "Refresh credentials",
-		Args:   cobra.ExactArgs(0),
-		Hidden: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := auth.NewClient(issuer, clientID)
-			if err != nil {
-				return err
-			}
-			_ = c.RefreshSession()
-			fmt.Fprintln(cmd.OutOrStdout(), "Refreshed successfully")
-			return nil
-		},
-	}
-
-	return cmd
-}
-
 func whoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whoami",
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tok, err := genSession()
+			tok, err := genSession(cmd.Context())
 			if err != nil {
 				return err
 			} else if tok == nil {
@@ -132,10 +111,10 @@ func whoAmICmd() *cobra.Command {
 	return cmd
 }
 
-func genSession() (*session.Token, error) {
+func genSession(ctx context.Context) (*session.Token, error) {
 	c, err := auth.NewClient(issuer, clientID)
 	if err != nil {
 		return nil, err
 	}
-	return c.GetSession(), nil
+	return c.GetSession(ctx)
 }

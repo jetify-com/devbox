@@ -41,7 +41,7 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	t, err := genSession()
+	t, err := genSession(cmd.Context())
 	var creds devopt.Credentials
 	if err != nil {
 		return errors.WithStack(err)
