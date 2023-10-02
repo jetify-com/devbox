@@ -23,7 +23,6 @@ const (
 // 3. The final PATH is reconstructed by concatenating the env-var values of each nixEnvPathKey.
 // 5. The stack is stored in its own env-var PathStackEnv, shared by all devbox-projects in this shell.
 type stack struct {
-
 	// keys holds the stack elements.
 	// Earlier (lower index number) keys get higher priority.
 	// This keeps the string representation of the stack aligned with the PATH value.

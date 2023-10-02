@@ -5,10 +5,9 @@ package envir
 
 import (
 	"os"
+	"slices"
 	"strconv"
 	"strings"
-
-	"slices"
 )
 
 func IsDevboxCloud() bool {

@@ -7,7 +7,6 @@ import (
 )
 
 func TestNewStack(t *testing.T) {
-
 	// Initialize a new Stack from the existing env
 	originalEnv := map[string]string{
 		"PATH": "/init-path",
@@ -86,7 +85,6 @@ func TestNewStack(t *testing.T) {
 	for idx, testStep := range testSteps {
 		t.Run(
 			fmt.Sprintf("step_%d", idx), func(t *testing.T) {
-
 				// Push to stack and update PATH env
 				stack.Push(env, testStep.projectHash, testStep.nixEnvPath, testStep.preservePathStack)
 				env["PATH"] = stack.Path(env)
