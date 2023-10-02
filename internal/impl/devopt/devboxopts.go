@@ -8,6 +8,7 @@ type Opts struct {
 	AllowInsecureAdds        bool
 	Dir                      string
 	Env                      map[string]string
+	PreservePathStack        bool
 	Pure                     bool
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string

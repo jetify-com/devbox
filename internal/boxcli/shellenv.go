@@ -15,10 +15,11 @@ import (
 
 type shellEnvCmdFlags struct {
 	envFlag
-	config      configFlags
-	runInitHook bool
-	install     bool
-	pure        bool
+	config            configFlags
+	runInitHook       bool
+	install           bool
+	pure              bool
+	preservePathStack bool
 }
 
 func shellEnvCmd() *cobra.Command {
@@ -48,6 +49,11 @@ func shellEnvCmd() *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+	command.Flags().BoolVar(
+		&flags.preservePathStack, "preserve-path-stack", false,
+		"Preserves existing PATH order if this project's environment is already in PATH. "+
+			"Useful if you want to avoid overshadowing another devbox project that is already active")
+	_ = command.Flags().MarkHidden("preserve-path-stack")
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
@@ -63,10 +69,11 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		return "", err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Stderr: cmd.ErrOrStderr(),
-		Pure:   flags.pure,
-		Env:    env,
+		Dir:               flags.config.path,
+		Stderr:            cmd.ErrOrStderr(),
+		PreservePathStack: flags.preservePathStack,
+		Pure:              flags.pure,
+		Env:               env,
 	})
 	if err != nil {
 		return "", err

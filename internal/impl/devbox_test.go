@@ -14,6 +14,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.jetpack.io/devbox/internal/impl/envpath"
 
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
@@ -85,10 +86,9 @@ func TestComputeNixPathIsIdempotent(t *testing.T) {
 	assert.NotEmpty(t, path, "path should not be nil")
 
 	t.Setenv("PATH", path)
-	t.Setenv(
-		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
-		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
-	)
+	t.Setenv(envpath.InitPathEnv, env[envpath.InitPathEnv])
+	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
+	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeNixEnv should not fail")
@@ -108,10 +108,9 @@ func TestComputeNixPathWhenRemoving(t *testing.T) {
 	assert.Contains(t, path, "/tmp/my/path", "path should contain /tmp/my/path")
 
 	t.Setenv("PATH", path)
-	t.Setenv(
-		"DEVBOX_OG_PATH_"+devbox.projectDirHash(),
-		env["DEVBOX_OG_PATH_"+devbox.projectDirHash()],
-	)
+	t.Setenv(envpath.InitPathEnv, env[envpath.InitPathEnv])
+	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
+	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
 	devbox.nix.(*testNix).path = ""
 	env, err = devbox.computeNixEnv(ctx, false /*use cache*/)

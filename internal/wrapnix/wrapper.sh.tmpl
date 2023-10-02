@@ -21,7 +21,7 @@ DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
 
 if [[ "${{ .ShellEnvHashKey }}" != "{{ .ShellEnvHash }}" ]] && [[ -z "${{ .ShellEnvHashKey }}_GUARD" ]]; then
 export {{ .ShellEnvHashKey }}_GUARD=true
-eval "$(DO_NOT_TRACK=1 devbox shellenv -c {{ .ProjectDir }})"
+eval "$(DO_NOT_TRACK=1 devbox shellenv --preserve-path-stack -c {{ .ProjectDir }})"
 fi
 
 {{/*

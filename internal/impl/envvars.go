@@ -7,37 +7,12 @@ import (
 	"os"
 	"slices"
 	"strings"
+
+	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/impl/envpath"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
-
-// mapToPairs creates a slice of environment variable "key=value" pairs from a
-// map.
-func mapToPairs(m map[string]string) []string {
-	pairs := make([]string, len(m))
-	i := 0
-	for k, v := range m {
-		pairs[i] = k + "=" + v
-		i++
-	}
-	slices.Sort(pairs) // for reproducibility
-	return pairs
-}
-
-// pairsToMap creates a map from a slice of "key=value" environment variable
-// pairs. Note that maps are not ordered, which can affect the final variable
-// values when pairs contains duplicate keys.
-func pairsToMap(pairs []string) map[string]string {
-	vars := make(map[string]string, len(pairs))
-	for _, p := range pairs {
-		k, v, ok := strings.Cut(p, "=")
-		if !ok {
-			continue
-		}
-		vars[k] = v
-	}
-	return vars
-}
 
 // exportify formats vars as a line-separated string of shell export statements.
 // Each line is of the form `export key="value";` with any special characters in
@@ -98,5 +73,8 @@ func markEnvsAsSetByDevbox(envs ...map[string]string) {
 // as a proxy for this. This allows us to differentiate between global and
 // individual project shells.
 func (d *Devbox) IsEnvEnabled() bool {
-	return os.Getenv(d.ogPathKey()) != ""
+	fakeEnv := map[string]string{}
+	// the Stack is initialized in the fakeEnv, from the state in the real os.Environ
+	pathStack := envpath.Stack(fakeEnv, envir.PairsToMap(os.Environ()))
+	return pathStack.Has(d.projectDirHash())
 }

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/shellgen"
 )
 
@@ -45,7 +46,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 		test := &tests[i]
 		test.name = filepath.Base(path)
 		if b, err := os.ReadFile(filepath.Join(path, "env")); err == nil {
-			test.env = pairsToMap(strings.Split(string(b), "\n"))
+			test.env = envir.PairsToMap(strings.Split(string(b), "\n"))
 		}
 
 		test.hooksFilePath = shellgen.ScriptPath(projectDir, shellgen.HooksFilename)
@@ -101,33 +102,6 @@ Generated shellrc != shellrc.golden (-shellrc.golden +shellrc):
 If the new shellrc is correct, you can update the golden file with:
 
 	go test -run "^%s$" -update`), diff, t.Name())
-			}
-		})
-	}
-}
-
-func TestCleanEnvPath(t *testing.T) {
-	tests := []struct {
-		name    string
-		inPath  string
-		outPath string
-	}{
-		{
-			name:    "NoEmptyPaths",
-			inPath:  "/usr/local/bin::",
-			outPath: "/usr/local/bin",
-		},
-		{
-			name:    "NoRelativePaths",
-			inPath:  "/usr/local/bin:/usr/bin:../test:/bin:/usr/sbin:/sbin:.:..",
-			outPath: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got := JoinPathLists(test.inPath)
-			if got != test.outPath {
-				t.Errorf("Got incorrect cleaned PATH.\ngot:  %s\nwant: %s", got, test.outPath)
 			}
 		})
 	}
