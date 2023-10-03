@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/pkg/sandbox/runx"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -225,6 +226,10 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	if err := d.InstallRunXPackages(); err != nil {
+		return err
+	}
+
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
@@ -290,7 +295,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 		return nil
 	}
 
-	pkgs, err := d.pendingPackagesForInstallation(ctx)
+	pkgs, err := d.pendingPackagesForInstallationInProfile(ctx)
 	if err != nil {
 		return err
 	}
@@ -317,7 +322,7 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 	profileDir, err := d.profilePath()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting profile path: %w", err)
 	}
 
 	total := len(pkgs)
@@ -326,14 +331,14 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 
-		if err := nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+		if err = nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
 			CustomStepMessage: stepMsg,
 			Lockfile:          d.lockfile,
 			Package:           pkg.Raw,
 			ProfilePath:       profileDir,
 			Writer:            d.stderr,
 		}); err != nil {
-			return err
+			return fmt.Errorf("error installing package %s: %w", pkg, err)
 		}
 	}
 
@@ -397,11 +402,11 @@ func (d *Devbox) tidyProfile(ctx context.Context) error {
 	return nixprofile.ProfileRemoveItems(profileDir, extras)
 }
 
-// pendingPackagesForInstallation returns a list of packages that are in
+// pendingPackagesForInstallationInProfile returns a list of packages that are in
 // devbox.json or global devbox.json but are not yet installed in the nix
 // profile. It maintains the order of packages as specified by
 // Devbox.AllPackages() (higher priority first)
-func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
+func (d *Devbox) pendingPackagesForInstallationInProfile(ctx context.Context) ([]*devpkg.Package, error) {
 	defer trace.StartRegion(ctx, "pendingPackages").End()
 
 	profileDir, err := d.profilePath()
@@ -418,6 +423,7 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
+	packages = lo.Filter(packages, devpkg.IsNix)
 	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Items:      items,
@@ -457,6 +463,8 @@ func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixP
 	if err != nil {
 		return nil, err
 	}
+
+	packages = lo.Filter(packages, devpkg.IsNix)
 
 	if len(packages) == len(profileItems) {
 		// Optimization: skip comparison if number of packages are the same. This only works
@@ -513,4 +521,21 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	}
 
 	return errors.WithStack(os.Remove(profileDir))
+}
+
+func (d *Devbox) InstallRunXPackages() error {
+	for _, pkg := range d.InstallablePackages() {
+		if pkg.IsRunX() {
+			// TODO: Once resolve is implemented, we use whatever version is in the lockfile.
+			if _, err := d.lockfile.Resolve(pkg.Raw); err != nil {
+				return err
+			}
+			_, err := runx.Install(pkg.RunXPath())
+			if err != nil {
+				return fmt.Errorf("error installing runx package %s: %w", pkg, err)
+			}
+
+		}
+	}
+	return nil
 }

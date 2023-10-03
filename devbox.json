@@ -1,7 +1,7 @@
 {
   "packages": [
-    "golangci-lint@1.52.2",
-    "go@latest"
+    "go@latest",
+    "runx:golangci/golangci-lint@latest"
   ],
   "env": {
     "GOENV": "off",
@@ -20,8 +20,8 @@
         "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox"
       ],
       "code": "code .",
-      "lint": "golangci-lint run",
       "fmt": "scripts/gofumpt.sh",
+      "lint": "golangci-lint run",
       "test": "go test -race -cover ./...",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go"
     }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/searcher"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
@@ -69,7 +70,12 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	if !hasEntry || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
-		if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
+		if pkgtype.IsRunX(pkg) {
+			// TODO implement runx resolution. This can be done by reading the releases.json file
+			locked = &Package{
+				Resolved: pkg,
+			}
+		} else if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
 			locked, err = f.FetchResolvedPackage(pkg)
 			if err != nil {
 				return nil, err

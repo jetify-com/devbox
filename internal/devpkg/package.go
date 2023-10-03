@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
@@ -518,4 +519,24 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	}
 	_, err := p.lockfile.Resolve(p.Raw)
 	return err
+}
+
+func (p *Package) IsRunX() bool {
+	return pkgtype.IsRunX(p.Raw)
+}
+
+func (p *Package) IsNix() bool {
+	return IsNix(p, 0)
+}
+
+func (p *Package) RunXPath() string {
+	return strings.TrimPrefix(p.Raw, "runx:")
+}
+
+func IsNix(p *Package, _ int) bool {
+	return !p.IsRunX()
+}
+
+func IsRunX(p *Package, _ int) bool {
+	return p.IsRunX()
 }

@@ -21,24 +21,8 @@
         }
       }
     },
-    "golangci-lint@1.52.2": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#golangci-lint",
-      "version": "1.52.2",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/x2l9ljvl5fzffc7vggjk5yksrka9yra4-golangci-lint-1.52.2"
-        },
-        "aarch64-linux": {
-          "store_path": "/nix/store/k905aab7fj7dvf2hhsbb3mmizk052ad7-golangci-lint-1.52.2"
-        },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/imxj7162whh9d56zpk1lzs1b3iw6wzp3-golangci-lint-1.52.2"
-        },
-        "x86_64-linux": {
-          "store_path": "/nix/store/nfhrynpdjd5yamz5snv2c377v1j9jdmx-golangci-lint-1.52.2"
-        }
-      }
+    "runx:golangci/golangci-lint@latest": {
+      "resolved": "runx:golangci/golangci-lint@latest"
     }
   }
 }

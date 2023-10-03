@@ -100,17 +100,20 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput 
 	})
 
 	order := []string{}
-	for _, input := range packages {
-		if flkInput, ok := flakeInputs[input.URLForFlakeInput()]; !ok {
-			order = append(order, input.URLForFlakeInput())
-			flakeInputs[input.URLForFlakeInput()] = &flakeInput{
-				Name:     input.FlakeInputName(),
-				URL:      input.URLForFlakeInput(),
-				Packages: []*devpkg.Package{input},
+	for _, pkg := range packages {
+		if !pkg.IsNix() {
+			continue
+		}
+		if flkInput, ok := flakeInputs[pkg.URLForFlakeInput()]; !ok {
+			order = append(order, pkg.URLForFlakeInput())
+			flakeInputs[pkg.URLForFlakeInput()] = &flakeInput{
+				Name:     pkg.FlakeInputName(),
+				URL:      pkg.URLForFlakeInput(),
+				Packages: []*devpkg.Package{pkg},
 			}
 		} else {
 			flkInput.Packages = lo.Uniq(
-				append(flakeInputs[input.URLForFlakeInput()].Packages, input),
+				append(flakeInputs[pkg.URLForFlakeInput()].Packages, pkg),
 			)
 		}
 	}
