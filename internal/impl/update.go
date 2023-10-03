@@ -17,7 +17,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
@@ -64,10 +63,6 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	}
 
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
-
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
 		return err
 	}
 

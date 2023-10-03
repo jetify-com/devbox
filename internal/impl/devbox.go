@@ -43,7 +43,6 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 const (
@@ -185,10 +184,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	envs[envir.DevboxShellEnabled] = "1"
 
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
-		return err
-	}
-
 	if err = createDevboxSymlink(d); err != nil {
 		return err
 	}
@@ -231,10 +226,6 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	if err = wrapnix.CreateWrappers(ctx, d); err != nil {
-		return err
-	}
-
 	// wrap the arg in double-quotes, and escape any double-quotes inside it
 	for idx, arg := range cmdArgs {
 		cmdArgs[idx] = strconv.Quote(arg)
@@ -268,10 +259,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	if _, err := d.NixEnv(ctx, false /*includeHooks*/); err != nil {
-		return err
-	}
-	return wrapnix.CreateWrappers(ctx, d)
+	return d.ensurePackagesAreInstalled(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -324,16 +312,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	return envir.MapToPairs(envs), nil
 }
 
-func (d *Devbox) ShellEnvHash(ctx context.Context) (string, error) {
-	envs, err := d.nixEnv(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	return envs[d.ShellEnvHashKey()], nil
-}
-
-func (d *Devbox) ShellEnvHashKey() string {
+func (d *Devbox) shellEnvHashKey() string {
 	// Don't make this a const so we don't use it by itself accidentally
 	return "__DEVBOX_SHELLENV_HASH_" + d.projectDirHash()
 }
@@ -916,16 +895,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	return env, d.addHashToEnv(env)
 }
 
-var nixEnvCache map[string]string
-
-// nixEnv is a wrapper around computeNixEnv that caches the result.
+// nixEnv is a wrapper around computeNixEnv that returns a cached result if
+// it has previously computed and the local lock file is up to date.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
-	if nixEnvCache != nil {
-		return nixEnvCache, nil
-	}
 
 	usePrintDevEnvCache := false
 
@@ -1120,20 +1095,16 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
-// NixBins returns the paths to all the nix binaries that are installed by
+// nixBins returns the paths to all the nix binaries that are installed by
 // the flake. If there are conflicts, it returns the first one it finds of a
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
-func (d *Devbox) NixBins(ctx context.Context) ([]string, error) {
-	env, err := d.nixEnv(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (d *Devbox) nixBins(env map[string]string) ([]string, error) {
 	dirs := strings.Split(env["buildInputs"], " ")
 	bins := map[string]string{}
 	for _, dir := range dirs {
 		binPath := filepath.Join(dir, "bin")
-		if _, err = os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 		files, err := os.ReadDir(binPath)
@@ -1157,7 +1128,7 @@ func (d *Devbox) projectDirHash() string {
 func (d *Devbox) addHashToEnv(env map[string]string) error {
 	hash, err := cuecfg.Hash(env)
 	if err == nil {
-		env[d.ShellEnvHashKey()] = hash
+		env[d.shellEnvHashKey()] = hash
 	}
 	return err
 }

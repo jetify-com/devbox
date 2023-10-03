@@ -21,11 +21,11 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-type devboxer interface {
-	NixBins(ctx context.Context) ([]string, error)
-	ShellEnvHash(ctx context.Context) (string, error)
-	ShellEnvHashKey() string
-	ProjectDir() string
+type CreateWrappersArgs struct {
+	NixBins         []string
+	ShellEnvHash    string
+	ShellEnvHashKey string
+	ProjectDir      string
 }
 
 //go:embed wrapper.sh.tmpl
@@ -37,44 +37,35 @@ var wrapperTemplate = template.Must(template.New("wrapper").Parse(wrapper))
 var devboxSymlinkDir = xdg.CacheSubpath(filepath.Join("devbox", "bin", "current"))
 
 // CreateWrappers creates wrappers for all the executables in nix paths
-func CreateWrappers(ctx context.Context, devbox devboxer) error {
+func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	defer debug.FunctionTimer().End()
-	shellEnvHash, err := devbox.ShellEnvHash(ctx)
-	if err != nil {
-		return err
-	}
 
 	// Remove all old wrappers
-	_ = os.RemoveAll(filepath.Join(devbox.ProjectDir(), plugin.WrapperPath))
+	_ = os.RemoveAll(filepath.Join(args.ProjectDir, plugin.WrapperPath))
 
 	// Recreate the bin wrapper directory
-	destPath := filepath.Join(wrapperBinPath(devbox))
+	destPath := filepath.Join(wrapperBinPath(args.ProjectDir))
 	_ = os.MkdirAll(destPath, 0o755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
 
-	bins, err := devbox.NixBins(ctx)
-	if err != nil {
-		return err
-	}
 	if err := CreateDevboxSymlinkIfPossible(); err != nil {
 		return err
 	}
 
-	for _, bin := range bins {
-		if err = createWrapper(&createWrapperArgs{
-			devboxer:         devbox,
-			BashPath:         bashPath,
-			Command:          bin,
-			ShellEnvHash:     shellEnvHash,
-			DevboxSymlinkDir: devboxSymlinkDir,
-			destPath:         filepath.Join(destPath, filepath.Base(bin)),
+	for _, bin := range args.NixBins {
+		if err := createWrapper(&createWrapperArgs{
+			CreateWrappersArgs: args,
+			BashPath:           bashPath,
+			Command:            bin,
+			DevboxSymlinkDir:   devboxSymlinkDir,
+			destPath:           filepath.Join(destPath, filepath.Base(bin)),
 		}); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
-	return createSymlinksForSupportDirs(devbox.ProjectDir())
+	return createSymlinksForSupportDirs(args.ProjectDir)
 }
 
 // CreateDevboxSymlinkIfPossible creates a symlink to the devbox binary.
@@ -134,12 +125,11 @@ func CreateDevboxSymlinkIfPossible() error {
 }
 
 type createWrapperArgs struct {
-	devboxer
+	CreateWrappersArgs
 	BashPath         string
 	Command          string
-	ShellEnvHash     string
-	DevboxSymlinkDir string
 	destPath         string
+	DevboxSymlinkDir string
 }
 
 func createWrapper(args *createWrapperArgs) error {
@@ -200,6 +190,6 @@ func createSymlinksForSupportDirs(projectDir string) error {
 	return nil
 }
 
-func wrapperBinPath(devbox devboxer) string {
-	return filepath.Join(devbox.ProjectDir(), plugin.WrapperBinPath)
+func wrapperBinPath(projectDir string) string {
+	return filepath.Join(projectDir, plugin.WrapperBinPath)
 }

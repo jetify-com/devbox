@@ -134,11 +134,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	if err := d.lockfile.Save(); err != nil {
-		return err
-	}
-
-	return wrapnix.CreateWrappers(ctx, d)
+	return nil
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile
@@ -183,11 +179,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	if err := d.saveCfg(); err != nil {
-		return err
-	}
-
-	return wrapnix.CreateWrappers(ctx, d)
+	return d.saveCfg()
 }
 
 // installMode is an enum for helping with ensurePackagesAreInstalled implementation
@@ -233,17 +225,27 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	// Force print-dev-env cache to be recomputed.
-	// We may be able to remove this after improving cache hits.
 	fmt.Fprintf(d.stderr, "Recomputing the devbox environment.\n")
-	if _, err := d.computeNixEnv(ctx, false /*use cache*/); err != nil {
+	// Force print-dev-env cache to be recomputed.
+	nixEnv, err := d.computeNixEnv(ctx, false /*use cache*/)
+	if err != nil {
 		return err
 	}
 
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
-	if err := wrapnix.CreateWrappers(ctx, d); err != nil {
+	nixBins, err := d.nixBins(nixEnv)
+	if err != nil {
+		return err
+	}
+
+	if err := wrapnix.CreateWrappers(ctx, wrapnix.CreateWrappersArgs{
+		NixBins:         nixBins,
+		ProjectDir:      d.projectDir,
+		ShellEnvHash:    nixEnv[d.shellEnvHashKey()],
+		ShellEnvHashKey: d.shellEnvHashKey(),
+	}); err != nil {
 		return err
 	}
 
