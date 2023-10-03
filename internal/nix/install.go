@@ -37,7 +37,7 @@ func Install(writer io.Writer, daemon *bool) error {
 	}
 	defer r.Close()
 
-	installScript := "curl -L https://nixos.org/nix/install | sh -s"
+	installScript := "curl -L https://releases.nixos.org/nix/nix-2.17.1/install | sh -s"
 	if daemon != nil {
 		if *daemon {
 			installScript += " -- --daemon"
