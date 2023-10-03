@@ -235,7 +235,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
-	nixBins, err := d.nixBins(ctx, nixEnv)
+	nixBins, err := d.nixBins(nixEnv)
 	if err != nil {
 		return err
 	}

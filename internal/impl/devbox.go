@@ -1099,10 +1099,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 // the flake. If there are conflicts, it returns the first one it finds of a
 // give name. This matches how nix flakes behaves if there are conflicts in
 // buildInputs
-func (d *Devbox) nixBins(
-	ctx context.Context,
-	env map[string]string,
-) ([]string, error) {
+func (d *Devbox) nixBins(env map[string]string) ([]string, error) {
 	dirs := strings.Split(env["buildInputs"], " ")
 	bins := map[string]string{}
 	for _, dir := range dirs {
