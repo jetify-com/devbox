@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -40,6 +41,7 @@ type PrintDevEnvArgs struct {
 	FlakesFilePath       string
 	PrintDevEnvCachePath string
 	UsePrintDevEnvCache  bool
+	Writer               io.Writer
 }
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
@@ -63,7 +65,8 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		fmt.Fprintf(os.Stderr, "Recomputing the devbox environment.\n")
+		// We may be able to remove this after improving cache hits.
+		fmt.Fprintf(args.Writer, "Recomputing the devbox environment.\n")
 		cmd := exec.CommandContext(
 			ctx,
 			"nix", "print-dev-env",

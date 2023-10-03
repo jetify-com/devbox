@@ -795,6 +795,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		FlakesFilePath:       d.nixFlakesFilePath(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
+		Writer:               d.stderr,
 	})
 	if err != nil {
 		return nil, err
