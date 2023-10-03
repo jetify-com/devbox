@@ -916,16 +916,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	return env, d.addHashToEnv(env)
 }
 
-var nixEnvCache map[string]string
-
 // nixEnv is a wrapper around computeNixEnv that caches the result.
 // Note that this is in-memory cache of the final environment, and not the same
 // as the nix print-dev-env cache which is stored in a file.
 func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
-	if nixEnvCache != nil {
-		return nixEnvCache, nil
-	}
 
 	usePrintDevEnvCache := false
 
