@@ -134,7 +134,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	return d.lockfile.Save()
+	return nil
 }
 
 // Remove removes the `pkgs` from the config (i.e. devbox.json) and nix profile
