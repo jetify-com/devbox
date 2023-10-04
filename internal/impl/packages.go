@@ -441,6 +441,13 @@ func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.
 	if err != nil {
 		return nil, err
 	}
+
+	// Fill the narinfo cache for all packages so we can check if they are in the
+	// binary cache.
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return nil, err
+	}
+
 	for _, pkg := range packages {
 		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Items:      items,
