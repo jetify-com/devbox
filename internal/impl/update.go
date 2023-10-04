@@ -56,7 +56,7 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 				return err
 			}
 		} else {
-			if err = d.updateDevboxPackage(ctx, pkg); err != nil {
+			if err = d.updateDevboxPackage(pkg); err != nil {
 				return err
 			}
 		}
@@ -89,10 +89,7 @@ func (d *Devbox) inputsToUpdate(
 	return pkgsToUpdate, nil
 }
 
-func (d *Devbox) updateDevboxPackage(
-	ctx context.Context,
-	pkg *devpkg.Package,
-) error {
+func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
 	resolved, err := d.lockfile.FetchResolvedPackage(pkg.Raw)
 	if err != nil {
 		return err
