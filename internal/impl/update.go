@@ -102,7 +102,6 @@ func (d *Devbox) updateDevboxPackage(
 }
 
 func (d *Devbox) mergeResolvedPackageToLockfile(
-	ctx context.Context,
 	pkg *devpkg.Package,
 	resolved *lock.Package,
 	lockfile *lock.File,
@@ -116,11 +115,6 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 
 	if existing.Version != resolved.Version {
 		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
-		if err := d.removePackagesFromProfile(ctx, []string{pkg.Raw}); err != nil {
-			// Warn but continue. TODO(landau): ensurePackagesAreInstalled should
-			// sync the profile so we don't need to do this manually.
-			ux.Fwarning(d.stderr, "Failed to remove %s from profile: %s\n", pkg, err)
-		}
 		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil
 	}
