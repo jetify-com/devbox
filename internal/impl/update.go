@@ -98,7 +98,7 @@ func (d *Devbox) updateDevboxPackage(
 		return err
 	}
 
-	return d.mergeResolvedPackageToLockfile(ctx, pkg, resolved, d.lockfile)
+	return d.mergeResolvedPackageToLockfile(pkg, resolved, d.lockfile)
 }
 
 func (d *Devbox) mergeResolvedPackageToLockfile(
