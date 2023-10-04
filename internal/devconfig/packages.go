@@ -2,7 +2,9 @@ package devconfig
 
 import (
 	"encoding/json"
+	"io"
 	"slices"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -10,6 +12,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type jsonKind int
@@ -70,7 +73,7 @@ func (pkgs *Packages) Remove(versionedName string) {
 }
 
 // AddPlatforms adds a platform to the list of platforms for a given package
-func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) error {
+func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -94,6 +97,10 @@ func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) err
 					pkg.VersionedName(),
 				)
 			}
+			ux.Finfo(writer,
+				"Added platform %s to package %s\n", strings.Join(platforms, ", "),
+				pkg.VersionedName(),
+			)
 
 			pkgs.jsonKind = jsonMap
 			pkg.kind = regular
@@ -105,7 +112,7 @@ func (pkgs *Packages) AddPlatforms(versionedname string, platforms []string) err
 }
 
 // ExcludePlatforms adds a platform to the list of excluded platforms for a given package
-func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string) error {
+func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -127,6 +134,8 @@ func (pkgs *Packages) ExcludePlatforms(versionedName string, platforms []string)
 					pkg.VersionedName(),
 				)
 			}
+			ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+				pkg.VersionedName())
 
 			pkgs.jsonKind = jsonMap
 			pkg.kind = regular

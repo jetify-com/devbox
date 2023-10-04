@@ -38,6 +38,9 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
+	// Track which packages had no changes so we can report that to the user.
+	unchangedPackageNames := []string{}
+
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
 	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
@@ -53,6 +56,8 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		if slices.Contains(existingPackageNames, pkg.Versioned()) {
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
+			unchangedPackageNames = append(unchangedPackageNames, pkg.Versioned())
+			ux.Finfo(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
 			continue
 		}
 
@@ -88,15 +93,16 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			return usererr.New("Package %s not found", pkg.Raw)
 		}
 
+		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
 		d.cfg.Packages.Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
 	for _, pkg := range addedPackageNames {
-		if err := d.cfg.Packages.AddPlatforms(pkg, platforms); err != nil {
+		if err := d.cfg.Packages.AddPlatforms(d.stderr, pkg, platforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.ExcludePlatforms(pkg, excludePlatforms); err != nil {
+		if err := d.cfg.Packages.ExcludePlatforms(d.stderr, pkg, excludePlatforms); err != nil {
 			return err
 		}
 	}
@@ -109,6 +115,11 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			p, err := d.lockfile.Resolve(name)
 			if err != nil {
 				return err
+			}
+			// TODO: Now that config packages can have fields,
+			// we should set this in the config, not the lockfile.
+			if !p.AllowInsecure {
+				fmt.Fprintf(d.stderr, "Allowing insecure for %s\n", name)
 			}
 			p.AllowInsecure = true
 		}
@@ -131,6 +142,16 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			return err
 		} else if readme != "" {
 			fmt.Fprintf(d.stderr, "%s\n", readme)
+		}
+	}
+
+	if len(platforms) == 0 && len(excludePlatforms) == 0 && !d.allowInsecureAdds {
+		if len(unchangedPackageNames) == 1 {
+			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
+		} else if len(unchangedPackageNames) > 1 {
+			ux.Finfo(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
+				strings.Join(unchangedPackageNames, ", "),
+			)
 		}
 	}
 
