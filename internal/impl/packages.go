@@ -57,7 +57,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
 			unchangedPackageNames = append(unchangedPackageNames, pkg.Versioned())
-			fmt.Fprintf(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
+			ux.Finfo(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
 			continue
 		}
 
@@ -93,7 +93,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			return usererr.New("Package %s not found", pkg.Raw)
 		}
 
-		fmt.Fprintf(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
+		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
 		d.cfg.Packages.Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
@@ -147,9 +147,9 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 
 	if len(platforms) == 0 && len(excludePlatforms) == 0 && !d.allowInsecureAdds {
 		if len(unchangedPackageNames) == 1 {
-			fmt.Fprintf(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
+			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {
-			fmt.Fprintf(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
+			ux.Finfo(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
 				strings.Join(unchangedPackageNames, ", "),
 			)
 		}

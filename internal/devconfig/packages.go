@@ -2,7 +2,6 @@ package devconfig
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type jsonKind int
@@ -97,7 +97,7 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 					pkg.VersionedName(),
 				)
 			}
-			fmt.Fprintf(writer,
+			ux.Finfo(writer,
 				"Added platform %s to package %s\n", strings.Join(platforms, ", "),
 				pkg.VersionedName(),
 			)
@@ -134,7 +134,7 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 					pkg.VersionedName(),
 				)
 			}
-			fmt.Fprintf(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+			ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
 				pkg.VersionedName())
 
 			pkgs.jsonKind = jsonMap
