@@ -155,6 +155,9 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			}
 		}
 		if updated {
+			// if we are updating the system info, then we should also update the resolved path
+			lockfile.Packages[pkg.Raw].Resolved = resolved.Resolved
+
 			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
 			return nil
 		}
