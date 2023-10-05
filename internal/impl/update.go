@@ -121,8 +121,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			// sync the profile so we don't need to do this manually.
 			ux.Fwarning(d.stderr, "Failed to remove %s from profile: %s\n", pkg, err)
 		}
-		resolved.AllowInsecure = existing.AllowInsecure
-		lockfile.Packages[pkg.Raw] = resolved
+		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil
 	}
 
@@ -136,25 +135,27 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		userSystem := nix.System()
 		updated := false
 		for sysName, newSysInfo := range resolved.Systems {
+			// Check whether we are actually updating any system info.
 			if sysName == userSystem {
 				// The resolved pkg has a system info for the user's system, so add/overwrite it.
 				if !newSysInfo.Equals(existing.Systems[userSystem]) {
 					// We only guard this so that the ux messaging is accurate. We could overwrite every time.
-					lockfile.Packages[pkg.Raw].Systems[userSystem] = newSysInfo
 					updated = true
 				}
 			} else {
 				// Add other system infos if they don't exist, or if we have a different StorePath. This may
-				// overwrite an existing CAPath, but to ensure correctness we should ensure that all StorePaths
+				// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
 				// come from the same package version.
 				existingSysInfo, exists := existing.Systems[sysName]
 				if !exists || existingSysInfo.StorePath != newSysInfo.StorePath {
-					lockfile.Packages[pkg.Raw].Systems[sysName] = newSysInfo
 					updated = true
 				}
 			}
 		}
 		if updated {
+			// if we are updating the system info, then we should also update the other fields
+			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+
 			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
 			return nil
 		}
@@ -189,4 +190,14 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 	}
 
 	return nil
+}
+
+func useResolvedPackageInLockfile(
+	lockfile *lock.File,
+	pkg *devpkg.Package,
+	resolved *lock.Package,
+	existing *lock.Package,
+) {
+	lockfile.Packages[pkg.Raw] = resolved
+	lockfile.Packages[pkg.Raw].AllowInsecure = existing.AllowInsecure
 }
