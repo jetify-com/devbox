@@ -132,11 +132,9 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 		}
 
-		newSystems := map[string]*lock.SystemInfo{}
 		userSystem := nix.System()
 		updated := false
 		for sysName, newSysInfo := range resolved.Systems {
-			newSystems[sysName] = newSysInfo
 
 			// Check whether we are actually updating any system info.
 			if sysName == userSystem {
@@ -158,7 +156,6 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		if updated {
 			// if we are updating the system info, then we should also update the other fields
 			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
-			lockfile.Packages[pkg.Raw].Systems = newSystems
 
 			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
 			return nil
