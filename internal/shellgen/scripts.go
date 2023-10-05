@@ -103,9 +103,7 @@ func WriteScriptFile(devbox devboxer, name, body string) (err error) {
 	defer script.Close() // best effort: close file
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		// NOTE: Devbox scripts will run using `sh` for consistency.
-		// However, we need to disable this for `fish` shell if/when we allow this for init_hooks,
-		// since init_hooks run in the host shell, and not `sh`.
+		// NOTE: Devbox scripts run using `sh` for consistency.
 		body = fmt.Sprintf("set -e\n\n%s", body)
 	}
 	_, err = script.WriteString(body)
