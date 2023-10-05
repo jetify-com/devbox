@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
@@ -188,15 +187,8 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		return err
 	}
 
-	if err := d.removePackagesFromProfile(ctx, packagesToUninstall); err != nil {
-		return err
-	}
-
+	// this will clean up the now-extra package from nix profile and the lockfile
 	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
-		return err
-	}
-
-	if err := d.lockfile.Remove(packagesToUninstall...); err != nil {
 		return err
 	}
 
@@ -215,15 +207,19 @@ const (
 // ensurePackagesAreInstalled ensures that the nix profile has the packages specified
 // in the config (devbox.json). The `mode` is used for user messaging to explain
 // what operations are happening, because this function may take time to execute.
+// TODO we should rename this to ensureDevboxEnvironmentIsUpToDate since it does
+// much more than ensuring packages are installed.
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 	defer debug.FunctionTimer().End()
 
-	if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
-		return err
-	}
-
+	// if mode is install or uninstall, then we need to update the nix-profile
+	// and lockfile, so we must continue below.
 	if mode == ensure {
+		// if mode is ensure, then we only continue if needed.
+		if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
+			return err
+		}
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
@@ -294,29 +290,100 @@ func (d *Devbox) profilePath() (string, error) {
 // and no more.
 func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
 	defer debug.FunctionTimer().End()
-	// TODO: we can probably merge these two operations to be faster and minimize chances of
-	// the devbox.json and nix profile falling out of sync.
-	if err := d.addPackagesToProfile(ctx, mode); err != nil {
+	defer trace.StartRegion(ctx, "syncPackagesToProfile").End()
+
+	// First, fetch the profile items from the nix-profile,
+	// and get the installable packages
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
+	if err != nil {
+		return err
+	}
+	packages, err := d.AllInstallablePackages()
+	if err != nil {
 		return err
 	}
 
-	return d.tidyProfile(ctx)
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return err
+	}
+
+	// Second, remove any packages from the nix-profile that are not in the config
+	itemsToKeep, err := d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
+	if err != nil {
+		return err
+	}
+
+	// we are done if mode is uninstall
+	if mode == uninstall {
+		return nil
+	}
+
+	// Last, find the pending packages, and ensure they are added to the nix-profile
+	// Important to maintain the order of packages as specified by
+	// Devbox.InstallablePackages() (higher priority first)
+	pending := []*devpkg.Package{}
+	for _, pkg := range packages {
+		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
+			Items:      itemsToKeep,
+			Lockfile:   d.lockfile,
+			Writer:     d.stderr,
+			Package:    pkg,
+			ProfileDir: profileDir,
+		})
+		if err != nil {
+			if !errors.Is(err, nix.ErrPackageNotFound) {
+				return err
+			}
+			pending = append(pending, pkg)
+		}
+	}
+
+	return d.addPackagesToProfile(ctx, pending)
+}
+
+func (d *Devbox) removeExtraItemsFromProfile(
+	ctx context.Context,
+	profileDir string,
+	profileItems []*nixprofile.NixProfileListItem,
+	packages []*devpkg.Package,
+) ([]*nixprofile.NixProfileListItem, error) {
+	defer debug.FunctionTimer().End()
+	defer trace.StartRegion(ctx, "removeExtraPackagesFromProfile").End()
+
+	itemsToKeep := []*nixprofile.NixProfileListItem{}
+	extras := []*nixprofile.NixProfileListItem{}
+	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
+	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
+	for _, item := range profileItems {
+		found := false
+		for _, pkg := range packages {
+			if item.Matches(pkg, d.lockfile) {
+				itemsToKeep = append(itemsToKeep, item)
+				found = true
+				break
+			}
+		}
+		if !found {
+			extras = append(extras, item)
+		}
+	}
+	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
+	if err := nixprofile.ProfileRemoveItems(profileDir, extras); err != nil {
+		return nil, err
+	}
+	return itemsToKeep, nil
 }
 
 // addPackagesToProfile inspects the packages in devbox.json, checks which of them
 // are missing from the nix profile, and then installs each package individually into the
 // nix profile.
-func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) error {
-	defer trace.StartRegion(ctx, "addNixProfilePkgs").End()
-
-	if mode == uninstall {
-		return nil
-	}
-
-	pkgs, err := d.pendingPackagesForInstallation(ctx)
-	if err != nil {
-		return err
-	}
+func (d *Devbox) addPackagesToProfile(ctx context.Context, pkgs []*devpkg.Package) error {
+	defer debug.FunctionTimer().End()
+	defer trace.StartRegion(ctx, "addPackagesToProfile").End()
 
 	if len(pkgs) == 0 {
 		return nil
@@ -361,154 +428,6 @@ func (d *Devbox) addPackagesToProfile(ctx context.Context, mode installMode) err
 	}
 
 	return nil
-}
-
-func (d *Devbox) removePackagesFromProfile(ctx context.Context, pkgs []string) error {
-	defer trace.StartRegion(ctx, "removeNixProfilePkgs").End()
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
-	for _, pkg := range devpkg.PackageFromStrings(pkgs, d.lockfile) {
-		index, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
-			Lockfile:   d.lockfile,
-			Writer:     d.stderr,
-			Package:    pkg,
-			ProfileDir: profileDir,
-		})
-		if err != nil {
-			debug.Log(
-				"Info: Package %s not found in nix profile. Skipping removing from profile.\n",
-				pkg.Raw,
-			)
-			continue
-		}
-
-		// TODO: unify this with nix.ProfileRemove
-		cmd := exec.Command("nix", "profile", "remove",
-			"--profile", profileDir,
-			fmt.Sprintf("%d", index),
-		)
-		cmd.Args = append(cmd.Args, nix.ExperimentalFlags()...)
-		cmd.Stdout = d.stderr
-		cmd.Stderr = d.stderr
-		err = cmd.Run()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// tidyProfile removes any packages in the nix profile that are not in devbox.json.
-func (d *Devbox) tidyProfile(ctx context.Context) error {
-	defer trace.StartRegion(ctx, "tidyProfile").End()
-
-	extras, err := d.extraPackagesInProfile(ctx)
-	if err != nil {
-		return err
-	}
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
-	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
-	return nixprofile.ProfileRemoveItems(profileDir, extras)
-}
-
-// pendingPackagesForInstallation returns a list of packages that are in
-// devbox.json or global devbox.json but are not yet installed in the nix
-// profile. It maintains the order of packages as specified by
-// Devbox.AllPackages() (higher priority first)
-func (d *Devbox) pendingPackagesForInstallation(ctx context.Context) ([]*devpkg.Package, error) {
-	defer trace.StartRegion(ctx, "pendingPackages").End()
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return nil, err
-	}
-
-	pending := []*devpkg.Package{}
-	items, err := nixprofile.ProfileListItems(d.stderr, profileDir)
-	if err != nil {
-		return nil, err
-	}
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return nil, err
-	}
-
-	// Fill the narinfo cache for all packages so we can check if they are in the
-	// binary cache.
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return nil, err
-	}
-
-	for _, pkg := range packages {
-		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
-			Items:      items,
-			Lockfile:   d.lockfile,
-			Writer:     d.stderr,
-			Package:    pkg,
-			ProfileDir: profileDir,
-		})
-		if err != nil {
-			if !errors.Is(err, nix.ErrPackageNotFound) {
-				return nil, err
-			}
-			pending = append(pending, pkg)
-		}
-	}
-	return pending, nil
-}
-
-// extraPackagesInProfile returns a list of packages that are in the nix profile,
-// but are NOT in devbox.json or global devbox.json.
-//
-// NOTE: as an optimization, this implementation assumes that all packages in
-// devbox.json have already been added to the nix profile.
-func (d *Devbox) extraPackagesInProfile(ctx context.Context) ([]*nixprofile.NixProfileListItem, error) {
-	defer trace.StartRegion(ctx, "extraPackagesInProfile").End()
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return nil, err
-	}
-
-	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
-	if err != nil {
-		return nil, err
-	}
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(packages) == len(profileItems) {
-		// Optimization: skip comparison if number of packages are the same. This only works
-		// because we assume that all packages in `devbox.json` have just been added to the
-		// profile.
-		return nil, nil
-	}
-
-	extras := []*nixprofile.NixProfileListItem{}
-	// Note: because nix.Input uses memoization when normalizing attribute paths (slow operation),
-	// and since we're reusing the Input objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-outer:
-	for _, item := range profileItems {
-		for _, pkg := range packages {
-			if item.Matches(pkg, d.lockfile) {
-				continue outer
-			}
-		}
-		extras = append(extras, item)
-	}
-
-	return extras, nil
 }
 
 var resetCheckDone = false

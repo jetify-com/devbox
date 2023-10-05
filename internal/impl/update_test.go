@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +24,7 @@ func TestUpdateNewPackageIsAdded(t *testing.T) {
 		Packages: map[string]*lock.Package{}, // empty
 	}
 
-	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 
 	require.Contains(t, lockfile.Packages, raw)
@@ -57,7 +56,7 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 		},
 	}
 
-	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 
 	require.Contains(t, lockfile.Packages, raw)
@@ -100,7 +99,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 		},
 	}
 
-	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 
 	require.Contains(t, lockfile.Packages, raw)
@@ -146,7 +145,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 		},
 	}
 
-	err := devbox.mergeResolvedPackageToLockfile(context.Background(), devPkg, resolved, lockfile)
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 
 	require.Contains(t, lockfile.Packages, raw)
