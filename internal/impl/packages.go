@@ -358,15 +358,18 @@ func (d *Devbox) removeExtraItemsFromProfile(
 	extras := []*nixprofile.NixProfileListItem{}
 	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
 	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-outer:
 	for _, item := range profileItems {
+		found := false
 		for _, pkg := range packages {
 			if item.Matches(pkg, d.lockfile) {
 				itemsToKeep = append(itemsToKeep, item)
-				continue outer
+				found = true
+				break
 			}
 		}
-		extras = append(extras, item)
+		if !found {
+			extras = append(extras, item)
+		}
 	}
 	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
 	if err := nixprofile.ProfileRemoveItems(profileDir, extras); err != nil {
