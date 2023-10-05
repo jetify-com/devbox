@@ -135,7 +135,6 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		userSystem := nix.System()
 		updated := false
 		for sysName, newSysInfo := range resolved.Systems {
-
 			// Check whether we are actually updating any system info.
 			if sysName == userSystem {
 				// The resolved pkg has a system info for the user's system, so add/overwrite it.
