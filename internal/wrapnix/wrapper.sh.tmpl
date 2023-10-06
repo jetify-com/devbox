@@ -29,7 +29,7 @@ Remove wrapper bin path from PATH so that we don't call more bin-wrappers from
 this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
 should be in PATH.
 
-This is implemented in sed for efficieny. sed is POSIX so we assume it's available.
+This is implemented in sed for efficiency. sed is POSIX so we assume it's available.
 
 */ -}}
 export PATH=$(echo $PATH | sed -e 's#:{{ .WrapperBinPath }}##' -e 's#{{ .WrapperBinPath }}:##' -e 's#{{ .WrapperBinPath }}##')
