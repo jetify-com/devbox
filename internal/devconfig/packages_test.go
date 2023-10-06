@@ -1,12 +1,11 @@
 package devconfig
 
 import (
-	"bytes"
-	"encoding/json"
-	"reflect"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/tailscale/hujson"
 )
 
 // TestJsonifyConfigPackages tests the jsonMarshal and jsonUnmarshal of the Config.Packages field
@@ -20,7 +19,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "empty-list",
 			jsonConfig: `{"packages":[]}`,
 			expected: Packages{
-				jsonKind:   jsonList,
 				Collection: []Package{},
 			},
 		},
@@ -28,7 +26,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "empty-map",
 			jsonConfig: `{"packages":{}}`,
 			expected: Packages{
-				jsonKind:   jsonMap,
 				Collection: []Package{},
 			},
 		},
@@ -36,7 +33,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "flat-list",
 			jsonConfig: `{"packages":["python","hello@latest","go@1.20"]}`,
 			expected: Packages{
-				jsonKind:   jsonList,
 				Collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
 			},
 		},
@@ -44,7 +40,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "map-with-string-value",
 			jsonConfig: `{"packages":{"python":"latest","go":"1.20"}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewVersionOnlyPackage("python", "latest"),
 					NewVersionOnlyPackage("go", "1.20"),
@@ -56,7 +51,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "map-with-struct-value",
 			jsonConfig: `{"packages":{"python":{"version":"latest"}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("python", map[string]any{"version": "latest"}),
 				},
@@ -66,7 +60,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "map-with-string-and-struct-values",
 			jsonConfig: `{"packages":{"go":"1.20","emacs":"latest","python":{"version":"latest"}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewVersionOnlyPackage("go", "1.20"),
 					NewVersionOnlyPackage("emacs", "latest"),
@@ -79,7 +72,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			jsonConfig: `{"packages":{"python":{"version":"latest",` +
 				`"platforms":["x86_64-darwin","aarch64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":   "latest",
@@ -93,7 +85,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			jsonConfig: `{"packages":{"python":{"version":"latest",` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":            "latest",
@@ -108,7 +99,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":            "latest",
@@ -124,7 +114,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("path:my-php-flake#hello", map[string]any{
 						"version":            "latest",
@@ -141,7 +130,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("github:F1bonacc1/process-compose/v0.43.1", map[string]any{
 						"version":            "latest",
@@ -158,7 +146,6 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: Packages{
-				jsonKind: jsonMap,
 				Collection: []Package{
 					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
 						"version":            "latest",
@@ -172,40 +159,29 @@ func TestJsonifyConfigPackages(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			config := &Config{}
-			if err := json.Unmarshal([]byte(testCase.jsonConfig), config); err != nil {
-				t.Errorf("unexpected error: %v", err)
+			config, err := loadBytes([]byte(testCase.jsonConfig))
+			if err != nil {
+				t.Errorf("load error: %v", err)
 			}
-			if !reflect.DeepEqual(config.Packages, testCase.expected) {
-				t.Errorf("expected: %v, got: %v", testCase.expected, config.Packages)
+			if diff := diffPackages(t, config.Packages, testCase.expected); diff != "" {
+				t.Errorf("got wrong packages (-want +got):\n%s", diff)
 			}
 
-			marshalled, err := json.Marshal(config)
+			got, err := hujson.Minimize(config.Bytes())
 			if err != nil {
-				t.Errorf("unexpected error: %v", err)
+				t.Fatal(err)
 			}
-			if string(marshalled) != testCase.jsonConfig {
-				t.Errorf("expected: %v, got: %v", testCase.jsonConfig, string(marshalled))
-			}
-
-			// We also test cuecfg.Marshal because elsewhere in our code we rely on it.
-			// While in this PR it is now a simple wrapper over json.Marshal, we want to
-			// ensure that any future changes to that function don't break our code.
-			marshalled, err = cuecfg.Marshal(config, ".json")
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			// We need to pretty-print the expected output because cuecfg.Marshal returns
-			// the json pretty-printed.
-			expected := &bytes.Buffer{}
-			if err := json.Indent(expected, []byte(testCase.jsonConfig), "", cuecfg.Indent); err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			if string(marshalled) != expected.String() {
-				t.Errorf("expected: %v, got: %v", testCase.jsonConfig, string(marshalled))
+			if string(got) != testCase.jsonConfig {
+				t.Errorf("expected: %v, got: %v", testCase.jsonConfig, string(got))
 			}
 		})
 	}
+}
+
+func diffPackages(t *testing.T, got, want Packages) string {
+	t.Helper()
+
+	return cmp.Diff(want, got, cmpopts.IgnoreUnexported(Packages{}, Package{}))
 }
 
 func TestParseVersionedName(t *testing.T) {

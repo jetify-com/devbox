@@ -4,26 +4,28 @@
 package devconfig
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
 func Init(dir string, writer io.Writer) (created bool, err error) {
-	cfgPath := filepath.Join(dir, DefaultName)
-
-	config := DefaultConfig()
+	created, err = initConfigFile(filepath.Join(dir, DefaultName))
+	if err != nil || !created {
+		return created, err
+	}
 
 	// package suggestion
 	pkgsToSuggest, err := initrec.Get(dir)
 	if err != nil {
-		return false, err
+		return created, err
 	}
 	if len(pkgsToSuggest) > 0 {
 		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
@@ -33,6 +35,30 @@ func Init(dir string, writer io.Writer) (created bool, err error) {
 			color.HiYellowString(s),
 		)
 	}
+	return created, err
+}
 
-	return cuecfg.InitFile(cfgPath, config)
+func initConfigFile(path string) (created bool, err error) {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o644)
+	if errors.Is(err, os.ErrExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		if err != nil {
+			os.Remove(file.Name())
+		}
+	}()
+
+	_, err = file.Write(DefaultConfig().Bytes())
+	if err != nil {
+		file.Close()
+		return false, err
+	}
+	if err := file.Close(); err != nil {
+		return false, err
+	}
+	return true, nil
 }
