@@ -55,6 +55,7 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 
 	for _, bin := range args.NixBins {
 		if err := createWrapper(&createWrapperArgs{
+			WrapperBinPath:     destPath,
 			CreateWrappersArgs: args,
 			BashPath:           bashPath,
 			Command:            bin,
@@ -130,6 +131,7 @@ type createWrapperArgs struct {
 	Command          string
 	destPath         string
 	DevboxSymlinkDir string
+	WrapperBinPath   string // This is the  directory where all bin wrappers live
 }
 
 func createWrapper(args *createWrapperArgs) error {

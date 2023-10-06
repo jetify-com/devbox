@@ -94,6 +94,8 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 }
 
 func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
+	// Deprecated: will be removed after devbox 0.7.0
+	// Don't add deprecated field to avoid printing anything to stdout
 	command := &cobra.Command{
 		Use:     "only-path-without-wrappers",
 		Hidden:  true,

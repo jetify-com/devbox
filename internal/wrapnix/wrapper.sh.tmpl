@@ -25,12 +25,13 @@ eval "$(DO_NOT_TRACK=1 devbox shellenv --preserve-path-stack -c {{ .ProjectDir }
 fi
 
 {{/*
-We call only-path-without-wrappers so that we do not invoke other bin-wrappers from
+Remove wrapper bin path from PATH so that we don't call more bin-wrappers from
 this bin-wrapper. Instead, we directly invoke the binary from the nix store, which
 should be in PATH.
 
-DO_NOT_TRACK=1 can be removed once we optimize segment to queue events.
+This is implemented in sed for efficiency. sed is POSIX so we assume it's available.
+
 */ -}}
-eval "$(DO_NOT_TRACK=1 devbox shellenv only-path-without-wrappers)"
+export PATH=$(echo $PATH | sed -e 's#:{{ .WrapperBinPath }}##' -e 's#{{ .WrapperBinPath }}:##' -e 's#{{ .WrapperBinPath }}##')
 
 exec {{ .Command }} "$@"
