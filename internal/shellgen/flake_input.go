@@ -85,7 +85,6 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput 
 	flakeInputs := map[string]*flakeInput{}
 
 	packages = lo.Filter(packages, func(item *devpkg.Package, _ int) bool {
-
 		// Non nix packages (e.g. runx) don't belong in the flake
 		if !item.IsNix() {
 			return false
