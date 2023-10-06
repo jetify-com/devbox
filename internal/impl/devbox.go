@@ -987,7 +987,7 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 
 func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 	if name == "" {
-		return nil, usererr.New("package name cannot be empty")
+		return nil, errors.New("package name cannot be empty")
 	}
 	results := map[*devpkg.Package]bool{}
 	for _, pkg := range d.configPackages() {
