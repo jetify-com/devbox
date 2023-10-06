@@ -27,6 +27,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/pkg/sandbox/runx"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -747,6 +748,7 @@ func (d *Devbox) StartProcessManager(
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeNixEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
+// TODO: Rename to computeDevboxEnv?
 func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	defer trace.StartRegion(ctx, "computeNixEnv").End()
 
@@ -874,6 +876,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
+	runXPaths, err := d.RunXPaths()
+	if err != nil {
+		return nil, err
+	}
+	nixEnvPath = envpath.JoinPathLists(nixEnvPath, runXPaths)
+
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
@@ -978,6 +986,9 @@ func (d *Devbox) HasDeprecatedPackages() bool {
 }
 
 func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
+	if name == "" {
+		return nil, errors.New("package name cannot be empty")
+	}
 	results := map[*devpkg.Package]bool{}
 	for _, pkg := range d.configPackages() {
 		if pkg.Raw == name || pkg.CanonicalName() == name {
@@ -1193,4 +1204,17 @@ func (d *Devbox) PluginManager() *plugin.Manager {
 
 func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
+}
+
+func (d *Devbox) RunXPaths() (string, error) {
+	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
+	paths := []string{}
+	for _, pkg := range packages {
+		p, err := runx.Install(pkg.RunXPath())
+		if err != nil {
+			return "", err
+		}
+		paths = append(paths, p...)
+	}
+	return envpath.JoinPathLists(paths...), nil
 }

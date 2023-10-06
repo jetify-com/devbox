@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -30,6 +30,10 @@ func (i *Info) String() string {
 }
 
 func Search(url string) (map[string]*Info, error) {
+	if strings.HasPrefix(url, "runx:") {
+		// TODO implement runx search
+		return map[string]*Info{}, nil
+	}
 	return searchSystem(url, "")
 }
 
@@ -98,7 +102,7 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	out, err := cmd.Output()
 	if err != nil {
 		// for now, assume all errors are invalid packages.
-		return nil, usererr.NewExecError(err)
+		return nil, fmt.Errorf("error searching for pkg %s: %w", url, err)
 	}
 	return parseSearchResults(out), nil
 }

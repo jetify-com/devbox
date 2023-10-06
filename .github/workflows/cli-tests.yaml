@@ -68,10 +68,11 @@ jobs:
           go-version-file: ./go.mod
           cache: false
 
-      - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.7.0
-        with:
-          enable-cache: true
+      # This can be reanabled once released version supports runx
+      # - name: Install devbox
+      #   uses: jetpack-io/devbox-install-action@v0.7.0
+      #   with:
+      #     enable-cache: true
 
       - name: Mount golang cache
         uses: actions/cache@v3
@@ -82,7 +83,8 @@ jobs:
             ~/go/pkg
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
-      - run:  devbox run fmt
+      # Use main devbox for now to ensure it supports runx
+      - run:  go run ./cmd/devbox run fmt
       
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.7.0

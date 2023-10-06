@@ -85,6 +85,11 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput 
 	flakeInputs := map[string]*flakeInput{}
 
 	packages = lo.Filter(packages, func(item *devpkg.Package, _ int) bool {
+		// Non nix packages (e.g. runx) don't belong in the flake
+		if !item.IsNix() {
+			return false
+		}
+
 		// Include packages (like local or remote flakes) that cannot be
 		// fetched from a Binary Cache Store.
 		if !featureflag.RemoveNixpkgs.Enabled() {
@@ -100,17 +105,17 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput 
 	})
 
 	order := []string{}
-	for _, input := range packages {
-		if flkInput, ok := flakeInputs[input.URLForFlakeInput()]; !ok {
-			order = append(order, input.URLForFlakeInput())
-			flakeInputs[input.URLForFlakeInput()] = &flakeInput{
-				Name:     input.FlakeInputName(),
-				URL:      input.URLForFlakeInput(),
-				Packages: []*devpkg.Package{input},
+	for _, pkg := range packages {
+		if flkInput, ok := flakeInputs[pkg.URLForFlakeInput()]; !ok {
+			order = append(order, pkg.URLForFlakeInput())
+			flakeInputs[pkg.URLForFlakeInput()] = &flakeInput{
+				Name:     pkg.FlakeInputName(),
+				URL:      pkg.URLForFlakeInput(),
+				Packages: []*devpkg.Package{pkg},
 			}
 		} else {
 			flkInput.Packages = lo.Uniq(
-				append(flakeInputs[input.URLForFlakeInput()].Packages, input),
+				append(flakeInputs[pkg.URLForFlakeInput()].Packages, pkg),
 			)
 		}
 	}

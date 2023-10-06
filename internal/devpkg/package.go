@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
@@ -93,6 +94,9 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 			normalizedURL += "#" + pkgURL.Fragment
 		}
 		pkgURL, _ = url.Parse(normalizedURL)
+	} else if pkgURL.Scheme == pkgtype.RunXScheme {
+		// THIS IS A HACK. These are not URLs and should not be treated as such
+		pkgURL.Path = pkgURL.Opaque
 	}
 
 	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw, isInstallable: isInstallable}
@@ -107,11 +111,13 @@ func (p *Package) isLocal() bool {
 }
 
 // IsDevboxPackage specifies whether this package is a devbox package. Devbox
-// packages have the format `canonicalName@version`and can be resolved by devbox
-// search. This also returns true for legacy packages which are just an
-// attribute path. An explicit flake reference is _not_ a devbox package.
+// packages have the format `canonicalName@version`and can be resolved by
+// lockfile.Resolve (including runx packages)
+// This also returns true for legacy packages which are just
+// an attribute path. An explicit flake reference is _not_ a devbox package.
+// TODO: Consider renaming to IsResolvable
 func (p *Package) IsDevboxPackage() bool {
-	return p.Scheme == ""
+	return p.Scheme == "" || p.IsRunX()
 }
 
 // isGithub specifies whether this Package is referenced by a remote flake
@@ -401,7 +407,7 @@ func (p *Package) CanonicalName() string {
 	if !p.IsDevboxPackage() {
 		return ""
 	}
-	name, _, _ := strings.Cut(p.Path, "@")
+	name, _, _ := strings.Cut(p.Raw, "@")
 	return name
 }
 
@@ -518,4 +524,24 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	}
 	_, err := p.lockfile.Resolve(p.Raw)
 	return err
+}
+
+func (p *Package) IsRunX() bool {
+	return pkgtype.IsRunX(p.Raw)
+}
+
+func (p *Package) IsNix() bool {
+	return IsNix(p, 0)
+}
+
+func (p *Package) RunXPath() string {
+	return strings.TrimPrefix(p.Raw, pkgtype.RunXPrefix)
+}
+
+func IsNix(p *Package, _ int) bool {
+	return !p.IsRunX()
+}
+
+func IsRunX(p *Package, _ int) bool {
+	return p.IsRunX()
 }
