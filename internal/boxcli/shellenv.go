@@ -95,11 +95,12 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 
 func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
 	command := &cobra.Command{
-		Use:     "only-path-without-wrappers",
-		Hidden:  true,
-		Short:   "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: ensureNixInstalled,
+		Use:        "only-path-without-wrappers",
+		Deprecated: "This command is deprecated and will be removed after devbox 0.7.0",
+		Hidden:     true,
+		Short:      "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
+		Args:       cobra.ExactArgs(0),
+		PreRunE:    ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s := shellEnvOnlyPathWithoutWrappersFunc()
 			fmt.Fprintln(cmd.OutOrStdout(), s)
