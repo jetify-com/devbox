@@ -69,8 +69,8 @@ func markEnvsAsSetByDevbox(envs ...map[string]string) {
 	}
 }
 
-// IsEnvEnabled checks if the devbox environment is enabled. We use the ogPathKey
-// as a proxy for this. This allows us to differentiate between global and
+// IsEnvEnabled checks if the devbox environment is enabled.
+// This allows us to differentiate between global and
 // individual project shells.
 func (d *Devbox) IsEnvEnabled() bool {
 	fakeEnv := map[string]string{}

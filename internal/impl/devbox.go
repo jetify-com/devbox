@@ -259,7 +259,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	return d.ensurePackagesAreInstalled(ctx, ensure)
+	return d.ensureDevboxEnvIsUpToDate(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -477,7 +477,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensureDevboxEnvIsUpToDate(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -931,9 +931,9 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensurePackagesAreInstalled is called with ensure=true, it always
+	// When ensureDevboxEnvIsUpToDate is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensureDevboxEnvIsUpToDate(ctx, ensure); err != nil {
 		return nil, err
 	}
 
@@ -1172,10 +1172,10 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		// handling special cases to for pure shell
-		// Passing HOME for pure shell to leak through otherwise devbox binary won't work
-		// We also include PATH to find the nix installation. It is cleaned for pure mode below
-		// TERM leaking through is to enable colored text in the pure shell
+		// handling special cases for pure shell
+		// - HOME required for devbox binary to work
+		// - PATH to find the nix installation. It is cleaned for pure mode below.
+		// - TERM to enable colored text in the pure shell
 		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
