@@ -407,7 +407,7 @@ func (p *Package) CanonicalName() string {
 	if !p.IsDevboxPackage() {
 		return ""
 	}
-	name, _, _ := strings.Cut(p.Path, "@")
+	name, _, _ := strings.Cut(p.Raw, "@")
 	return name
 }
 

@@ -65,7 +65,6 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		// it. Ignore error (which is either missing or more than one). We search by
 		// CanonicalName so any legacy or versioned packages will be removed if they
 		// match.
-		fmt.Fprintln(d.stderr, "pkg.CanonicalName()", pkg.CanonicalName())
 		found, _ := d.findPackageByName(pkg.CanonicalName())
 		if found != nil {
 			ux.Finfo(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
