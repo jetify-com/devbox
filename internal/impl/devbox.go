@@ -167,9 +167,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
 	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
 
 	profileDir, err := d.profilePath()
@@ -208,10 +205,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
-
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
 
 	if err := shellgen.WriteScriptsToFiles(d); err != nil {
 		return err
@@ -273,22 +266,35 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return "", err
+	var envs map[string]string
+	var err error
+
+	if opts.DontRecomputeEnvironment {
+		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
+		if !upToDate {
+			ux.Finfo(
+				d.stderr,
+				"Your devbox environment may be out of date. Please run \n\n"+
+					"eval \"$(devbox global shellenv -r)\"\n\n",
+			)
+		}
+
+		envs, err = d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+	} else {
+		envs, err = d.nixEnv(ctx)
 	}
 
-	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	envStr := exportify(envs)
 
-	if includeHooks {
+	if opts.RunHooks {
 		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
@@ -299,11 +305,6 @@ func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) 
 func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
-	// this only returns env variables for the shell environment excluding hooks
-	// and excluding "export " prefix in "export key=value" format
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return nil, err
-	}
 
 	envs, err := d.nixEnv(ctx)
 	if err != nil {
@@ -911,6 +912,12 @@ func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
 	}
 	if upToDate {
 		usePrintDevEnvCache = true
+	}
+
+	if !usePrintDevEnvCache {
+		if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+			return nil, err
+		}
 	}
 
 	return d.computeNixEnv(ctx, usePrintDevEnvCache)

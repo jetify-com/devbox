@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -72,7 +73,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(servicesCmd())
 	command.AddCommand(setupCmd())
 	command.AddCommand(shellCmd())
-	command.AddCommand(shellEnvCmd())
+	command.AddCommand(shellEnvCmd(lo.ToPtr(false) /*dontRecomputeEnv*/))
 	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
 	// Preview commands
