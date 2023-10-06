@@ -17,8 +17,8 @@ import (
 	"go.jetpack.io/devbox/internal/shellgen"
 )
 
-// update overwrites golden files with the new test results.
-var update = flag.Bool("update", false, "update the golden files with the test results")
+// updateFlag overwrites golden files with the new test results.
+var updateFlag = flag.Bool("update", false, "update the golden files with the test results")
 
 func TestWriteDevboxShellrc(t *testing.T) {
 	testdirs, err := filepath.Glob("testdata/shellrc/*")
@@ -83,7 +83,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 			// Overwrite the golden file if the -update flag was
 			// set, and then proceed normally. The test should
 			// always pass in this case.
-			if *update {
+			if *updateFlag {
 				err = os.WriteFile(test.goldShellrcPath, gotShellrc, 0o666)
 				if err != nil {
 					t.Error("Error updating golden files:", err)
