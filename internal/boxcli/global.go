@@ -34,8 +34,8 @@ func globalCmd() *cobra.Command {
 	}
 
 	shellEnv := shellEnvCmd(&globalShellEnvCmdFlags.recompute)
-	shellEnv.Flags().BoolVarP(
-		&globalShellEnvCmdFlags.recompute, "recompute", "r", false,
+	shellEnv.Flags().BoolVar(
+		&globalShellEnvCmdFlags.recompute, "recompute", false,
 		"Recompute environment if needed",
 	)
 
