@@ -8,6 +8,10 @@ import (
 )
 
 func (p *Package) ValidateExists() (bool, error) {
+	if p.IsRunX() {
+		// TODO implement runx validation
+		return true, nil
+	}
 	if p.isVersioned() && p.version() == "" {
 		return false, usererr.New("No version specified for %q.", p.Path)
 	}

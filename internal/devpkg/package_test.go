@@ -226,3 +226,29 @@ func TestStorePathParts(t *testing.T) {
 		})
 	}
 }
+
+func TestCanonicalName(t *testing.T) {
+	tests := []struct {
+		pkgName      string
+		expectedName string
+	}{
+		{"go", "go"},
+		{"go@latest", "go"},
+		{"go@1.21", "go"},
+		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
+		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
+		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
+		{"github:NixOS/nixpkgs/12345", ""},
+		{"path:/to/my/file", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromString(tt.pkgName, nil)
+			got := pkg.CanonicalName()
+			if got != tt.expectedName {
+				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
