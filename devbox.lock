@@ -22,7 +22,8 @@
       }
     },
     "runx:golangci/golangci-lint@latest": {
-      "resolved": "runx:golangci/golangci-lint@latest"
+      "resolved": "golangci/golangci-lint@v1.54.2",
+      "version": "v1.54.2"
     }
   }
 }

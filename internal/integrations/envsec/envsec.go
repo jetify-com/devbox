@@ -2,6 +2,7 @@ package envsec
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os/exec"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/pkg/sandbox/runx"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 )
 
 var (
@@ -17,24 +18,24 @@ var (
 	binPathCache string
 )
 
-func Env(projectDir string) (map[string]string, error) {
+func Env(ctx context.Context, projectDir string) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
 	if envCache != nil {
 		return envCache, nil
 	}
 
-	if err := ensureInitialized(projectDir); err != nil {
+	if err := ensureInitialized(ctx, projectDir); err != nil {
 		return nil, err
 	}
 
 	var err error
-	envCache, err = envsecList(projectDir)
+	envCache, err = envsecList(ctx, projectDir)
 
 	return envCache, err
 }
 
-func EnsureInstalled() (string, error) {
+func EnsureInstalled(ctx context.Context) (string, error) {
 	if binPathCache != "" {
 		return binPathCache, nil
 	}
@@ -44,7 +45,7 @@ func EnsureInstalled() (string, error) {
 		return binPathCache, nil
 	}
 
-	paths, err := runx.Install("jetpack-io/envsec")
+	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install envsec")
 	}
@@ -57,8 +58,8 @@ func EnsureInstalled() (string, error) {
 	return binPathCache, nil
 }
 
-func ensureInitialized(projectDir string) error {
-	binPath, err := EnsureInstalled()
+func ensureInitialized(ctx context.Context, projectDir string) error {
+	binPath, err := EnsureInstalled(ctx)
 	if err != nil {
 		return err
 	}
@@ -73,8 +74,11 @@ func ensureInitialized(projectDir string) error {
 	return nil
 }
 
-func envsecList(projectDir string) (map[string]string, error) {
-	binPath, err := EnsureInstalled()
+func envsecList(
+	ctx context.Context,
+	projectDir string,
+) (map[string]string, error) {
+	binPath, err := EnsureInstalled(ctx)
 	if err != nil {
 		return nil, err
 	}

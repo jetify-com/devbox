@@ -16,9 +16,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
-	"go.jetpack.io/pkg/sandbox/runx"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -78,7 +78,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
 
 		packageNameForConfig := pkg.Raw
-		ok, err := versionedPkg.ValidateExists()
+		ok, err := versionedPkg.ValidateExists(ctx)
 		if (err == nil && ok) || errors.Is(err, devpkg.ErrCannotBuildPackageOnSystem) {
 			// Only use versioned if it exists in search. We can disregard the error
 			// about not building on the current system, since user's can continue
@@ -236,7 +236,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	if err := d.InstallRunXPackages(); err != nil {
+	if err := d.InstallRunXPackages(ctx); err != nil {
 		return err
 	}
 
@@ -473,18 +473,17 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	return errors.WithStack(os.Remove(profileDir))
 }
 
-func (d *Devbox) InstallRunXPackages() error {
-	for _, pkg := range d.InstallablePackages() {
-		if pkg.IsRunX() {
-			// TODO: Once resolve is implemented, we use whatever version is in the lockfile.
-			if _, err := d.lockfile.Resolve(pkg.Raw); err != nil {
-				return err
-			}
-			_, err := runx.Install(pkg.RunXPath())
-			if err != nil {
-				return fmt.Errorf("error installing runx package %s: %w", pkg, err)
-			}
-
+func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
+	for _, pkg := range lo.Filter(d.InstallablePackages(), devpkg.IsRunX) {
+		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
+		if err != nil {
+			return err
+		}
+		if _, err := pkgtype.RunXClient().Install(
+			ctx,
+			lockedPkg.Resolved,
+		); err != nil {
+			return fmt.Errorf("error installing runx package %s: %w", pkg, err)
 		}
 	}
 	return nil
