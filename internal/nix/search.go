@@ -1,14 +1,17 @@
 package nix
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/xdg"
 )
 
 var (
@@ -19,10 +22,10 @@ var (
 type Info struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
-	AttributeKey string
-	PName        string
-	Summary      string
-	Version      string
+	AttributeKey string `json:"attribute"`
+	PName        string `json:"pname"`
+	Summary      string `json:"summary"`
+	Version      string `json:"version"`
 }
 
 func (i *Info) String() string {
@@ -34,7 +37,7 @@ func Search(url string) (map[string]*Info, error) {
 		// TODO implement runx search
 		return map[string]*Info{}, nil
 	}
-	return searchSystem(url, "")
+	return searchSystemUsingCache(url, "")
 }
 
 func parseSearchResults(data []byte) map[string]*Info {
@@ -105,4 +108,76 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 		return nil, fmt.Errorf("error searching for pkg %s: %w", url, err)
 	}
 	return parseSearchResults(out), nil
+}
+
+type searchSystemCache struct {
+	QueryToInfo map[string]map[string]*Info `json:"query_to_info"`
+}
+
+const (
+	searchSystemCacheSubDir   = "devbox/nix"
+	searchSystemCacheFileName = "search-system-cache.json"
+)
+
+var cache = searchSystemCache{}
+
+func searchSystemUsingCache(url, system string) (map[string]*Info, error) {
+	if system != "" {
+		return searchSystem(url, system)
+	}
+
+	if cache.QueryToInfo == nil {
+		contents, err := readSearchSystemCacheFile()
+		if err != nil {
+			return nil, err
+		}
+		cache.QueryToInfo = contents
+	}
+
+	if result := cache.QueryToInfo[url]; result != nil {
+		return result, nil
+	}
+
+	info, err := searchSystem(url, system)
+	if err != nil {
+		return nil, err
+	}
+
+	cache.QueryToInfo[url] = info
+	if err := writeSearchSystemCacheFile(cache.QueryToInfo); err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func readSearchSystemCacheFile() (map[string]map[string]*Info, error) {
+	contents, err := os.ReadFile(xdg.CacheSubpath(filepath.Join(searchSystemCacheSubDir, searchSystemCacheFileName)))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return make(map[string]map[string]*Info), nil
+		}
+		return nil, err
+	}
+	var result map[string]map[string]*Info
+	if err := json.Unmarshal(contents, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func writeSearchSystemCacheFile(contents map[string]map[string]*Info) error {
+	buf := bytes.Buffer{}
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent("", "  ")
+	err := enc.Encode(contents)
+	if err != nil {
+		return err
+	}
+	dir := xdg.CacheSubpath(searchSystemCacheSubDir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	path := filepath.Join(dir, searchSystemCacheFileName)
+	return os.WriteFile(path, buf.Bytes(), 0o644)
 }
