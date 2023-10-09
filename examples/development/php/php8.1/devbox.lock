@@ -40,26 +40,6 @@
         }
       }
     },
-    "php81Packages.composer@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Packages.composer",
-      "source": "devbox-search",
-      "version": "2.5.8",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/7hxmkxa9bmaplyy1ixl0yxv3j0qvxvc3-php-composer-2.5.8"
-        },
-        "aarch64-linux": {
-          "store_path": "/nix/store/vwrbpz9wr7blr7alx0fl3x79ym3jbdqa-php-composer-2.5.8"
-        },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/fjy357jpj9q2bfahsgnak4mrh8y07izw-php-composer-2.5.8"
-        },
-        "x86_64-linux": {
-          "store_path": "/nix/store/6w2vrfjdwhr3mj1magr2rmbycln379f8-php-composer-2.5.8"
-        }
-      }
-    },
     "php@8.1": {
       "last_modified": "2023-09-04T16:24:30Z",
       "plugin_version": "0.0.2",

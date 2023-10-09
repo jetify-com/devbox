@@ -1,6 +1,5 @@
 {
   "packages": [
-    "php81Packages.composer@latest",
     "php81Extensions.xdebug@latest",
     "php81Extensions.imagick@latest",
     "php@8.1"

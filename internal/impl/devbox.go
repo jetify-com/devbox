@@ -963,14 +963,7 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 // packages concatenated in correct order
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()
-	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
-	if err != nil {
-		return nil, err
-	}
-	// We prioritize plugin packages so that the php plugin works. Not sure
-	// if this is behavior we want for user plugins. We may need to add an optional
-	// priority field to the config.
-	return append(pluginPackages, userPackages...), nil
+	return d.PluginManager().ProcessPluginPackages(userPackages)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
