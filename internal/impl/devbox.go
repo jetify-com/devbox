@@ -22,12 +22,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/impl/envpath"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/pkg/sandbox/runx"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -851,13 +851,13 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		)
 	}
 
-	env["PATH"], err = d.addUtilitiesToPath(env["PATH"])
+	env["PATH"], err = d.addUtilitiesToPath(ctx, env["PATH"])
 	if err != nil {
 		return nil, err
 	}
 
 	// Include env variables in devbox.json
-	configEnv, err := d.configEnvs(env)
+	configEnv, err := d.configEnvs(ctx, env)
 	if err != nil {
 		return nil, err
 	}
@@ -885,7 +885,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	runXPaths, err := d.RunXPaths()
+	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1051,8 +1051,11 @@ func (d *Devbox) checkOldEnvrc() error {
 // their value in the existing env variables. Note, this doesn't
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
-func (d *Devbox) configEnvs(existingEnv map[string]string) (map[string]string, error) {
-	env, err := d.cfg.ComputedEnv(d.ProjectDir())
+func (d *Devbox) configEnvs(
+	ctx context.Context,
+	existingEnv map[string]string,
+) (map[string]string, error) {
+	env, err := d.cfg.ComputedEnv(ctx, d.ProjectDir())
 	if err != nil {
 		return nil, err
 	}
@@ -1213,11 +1216,15 @@ func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
 }
 
-func (d *Devbox) RunXPaths() (string, error) {
+func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
 	paths := []string{}
 	for _, pkg := range packages {
-		p, err := runx.Install(pkg.RunXPath())
+		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
+		if err != nil {
+			return "", err
+		}
+		p, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
 		if err != nil {
 			return "", err
 		}

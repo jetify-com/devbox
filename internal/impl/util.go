@@ -38,9 +38,12 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 // to (e.g. envsec).
 // Question: Should we add utilityBinPath here? That would allow user to use
 // process-compose, etc
-func (d *Devbox) addUtilitiesToPath(path string) (string, error) {
+func (d *Devbox) addUtilitiesToPath(
+	ctx context.Context,
+	path string,
+) (string, error) {
 	if d.cfg.IsEnvsecEnabled() {
-		envsecPath, err := envsec.EnsureInstalled()
+		envsecPath, err := envsec.EnsureInstalled(ctx)
 		if err != nil {
 			return "", err
 		}

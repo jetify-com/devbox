@@ -4,6 +4,7 @@
 package lock
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/pkg/sandbox/runx/impl/types"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -71,9 +73,13 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 		locked := &Package{}
 		var err error
 		if pkgtype.IsRunX(pkg) {
-			// TODO implement runx resolution. This can be done by reading the releases.json file
+			ref, err := ResolveRunXPackage(context.TODO(), pkg)
+			if err != nil {
+				return nil, err
+			}
 			locked = &Package{
-				Resolved: pkg,
+				Resolved: ref.String(),
+				Version:  ref.Version,
 			}
 		} else if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
 			locked, err = f.FetchResolvedPackage(pkg)
@@ -184,4 +190,17 @@ func lockFilePath(project devboxProject) string {
 
 func getLockfileHash(project devboxProject) (string, error) {
 	return cuecfg.FileHash(lockFilePath(project))
+}
+
+func ResolveRunXPackage(ctx context.Context, pkg string) (types.PkgRef, error) {
+	ref, err := types.NewPkgRef(strings.TrimPrefix(pkg, pkgtype.RunXPrefix))
+	if err != nil {
+		return types.PkgRef{}, err
+	}
+
+	registry, err := pkgtype.RunXRegistry(ctx)
+	if err != nil {
+		return types.PkgRef{}, err
+	}
+	return registry.ResolveVersion(ref)
 }
