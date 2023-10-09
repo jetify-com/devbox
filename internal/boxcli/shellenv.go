@@ -22,7 +22,7 @@ type shellEnvCmdFlags struct {
 	preservePathStack bool
 }
 
-func shellEnvCmd() *cobra.Command {
+func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
 		Use:     "shellenv",
@@ -30,7 +30,7 @@ func shellEnvCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			s, err := shellEnvFunc(cmd, flags)
+			s, err := shellEnvFunc(cmd, flags, *recomputeEnvIfNeeded)
 			if err != nil {
 				return err
 			}
@@ -63,7 +63,11 @@ func shellEnvCmd() *cobra.Command {
 	return command
 }
 
-func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
+func shellEnvFunc(
+	cmd *cobra.Command,
+	flags shellEnvCmdFlags,
+	recomputeEnvIfNeeded bool,
+) (string, error) {
 	env, err := flags.Env(flags.config.path)
 	if err != nil {
 		return "", err
@@ -85,7 +89,10 @@ func shellEnvFunc(cmd *cobra.Command, flags shellEnvCmdFlags) (string, error) {
 		}
 	}
 
-	envStr, err := box.NixEnv(cmd.Context(), flags.runInitHook)
+	envStr, err := box.NixEnv(cmd.Context(), devopt.NixEnvOpts{
+		DontRecomputeEnvironment: !recomputeEnvIfNeeded,
+		RunHooks:                 flags.runInitHook,
+	})
 	if err != nil {
 		return "", err
 	}

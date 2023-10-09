@@ -43,3 +43,8 @@ type UpdateOpts struct {
 	Pkgs                  []string
 	IgnoreMissingPackages bool
 }
+
+type NixEnvOpts struct {
+	DontRecomputeEnvironment bool
+	RunHooks                 bool
+}

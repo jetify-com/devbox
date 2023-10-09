@@ -14,7 +14,12 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
+type globalShellEnvCmdFlags struct {
+	recompute bool
+}
+
 func globalCmd() *cobra.Command {
+	globalShellEnvCmdFlags := globalShellEnvCmdFlags{}
 	globalCmd := &cobra.Command{}
 	persistentPreRunE := setGlobalConfigForDelegatedCommands(globalCmd)
 	*globalCmd = cobra.Command{
@@ -28,6 +33,12 @@ func globalCmd() *cobra.Command {
 		PersistentPostRunE: ensureGlobalEnvEnabled,
 	}
 
+	shellEnv := shellEnvCmd(&globalShellEnvCmdFlags.recompute)
+	shellEnv.Flags().BoolVar(
+		&globalShellEnvCmdFlags.recompute, "recompute", false,
+		"Recompute environment if needed",
+	)
+
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
 	addCommandAndHideConfigFlag(globalCmd, pathCmd())
@@ -36,7 +47,7 @@ func globalCmd() *cobra.Command {
 	addCommandAndHideConfigFlag(globalCmd, removeCmd())
 	addCommandAndHideConfigFlag(globalCmd, runCmd())
 	addCommandAndHideConfigFlag(globalCmd, servicesCmd(persistentPreRunE))
-	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd())
+	addCommandAndHideConfigFlag(globalCmd, shellEnv)
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 
 	// Create list for non-global? Mike: I want it :)

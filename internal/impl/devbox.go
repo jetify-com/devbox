@@ -168,21 +168,22 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
-	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
-
 	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
+
+	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
+
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	// TODO: This is likely obsolete but we need to decide what happens when
+	// the user does shell-ception. One option is to leave the current shell and
+	// join a new one (that way they are not in nested shells.)
 	envs[envir.DevboxShellEnabled] = "1"
 
 	if err = createDevboxSymlink(d); err != nil {
@@ -210,15 +211,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
-
 	if err := shellgen.WriteScriptsToFiles(d); err != nil {
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	env, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -274,22 +271,39 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return "", err
+	var envs map[string]string
+	var err error
+
+	if opts.DontRecomputeEnvironment {
+		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
+		if !upToDate {
+			cmd := `eval "$(devbox global shellenv --recompute)"`
+			if strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+				cmd = `devbox global shellenv --recompute | source`
+			}
+			ux.Finfo(
+				d.stderr,
+				"Your devbox environment may be out of date. Please run \n\n%s\n\n",
+				cmd,
+			)
+		}
+
+		envs, err = d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+	} else {
+		envs, err = d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	}
 
-	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	envStr := exportify(envs)
 
-	if includeHooks {
+	if opts.RunHooks {
 		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
@@ -301,12 +315,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	// and excluding "export " prefix in "export key=value" format
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return nil, err
-	}
-
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -903,25 +912,23 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	return env, d.addHashToEnv(env)
 }
 
-// nixEnv is a wrapper around computeNixEnv that returns a cached result if
-// it has previously computed and the local lock file is up to date.
-// Note that this is in-memory cache of the final environment, and not the same
-// as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+// ensurePackagesAreInstalledAndComputeEnv does what it says :P
+func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
+	ctx context.Context,
+) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	usePrintDevEnvCache := false
-
-	// If lockfile is up-to-date, we can use the print-dev-env cache.
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
-	if err != nil {
+	// When ensurePackagesAreInstalled is called with ensure=true, it always
+	// returns early if the lockfile is up to date. So we don't need to check here
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return nil, err
 	}
-	if upToDate {
-		usePrintDevEnvCache = true
-	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache)
+	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
+	// it's ok to use usePrintDevEnvCache=true here always. This does end up
+	// doing some non-nix work twice if lockfile is not up to date.
+	// TODO: Improve this to avoid extra work.
+	return d.computeNixEnv(ctx, true)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
