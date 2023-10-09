@@ -1207,14 +1207,33 @@ func (d *Devbox) Lockfile() *lock.File {
 }
 
 func (d *Devbox) RunXPaths() (string, error) {
+	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
+	if err := os.RemoveAll(runxBinPath); err != nil {
+		return "", err
+	}
+	if err := fileutil.EnsureDirExists(runxBinPath, 0o755, false); err != nil {
+		return "", err
+	}
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
-	paths := []string{}
 	for _, pkg := range packages {
-		p, err := runx.Install(pkg.RunXPath())
+		paths, err := runx.Install(pkg.RunXPath())
 		if err != nil {
 			return "", err
 		}
-		paths = append(paths, p...)
+		for _, path := range paths {
+			// create symlink to all files in p
+			files, err := os.ReadDir(path)
+			if err != nil {
+				return "", err
+			}
+			for _, file := range files {
+				src := filepath.Join(path, file.Name())
+				dst := filepath.Join(runxBinPath, file.Name())
+				if err := os.Symlink(src, dst); err != nil && errors.Is(err, os.ErrExist) {
+					return "", err
+				}
+			}
+		}
 	}
-	return envpath.JoinPathLists(paths...), nil
+	return runxBinPath, nil
 }
