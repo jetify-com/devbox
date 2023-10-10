@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
@@ -33,11 +32,7 @@ func (i *Info) String() string {
 }
 
 func Search(url string) (map[string]*Info, error) {
-	if strings.HasPrefix(url, "runx:") {
-		// TODO implement runx search
-		return map[string]*Info{}, nil
-	}
-	return searchSystemUsingCache(url, "")
+	return searchSystem(url, "" /* system */)
 }
 
 func parseSearchResults(data []byte) map[string]*Info {
@@ -110,21 +105,27 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	return parseSearchResults(out), nil
 }
 
+// searchSystemCache is a machine-wide cache of search results. It is shared by all
+// Devbox projects on the current machine. It is stored in the XDG cache directory.
 type searchSystemCache struct {
 	QueryToInfo map[string]map[string]*Info `json:"query_to_info"`
 }
 
 const (
+	// searchSystemCacheSubDir is a sub-directory of the XDG cache directory
 	searchSystemCacheSubDir   = "devbox/nix"
 	searchSystemCacheFileName = "search-system-cache.json"
 )
 
 var cache = searchSystemCache{}
 
-func searchSystemUsingCache(url, system string) (map[string]*Info, error) {
-	if system != "" {
-		return searchSystem(url, system)
-	}
+// SearchNixpkgsAttribute is a wrapper around searchSystem that caches results.
+// NOTE: we should be very conservative in where we use this function. `nix search`
+// accepts generalized `installable regex` as arguments but is slow. For certain
+// queries of the form `nixpkgs/<commit-hash>#attribute`, we can know for sure that
+// once `nix search` returns a valid result, it will always be the very same result.
+// Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
+func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 
 	if cache.QueryToInfo == nil {
 		contents, err := readSearchSystemCacheFile()
@@ -134,16 +135,16 @@ func searchSystemUsingCache(url, system string) (map[string]*Info, error) {
 		cache.QueryToInfo = contents
 	}
 
-	if result := cache.QueryToInfo[url]; result != nil {
+	if result := cache.QueryToInfo[query]; result != nil {
 		return result, nil
 	}
 
-	info, err := searchSystem(url, system)
+	info, err := searchSystem(query, "" /*system*/)
 	if err != nil {
 		return nil, err
 	}
 
-	cache.QueryToInfo[url] = info
+	cache.QueryToInfo[query] = info
 	if err := writeSearchSystemCacheFile(cache.QueryToInfo); err != nil {
 		return nil, err
 	}
@@ -155,10 +156,12 @@ func readSearchSystemCacheFile() (map[string]map[string]*Info, error) {
 	contents, err := os.ReadFile(xdg.CacheSubpath(filepath.Join(searchSystemCacheSubDir, searchSystemCacheFileName)))
 	if err != nil {
 		if os.IsNotExist(err) {
+			// If the file doesn't exist, return an empty map. This will hopefully be filled and written to disk later.
 			return make(map[string]map[string]*Info), nil
 		}
 		return nil, err
 	}
+
 	var result map[string]map[string]*Info
 	if err := json.Unmarshal(contents, &result); err != nil {
 		return nil, err
@@ -167,6 +170,7 @@ func readSearchSystemCacheFile() (map[string]map[string]*Info, error) {
 }
 
 func writeSearchSystemCacheFile(contents map[string]map[string]*Info) error {
+	// Print as a human-readable JSON file i.e. use nice indentation and newlines.
 	buf := bytes.Buffer{}
 	enc := json.NewEncoder(&buf)
 	enc.SetIndent("", "  ")
@@ -174,10 +178,12 @@ func writeSearchSystemCacheFile(contents map[string]map[string]*Info) error {
 	if err != nil {
 		return err
 	}
+
 	dir := xdg.CacheSubpath(searchSystemCacheSubDir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
+
 	path := filepath.Join(dir, searchSystemCacheFileName)
 	return os.WriteFile(path, buf.Bytes(), 0o644)
 }

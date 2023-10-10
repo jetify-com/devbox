@@ -284,8 +284,25 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 	return p.normalizedPackageAttributePathCache, nil
 }
 
+// search attempts to find the package in the local nixpkgs. It may be an expensive
+// call, if it is has not been cached.
+func (p *Package) search(query string) (map[string]*nix.Info, error) {
+	if p.IsDevboxPackage() {
+		if strings.HasPrefix(query, "runx:") {
+			// TODO implement runx search
+			return map[string]*nix.Info{}, nil
+		}
+		// This will be slow if its the first time on the user's machine that this
+		// query is running. Otherwise, it will be cached and fast.
+		return nix.SearchNixpkgsAttribute(query)
+	}
+
+	// fallback to the slow but generalized nix.Search
+	return nix.Search(query)
+}
+
 // normalizePackageAttributePath calls nix search to find the normalized attribute
-// path. It is an expensive call (~100ms).
+// path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
 	if p.IsDevboxPackage() {
@@ -302,9 +319,9 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		query = p.String()
 	}
 
-	// We prefer search over just trying to parse the URL because search will
+	// We prefer search over just trying to parse the package's "URL" because search will
 	// guarantee that the package exists for the current system.
-	infos, err := nix.Search(query)
+	infos, err := p.search(query)
 	if err != nil {
 		return "", err
 	}
