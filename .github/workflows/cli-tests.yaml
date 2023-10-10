@@ -81,6 +81,7 @@ jobs:
       - uses: crate-ci/typos@v1.13.16
 
   golangci-lint:
+    needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
