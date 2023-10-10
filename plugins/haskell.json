@@ -5,6 +5,7 @@
   "__packages": [
     "path:{{ .Virtenv }}"
   ],
+  "__remove_trigger_package": true,
   "create_files": {
     "{{ .Virtenv }}/flake.nix": "haskell/flake.nix"
   }

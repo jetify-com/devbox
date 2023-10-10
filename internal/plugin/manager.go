@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 )
@@ -45,16 +46,31 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 	}
 }
 
-func (m *Manager) PluginPackages(inputs []*devpkg.Package) ([]*devpkg.Package, error) {
-	result := []*devpkg.Package{}
-	for _, input := range inputs {
-		config, err := getConfigIfAny(input, m.ProjectDir())
+// ProcessPluginPackages adds and removes packages as indicated by plugins
+func (m *Manager) ProcessPluginPackages(
+	userPackages []*devpkg.Package,
+) ([]*devpkg.Package, error) {
+	pluginPackages := []*devpkg.Package{}
+	packagesToRemove := []*devpkg.Package{}
+	for _, pkg := range userPackages {
+		config, err := getConfigIfAny(pkg, m.ProjectDir())
 		if err != nil {
 			return nil, err
 		} else if config == nil {
 			continue
 		}
-		result = append(result, devpkg.PackageFromStrings(config.Packages, m.lockfile)...)
+		pluginPackages = append(
+			pluginPackages,
+			devpkg.PackageFromStrings(config.Packages, m.lockfile)...,
+		)
+		if config.RemoveTriggerPackage {
+			packagesToRemove = append(packagesToRemove, pkg)
+		}
 	}
-	return result, nil
+
+	netUserPackages, _ := lo.Difference(userPackages, packagesToRemove)
+	// We prioritize plugin packages so that the php plugin works. Not sure
+	// if this is behavior we want for user plugins. We may need to add an optional
+	// priority field to the config.
+	return append(pluginPackages, netUserPackages...), nil
 }
