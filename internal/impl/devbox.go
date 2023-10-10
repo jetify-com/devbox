@@ -1214,11 +1214,14 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	if err := os.RemoveAll(runxBinPath); err != nil {
 		return "", err
 	}
-	if err := fileutil.EnsureDirExists(runxBinPath, 0o755, false); err != nil {
+	if err := os.MkdirAll(runxBinPath, 0o755); err != nil {
 		return "", err
 	}
-	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
-	for _, pkg := range packages {
+
+	for _, pkg := range d.InstallablePackages() {
+		if !pkg.IsRunX() {
+			continue
+		}
 		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
 		if err != nil {
 			return "", err
@@ -1236,7 +1239,7 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 			for _, file := range files {
 				src := filepath.Join(path, file.Name())
 				dst := filepath.Join(runxBinPath, file.Name())
-				if err := os.Symlink(src, dst); err != nil && errors.Is(err, os.ErrExist) {
+				if err := os.Symlink(src, dst); err != nil && !errors.Is(err, os.ErrExist) {
 					return "", err
 				}
 			}

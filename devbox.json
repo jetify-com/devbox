@@ -1,7 +1,8 @@
 {
   "packages": [
     "go@latest",
-    "runx:golangci/golangci-lint@latest"
+    "runx:golangci/golangci-lint@latest",
+    "runx:mvdan/gofumpt@latest"
   ],
   "env": {
     "GOENV": "off",

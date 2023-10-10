@@ -339,6 +339,8 @@ go.jetpack.io/pkg v0.0.0-20231002215645-9afeb0623fd3 h1:aMydtVCHn7dfotOyV41VAxX5
 go.jetpack.io/pkg v0.0.0-20231002215645-9afeb0623fd3/go.mod h1:iaf3e/aENp5luwYFlfCxj+GsiwqHagbvRAY3bIdEgGA=
 go.jetpack.io/pkg v0.0.0-20231006204718-f59feb213022 h1:8TRpo0lYh1Y6zec8Px0yXbnVRXXs+yUPU+TnHNsREdA=
 go.jetpack.io/pkg v0.0.0-20231006204718-f59feb213022/go.mod h1:iaf3e/aENp5luwYFlfCxj+GsiwqHagbvRAY3bIdEgGA=
+go.jetpack.io/pkg v0.0.0-20231010185527-78c6902d51f7 h1:QGNfUfKmGtjPgYNgmXwsUa9+AN7rdcRx3N6Mfy5BXS0=
+go.jetpack.io/pkg v0.0.0-20231010185527-78c6902d51f7/go.mod h1:iaf3e/aENp5luwYFlfCxj+GsiwqHagbvRAY3bIdEgGA=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
