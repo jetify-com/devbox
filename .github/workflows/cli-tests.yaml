@@ -85,13 +85,7 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
       # Use main devbox for now to ensure it supports runx
-      - run:  go run ./cmd/devbox run fmt
-      
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.7.0
-        with:
-          args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
-          skip-cache: true
+      - run:  go run ./cmd/devbox run lint
 
   test:
     strategy:
@@ -133,6 +127,13 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
       - name: Build devbox
         run: go install ./cmd/devbox
       - name: Install additional shells (dash, zsh)
@@ -180,6 +181,13 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
       - name: Build devbox
         run: go install ./cmd/devbox
       - name: Install nix and devbox packages
