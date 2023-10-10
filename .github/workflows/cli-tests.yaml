@@ -208,7 +208,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: devbox-${{ runner.os }}
-      - run: chmod +x ./devbox
+      - name: Add devbox to path
+        run: |
+          chmod +x ./devbox
+          sudo mv ./devbox /usr/local/bin/
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
@@ -237,7 +240,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: devbox-${{ runner.os }}
-      - run: chmod +x ./devbox
+      - name: Add devbox to path
+        run: |
+          chmod +x ./devbox
+          sudo mv ./devbox /usr/local/bin/
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
         with:
