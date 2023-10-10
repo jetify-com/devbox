@@ -118,7 +118,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	}
 
 	if err := box.RunScript(cmd.Context(), script, scriptArgs); err != nil {
-		return redact.Errorf("error running command in Devbox: %w", err)
+		return redact.Errorf("error running script %q in Devbox: %w", script, err)
 	}
 	return nil
 }

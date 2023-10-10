@@ -18,6 +18,7 @@
   "__packages": [
     "path:{{ .Virtenv }}"
   ],
+  "__remove_trigger_package": true,
   "shell": {
     "init_hook": [
       "bash {{ .Virtenv }}/setup_db.sh"

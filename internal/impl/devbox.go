@@ -22,12 +22,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/impl/envpath"
 	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/pkg/sandbox/runx"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -168,21 +168,22 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
-	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
-
 	profileDir, err := d.profilePath()
 	if err != nil {
 		return err
 	}
 
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
+
+	fmt.Fprintln(d.stderr, "Starting a devbox shell...")
+
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
+	// TODO: This is likely obsolete but we need to decide what happens when
+	// the user does shell-ception. One option is to leave the current shell and
+	// join a new one (that way they are not in nested shells.)
 	envs[envir.DevboxShellEnabled] = "1"
 
 	if err = createDevboxSymlink(d); err != nil {
@@ -210,15 +211,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return err
-	}
-
 	if err := shellgen.WriteScriptsToFiles(d); err != nil {
 		return err
 	}
 
-	env, err := d.nixEnv(ctx)
+	env, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -274,22 +271,39 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, includeHooks bool) (string, error) {
+func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return "", err
+	var envs map[string]string
+	var err error
+
+	if opts.DontRecomputeEnvironment {
+		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
+		if !upToDate {
+			cmd := `eval "$(devbox global shellenv --recompute)"`
+			if strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+				cmd = `devbox global shellenv --recompute | source`
+			}
+			ux.Finfo(
+				d.stderr,
+				"Your devbox environment may be out of date. Please run \n\n%s\n\n",
+				cmd,
+			)
+		}
+
+		envs, err = d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+	} else {
+		envs, err = d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	}
 
-	envs, err := d.nixEnv(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	envStr := exportify(envs)
 
-	if includeHooks {
+	if opts.RunHooks {
 		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
@@ -301,12 +315,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	// and excluding "export " prefix in "export key=value" format
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
-		return nil, err
-	}
-
-	envs, err := d.nixEnv(ctx)
+	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -773,7 +782,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	maps.Copy(originalEnv, env)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
-		FlakesFilePath:       d.nixFlakesFilePath(),
+		FlakeDir:             d.flakeDir(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
 	})
@@ -842,13 +851,13 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		)
 	}
 
-	env["PATH"], err = d.addUtilitiesToPath(env["PATH"])
+	env["PATH"], err = d.addUtilitiesToPath(ctx, env["PATH"])
 	if err != nil {
 		return nil, err
 	}
 
 	// Include env variables in devbox.json
-	configEnv, err := d.configEnvs(env)
+	configEnv, err := d.configEnvs(ctx, env)
 	if err != nil {
 		return nil, err
 	}
@@ -876,7 +885,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
 
-	runXPaths, err := d.RunXPaths()
+	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -903,33 +912,31 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	return env, d.addHashToEnv(env)
 }
 
-// nixEnv is a wrapper around computeNixEnv that returns a cached result if
-// it has previously computed and the local lock file is up to date.
-// Note that this is in-memory cache of the final environment, and not the same
-// as the nix print-dev-env cache which is stored in a file.
-func (d *Devbox) nixEnv(ctx context.Context) (map[string]string, error) {
+// ensurePackagesAreInstalledAndComputeEnv does what it says :P
+func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
+	ctx context.Context,
+) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	usePrintDevEnvCache := false
-
-	// If lockfile is up-to-date, we can use the print-dev-env cache.
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
-	if err != nil {
+	// When ensurePackagesAreInstalled is called with ensure=true, it always
+	// returns early if the lockfile is up to date. So we don't need to check here
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return nil, err
 	}
-	if upToDate {
-		usePrintDevEnvCache = true
-	}
 
-	return d.computeNixEnv(ctx, usePrintDevEnvCache)
+	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
+	// it's ok to use usePrintDevEnvCache=true here always. This does end up
+	// doing some non-nix work twice if lockfile is not up to date.
+	// TODO: Improve this to avoid extra work.
+	return d.computeNixEnv(ctx, true)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
 	return filepath.Join(d.projectDir, ".devbox/.nix-print-dev-env-cache")
 }
 
-func (d *Devbox) nixFlakesFilePath() string {
-	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
+func (d *Devbox) flakeDir() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake")
 }
 
 // ConfigPackageNames returns the package names as defined in devbox.json
@@ -956,14 +963,7 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 // packages concatenated in correct order
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()
-	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
-	if err != nil {
-		return nil, err
-	}
-	// We prioritize plugin packages so that the php plugin works. Not sure
-	// if this is behavior we want for user plugins. We may need to add an optional
-	// priority field to the config.
-	return append(pluginPackages, userPackages...), nil
+	return d.PluginManager().ProcessPluginPackages(userPackages)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
@@ -1044,8 +1044,11 @@ func (d *Devbox) checkOldEnvrc() error {
 // their value in the existing env variables. Note, this doesn't
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
-func (d *Devbox) configEnvs(existingEnv map[string]string) (map[string]string, error) {
-	env, err := d.cfg.ComputedEnv(d.ProjectDir())
+func (d *Devbox) configEnvs(
+	ctx context.Context,
+	existingEnv map[string]string,
+) (map[string]string, error) {
+	env, err := d.cfg.ComputedEnv(ctx, d.ProjectDir())
 	if err != nil {
 		return nil, err
 	}
@@ -1206,7 +1209,7 @@ func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
 }
 
-func (d *Devbox) RunXPaths() (string, error) {
+func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
 	if err := os.RemoveAll(runxBinPath); err != nil {
 		return "", err
@@ -1216,7 +1219,11 @@ func (d *Devbox) RunXPaths() (string, error) {
 	}
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
 	for _, pkg := range packages {
-		paths, err := runx.Install(pkg.RunXPath())
+		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
+		if err != nil {
+			return "", err
+		}
+		paths, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
 		if err != nil {
 			return "", err
 		}

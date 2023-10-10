@@ -43,6 +43,9 @@ type config struct {
 	Packages    []string          `json:"__packages"`
 	Env         map[string]string `json:"env"`
 	Readme      string            `json:"readme"`
+	// If true, we remove the package that triggered this plugin from the environment
+	// Useful when we want to replace with flake
+	RemoveTriggerPackage bool `json:"__remove_trigger_package,omitempty"`
 
 	Shell struct {
 		// InitHook contains commands that will run at shell startup.

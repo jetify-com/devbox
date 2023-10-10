@@ -6,6 +6,7 @@
     "path:{{ .Virtenv }}",
     "path:{{ .Virtenv }}#composer"
   ],
+  "__remove_trigger_package": true,
   "env": {
     "PHPFPM_ERROR_LOG_FILE": "{{ .Virtenv }}/php-fpm.log",
     "PHPFPM_PID_FILE": "{{ .Virtenv }}/php-fpm.pid",

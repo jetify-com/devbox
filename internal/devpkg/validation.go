@@ -1,16 +1,17 @@
 package devpkg
 
 import (
+	"context"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func (p *Package) ValidateExists() (bool, error) {
+func (p *Package) ValidateExists(ctx context.Context) (bool, error) {
 	if p.IsRunX() {
-		// TODO implement runx validation
-		return true, nil
+		_, err := p.lockfile.Resolve(p.Raw)
+		return err == nil, err
 	}
 	if p.isVersioned() && p.version() == "" {
 		return false, usererr.New("No version specified for %q.", p.Path)

@@ -1,15 +1,20 @@
 package devconfig
 
 import (
+	"context"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/integrations/envsec"
 )
 
-func (c *Config) ComputedEnv(projectDir string) (map[string]string, error) {
+func (c *Config) ComputedEnv(
+	ctx context.Context,
+	projectDir string,
+) (map[string]string, error) {
 	env := map[string]string{}
 	var err error
 	if c.IsEnvsecEnabled() {
-		env, err = envsec.Env(projectDir)
+		env, err = envsec.Env(ctx, projectDir)
 		if err != nil {
 			return nil, err
 		}
