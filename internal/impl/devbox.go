@@ -764,9 +764,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
 	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv)
-	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
-	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
-	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/.devbox/virtenv/.wrappers"
 
 	if err != nil {
 		return nil, err
@@ -859,6 +856,11 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	if err != nil {
 		return nil, err
 	}
+
+	// Add helpful env vars for a Devbox project
+	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
+	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
+	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/.devbox/virtenv/.wrappers"
 
 	// Include env variables in devbox.json
 	configEnv, err := d.configEnvs(ctx, env)
