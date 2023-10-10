@@ -46,6 +46,31 @@ env:
   DEVBOX_DEBUG: 1
 
 jobs:
+  build-devbox:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: ./go.mod
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-build-${{ runner.os }}-${{ hashFiles('go.sum') }}
+      - name: Build devbox
+        run: go build -o dist/devbox ./cmd/devbox
+      - name: Upload compiled binary as artifact
+        uses: actions/upload-artifact@v3  
+        with:
+          name: devbox-${{ runner.os }}
+          path: ./dist/devbox
+
   typos:
     name: Spell Check with Typos
     if: github.ref != 'refs/heads/main'
@@ -88,6 +113,7 @@ jobs:
       - run:  go run ./cmd/devbox run lint
 
   test:
+    needs: build-devbox
     strategy:
       matrix:
         is-main:
@@ -134,8 +160,6 @@ jobs:
             ~/.cache/go-build
             ~/go/pkg
           key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
-      - name: Build devbox
-        run: go install ./cmd/devbox
       - name: Install additional shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -172,6 +196,7 @@ jobs:
           go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
+    needs: build-devbox 
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -181,15 +206,11 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
-      - name: Mount golang cache
-        uses: actions/cache@v3
+      - name: Download devbox
+        uses: actions/download-artifact@v3
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg
-          key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
-      - name: Build devbox
-        run: go install ./cmd/devbox
+          name: devbox-${{ runner.os }}
+      - run: chmod +x ./devbox
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
@@ -206,6 +227,7 @@ jobs:
   # Run a sanity test to make sure Devbox can install and remove packages with
   # the last 3 Nix releases.
   test-nix-versions:
+    needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -213,11 +235,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - name: Download devbox
+        uses: actions/download-artifact@v3
         with:
-          go-version-file: ./go.mod
-      - name: Build devbox
-        run: go install ./cmd/devbox
+          name: devbox-${{ runner.os }}
+      - run: chmod +x ./devbox
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
         with:
