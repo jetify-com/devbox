@@ -65,11 +65,12 @@ jobs:
           key: go-devbox-build-${{ runner.os }}-${{ hashFiles('go.sum') }}
       - name: Build devbox
         run: go build -o dist/devbox ./cmd/devbox
-      - name: Upload compiled binary as artifact
+      - name: Upload devbox artifact
         uses: actions/upload-artifact@v3  
         with:
           name: devbox-${{ runner.os }}
           path: ./dist/devbox
+          retention-days: 7
 
   typos:
     name: Spell Check with Typos
@@ -203,9 +204,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version-file: ./go.mod
       - name: Download devbox
         uses: actions/download-artifact@v3
         with:
