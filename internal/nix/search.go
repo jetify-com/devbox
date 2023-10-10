@@ -126,7 +126,6 @@ var cache = searchSystemCache{}
 // once `nix search` returns a valid result, it will always be the very same result.
 // Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
 func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
-
 	if cache.QueryToInfo == nil {
 		contents, err := readSearchSystemCacheFile()
 		if err != nil {
