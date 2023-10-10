@@ -96,7 +96,12 @@ jobs:
           go-version-file: ./go.mod
           cache: false
 
-      # TODO ADD nix only cache
+      # This can be reanabled once released version supports runx
+      # and we can remove needs: build-devbox
+      # - name: Install devbox
+      #   uses: jetpack-io/devbox-install-action@v0.7.0
+      #   with:
+      #     enable-cache: true
 
       - name: Mount golang cache
         uses: actions/cache@v3
