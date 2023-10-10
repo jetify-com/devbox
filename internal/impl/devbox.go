@@ -782,7 +782,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	maps.Copy(originalEnv, env)
 
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
-		FlakesFilePath:       d.nixFlakesFilePath(),
+		FlakeDir:             d.flakeDir(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
 	})
@@ -935,8 +935,8 @@ func (d *Devbox) nixPrintDevEnvCachePath() string {
 	return filepath.Join(d.projectDir, ".devbox/.nix-print-dev-env-cache")
 }
 
-func (d *Devbox) nixFlakesFilePath() string {
-	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
+func (d *Devbox) flakeDir() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake")
 }
 
 // ConfigPackageNames returns the package names as defined in devbox.json
