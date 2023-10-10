@@ -1210,18 +1210,40 @@ func (d *Devbox) Lockfile() *lock.File {
 }
 
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
-	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
-	paths := []string{}
-	for _, pkg := range packages {
+	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
+	if err := os.RemoveAll(runxBinPath); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(runxBinPath, 0o755); err != nil {
+		return "", err
+	}
+
+	for _, pkg := range d.InstallablePackages() {
+		if !pkg.IsRunX() {
+			continue
+		}
 		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
 		if err != nil {
 			return "", err
 		}
-		p, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
+		paths, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
 		if err != nil {
 			return "", err
 		}
-		paths = append(paths, p...)
+		for _, path := range paths {
+			// create symlink to all files in p
+			files, err := os.ReadDir(path)
+			if err != nil {
+				return "", err
+			}
+			for _, file := range files {
+				src := filepath.Join(path, file.Name())
+				dst := filepath.Join(runxBinPath, file.Name())
+				if err := os.Symlink(src, dst); err != nil && !errors.Is(err, os.ErrExist) {
+					return "", err
+				}
+			}
+		}
 	}
-	return envpath.JoinPathLists(paths...), nil
+	return runxBinPath, nil
 }
