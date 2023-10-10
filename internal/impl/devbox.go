@@ -259,7 +259,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	return d.ensureDevboxEnvIsUpToDate(ctx, ensure)
+	return d.ensurePackagesAreInstalled(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -477,7 +477,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensureDevboxEnvIsUpToDate(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -931,9 +931,9 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensureDevboxEnvIsUpToDate is called with ensure=true, it always
+	// When ensurePackagesAreInstalled is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensureDevboxEnvIsUpToDate(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
 		return nil, err
 	}
 

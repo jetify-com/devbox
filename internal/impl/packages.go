@@ -108,7 +108,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	// Resolving here ensures we allow insecure before running ensureDevboxEnvIsUpToDate
+	// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled
 	// which will call print-dev-env. Resolving does not save the lockfile, we
 	// save at the end when everything has succeeded.
 	if d.allowInsecureAdds {
@@ -126,7 +126,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	if err := d.ensureDevboxEnvIsUpToDate(ctx, install); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
 		return usererr.WithUserMessage(err, "There was an error installing nix packages")
 	}
 
@@ -190,14 +190,14 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	// this will clean up the now-extra package from nix profile and the lockfile
-	if err := d.ensureDevboxEnvIsUpToDate(ctx, uninstall); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
 		return err
 	}
 
 	return d.saveCfg()
 }
 
-// installMode is an enum for helping with ensureDevboxEnvIsUpToDate implementation
+// installMode is an enum for helping with ensurePackagesAreInstalled implementation
 type installMode string
 
 const (
@@ -208,7 +208,7 @@ const (
 	ensure installMode = "ensure"
 )
 
-// ensureDevboxEnvIsUpToDate ensures:
+// ensurePackagesAreInstalled ensures:
 //  1. Packages are installed, in nix-profile or runx.
 //     Extraneous packages are removed (references purged, not uninstalled).
 //  2. Files for devbox shellenv are generated
@@ -218,7 +218,8 @@ const (
 // The `mode` is used for:
 // 1. Skipping certain operations that may not apply.
 // 2. User messaging to explain what operations are happening, because this function may take time to execute.
-func (d *Devbox) ensureDevboxEnvIsUpToDate(ctx context.Context, mode installMode) error {
+// TODO: Rename method since it does more than just ensure packages are installed.
+func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 	defer debug.FunctionTimer().End()
 
