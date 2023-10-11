@@ -786,8 +786,8 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	var spinny *spinner.Spinner
 	if !usePrintDevEnvCache {
 		spinny = spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(d.stderr))
-		spinny.FinalMSG = "✓ Got env-vars from nix.\n"
-		spinny.Suffix = " Getting env-vars from nix...\n"
+		spinny.FinalMSG = "✓ Computed the Devbox environment.\n"
+		spinny.Suffix = " Computing the Devbox environment...\n"
 		spinny.Start()
 	}
 
