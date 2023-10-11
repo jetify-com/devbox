@@ -18,7 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -781,11 +783,22 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
 
+	var spinny *spinner.Spinner
+	if !usePrintDevEnvCache {
+		spinny = spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(d.stderr))
+		spinny.FinalMSG = "✓ Computed the Devbox environment.\n"
+		spinny.Suffix = " Computing the Devbox environment...\n"
+		spinny.Start()
+	}
+
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakeDir:             d.flakeDir(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
 	})
+	if spinny != nil {
+		spinny.Stop()
+	}
 	if err != nil {
 		return nil, err
 	}

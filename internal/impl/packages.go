@@ -248,7 +248,6 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	fmt.Fprintf(d.stderr, "Recomputing the devbox environment.\n")
 	// Force print-dev-env cache to be recomputed.
 	nixEnv, err := d.computeNixEnv(ctx, false /*use cache*/)
 	if err != nil {
