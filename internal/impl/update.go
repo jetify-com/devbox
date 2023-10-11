@@ -62,7 +62,7 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, update); err != nil {
 		return err
 	}
 

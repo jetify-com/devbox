@@ -1172,10 +1172,10 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		// handling special cases to for pure shell
-		// Passing HOME for pure shell to leak through otherwise devbox binary won't work
-		// We also include PATH to find the nix installation. It is cleaned for pure mode below
-		// TERM leaking through is to enable colored text in the pure shell
+		// handling special cases for pure shell
+		// - HOME required for devbox binary to work
+		// - PATH to find the nix installation. It is cleaned for pure mode below.
+		// - TERM to enable colored text in the pure shell
 		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
