@@ -301,8 +301,8 @@ func (d *Devbox) profilePath() (string, error) {
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
 }
 
-// syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,
-// and no more.
+// syncPackagesToProfile can ensure that all packages in devbox.json exist in the nix profile,
+// and no more. However, it may skip some steps depending on the `mode`.
 func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
 	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "syncPackagesToProfile").End()
@@ -330,9 +330,12 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 	}
 
 	// Second, remove any packages from the nix-profile that are not in the config
-	itemsToKeep, err := d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
-	if err != nil {
-		return err
+	itemsToKeep := profileItems
+	if mode != install {
+		itemsToKeep, err = d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
+		if err != nil {
+			return err
+		}
 	}
 
 	// we are done if mode is uninstall
