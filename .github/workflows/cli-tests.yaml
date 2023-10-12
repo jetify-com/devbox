@@ -46,6 +46,32 @@ env:
   DEVBOX_DEBUG: 1
 
 jobs:
+  build-devbox:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: ./go.mod
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-build-${{ runner.os }}-${{ hashFiles('go.sum') }}
+      - name: Build devbox
+        run: go build -o dist/devbox ./cmd/devbox
+      - name: Upload devbox artifact
+        uses: actions/upload-artifact@v3  
+        with:
+          name: devbox-${{ runner.os }}-${{ runner.arch }}
+          path: ./dist/devbox
+          retention-days: 7
+
   typos:
     name: Spell Check with Typos
     if: github.ref != 'refs/heads/main'
@@ -55,6 +81,7 @@ jobs:
       - uses: crate-ci/typos@v1.13.16
 
   golangci-lint:
+    needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -70,6 +97,7 @@ jobs:
           cache: false
 
       # This can be reanabled once released version supports runx
+      # and we can remove needs: build-devbox
       # - name: Install devbox
       #   uses: jetpack-io/devbox-install-action@v0.7.0
       #   with:
@@ -84,16 +112,19 @@ jobs:
             ~/go/pkg
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
-      # Use main devbox for now to ensure it supports runx
-      - run:  go run ./cmd/devbox run fmt
-      
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.7.0
+      - name: Download devbox
+        uses: actions/download-artifact@v3
         with:
-          args: "--out-${NO_FUTURE}format colored-line-number --timeout=10m"
-          skip-cache: true
+          name: devbox-${{ runner.os }}-${{ runner.arch }}
+      - name: Add devbox to path
+        run: |
+          chmod +x ./devbox
+          sudo mv ./devbox /usr/local/bin/
+          
+      - run:  devbox run lint
 
   test:
+    needs: build-devbox
     strategy:
       matrix:
         is-main:
@@ -117,7 +148,7 @@ jobs:
             os: macos-latest
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && 37 || 25 }}
+    timeout-minutes: 37
     steps:
       - name: Maximize build disk space
         uses: easimon/maximize-build-space@v8
@@ -133,8 +164,13 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
-      - name: Build devbox
-        run: go install ./cmd/devbox
+      - name: Mount golang cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
       - name: Install additional shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -171,17 +207,21 @@ jobs:
           go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
+    needs: build-devbox 
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - name: Download devbox
+        uses: actions/download-artifact@v3
         with:
-          go-version-file: ./go.mod
-      - name: Build devbox
-        run: go install ./cmd/devbox
+          name: devbox-${{ runner.os }}-${{ runner.arch }}
+      - name: Add devbox to path
+        run: |
+          chmod +x ./devbox
+          sudo mv ./devbox /usr/local/bin/
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
@@ -198,6 +238,7 @@ jobs:
   # Run a sanity test to make sure Devbox can install and remove packages with
   # the last 3 Nix releases.
   test-nix-versions:
+    needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -205,11 +246,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - name: Download devbox
+        uses: actions/download-artifact@v3
         with:
-          go-version-file: ./go.mod
-      - name: Build devbox
-        run: go install ./cmd/devbox
+          name: devbox-${{ runner.os }}-${{ runner.arch }}
+      - name: Add devbox to path
+        run: |
+          chmod +x ./devbox
+          sudo mv ./devbox /usr/local/bin/
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v4
         with:
