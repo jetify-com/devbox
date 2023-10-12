@@ -16,7 +16,10 @@ import (
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 )
 
-const DefaultName = "devbox.json"
+const (
+	DefaultName      = "devbox.json"
+	DefaultTySONName = "devbox.tson"
+)
 
 // Config defines a devbox environment as JSON.
 type Config struct {

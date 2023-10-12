@@ -1,0 +1,7 @@
+import otherConfig from './devbox.json'
+
+otherConfig.shell.scripts["tyson-script"] = "echo hello TySON world"
+
+export default {
+  ...otherConfig
+}

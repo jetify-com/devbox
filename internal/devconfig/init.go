@@ -4,14 +4,18 @@
 package devconfig
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
@@ -35,4 +39,29 @@ func Init(dir string, writer io.Writer) (created bool, err error) {
 	}
 
 	return cuecfg.InitFile(cfgPath, config)
+}
+
+func Open(projectDir string) (*Config, error) {
+	cfgPath := filepath.Join(projectDir, DefaultName)
+
+	if _, err := os.Stat(filepath.Join(projectDir, DefaultTySONName)); err == nil {
+		paths, err := pkgtype.RunXClient().Install(context.TODO(), "jetpack-io/tyson")
+		if err != nil {
+			return nil, err
+		}
+		binPath := filepath.Join(paths[0], "tyson")
+		tmpFile, err := os.CreateTemp("", "*.json")
+		if err != nil {
+			return nil, err
+		}
+		cmd := exec.Command(binPath, "eval", filepath.Join(projectDir, DefaultTySONName))
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = tmpFile
+		if err = cmd.Run(); err != nil {
+			return nil, err
+		}
+		cfgPath = tmpFile.Name()
+	}
+
+	return Load(cfgPath)
 }
