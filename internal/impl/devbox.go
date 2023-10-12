@@ -766,7 +766,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
 	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv)
-
 	if err != nil {
 		return nil, err
 	}
