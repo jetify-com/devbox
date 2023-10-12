@@ -1,15 +1,18 @@
 {
     "name": "poetry",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "readme": "This plugin automatically configures poetry to use the version of python installed in your Devbox shell, instead of the Python version that it is bundled with. Your pyproject.toml must be in the same directory as your devbox.json.",
     "env": {
         "POETRY_VIRTUALENVS_IN_PROJECT": "true",
         "POETRY_VIRTUALENVS_CREATE": "true",
         "POETRY_VIRTUALENVS_PATH": "{{.Virtenv}}/.virtualenvs"
     },
+    "create_files": {
+        "{{ .Virtenv }}/bin/initHook.sh": "poetry/initHook.sh"
+    },
     "shell": {
         "init_hook": [
-            "poetry env use $(command -v python) --no-interaction"
+            "{{ .Virtenv }}/bin/initHook.sh"
         ]
     }
 }
