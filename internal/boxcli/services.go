@@ -77,9 +77,11 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	}
 
 	stopCommand := &cobra.Command{
-		Use:   "stop [service]...",
-		Short: "Stop one or more services in the current project. If no service is specified, stops all services in the current project.",
-		Long:  `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
+		Use:     "stop [service]...",
+		Aliases: []string{"down"},
+		Short: `Stop one or more services in the current project. If no service is specified, 
+				 stops all services in the current project.`,
+		Long: `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return stopServices(cmd, args, flags, serviceStopFlags)
 		},
