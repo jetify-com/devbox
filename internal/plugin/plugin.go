@@ -235,6 +235,7 @@ func buildConfig(pkg Includable, projectDir, content string) (*config, error) {
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+		"ProjectDir":           projectDir,
 		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
 	}); err != nil {
 		return nil, errors.WithStack(err)
