@@ -16,6 +16,7 @@
         "poetry install"
       ],
       "run_test": [
+        "devbox run install-service",
         "cd service && poetry run pytest"
       ]
     }
