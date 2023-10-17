@@ -48,6 +48,7 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	_ = os.MkdirAll(destPath, 0o755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
+	sedPath := cmdutil.GetPathOrDefault("sed", "sed")
 
 	if err := CreateDevboxSymlinkIfPossible(); err != nil {
 		return err
@@ -58,6 +59,7 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 			WrapperBinPath:     destPath,
 			CreateWrappersArgs: args,
 			BashPath:           bashPath,
+			SedPath:            sedPath,
 			Command:            bin,
 			DevboxSymlinkDir:   devboxSymlinkDir,
 			destPath:           filepath.Join(destPath, filepath.Base(bin)),
@@ -128,6 +130,7 @@ func CreateDevboxSymlinkIfPossible() error {
 type createWrapperArgs struct {
 	CreateWrappersArgs
 	BashPath         string
+	SedPath          string
 	Command          string
 	destPath         string
 	DevboxSymlinkDir string
