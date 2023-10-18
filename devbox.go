@@ -39,7 +39,7 @@ type Devbox interface {
 	Services() (services.Services, error)
 	StartProcessManager(ctx context.Context, runInCurrentShell bool, requestedServices []string, background bool, processComposeFileOrDir string) error
 	StartServices(ctx context.Context, runInCurrentShell bool, services ...string) error
-	StopServices(ctx context.Context, runInCurrentShell bool, allProjects bool, services ...string) error
+	StopServices(ctx context.Context, runInCurrentShell, allProjects bool, services ...string) error
 
 	// Generate files
 	Generate(ctx context.Context) error

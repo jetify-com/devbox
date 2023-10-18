@@ -539,7 +539,8 @@ func (d *Devbox) Services() (services.Services, error) {
 }
 
 func (d *Devbox) StartServices(
-	ctx context.Context, runInCurrentShell bool, serviceNames ...string) error {
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
 	if !runInCurrentShell {
 		return d.RunScript(ctx, "devbox",
 			append(
@@ -581,7 +582,7 @@ func (d *Devbox) StartServices(
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell bool, allProjects bool, serviceNames ...string) error {
+func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
 	if !runInCurrentShell {
 		args := []string{"services", "stop", "--run-in-current-shell"}
 		args = append(args, serviceNames...)
@@ -660,7 +661,8 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 }
 
 func (d *Devbox) RestartServices(
-	ctx context.Context, runInCurrentShell bool, serviceNames ...string) error {
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
 	if !runInCurrentShell {
 		return d.RunScript(ctx, "devbox",
 			append(
