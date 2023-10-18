@@ -17,6 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/vercheck"
@@ -113,6 +114,7 @@ func Execute(ctx context.Context, args []string) int {
 
 func Main() {
 	timer := debug.Timer(strings.Join(os.Args, " "))
+	setSystemBinaryPaths()
 	ctx := context.Background()
 	if strings.HasSuffix(os.Args[0], "ssh") ||
 		strings.HasSuffix(os.Args[0], "scp") {
@@ -144,5 +146,14 @@ func listAllCommands(cmd *cobra.Command, indent string) {
 	// Recursively list child commands with increased indentation
 	for _, childCmd := range cmd.Commands() {
 		listAllCommands(childCmd, indent+"\t")
+	}
+}
+
+func setSystemBinaryPaths() {
+	if os.Getenv("DEVBOX_SYSTEM_BASH") == "" {
+		os.Setenv("DEVBOX_SYSTEM_BASH", cmdutil.GetPathOrDefault("bash", "/bin/bash"))
+	}
+	if os.Getenv("DEVBOX_SYSTEM_SED") == "" {
+		os.Setenv("DEVBOX_SYSTEM_SED", cmdutil.GetPathOrDefault("sed", "/usr/bin/sed"))
 	}
 }
