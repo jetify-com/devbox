@@ -21,6 +21,11 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
+var dontWrap = map[string]bool{
+	"bash": true,
+	"sed":  true,
+}
+
 type CreateWrappersArgs struct {
 	NixBins         []string
 	ShellEnvHash    string
@@ -48,13 +53,17 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	_ = os.MkdirAll(destPath, 0o755)
 
 	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
-	sedPath := cmdutil.GetPathOrDefault("sed", "sed")
+	sedPath := cmdutil.GetPathOrDefault("sed", "/usr/bin/sed")
 
 	if err := CreateDevboxSymlinkIfPossible(); err != nil {
 		return err
 	}
 
 	for _, bin := range args.NixBins {
+		if dontWrap[filepath.Base(bin)] {
+			continue
+		}
+
 		if err := createWrapper(&createWrapperArgs{
 			WrapperBinPath:     destPath,
 			CreateWrappersArgs: args,
