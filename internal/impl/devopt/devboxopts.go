@@ -12,7 +12,6 @@ type Opts struct {
 	Pure                     bool
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
-	OmitBinWrappersFromPath  bool
 	Stderr                   io.Writer
 }
 

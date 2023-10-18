@@ -12,7 +12,8 @@ import (
 
 type servicesCmdFlags struct {
 	envFlag
-	config configFlags
+	config            configFlags
+	runInCurrentShell bool
 }
 
 type serviceUpFlags struct {
@@ -105,6 +106,13 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 
 	flags.envFlag.register(servicesCommand)
 	flags.config.registerPersistent(servicesCommand)
+	servicesCommand.PersistentFlags().BoolVar(
+		&flags.runInCurrentShell,
+		"run-in-current-shell",
+		false,
+		"Run the command in the current shell instead of a new shell",
+	)
+	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
 	servicesCommand.AddCommand(lsCommand)
@@ -124,7 +132,7 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.ListServices(cmd.Context())
+	return box.ListServices(cmd.Context(), flags.runInCurrentShell)
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
@@ -141,7 +149,7 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 		return errors.WithStack(err)
 	}
 
-	return box.StartServices(cmd.Context(), services...)
+	return box.StartServices(cmd.Context(), flags.runInCurrentShell, services...)
 }
 
 func stopServices(
@@ -165,7 +173,8 @@ func stopServices(
 	if len(services) > 0 && flags.allProjects {
 		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
-	return box.StopServices(cmd.Context(), flags.allProjects, services...)
+	return box.StopServices(
+		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, services...)
 }
 
 func restartServices(
@@ -186,7 +195,7 @@ func restartServices(
 		return errors.WithStack(err)
 	}
 
-	return box.RestartServices(cmd.Context(), services...)
+	return box.RestartServices(cmd.Context(), flags.runInCurrentShell, services...)
 }
 
 func startProcessManager(
@@ -209,5 +218,11 @@ func startProcessManager(
 		return errors.WithStack(err)
 	}
 
-	return box.StartProcessManager(cmd.Context(), args, flags.background, flags.processComposeFile)
+	return box.StartProcessManager(
+		cmd.Context(),
+		servicesFlags.runInCurrentShell,
+		args,
+		flags.background,
+		flags.processComposeFile,
+	)
 }

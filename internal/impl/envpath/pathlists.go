@@ -1,6 +1,7 @@
 package envpath
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -34,4 +35,23 @@ func JoinPathLists(pathLists ...string) string {
 		}
 	}
 	return strings.Join(cleaned, string(filepath.ListSeparator))
+}
+
+func RemoveFromPath(path, pathToRemove string) string {
+	paths := strings.Split(path, string(os.PathListSeparator))
+
+	// Create a new slice to store the modified paths
+	var newPaths []string
+
+	// Iterate through the paths and add them to the newPaths slice if they are not equal to pathToRemove
+	for _, p := range paths {
+		if p != pathToRemove {
+			newPaths = append(newPaths, p)
+		}
+	}
+
+	// Join the modified paths using ":" as the delimiter
+	newPath := strings.Join(newPaths, string(os.PathListSeparator))
+
+	return newPath
 }
