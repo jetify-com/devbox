@@ -21,6 +21,15 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
+// Avoid wrapping bash and sed to prevent accidentally creating a recursive loop
+// We use DEVBOX_SYSTEM_BASH and DEVBOX_SYSTEM_SED so normally we won't use
+// user versions, but we want to be extra careful.
+// This also has minor performance benefits.
+var dontWrap = map[string]bool{
+	"bash": true,
+	"sed":  true,
+}
+
 type CreateWrappersArgs struct {
 	NixBins         []string
 	ShellEnvHash    string
@@ -55,6 +64,9 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	}
 
 	for _, bin := range args.NixBins {
+		if dontWrap[filepath.Base(bin)] {
+			continue
+		}
 		if err := createWrapper(&createWrapperArgs{
 			WrapperBinPath:     destPath,
 			CreateWrappersArgs: args,
