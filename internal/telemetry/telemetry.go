@@ -113,7 +113,8 @@ func commandEvent(meta Metadata) (id string, msg *segment.Track) {
 }
 
 // Error reports an error to the telemetry server.
-func Error(errToLog error, meta Metadata) {
+func Error(err error, meta Metadata) {
+	errToLog := err // use errToLog to avoid shadowing err later. Use err to keep API clean.
 	if !started || errToLog == nil {
 		return
 	}
