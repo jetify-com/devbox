@@ -48,7 +48,13 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	serviceStopFlags := serviceStopFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
-		Short: "Interact with devbox services",
+		Short: "Interact with devbox services.",
+		Long: "Interact with devbox services. Services start in a new shell. " +
+			"Plugin services use envrinment variables specified by plugin unless " +
+			"overridden by the user. To override plugin environment variables, use " +
+			"the --env or --env-file flag. You may also override in devbox.json by " +
+			"using the `env` field or exporting an environment variable in the " +
+			"init hook.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			preruns := append([]cobraFunc{ensureNixInstalled}, persistentPreRunE...)
 			for _, fn := range preruns {
