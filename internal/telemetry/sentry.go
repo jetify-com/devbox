@@ -51,8 +51,8 @@ func initSentryClient(appName string) bool {
 	return err == nil
 }
 
-func newSentryException(err error) []sentry.Exception {
-	errMsg := err.Error()
+func newSentryException(errToLog error) []sentry.Exception {
+	errMsg := errToLog.Error()
 	binPkg := ""
 	modPath := ""
 	if build, ok := debug.ReadBuildInfo(); ok {
@@ -66,12 +66,12 @@ func newSentryException(err error) []sentry.Exception {
 	var stFunc func() []runtime.Frame
 	errType := "Generic Error"
 	for {
-		if t := exportedErrType(err); t != "" {
+		if t := exportedErrType(errToLog); t != "" {
 			errType = t
 		}
 
 		//nolint:errorlint
-		switch stackErr := err.(type) {
+		switch stackErr := errToLog.(type) {
 		// If the error implements the StackTrace method in the redact package, then
 		// prefer that. The Sentry SDK gets some things wrong when guessing how
 		// to extract the stack trace.
@@ -98,11 +98,11 @@ func newSentryException(err error) []sentry.Exception {
 				return frames
 			}
 		}
-		uw := errors.Unwrap(err)
+		uw := errors.Unwrap(errToLog)
 		if uw == nil {
 			break
 		}
-		err = uw
+		errToLog = uw
 	}
 	ex := []sentry.Exception{{Type: errType, Value: errMsg}}
 	if stFunc != nil {
