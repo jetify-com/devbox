@@ -38,7 +38,7 @@ func JoinPathLists(pathLists ...string) string {
 }
 
 func RemoveFromPath(path, pathToRemove string) string {
-	paths := strings.Split(path, string(os.PathListSeparator))
+	paths := filepath.SplitList(path)
 
 	// Create a new slice to store the modified paths
 	var newPaths []string

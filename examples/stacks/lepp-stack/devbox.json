@@ -22,7 +22,6 @@
       "init_db": "initdb",
       "run_test": [
         "mkdir -p /tmp/devbox/lepp",
-        "export PGHOST=/tmp/devbox/lepp",
         "rm -rf .devbox/virtenv/postgresql/data",
         "initdb",
         "devbox services up -b",
