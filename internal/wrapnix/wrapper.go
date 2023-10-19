@@ -53,7 +53,7 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	_ = os.RemoveAll(filepath.Join(args.ProjectDir, plugin.WrapperPath))
 
 	// Recreate the bin wrapper directory
-	destPath := filepath.Join(wrapperBinPath(args.ProjectDir))
+	destPath := filepath.Join(WrapperBinPath(args.ProjectDir))
 	_ = os.MkdirAll(destPath, 0o755)
 
 	bashPath := cmdutil.GetPathOrDefault(os.Getenv("DEVBOX_SYSTEM_BASH"), "/bin/bash")
@@ -207,6 +207,6 @@ func createSymlinksForSupportDirs(projectDir string) error {
 	return nil
 }
 
-func wrapperBinPath(projectDir string) string {
+func WrapperBinPath(projectDir string) string {
 	return filepath.Join(projectDir, plugin.WrapperBinPath)
 }

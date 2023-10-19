@@ -30,6 +30,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/wrapnix"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -67,7 +68,6 @@ type Devbox struct {
 	pure                     bool
 	allowInsecureAdds        bool
 	customProcessComposeFile string
-	OmitBinWrappersFromPath  bool
 
 	// This is needed because of the --quiet flag.
 	stderr io.Writer
@@ -98,7 +98,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
-		OmitBinWrappersFromPath:  opts.OmitBinWrappersFromPath,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -221,6 +220,19 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	if err != nil {
 		return err
 	}
+
+	// By default we always remove bin wrappers when using `run`. This env var is
+	// for testing. Once we completely remove bin wrappers we can remove this.
+	// It helps simulate shell using "run".
+	if includeBinWrappers, _ := strconv.ParseBool(
+		os.Getenv("DEVBOX_INCLUDE_BIN_WRAPPERS_IN_PATH"),
+	); !includeBinWrappers {
+		env["PATH"] = envpath.RemoveFromPath(
+			env["PATH"],
+			wrapnix.WrapperBinPath(d.projectDir),
+		)
+	}
+
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	// This is temporary because StartServices() needs it but should be replaced with
 	// better alternative since devbox run and devbox shell are not the same.
@@ -526,15 +538,22 @@ func (d *Devbox) Services() (services.Services, error) {
 	return result, nil
 }
 
-func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
+func (d *Devbox) StartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "start", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	svcSet, err := d.Services()
@@ -563,9 +582,9 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "stop"}
+func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
+	if !runInCurrentShell {
+		args := []string{"services", "stop", "--run-in-current-shell"}
 		args = append(args, serviceNames...)
 		if allProjects {
 			args = append(args, "--all-projects")
@@ -602,9 +621,10 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 	return nil
 }
 
-func (d *Devbox) ListServices(ctx context.Context) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
+func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx,
+			"devbox", []string{"services", "ls", "--run-in-current-shell"})
 	}
 
 	svcSet, err := d.Services()
@@ -640,15 +660,22 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 	return nil
 }
 
-func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
+func (d *Devbox) RestartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "restart", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -674,12 +701,13 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
+	runInCurrentShell bool,
 	requestedServices []string,
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "up"}
+	if !runInCurrentShell {
+		args := []string{"services", "up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
 			args = append(args, "--process-compose-file", processComposeFileOrDir)
@@ -853,16 +881,10 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
 	env["PATH"] = envpath.JoinPathLists(
+		filepath.Join(d.projectDir, plugin.WrapperBinPath),
 		nix.ProfileBinPath(d.projectDir),
 		env["PATH"],
 	)
-
-	if !d.OmitBinWrappersFromPath {
-		env["PATH"] = envpath.JoinPathLists(
-			filepath.Join(d.projectDir, plugin.WrapperBinPath),
-			env["PATH"],
-		)
-	}
 
 	env["PATH"], err = d.addUtilitiesToPath(ctx, env["PATH"])
 	if err != nil {
