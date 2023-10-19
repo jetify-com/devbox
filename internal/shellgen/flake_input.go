@@ -47,28 +47,33 @@ func (f *flakeInput) PkgImportName() string {
 	return f.Name + "-pkgs"
 }
 
-func (f *flakeInput) BuildInputs() ([]string, error) {
-	var err error
-	attributePaths := lo.Map(f.Packages, func(pkg *devpkg.Package, _ int) string {
-		attributePath, attributePathErr := pkg.FullPackageAttributePath()
-		if attributePathErr != nil {
-			err = attributePathErr
+type buildInput struct {
+	AttrPath   string
+	PatchGlibc bool
+}
+
+func (f *flakeInput) BuildInputs() ([]buildInput, error) {
+	inputs := make([]buildInput, len(f.Packages))
+	prefix := f.Name
+	if f.IsNixpkgs() {
+		prefix = f.PkgImportName()
+	}
+	prefix += "."
+	for i, pkg := range f.Packages {
+		attrPath, err := pkg.FullPackageAttributePath()
+		if err != nil {
+			return nil, err
 		}
-		return attributePath
-	})
-	if err != nil {
-		return nil, err
+		if f.IsNixpkgs() {
+			// Remove the legacyPackages.<system> prefix.
+			attrPath = strings.SplitN(attrPath, ".", 3)[2]
+		}
+		inputs[i] = buildInput{
+			AttrPath:   prefix + attrPath,
+			PatchGlibc: pkg.PatchGlibc,
+		}
 	}
-	if !f.IsNixpkgs() {
-		return lo.Map(attributePaths, func(pkg string, _ int) string {
-			return f.Name + "." + pkg
-		}), nil
-	}
-	return lo.Map(attributePaths, func(pkg string, _ int) string {
-		parts := strings.Split(pkg, ".")
-		// Ugh, not sure if this is reliable?
-		return f.PkgImportName() + "." + strings.Join(parts[2:], ".")
-	}), nil
+	return inputs, nil
 }
 
 // flakeInputs returns a list of flake inputs for the top level flake.nix
