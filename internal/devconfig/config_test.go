@@ -436,6 +436,9 @@ func TestAddPlatforms(t *testing.T) {
 		"hello": {
 			"version": "latest",
 			"platforms": ["x86_64-linux"]
+		},
+		"vim": {
+			"version": "latest"
 		}
 	}
 }
@@ -456,6 +459,9 @@ func TestAddPlatforms(t *testing.T) {
 		"hello": {
 			"version":   "latest",
 			"platforms": ["x86_64-linux", "x86_64-darwin"]
+		},
+		"vim": {
+			"version": "latest"
 		}
 	}
 }`)

@@ -100,9 +100,9 @@ func (c *configAST) appendPackage(name, version string) {
 	pkgs := c.packagesField(false)
 	switch val := pkgs.Value.Value.(type) {
 	case *hujson.Object:
-		c.appendPackageMember(val, name, version)
+		c.appendPackageToObject(val, name, version)
 	case *hujson.Array:
-		c.appendPackageElement(val, joinNameVersion(name, version))
+		c.appendPackageToArray(val, joinNameVersion(name, version))
 	default:
 		panic("packages field must be an object or array")
 	}
@@ -114,7 +114,7 @@ func (c *configAST) appendPackage(name, version string) {
 	c.root.Format()
 }
 
-func (c *configAST) appendPackageMember(pkgs *hujson.Object, name, version string) {
+func (c *configAST) appendPackageToObject(pkgs *hujson.Object, name, version string) {
 	i := c.memberIndex(pkgs, name)
 	if i != -1 {
 		return
@@ -128,7 +128,7 @@ func (c *configAST) appendPackageMember(pkgs *hujson.Object, name, version strin
 	})
 }
 
-func (c *configAST) appendPackageElement(arr *hujson.Array, versionedName string) {
+func (c *configAST) appendPackageToArray(arr *hujson.Array, versionedName string) {
 	var extra []byte
 	if len(arr.Elements) > 0 {
 		// Put each element on its own line if there

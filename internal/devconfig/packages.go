@@ -37,8 +37,8 @@ func (pkgs *Packages) VersionedNames() []string {
 
 // Get returns the package with the given versionedName
 func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
-	name, _ := parseVersionedName(versionedName)
-	i := pkgs.index(name)
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
 	if i == -1 {
 		return nil, false
 	}
@@ -48,7 +48,7 @@ func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
 // Add adds a package to the list of packages
 func (pkgs *Packages) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
-	if pkgs.index(name) != -1 {
+	if pkgs.index(name, version) != -1 {
 		return
 	}
 	pkgs.Collection = append(pkgs.Collection, NewVersionOnlyPackage(name, version))
@@ -57,8 +57,8 @@ func (pkgs *Packages) Add(versionedName string) {
 
 // Remove removes a package from the list of packages
 func (pkgs *Packages) Remove(versionedName string) {
-	name, _ := parseVersionedName(versionedName)
-	i := pkgs.index(name)
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
 	if i == -1 {
 		return
 	}
@@ -75,8 +75,8 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 		return errors.WithStack(err)
 	}
 
-	name, _ := parseVersionedName(versionedname)
-	i := pkgs.index(name)
+	name, version := parseVersionedName(versionedname)
+	i := pkgs.index(name, version)
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedname)
 	}
@@ -87,7 +87,7 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 	if len(pkg.ExcludedPlatforms) > 0 {
 		return usererr.New(
 			"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
-				"Please delete the `excludedPlatforms` for this package from devbox.json and retry.",
+				"Please delete the `excluded_platforms` for this package from devbox.json and retry.",
 			pkg.VersionedName(),
 		)
 	}
@@ -101,12 +101,11 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 	}
 	if len(pkg.Platforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.name, "platforms", pkg.Platforms[oldLen:])
+		ux.Finfo(writer,
+			"Added platform %s to package %s\n", strings.Join(platforms, ", "),
+			pkg.VersionedName(),
+		)
 	}
-
-	ux.Finfo(writer,
-		"Added platform %s to package %s\n", strings.Join(platforms, ", "),
-		pkg.VersionedName(),
-	)
 	return nil
 }
 
@@ -119,8 +118,8 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 		return errors.WithStack(err)
 	}
 
-	name, _ := parseVersionedName(versionedName)
-	i := pkgs.index(name)
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
@@ -142,10 +141,9 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 	}
 	if len(pkg.ExcludedPlatforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
+		ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+			pkg.VersionedName())
 	}
-
-	ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
-		pkg.VersionedName())
 	return nil
 }
 
@@ -179,9 +177,9 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (pkgs *Packages) index(name string) int {
+func (pkgs *Packages) index(name, version string) int {
 	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
-		return p.name == name
+		return p.name == name && p.Version == version
 	})
 }
 
