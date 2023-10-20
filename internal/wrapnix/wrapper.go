@@ -21,6 +21,15 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
+// Avoid wrapping bash and sed to prevent accidentally creating a recursive loop
+// We use DEVBOX_SYSTEM_BASH and DEVBOX_SYSTEM_SED so normally we won't use
+// user versions, but we want to be extra careful.
+// This also has minor performance benefits.
+var dontWrap = map[string]bool{
+	"bash": true,
+	"sed":  true,
+}
+
 type CreateWrappersArgs struct {
 	NixBins         []string
 	ShellEnvHash    string
@@ -44,20 +53,25 @@ func CreateWrappers(ctx context.Context, args CreateWrappersArgs) error {
 	_ = os.RemoveAll(filepath.Join(args.ProjectDir, plugin.WrapperPath))
 
 	// Recreate the bin wrapper directory
-	destPath := filepath.Join(wrapperBinPath(args.ProjectDir))
+	destPath := filepath.Join(WrapperBinPath(args.ProjectDir))
 	_ = os.MkdirAll(destPath, 0o755)
 
-	bashPath := cmdutil.GetPathOrDefault("bash", "/bin/bash")
+	bashPath := cmdutil.GetPathOrDefault(os.Getenv("DEVBOX_SYSTEM_BASH"), "/bin/bash")
+	sedPath := cmdutil.GetPathOrDefault(os.Getenv("DEVBOX_SYSTEM_SED"), "/usr/bin/sed")
 
 	if err := CreateDevboxSymlinkIfPossible(); err != nil {
 		return err
 	}
 
 	for _, bin := range args.NixBins {
+		if dontWrap[filepath.Base(bin)] {
+			continue
+		}
 		if err := createWrapper(&createWrapperArgs{
 			WrapperBinPath:     destPath,
 			CreateWrappersArgs: args,
 			BashPath:           bashPath,
+			SedPath:            sedPath,
 			Command:            bin,
 			DevboxSymlinkDir:   devboxSymlinkDir,
 			destPath:           filepath.Join(destPath, filepath.Base(bin)),
@@ -128,6 +142,7 @@ func CreateDevboxSymlinkIfPossible() error {
 type createWrapperArgs struct {
 	CreateWrappersArgs
 	BashPath         string
+	SedPath          string
 	Command          string
 	destPath         string
 	DevboxSymlinkDir string
@@ -192,6 +207,6 @@ func createSymlinksForSupportDirs(projectDir string) error {
 	return nil
 }
 
-func wrapperBinPath(projectDir string) string {
+func WrapperBinPath(projectDir string) string {
 	return filepath.Join(projectDir, plugin.WrapperBinPath)
 }

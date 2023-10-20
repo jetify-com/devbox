@@ -203,14 +203,22 @@ type installMode string
 const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
-	ensure    installMode = "ensure"
+	// update is both install new package version and uninstall old package version
+	update installMode = "update"
+	ensure installMode = "ensure"
 )
 
-// ensurePackagesAreInstalled ensures that the nix profile has the packages specified
-// in the config (devbox.json). The `mode` is used for user messaging to explain
-// what operations are happening, because this function may take time to execute.
-// TODO we should rename this to ensureDevboxEnvironmentIsUpToDate since it does
-// much more than ensuring packages are installed.
+// ensurePackagesAreInstalled ensures:
+//  1. Packages are installed, in nix-profile or runx.
+//     Extraneous packages are removed (references purged, not uninstalled).
+//  2. Files for devbox shellenv are generated
+//  3. Env-vars for shellenv are computed
+//  4. Lockfile is synced
+//
+// The `mode` is used for:
+// 1. Skipping certain operations that may not apply.
+// 2. User messaging to explain what operations are happening, because this function may take time to execute.
+// TODO: Rename method since it does more than just ensure packages are installed.
 func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
 	defer trace.StartRegion(ctx, "ensurePackages").End()
 	defer debug.FunctionTimer().End()
@@ -248,9 +256,10 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	fmt.Fprintf(d.stderr, "Recomputing the devbox environment.\n")
-	// Force print-dev-env cache to be recomputed.
-	nixEnv, err := d.computeNixEnv(ctx, false /*use cache*/)
+	// Use the printDevEnvCache if we are adding or removing or updating any package,
+	// AND we are not in the shellenv-enabled environment of the current devbox-project.
+	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
+	nixEnv, err := d.computeNixEnv(ctx, usePrintDevEnvCache)
 	if err != nil {
 		return err
 	}
@@ -292,8 +301,8 @@ func (d *Devbox) profilePath() (string, error) {
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
 }
 
-// syncPackagesToProfile ensures that all packages in devbox.json exist in the nix profile,
-// and no more.
+// syncPackagesToProfile can ensure that all packages in devbox.json exist in the nix profile,
+// and no more. However, it may skip some steps depending on the `mode`.
 func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
 	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "syncPackagesToProfile").End()
@@ -321,9 +330,12 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 	}
 
 	// Second, remove any packages from the nix-profile that are not in the config
-	itemsToKeep, err := d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
-	if err != nil {
-		return err
+	itemsToKeep := profileItems
+	if mode != install {
+		itemsToKeep, err = d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
+		if err != nil {
+			return err
+		}
 	}
 
 	// we are done if mode is uninstall

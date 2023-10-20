@@ -18,7 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -28,6 +30,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/wrapnix"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -65,7 +68,6 @@ type Devbox struct {
 	pure                     bool
 	allowInsecureAdds        bool
 	customProcessComposeFile string
-	OmitBinWrappersFromPath  bool
 
 	// This is needed because of the --quiet flag.
 	stderr io.Writer
@@ -96,7 +98,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
-		OmitBinWrappersFromPath:  opts.OmitBinWrappersFromPath,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -219,6 +220,19 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	if err != nil {
 		return err
 	}
+
+	// By default we always remove bin wrappers when using `run`. This env var is
+	// for testing. Once we completely remove bin wrappers we can remove this.
+	// It helps simulate shell using "run".
+	if includeBinWrappers, _ := strconv.ParseBool(
+		os.Getenv("DEVBOX_INCLUDE_BIN_WRAPPERS_IN_PATH"),
+	); !includeBinWrappers {
+		env["PATH"] = envpath.RemoveFromPath(
+			env["PATH"],
+			wrapnix.WrapperBinPath(d.projectDir),
+		)
+	}
+
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	// This is temporary because StartServices() needs it but should be replaced with
 	// better alternative since devbox run and devbox shell are not the same.
@@ -524,15 +538,22 @@ func (d *Devbox) Services() (services.Services, error) {
 	return result, nil
 }
 
-func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
+func (d *Devbox) StartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "start", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	svcSet, err := d.Services()
@@ -561,9 +582,9 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "stop"}
+func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
+	if !runInCurrentShell {
+		args := []string{"services", "stop", "--run-in-current-shell"}
 		args = append(args, serviceNames...)
 		if allProjects {
 			args = append(args, "--all-projects")
@@ -600,9 +621,10 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 	return nil
 }
 
-func (d *Devbox) ListServices(ctx context.Context) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
+func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx,
+			"devbox", []string{"services", "ls", "--run-in-current-shell"})
 	}
 
 	svcSet, err := d.Services()
@@ -638,15 +660,22 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 	return nil
 }
 
-func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
+func (d *Devbox) RestartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "restart", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -672,12 +701,13 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
+	runInCurrentShell bool,
 	requestedServices []string,
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "up"}
+	if !runInCurrentShell {
+		args := []string{"services", "up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
 			args = append(args, "--process-compose-file", processComposeFileOrDir)
@@ -781,11 +811,22 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
 
+	var spinny *spinner.Spinner
+	if !usePrintDevEnvCache {
+		spinny = spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(d.stderr))
+		spinny.FinalMSG = "✓ Computed the Devbox environment.\n"
+		spinny.Suffix = " Computing the Devbox environment...\n"
+		spinny.Start()
+	}
+
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
-		FlakesFilePath:       d.nixFlakesFilePath(),
+		FlakeDir:             d.flakeDir(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
 	})
+	if spinny != nil {
+		spinny.Stop()
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -840,21 +881,20 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
 	env["PATH"] = envpath.JoinPathLists(
+		filepath.Join(d.projectDir, plugin.WrapperBinPath),
 		nix.ProfileBinPath(d.projectDir),
 		env["PATH"],
 	)
-
-	if !d.OmitBinWrappersFromPath {
-		env["PATH"] = envpath.JoinPathLists(
-			filepath.Join(d.projectDir, plugin.WrapperBinPath),
-			env["PATH"],
-		)
-	}
 
 	env["PATH"], err = d.addUtilitiesToPath(ctx, env["PATH"])
 	if err != nil {
 		return nil, err
 	}
+
+	// Add helpful env vars for a Devbox project
+	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
+	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
+	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/.devbox/virtenv/.wrappers"
 
 	// Include env variables in devbox.json
 	configEnv, err := d.configEnvs(ctx, env)
@@ -935,8 +975,8 @@ func (d *Devbox) nixPrintDevEnvCachePath() string {
 	return filepath.Join(d.projectDir, ".devbox/.nix-print-dev-env-cache")
 }
 
-func (d *Devbox) nixFlakesFilePath() string {
-	return filepath.Join(d.projectDir, ".devbox/gen/flake/flake.nix")
+func (d *Devbox) flakeDir() string {
+	return filepath.Join(d.projectDir, ".devbox/gen/flake")
 }
 
 // ConfigPackageNames returns the package names as defined in devbox.json
@@ -963,14 +1003,7 @@ func (d *Devbox) InstallablePackages() []*devpkg.Package {
 // packages concatenated in correct order
 func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 	userPackages := d.InstallablePackages()
-	pluginPackages, err := d.PluginManager().PluginPackages(userPackages)
-	if err != nil {
-		return nil, err
-	}
-	// We prioritize plugin packages so that the php plugin works. Not sure
-	// if this is behavior we want for user plugins. We may need to add an optional
-	// priority field to the config.
-	return append(pluginPackages, userPackages...), nil
+	return d.PluginManager().ProcessPluginPackages(userPackages)
 }
 
 func (d *Devbox) Includes() []plugin.Includable {
@@ -1166,10 +1199,10 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		// handling special cases to for pure shell
-		// Passing HOME for pure shell to leak through otherwise devbox binary won't work
-		// We also include PATH to find the nix installation. It is cleaned for pure mode below
-		// TERM leaking through is to enable colored text in the pure shell
+		// handling special cases for pure shell
+		// - HOME required for devbox binary to work
+		// - PATH to find the nix installation. It is cleaned for pure mode below.
+		// - TERM to enable colored text in the pure shell
 		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
@@ -1217,18 +1250,40 @@ func (d *Devbox) Lockfile() *lock.File {
 }
 
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
-	packages := lo.Filter(d.InstallablePackages(), devpkg.IsRunX)
-	paths := []string{}
-	for _, pkg := range packages {
+	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
+	if err := os.RemoveAll(runxBinPath); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(runxBinPath, 0o755); err != nil {
+		return "", err
+	}
+
+	for _, pkg := range d.InstallablePackages() {
+		if !pkg.IsRunX() {
+			continue
+		}
 		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
 		if err != nil {
 			return "", err
 		}
-		p, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
+		paths, err := pkgtype.RunXClient().Install(ctx, lockedPkg.Resolved)
 		if err != nil {
 			return "", err
 		}
-		paths = append(paths, p...)
+		for _, path := range paths {
+			// create symlink to all files in p
+			files, err := os.ReadDir(path)
+			if err != nil {
+				return "", err
+			}
+			for _, file := range files {
+				src := filepath.Join(path, file.Name())
+				dst := filepath.Join(runxBinPath, file.Name())
+				if err := os.Symlink(src, dst); err != nil && !errors.Is(err, os.ErrExist) {
+					return "", err
+				}
+			}
+		}
 	}
-	return envpath.JoinPathLists(paths...), nil
+	return runxBinPath, nil
 }

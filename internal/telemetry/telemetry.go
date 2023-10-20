@@ -114,7 +114,8 @@ func commandEvent(meta Metadata) (id string, msg *segment.Track) {
 
 // Error reports an error to the telemetry server.
 func Error(err error, meta Metadata) {
-	if !started || err == nil {
+	errToLog := err // use errToLog to avoid shadowing err later. Use err to keep API clean.
+	if !started || errToLog == nil {
 		return
 	}
 
@@ -127,7 +128,7 @@ func Error(err error, meta Metadata) {
 		EventID:   sentry.EventID(ExecutionID),
 		Level:     sentry.LevelError,
 		User:      sentry.User{ID: deviceID},
-		Exception: newSentryException(redact.Error(err)),
+		Exception: newSentryException(redact.Error(errToLog)),
 		Contexts: map[string]map[string]any{
 			"os": {
 				"name": build.OS(),

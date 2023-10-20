@@ -12,7 +12,8 @@ import (
 
 type servicesCmdFlags struct {
 	envFlag
-	config configFlags
+	config            configFlags
+	runInCurrentShell bool
 }
 
 type serviceUpFlags struct {
@@ -47,7 +48,13 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	serviceStopFlags := serviceStopFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
-		Short: "Interact with devbox services",
+		Short: "Interact with devbox services.",
+		Long: "Interact with devbox services. Services start in a new shell. " +
+			"Plugin services use environment variables specified by plugin unless " +
+			"overridden by the user. To override plugin environment variables, use " +
+			"the --env or --env-file flag. You may also override in devbox.json by " +
+			"using the `env` field or exporting an environment variable in the " +
+			"init hook.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			preruns := append([]cobraFunc{ensureNixInstalled}, persistentPreRunE...)
 			for _, fn := range preruns {
@@ -77,9 +84,11 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	}
 
 	stopCommand := &cobra.Command{
-		Use:   "stop [service]...",
-		Short: "Stop one or more services in the current project. If no service is specified, stops all services in the current project.",
-		Long:  `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
+		Use:     "stop [service]...",
+		Aliases: []string{"down"},
+		Short: `Stop one or more services in the current project. If no service is specified, 
+				 stops all services in the current project.`,
+		Long: `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return stopServices(cmd, args, flags, serviceStopFlags)
 		},
@@ -103,6 +112,13 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 
 	flags.envFlag.register(servicesCommand)
 	flags.config.registerPersistent(servicesCommand)
+	servicesCommand.PersistentFlags().BoolVar(
+		&flags.runInCurrentShell,
+		"run-in-current-shell",
+		false,
+		"Run the command in the current shell instead of a new shell",
+	)
+	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
 	servicesCommand.AddCommand(lsCommand)
@@ -122,7 +138,7 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.ListServices(cmd.Context())
+	return box.ListServices(cmd.Context(), flags.runInCurrentShell)
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {
@@ -139,7 +155,7 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 		return errors.WithStack(err)
 	}
 
-	return box.StartServices(cmd.Context(), services...)
+	return box.StartServices(cmd.Context(), flags.runInCurrentShell, services...)
 }
 
 func stopServices(
@@ -163,7 +179,8 @@ func stopServices(
 	if len(services) > 0 && flags.allProjects {
 		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
-	return box.StopServices(cmd.Context(), flags.allProjects, services...)
+	return box.StopServices(
+		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, services...)
 }
 
 func restartServices(
@@ -184,7 +201,7 @@ func restartServices(
 		return errors.WithStack(err)
 	}
 
-	return box.RestartServices(cmd.Context(), services...)
+	return box.RestartServices(cmd.Context(), flags.runInCurrentShell, services...)
 }
 
 func startProcessManager(
@@ -207,5 +224,11 @@ func startProcessManager(
 		return errors.WithStack(err)
 	}
 
-	return box.StartProcessManager(cmd.Context(), args, flags.background, flags.processComposeFile)
+	return box.StartProcessManager(
+		cmd.Context(),
+		servicesFlags.runInCurrentShell,
+		args,
+		flags.background,
+		flags.processComposeFile,
+	)
 }

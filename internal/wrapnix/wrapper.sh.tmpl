@@ -32,6 +32,6 @@ should be in PATH.
 This is implemented in sed for efficiency. sed is POSIX so we assume it's available.
 
 */ -}}
-export PATH=$(echo $PATH | sed -e 's#:{{ .WrapperBinPath }}##' -e 's#{{ .WrapperBinPath }}:##' -e 's#{{ .WrapperBinPath }}##')
+export PATH=$(echo $PATH | {{ .SedPath }} -e 's#:{{ .WrapperBinPath }}##' -e 's#{{ .WrapperBinPath }}:##' -e 's#{{ .WrapperBinPath }}##')
 
 exec {{ .Command }} "$@"

@@ -36,7 +36,7 @@ type Variable struct {
 }
 
 type PrintDevEnvArgs struct {
-	FlakesFilePath       string
+	FlakeDir             string
 	PrintDevEnvCachePath string
 	UsePrintDevEnvCache  bool
 }
@@ -65,7 +65,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		cmd := exec.CommandContext(
 			ctx,
 			"nix", "print-dev-env",
-			args.FlakesFilePath,
+			args.FlakeDir,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")

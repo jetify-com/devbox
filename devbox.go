@@ -34,12 +34,12 @@ type Devbox interface {
 	Update(ctx context.Context, opts devopt.UpdateOpts) error
 
 	// Interact with services
-	ListServices(ctx context.Context) error
-	RestartServices(ctx context.Context, services ...string) error
+	ListServices(ctx context.Context, runInCurrentShell bool) error
+	RestartServices(ctx context.Context, runInCurrentShell bool, services ...string) error
 	Services() (services.Services, error)
-	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
-	StartServices(ctx context.Context, services ...string) error
-	StopServices(ctx context.Context, allProjects bool, services ...string) error
+	StartProcessManager(ctx context.Context, runInCurrentShell bool, requestedServices []string, background bool, processComposeFileOrDir string) error
+	StartServices(ctx context.Context, runInCurrentShell bool, services ...string) error
+	StopServices(ctx context.Context, runInCurrentShell, allProjects bool, services ...string) error
 
 	// Generate files
 	Generate(ctx context.Context) error
