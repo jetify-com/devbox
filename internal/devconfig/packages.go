@@ -1,3 +1,4 @@
+//nolint:dupl // add/exclude platforms needs refactoring
 package devconfig
 
 import (
@@ -7,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/nix"
@@ -15,23 +15,11 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-type jsonKind int
-
-const (
-	// jsonList is the legacy format for packages
-	jsonList jsonKind = iota
-	// jsonMap is the new format for packages
-	jsonMap jsonKind = iota
-)
-
 type Packages struct {
-	jsonKind jsonKind
-
 	// Collection contains the set of package definitions
-	// We don't want this key to be serialized automatically, hence the "key" in json is "-"
-	// NOTE: this is not a pointer to make debugging failure cases easier
-	// (get dumps of the values, not memory addresses)
-	Collection []Package `json:"-,omitempty"`
+	Collection []Package
+
+	ast *configAST
 }
 
 // VersionedNames returns a list of package names with versions.
@@ -50,26 +38,32 @@ func (pkgs *Packages) VersionedNames() []string {
 // Get returns the package with the given versionedName
 func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
 	name, version := parseVersionedName(versionedName)
-	for _, pkg := range pkgs.Collection {
-		if pkg.name == name && pkg.Version == version {
-			return &pkg, true
-		}
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return nil, false
 	}
-	return nil, false
+	return &pkgs.Collection[i], true
 }
 
 // Add adds a package to the list of packages
 func (pkgs *Packages) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
+	if pkgs.index(name, version) != -1 {
+		return
+	}
 	pkgs.Collection = append(pkgs.Collection, NewVersionOnlyPackage(name, version))
+	pkgs.ast.appendPackage(name, version)
 }
 
 // Remove removes a package from the list of packages
 func (pkgs *Packages) Remove(versionedName string) {
 	name, version := parseVersionedName(versionedName)
-	pkgs.Collection = slices.DeleteFunc(pkgs.Collection, func(pkg Package) bool {
-		return pkg.name == name && pkg.Version == version
-	})
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return
+	}
+	pkgs.Collection = slices.Delete(pkgs.Collection, i, i+1)
+	pkgs.ast.removePackage(name)
 }
 
 // AddPlatforms adds a platform to the list of platforms for a given package
@@ -82,33 +76,37 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 	}
 
 	name, version := parseVersionedName(versionedname)
-	for idx, pkg := range pkgs.Collection {
-		if pkg.name == name && pkg.Version == version {
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedname)
+	}
 
-			// Append if the platform is not already present
-			pkg.Platforms = lo.Uniq(append(pkg.Platforms, platforms...))
+	// Adding any platform will restrict installation to it, so
+	// the ExcludedPlatforms are no longer needed
+	pkg := &pkgs.Collection[i]
+	if len(pkg.ExcludedPlatforms) > 0 {
+		return usererr.New(
+			"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
+				"Please delete the `excluded_platforms` for this package from devbox.json and retry.",
+			pkg.VersionedName(),
+		)
+	}
 
-			// Adding any platform will restrict installation to it, so
-			// the ExcludedPlatforms are no longer needed
-			if len(pkg.ExcludedPlatforms) > 0 {
-				return usererr.New(
-					"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
-						"Please delete the `excludedPlatforms` for this package from devbox.json and re-try.",
-					pkg.VersionedName(),
-				)
-			}
-			ux.Finfo(writer,
-				"Added platform %s to package %s\n", strings.Join(platforms, ", "),
-				pkg.VersionedName(),
-			)
-
-			pkgs.jsonKind = jsonMap
-			pkg.kind = regular
-			pkgs.Collection[idx] = pkg
-			return nil
+	// Append if the platform is not already present
+	oldLen := len(pkg.Platforms)
+	for _, p := range platforms {
+		if !slices.Contains(pkg.Platforms, p) {
+			pkg.Platforms = append(pkg.Platforms, p)
 		}
 	}
-	return errors.Errorf("package %s not found", versionedname)
+	if len(pkg.Platforms) > oldLen {
+		pkgs.ast.appendPlatforms(pkg.name, "platforms", pkg.Platforms[oldLen:])
+		ux.Finfo(writer,
+			"Added platform %s to package %s\n", strings.Join(platforms, ", "),
+			pkg.VersionedName(),
+		)
+	}
+	return nil
 }
 
 // ExcludePlatforms adds a platform to the list of excluded platforms for a given package
@@ -116,34 +114,37 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 	if len(platforms) == 0 {
 		return nil
 	}
-	for _, platform := range platforms {
-		if err := nix.EnsureValidPlatform(platform); err != nil {
-			return errors.WithStack(err)
-		}
+	if err := nix.EnsureValidPlatform(platforms...); err != nil {
+		return errors.WithStack(err)
 	}
 
 	name, version := parseVersionedName(versionedName)
-	for idx, pkg := range pkgs.Collection {
-		if pkg.name == name && pkg.Version == version {
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedName)
+	}
 
-			pkg.ExcludedPlatforms = lo.Uniq(append(pkg.ExcludedPlatforms, platforms...))
-			if len(pkg.Platforms) > 0 {
-				return usererr.New(
-					"cannot exclude any platform for package %s because it already has `platforms` defined. "+
-						"Please delete the `platforms` for this package from devbox.json and re-try.",
-					pkg.VersionedName(),
-				)
-			}
-			ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
-				pkg.VersionedName())
+	pkg := &pkgs.Collection[i]
+	if len(pkg.Platforms) > 0 {
+		return usererr.New(
+			"cannot exclude any platform for package %s because it already has `platforms` defined. "+
+				"Please delete the `platforms` for this package from devbox.json and re-try.",
+			pkg.VersionedName(),
+		)
+	}
 
-			pkgs.jsonKind = jsonMap
-			pkg.kind = regular
-			pkgs.Collection[idx] = pkg
-			return nil
+	oldLen := len(pkg.ExcludedPlatforms)
+	for _, p := range platforms {
+		if !slices.Contains(pkg.ExcludedPlatforms, p) {
+			pkg.ExcludedPlatforms = append(pkg.ExcludedPlatforms, p)
 		}
 	}
-	return errors.Errorf("package %s not found", versionedName)
+	if len(pkg.ExcludedPlatforms) > oldLen {
+		pkgs.ast.appendPlatforms(pkg.name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
+		ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+			pkg.VersionedName())
+	}
+	return nil
 }
 
 func (pkgs *Packages) UnmarshalJSON(data []byte) error {
@@ -151,7 +152,6 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {
 		pkgs.Collection = packagesFromLegacyList(packages)
-		pkgs.jsonKind = jsonList
 		return nil
 	}
 
@@ -174,41 +174,16 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 		packagesList = append(packagesList, pkg)
 	}
 	pkgs.Collection = packagesList
-	pkgs.jsonKind = jsonMap
 	return nil
 }
 
-func (pkgs *Packages) MarshalJSON() ([]byte, error) {
-	if pkgs.jsonKind == jsonList {
-		packagesList := make([]string, 0, len(pkgs.Collection))
-		for _, p := range pkgs.Collection {
-
-			// Version may be empty for unversioned packages
-			packageToWrite := p.name
-			if p.Version != "" {
-				packageToWrite += "@" + p.Version
-			}
-			packagesList = append(packagesList, packageToWrite)
-		}
-		return json.Marshal(packagesList)
-	}
-
-	orderedMap := orderedmap.New[string, Package]()
-	for _, p := range pkgs.Collection {
-		orderedMap.Set(p.name, p)
-	}
-	return json.Marshal(orderedMap)
+func (pkgs *Packages) index(name, version string) int {
+	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
+		return p.name == name && p.Version == version
+	})
 }
 
-type packageKind int
-
-const (
-	versionOnly packageKind = iota
-	regular     packageKind = iota
-)
-
 type Package struct {
-	kind    packageKind
 	name    string
 	Version string `json:"version,omitempty"`
 
@@ -218,7 +193,6 @@ type Package struct {
 
 func NewVersionOnlyPackage(name, version string) Package {
 	return Package{
-		kind:    versionOnly,
 		name:    name,
 		Version: version,
 	}
@@ -243,7 +217,6 @@ func NewPackage(name string, values map[string]any) Package {
 	}
 
 	return Package{
-		kind:              regular,
 		name:              name,
 		Version:           version.(string),
 		Platforms:         platforms,
@@ -285,7 +258,6 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a version-only string
 	var version string
 	if err := json.Unmarshal(data, &version); err == nil {
-		p.kind = versionOnly
 		p.Version = version
 		return nil
 	}
@@ -298,18 +270,7 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 	}
 
 	*p = Package(*alias)
-	p.kind = regular
 	return nil
-}
-
-func (p Package) MarshalJSON() ([]byte, error) {
-	if p.kind == versionOnly {
-		return json.Marshal(p.Version)
-	}
-
-	// If we have a regular package, we want to marshal the entire struct:
-	type packageAlias Package // Use an alias-type to avoid infinite recursion
-	return json.Marshal((packageAlias)(p))
 }
 
 // parseVersionedName parses the name and version from package@version representation

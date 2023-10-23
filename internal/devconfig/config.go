@@ -4,13 +4,17 @@
 package devconfig
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
@@ -42,6 +46,8 @@ type Config struct {
 	// plugin: for built-in plugins
 	// This is a similar format to nix inputs
 	Include []string `json:"include,omitempty"`
+
+	ast *configAST
 }
 
 type shellConfig struct {
@@ -60,22 +66,28 @@ type Stage struct {
 }
 
 func DefaultConfig() *Config {
-	return &Config{
-		// initialize to empty slice instead of nil for consistent marshalling
-		Packages: Packages{Collection: []Package{}},
-		Shell: &shellConfig{
-			Scripts: map[string]*shellcmd.Commands{
-				"test": {
-					Cmds: []string{"echo \"Error: no test specified\" && exit 1"},
-				},
-			},
-			InitHook: &shellcmd.Commands{
-				Cmds: []string{
-					"echo 'Welcome to devbox!' > /dev/null",
-				},
-			},
-		},
+	cfg, err := loadBytes([]byte(`{
+  "packages": [],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "test": [
+        "echo \"Error: no test specified\" && exit 1"
+      ]
+    }
+  }
+}
+`))
+	if err != nil {
+		panic("default devbox.json is invalid: " + err.Error())
 	}
+	return cfg
+}
+
+func (c *Config) Bytes() []byte {
+	return c.ast.root.Pack()
 }
 
 func (c *Config) Hash() (string, error) {
@@ -114,19 +126,33 @@ func (c *Config) InitHook() *shellcmd.Commands {
 
 // SaveTo writes the config to a file.
 func (c *Config) SaveTo(path string) error {
-	cfgPath := filepath.Join(path, DefaultName)
-	return cuecfg.WriteFile(cfgPath, c)
-}
-
-func readConfig(path string) (*Config, error) {
-	cfg := &Config{}
-	return cfg, errors.WithStack(cuecfg.ParseFile(path, cfg))
+	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
 }
 
 // Load reads a devbox config file, and validates it.
 func Load(path string) (*Config, error) {
-	cfg, err := readConfig(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
+		return nil, err
+	}
+	return loadBytes(b)
+}
+
+func loadBytes(b []byte) (*Config, error) {
+	jsonb, err := hujson.Standardize(slices.Clone(b))
+	if err != nil {
+		return nil, err
+	}
+
+	ast, err := parseConfig(b)
+	if err != nil {
+		return nil, err
+	}
+	cfg := &Config{
+		Packages: Packages{ast: ast},
+		ast:      ast,
+	}
+	if err := json.Unmarshal(jsonb, cfg); err != nil {
 		return nil, err
 	}
 	return cfg, validateConfig(cfg)
@@ -138,28 +164,12 @@ func LoadConfigFromURL(url string) (*Config, error) {
 		return nil, errors.WithStack(err)
 	}
 	defer res.Body.Close()
-	cfg := &Config{}
+
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	ext := filepath.Ext(url)
-	if !cuecfg.IsSupportedExtension(ext) {
-		ext = ".json"
-	}
-	if err = cuecfg.Unmarshal(data, ext, cfg); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return cfg, validateConfig(cfg)
-}
-
-// WriteConfig saves a devbox config file.
-func WriteConfig(path string, cfg *Config) error {
-	err := validateConfig(cfg)
-	if err != nil {
-		return err
-	}
-	return cuecfg.WriteFile(path, cfg)
+	return loadBytes(data)
 }
 
 func validateConfig(cfg *Config) error {
