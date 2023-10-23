@@ -35,18 +35,12 @@ readonly interp
 
 patch() {
 	declare -r binary="$1" # ELF binary to patch
-	declare -r type="$2"   # "exe" or "lib"
-
-	declare set_interpreter
-	if [[ "$type" == "exe" ]]; then
-		set_interpreter=true
-	fi
 
 	perm=$(stat -c "%a" "$binary")
 	old_rpath="$(patchelf --print-rpath "$binary")"
 	new_rpath="$glibc/lib${old_rpath:+:$old_rpath}"
 
-	echo "running patchelf file=\"$binary\" type=\"$type\" rpath=\"$new_rpath\" perm=\"$perm\""
+	echo "running patchelf file=\"$binary\" rpath=\"$new_rpath\" perm=\"$perm\""
 	chmod u+w "$binary"
 	patchelf --set-rpath "$new_rpath" \
 	         --add-needed libBrokenLocale.so.1 \
@@ -67,33 +61,18 @@ patch() {
 	         --add-needed libresolv.so.2 \
 	         --add-needed librt.so.1 \
 	         --add-needed libutil.so.1 \
-	         ${set_interpreter:+"--set-interpreter" "$interp"} \
+	         --set-interpreter "$interp" \
                  "$binary"
 	chmod "$perm" "$binary"
 }
 
 # Search for any files that look like ELF binaries and patch them.
-elves="$(mktemp)"
-find "$out" -type f -exec "$file/bin/file" {} \+ | rg '.*ELF.*dynamically linked.*' > "$elves"
-count="$(wc -l < "$elves")"
+elves="$(find "$out" -type f -exec "$file/bin/file" {} \+ | rg --replace '$1' '^(.*): .*ELF.*executable.*dynamically linked.*$')"
+count="$(echo "$elves" | wc -l)"
 echo "patching elf binaries count=$count"
-"$coreutils/bin/cat" "$elves"
-
-exe_files="$(rg --replace '$1' '^(.*): .*executable.*$' < "$elves")"
-count=$(echo "$exe_files" | wc -l)
-echo "patching executable binaries count=$count"
-for binary in $exe_files; do
+for binary in $elves; do
 	patch "$binary" exe
 done
 
-so_files="$(rg --replace '$1' '^(.*): .*shared object.*$' < "$elves")"
-count=$(echo "$so_files" | wc -l)
-echo "patching shared object binaries count=$count"
-for binary in $so_files; do
-	patch "$binary" lib
-done
-
 echo "shrinking binary rpaths"
-echo "$exe_files" | xargs "$patchelf/bin/patchelf" --shrink-rpath
-echo "$so_files" | xargs "$patchelf/bin/patchelf" --shrink-rpath
-rm "$elves"
+echo "$elves" | xargs "$patchelf/bin/patchelf" --shrink-rpath
