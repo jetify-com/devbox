@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/trace"
 	"slices"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
@@ -68,6 +69,9 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 }
 
 func (f flakePlan) PatchGlibc() bool {
+	if !strings.Contains(f.System, "linux") {
+		return false
+	}
 	return slices.ContainsFunc(f.Packages, func(p *devpkg.Package) bool {
 		return p.PatchGlibc
 	})
