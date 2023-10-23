@@ -259,3 +259,98 @@ func isArchive(path string) bool {
 		strings.HasSuffix(path, ".tar.bz2") ||
 		strings.HasSuffix(path, ".zip")
 }
+
+// FlakeInstallable is a Nix command line argument that specifies how to install
+// a flake. It can be a plain flake reference, or a flake reference with an
+// attribute path and/or output specification.
+//
+// Some examples are:
+//
+//   - "." installs the default attribute from the flake in the current
+//     directory.
+//   - ".#hello" installs the hello attribute from the flake in the current
+//     directory.
+//   - "nixpkgs#hello" installs the hello attribute from the nixpkgs flake.
+//   - "github:NixOS/nixpkgs/unstable#curl^lib" installs the the lib output of
+//     curl attribute from the flake on the nixpkgs unstable branch.
+//
+// The flake installable syntax is only valid in Nix command line arguments, not
+// in Nix expressions. See FlakeRef and the [Nix manual for details on the
+// differences between flake references and installables.
+//
+// [Nix manual]: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix#installables
+type FlakeInstallable struct {
+	Ref      FlakeRef
+	AttrPath string
+	Outputs  []string
+
+	raw string
+}
+
+// ParseFlakeInstallable parses a flake installable. The string s must contain a
+// valid flake reference parsable by ParseFlakeRef, optionally followed by an
+// #attrpath and/or an ^output.
+func ParseFlakeInstallable(raw string) (FlakeInstallable, error) {
+	if raw == "" {
+		return FlakeInstallable{}, redact.Errorf("empty flake installable")
+	}
+
+	// The output spec must be parsed and removed first, otherwise it will
+	// be parsed as part of the flakeref's URL fragment.
+	install := FlakeInstallable{raw: raw}
+	before, after := splitOutputSpec(raw)
+	if after != "" {
+		install.Outputs = strings.Split(after, ",")
+	}
+	raw = before
+
+	// Interpret installables with path-style flakerefs as URLs to extract
+	// the attribute path (fragment). This means that path-style flakerefs
+	// cannot point to files with a '#' or '?' in their name, since those
+	// would be parsed as the URL fragment or query string. This mimic's
+	// Nix's CLI behavior.
+	prefix := ""
+	if raw[0] == '.' || raw[0] == '/' {
+		prefix = "path:"
+		raw = prefix + raw
+	}
+
+	var err error
+	install.Ref, install.AttrPath, err = parseFlakeURLRef(raw)
+	if err != nil {
+		return FlakeInstallable{}, err
+	}
+	// Make sure to reset the raw flakeref to the original string
+	// after parsing.
+	install.Ref.raw = raw[len(prefix):]
+	return install, nil
+}
+
+// AllOutputs returns true if the installable specifies all outputs with the
+// "^*" syntax.
+func (f FlakeInstallable) AllOutputs() bool {
+	for _, out := range f.Outputs {
+		if out == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+// DefaultOutputs returns true if the installable does not specify any outputs.
+func (f FlakeInstallable) DefaultOutputs() bool {
+	return len(f.Outputs) == 0
+}
+
+// String returns the raw installable string as given to ParseFlakeInstallable.
+func (f FlakeInstallable) String() string {
+	return f.raw
+}
+
+// splitOutputSpec cuts a flake installable around the last instance of ^.
+func splitOutputSpec(s string) (before, after string) {
+	if i := strings.LastIndexByte(s, '^'); i >= 0 {
+		return s[:i], s[i+1:]
+	}
+	return s, ""
+}

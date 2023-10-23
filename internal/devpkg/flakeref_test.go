@@ -164,3 +164,92 @@ func TestParseFlakeRef(t *testing.T) {
 		})
 	}
 }
+
+func TestParseFlakeInstallable(t *testing.T) {
+	cases := map[string]FlakeInstallable{
+		// Empty string is not a valid installable.
+		"": {},
+
+		// Not a path and not a valid URL.
+		"://bad/url": {},
+
+		".":             {Ref: FlakeRef{Type: "path", Path: "."}},
+		".#app":         {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "."}},
+		".#app^out":     {AttrPath: "app", Outputs: []string{"out"}, Ref: FlakeRef{Type: "path", Path: "."}},
+		".#app^out,lib": {AttrPath: "app", Outputs: []string{"out", "lib"}, Ref: FlakeRef{Type: "path", Path: "."}},
+		".#app^*":       {AttrPath: "app", Outputs: []string{"*"}, Ref: FlakeRef{Type: "path", Path: "."}},
+		".^*":           {Outputs: []string{"*"}, Ref: FlakeRef{Type: "path", Path: "."}},
+
+		"./flake":             {Ref: FlakeRef{Type: "path", Path: "./flake"}},
+		"./flake#app":         {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./flake"}},
+		"./flake#app^out":     {AttrPath: "app", Outputs: []string{"out"}, Ref: FlakeRef{Type: "path", Path: "./flake"}},
+		"./flake#app^out,lib": {AttrPath: "app", Outputs: []string{"out", "lib"}, Ref: FlakeRef{Type: "path", Path: "./flake"}},
+		"./flake^out":         {Outputs: []string{"out"}, Ref: FlakeRef{Type: "path", Path: "./flake"}},
+
+		"indirect":            {Ref: FlakeRef{Type: "indirect", ID: "indirect"}},
+		"nixpkgs#app":         {AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
+		"nixpkgs#app^out":     {AttrPath: "app", Outputs: []string{"out"}, Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
+		"nixpkgs#app^out,lib": {AttrPath: "app", Outputs: []string{"out", "lib"}, Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
+		"nixpkgs^out":         {Outputs: []string{"out"}, Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
+
+		"%23#app":                        {AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "#"}},
+		"./%23#app":                      {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./#"}},
+		"/%23#app":                       {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/#"}},
+		"path:/%23#app":                  {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/#"}},
+		"http://example.com/%23.tar#app": {AttrPath: "app", Ref: FlakeRef{Type: "tarball", URL: "http://example.com/%23.tar#app"}},
+	}
+
+	for installable, want := range cases {
+		t.Run(installable, func(t *testing.T) {
+			got, err := ParseFlakeInstallable(installable)
+			if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(FlakeRef{}, FlakeInstallable{})); diff != "" {
+				if err != nil {
+					t.Errorf("got error: %s", err)
+				}
+				t.Errorf("wrong installable (-want +got):\n%s", diff)
+			}
+			if err != nil {
+				return
+			}
+			if installable != got.String() {
+				t.Errorf("got.String() = %q != %q", got, installable)
+			}
+		})
+	}
+}
+
+func TestFlakeInstallableDefaultOutputs(t *testing.T) {
+	install := FlakeInstallable{Outputs: nil}
+	if !install.DefaultOutputs() {
+		t.Errorf("DefaultOutputs() = false for nil outputs slice, want true")
+	}
+
+	install = FlakeInstallable{Outputs: []string{}}
+	if !install.DefaultOutputs() {
+		t.Errorf("DefaultOutputs() = false for empty outputs slice, want true")
+	}
+
+	install = FlakeInstallable{Outputs: []string{"out"}}
+	if install.DefaultOutputs() {
+		t.Errorf("DefaultOutputs() = true for %v, want false", install.Outputs)
+	}
+}
+
+func TestFlakeInstallableAllOutputs(t *testing.T) {
+	install := FlakeInstallable{Outputs: []string{"*"}}
+	if !install.AllOutputs() {
+		t.Errorf("AllOutputs() = false for %v, want true", install.Outputs)
+	}
+	install = FlakeInstallable{Outputs: []string{"out", "*"}}
+	if !install.AllOutputs() {
+		t.Errorf("AllOutputs() = false for %v, want true", install.Outputs)
+	}
+	install = FlakeInstallable{Outputs: nil}
+	if install.AllOutputs() {
+		t.Errorf("AllOutputs() = true for nil outputs slice, want false")
+	}
+	install = FlakeInstallable{Outputs: []string{}}
+	if install.AllOutputs() {
+		t.Errorf("AllOutputs() = true for empty outputs slice, want false")
+	}
+}
