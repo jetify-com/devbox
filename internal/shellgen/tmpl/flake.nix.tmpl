@@ -45,7 +45,7 @@
           buildInputs = with pkgs; [
             {{- range $_, $flake := .FlakeInputs }}
             {{- range $flake.BuildInputs }}
-            {{.}}
+            {{.AttrPath}}
             {{- end }}
             {{- end }}
           ];
