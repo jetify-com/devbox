@@ -42,7 +42,7 @@
             {{- range $flake.Packages }}
             {{- if .PatchGlibc }}
             (final: prev: {
-              {{.PackageAttributePath}} = prev.{{.PackageAttributePath}};
+              {{.PackageAttributePath}} = (patchGlibc prev.{{.PackageAttributePath}});
             })
             {{- end }}
             {{- end }}
@@ -87,9 +87,7 @@
             {{- end }}
             {{- range .FlakeInputs }}
             {{- range .BuildInputs }}
-            {{ if .PatchGlibc -}} (patchGlibc {{ end -}}
             {{.AttrPath}}
-            {{- if .PatchGlibc -}} ) {{- end -}}
             {{- end }}
             {{- end }}
           ];
