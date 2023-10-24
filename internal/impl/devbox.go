@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"maps"
 	"os"
 	"os/exec"
@@ -30,7 +29,6 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/wrapnix"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -213,18 +211,6 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	env, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
-	}
-
-	// By default we always remove bin wrappers when using `run`. This env var is
-	// for testing. Once we completely remove bin wrappers we can remove this.
-	// It helps simulate shell using "run".
-	if includeBinWrappers, _ := strconv.ParseBool(
-		os.Getenv("DEVBOX_INCLUDE_BIN_WRAPPERS_IN_PATH"),
-	); !includeBinWrappers {
-		env["PATH"] = envpath.RemoveFromPath(
-			env["PATH"],
-			wrapnix.WrapperBinPath(d.projectDir),
-		)
 	}
 
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
@@ -1141,31 +1127,6 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
 	env["LD_LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
 	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
-}
-
-// nixBins returns the paths to all the nix binaries that are installed by
-// the flake. If there are conflicts, it returns the first one it finds of a
-// give name. This matches how nix flakes behaves if there are conflicts in
-// buildInputs
-func (d *Devbox) nixBins(env map[string]string) ([]string, error) {
-	dirs := strings.Split(env["buildInputs"], " ")
-	bins := map[string]string{}
-	for _, dir := range dirs {
-		binPath := filepath.Join(dir, "bin")
-		if _, err := os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
-			continue
-		}
-		files, err := os.ReadDir(binPath)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		for _, file := range files {
-			if _, alreadySet := bins[file.Name()]; !alreadySet {
-				bins[file.Name()] = filepath.Join(binPath, file.Name())
-			}
-		}
-	}
-	return lo.Values(bins), nil
 }
 
 func (d *Devbox) projectDirHash() string {

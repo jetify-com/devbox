@@ -25,7 +25,6 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 // packages.go has functions for adding, removing and getting info about nix
@@ -256,30 +255,8 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	// Use the printDevEnvCache if we are adding or removing or updating any package,
-	// AND we are not in the shellenv-enabled environment of the current devbox-project.
-	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
-	nixEnv, err := d.computeNixEnv(ctx, usePrintDevEnvCache)
-	if err != nil {
-		return err
-	}
-
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
-
-	nixBins, err := d.nixBins(nixEnv)
-	if err != nil {
-		return err
-	}
-
-	if err := wrapnix.CreateWrappers(ctx, wrapnix.CreateWrappersArgs{
-		NixBins:         nixBins,
-		ProjectDir:      d.projectDir,
-		ShellEnvHash:    nixEnv[d.shellEnvHashKey()],
-		ShellEnvHashKey: d.shellEnvHashKey(),
-	}); err != nil {
-		return err
-	}
 
 	// Update lockfile with new packages that are not to be installed
 	for _, pkg := range d.configPackages() {
