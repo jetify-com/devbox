@@ -169,11 +169,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
 	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
@@ -193,7 +188,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 
 	opts := []ShellOption{
 		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
-		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),

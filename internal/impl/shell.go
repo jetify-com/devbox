@@ -59,10 +59,7 @@ type DevboxShell struct {
 	userShellrcPath string
 
 	hooksFilePath string
-
-	// profileDir is the absolute path to the directory storing the nix-profile
-	profileDir  string
-	historyFile string
+	historyFile   string
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime time.Time
@@ -172,12 +169,6 @@ func initShellBinaryFields(path string) *DevboxShell {
 		shell.name = shUnknown
 	}
 	return shell
-}
-
-func WithProfile(profileDir string) ShellOption {
-	return func(s *DevboxShell) {
-		s.profileDir = profileDir
-	}
 }
 
 func WithHistoryFile(historyFile string) ShellOption {
