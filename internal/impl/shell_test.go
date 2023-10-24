@@ -69,7 +69,6 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 				projectDir:      "path/to/projectDir",
 				userShellrcPath: test.shellrcPath,
 				hooksFilePath:   test.hooksFilePath,
-				profileDir:      "./.devbox/profile",
 			}
 			gotPath, err := s.writeDevboxShellrc()
 			if err != nil {
