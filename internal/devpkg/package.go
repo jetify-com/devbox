@@ -270,7 +270,7 @@ func (p *Package) FullPackageAttributePath() (string, error) {
 }
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
-// search. This is useful for comparing different attribute paths that may
+// lookupNixInfo. This is useful for comparing different attribute paths that may
 // point to the same package. Note, it may be an expensive call.
 func (p *Package) NormalizedPackageAttributePath() (string, error) {
 	if p.normalizedPackageAttributePathCache != "" {
@@ -284,24 +284,7 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 	return p.normalizedPackageAttributePathCache, nil
 }
 
-// search attempts to find the package in the local nixpkgs. It may be an expensive
-// call, if it is has not been cached.
-func (p *Package) search(query string) (map[string]*nix.Info, error) {
-	if p.IsDevboxPackage() {
-		if strings.HasPrefix(query, "runx:") {
-			// TODO implement runx search
-			return map[string]*nix.Info{}, nil
-		}
-		// This will be slow if its the first time on the user's machine that this
-		// query is running. Otherwise, it will be cached and fast.
-		return nix.SearchNixpkgsAttribute(query)
-	}
-
-	// fallback to the slow but generalized nix.Search
-	return nix.Search(query)
-}
-
-// normalizePackageAttributePath calls nix search to find the normalized attribute
+// normalizePackageAttributePath calls nix lookupNixInfo to find the normalized attribute
 // path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
@@ -319,11 +302,24 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		query = p.String()
 	}
 
-	// We prefer search over just trying to parse the package's "URL" because search will
-	// guarantee that the package exists for the current system.
-	infos, err := p.search(query)
-	if err != nil {
-		return "", err
+	// We prefer nix.Search over just trying to parse the package's "URL" because
+	// nix.Search will guarantee that the package exists for the current system.
+	var infos map[string]*nix.Info
+	var err error
+	if p.IsDevboxPackage() && !p.IsRunX() {
+		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
+		// use a nix.Search cache.
+		//
+		// This will be slow if its the first time on the user's machine that this
+		// query is running. Otherwise, it will be cached and fast.
+		if infos, err = nix.SearchNixpkgsAttribute(query); err != nil {
+			return "", err
+		}
+	} else {
+		// fallback to the slow but generalized nix.Search
+		if infos, err = nix.Search(query); err != nil {
+			return "", err
+		}
 	}
 
 	if len(infos) == 1 {

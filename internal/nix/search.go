@@ -1,16 +1,18 @@
 package nix
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetpack.io/pkg/filecache"
 )
 
 var (
@@ -32,6 +34,11 @@ func (i *Info) String() string {
 }
 
 func Search(url string) (map[string]*Info, error) {
+	if strings.HasPrefix(url, "runx:") {
+		// TODO implement runx search. Also, move this check outside this function: nix package
+		// should not be handling runx logic.
+		return map[string]*Info{}, nil
+	}
 	return searchSystem(url, "" /* system */)
 }
 
@@ -105,19 +112,11 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	return parseSearchResults(out), nil
 }
 
-// searchSystemCache is a machine-wide cache of search results. It is shared by all
-// Devbox projects on the current machine. It is stored in the XDG cache directory.
-type searchSystemCache struct {
-	QueryToInfo map[string]map[string]*Info `json:"query_to_info"`
+type CachedSearchResult struct {
+	Results map[string]*Info `json:"results"`
+	// Query is added easier to grep for debuggability
+	Query string `json:"query"`
 }
-
-const (
-	// searchSystemCacheSubDir is a sub-directory of the XDG cache directory
-	searchSystemCacheSubDir   = "devbox/nix"
-	searchSystemCacheFileName = "search-system-cache.json"
-)
-
-var cache = searchSystemCache{}
 
 // SearchNixpkgsAttribute is a wrapper around searchSystem that caches results.
 // NOTE: we should be very conservative in where we use this function. `nix search`
@@ -126,63 +125,64 @@ var cache = searchSystemCache{}
 // once `nix search` returns a valid result, it will always be the very same result.
 // Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
 func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
-	if cache.QueryToInfo == nil {
-		contents, err := readSearchSystemCacheFile()
-		if err != nil {
+	key := cacheKey(query)
+
+	// Check if the query was already cached, and return the result if so
+	cache := filecache.New("devbox/nix", filecache.WithCacheDir(xdg.CacheSubpath("")))
+	if cachedResults, err := cache.Get(key); err == nil {
+		var results map[string]*Info
+		if err := json.Unmarshal(cachedResults, &results); err != nil {
 			return nil, err
 		}
-		cache.QueryToInfo = contents
+		return results, nil
+	} else if !filecacheNeedsUpdate(err) {
+		return nil, err // genuine error
 	}
 
-	if result := cache.QueryToInfo[query]; result != nil {
-		return result, nil
-	}
-
-	info, err := searchSystem(query, "" /*system*/)
+	// If not cached, or an update is needed, then call searchSystem
+	infos, err := searchSystem(query, "" /*system*/)
 	if err != nil {
 		return nil, err
 	}
 
-	cache.QueryToInfo[query] = info
-	if err := writeSearchSystemCacheFile(cache.QueryToInfo); err != nil {
+	// Save the results to the cache
+	marshalled, err := json.Marshal(infos)
+	if err != nil {
+		return nil, err
+	}
+	// TODO savil: add a SetForever API that does not expire. Time based expiration is not needed here
+	// because we're caching results that are guaranteed to be stable.
+	// TODO savil: Make filecache.cache a public struct so it can be passed into other functions
+	const oneYear = 12 * 30 * 24 * time.Hour
+	if err := cache.Set(key, marshalled, oneYear); err != nil {
 		return nil, err
 	}
 
-	return info, nil
+	return infos, nil
 }
 
-func readSearchSystemCacheFile() (map[string]map[string]*Info, error) {
-	contents, err := os.ReadFile(xdg.CacheSubpath(filepath.Join(searchSystemCacheSubDir, searchSystemCacheFileName)))
-	if err != nil {
-		if os.IsNotExist(err) {
-			// If the file doesn't exist, return an empty map. This will hopefully be filled and written to disk later.
-			return make(map[string]map[string]*Info), nil
-		}
-		return nil, err
-	}
-
-	var result map[string]map[string]*Info
-	if err := json.Unmarshal(contents, &result); err != nil {
-		return nil, err
-	}
-	return result, nil
+// read as: filecache.NeedsUpdate(err)
+// TODO savil: this should be implemented in the filecache package
+func filecacheNeedsUpdate(err error) bool {
+	return errors.Is(err, filecache.NotFound) || errors.Is(err, filecache.Expired)
 }
 
-func writeSearchSystemCacheFile(contents map[string]map[string]*Info) error {
-	// Print as a human-readable JSON file i.e. use nice indentation and newlines.
-	buf := bytes.Buffer{}
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", "  ")
-	err := enc.Encode(contents)
-	if err != nil {
-		return err
+// cacheKey sanitizes the search query to be a valid unix filename.
+// This cache key is used as the filename to store the cache value, and having a
+// representation of the query is important for debuggability.
+func cacheKey(input string) string {
+	// Replace disallowed characters with underscores.
+	re := regexp.MustCompile(`[:/#+]`)
+	sanitized := re.ReplaceAllString(input, "_")
+
+	// Remove any remaining invalid characters.
+	sanitized = regexp.MustCompile(`[^\w\.-]`).ReplaceAllString(sanitized, "")
+
+	// Ensure the filename doesn't exceed the maximum length.
+	const maxLen = 255
+	if len(sanitized) > maxLen {
+		sanitized = sanitized[:maxLen]
 	}
 
-	dir := xdg.CacheSubpath(searchSystemCacheSubDir)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-
-	path := filepath.Join(dir, searchSystemCacheFileName)
-	return os.WriteFile(path, buf.Bytes(), 0o644)
+	return sanitized
 }
