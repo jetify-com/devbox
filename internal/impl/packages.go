@@ -240,10 +240,6 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		}
 	}
 
-	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
-		return err
-	}
-
 	if err := d.InstallRunXPackages(ctx); err != nil {
 		return err
 	}
@@ -261,6 +257,14 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
 	nixEnv, err := d.computeNixEnv(ctx, usePrintDevEnvCache)
 	if err != nil {
+		return err
+	}
+
+	profile, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+	if err := syncFlakeToProfile(ctx, d.flakeDir(), profile); err != nil {
 		return err
 	}
 
