@@ -270,7 +270,7 @@ func (p *Package) FullPackageAttributePath() (string, error) {
 }
 
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
-// lookupNixInfo. This is useful for comparing different attribute paths that may
+// search. This is useful for comparing different attribute paths that may
 // point to the same package. Note, it may be an expensive call.
 func (p *Package) NormalizedPackageAttributePath() (string, error) {
 	if p.normalizedPackageAttributePathCache != "" {
@@ -284,7 +284,7 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 	return p.normalizedPackageAttributePathCache, nil
 }
 
-// normalizePackageAttributePath calls nix lookupNixInfo to find the normalized attribute
+// normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string

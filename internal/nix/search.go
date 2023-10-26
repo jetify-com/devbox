@@ -118,6 +118,12 @@ type CachedSearchResult struct {
 	Query string `json:"query"`
 }
 
+var allowableQuery = regexp.MustCompile("^github:NixOS/nixpkgs/[0-9a-f]{40}#[^#]+$")
+
+func isAllowableQuery(query string) bool {
+	return allowableQuery.MatchString(query)
+}
+
 // SearchNixpkgsAttribute is a wrapper around searchSystem that caches results.
 // NOTE: we should be very conservative in where we use this function. `nix search`
 // accepts generalized `installable regex` as arguments but is slow. For certain
@@ -125,6 +131,10 @@ type CachedSearchResult struct {
 // once `nix search` returns a valid result, it will always be the very same result.
 // Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
 func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
+	if !isAllowableQuery(query) {
+		return nil, errors.Errorf("invalid query: %s, must match regex: %s", query, allowableQuery)
+	}
+
 	key := cacheKey(query)
 
 	// Check if the query was already cached, and return the result if so
@@ -170,10 +180,10 @@ func filecacheNeedsUpdate(err error) bool {
 // cacheKey sanitizes the search query to be a valid unix filename.
 // This cache key is used as the filename to store the cache value, and having a
 // representation of the query is important for debuggability.
-func cacheKey(input string) string {
+func cacheKey(query string) string {
 	// Replace disallowed characters with underscores.
-	re := regexp.MustCompile(`[:/#+]`)
-	sanitized := re.ReplaceAllString(input, "_")
+	re := regexp.MustCompile(`[:/#@+]`)
+	sanitized := re.ReplaceAllString(query, "_")
 
 	// Remove any remaining invalid characters.
 	sanitized = regexp.MustCompile(`[^\w\.-]`).ReplaceAllString(sanitized, "")
