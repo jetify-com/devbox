@@ -42,7 +42,7 @@ func findNixInPATH(env map[string]string) ([]string, error) {
 	return nixBinsInPath, nil
 }
 
-// Creates a symlink for devbox in .devbox/virtenv/.wrappers/bin
+// Creates a symlink for devbox in .devbox/bin
 // so that devbox can be available inside a pure shell
 func createDevboxSymlink(d *Devbox) error {
 	// Get absolute path for where devbox is called

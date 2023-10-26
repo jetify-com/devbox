@@ -224,11 +224,12 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 
 	// if mode is install or uninstall, then we need to update the nix-profile
 	// and lockfile, so we must continue below.
-	if mode == ensure {
-		// if mode is ensure, then we only continue if needed.
-		if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
-			return err
-		}
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
+	if err != nil {
+		return err
+	}
+	// if mode is ensure and we are up to date, then we can skip the rest
+	if mode == ensure && upToDate {
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
@@ -263,6 +264,17 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}
+	}
+
+	// If we're in a devbox shell (global or project), then the environment might
+	// be out of date after the user installs something. If have direnv active
+	// it should reload automatically so we don't need to refresh.
+	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
+		ux.Fwarning(
+			d.stderr,
+			"Your shell environment may be out of date. Run `%s` to update it.\n",
+			d.refreshCmdOrAlias(),
+		)
 	}
 
 	return d.lockfile.Save()

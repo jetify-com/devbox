@@ -244,9 +244,8 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
-// Install ensures that all the packages in the config are installed and
-// creates all wrappers, but does not run init hooks. It is used to power
-// devbox install cli command.
+// Install ensures that all the packages in the config are installed
+// but does not run init hooks. It is used to power devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
@@ -301,6 +300,8 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
+
+	envStr += "\n" + d.refreshAlias()
 
 	return envStr, nil
 }
@@ -849,7 +850,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	debug.Log("nix environment PATH is: %s", env)
 
 	// Add any vars defined in plugins.
-	// TODO: Now that we have bin wrappers, this may can eventually be removed.
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
@@ -861,7 +861,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	addEnvIfNotPreviouslySetByDevbox(env, pluginEnv)
 
 	env["PATH"] = envpath.JoinPathLists(
-		filepath.Join(d.projectDir, plugin.WrapperBinPath),
 		nix.ProfileBinPath(d.projectDir),
 		env["PATH"],
 	)
@@ -874,7 +873,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
-	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/.devbox/virtenv/.wrappers"
+	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
 	// Include env variables in devbox.json
 	configEnv, err := d.configEnvs(ctx, env)
@@ -1176,24 +1175,6 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		env["PATH"] = envpath.JoinPathLists(includedInPath...)
 	}
 	return env, nil
-}
-
-// ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
-func ExportifySystemPathWithoutWrappers() string {
-	path := []string{}
-	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
-		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
-		// we filter out bin-wrappers for devbox-global and devbox-project.
-		if !strings.Contains(p, plugin.WrapperBinPath) {
-			path = append(path, p)
-		}
-	}
-
-	envs := map[string]string{
-		"PATH": strings.Join(path, string(filepath.ListSeparator)),
-	}
-
-	return exportify(envs)
 }
 
 func (d *Devbox) PluginManager() *plugin.Manager {

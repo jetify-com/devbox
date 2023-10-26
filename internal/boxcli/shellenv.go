@@ -49,6 +49,8 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+	// NOTE: Preserve path stack is not used, but may be used in a direnv style shell hook.
+	// We could either remove until then, or just keep it until we implement hook.
 	command.Flags().BoolVar(
 		&flags.preservePathStack, "preserve-path-stack", false,
 		"Preserves existing PATH order if this project's environment is already in PATH. "+
@@ -57,8 +59,6 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
-
-	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
 
 	return command
 }
@@ -98,26 +98,4 @@ func shellEnvFunc(
 	}
 
 	return envStr, nil
-}
-
-func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
-	// Deprecated: will be removed after devbox 0.7.0
-	// Don't add deprecated field to avoid printing anything to stdout
-	command := &cobra.Command{
-		Use:     "only-path-without-wrappers",
-		Hidden:  true,
-		Short:   "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: ensureNixInstalled,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			s := shellEnvOnlyPathWithoutWrappersFunc()
-			fmt.Fprintln(cmd.OutOrStdout(), s)
-			return nil
-		},
-	}
-	return command
-}
-
-func shellEnvOnlyPathWithoutWrappersFunc() string {
-	return devbox.ExportifySystemPathWithoutWrappers()
 }
