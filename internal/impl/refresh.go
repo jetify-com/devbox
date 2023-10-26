@@ -3,10 +3,11 @@ package impl
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func (d *Devbox) IsDirenvActive() bool {
-	return os.Getenv("DIRENV_DIR") == d.projectDir
+	return strings.TrimPrefix(os.Getenv("DIRENV_DIR"), "-") == d.projectDir
 }
 
 func (d *Devbox) isRefreshAliasSet() bool {
