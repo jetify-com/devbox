@@ -14,7 +14,7 @@ Before contributing, please consult our [Contributing Guide](https://github.com/
 
 ## Creating a Plugin
 
-We recommend organizing your plugin with the following directory structure, where the top-level folder matches the name of your plugin: 
+We recommend organizing your plugin with the following directory structure, where the top-level folder matches the name of your plugin:
 
 ```
 my-plugin/
@@ -98,12 +98,6 @@ The name of your plugin. This is used to identify your plugin when a user runs `
 
 The version of your plugin. You should start your version at 0.0.1 and bump it whenever you merge an update to the plugin.
 
-#### `match` *string*
-
-A regex expression that is used to identify when the plugin will be activated. Devbox will activate your plugin when a package installed with `devbox add` matches this regular expression.
-
-The regex you provide should match a package name to automatically update. You can look up packages at `nixhub.io`
-
 #### `readme` *string*
 
 Special usage instructions or notes to display when your plugin activates or when a user runs `devbox info`. You do not need to document variables, helper files, or services, since these are automatically printed when a user runs `devbox info`.
@@ -128,7 +122,7 @@ You should use this to copy starter config files or templates needed to run the 
 
 #### `shell.init_hook` *string | string[]*
 
-A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. 
+A single `bash` command or list of `bash` commands that should run before the user's shell is initialized.
 
 This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
 
@@ -145,7 +139,7 @@ See the process compose [docs](https://github.com/F1bonacc1/process-compose) for
 Testing plugins can be done using an example Devbox project. Follow the steps below to create a new test project
 
 1. Create a new `devbox.json` in an empty directory using `devbox init`.
-2. Add your plugin to the `include` section of the `devbox.json` file. 
+2. Add your plugin to the `include` section of the `devbox.json` file.
 2. Add any expected packages using `devbox add <pkg>`.
 3. Check that your plugin creates the correct files and environment variables when running `devbox shell`
 4. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
@@ -153,7 +147,7 @@ Testing plugins can be done using an example Devbox project. Follow the steps be
 
 ## Example: MongoDB
 
-The plugin.json below sets the environment variables and config needed to run MongoDB in Devbox. You can view the full example at 
+The plugin.json below sets the environment variables and config needed to run MongoDB in Devbox. You can view the full example at
 
 ```json
 {

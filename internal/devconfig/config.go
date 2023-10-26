@@ -4,6 +4,7 @@
 package devconfig
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -87,7 +88,8 @@ func DefaultConfig() *Config {
 }
 
 func (c *Config) Bytes() []byte {
-	return c.ast.root.Pack()
+	b := c.ast.root.Pack()
+	return bytes.ReplaceAll(b, []byte("\t"), []byte("  "))
 }
 
 func (c *Config) Hash() (string, error) {
