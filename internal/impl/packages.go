@@ -273,7 +273,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		ux.Fwarning(
 			d.stderr,
 			"Your shell environment may be out of date. Run `%s` to update it.\n",
-			d.refreshCmdOrAlias(),
+			d.refreshAliasOrCommand(),
 		)
 	}
 

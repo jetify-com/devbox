@@ -26,7 +26,7 @@ func (d *Devbox) isGlobal() bool {
 // In some cases (e.g. 2 projects somehow active at the same time),
 // refresh might not match. This is a tiny edge case, so no need to make UX
 // great, we just print out the entire command.
-func (d *Devbox) refreshCmdOrAlias() string {
+func (d *Devbox) refreshAliasOrCommand() string {
 	if !d.isRefreshAliasSet() {
 		return d.refreshCmd()
 	}
