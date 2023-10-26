@@ -49,8 +49,6 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
-	// NOTE: Preserve path stack is not used, but may be used in a direnv style shell hook.
-	// We could either remove until then, or just keep it until we implement hook.
 	command.Flags().BoolVar(
 		&flags.preservePathStack, "preserve-path-stack", false,
 		"Preserves existing PATH order if this project's environment is already in PATH. "+

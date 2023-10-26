@@ -40,9 +40,9 @@ func (d *Devbox) refreshAliasName() string {
 }
 
 func (d *Devbox) refreshCmd() string {
-	devboxCmd := fmt.Sprintf("shellenv -c %s", d.projectDir)
+	devboxCmd := fmt.Sprintf("shellenv --preserve-path-stack -c %s", d.projectDir)
 	if d.isGlobal() {
-		devboxCmd = "global shellenv -r"
+		devboxCmd = "global shellenv --preserve-path-stack -r"
 	}
 	if os.Getenv("SHELL") == "fish" {
 		return fmt.Sprintf(`eval (devbox %s  | string collect)`, devboxCmd)
