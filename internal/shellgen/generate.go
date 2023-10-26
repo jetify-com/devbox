@@ -51,6 +51,15 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 
+	if plan.needsGlibcPatch() {
+		patch, err := newGlibcPatchFlake(devbox.Config().NixPkgsCommitHash(), plan.Packages)
+		if err != nil {
+			return redact.Errorf("generate glibc patch flake: %v", err)
+		}
+		if err := patch.writeTo(filepath.Join(FlakePath(devbox), "glibc-patch")); err != nil {
+			return redact.Errorf("write glibc patch flake to directory: %v", err)
+		}
+	}
 	err = makeFlakeFile(devbox, outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
@@ -184,13 +193,6 @@ func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
 	err := writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
 	if err != nil {
 		return errors.WithStack(err)
-	}
-
-	if plan.PatchGlibc() {
-		err := writeGlibcPatchScript(filepath.Join(flakeDir, "glibc-patch.bash"))
-		if err != nil {
-			return err
-		}
 	}
 
 	if !isProjectInGitRepo(outPath) {

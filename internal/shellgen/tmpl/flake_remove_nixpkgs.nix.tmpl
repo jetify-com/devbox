@@ -7,10 +7,6 @@
      {{- range .FlakeInputs }}
      {{.Name}}.url = "{{.URLWithCaching}}";
      {{- end }}
-
-     {{- if .PatchGlibc }}
-     nixpkgs-unstable.url = "nixpkgs";
-     {{- end }}
    };
 
    outputs = {
@@ -18,9 +14,6 @@
      nixpkgs,
      {{- range .FlakeInputs }}
      {{.Name}},
-     {{- end }}
-     {{- if .PatchGlibc }}
-     nixpkgs-unstable,
      {{- end }}
    }:
       let
@@ -37,57 +30,25 @@
             {{- end }}
             {{- end }}
           ];
-
-          overlays = [
-            {{- range $flake.Packages }}
-            {{- if .PatchGlibc }}
-            (final: prev: {
-              {{.PackageAttributePath}} = (patchGlibc prev.{{.PackageAttributePath}});
-            })
-            {{- end }}
-            {{- end }}
-          ];
         });
         {{- end }}
         {{- end }}
-
-	{{ if .PatchGlibc -}}
-        patchGlibc = pkg: derivation {
-          name = "devbox-patched-glibc";
-          system = "{{.System}}";
-
-          # Set these attributes so that glibc-patch.bash has access to their
-          # paths via environment variables of the same name.
-          inherit pkg;
-          glibc = nixpkgs.legacyPackages."{{.System}}".glibc;
-          coreutils = nixpkgs.legacyPackages."{{.System}}".coreutils;
-          file = nixpkgs.legacyPackages."{{.System}}".file;
-          findutils = nixpkgs.legacyPackages."{{.System}}".findutils;
-          patchelf = nixpkgs.legacyPackages."{{.System}}".patchelf;
-          ripgrep = nixpkgs.legacyPackages."{{.System}}".ripgrep;
-
-          builder = "${nixpkgs-unstable.legacyPackages.{{.System}}.bash}/bin/bash";
-          args = [ ./glibc-patch.bash ];
-        };
-        {{ end }}
       in
       {
         devShells.{{ .System }}.default = pkgs.mkShell {
           buildInputs = [
             {{- range .Packages }}
-            {{ if .IsInBinaryCache -}}
-            {{ if .PatchGlibc -}} (patchGlibc {{ end -}}
+            {{ if and .IsInBinaryCache (not .PatchGlibc) -}}
             (builtins.fetchClosure {
               fromStore = "{{ $.BinaryCache }}";
               fromPath = "{{ .InputAddressedPath }}";
               inputAddressed = true;
             })
-            {{- if .PatchGlibc -}} ) {{- end -}}
             {{- end }}
             {{- end }}
             {{- range .FlakeInputs }}
             {{- range .BuildInputs }}
-            {{.AttrPath}}
+            {{.}}
             {{- end }}
             {{- end }}
           ];
