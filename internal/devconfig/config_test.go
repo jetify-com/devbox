@@ -21,11 +21,11 @@ with weird indentation.
 
 Tests begin by defining their JSON with:
 
-	in, want := parseConfigTxtarTest(t, `an optional comment that will be logged with t.Log
-	-- in --
-	{ }
-	-- want --
-	{ "packages": { "go": "latest" } }`)
+  in, want := parseConfigTxtarTest(t, `an optional comment that will be logged with t.Log
+  -- in --
+  { }
+  -- want --
+  { "packages": { "go": "latest" } }`)
 */
 
 func parseConfigTxtarTest(t *testing.T, test string) (in *Config, want []byte) {
@@ -93,9 +93,9 @@ func TestAddPackageEmptyConfig(t *testing.T) {
 {}
 -- want --
 {
-	"packages": {
-		"go": "latest"
-	}
+  "packages": {
+    "go": "latest"
+  }
 }`)
 
 	in.Packages.Add("go@latest")
@@ -115,9 +115,9 @@ func TestAddPackageEmptyConfigWhitespace(t *testing.T) {
 }
 -- want --
 {
-	"packages": {
-		"go": "latest"
-	}
+  "packages": {
+    "go": "latest"
+  }
 }`)
 
 	in.Packages.Add("go@latest")
@@ -137,9 +137,9 @@ func TestAddPackageEmptyConfigComment(t *testing.T) {
 -- want --
 // Comment
 {
-	"packages": {
-		"go": "latest",
-	},
+  "packages": {
+    "go": "latest",
+  },
 }`)
 
 	in.Packages.Add("go@latest")
@@ -157,9 +157,9 @@ func TestAddPackageNull(t *testing.T) {
 { "packages": null }
 -- want --
 {
-	"packages": {
-		"go": "latest"
-	}
+  "packages": {
+    "go": "latest"
+  }
 }`)
 
 	in.Packages.Add("go@latest")
@@ -175,16 +175,16 @@ func TestAddPackageObject(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": {
-		"go": "latest"
-	}
+  "packages": {
+    "go": "latest"
+  }
 }
 -- want --
 {
-	"packages": {
-		"go":     "latest",
-		"python": "3.10"
-	}
+  "packages": {
+    "go":     "latest",
+    "python": "3.10"
+  }
 }`)
 
 	in.Packages.Add("python@3.10")
@@ -200,18 +200,18 @@ func TestAddPackageObjectComment(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": {
-		// Package comment
-		"go": "latest"
-	}
+  "packages": {
+    // Package comment
+    "go": "latest"
+  }
 }
 -- want --
 {
-	"packages": {
-		// Package comment
-		"go":     "latest",
-		"python": "3.10",
-	},
+  "packages": {
+    // Package comment
+    "go":     "latest",
+    "python": "3.10",
+  },
 }`)
 
 	in.Packages.Add("python@3.10")
@@ -227,11 +227,11 @@ func TestAddPackageEmptyArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": []
+  "packages": []
 }
 -- want --
 {
-	"packages": ["go@latest"]
+  "packages": ["go@latest"]
 }`)
 
 	in.Packages.Add("go@latest")
@@ -247,14 +247,14 @@ func TestAddPackageOneLineArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": ["go"]
+  "packages": ["go"]
 }
 -- want --
 {
-	"packages": [
-		"go",
-		"python@3.10"
-	]
+  "packages": [
+    "go",
+    "python@3.10"
+  ]
 }`)
 
 	in.Packages.Add("python@3.10")
@@ -270,16 +270,16 @@ func TestAddPackageMultiLineArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": [
-		"go"
-	]
+  "packages": [
+    "go"
+  ]
 }
 -- want --
 {
-	"packages": [
-		"go",
-		"python@3.10"
-	]
+  "packages": [
+    "go",
+    "python@3.10"
+  ]
 }`)
 
 	in.Packages.Add("python@3.10")
@@ -295,24 +295,24 @@ func TestAddPackageArrayComments(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": [
-		// Go package comment
-		"go",
+  "packages": [
+    // Go package comment
+    "go",
 
-		// Python package comment
-		"python@3.10"
-	]
+    // Python package comment
+    "python@3.10"
+  ]
 }
 -- want --
 {
-	"packages": [
-		// Go package comment
-		"go",
+  "packages": [
+    // Go package comment
+    "go",
 
-		// Python package comment
-		"python@3.10",
-		"hello@latest",
-	],
+    // Python package comment
+    "python@3.10",
+    "hello@latest",
+  ],
 }`)
 
 	in.Packages.Add("hello@latest")
@@ -328,16 +328,16 @@ func TestRemovePackageObject(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": {
-		"go": "latest",
-		"python": "3.10"
-	}
+  "packages": {
+    "go": "latest",
+    "python": "3.10"
+  }
 }
 -- want --
 {
-	"packages": {
-		"python": "3.10"
-	}
+  "packages": {
+    "python": "3.10"
+  }
 }`)
 
 	in.Packages.Remove("go@latest")
@@ -353,15 +353,15 @@ func TestRemovePackageLastMember(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"env": {"NAME": "value"},
-	"packages": {
-		"go": "latest"
-	}
+  "env": {"NAME": "value"},
+  "packages": {
+    "go": "latest"
+  }
 }
 -- want --
 {
-	"env":      {"NAME": "value"},
-	"packages": {}
+  "env":      {"NAME": "value"},
+  "packages": {}
 }`)
 
 	in.Packages.Remove("go@latest")
@@ -377,11 +377,11 @@ func TestRemovePackageArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": ["go@latest", "python@3.10"]
+  "packages": ["go@latest", "python@3.10"]
 }
 -- want --
 {
-	"packages": ["python@3.10"]
+  "packages": ["python@3.10"]
 }`)
 
 	in.Packages.Remove("go@latest")
@@ -397,17 +397,17 @@ func TestRemovePackageLastElement(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": ["go@latest"],
-	"env": {
-		"NAME": "value"
-	}
+  "packages": ["go@latest"],
+  "env": {
+    "NAME": "value"
+  }
 }
 -- want --
 {
-	"packages": [],
-	"env": {
-		"NAME": "value"
-	}
+  "packages": [],
+  "env": {
+    "NAME": "value"
+  }
 }`)
 
 	in.Packages.Remove("go@latest")
@@ -423,47 +423,47 @@ func TestAddPlatforms(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": {
-		"go": {
-			"version": "1.20"
-		},
-		"python": {
-			"version": "3.10",
-			"platforms": [
-				"x86_64-linux"
-			]
-		},
-		"hello": {
-			"version": "latest",
-			"platforms": ["x86_64-linux"]
-		},
-		"vim": {
-			"version": "latest"
-		}
-	}
+  "packages": {
+    "go": {
+      "version": "1.20"
+    },
+    "python": {
+      "version": "3.10",
+      "platforms": [
+        "x86_64-linux"
+      ]
+    },
+    "hello": {
+      "version": "latest",
+      "platforms": ["x86_64-linux"]
+    },
+    "vim": {
+      "version": "latest"
+    }
+  }
 }
 -- want --
 {
-	"packages": {
-		"go": {
-			"version":   "1.20",
-			"platforms": ["aarch64-darwin", "x86_64-darwin"]
-		},
-		"python": {
-			"version": "3.10",
-			"platforms": [
-				"x86_64-linux",
-				"x86_64-darwin"
-			]
-		},
-		"hello": {
-			"version":   "latest",
-			"platforms": ["x86_64-linux", "x86_64-darwin"]
-		},
-		"vim": {
-			"version": "latest"
-		}
-	}
+  "packages": {
+    "go": {
+      "version":   "1.20",
+      "platforms": ["aarch64-darwin", "x86_64-darwin"]
+    },
+    "python": {
+      "version": "3.10",
+      "platforms": [
+        "x86_64-linux",
+        "x86_64-darwin"
+      ]
+    },
+    "hello": {
+      "version":   "latest",
+      "platforms": ["x86_64-linux", "x86_64-darwin"]
+    },
+    "vim": {
+      "version": "latest"
+    }
+  }
 }`)
 
 	err := in.Packages.AddPlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin", "x86_64-darwin"})
@@ -490,20 +490,20 @@ func TestAddPlatformsMigrateArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": ["go", "python@3.10", "hello"]
+  "packages": ["go", "python@3.10", "hello"]
 }
 -- want --
 {
-	"packages": {
-		"go": {
-			"platforms": ["aarch64-darwin"]
-		},
-		"python": {
-			"version":   "3.10",
-			"platforms": ["x86_64-darwin", "x86_64-linux"]
-		},
-		"hello": ""
-	}
+  "packages": {
+    "go": {
+      "platforms": ["aarch64-darwin"]
+    },
+    "python": {
+      "version":   "3.10",
+      "platforms": ["x86_64-darwin", "x86_64-linux"]
+    },
+    "hello": ""
+  }
 }`)
 
 	err := in.Packages.AddPlatforms(io.Discard, "go", []string{"aarch64-darwin"})
@@ -526,25 +526,25 @@ func TestAddPlatformsMigrateArrayComments(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": [
-		// Go comment
-		"go",
+  "packages": [
+    // Go comment
+    "go",
 
-		// Python comment
-		"python@3.10"
-	]
+    // Python comment
+    "python@3.10"
+  ]
 }
 -- want --
 {
-	"packages": {
-		// Go comment
-		"go": "",
-		// Python comment
-		"python": {
-			"version":   "3.10",
-			"platforms": ["x86_64-darwin", "x86_64-linux"],
-		},
-	},
+  "packages": {
+    // Go comment
+    "go": "",
+    // Python comment
+    "python": {
+      "version":   "3.10",
+      "platforms": ["x86_64-darwin", "x86_64-linux"],
+    },
+  },
 }`)
 
 	err := in.Packages.AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin", "x86_64-linux"})
@@ -563,20 +563,20 @@ func TestExcludePlatforms(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
 {
-	"packages": {
-		"go": {
-			"version": "1.20"
-		}
-	}
+  "packages": {
+    "go": {
+      "version": "1.20"
+    }
+  }
 }
 -- want --
 {
-	"packages": {
-		"go": {
-			"version":            "1.20",
-			"excluded_platforms": ["aarch64-darwin"]
-		}
-	}
+  "packages": {
+    "go": {
+      "version":            "1.20",
+      "excluded_platforms": ["aarch64-darwin"]
+    }
+  }
 }`)
 
 	err := in.Packages.ExcludePlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin"})

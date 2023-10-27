@@ -149,7 +149,11 @@ func initShellBinaryFields(path string) *DevboxShell {
 		shell.userShellrcPath = rcfilePath(".bashrc")
 	case "zsh":
 		shell.name = shZsh
-		shell.userShellrcPath = rcfilePath(".zshrc")
+		if zdotdir := os.Getenv("ZDOTDIR"); zdotdir != "" {
+			shell.userShellrcPath = filepath.Join(os.ExpandEnv(zdotdir), ".zshrc")
+		} else {
+			shell.userShellrcPath = rcfilePath(".zshrc")
+		}
 	case "ksh":
 		shell.name = shKsh
 		shell.userShellrcPath = rcfilePath(".kshrc")
@@ -348,14 +352,15 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 	// For now, we only need to do this for zsh shell
 	if s.name == shZsh {
-		// Useful explanation of zsh startup files: https://zsh.sourceforge.io/FAQ/zshfaq03.html#l20
-		filenames := []string{".zshenv", ".zprofile", ".zlogin"}
+		// List of zsh startup files: https://zsh.sourceforge.io/Intro/intro_3.html
+		filenames := []string{".zshenv", ".zprofile", ".zlogin", ".zlogout"}
 
 		// zim framework
 		// https://zimfw.sh/docs/install/
 		filenames = append(filenames, ".zimrc")
 
 		for _, filename := range filenames {
+			// The userShellrcPath should be set to ZDOTDIR already.
 			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
 			_, err := os.Stat(fileOld)
 			if errors.Is(err, fs.ErrNotExist) {
@@ -367,12 +372,11 @@ func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)
-
-			if err := os.Link(fileOld, fileNew); err == nil {
-				debug.Log("Linked shell startup file %s to %s", fileOld, fileNew)
-			} else {
+			cmd := exec.Command("cp", fileOld, fileNew)
+			if err := cmd.Run(); err != nil {
 				// This is a best-effort operation. If there's an error then log it for visibility but continue.
-				debug.Log("Error linking zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+				debug.Log("Error copying zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+				continue
 			}
 		}
 	}
