@@ -7,7 +7,7 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 )
 
-// FlakeRef is a parsed Nix flake reference. A flake reference is as subset of
+// FlakeRef is a parsed Nix flake reference. A flake reference is a subset of
 // the Nix CLI "installable" syntax. Installables may specify an attribute path
 // and derivation outputs with a flake reference using the '#' and '^' characters.
 // For example, the string "nixpkgs" and "./flake" are valid flake references,
@@ -38,7 +38,7 @@ type FlakeRef struct {
 	Rev string `json:"rev,omitempty"`
 	Ref string `json:"ref,omitempty"`
 
-	// Dir is non-empty when the directory containinig the flake.nix file is
+	// Dir is non-empty when the directory containing the flake.nix file is
 	// not at the flake root. It corresponds to the optional "dir" query
 	// parameter when Type is "github", "git", "tarball", or "file".
 	Dir string `json:"dir,omitempty"`
