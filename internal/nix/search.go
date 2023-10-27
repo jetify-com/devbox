@@ -112,17 +112,8 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	return parseSearchResults(out), nil
 }
 
-type CachedSearchResult struct {
-	Results map[string]*Info `json:"results"`
-	// Query is added easier to grep for debuggability
-	Query string `json:"query"`
-}
-
+// allowableQuery specifies the regex that queries for SearchNixpkgsAttribute must match.
 var allowableQuery = regexp.MustCompile("^github:NixOS/nixpkgs/[0-9a-f]{40}#[^#]+$")
-
-func isAllowableQuery(query string) bool {
-	return allowableQuery.MatchString(query)
-}
 
 // SearchNixpkgsAttribute is a wrapper around searchSystem that caches results.
 // NOTE: we should be very conservative in where we use this function. `nix search`
@@ -131,7 +122,7 @@ func isAllowableQuery(query string) bool {
 // once `nix search` returns a valid result, it will always be the very same result.
 // Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
 func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
-	if !isAllowableQuery(query) {
+	if !allowableQuery.MatchString(query) {
 		return nil, errors.Errorf("invalid query: %s, must match regex: %s", query, allowableQuery)
 	}
 
@@ -145,7 +136,7 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 			return nil, err
 		}
 		return results, nil
-	} else if !filecacheNeedsUpdate(err) {
+	} else if !filecacheIsCacheMiss(err) {
 		return nil, err // genuine error
 	}
 
@@ -171,9 +162,9 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 	return infos, nil
 }
 
-// read as: filecache.NeedsUpdate(err)
+// read as: filecache.IsCacheMiss(err)
 // TODO savil: this should be implemented in the filecache package
-func filecacheNeedsUpdate(err error) bool {
+func filecacheIsCacheMiss(err error) bool {
 	return errors.Is(err, filecache.NotFound) || errors.Is(err, filecache.Expired)
 }
 

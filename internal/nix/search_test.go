@@ -29,7 +29,7 @@ func TestSearchCacheKey(t *testing.T) {
 	}
 }
 
-func TestIsAllowableQuery(t *testing.T) {
+func TestAllowableQuery(t *testing.T) {
 	testCases := []struct {
 		in       string
 		expected bool
@@ -53,7 +53,7 @@ func TestIsAllowableQuery(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.in, func(t *testing.T) {
-			out := isAllowableQuery(testCase.in)
+			out := allowableQuery.MatchString(testCase.in)
 			if out != testCase.expected {
 				t.Errorf("got %t, want %t", out, testCase.expected)
 			}
