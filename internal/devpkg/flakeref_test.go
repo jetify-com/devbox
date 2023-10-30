@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestParseFlakeRef(t *testing.T) {
@@ -264,17 +263,80 @@ func TestParseFlakeInstallable(t *testing.T) {
 	for installable, want := range cases {
 		t.Run(installable, func(t *testing.T) {
 			got, err := ParseFlakeInstallable(installable)
-			if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(FlakeRef{}, FlakeInstallable{})); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				if err != nil {
 					t.Errorf("got error: %s", err)
 				}
 				t.Errorf("wrong installable (-want +got):\n%s", diff)
 			}
-			if err != nil {
-				return
-			}
-			if installable != got.String() {
-				t.Errorf("got.String() = %q != %q", got, installable)
+		})
+	}
+}
+
+func TestFlakeInstallableString(t *testing.T) {
+	cases := map[FlakeInstallable]string{
+		{}: "",
+
+		// No attribute or outputs.
+		{Ref: FlakeRef{Type: "path", Path: "."}}:          "path:.",
+		{Ref: FlakeRef{Type: "path", Path: "./flake"}}:    "path:flake",
+		{Ref: FlakeRef{Type: "path", Path: "/flake"}}:     "path:/flake",
+		{Ref: FlakeRef{Type: "indirect", ID: "indirect"}}: "flake:indirect",
+
+		// Attribute without outputs.
+		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "."}}:            "path:.#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./flake"}}:      "path:flake#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/flake"}}:       "path:/flake#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:    "flake:nixpkgs#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#my%23app",
+
+		// Attribute with single output.
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^out",
+
+		// Attribute with multiple outputs.
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^lib,out",
+
+		// Outputs are cleaned and sorted.
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "."}}:       "path:.#app^lib,out",
+		{AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: "path", Path: "./flake"}}: "path:flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,,", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^out",
+		{AttrPath: "app", Outputs: ",lib,out", Ref: FlakeRef{Type: "path", Path: "/flake"}}: "path:/flake#app^lib,out",
+		{AttrPath: "app", Outputs: ",", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:     "flake:nixpkgs#app",
+
+		// Wildcard replaces other outputs.
+		{AttrPath: "app", Outputs: "*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:     "flake:nixpkgs#app^*",
+		{AttrPath: "app", Outputs: "out,*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^*",
+		{AttrPath: "app", Outputs: ",*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:    "flake:nixpkgs#app^*",
+
+		// Outputs are not percent-encoded.
+		{AttrPath: "app", Outputs: "%", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:   "flake:nixpkgs#app^%",
+		{AttrPath: "app", Outputs: "/", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:   "flake:nixpkgs#app^/",
+		{AttrPath: "app", Outputs: "%2F", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^%2F",
+
+		// Missing or invalid fields.
+		{AttrPath: "app", Ref: FlakeRef{Type: "file", URL: ""}}:     "",
+		{AttrPath: "app", Ref: FlakeRef{Type: "git", URL: ""}}:      "",
+		{AttrPath: "app", Ref: FlakeRef{Type: "github", Owner: ""}}: "",
+		{AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: ""}}:  "",
+		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: ""}}:    "",
+		{AttrPath: "app", Ref: FlakeRef{Type: "tarball", URL: ""}}:  "",
+	}
+
+	for installable, want := range cases {
+		t.Run(want, func(t *testing.T) {
+			t.Logf("input = %#v", installable)
+			got := installable.String()
+			if got != want {
+				t.Errorf("got %#q, want %#q", got, want)
 			}
 		})
 	}

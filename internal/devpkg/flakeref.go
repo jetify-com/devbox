@@ -441,7 +441,6 @@ type FlakeInstallable struct {
 	Ref      FlakeRef
 	AttrPath string
 
-	raw     string
 	Outputs string
 }
 
@@ -455,7 +454,7 @@ func ParseFlakeInstallable(raw string) (FlakeInstallable, error) {
 
 	// The output spec must be parsed and removed first, otherwise it will
 	// be parsed as part of the flakeref's URL fragment.
-	install := FlakeInstallable{raw: raw}
+	install := FlakeInstallable{}
 	raw, install.Outputs = splitOutputSpec(raw)
 	install.Outputs = strings.Join(install.SplitOutputs(), ",") // clean the outputs
 
@@ -501,9 +500,34 @@ func (f FlakeInstallable) SplitOutputs() []string {
 	return split
 }
 
-// String returns the raw installable string as given to ParseFlakeInstallable.
+// String encodes the installable as a Nix command line argument. It normalizes
+// the result such that if two installable values are equal, then their strings
+// will also be equal.
+//
+// String always cleans the outputs spec as described by the Outputs field's
+// documentation. The same normalization rules from FlakeRef.String still apply.
 func (f FlakeInstallable) String() string {
-	return f.raw
+	str := f.Ref.String()
+	if str == "" {
+		return ""
+	}
+	if f.AttrPath != "" {
+		url, err := url.Parse(str)
+		if err != nil {
+			// This should never happen. Even an empty string is a
+			// valid URL.
+			panic("invalid URL from FlakeRef.String: " + str)
+		}
+		url.Fragment = f.AttrPath
+		str = url.String()
+	}
+	if f.Outputs != "" {
+		clean := strings.Join(f.SplitOutputs(), ",")
+		if clean != "" {
+			str += "^" + clean
+		}
+	}
+	return str
 }
 
 // splitOutputSpec cuts a flake installable around the last instance of ^.
