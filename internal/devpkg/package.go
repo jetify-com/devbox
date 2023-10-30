@@ -285,7 +285,7 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 }
 
 // normalizePackageAttributePath calls nix search to find the normalized attribute
-// path. It is an expensive call (~100ms).
+// path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
 	var query string
 	if p.IsDevboxPackage() {
@@ -302,11 +302,24 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		query = p.String()
 	}
 
-	// We prefer search over just trying to parse the URL because search will
-	// guarantee that the package exists for the current system.
-	infos, err := nix.Search(query)
-	if err != nil {
-		return "", err
+	// We prefer nix.Search over just trying to parse the package's "URL" because
+	// nix.Search will guarantee that the package exists for the current system.
+	var infos map[string]*nix.Info
+	var err error
+	if p.IsDevboxPackage() && !p.IsRunX() {
+		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
+		// use a nix.Search cache.
+		//
+		// This will be slow if its the first time on the user's machine that this
+		// query is running. Otherwise, it will be cached and fast.
+		if infos, err = nix.SearchNixpkgsAttribute(query); err != nil {
+			return "", err
+		}
+	} else {
+		// fallback to the slow but generalized nix.Search
+		if infos, err = nix.Search(query); err != nil {
+			return "", err
+		}
 	}
 
 	if len(infos) == 1 {

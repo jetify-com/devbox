@@ -44,6 +44,7 @@ type PrintDevEnvArgs struct {
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
 func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
+	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
 	var data []byte
