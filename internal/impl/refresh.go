@@ -41,18 +41,18 @@ func (d *Devbox) refreshAliasName() string {
 }
 
 func (d *Devbox) refreshCmd() string {
-	devboxCmd := fmt.Sprintf("shellenv --preserve-path-stack -c %s", d.projectDir)
+	devboxCmd := fmt.Sprintf("shellenv --preserve-path-stack -c %q", d.projectDir)
 	if d.isGlobal() {
 		devboxCmd = "global shellenv --preserve-path-stack -r"
 	}
-	if os.Getenv("SHELL") == "fish" {
+	if isFishShell() {
 		return fmt.Sprintf(`eval (devbox %s  | string collect)`, devboxCmd)
 	}
 	return fmt.Sprintf(`eval "$(devbox %s)" && hash -r`, devboxCmd)
 }
 
 func (d *Devbox) refreshAlias() string {
-	if os.Getenv("SHELL") == "fish" {
+	if isFishShell() {
 		return fmt.Sprintf(
 			`if not type %[1]s >/dev/null 2>&1
 	export %[2]s='%[3]s'

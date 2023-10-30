@@ -275,7 +275,7 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
 		if !upToDate {
 			cmd := `eval "$(devbox global shellenv --recompute)"`
-			if strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+			if isFishShell() {
 				cmd = `devbox global shellenv --recompute | source`
 			}
 			ux.Finfo(

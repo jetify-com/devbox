@@ -400,3 +400,7 @@ func filterPathList(pathList string, keep func(string) bool) string {
 	}
 	return strings.Join(filtered, string(filepath.ListSeparator))
 }
+
+func isFishShell() bool {
+	return filepath.Base(os.Getenv("SHELL")) == "fish"
+}
