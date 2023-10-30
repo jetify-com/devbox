@@ -107,17 +107,10 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 		// [flake:]<flake-id>(/<rev-or-ref>(/rev)?)?
 
 		parsed.Type = "indirect"
-
-		// "indirect" is parsed as a path, "flake:indirect" is parsed as
-		// opaque because it has a scheme.
-		path := refURL.Path
-		if path == "" {
-			path, err = url.PathUnescape(refURL.Opaque)
-			if err != nil {
-				path = refURL.Opaque
-			}
+		split, err := splitPathOrOpaque(refURL)
+		if err != nil {
+			return FlakeRef{}, "", redact.Errorf("parse flake reference URL path: %v", err)
 		}
-		split := strings.SplitN(path, "/", 3)
 		parsed.ID = split[0]
 		if len(split) > 1 {
 			if isGitHash(split[1]) {
@@ -136,7 +129,7 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 		if refURL.Path == "" {
 			parsed.Path, err = url.PathUnescape(refURL.Opaque)
 			if err != nil {
-				parsed.Path = refURL.Opaque
+				return FlakeRef{}, "", err
 			}
 		} else {
 			parsed.Path = refURL.Path
@@ -147,16 +140,20 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 		} else {
 			parsed.Type = "file"
 		}
-		parsed.URL = ref
 		parsed.Dir = refURL.Query().Get("dir")
+		parsed.URL = refURL.String()
 	case "tarball+http", "tarball+https", "tarball+file":
 		parsed.Type = "tarball"
 		parsed.Dir = refURL.Query().Get("dir")
-		parsed.URL = ref[8:] // remove tarball+
+
+		refURL.Scheme = refURL.Scheme[8:] // remove tarball+
+		parsed.URL = refURL.String()
 	case "file+http", "file+https", "file+file":
 		parsed.Type = "file"
 		parsed.Dir = refURL.Query().Get("dir")
-		parsed.URL = ref[5:] // remove file+
+
+		refURL.Scheme = refURL.Scheme[5:] // remove file+
+		parsed.URL = refURL.String()
 	case "git", "git+http", "git+https", "git+ssh", "git+git", "git+file":
 		parsed.Type = "git"
 		q := refURL.Query()
@@ -185,17 +182,10 @@ func parseGitHubFlakeRef(refURL *url.URL, parsed *FlakeRef) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
 	parsed.Type = "github"
-	path := refURL.Path
-	if path == "" {
-		var err error
-		path, err = url.PathUnescape(refURL.Opaque)
-		if err != nil {
-			path = refURL.Opaque
-		}
+	split, err := splitPathOrOpaque(refURL)
+	if err != nil {
+		return err
 	}
-	path = strings.TrimPrefix(path, "/")
-
-	split := strings.SplitN(path, "/", 3)
 	parsed.Owner = split[0]
 	parsed.Repo = split[1]
 	if len(split) > 2 {
@@ -357,6 +347,37 @@ func isArchive(path string) bool {
 		strings.HasSuffix(path, ".tar.zst") ||
 		strings.HasSuffix(path, ".tar.bz2") ||
 		strings.HasSuffix(path, ".zip")
+}
+
+// splitPathOrOpaque splits a URL path by '/'. If the path is empty, it splits
+// the opaque instead. Splitting happens before unescaping the path or opaque,
+// ensuring that path elements with an encoded '/' (%2F) are not split.
+// For example, "/dir/file%2Fname" becomes the elements "dir" and "file/name".
+func splitPathOrOpaque(u *url.URL) ([]string, error) {
+	upath := u.EscapedPath()
+	if upath == "" {
+		upath = u.Opaque
+	}
+	upath = strings.TrimSpace(upath)
+	if upath == "" {
+		return nil, nil
+	}
+
+	// We don't want an empty element if the path is rooted.
+	if upath[0] == '/' {
+		upath = upath[1:]
+	}
+	upath = path.Clean(upath)
+
+	var err error
+	split := strings.Split(upath, "/")
+	for i := range split {
+		split[i], err = url.PathUnescape(split[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return split, nil
 }
 
 // buildOpaquePath escapes and joins path elements for a URL flakeref. The
