@@ -149,17 +149,81 @@ func TestParseFlakeRef(t *testing.T) {
 	for ref, want := range cases {
 		t.Run(ref, func(t *testing.T) {
 			got, err := ParseFlakeRef(ref)
-			if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(FlakeRef{})); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				if err != nil {
 					t.Errorf("got error: %s", err)
 				}
 				t.Errorf("wrong flakeref (-want +got):\n%s", diff)
 			}
-			if err != nil {
-				return
-			}
-			if ref != got.String() {
-				t.Errorf("got.String() = %q != %q", got, ref)
+		})
+	}
+}
+
+func TestFlakeRefString(t *testing.T) {
+	cases := map[FlakeRef]string{
+		{}: "",
+
+		// Path references.
+		{Type: "path", Path: "."}:                "path:.",
+		{Type: "path", Path: "./"}:               "path:.",
+		{Type: "path", Path: "./flake"}:          "path:flake",
+		{Type: "path", Path: "./relative/flake"}: "path:relative/flake",
+		{Type: "path", Path: "/"}:                "path:/",
+		{Type: "path", Path: "/flake"}:           "path:/flake",
+		{Type: "path", Path: "/absolute/flake"}:  "path:/absolute/flake",
+
+		// Path references with escapes.
+		{Type: "path", Path: "%"}:                 "path:%25",
+		{Type: "path", Path: "/%2F"}:              "path:/%252F",
+		{Type: "path", Path: "./Ûñî©ôδ€/flake\n"}: "path:%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
+		{Type: "path", Path: "/Ûñî©ôδ€/flake\n"}:  "path:/%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
+
+		// Indirect references.
+		{Type: "indirect", ID: "indirect"}:                                                              "flake:indirect",
+		{Type: "indirect", ID: "indirect", Dir: "sub/dir"}:                                              "flake:indirect?dir=sub%2Fdir",
+		{Type: "indirect", ID: "indirect", Ref: "ref"}:                                                  "flake:indirect/ref",
+		{Type: "indirect", ID: "indirect", Ref: "my/ref"}:                                               "flake:indirect/my%2Fref",
+		{Type: "indirect", ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}:             "flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: "indirect", ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+
+		// GitHub references.
+		{Type: "github", Owner: "NixOS", Repo: "nix"}:                                                  "github:NixOS/nix",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"}:                                   "github:NixOS/nix/v1.2.3",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "my/ref"}:                                   "github:NixOS/nix/my%2Fref",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"}: "github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Dir: "sub/dir"}:                                  "github:NixOS/nix?dir=sub%2Fdir",
+		{Type: "github", Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:             "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
+
+		// Git references.
+		{Type: "git", URL: "git://example.com/repo/flake"}:     "git://example.com/repo/flake",
+		{Type: "git", URL: "https://example.com/repo/flake"}:   "git+https://example.com/repo/flake",
+		{Type: "git", URL: "ssh://git@example.com/repo/flake"}: "git+ssh://git@example.com/repo/flake",
+		{Type: "git", URL: "git:/repo/flake"}:                  "git:/repo/flake",
+		{Type: "git", URL: "file:///repo/flake"}:               "git+file:///repo/flake",
+		{Type: "git", URL: "ssh://git@example.com/repo/flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4"}:                               "git+ssh://git@example.com/repo/flake?ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: "git", URL: "ssh://git@example.com/repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}: "git+ssh://git@example.com/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: "git", URL: "git:repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}:                   "git:repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+
+		// Tarball references.
+		{Type: "tarball", URL: "http://example.com/flake"}:                  "tarball+http://example.com/flake",
+		{Type: "tarball", URL: "https://example.com/flake"}:                 "tarball+https://example.com/flake",
+		{Type: "tarball", URL: "https://example.com/flake", Dir: "sub/dir"}: "tarball+https://example.com/flake?dir=sub%2Fdir",
+		{Type: "tarball", URL: "file:///home/flake"}:                        "tarball+file:///home/flake",
+
+		// File URL references.
+		{Type: "file", URL: "file:///flake"}:                                              "file+file:///flake",
+		{Type: "file", URL: "http://example.com/flake"}:                                   "file+http://example.com/flake",
+		{Type: "file", URL: "http://example.com/flake.git"}:                               "file+http://example.com/flake.git",
+		{Type: "file", URL: "http://example.com/flake.tar?dir=sub%2Fdir", Dir: "sub/dir"}: "file+http://example.com/flake.tar?dir=sub%2Fdir",
+	}
+
+	for ref, want := range cases {
+		t.Run(want, func(t *testing.T) {
+			t.Logf("input = %#v", ref)
+			got := ref.String()
+			if got != want {
+				t.Errorf("got %#q, want %#q", got, want)
 			}
 		})
 	}
@@ -252,4 +316,20 @@ func TestFlakeInstallableAllOutputs(t *testing.T) {
 	if install.AllOutputs() {
 		t.Errorf("AllOutputs() = true for empty outputs slice, want false")
 	}
+}
+
+func TestBuildQueryString(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("wanted panic for odd-number of key-value parameters")
+		}
+	}()
+
+	// staticcheck impressively catches buildQueryString calls that have an
+	// odd number of parameters. Build the slice in a convoluted way to
+	// throw it off and suppress the warning (gopls doesn't have nolint
+	// directives).
+	var elems []string
+	elems = append(elems, "1")
+	buildQueryString(elems...)
 }
