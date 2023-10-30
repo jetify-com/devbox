@@ -3,6 +3,7 @@ package devpkg
 import (
 	"net/url"
 	"path"
+	"slices"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/redact"
@@ -407,6 +408,16 @@ func buildQueryString(keyval ...string) string {
 	return query.Encode()
 }
 
+// Special values for FlakeInstallable.Outputs.
+const (
+	// DefaultOutputs specifies that the package-defined default outputs
+	// should be installed.
+	DefaultOutputs = ""
+
+	// AllOutputs specifies that all package outputs should be installed.
+	AllOutputs = "*"
+)
+
 // FlakeInstallable is a Nix command line argument that specifies how to install
 // a flake. It can be a plain flake reference, or a flake reference with an
 // attribute path and/or output specification.
@@ -429,9 +440,9 @@ func buildQueryString(keyval ...string) string {
 type FlakeInstallable struct {
 	Ref      FlakeRef
 	AttrPath string
-	Outputs  []string
 
-	raw string
+	raw     string
+	Outputs string
 }
 
 // ParseFlakeInstallable parses a flake installable. The string s must contain a
@@ -445,11 +456,8 @@ func ParseFlakeInstallable(raw string) (FlakeInstallable, error) {
 	// The output spec must be parsed and removed first, otherwise it will
 	// be parsed as part of the flakeref's URL fragment.
 	install := FlakeInstallable{raw: raw}
-	before, after := splitOutputSpec(raw)
-	if after != "" {
-		install.Outputs = strings.Split(after, ",")
-	}
-	raw = before
+	raw, install.Outputs = splitOutputSpec(raw)
+	install.Outputs = strings.Join(install.SplitOutputs(), ",") // clean the outputs
 
 	// Interpret installables with path-style flakerefs as URLs to extract
 	// the attribute path (fragment). This means that path-style flakerefs
@@ -468,20 +476,29 @@ func ParseFlakeInstallable(raw string) (FlakeInstallable, error) {
 	return install, nil
 }
 
-// AllOutputs returns true if the installable specifies all outputs with the
-// "^*" syntax.
-func (f FlakeInstallable) AllOutputs() bool {
-	for _, out := range f.Outputs {
+// SplitOutputs splits and sorts the comma-separated list of outputs. It skips
+// any empty outputs. If one or more of the outputs is a "*", then the result
+// will be a slice with a single "*" element.
+func (f FlakeInstallable) SplitOutputs() []string {
+	if f.Outputs == "" {
+		return []string{}
+	}
+
+	split := strings.Split(f.Outputs, ",")
+	i := 0
+	for _, out := range split {
+		// A wildcard takes priority over any other outputs.
 		if out == "*" {
-			return true
+			return []string{"*"}
+		}
+		if out != "" {
+			split[i] = out
+			i++
 		}
 	}
-	return false
-}
-
-// DefaultOutputs returns true if the installable does not specify any outputs.
-func (f FlakeInstallable) DefaultOutputs() bool {
-	return len(f.Outputs) == 0
+	split = split[:i]
+	slices.Sort(split)
+	return split
 }
 
 // String returns the raw installable string as given to ParseFlakeInstallable.
