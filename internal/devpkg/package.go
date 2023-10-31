@@ -47,6 +47,10 @@ type Package struct {
 	//    example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
 	Raw string
 
+	// PatchGlibc applies a function to the package's derivation that
+	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
+	PatchGlibc bool
+
 	// isInstallable is true if the package may be enabled on the current platform.
 	isInstallable bool
 
@@ -65,8 +69,10 @@ func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
 
 func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
-	for _, pkg := range config.Packages.Collection {
-		result = append(result, newPackage(pkg.VersionedName(), pkg.IsEnabledOnPlatform(), l))
+	for _, cfgPkg := range config.Packages.Collection {
+		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
+		pkg.PatchGlibc = cfgPkg.PatchGlibc
+		result = append(result, pkg)
 	}
 	return result
 }

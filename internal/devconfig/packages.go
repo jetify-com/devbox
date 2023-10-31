@@ -189,6 +189,10 @@ type Package struct {
 
 	Platforms         []string `json:"platforms,omitempty"`
 	ExcludedPlatforms []string `json:"excluded_platforms,omitempty"`
+
+	// PatchGlibc applies a function to the package's derivation that
+	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
+	PatchGlibc bool `json:"patch_glibc,omitempty"`
 }
 
 func NewVersionOnlyPackage(name, version string) Package {

@@ -3,6 +3,7 @@
 
    inputs = {
      nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+
      {{- range .FlakeInputs }}
      {{.Name}}.url = "{{.URLWithCaching}}";
      {{- end }}
@@ -37,8 +38,8 @@
         devShells.{{ .System }}.default = pkgs.mkShell {
           buildInputs = [
             {{- range .Packages }}
-            {{- if .IsInBinaryCache }}
-            (builtins.fetchClosure{
+            {{ if and .IsInBinaryCache (not .PatchGlibc) -}}
+            (builtins.fetchClosure {
               fromStore = "{{ $.BinaryCache }}";
               fromPath = "{{ .InputAddressedPath }}";
               inputAddressed = true;

@@ -3,14 +3,17 @@ package shellgen
 import (
 	"context"
 	"runtime/trace"
+	"slices"
 	"strings"
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/nix"
 )
+
+const glibcPatchFlakeRef = "path:./glibc-patch"
 
 type flakeInput struct {
 	Name     string
@@ -54,6 +57,13 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 		if attributePathErr != nil {
 			err = attributePathErr
 		}
+		if pkg.PatchGlibc {
+			// When the package comes from the glibc flake, the
+			// "legacyPackages" portion of the attribute path
+			// becomes just "packages" (matching the standard flake
+			// output schema).
+			return strings.Replace(attributePath, "legacyPackages", "packages", 1)
+		}
 		return attributePath
 	})
 	if err != nil {
@@ -77,48 +87,71 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 // i.e. have a commit hash and always resolve to the same package/version.
 // Note: inputs returned by this function include plugin packages. (php only for now)
 // It's not entirely clear we always want to add plugin packages to the top level
-func flakeInputs(ctx context.Context, packages []*devpkg.Package) []*flakeInput {
+func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
-	// Use the verbose name flakeInputs to distinguish from `inputs`
-	// which refer to `nix.Input` in most of the codebase.
-	flakeInputs := map[string]*flakeInput{}
-
-	packages = lo.Filter(packages, func(item *devpkg.Package, _ int) bool {
-		// Non nix packages (e.g. runx) don't belong in the flake
-		if !item.IsNix() {
-			return false
-		}
-
-		// Include packages (like local or remote flakes) that cannot be
-		// fetched from a Binary Cache Store.
-		if !featureflag.RemoveNixpkgs.Enabled() {
-			return true
-		}
-
-		inCache, err := item.IsInBinaryCache()
-		if err != nil {
-			// Ignore this error for now. TODO savil: return error?
-			return true
-		}
-		return !inCache
-	})
-
-	order := []string{}
+	var flakeInputs keyedSlice
 	for _, pkg := range packages {
-		if flkInput, ok := flakeInputs[pkg.URLForFlakeInput()]; !ok {
-			order = append(order, pkg.URLForFlakeInput())
-			flakeInputs[pkg.URLForFlakeInput()] = &flakeInput{
-				Name:     pkg.FlakeInputName(),
-				URL:      pkg.URLForFlakeInput(),
-				Packages: []*devpkg.Package{pkg},
+		// Non-nix packages (e.g. runx) don't belong in the flake
+		if !pkg.IsNix() {
+			continue
+		}
+
+		// Don't include cached packages (like local or remote flakes)
+		// that can be fetched from a Binary Cache Store.
+		if featureflag.RemoveNixpkgs.Enabled() {
+			// TODO(savil): return error?
+			cached, err := pkg.IsInBinaryCache()
+			if err != nil {
+				debug.Log("error checking if package is in binary cache: %v", err)
 			}
-		} else {
-			flkInput.Packages = lo.Uniq(
-				append(flakeInputs[pkg.URLForFlakeInput()].Packages, pkg),
-			)
+			if err == nil && cached {
+				continue
+			}
+		}
+
+		// Packages that need a glibc patch are assigned to the special
+		// glibc-patched flake input. This input refers to the
+		// glibc-patch.nix flake.
+		if pkg.PatchGlibc {
+			nixpkgsGlibc := flakeInputs.getOrAppend(glibcPatchFlakeRef)
+			nixpkgsGlibc.Name = "glibc-patch"
+			nixpkgsGlibc.URL = glibcPatchFlakeRef
+			nixpkgsGlibc.Packages = append(nixpkgsGlibc.Packages, pkg)
+			continue
+		}
+
+		pkgURL := pkg.URLForFlakeInput()
+		flake := flakeInputs.getOrAppend(pkgURL)
+		flake.Name = pkg.FlakeInputName()
+		flake.URL = pkgURL
+
+		// TODO(gcurtis): is the uniqueness check necessary? We're
+		// comparing pointers.
+		if !slices.Contains(flake.Packages, pkg) {
+			flake.Packages = append(flake.Packages, pkg)
 		}
 	}
+	return flakeInputs.slice
+}
 
-	return goutil.PickByKeysSorted(flakeInputs, order)
+// keyedSlice keys the elements of an append-only slice for fast lookups.
+type keyedSlice struct {
+	slice  []flakeInput
+	lookup map[string]int
+}
+
+// getOrAppend returns a pointer to the slice element with a given key. If the
+// key doesn't exist, a new element is automatically appended to the slice. The
+// pointer is valid until the next append.
+func (k *keyedSlice) getOrAppend(key string) *flakeInput {
+	if k.lookup == nil {
+		k.lookup = make(map[string]int)
+	}
+	if i, ok := k.lookup[key]; ok {
+		return &k.slice[i]
+	}
+	k.slice = append(k.slice, flakeInput{})
+	k.lookup[key] = len(k.slice) - 1
+	return &k.slice[len(k.slice)-1]
 }
