@@ -23,7 +23,7 @@ func (d *Devbox) isGlobal() bool {
 	return d.projectDir == globalPath
 }
 
-// In some cases (e.g. 2 projects somehow active at the same time),
+// In some cases (e.g. 2 non-global projects somehow active at the same time),
 // refresh might not match. This is a tiny edge case, so no need to make UX
 // great, we just print out the entire command.
 func (d *Devbox) refreshAliasOrCommand() string {
