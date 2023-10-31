@@ -25,7 +25,6 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/wrapnix"
 )
 
 // packages.go has functions for adding, removing and getting info about nix
@@ -225,11 +224,12 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 
 	// if mode is install or uninstall, then we need to update the nix-profile
 	// and lockfile, so we must continue below.
-	if mode == ensure {
-		// if mode is ensure, then we only continue if needed.
-		if upToDate, err := d.lockfile.IsUpToDateAndInstalled(); err != nil || upToDate {
-			return err
-		}
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
+	if err != nil {
+		return err
+	}
+	// if mode is ensure and we are up to date, then we can skip the rest
+	if mode == ensure && upToDate {
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
@@ -256,36 +256,25 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
-	// Use the printDevEnvCache if we are adding or removing or updating any package,
-	// AND we are not in the shellenv-enabled environment of the current devbox-project.
-	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
-	nixEnv, err := d.computeNixEnv(ctx, usePrintDevEnvCache)
-	if err != nil {
-		return err
-	}
-
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
-
-	nixBins, err := d.nixBins(nixEnv)
-	if err != nil {
-		return err
-	}
-
-	if err := wrapnix.CreateWrappers(ctx, wrapnix.CreateWrappersArgs{
-		NixBins:         nixBins,
-		ProjectDir:      d.projectDir,
-		ShellEnvHash:    nixEnv[d.shellEnvHashKey()],
-		ShellEnvHashKey: d.shellEnvHashKey(),
-	}); err != nil {
-		return err
-	}
 
 	// Update lockfile with new packages that are not to be installed
 	for _, pkg := range d.configPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}
+	}
+
+	// If we're in a devbox shell (global or project), then the environment might
+	// be out of date after the user installs something. If have direnv active
+	// it should reload automatically so we don't need to refresh.
+	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
+		ux.Fwarning(
+			d.stderr,
+			"Your shell environment may be out of date. Run `%s` to update it.\n",
+			d.refreshAliasOrCommand(),
+		)
 	}
 
 	return d.lockfile.Save()

@@ -31,9 +31,6 @@ const (
 var (
 	VirtenvPath    = filepath.Join(devboxHiddenDirName, "virtenv")
 	VirtenvBinPath = filepath.Join(VirtenvPath, "bin")
-
-	WrapperPath    = filepath.Join(VirtenvPath, ".wrappers")
-	WrapperBinPath = filepath.Join(WrapperPath, "bin")
 )
 
 type config struct {
@@ -185,8 +182,6 @@ func (m *Manager) createFile(
 }
 
 // Env returns the environment variables for the given plugins.
-// TODO: We should associate the env variables with the individual plugin
-// binaries via wrappers instead of adding to the environment everywhere.
 // TODO: this should have PluginManager as receiver so we can build once with
 // pkgs, includes, etc
 func (m *Manager) Env(
