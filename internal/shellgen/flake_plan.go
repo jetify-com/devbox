@@ -127,7 +127,7 @@ func (g *glibcPatchFlake) addPackageOutput(pkg *devpkg.Package) error {
 	if g.Outputs.Packages == nil {
 		g.Outputs.Packages = map[string]map[string]string{nix.System(): {}}
 	}
-	if cached, _ := pkg.IsInBinaryCache(); cached {
+	if cached, err := pkg.IsInBinaryCache(); err == nil && cached {
 		if expr, err := g.fetchClosureExpr(pkg); err == nil {
 			g.Outputs.Packages[nix.System()][outputName] = expr
 			return nil

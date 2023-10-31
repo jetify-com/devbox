@@ -58,6 +58,10 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 			err = attributePathErr
 		}
 		if pkg.PatchGlibc {
+			// When the package comes from the glibc flake, the
+			// "legacyPackages" portion of the attribute path
+			// becomes just "packages" (matching the standard flake
+			// output schema).
 			return strings.Replace(attributePath, "legacyPackages", "packages", 1)
 		}
 		return attributePath
@@ -86,8 +90,7 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 	defer trace.StartRegion(ctx, "flakeInputs").End()
 
-	var flakeInputs []flakeInput
-	flakeInputsByURL := make(map[string]*flakeInput)
+	var flakeInputs keyedSlice
 	for _, pkg := range packages {
 		// Non-nix packages (e.g. runx) don't belong in the flake
 		if !pkg.IsNix() {
@@ -111,37 +114,44 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 		// glibc-patched flake input. This input refers to the
 		// glibc-patch.nix flake.
 		if pkg.PatchGlibc {
-			nixpkgsGlibc := flakeInputsByURL[glibcPatchFlakeRef]
-			if nixpkgsGlibc == nil {
-				flakeInputs = append(flakeInputs, flakeInput{
-					Name:     "glibc-patch",
-					URL:      glibcPatchFlakeRef,
-					Packages: []*devpkg.Package{pkg},
-				})
-				flakeInputsByURL[glibcPatchFlakeRef] = &flakeInputs[len(flakeInputs)-1]
-				continue
-			}
+			nixpkgsGlibc := flakeInputs.getOrAppend(glibcPatchFlakeRef)
+			nixpkgsGlibc.Name = "glibc-patch"
+			nixpkgsGlibc.URL = glibcPatchFlakeRef
 			nixpkgsGlibc.Packages = append(nixpkgsGlibc.Packages, pkg)
 			continue
 		}
 
 		pkgURL := pkg.URLForFlakeInput()
-		existing := flakeInputsByURL[pkgURL]
-		if existing == nil {
-			flakeInputs = append(flakeInputs, flakeInput{
-				Name:     pkg.FlakeInputName(),
-				URL:      pkgURL,
-				Packages: []*devpkg.Package{pkg},
-			})
-			flakeInputsByURL[pkgURL] = &flakeInputs[len(flakeInputs)-1]
-			continue
-		}
+		flake := flakeInputs.getOrAppend(pkgURL)
+		flake.Name = pkg.FlakeInputName()
+		flake.URL = pkgURL
 
 		// TODO(gcurtis): is the uniqueness check necessary? We're
 		// comparing pointers.
-		if !slices.Contains(existing.Packages, pkg) {
-			existing.Packages = append(existing.Packages, pkg)
+		if !slices.Contains(flake.Packages, pkg) {
+			flake.Packages = append(flake.Packages, pkg)
 		}
 	}
-	return flakeInputs
+	return flakeInputs.slice
+}
+
+// keyedSlice keys the elements of an append-only slice for fast lookups.
+type keyedSlice struct {
+	slice  []flakeInput
+	lookup map[string]int
+}
+
+// getOrAppend returns a pointer to the slice element with a given key. If the
+// key doesn't exist, a new element is automatically appended to the slice. The
+// pointer is valid until the next append.
+func (k *keyedSlice) getOrAppend(key string) *flakeInput {
+	if k.lookup == nil {
+		k.lookup = make(map[string]int)
+	}
+	if i, ok := k.lookup[key]; ok {
+		return &k.slice[i]
+	}
+	k.slice = append(k.slice, flakeInput{})
+	k.lookup[key] = len(k.slice) - 1
+	return &k.slice[len(k.slice)-1]
 }

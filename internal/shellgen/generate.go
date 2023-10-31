@@ -218,7 +218,7 @@ func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
 
 	// Any files that flake.nix needs at build time must be in git.
 	// Otherwise, Nix won't copy it into the flake's build environment.
-	cmd = exec.Command("git", "-C", flakeDir, "add", ".")
+	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix", "glibc-patch/flake.nix")
 	if debug.IsEnabled() {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout

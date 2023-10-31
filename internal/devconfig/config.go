@@ -89,7 +89,7 @@ func (c *Config) Equals(other *Config) bool {
 }
 
 func (c *Config) NixPkgsCommitHash() string {
-	// The commit hash for nixpkgs-unstable on 2023-01-25 from status.nixos.org
+	// The commit hash for nixpkgs-unstable on 2023-10-25 from status.nixos.org
 	const DefaultNixpkgsCommit = "75a52265bda7fd25e06e3a67dee3f0354e73243c"
 
 	if c == nil || c.Nixpkgs == nil || c.Nixpkgs.Commit == "" {
