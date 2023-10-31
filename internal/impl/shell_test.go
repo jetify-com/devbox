@@ -65,6 +65,7 @@ func testWriteDevboxShellrc(t *testing.T, testdirs []string) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			s := &DevboxShell{
+				devbox:          &Devbox{projectDir: projectDir},
 				env:             test.env,
 				projectDir:      "path/to/projectDir",
 				userShellrcPath: test.shellrcPath,

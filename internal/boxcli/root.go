@@ -74,8 +74,8 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(servicesCmd())
 	command.AddCommand(setupCmd())
 	command.AddCommand(shellCmd())
-	// False to avoid recomputing the env in global shellenv:
-	command.AddCommand(shellEnvCmd(lo.ToPtr(false)))
+	// True to always recompute environment if needed.
+	command.AddCommand(shellEnvCmd(lo.ToPtr(true)))
 	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
 	// Preview commands

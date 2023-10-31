@@ -52,6 +52,7 @@ var ErrNoRecognizableShellFound = errors.New("SHELL in undefined, and couldn't f
 // DevboxShell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
 type DevboxShell struct {
+	devbox          *Devbox
 	name            name
 	binPath         string
 	projectDir      string // path to where devbox.json config resides
@@ -75,6 +76,7 @@ func NewDevboxShell(devbox *Devbox, opts ...ShellOption) (*DevboxShell, error) {
 		return nil, err
 	}
 	sh := initShellBinaryFields(shPath)
+	sh.devbox = devbox
 
 	for _, opt := range opts {
 		opt(sh)
@@ -327,14 +329,21 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
+
+		RefreshAliasName   string
+		RefreshCmd         string
+		RefreshAliasEnvVar string
 	}{
-		ProjectDir:       s.projectDir,
-		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
-		OriginalInitPath: s.userShellrcPath,
-		HooksFilePath:    s.hooksFilePath,
-		ShellStartTime:   telemetry.FormatShellStart(s.shellStartTime),
-		HistoryFile:      strings.TrimSpace(s.historyFile),
-		ExportEnv:        exportify(s.env),
+		ProjectDir:         s.projectDir,
+		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
+		OriginalInitPath:   s.userShellrcPath,
+		HooksFilePath:      s.hooksFilePath,
+		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
+		HistoryFile:        strings.TrimSpace(s.historyFile),
+		ExportEnv:          exportify(s.env),
+		RefreshAliasName:   s.devbox.refreshAliasName(),
+		RefreshCmd:         s.devbox.refreshCmd(),
+		RefreshAliasEnvVar: s.devbox.refreshAliasEnvVar(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -390,4 +399,8 @@ func filterPathList(pathList string, keep func(string) bool) string {
 		}
 	}
 	return strings.Join(filtered, string(filepath.ListSeparator))
+}
+
+func isFishShell() bool {
+	return filepath.Base(os.Getenv("SHELL")) == "fish"
 }

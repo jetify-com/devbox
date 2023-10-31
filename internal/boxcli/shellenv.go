@@ -58,8 +58,6 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 	flags.config.register(command)
 	flags.envFlag.register(command)
 
-	command.AddCommand(shellEnvOnlyPathWithoutWrappersCmd())
-
 	return command
 }
 
@@ -98,26 +96,4 @@ func shellEnvFunc(
 	}
 
 	return envStr, nil
-}
-
-func shellEnvOnlyPathWithoutWrappersCmd() *cobra.Command {
-	// Deprecated: will be removed after devbox 0.7.0
-	// Don't add deprecated field to avoid printing anything to stdout
-	command := &cobra.Command{
-		Use:     "only-path-without-wrappers",
-		Hidden:  true,
-		Short:   "[internal] Print shell command that exports the system $PATH without the bin-wrappers paths.",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: ensureNixInstalled,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			s := shellEnvOnlyPathWithoutWrappersFunc()
-			fmt.Fprintln(cmd.OutOrStdout(), s)
-			return nil
-		},
-	}
-	return command
-}
-
-func shellEnvOnlyPathWithoutWrappersFunc() string {
-	return devbox.ExportifySystemPathWithoutWrappers()
 }
