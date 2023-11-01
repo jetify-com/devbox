@@ -270,7 +270,7 @@ func (f FlakeRef) String() string {
 		}
 		url := &url.URL{
 			Scheme:   "github",
-			Opaque:   buildOpaquePath(f.Owner, f.Repo, f.Rev, f.Ref),
+			Opaque:   buildEscapedPath(f.Owner, f.Repo, f.Rev, f.Ref),
 			RawQuery: buildQueryString("host", f.Host, "dir", f.Dir),
 		}
 		return url.String()
@@ -280,7 +280,7 @@ func (f FlakeRef) String() string {
 		}
 		url := &url.URL{
 			Scheme:   "flake",
-			Opaque:   buildOpaquePath(f.ID, f.Ref, f.Rev),
+			Opaque:   buildEscapedPath(f.ID, f.Ref, f.Rev),
 			RawQuery: buildQueryString("dir", f.Dir),
 		}
 		return url.String()
@@ -291,7 +291,7 @@ func (f FlakeRef) String() string {
 		f.Path = path.Clean(f.Path)
 		url := &url.URL{
 			Scheme: "path",
-			Opaque: buildOpaquePath(strings.Split(f.Path, "/")...),
+			Opaque: buildEscapedPath(strings.Split(f.Path, "/")...),
 		}
 
 		// Add the / prefix back if strings.Split removed it.
@@ -380,9 +380,9 @@ func splitPathOrOpaque(u *url.URL) ([]string, error) {
 	return split, nil
 }
 
-// buildOpaquePath escapes and joins path elements for a URL flakeref. The
+// buildEscapedPath escapes and joins path elements for a URL flakeref. The
 // resulting path is cleaned according to url.JoinPath.
-func buildOpaquePath(elem ...string) string {
+func buildEscapedPath(elem ...string) string {
 	for i := range elem {
 		elem[i] = url.PathEscape(elem[i])
 	}
