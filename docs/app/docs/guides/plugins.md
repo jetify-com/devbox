@@ -34,7 +34,7 @@ Built-in plugins are available for the following packages. You can activate the 
 * [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0...)
 
 
-### Local PLugins
+### Local Plugins
 
 You can also [define your own plugins](./creating_plugins.md) and use them in your project. To use a local plugin, add the following to the `include` section of your devbox.json:
 
