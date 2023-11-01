@@ -17,6 +17,9 @@ func TestParseFlakeRef(t *testing.T) {
 		// Not a path and not a valid URL.
 		"://bad/url": {},
 
+		// Invalid escape.
+		"path:./relative/my%flake": {},
+
 		// Path-like references start with a '.' or '/'.
 		// This distinguishes them from indirect references
 		// (./nixpkgs is a directory; nixpkgs is an indirect).
@@ -60,7 +63,7 @@ func TestParseFlakeRef(t *testing.T) {
 		// Indirect references.
 		"flake:indirect":          {Type: "indirect", ID: "indirect"},
 		"flake:indirect/ref":      {Type: "indirect", ID: "indirect", Ref: "ref"},
-		"flake:indirect/my%20ref": {Type: "indirect", ID: "indirect", Ref: "my ref"},
+		"flake:indirect/my%2Fref": {Type: "indirect", ID: "indirect", Ref: "my/ref"},
 		"flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: "indirect", ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 		"flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "indirect", ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 
@@ -139,11 +142,6 @@ func TestParseFlakeRef(t *testing.T) {
 		"http://example.com/flake":            {Type: "file", URL: "http://example.com/flake"},
 		"http://example.com/flake.git":        {Type: "file", URL: "http://example.com/flake.git"},
 		"http://example.com/flake?dir=subdir": {Type: "file", URL: "http://example.com/flake?dir=subdir", Dir: "subdir"},
-
-		// Interpret opaques with invalid escapes literally.
-		"path:./relative/my%flake": {Type: "path", Path: "./relative/my%flake"},
-		"flake:indirect/my%ref":    {Type: "indirect", ID: "indirect", Ref: "my%ref"},
-		"github:NixOS/nix/my%ref":  {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "my%ref"},
 	}
 
 	for ref, want := range cases {
