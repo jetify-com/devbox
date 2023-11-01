@@ -6,7 +6,7 @@ This doc describes how to use Devbox Plugins with your project. **Plugins** prov
 
 ## Using Plugins
 
-### Built-in PLguins
+### Built-in Plugins
 
 If you add one of the packages listed above to your project using `devbox add <pkg>`, Devbox will automatically activate the plugin for that package.
 
