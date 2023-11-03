@@ -31,4 +31,5 @@ jobs:
           context: ./internal/impl/generate/tmpl/
           file: ./internal/impl/generate/tmpl/DevboxImageDockerfileRootUser
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: jetpackio/devbox-root-user:latest
