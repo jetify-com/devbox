@@ -6,6 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/pkg/sandbox/auth"
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/goutil"
@@ -43,9 +44,9 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 	}
 	t, err := genSession(cmd.Context())
 	var creds devopt.Credentials
-	if err != nil {
+	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return errors.WithStack(err)
-	} else if t != nil {
+	} else if t != nil && err == nil {
 		creds = devopt.Credentials{
 			IDToken: t.IDToken,
 			Email:   t.IDClaims().Email,
