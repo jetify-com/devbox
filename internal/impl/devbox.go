@@ -891,12 +891,12 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Motivation: if a user removes a package from their devbox it should no longer
 	// be available in their environment.
 	buildInputs := strings.Split(env["buildInputs"], " ")
-	glibcPatchPath := ""
+	var glibcPatchPath []string
 	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
 		// TODO(gcurtis): this is a massive hack. Please get rid
 		// of this and install the package to the profile.
 		if strings.Contains(path, "patched-glibc") {
-			glibcPatchPath = path
+			glibcPatchPath = append(glibcPatchPath, path)
 			return true
 		}
 		for _, input := range buildInputs {
@@ -913,8 +913,9 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	// TODO(gcurtis): this is a massive hack. Please get rid
 	// of this and install the package to the profile.
-	if glibcPatchPath != "" {
-		nixEnvPath = glibcPatchPath + ":" + nixEnvPath
+	if len(glibcPatchPath) != 0 {
+		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
+		nixEnvPath = envpath.JoinPathLists(patchedPath, nixEnvPath)
 		debug.Log("PATH after glibc-patch hack is: %s", nixEnvPath)
 	}
 
