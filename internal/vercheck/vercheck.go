@@ -179,7 +179,7 @@ func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 	}
 
 	// TODO savil. Add a --json flag to devbox version and parse the output as JSON
-	cmd := exec.Command(exePath, "version", "-v", "--update-devbox-symlink")
+	cmd := exec.Command(exePath, "version", "-v")
 
 	buf := new(bytes.Buffer)
 	cmd.Stdout = io.MultiWriter(stdErr, buf)
