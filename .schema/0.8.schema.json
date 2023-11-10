@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "https://github.com/jetpack-io/devbox",
+    "title": "Devbox json definition",
+    "description": "Defines fields and acceptable values of devbox.json",
+    "type": "object",
+    "properties": {
+        "packages": {
+            "description": "A specification of packages to be installed via devbox.",
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "description": "Name and version of each package in name@version format.",
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "object",
+                    "description": "Name of each package in {\"name\": \"version\"} format.",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string",
+                            "description": "Version number of the package in this object."
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "description": "Name of each package in {\"name\": {\"version\": \"1.2.3\"}} format.",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "object",
+                            "description": "Version number of the specified package in {\"version\": \"1.2.3\"} formmat.",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "Version of the package"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "env": {
+            "description": "List of additional environment variables to be set in devbox shell. Values can contain $PATH and $PWD.",
+            "type": "object"
+        },
+        "shell": {
+            "description": "Definitions of scripts and actions to take when in devbox shell.",
+            "type": "object",
+            "properties": {
+                "init_hook": {
+                    "type": "array",
+                    "items": {
+                        "description": "list of shell commands/scripts to run right after devbox shell starts.",
+                        "type": "string"
+                    }
+                },
+                "scripts": {
+                    "description": "List of commads/scripts definitions to run with `devbox run <script_name>` command.",
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {
+                            "description": "Alias name for the script.",
+                            "type": [
+                                "array",
+                                "string"
+                            ],
+                            "items": {
+                                "type": "string",
+                                "description": "command/script to run as part of a list of commands defined here."
+                            }
+                        }
+                    }
+                }
+            },
+            "required": [
+                "init_hook"
+            ]
+        }
+    },
+    "required": [
+        "packages",
+        "shell"
+    ]
+}
