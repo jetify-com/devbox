@@ -6,7 +6,7 @@
     "type": "object",
     "properties": {
         "packages": {
-            "description": "A specification of packages to be installed via devbox.",
+            "description": "Collection of packages to install",
             "oneOf": [
                 {
                     "type": "array",
@@ -21,7 +21,7 @@
                     "patternProperties": {
                         ".*": {
                             "type": "string",
-                            "description": "Version number of the package in this object."
+                            "description": "Version of the package to install."
                         }
                     }
                 },
@@ -31,12 +31,15 @@
                     "patternProperties": {
                         ".*": {
                             "type": "object",
-                            "description": "Version number of the specified package in {\"version\": \"1.2.3\"} formmat.",
+                            "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
                             "properties": {
                                 "version": {
                                     "type": "string",
                                     "description": "Version of the package"
-                                }
+                                },
+                                "platform": {},
+                                "excluded_platform": {},
+                                "glibc_patch": {}
                             }
                         }
                     }
@@ -44,7 +47,7 @@
             ]
         },
         "env": {
-            "description": "List of additional environment variables to be set in devbox shell. Values can contain $PATH and $PWD.",
+            "description": "List of additional environment variables to be set in the Devbox environment. Values containing $PATH or $PWD will be expanded. No other variable expansion or command substitution will occur.",
             "type": "object"
         },
         "shell": {
@@ -52,14 +55,17 @@
             "type": "object",
             "properties": {
                 "init_hook": {
-                    "type": "array",
+                    "type": [
+                        "array",
+                        "string"
+                    ],
                     "items": {
-                        "description": "list of shell commands/scripts to run right after devbox shell starts.",
+                        "description": "List of shell commands/scripts to run right after devbox shell starts.",
                         "type": "string"
                     }
                 },
                 "scripts": {
-                    "description": "List of commads/scripts definitions to run with `devbox run <script_name>` command.",
+                    "description": "List of command/script definitions to run with `devbox run <script_name>`.",
                     "type": "object",
                     "patternProperties": {
                         ".*": {
@@ -70,7 +76,7 @@
                             ],
                             "items": {
                                 "type": "string",
-                                "description": "command/script to run as part of a list of commands defined here."
+                                "description": "The script's shell commands."
                             }
                         }
                     }
