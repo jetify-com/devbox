@@ -1,0 +1,87 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "https://github.com/jetpack-io/devbox",
+    "title": "Devbox json definition",
+    "description": "Defines fields and acceptable values of devbox.json",
+    "type": "object",
+    "properties": {
+        "packages": {
+            "description": "Collection of packages to install",
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "description": "Name and version of each package in name@version format.",
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "object",
+                    "description": "Name of each package in {\"name\": \"version\"} format.",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string",
+                            "description": "Version of the package to install."
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "description": "Name of each package in {\"name\": {\"version\": \"1.2.3\"}} format.",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "object",
+                            "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "Version of the package"
+                                },
+                                "platform": {},
+                                "excluded_platform": {},
+                                "glibc_patch": {}
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "env": {
+            "description": "List of additional environment variables to be set in the Devbox environment. Values containing $PATH or $PWD will be expanded. No other variable expansion or command substitution will occur.",
+            "type": "object"
+        },
+        "shell": {
+            "description": "Definitions of scripts and actions to take when in devbox shell.",
+            "type": "object",
+            "properties": {
+                "init_hook": {
+                    "type": [
+                        "array",
+                        "string"
+                    ],
+                    "items": {
+                        "description": "List of shell commands/scripts to run right after devbox shell starts.",
+                        "type": "string"
+                    }
+                },
+                "scripts": {
+                    "description": "List of command/script definitions to run with `devbox run <script_name>`.",
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {
+                            "description": "Alias name for the script.",
+                            "type": [
+                                "array",
+                                "string"
+                            ],
+                            "items": {
+                                "type": "string",
+                                "description": "The script's shell commands."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
