@@ -81,14 +81,7 @@
                         }
                     }
                 }
-            },
-            "required": [
-                "init_hook"
-            ]
+            }
         }
-    },
-    "required": [
-        "packages",
-        "shell"
-    ]
+    }
 }
