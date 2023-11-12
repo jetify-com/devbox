@@ -113,6 +113,12 @@
         }
       ]
     },
+    "jsonValidation": [
+      {
+        "fileMatch": "devbox.json",
+        "url": "https://json.schemastore.org/devbox"
+      }
+    ],
     "configuration": {
       "title": "devbox",
       "properties": {
