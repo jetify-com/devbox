@@ -5,6 +5,10 @@
     "description": "Defines fields and acceptable values of devbox.json",
     "type": "object",
     "properties": {
+        "$schema": {
+            "description": "The schema version of this devbox.json file.",
+            "type": "string"
+        },
         "packages": {
             "description": "Collection of packages to install",
             "oneOf": [
@@ -48,7 +52,13 @@
         },
         "env": {
             "description": "List of additional environment variables to be set in the Devbox environment. Values containing $PATH or $PWD will be expanded. No other variable expansion or command substitution will occur.",
-            "type": "object"
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "type": "string",
+                    "description": "Value of the environment variable."
+                }
+            }
         },
         "shell": {
             "description": "Definitions of scripts and actions to take when in devbox shell.",
@@ -81,7 +91,20 @@
                         }
                     }
                 }
+            },
+            "additionalProperties": false
+        },
+        "include": {
+            "description": "List of additional plugins to activate within your devbox shell",
+            "type": "array",
+            "items": {
+                "description": "Name of the plugin to activate.",
+                "type": "string"
             }
+        },
+        "env_from": {
+            "type": "string"
         }
-    }
+    },
+    "additionalProperties": false
 }
