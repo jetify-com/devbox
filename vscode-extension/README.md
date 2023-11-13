@@ -42,6 +42,10 @@ NOTE: Requires devbox CLI v0.5.5 and above
   reopen VSCode in devbox environment. Note: It requires devbox CLI v0.5.5 and above
   installed and in PATH.
 
+### JSON validation when writing a devbox.json file
+
+No need to take any action for this feature. When writing a devbox.json, if this extension is installed, it will validate and highlight any disallowed fields or values on a devbox.json file.
+
 ---
 
 ## Following extension guidelines
