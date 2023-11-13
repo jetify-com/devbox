@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by jetpack.io",
   "description": "devbox integration for VSCode",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
@@ -21,7 +21,9 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "extensionDependencies": ["ms-vscode-remote.remote-ssh"],
+  "extensionDependencies": [
+    "ms-vscode-remote.remote-ssh"
+  ],
   "contributes": {
     "commands": [
       {
@@ -116,7 +118,7 @@
     "jsonValidation": [
       {
         "fileMatch": "devbox.json",
-        "url": "https://json.schemastore.org/devbox"
+        "url": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json"
       }
     ],
     "configuration": {
