@@ -11,12 +11,12 @@
   },
   "create_files": {
     "{{ .Virtenv }}/run": "",
-    "{{ .Virtenv }}/flake.nix": "mariadb/flake.nix",
+    "{{ .Virtenv }}/flake/flake.nix": "mariadb/flake.nix",
     "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh",
     "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml"
   },
   "__packages": [
-    "path:{{ .Virtenv }}"
+    "path:{{ .Virtenv }}/flake"
   ],
   "__remove_trigger_package": true,
   "shell": {
