@@ -228,12 +228,14 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	if err != nil {
 		return err
 	}
-	// if mode is ensure and we are up to date, then we can skip the rest
-	if mode == ensure && upToDate {
-		return nil
-	}
 
-	fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
+	if mode == ensure {
+		// if mode is ensure and we are up to date, then we can skip the rest
+		if upToDate {
+			return nil
+		}
+		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
+	}
 
 	// Create plugin directories first because packages might need them
 	for _, pkg := range d.InstallablePackages() {
