@@ -1,6 +1,6 @@
 {
   "name": "haskell",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "readme": "Haskell plugin",
   "__packages": [
     "path:{{ .Virtenv }}/flake"
