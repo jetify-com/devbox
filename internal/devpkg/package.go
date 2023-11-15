@@ -9,10 +9,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -30,8 +30,36 @@ import (
 // This Package will be aggregated into a specific "flake input" (see shellgen.flakeInput).
 type Package struct {
 	plugins.BuiltIn
-	url.URL
-	lockfile lock.Locker
+	lockfile        lock.Locker
+	isDevboxPackage bool
+
+	// installable is the flake attribute that the package resolves to.
+	// When it gets set depends on the original package string:
+	//
+	// - If the parsed package string is unambiguously a flake installable
+	//   (not "name" or "name@version"), then it is set immediately.
+	// - Otherwise, it's set after calling resolve.
+	//
+	// This is done for performance reasons. Some commands don't require the
+	// fully-resolved package, so we don't want to waste time computing it.
+	installable FlakeInstallable
+
+	// resolve resolves a Devbox package string to a Nix installable.
+	//
+	// - If the package exists in the lockfile, it resolves to the
+	//   lockfile's installable.
+	// - If the package doesn't exist in the lockfile, it resolves to the
+	//   installable returned by the search index (/v1/resolve).
+	//
+	// After resolving the installable, it also sets storePath when the
+	// package exists in the Nix binary cache.
+	//
+	// For flake packages (non-devbox packages), resolve is a no-op.
+	resolve func() error
+
+	// storePath is set by resolve if the package exists in the Nix binary
+	// cache.
+	storePath string
 
 	// Raw is the devbox package name from the devbox.json config.
 	// Raw has a few forms:
@@ -85,35 +113,81 @@ func PackageFromString(raw string, locker lock.Locker) *Package {
 }
 
 func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
-	// TODO: We should handle this error
-	// TODO: URL might not be best representation since most packages are not urls
-	pkgURL, _ := url.Parse(raw)
-
-	// This handles local flakes in a relative path.
-	// `raw` will be of the form `path:./local_flake_subdir#myPackage`
-	// for which path:<empty>, opaque:./local_subdir, and scheme:path
-	if pkgURL.Path == "" && pkgURL.Opaque != "" && pkgURL.Scheme == "path" {
-		// This normalizes url paths to be absolute. It also ensures all
-		// path urls have a single slash (instead of possibly 3 slashes)
-		normalizedURL := "path:" + filepath.Join(locker.ProjectDir(), pkgURL.Opaque)
-		if pkgURL.Fragment != "" {
-			normalizedURL += "#" + pkgURL.Fragment
-		}
-		pkgURL, _ = url.Parse(normalizedURL)
-	} else if pkgURL.Scheme == pkgtype.RunXScheme {
-		// THIS IS A HACK. These are not URLs and should not be treated as such
-		pkgURL.Path = pkgURL.Opaque
+	pkg := &Package{
+		Raw:           raw,
+		lockfile:      locker,
+		isInstallable: isInstallable,
 	}
 
-	return &Package{URL: *pkgURL, lockfile: locker, Raw: raw, isInstallable: isInstallable}
+	// The raw string is either a Devbox package ("name" or "name@version")
+	// or it's a flake installable. In some cases they're ambiguous
+	// ("nixpkgs" is a devbox package and a flake). When that happens, we
+	// assume a Devbox package.
+	parsed, err := ParseFlakeInstallable(raw)
+	if err != nil || isAmbiguous(raw, parsed) {
+		pkg.isDevboxPackage = true
+		pkg.resolve = sync.OnceValue(func() error {
+			resolved, err := locker.Resolve(raw)
+			if err != nil {
+				return err
+			}
+			if inCache, err := pkg.IsInBinaryCache(); err == nil && inCache {
+				pkg.storePath = resolved.Systems[nix.System()].StorePath
+			}
+			parsed, err := ParseFlakeInstallable(resolved.Resolved)
+			if err != nil {
+				return err
+			}
+			pkg.setInstallable(parsed, locker.ProjectDir())
+			return nil
+		})
+		return pkg
+	}
+
+	// We currently don't lock flake references in devbox.lock, so there's
+	// nothing to resolve.
+	pkg.resolve = sync.OnceValue(func() error { return nil })
+	pkg.setInstallable(parsed, locker.ProjectDir())
+	return pkg
 }
 
-// isLocal specifies whether this package is a local flake.
-// Usually, this is of the form: `path:./local_flake_subdir#myPackage`
-func (p *Package) isLocal() bool {
-	// Technically flakes allows omitting the scheme for local absolute paths, but
-	// we don't support that (yet).
-	return p.Scheme == "path"
+// isAmbiguous returns true if a package string could be a Devbox package or
+// a flake installable. For example, "nixpkgs" is both a Devbox package and a
+// flake.
+func isAmbiguous(raw string, parsed FlakeInstallable) bool {
+	// Devbox package strings never have a #attr_path in them.
+	if parsed.AttrPath != "" {
+		return false
+	}
+
+	// Indirect installables must have a "flake:" scheme to disambiguate
+	// them from legacy (unversioned) devbox package strings.
+	if parsed.Ref.Type == FlakeTypeIndirect {
+		return !strings.HasPrefix(raw, "flake:")
+	}
+
+	// Path installables must have a "path:" scheme, start with "/" or start
+	// with "./" to disambiguate them from devbox package strings.
+	if parsed.Ref.Type == FlakeTypePath {
+		if raw[0] == '.' || raw[0] == '/' {
+			return false
+		}
+		if strings.HasPrefix(raw, "path:") {
+			return false
+		}
+		return true
+	}
+
+	// All other flakeref types must have a scheme, so we know those can't
+	// be devbox package strings.
+	return false
+}
+
+func (p *Package) setInstallable(i FlakeInstallable, projectDir string) {
+	if i.Ref.Type == FlakeTypePath && !filepath.IsAbs(i.Ref.Path) {
+		i.Ref.Path = filepath.Join(projectDir, i.Ref.Path)
+	}
+	p.installable = i
 }
 
 // IsDevboxPackage specifies whether this package is a devbox package. Devbox
@@ -123,14 +197,7 @@ func (p *Package) isLocal() bool {
 // an attribute path. An explicit flake reference is _not_ a devbox package.
 // TODO: Consider renaming to IsResolvable
 func (p *Package) IsDevboxPackage() bool {
-	return p.Scheme == "" || p.IsRunX()
-}
-
-// isGithub specifies whether this Package is referenced by a remote flake
-// hosted on a github repository.
-// example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
-func (p *Package) isGithub() bool {
-	return p.Scheme == "github"
+	return p.isDevboxPackage
 }
 
 var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
@@ -140,19 +207,28 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 // flake so we attach a hash to (quasi) ensure uniqueness.
 // Input name will be different from raw package name
 func (p *Package) FlakeInputName() string {
+	_ = p.resolve()
+
 	result := ""
-	if p.isLocal() {
-		result = filepath.Base(p.Path) + "-" + p.Hash()
-	} else if p.isGithub() {
-		result = "gh-" + strings.Join(strings.Split(p.Opaque, "/"), "-")
-	} else if url := p.URLForFlakeInput(); nix.IsGithubNixpkgsURL(url) {
-		commitHash := nix.HashFromNixPkgsURL(url)
-		if len(commitHash) > 6 {
-			commitHash = commitHash[0:6]
+	switch p.installable.Ref.Type {
+	case FlakeTypePath:
+		result = filepath.Base(p.installable.Ref.Path) + "-" + p.Hash()
+	case FlakeTypeGitHub:
+		isNixOS := strings.ToLower(p.installable.Ref.Owner) == "nixos"
+		isNixpkgs := isNixOS && strings.ToLower(p.installable.Ref.Repo) == "nixpkgs"
+		if isNixpkgs && p.IsDevboxPackage() {
+			commitHash := nix.HashFromNixPkgsURL(p.installable.Ref.String())
+			result = "nixpkgs-" + commitHash[:min(6, len(commitHash))]
+		} else {
+			result = "gh-" + p.installable.Ref.Owner + "-" + p.installable.Ref.Repo
+			if p.installable.Ref.Rev != "" {
+				result += "-" + p.installable.Ref.Rev
+			} else if p.installable.Ref.Ref != "" {
+				result += "-" + p.installable.Ref.Ref
+			}
 		}
-		result = "nixpkgs-" + commitHash
-	} else {
-		result = p.String() + "-" + p.Hash()
+	default:
+		result = p.installable.String() + "-" + p.Hash()
 	}
 
 	// replace all non-alphanumeric with dashes
@@ -162,16 +238,11 @@ func (p *Package) FlakeInputName() string {
 // URLForFlakeInput returns the input url to be used in a flake.nix file. This
 // input can be used to import the package.
 func (p *Package) URLForFlakeInput() string {
-	if p.IsDevboxPackage() {
-		entry, err := p.lockfile.Resolve(p.Raw)
-		if err != nil {
-			panic(err)
-			// TODO(landau): handle error
-		}
-		withoutFragment, _, _ := strings.Cut(entry.Resolved, "#")
-		return withoutFragment
+	if err := p.resolve(); err != nil {
+		// TODO(landau): handle error
+		panic(err)
 	}
-	return p.urlWithoutFragment()
+	return p.installable.Ref.String()
 }
 
 // IsInstallable returns whether this package is installable. Not to be confused
@@ -207,56 +278,31 @@ func (p *Package) Installable() (string, error) {
 // The key difference with URLForFlakeInput is that it has a suffix of
 // `#attributePath`
 func (p *Package) urlForInstall() (string, error) {
-	if p.IsDevboxPackage() {
-		entry, err := p.lockfile.Resolve(p.Raw)
-		if err != nil {
-			return "", err
-		}
-		return entry.Resolved, nil
-	}
-	attrPath, err := p.FullPackageAttributePath()
-	if err != nil {
+	if err := p.resolve(); err != nil {
 		return "", err
 	}
-	return p.urlWithoutFragment() + "#" + attrPath, nil
+	return p.installable.String(), nil
 }
 
 func (p *Package) NormalizedDevboxPackageReference() (string, error) {
-	if !p.IsDevboxPackage() {
+	if err := p.resolve(); err != nil {
+		return "", err
+	}
+	if p.installable.AttrPath == "" {
 		return "", nil
 	}
-
-	path := ""
-	if p.isVersioned() {
-		entry, err := p.lockfile.Resolve(p.Raw)
-		if err != nil {
-			return "", err
-		}
-		path = entry.Resolved
-	} else if p.IsDevboxPackage() {
-		path = p.lockfile.LegacyNixpkgsPath(p.String())
-	}
-
-	if path != "" {
-		url, fragment, _ := strings.Cut(path, "#")
-		return fmt.Sprintf("%s#legacyPackages.%s.%s", url, nix.System(), fragment), nil
-	}
-
-	return "", nil
+	clone := p.installable
+	clone.AttrPath = fmt.Sprintf("legacyPackages.%s.%s", nix.System(), clone.AttrPath)
+	return clone.String(), nil
 }
 
 // PackageAttributePath returns the short attribute path for a package which
 // does not include packages/legacyPackages or the system name.
 func (p *Package) PackageAttributePath() (string, error) {
-	if p.IsDevboxPackage() {
-		entry, err := p.lockfile.Resolve(p.Raw)
-		if err != nil {
-			return "", err
-		}
-		_, fragment, _ := strings.Cut(entry.Resolved, "#")
-		return fragment, nil
+	if err := p.resolve(); err != nil {
+		return "", err
 	}
-	return p.Fragment, nil
+	return p.installable.AttrPath, nil
 }
 
 // FullPackageAttributePath returns the attribute path for a package. It is not
@@ -293,19 +339,13 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 // normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
-	var query string
-	if p.IsDevboxPackage() {
-		if p.isVersioned() {
-			entry, err := p.lockfile.Resolve(p.Raw)
-			if err != nil {
-				return "", err
-			}
-			query = entry.Resolved
-		} else {
-			query = p.lockfile.LegacyNixpkgsPath(p.String())
-		}
-	} else {
-		query = p.String()
+	if err := p.resolve(); err != nil {
+		return "", err
+	}
+
+	query := p.installable.String()
+	if query == "" {
+		query = p.Raw
 	}
 
 	// We prefer nix.Search over just trying to parse the package's "URL" because
@@ -333,7 +373,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	}
 
 	// If ambiguous, try to find a default output
-	if len(infos) > 1 && p.Fragment == "" {
+	if len(infos) > 1 && p.installable.AttrPath == "" {
 		for key := range infos {
 			if strings.HasSuffix(key, ".default") {
 				return key, nil
@@ -355,7 +395,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 		}
 		return "", usererr.New(
 			"Package \"%s\" is ambiguous. %s",
-			p.String(),
+			p.Raw,
 			outputs,
 		)
 	}
@@ -365,42 +405,38 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 			ErrCannotBuildPackageOnSystem,
 			"Package \"%s\" was found, but we're unable to build it for your system."+
 				" You may need to choose another version or write a custom flake.",
-			p.String(),
+			p.Raw,
 		)
 	}
 
-	return "", usererr.New("Package \"%s\" was not found", p.String())
+	return "", usererr.New("Package \"%s\" was not found", p.Raw)
 }
 
 var ErrCannotBuildPackageOnSystem = errors.New("unable to build for system")
 
-func (p *Package) urlWithoutFragment() string {
-	u := p.URL // get copy
-	u.Fragment = ""
-	return u.String()
-}
-
 func (p *Package) Hash() string {
-	// For local flakes, use content hash of the flake.nix file to ensure
-	// user always gets newest flake.
-	if p.isLocal() {
-		fileHash, _ := cuecfg.FileHash(filepath.Join(p.Path, "flake.nix"))
-		if fileHash != "" {
-			return fileHash[:6]
-		}
+	hash := ""
+	if p.installable != (FlakeInstallable{}) {
+		sum := md5.Sum([]byte(p.installable.String()))
+		hash = hex.EncodeToString(sum[:])
+	} else if p.installable.Ref.Type == FlakeTypePath {
+		// For local flakes, use content hash of the flake.nix file to ensure
+		// user always gets newest flake.
+		hash, _ = cuecfg.FileHash(filepath.Join(p.installable.Ref.Path, "flake.nix"))
 	}
-	hasher := md5.New()
-	hasher.Write([]byte(p.String()))
-	hash := hasher.Sum(nil)
-	shortHash := hex.EncodeToString(hash)[:6]
-	return shortHash
+
+	if hash == "" {
+		sum := md5.Sum([]byte(p.installable.String()))
+		hash = hex.EncodeToString(sum[:])
+	}
+	return hash[:min(len(hash), 6)]
 }
 
 // Equals compares two Packages. This may be an expensive operation since it
 // may have to normalize a Package's attribute path, which may require a network
 // call.
 func (p *Package) Equals(other *Package) bool {
-	if p.String() == other.String() {
+	if p.Raw == other.Raw || p.installable == other.installable {
 		return true
 	}
 
@@ -485,12 +521,12 @@ func (p *Package) version() string {
 	if !p.IsDevboxPackage() {
 		return ""
 	}
-	_, version, _ := strings.Cut(p.Path, "@")
+	_, version, _ := strings.Cut(p.Raw, "@")
 	return version
 }
 
 func (p *Package) isVersioned() bool {
-	return p.IsDevboxPackage() && strings.Contains(p.Path, "@")
+	return p.IsDevboxPackage() && strings.Contains(p.Raw, "@")
 }
 
 func (p *Package) HashFromNixPkgsURL() string {
@@ -555,6 +591,13 @@ func (p *Package) IsNix() bool {
 
 func (p *Package) RunXPath() string {
 	return strings.TrimPrefix(p.Raw, pkgtype.RunXPrefix)
+}
+
+func (p *Package) String() string {
+	if p.installable.AttrPath != "" {
+		return p.installable.AttrPath
+	}
+	return p.Raw
 }
 
 func IsNix(p *Package, _ int) bool {

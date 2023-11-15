@@ -14,7 +14,7 @@ func (p *Package) ValidateExists(ctx context.Context) (bool, error) {
 		return err == nil, err
 	}
 	if p.isVersioned() && p.version() == "" {
-		return false, usererr.New("No version specified for %q.", p.Path)
+		return false, usererr.New("No version specified for %q.", p.Raw)
 	}
 
 	inCache, err := p.IsInBinaryCache()
