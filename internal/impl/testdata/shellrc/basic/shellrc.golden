@@ -24,6 +24,6 @@ cd "$working_dir" || exit
 
 # Add refresh alias (only if it doesn't already exist)
 if ! type refresh >/dev/null 2>&1; then
-  alias refresh='eval $(devbox shellenv)'
-  export DEVBOX_REFRESH_ALIAS="refresh"
+  export DEVBOX_REFRESH_ALIAS_8f8c22fe4ebaac1362df5660c064aab19a5c093ee1717492bd5b8197ab10abf4='eval "$(devbox shellenv --preserve-path-stack -c "/path/to/projectDir")" && hash -r'
+  alias refresh='eval "$(devbox shellenv --preserve-path-stack -c "/path/to/projectDir")" && hash -r'
 fi

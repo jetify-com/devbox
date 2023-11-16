@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"maps"
 	"os"
 	"os/exec"
@@ -67,7 +66,6 @@ type Devbox struct {
 	pure                     bool
 	allowInsecureAdds        bool
 	customProcessComposeFile string
-	OmitBinWrappersFromPath  bool
 
 	// This is needed because of the --quiet flag.
 	stderr io.Writer
@@ -97,7 +95,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 		allowInsecureAdds:        opts.AllowInsecureAdds,
-		OmitBinWrappersFromPath:  opts.OmitBinWrappersFromPath,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -169,11 +166,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-
 	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	if err != nil {
 		return err
@@ -193,7 +185,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 
 	opts := []ShellOption{
 		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
-		WithProfile(profileDir),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
@@ -220,6 +211,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	if err != nil {
 		return err
 	}
+
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
 	// This is temporary because StartServices() needs it but should be replaced with
 	// better alternative since devbox run and devbox shell are not the same.
@@ -251,9 +243,8 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
 }
 
-// Install ensures that all the packages in the config are installed and
-// creates all wrappers, but does not run init hooks. It is used to power
-// devbox install cli command.
+// Install ensures that all the packages in the config are installed
+// but does not run init hooks. It is used to power devbox install cli command.
 func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
@@ -283,7 +274,7 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
 		if !upToDate {
 			cmd := `eval "$(devbox global shellenv --recompute)"`
-			if strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+			if isFishShell() {
 				cmd = `devbox global shellenv --recompute | source`
 			}
 			ux.Finfo(
@@ -308,6 +299,8 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
+
+	envStr += "\n" + d.refreshAlias()
 
 	return envStr, nil
 }
@@ -525,15 +518,22 @@ func (d *Devbox) Services() (services.Services, error) {
 	return result, nil
 }
 
-func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "start"}, serviceNames...))
+func (d *Devbox) StartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "start", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	svcSet, err := d.Services()
@@ -562,9 +562,9 @@ func (d *Devbox) StartServices(ctx context.Context, serviceNames ...string) erro
 	return nil
 }
 
-func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "stop"}
+func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
+	if !runInCurrentShell {
+		args := []string{"services", "stop", "--run-in-current-shell"}
 		args = append(args, serviceNames...)
 		if allProjects {
 			args = append(args, "--all-projects")
@@ -601,9 +601,10 @@ func (d *Devbox) StopServices(ctx context.Context, allProjects bool, serviceName
 	return nil
 }
 
-func (d *Devbox) ListServices(ctx context.Context) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", []string{"services", "ls"})
+func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx,
+			"devbox", []string{"services", "ls", "--run-in-current-shell"})
 	}
 
 	svcSet, err := d.Services()
@@ -639,15 +640,22 @@ func (d *Devbox) ListServices(ctx context.Context) error {
 	return nil
 }
 
-func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) error {
-	if !d.IsEnvEnabled() {
-		return d.RunScript(ctx, "devbox", append([]string{"services", "restart"}, serviceNames...))
+func (d *Devbox) RestartServices(
+	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
+) error {
+	if !runInCurrentShell {
+		return d.RunScript(ctx, "devbox",
+			append(
+				[]string{"services", "restart", "--run-in-current-shell"},
+				serviceNames...,
+			),
+		)
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -673,12 +681,13 @@ func (d *Devbox) RestartServices(ctx context.Context, serviceNames ...string) er
 
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
+	runInCurrentShell bool,
 	requestedServices []string,
 	background bool,
 	processComposeFileOrDir string,
 ) error {
-	if !d.IsEnvEnabled() {
-		args := []string{"services", "up"}
+	if !runInCurrentShell {
+		args := []string{"services", "up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
 		if processComposeFileOrDir != "" {
 			args = append(args, "--process-compose-file", processComposeFileOrDir)
@@ -840,7 +849,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	debug.Log("nix environment PATH is: %s", env)
 
 	// Add any vars defined in plugins.
-	// TODO: Now that we have bin wrappers, this may can eventually be removed.
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
@@ -856,13 +864,6 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		env["PATH"],
 	)
 
-	if !d.OmitBinWrappersFromPath {
-		env["PATH"] = envpath.JoinPathLists(
-			filepath.Join(d.projectDir, plugin.WrapperBinPath),
-			env["PATH"],
-		)
-	}
-
 	env["PATH"], err = d.addUtilitiesToPath(ctx, env["PATH"])
 	if err != nil {
 		return nil, err
@@ -871,7 +872,7 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
-	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/.devbox/virtenv/.wrappers"
+	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
 	// Include env variables in devbox.json
 	configEnv, err := d.configEnvs(ctx, env)
@@ -889,7 +890,14 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	// Motivation: if a user removes a package from their devbox it should no longer
 	// be available in their environment.
 	buildInputs := strings.Split(env["buildInputs"], " ")
+	var glibcPatchPath []string
 	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
+		// TODO(gcurtis): this is a massive hack. Please get rid
+		// of this and install the package to the profile.
+		if strings.Contains(path, "patched-glibc") {
+			glibcPatchPath = append(glibcPatchPath, path)
+			return true
+		}
 		for _, input := range buildInputs {
 			// input is of the form: /nix/store/<hash>-<package-name>-<version>
 			// path is of the form: /nix/store/<hash>-<package-name>-<version>/bin
@@ -901,6 +909,14 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		return true
 	})
 	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
+
+	// TODO(gcurtis): this is a massive hack. Please get rid
+	// of this and install the package to the profile.
+	if len(glibcPatchPath) != 0 {
+		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
+		nixEnvPath = envpath.JoinPathLists(patchedPath, nixEnvPath)
+		debug.Log("PATH after glibc-patch hack is: %s", nixEnvPath)
+	}
 
 	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
@@ -1126,31 +1142,6 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
-// nixBins returns the paths to all the nix binaries that are installed by
-// the flake. If there are conflicts, it returns the first one it finds of a
-// give name. This matches how nix flakes behaves if there are conflicts in
-// buildInputs
-func (d *Devbox) nixBins(env map[string]string) ([]string, error) {
-	dirs := strings.Split(env["buildInputs"], " ")
-	bins := map[string]string{}
-	for _, dir := range dirs {
-		binPath := filepath.Join(dir, "bin")
-		if _, err := os.Stat(binPath); errors.Is(err, fs.ErrNotExist) {
-			continue
-		}
-		files, err := os.ReadDir(binPath)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		for _, file := range files {
-			if _, alreadySet := bins[file.Name()]; !alreadySet {
-				bins[file.Name()] = filepath.Join(binPath, file.Name())
-			}
-		}
-	}
-	return lo.Values(bins), nil
-}
-
 func (d *Devbox) projectDirHash() string {
 	hash, _ := cuecfg.Hash(d.projectDir)
 	return hash
@@ -1198,24 +1189,6 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		env["PATH"] = envpath.JoinPathLists(includedInPath...)
 	}
 	return env, nil
-}
-
-// ExportifySystemPathWithoutWrappers is a small utility to filter WrapperBin paths from PATH
-func ExportifySystemPathWithoutWrappers() string {
-	path := []string{}
-	for _, p := range strings.Split(os.Getenv("PATH"), string(filepath.ListSeparator)) {
-		// Intentionally do not include projectDir with plugin.WrapperBinPath so that
-		// we filter out bin-wrappers for devbox-global and devbox-project.
-		if !strings.Contains(p, plugin.WrapperBinPath) {
-			path = append(path, p)
-		}
-	}
-
-	envs := map[string]string{
-		"PATH": strings.Join(path, string(filepath.ListSeparator)),
-	}
-
-	return exportify(envs)
 }
 
 func (d *Devbox) PluginManager() *plugin.Manager {

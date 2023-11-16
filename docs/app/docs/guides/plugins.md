@@ -6,7 +6,7 @@ This doc describes how to use Devbox Plugins with your project. **Plugins** prov
 
 ## Using Plugins
 
-### Built-in PLguins
+### Built-in Plugins
 
 If you add one of the packages listed above to your project using `devbox add <pkg>`, Devbox will automatically activate the plugin for that package.
 
@@ -34,7 +34,7 @@ Built-in plugins are available for the following packages. You can activate the 
 * [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0...)
 
 
-### Local PLugins
+### Local Plugins
 
 You can also [define your own plugins](./creating_plugins.md) and use them in your project. To use a local plugin, add the following to the `include` section of your devbox.json:
 

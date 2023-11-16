@@ -17,6 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox/s3"
+	"go.jetpack.io/pkg/sandbox/auth"
 )
 
 type pullCmdFlags struct {
@@ -63,9 +64,9 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 
 	var creds devopt.Credentials
 	t, err := genSession(cmd.Context())
-	if err != nil {
+	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return errors.WithStack(err)
-	} else if t != nil {
+	} else if t != nil && err == nil {
 		creds = devopt.Credentials{
 			IDToken: t.IDToken,
 			Email:   t.IDClaims().Email,

@@ -34,12 +34,12 @@ type Devbox interface {
 	Update(ctx context.Context, opts devopt.UpdateOpts) error
 
 	// Interact with services
-	ListServices(ctx context.Context) error
-	RestartServices(ctx context.Context, services ...string) error
+	ListServices(ctx context.Context, runInCurrentShell bool) error
+	RestartServices(ctx context.Context, runInCurrentShell bool, services ...string) error
 	Services() (services.Services, error)
-	StartProcessManager(ctx context.Context, requestedServices []string, background bool, processComposeFileOrDir string) error
-	StartServices(ctx context.Context, services ...string) error
-	StopServices(ctx context.Context, allProjects bool, services ...string) error
+	StartProcessManager(ctx context.Context, runInCurrentShell bool, requestedServices []string, background bool, processComposeFileOrDir string) error
+	StartServices(ctx context.Context, runInCurrentShell bool, services ...string) error
+	StopServices(ctx context.Context, runInCurrentShell, allProjects bool, services ...string) error
 
 	// Generate files
 	Generate(ctx context.Context) error
@@ -64,13 +64,4 @@ func GlobalDataPath() (string, error) {
 
 func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
 	return impl.PrintEnvrcContent(w, envFlags)
-}
-
-// ExportifySystemPathWithoutWrappers reads $PATH, removes `virtenv/.wrappers/bin` paths,
-// and returns a string of the form `export PATH=....`
-//
-// This small utility function could have been inlined in the boxcli caller, but
-// needed the impl.exportify functionality. It does not depend on core-devbox.
-func ExportifySystemPathWithoutWrappers() string {
-	return impl.ExportifySystemPathWithoutWrappers()
 }

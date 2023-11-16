@@ -1,10 +1,10 @@
 {
   "name": "php",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "readme": "PHP is compiled with default extensions. If you would like to use non-default extensions you can add them with devbox add php81Extensions.{extension} . For example, for the memcache extension you can do `devbox add php81Extensions.memcached`.",
   "__packages": [
-    "path:{{ .Virtenv }}",
-    "path:{{ .Virtenv }}#composer"
+    "path:{{ .Virtenv }}/flake",
+    "path:{{ .Virtenv }}/flake#composer"
   ],
   "__remove_trigger_package": true,
   "env": {
@@ -17,6 +17,6 @@
     "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf",
     "{{ .DevboxDir }}/php.ini": "php/php.ini",
     "{{ .Virtenv }}/process-compose.yaml": "php/process-compose.yaml",
-    "{{ .Virtenv }}/flake.nix": "php/flake.nix"
+    "{{ .Virtenv }}/flake/flake.nix": "php/flake.nix"
   }
 }

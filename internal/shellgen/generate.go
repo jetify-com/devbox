@@ -4,10 +4,10 @@
 package shellgen
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"embed"
-	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -20,6 +20,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/redact"
 )
 
 //go:embed tmpl/*
@@ -50,6 +51,15 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 
+	if plan.needsGlibcPatch() {
+		patch, err := newGlibcPatchFlake(devbox.Config().NixPkgsCommitHash(), plan.Packages)
+		if err != nil {
+			return redact.Errorf("generate glibc patch flake: %v", err)
+		}
+		if err := patch.writeTo(filepath.Join(FlakePath(devbox), "glibc-patch")); err != nil {
+			return redact.Errorf("write glibc patch flake to directory: %v", err)
+		}
+	}
 	err = makeFlakeFile(devbox, outPath, plan)
 	if err != nil {
 		return errors.WithStack(err)
@@ -61,10 +71,7 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 // Cache and buffers for generating templated files.
 var (
 	tmplCache = map[string]*template.Template{}
-
-	// Most generated files are < 4KiB.
-	tmplNewBuf = bytes.NewBuffer(make([]byte, 0, 4096))
-	tmplOldBuf = bytes.NewBuffer(make([]byte, 0, 4096))
+	tmplBuf   bytes.Buffer
 )
 
 func writeFromTemplate(path string, plan any, tmplName, generatedName string) error {
@@ -75,61 +82,92 @@ func writeFromTemplate(path string, plan any, tmplName, generatedName string) er
 		tmpl.Funcs(templateFuncs)
 
 		var err error
-		tmpl, err = tmpl.ParseFS(tmplFS, "tmpl/"+tmplKey)
+		glob := "tmpl/" + tmplKey
+		tmpl, err = tmpl.ParseFS(tmplFS, glob)
 		if err != nil {
-			return errors.WithStack(err)
+			return redact.Errorf("parse embedded tmplFS glob %q: %v", redact.Safe(glob), redact.Safe(err))
 		}
 		tmplCache[tmplKey] = tmpl
 	}
-	tmplNewBuf.Reset()
-	if err := tmpl.Execute(tmplNewBuf, plan); err != nil {
-		return errors.WithStack(err)
+	tmplBuf.Reset()
+	if err := tmpl.Execute(&tmplBuf, plan); err != nil {
+		return redact.Errorf("execute template %s: %v", redact.Safe(tmplKey), err)
 	}
 
 	// In some circumstances, Nix looks at the mod time of a file when
 	// caching, so we only want to update the file if something has
 	// changed. Blindly overwriting the file could invalidate Nix's cache
 	// every time, slowing down evaluation considerably.
-	var (
-		outPath = filepath.Join(path, generatedName)
-		flag    = os.O_RDWR | os.O_CREATE
-		perm    = fs.FileMode(0o644)
-	)
-	outFile, err := os.OpenFile(outPath, flag, perm)
-	if errors.Is(err, fs.ErrNotExist) {
-		if err := os.MkdirAll(path, 0o755); err != nil {
-			return errors.WithStack(err)
+	err := overwriteFileIfChanged(filepath.Join(path, generatedName), tmplBuf.Bytes(), 0o644)
+	if err != nil {
+		return redact.Errorf("write %s to file: %v", redact.Safe(tmplName), err)
+	}
+	return nil
+}
+
+// writeGlibcPatchScript writes the embedded glibc patching script to disk so
+// that a generated flake can use it.
+func writeGlibcPatchScript(path string) error {
+	script, err := fs.ReadFile(tmplFS, "tmpl/glibc-patch.bash")
+	if err != nil {
+		return redact.Errorf("read embedded glibc-patch.bash: %v", redact.Safe(err))
+	}
+	err = overwriteFileIfChanged(path, script, 0o755)
+	if err != nil {
+		return redact.Errorf("write glibc-patch.bash to file: %v", err)
+	}
+	return nil
+}
+
+// overwriteFileIfChanged checks that the contents of f == data, and overwrites
+// f if they differ. It also ensures that f's permissions are set to perm.
+func overwriteFileIfChanged(path string, data []byte, perm os.FileMode) error {
+	flag := os.O_RDWR | os.O_CREATE
+	file, err := os.OpenFile(path, flag, perm)
+	if errors.Is(err, os.ErrNotExist) {
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			return err
 		}
-		outFile, err = os.OpenFile(outPath, flag, perm)
+
+		// Definitely a new file if we had to make the directory.
+		return os.WriteFile(path, data, perm)
 	}
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
-	defer outFile.Close()
+	defer file.Close()
 
-	// Only read len(tmplWriteBuf) + 1 from the existing file so we can
-	// check if the lengths are different without reading the whole thing.
-	tmplOldBuf.Reset()
-	tmplOldBuf.Grow(tmplNewBuf.Len() + 1)
-	_, err = io.Copy(tmplOldBuf, io.LimitReader(outFile, int64(tmplNewBuf.Len())+1))
+	fi, err := file.Stat()
+	if err != nil || fi.Mode().Perm() != perm {
+		if err := file.Chmod(perm); err != nil {
+			return err
+		}
+	}
+
+	// Fast path - check if the lengths differ.
+	if err == nil && fi.Size() != int64(len(data)) {
+		return overwriteFile(file, data, 0)
+	}
+
+	r := bufio.NewReader(file)
+	for offset := range data {
+		b, err := r.ReadByte()
+		if err != nil || b != data[offset] {
+			return overwriteFile(file, data, offset)
+		}
+	}
+	return nil
+}
+
+// overwriteFile truncates f to len(data) and writes data[offset:] beginning at
+// the same offset in f.
+func overwriteFile(f *os.File, data []byte, offset int) error {
+	err := f.Truncate(int64(len(data)))
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
-	if bytes.Equal(tmplNewBuf.Bytes(), tmplOldBuf.Bytes()) {
-		return nil
-	}
-
-	// Replace the existing file contents.
-	if _, err := outFile.Seek(0, io.SeekStart); err != nil {
-		return errors.WithStack(err)
-	}
-	if err := outFile.Truncate(int64(tmplNewBuf.Len())); err != nil {
-		return errors.WithStack(err)
-	}
-	if _, err := io.Copy(outFile, tmplNewBuf); err != nil {
-		return errors.WithStack(err)
-	}
-	return errors.WithStack(outFile.Close())
+	_, err = f.WriteAt(data[offset:], int64(offset))
+	return err
 }
 
 func toJSON(a any) string {
@@ -178,8 +216,12 @@ func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
 		return errors.WithStack(err)
 	}
 
-	// add the flake.nix file to git
+	// Any files that flake.nix needs at build time must be in git.
+	// Otherwise, Nix won't copy it into the flake's build environment.
 	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix")
+	if plan.needsGlibcPatch() {
+		cmd.Args = append(cmd.Args, "glibc-patch/flake.nix")
+	}
 	if debug.IsEnabled() {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout

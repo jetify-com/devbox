@@ -9,7 +9,6 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/wrapnix"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -17,8 +16,7 @@ import (
 )
 
 type versionFlags struct {
-	verbose             bool
-	updateDevboxSymlink bool
+	verbose bool
 }
 
 func versionCmd() *cobra.Command {
@@ -35,13 +33,6 @@ func versionCmd() *cobra.Command {
 	command.Flags().BoolVarP(&flags.verbose, "verbose", "v", false, // value
 		"displays additional version information",
 	)
-	// Make this flag hidden because:
-	// This functionality doesn't strictly belong in this command, but we add it here
-	// since `devbox version update` calls `devbox version -v` to trigger an update.
-	command.Flags().BoolVarP(&flags.updateDevboxSymlink, "update-devbox-symlink", "u", false, // value
-		"update the devbox symlink to point to the current binary",
-	)
-	_ = command.Flags().MarkHidden("update-devbox-symlink")
 
 	command.AddCommand(selfUpdateCmd())
 	return command
@@ -71,13 +62,6 @@ func versionCmdFunc(cmd *cobra.Command, _ []string, flags versionFlags) error {
 		fmt.Fprintf(w, "Go Version:  %v\n", info.GoVersion)
 		fmt.Fprintf(w, "Launcher:    %v\n", info.LauncherVersion)
 
-		// TODO: in a subsequent PR, we should do this when flags.updateDevboxSymlink is true.
-		// Not doing for now, since users who have Devbox binary prior to this edit
-		// (before Devbox v0.5.9) will not invoke this flag in `devbox version update`.
-		// But we still want this to run for them.
-		if err := wrapnix.CreateDevboxSymlinkIfPossible(); err != nil {
-			return err
-		}
 	} else {
 		fmt.Fprintf(w, "%v\n", info.Version)
 	}

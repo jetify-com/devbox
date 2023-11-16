@@ -9,7 +9,8 @@
   "env": {
     "NGINX_WEB_PORT": "8089",
     "NGINX_WEB_ROOT": "../../../my_app",
-    "PGPORT": "5433"
+    "PGPORT": "5433",
+    "PGHOST": "/tmp/devbox/lepp"
   },
   "shell": {
     "scripts": {
@@ -21,7 +22,7 @@
       "init_db": "initdb",
       "run_test": [
         "mkdir -p /tmp/devbox/lepp",
-        "export PGHOST=/tmp/devbox/lepp",
+        "rm -rf .devbox/virtenv/postgresql/data",
         "initdb",
         "devbox services up -b",
         "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",

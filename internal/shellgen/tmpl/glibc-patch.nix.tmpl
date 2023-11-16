@@ -1,0 +1,64 @@
+{
+  description = "Patches packages to use a newer version of glibc";
+
+  inputs = {
+    nixpkgs-glibc.url = "{{ .NixpkgsGlibcFlakeRef }}";
+
+    {{- range $name, $flakeref := .Inputs }}
+    {{ $name }}.url = "{{ $flakeref }}";
+    {{- end }}
+  };
+
+  outputs = args@{ self, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
+    {{ with .Outputs -}}
+    let
+      # Initialize each nixpkgs input into a new attribute set with the
+      # schema "pkgs.<input>.<system>.<package>".
+      #
+      # Example: pkgs.nixpkgs-80c24e.x86_64-linux.python37
+      pkgs = builtins.mapAttrs (name: flake:
+        if builtins.hasAttr "legacyPackages" flake then
+          {
+            {{- range $system, $_ := .Packages }}
+            {{ $system }} = (import flake {
+              system = "{{ $system }}";
+              config.allowUnfree = true;
+              config.allowInsecurePredicate = pkg: true;
+            });
+            {{- end }}
+          }
+        else null) args;
+
+      patchGlibc = pkg: derivation rec {
+        name = "devbox-patched-glibc";
+        system = pkg.system;
+
+        # The package we're patching.
+        inherit pkg;
+
+        # Programs needed by glibc-patch.bash.
+        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc patchelf ripgrep;
+
+        builder = "${bash}/bin/bash";
+        args = [ ./glibc-patch.bash ];
+      };
+    in
+    {
+      packages = {
+        {{- range $system, $packages := .Packages }}
+        {{ $system }} = {
+          {{- range $name, $derivation := $packages }}
+          {{ $name }} = patchGlibc {{ $derivation }};
+          {{- end }}
+        };
+        {{- end }}
+      };
+
+      formatter = {
+        {{- range $system, $_ := .Packages }}
+        {{ $system }} = nixpkgs-glibc.legacyPackages.{{ $system }}.nixpkgs-fmt;
+        {{- end }}
+      };
+    };
+    {{- end }}
+}

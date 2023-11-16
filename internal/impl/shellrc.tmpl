@@ -63,7 +63,7 @@ devbox log shell-interactive {{ .ShellStartTime }}
 {{ end }}
 
 # Add refresh alias (only if it doesn't already exist)
-if ! type refresh >/dev/null 2>&1; then
-  alias refresh='eval $(devbox shellenv)'
-  export DEVBOX_REFRESH_ALIAS="refresh"
+if ! type {{ .RefreshAliasName }} >/dev/null 2>&1; then
+  export {{ .RefreshAliasEnvVar }}='{{ .RefreshCmd }}'
+  alias {{ .RefreshAliasName }}='{{ .RefreshCmd }}'
 fi

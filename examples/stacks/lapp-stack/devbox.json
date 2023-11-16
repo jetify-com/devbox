@@ -7,7 +7,8 @@
     "apache@2.4"
   ],
   "env": {
-    "PGPORT": "5432"
+    "PGPORT": "5432",
+    "PGHOST": "/tmp/devbox/lapp"
   },
   "shell": {
     "scripts": {
@@ -19,7 +20,6 @@
       "init_db": "initdb",
       "run_test": [
         "mkdir -p /tmp/devbox/lapp",
-        "export PGHOST=/tmp/devbox/lapp",
         "initdb",
         "devbox services start",
         "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",

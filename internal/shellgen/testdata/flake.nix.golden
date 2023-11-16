@@ -7,11 +7,11 @@
     nixpkgs.url = "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be";
   };
 
-  outputs = { 
+  outputs = {
     self,
     nixpkgs,
     nixpkgs,
-    flake-utils 
+    flake-utils
   }:
     flake-utils.lib.eachDefaultSystem (system:
       let

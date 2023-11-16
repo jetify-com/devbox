@@ -10,13 +10,13 @@
     {{- end }}
   };
 
-  outputs = { 
+  outputs = {
     self,
     nixpkgs,
     {{- range .FlakeInputs }}
     {{.Name}},
     {{- end }}
-    flake-utils 
+    flake-utils
   }:
     flake-utils.lib.eachDefaultSystem (system:
       let

@@ -52,6 +52,7 @@ var ErrNoRecognizableShellFound = errors.New("SHELL in undefined, and couldn't f
 // DevboxShell configures a user's shell to run in Devbox. Its zero value is a
 // fallback shell that launches a regular Nix shell.
 type DevboxShell struct {
+	devbox          *Devbox
 	name            name
 	binPath         string
 	projectDir      string // path to where devbox.json config resides
@@ -59,10 +60,7 @@ type DevboxShell struct {
 	userShellrcPath string
 
 	hooksFilePath string
-
-	// profileDir is the absolute path to the directory storing the nix-profile
-	profileDir  string
-	historyFile string
+	historyFile   string
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime time.Time
@@ -78,6 +76,7 @@ func NewDevboxShell(devbox *Devbox, opts ...ShellOption) (*DevboxShell, error) {
 		return nil, err
 	}
 	sh := initShellBinaryFields(shPath)
+	sh.devbox = devbox
 
 	for _, opt := range opts {
 		opt(sh)
@@ -152,7 +151,11 @@ func initShellBinaryFields(path string) *DevboxShell {
 		shell.userShellrcPath = rcfilePath(".bashrc")
 	case "zsh":
 		shell.name = shZsh
-		shell.userShellrcPath = rcfilePath(".zshrc")
+		if zdotdir := os.Getenv("ZDOTDIR"); zdotdir != "" {
+			shell.userShellrcPath = filepath.Join(os.ExpandEnv(zdotdir), ".zshrc")
+		} else {
+			shell.userShellrcPath = rcfilePath(".zshrc")
+		}
 	case "ksh":
 		shell.name = shKsh
 		shell.userShellrcPath = rcfilePath(".kshrc")
@@ -172,12 +175,6 @@ func initShellBinaryFields(path string) *DevboxShell {
 		shell.name = shUnknown
 	}
 	return shell
-}
-
-func WithProfile(profileDir string) ShellOption {
-	return func(s *DevboxShell) {
-		s.profileDir = profileDir
-	}
 }
 
 func WithHistoryFile(historyFile string) ShellOption {
@@ -332,14 +329,21 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
+
+		RefreshAliasName   string
+		RefreshCmd         string
+		RefreshAliasEnvVar string
 	}{
-		ProjectDir:       s.projectDir,
-		OriginalInit:     string(bytes.TrimSpace(userShellrc)),
-		OriginalInitPath: s.userShellrcPath,
-		HooksFilePath:    s.hooksFilePath,
-		ShellStartTime:   telemetry.FormatShellStart(s.shellStartTime),
-		HistoryFile:      strings.TrimSpace(s.historyFile),
-		ExportEnv:        exportify(s.env),
+		ProjectDir:         s.projectDir,
+		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
+		OriginalInitPath:   s.userShellrcPath,
+		HooksFilePath:      s.hooksFilePath,
+		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
+		HistoryFile:        strings.TrimSpace(s.historyFile),
+		ExportEnv:          exportify(s.env),
+		RefreshAliasName:   s.devbox.refreshAliasName(),
+		RefreshCmd:         s.devbox.refreshCmd(),
+		RefreshAliasEnvVar: s.devbox.refreshAliasEnvVar(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("execute shellrc template: %v", err)
@@ -357,14 +361,15 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 	// For now, we only need to do this for zsh shell
 	if s.name == shZsh {
-		// Useful explanation of zsh startup files: https://zsh.sourceforge.io/FAQ/zshfaq03.html#l20
-		filenames := []string{".zshenv", ".zprofile", ".zlogin"}
+		// List of zsh startup files: https://zsh.sourceforge.io/Intro/intro_3.html
+		filenames := []string{".zshenv", ".zprofile", ".zlogin", ".zlogout"}
 
 		// zim framework
 		// https://zimfw.sh/docs/install/
 		filenames = append(filenames, ".zimrc")
 
 		for _, filename := range filenames {
+			// The userShellrcPath should be set to ZDOTDIR already.
 			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
 			_, err := os.Stat(fileOld)
 			if errors.Is(err, fs.ErrNotExist) {
@@ -376,12 +381,11 @@ func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)
-
-			if err := os.Link(fileOld, fileNew); err == nil {
-				debug.Log("Linked shell startup file %s to %s", fileOld, fileNew)
-			} else {
+			cmd := exec.Command("cp", fileOld, fileNew)
+			if err := cmd.Run(); err != nil {
 				// This is a best-effort operation. If there's an error then log it for visibility but continue.
-				debug.Log("Error linking zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+				debug.Log("Error copying zsh setting file from %s to %s: %v", fileOld, fileNew, err)
+				continue
 			}
 		}
 	}
@@ -395,4 +399,8 @@ func filterPathList(pathList string, keep func(string) bool) string {
 		}
 	}
 	return strings.Join(filtered, string(filepath.ListSeparator))
+}
+
+func isFishShell() bool {
+	return filepath.Base(os.Getenv("SHELL")) == "fish"
 }
