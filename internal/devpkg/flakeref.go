@@ -9,6 +9,15 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 )
 
+const (
+	FlakeTypeIndirect = "indirect"
+	FlakeTypePath     = "path"
+	FlakeTypeFile     = "file"
+	FlakeTypeGit      = "git"
+	FlakeTypeGitHub   = "github"
+	FlakeTypeTarball  = "tarball"
+)
+
 // FlakeRef is a parsed Nix flake reference. A flake reference is a subset of
 // the Nix CLI "installable" syntax. Installables may specify an attribute path
 // and derivation outputs with a flake reference using the '#' and '^' characters.
@@ -86,7 +95,7 @@ func ParseFlakeRef(ref string) (FlakeRef, error) {
 			// don't allow it at all.
 			return FlakeRef{}, redact.Errorf("path-style flake reference %q contains a '?' or '#'", ref)
 		}
-		parsed.Type = "path"
+		parsed.Type = FlakeTypePath
 		parsed.Path = ref
 		return parsed, nil
 	}
@@ -107,7 +116,7 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 	case "", "flake":
 		// [flake:]<flake-id>(/<rev-or-ref>(/rev)?)?
 
-		parsed.Type = "indirect"
+		parsed.Type = FlakeTypeIndirect
 		split, err := splitPathOrOpaque(refURL)
 		if err != nil {
 			return FlakeRef{}, "", redact.Errorf("parse flake reference URL path: %v", err)
@@ -126,7 +135,7 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 	case "path":
 		// [path:]<path>(\?<params)?
 
-		parsed.Type = "path"
+		parsed.Type = FlakeTypePath
 		if refURL.Path == "" {
 			parsed.Path, err = url.PathUnescape(refURL.Opaque)
 			if err != nil {
@@ -137,26 +146,26 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 		}
 	case "http", "https", "file":
 		if isArchive(refURL.Path) {
-			parsed.Type = "tarball"
+			parsed.Type = FlakeTypeTarball
 		} else {
-			parsed.Type = "file"
+			parsed.Type = FlakeTypeFile
 		}
 		parsed.Dir = refURL.Query().Get("dir")
 		parsed.URL = refURL.String()
 	case "tarball+http", "tarball+https", "tarball+file":
-		parsed.Type = "tarball"
+		parsed.Type = FlakeTypeTarball
 		parsed.Dir = refURL.Query().Get("dir")
 
 		refURL.Scheme = refURL.Scheme[8:] // remove tarball+
 		parsed.URL = refURL.String()
 	case "file+http", "file+https", "file+file":
-		parsed.Type = "file"
+		parsed.Type = FlakeTypeFile
 		parsed.Dir = refURL.Query().Get("dir")
 
 		refURL.Scheme = refURL.Scheme[5:] // remove file+
 		parsed.URL = refURL.String()
 	case "git", "git+http", "git+https", "git+ssh", "git+git", "git+file":
-		parsed.Type = "git"
+		parsed.Type = FlakeTypeGit
 		q := refURL.Query()
 		parsed.Dir = q.Get("dir")
 		parsed.Ref = q.Get("ref")
@@ -182,7 +191,7 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 func parseGitHubFlakeRef(refURL *url.URL, parsed *FlakeRef) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
-	parsed.Type = "github"
+	parsed.Type = FlakeTypeGitHub
 	split, err := splitPathOrOpaque(refURL)
 	if err != nil {
 		return err
@@ -237,12 +246,12 @@ func parseGitHubFlakeRef(refURL *url.URL, parsed *FlakeRef) error {
 // string.
 func (f FlakeRef) String() string {
 	switch f.Type {
-	case "file":
+	case FlakeTypeFile:
 		if f.URL == "" {
 			return ""
 		}
 		return "file+" + f.URL
-	case "git":
+	case FlakeTypeGit:
 		if f.URL == "" {
 			return ""
 		}
@@ -265,7 +274,7 @@ func (f FlakeRef) String() string {
 		}
 		url.RawQuery = buildQueryString("ref", f.Ref, "rev", f.Rev, "dir", f.Dir)
 		return url.String()
-	case "github":
+	case FlakeTypeGitHub:
 		if f.Owner == "" || f.Repo == "" {
 			return ""
 		}
@@ -275,7 +284,7 @@ func (f FlakeRef) String() string {
 			RawQuery: buildQueryString("host", f.Host, "dir", f.Dir),
 		}
 		return url.String()
-	case "indirect":
+	case FlakeTypeIndirect:
 		if f.ID == "" {
 			return ""
 		}
@@ -285,7 +294,7 @@ func (f FlakeRef) String() string {
 			RawQuery: buildQueryString("dir", f.Dir),
 		}
 		return url.String()
-	case "path":
+	case FlakeTypePath:
 		if f.Path == "" {
 			return ""
 		}
@@ -302,7 +311,7 @@ func (f FlakeRef) String() string {
 			url.Opaque = "."
 		}
 		return url.String()
-	case "tarball":
+	case FlakeTypeTarball:
 		if f.URL == "" {
 			return ""
 		}

@@ -22,18 +22,18 @@ func TestParseFlakeRef(t *testing.T) {
 		// Path-like references start with a '.' or '/'.
 		// This distinguishes them from indirect references
 		// (./nixpkgs is a directory; nixpkgs is an indirect).
-		".":                {Type: "path", Path: "."},
-		"./":               {Type: "path", Path: "./"},
-		"./flake":          {Type: "path", Path: "./flake"},
-		"./relative/flake": {Type: "path", Path: "./relative/flake"},
-		"/":                {Type: "path", Path: "/"},
-		"/flake":           {Type: "path", Path: "/flake"},
-		"/absolute/flake":  {Type: "path", Path: "/absolute/flake"},
+		".":                {Type: FlakeTypePath, Path: "."},
+		"./":               {Type: FlakeTypePath, Path: "./"},
+		"./flake":          {Type: FlakeTypePath, Path: "./flake"},
+		"./relative/flake": {Type: FlakeTypePath, Path: "./relative/flake"},
+		"/":                {Type: FlakeTypePath, Path: "/"},
+		"/flake":           {Type: FlakeTypePath, Path: "/flake"},
+		"/absolute/flake":  {Type: FlakeTypePath, Path: "/absolute/flake"},
 
 		// Path-like references can have raw unicode characters unlike
 		// path: URL references.
-		"./Ûñî©ôδ€/flake\n": {Type: "path", Path: "./Ûñî©ôδ€/flake\n"},
-		"/Ûñî©ôδ€/flake\n":  {Type: "path", Path: "/Ûñî©ôδ€/flake\n"},
+		"./Ûñî©ôδ€/flake\n": {Type: FlakeTypePath, Path: "./Ûñî©ôδ€/flake\n"},
+		"/Ûñî©ôδ€/flake\n":  {Type: FlakeTypePath, Path: "/Ûñî©ôδ€/flake\n"},
 
 		// Path-like references don't allow paths with a '?' or '#'.
 		"./invalid#path": {},
@@ -44,43 +44,43 @@ func TestParseFlakeRef(t *testing.T) {
 		"/?":             {},
 
 		// URL-like path references.
-		"path:":                      {Type: "path", Path: ""},
-		"path:.":                     {Type: "path", Path: "."},
-		"path:./":                    {Type: "path", Path: "./"},
-		"path:./flake":               {Type: "path", Path: "./flake"},
-		"path:./relative/flake":      {Type: "path", Path: "./relative/flake"},
-		"path:./relative/my%20flake": {Type: "path", Path: "./relative/my flake"},
-		"path:/":                     {Type: "path", Path: "/"},
-		"path:/flake":                {Type: "path", Path: "/flake"},
-		"path:/absolute/flake":       {Type: "path", Path: "/absolute/flake"},
+		"path:":                      {Type: FlakeTypePath, Path: ""},
+		"path:.":                     {Type: FlakeTypePath, Path: "."},
+		"path:./":                    {Type: FlakeTypePath, Path: "./"},
+		"path:./flake":               {Type: FlakeTypePath, Path: "./flake"},
+		"path:./relative/flake":      {Type: FlakeTypePath, Path: "./relative/flake"},
+		"path:./relative/my%20flake": {Type: FlakeTypePath, Path: "./relative/my flake"},
+		"path:/":                     {Type: FlakeTypePath, Path: "/"},
+		"path:/flake":                {Type: FlakeTypePath, Path: "/flake"},
+		"path:/absolute/flake":       {Type: FlakeTypePath, Path: "/absolute/flake"},
 
 		// URL-like paths can omit the "./" prefix for relative
 		// directories.
-		"path:flake":          {Type: "path", Path: "flake"},
-		"path:relative/flake": {Type: "path", Path: "relative/flake"},
+		"path:flake":          {Type: FlakeTypePath, Path: "flake"},
+		"path:relative/flake": {Type: FlakeTypePath, Path: "relative/flake"},
 
 		// Indirect references.
-		"flake:indirect":          {Type: "indirect", ID: "indirect"},
-		"flake:indirect/ref":      {Type: "indirect", ID: "indirect", Ref: "ref"},
-		"flake:indirect/my%2Fref": {Type: "indirect", ID: "indirect", Ref: "my/ref"},
-		"flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: "indirect", ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "indirect", ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"flake:indirect":          {Type: FlakeTypeIndirect, ID: "indirect"},
+		"flake:indirect/ref":      {Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref"},
+		"flake:indirect/my%2Fref": {Type: FlakeTypeIndirect, ID: "indirect", Ref: "my/ref"},
+		"flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: FlakeTypeIndirect, ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 
 		// Indirect references can omit their "indirect:" type prefix.
-		"indirect":     {Type: "indirect", ID: "indirect"},
-		"indirect/ref": {Type: "indirect", ID: "indirect", Ref: "ref"},
-		"indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: "indirect", ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "indirect", ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"indirect":     {Type: FlakeTypeIndirect, ID: "indirect"},
+		"indirect/ref": {Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref"},
+		"indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: FlakeTypeIndirect, ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 
 		// GitHub references.
-		"github:NixOS/nix":            {Type: "github", Owner: "NixOS", Repo: "nix"},
-		"github:NixOS/nix/v1.2.3":     {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github:NixOS/nix?ref=v1.2.3": {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github:NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: "github", Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":     {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
-		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "github", Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix?host=example.com":                             {Type: "github", Owner: "NixOS", Repo: "nix", Host: "example.com"},
+		"github:NixOS/nix":            {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix"},
+		"github:NixOS/nix/v1.2.3":     {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
+		"github:NixOS/nix?ref=v1.2.3": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
+		"github:NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":     {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
+		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix?host=example.com":                             {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
 
 		// GitHub references with invalid ref + rev combinations.
 		"github:NixOS/nix?ref=v1.2.3&rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":                               {},
@@ -90,57 +90,57 @@ func TestParseFlakeRef(t *testing.T) {
 
 		// The github type allows clone-style URLs. The username and
 		// host are ignored.
-		"github://git@github.com/NixOS/nix":                                              {Type: "github", Owner: "NixOS", Repo: "nix"},
-		"github://git@github.com/NixOS/nix/v1.2.3":                                       {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github://git@github.com/NixOS/nix?ref=v1.2.3":                                   {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github://git@github.com/NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github://git@github.com/NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: "github", Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github://git@github.com/NixOS/nix?host=example.com":                             {Type: "github", Owner: "NixOS", Repo: "nix", Host: "example.com"},
+		"github://git@github.com/NixOS/nix":                                              {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix"},
+		"github://git@github.com/NixOS/nix/v1.2.3":                                       {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
+		"github://git@github.com/NixOS/nix?ref=v1.2.3":                                   {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
+		"github://git@github.com/NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github://git@github.com/NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github://git@github.com/NixOS/nix?host=example.com":                             {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
 
 		// Git references.
-		"git://example.com/repo/flake":         {Type: "git", URL: "git://example.com/repo/flake"},
-		"git+https://example.com/repo/flake":   {Type: "git", URL: "https://example.com/repo/flake"},
-		"git+ssh://git@example.com/repo/flake": {Type: "git", URL: "ssh://git@example.com/repo/flake"},
-		"git:/repo/flake":                      {Type: "git", URL: "git:/repo/flake"},
-		"git+file:///repo/flake":               {Type: "git", URL: "file:///repo/flake"},
-		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir": {Type: "git", URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
+		"git://example.com/repo/flake":         {Type: FlakeTypeGit, URL: "git://example.com/repo/flake"},
+		"git+https://example.com/repo/flake":   {Type: FlakeTypeGit, URL: "https://example.com/repo/flake"},
+		"git+ssh://git@example.com/repo/flake": {Type: FlakeTypeGit, URL: "ssh://git@example.com/repo/flake"},
+		"git:/repo/flake":                      {Type: FlakeTypeGit, URL: "git:/repo/flake"},
+		"git+file:///repo/flake":               {Type: FlakeTypeGit, URL: "file:///repo/flake"},
+		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir": {Type: FlakeTypeGit, URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
 
 		// Tarball references.
-		"tarball+http://example.com/flake":  {Type: "tarball", URL: "http://example.com/flake"},
-		"tarball+https://example.com/flake": {Type: "tarball", URL: "https://example.com/flake"},
-		"tarball+file:///home/flake":        {Type: "tarball", URL: "file:///home/flake"},
+		"tarball+http://example.com/flake":  {Type: FlakeTypeTarball, URL: "http://example.com/flake"},
+		"tarball+https://example.com/flake": {Type: FlakeTypeTarball, URL: "https://example.com/flake"},
+		"tarball+file:///home/flake":        {Type: FlakeTypeTarball, URL: "file:///home/flake"},
 
 		// Regular URLs have the tarball type if they have a known
 		// archive extension:
 		// .zip, .tar, .tgz, .tar.gz, .tar.xz, .tar.bz2 or .tar.zst
-		"http://example.com/flake.zip":            {Type: "tarball", URL: "http://example.com/flake.zip"},
-		"http://example.com/flake.tar":            {Type: "tarball", URL: "http://example.com/flake.tar"},
-		"http://example.com/flake.tgz":            {Type: "tarball", URL: "http://example.com/flake.tgz"},
-		"http://example.com/flake.tar.gz":         {Type: "tarball", URL: "http://example.com/flake.tar.gz"},
-		"http://example.com/flake.tar.xz":         {Type: "tarball", URL: "http://example.com/flake.tar.xz"},
-		"http://example.com/flake.tar.bz2":        {Type: "tarball", URL: "http://example.com/flake.tar.bz2"},
-		"http://example.com/flake.tar.zst":        {Type: "tarball", URL: "http://example.com/flake.tar.zst"},
-		"http://example.com/flake.tar?dir=subdir": {Type: "tarball", URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
-		"file:///flake.zip":                       {Type: "tarball", URL: "file:///flake.zip"},
-		"file:///flake.tar":                       {Type: "tarball", URL: "file:///flake.tar"},
-		"file:///flake.tgz":                       {Type: "tarball", URL: "file:///flake.tgz"},
-		"file:///flake.tar.gz":                    {Type: "tarball", URL: "file:///flake.tar.gz"},
-		"file:///flake.tar.xz":                    {Type: "tarball", URL: "file:///flake.tar.xz"},
-		"file:///flake.tar.bz2":                   {Type: "tarball", URL: "file:///flake.tar.bz2"},
-		"file:///flake.tar.zst":                   {Type: "tarball", URL: "file:///flake.tar.zst"},
-		"file:///flake.tar?dir=subdir":            {Type: "tarball", URL: "file:///flake.tar?dir=subdir", Dir: "subdir"},
+		"http://example.com/flake.zip":            {Type: FlakeTypeTarball, URL: "http://example.com/flake.zip"},
+		"http://example.com/flake.tar":            {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar"},
+		"http://example.com/flake.tgz":            {Type: FlakeTypeTarball, URL: "http://example.com/flake.tgz"},
+		"http://example.com/flake.tar.gz":         {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar.gz"},
+		"http://example.com/flake.tar.xz":         {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar.xz"},
+		"http://example.com/flake.tar.bz2":        {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar.bz2"},
+		"http://example.com/flake.tar.zst":        {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar.zst"},
+		"http://example.com/flake.tar?dir=subdir": {Type: FlakeTypeTarball, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
+		"file:///flake.zip":                       {Type: FlakeTypeTarball, URL: "file:///flake.zip"},
+		"file:///flake.tar":                       {Type: FlakeTypeTarball, URL: "file:///flake.tar"},
+		"file:///flake.tgz":                       {Type: FlakeTypeTarball, URL: "file:///flake.tgz"},
+		"file:///flake.tar.gz":                    {Type: FlakeTypeTarball, URL: "file:///flake.tar.gz"},
+		"file:///flake.tar.xz":                    {Type: FlakeTypeTarball, URL: "file:///flake.tar.xz"},
+		"file:///flake.tar.bz2":                   {Type: FlakeTypeTarball, URL: "file:///flake.tar.bz2"},
+		"file:///flake.tar.zst":                   {Type: FlakeTypeTarball, URL: "file:///flake.tar.zst"},
+		"file:///flake.tar?dir=subdir":            {Type: FlakeTypeTarball, URL: "file:///flake.tar?dir=subdir", Dir: "subdir"},
 
 		// File URL references.
-		"file+file:///flake":                           {Type: "file", URL: "file:///flake"},
-		"file+http://example.com/flake":                {Type: "file", URL: "http://example.com/flake"},
-		"file+http://example.com/flake.git":            {Type: "file", URL: "http://example.com/flake.git"},
-		"file+http://example.com/flake.tar?dir=subdir": {Type: "file", URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
+		"file+file:///flake":                           {Type: FlakeTypeFile, URL: "file:///flake"},
+		"file+http://example.com/flake":                {Type: FlakeTypeFile, URL: "http://example.com/flake"},
+		"file+http://example.com/flake.git":            {Type: FlakeTypeFile, URL: "http://example.com/flake.git"},
+		"file+http://example.com/flake.tar?dir=subdir": {Type: FlakeTypeFile, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
 
 		// Regular URLs have the file type if they don't have a known
 		// archive extension.
-		"http://example.com/flake":            {Type: "file", URL: "http://example.com/flake"},
-		"http://example.com/flake.git":        {Type: "file", URL: "http://example.com/flake.git"},
-		"http://example.com/flake?dir=subdir": {Type: "file", URL: "http://example.com/flake?dir=subdir", Dir: "subdir"},
+		"http://example.com/flake":            {Type: FlakeTypeFile, URL: "http://example.com/flake"},
+		"http://example.com/flake.git":        {Type: FlakeTypeFile, URL: "http://example.com/flake.git"},
+		"http://example.com/flake?dir=subdir": {Type: FlakeTypeFile, URL: "http://example.com/flake?dir=subdir", Dir: "subdir"},
 	}
 
 	for ref, want := range cases {
@@ -161,58 +161,58 @@ func TestFlakeRefString(t *testing.T) {
 		{}: "",
 
 		// Path references.
-		{Type: "path", Path: "."}:                "path:.",
-		{Type: "path", Path: "./"}:               "path:.",
-		{Type: "path", Path: "./flake"}:          "path:flake",
-		{Type: "path", Path: "./relative/flake"}: "path:relative/flake",
-		{Type: "path", Path: "/"}:                "path:/",
-		{Type: "path", Path: "/flake"}:           "path:/flake",
-		{Type: "path", Path: "/absolute/flake"}:  "path:/absolute/flake",
+		{Type: FlakeTypePath, Path: "."}:                "path:.",
+		{Type: FlakeTypePath, Path: "./"}:               "path:.",
+		{Type: FlakeTypePath, Path: "./flake"}:          "path:flake",
+		{Type: FlakeTypePath, Path: "./relative/flake"}: "path:relative/flake",
+		{Type: FlakeTypePath, Path: "/"}:                "path:/",
+		{Type: FlakeTypePath, Path: "/flake"}:           "path:/flake",
+		{Type: FlakeTypePath, Path: "/absolute/flake"}:  "path:/absolute/flake",
 
 		// Path references with escapes.
-		{Type: "path", Path: "%"}:                 "path:%25",
-		{Type: "path", Path: "/%2F"}:              "path:/%252F",
-		{Type: "path", Path: "./Ûñî©ôδ€/flake\n"}: "path:%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
-		{Type: "path", Path: "/Ûñî©ôδ€/flake\n"}:  "path:/%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
+		{Type: FlakeTypePath, Path: "%"}:                 "path:%25",
+		{Type: FlakeTypePath, Path: "/%2F"}:              "path:/%252F",
+		{Type: FlakeTypePath, Path: "./Ûñî©ôδ€/flake\n"}: "path:%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
+		{Type: FlakeTypePath, Path: "/Ûñî©ôδ€/flake\n"}:  "path:/%C3%9B%C3%B1%C3%AE%C2%A9%C3%B4%CE%B4%E2%82%AC/flake%0A",
 
 		// Indirect references.
-		{Type: "indirect", ID: "indirect"}:                                                              "flake:indirect",
-		{Type: "indirect", ID: "indirect", Dir: "sub/dir"}:                                              "flake:indirect?dir=sub%2Fdir",
-		{Type: "indirect", ID: "indirect", Ref: "ref"}:                                                  "flake:indirect/ref",
-		{Type: "indirect", ID: "indirect", Ref: "my/ref"}:                                               "flake:indirect/my%2Fref",
-		{Type: "indirect", ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}:             "flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
-		{Type: "indirect", ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: FlakeTypeIndirect, ID: "indirect"}:                                                              "flake:indirect",
+		{Type: FlakeTypeIndirect, ID: "indirect", Dir: "sub/dir"}:                                              "flake:indirect?dir=sub%2Fdir",
+		{Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref"}:                                                  "flake:indirect/ref",
+		{Type: FlakeTypeIndirect, ID: "indirect", Ref: "my/ref"}:                                               "flake:indirect/my%2Fref",
+		{Type: FlakeTypeIndirect, ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}:             "flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: FlakeTypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
 
 		// GitHub references.
-		{Type: "github", Owner: "NixOS", Repo: "nix"}:                                                  "github:NixOS/nix",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"}:                                   "github:NixOS/nix/v1.2.3",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "my/ref"}:                                   "github:NixOS/nix/my%2Fref",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"}: "github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Dir: "sub/dir"}:                                  "github:NixOS/nix?dir=sub%2Fdir",
-		{Type: "github", Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:             "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix"}:                                                  "github:NixOS/nix",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"}:                                   "github:NixOS/nix/v1.2.3",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "my/ref"}:                                   "github:NixOS/nix/my%2Fref",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"}: "github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir"}:                                  "github:NixOS/nix?dir=sub%2Fdir",
+		{Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:             "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
 
 		// Git references.
-		{Type: "git", URL: "git://example.com/repo/flake"}:     "git://example.com/repo/flake",
-		{Type: "git", URL: "https://example.com/repo/flake"}:   "git+https://example.com/repo/flake",
-		{Type: "git", URL: "ssh://git@example.com/repo/flake"}: "git+ssh://git@example.com/repo/flake",
-		{Type: "git", URL: "git:/repo/flake"}:                  "git:/repo/flake",
-		{Type: "git", URL: "file:///repo/flake"}:               "git+file:///repo/flake",
-		{Type: "git", URL: "ssh://git@example.com/repo/flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4"}:                               "git+ssh://git@example.com/repo/flake?ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
-		{Type: "git", URL: "ssh://git@example.com/repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}: "git+ssh://git@example.com/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
-		{Type: "git", URL: "git:repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}:                   "git:repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: FlakeTypeGit, URL: "git://example.com/repo/flake"}:                                                                     "git://example.com/repo/flake",
+		{Type: FlakeTypeGit, URL: "https://example.com/repo/flake"}:                                                                   "git+https://example.com/repo/flake",
+		{Type: FlakeTypeGit, URL: "ssh://git@example.com/repo/flake"}:                                                                 "git+ssh://git@example.com/repo/flake",
+		{Type: FlakeTypeGit, URL: "git:/repo/flake"}:                                                                                  "git:/repo/flake",
+		{Type: FlakeTypeGit, URL: "file:///repo/flake"}:                                                                               "git+file:///repo/flake",
+		{Type: FlakeTypeGit, URL: "ssh://git@example.com/repo/flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4"}: "git+ssh://git@example.com/repo/flake?ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: FlakeTypeGit, URL: "ssh://git@example.com/repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}: "git+ssh://git@example.com/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: FlakeTypeGit, URL: "git:repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}:                   "git:repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
 
 		// Tarball references.
-		{Type: "tarball", URL: "http://example.com/flake"}:                  "tarball+http://example.com/flake",
-		{Type: "tarball", URL: "https://example.com/flake"}:                 "tarball+https://example.com/flake",
-		{Type: "tarball", URL: "https://example.com/flake", Dir: "sub/dir"}: "tarball+https://example.com/flake?dir=sub%2Fdir",
-		{Type: "tarball", URL: "file:///home/flake"}:                        "tarball+file:///home/flake",
+		{Type: FlakeTypeTarball, URL: "http://example.com/flake"}:                  "tarball+http://example.com/flake",
+		{Type: FlakeTypeTarball, URL: "https://example.com/flake"}:                 "tarball+https://example.com/flake",
+		{Type: FlakeTypeTarball, URL: "https://example.com/flake", Dir: "sub/dir"}: "tarball+https://example.com/flake?dir=sub%2Fdir",
+		{Type: FlakeTypeTarball, URL: "file:///home/flake"}:                        "tarball+file:///home/flake",
 
 		// File URL references.
-		{Type: "file", URL: "file:///flake"}:                                              "file+file:///flake",
-		{Type: "file", URL: "http://example.com/flake"}:                                   "file+http://example.com/flake",
-		{Type: "file", URL: "http://example.com/flake.git"}:                               "file+http://example.com/flake.git",
-		{Type: "file", URL: "http://example.com/flake.tar?dir=sub%2Fdir", Dir: "sub/dir"}: "file+http://example.com/flake.tar?dir=sub%2Fdir",
+		{Type: FlakeTypeFile, URL: "file:///flake"}:                                              "file+file:///flake",
+		{Type: FlakeTypeFile, URL: "http://example.com/flake"}:                                   "file+http://example.com/flake",
+		{Type: FlakeTypeFile, URL: "http://example.com/flake.git"}:                               "file+http://example.com/flake.git",
+		{Type: FlakeTypeFile, URL: "http://example.com/flake.tar?dir=sub%2Fdir", Dir: "sub/dir"}: "file+http://example.com/flake.tar?dir=sub%2Fdir",
 	}
 
 	for ref, want := range cases {
@@ -234,30 +234,30 @@ func TestParseFlakeInstallable(t *testing.T) {
 		// Not a path and not a valid URL.
 		"://bad/url": {},
 
-		".":             {Ref: FlakeRef{Type: "path", Path: "."}},
-		".#app":         {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "."}},
-		".#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "."}},
-		".#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: "path", Path: "."}},
-		".#app^*":       {AttrPath: "app", Outputs: "*", Ref: FlakeRef{Type: "path", Path: "."}},
-		".^*":           {Outputs: "*", Ref: FlakeRef{Type: "path", Path: "."}},
+		".":             {Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
+		".#app":         {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
+		".#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
+		".#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
+		".#app^*":       {AttrPath: "app", Outputs: "*", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
+		".^*":           {Outputs: "*", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}},
 
-		"./flake":             {Ref: FlakeRef{Type: "path", Path: "./flake"}},
-		"./flake#app":         {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./flake"}},
-		"./flake#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "./flake"}},
-		"./flake#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: "path", Path: "./flake"}},
-		"./flake^out":         {Outputs: "out", Ref: FlakeRef{Type: "path", Path: "./flake"}},
+		"./flake":             {Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}},
+		"./flake#app":         {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}},
+		"./flake#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}},
+		"./flake#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}},
+		"./flake^out":         {Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}},
 
-		"indirect":            {Ref: FlakeRef{Type: "indirect", ID: "indirect"}},
-		"nixpkgs#app":         {AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
-		"nixpkgs#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
-		"nixpkgs#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
-		"nixpkgs^out":         {Outputs: "out", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}},
+		"indirect":            {Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "indirect"}},
+		"nixpkgs#app":         {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}},
+		"nixpkgs#app^out":     {AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}},
+		"nixpkgs#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}},
+		"nixpkgs^out":         {Outputs: "out", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}},
 
-		"%23#app":                        {AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "#"}},
-		"./%23#app":                      {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./#"}},
-		"/%23#app":                       {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/#"}},
-		"path:/%23#app":                  {AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/#"}},
-		"http://example.com/%23.tar#app": {AttrPath: "app", Ref: FlakeRef{Type: "tarball", URL: "http://example.com/%23.tar#app"}},
+		"%23#app":                        {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "#"}},
+		"./%23#app":                      {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "./#"}},
+		"/%23#app":                       {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "/#"}},
+		"path:/%23#app":                  {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "/#"}},
+		"http://example.com/%23.tar#app": {AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeTarball, URL: "http://example.com/%23.tar#app"}},
 	}
 
 	for installable, want := range cases {
@@ -278,57 +278,57 @@ func TestFlakeInstallableString(t *testing.T) {
 		{}: "",
 
 		// No attribute or outputs.
-		{Ref: FlakeRef{Type: "path", Path: "."}}:          "path:.",
-		{Ref: FlakeRef{Type: "path", Path: "./flake"}}:    "path:flake",
-		{Ref: FlakeRef{Type: "path", Path: "/flake"}}:     "path:/flake",
-		{Ref: FlakeRef{Type: "indirect", ID: "indirect"}}: "flake:indirect",
+		{Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:          "path:.",
+		{Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}:    "path:flake",
+		{Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:     "path:/flake",
+		{Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "indirect"}}: "flake:indirect",
 
 		// Attribute without outputs.
-		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "."}}:            "path:.#app",
-		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#my%23app",
-		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "./flake"}}:      "path:flake#app",
-		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#my%23app",
-		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: "/flake"}}:       "path:/flake#app",
-		{AttrPath: "my#app", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#my%23app",
-		{AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:    "flake:nixpkgs#app",
-		{AttrPath: "my#app", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:            "path:.#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:         "path:.#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}:      "path:flake#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}:   "path:flake#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:       "path:/flake#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:    "path:/flake#my%23app",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:    "flake:nixpkgs#app",
+		{AttrPath: "my#app", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#my%23app",
 
 		// Attribute with single output.
-		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#app^out",
-		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#app^out",
-		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^out",
-		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:         "path:.#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}:   "path:flake#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:    "path:/flake#app^out",
+		{AttrPath: "app", Outputs: "out", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#app^out",
 
 		// Attribute with multiple outputs.
-		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "."}}:         "path:.#app^lib,out",
-		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "./flake"}}:   "path:flake#app^lib,out",
-		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^lib,out",
-		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:         "path:.#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}:   "path:flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:    "path:/flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#app^lib,out",
 
 		// Outputs are cleaned and sorted.
-		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: "path", Path: "."}}:       "path:.#app^lib,out",
-		{AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: "path", Path: "./flake"}}: "path:flake#app^lib,out",
-		{AttrPath: "app", Outputs: "out,,", Ref: FlakeRef{Type: "path", Path: "/flake"}}:    "path:/flake#app^out",
-		{AttrPath: "app", Outputs: ",lib,out", Ref: FlakeRef{Type: "path", Path: "/flake"}}: "path:/flake#app^lib,out",
-		{AttrPath: "app", Outputs: ",", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:     "flake:nixpkgs#app",
+		{AttrPath: "app", Outputs: "out,lib", Ref: FlakeRef{Type: FlakeTypePath, Path: "."}}:       "path:.#app^lib,out",
+		{AttrPath: "app", Outputs: "lib,out", Ref: FlakeRef{Type: FlakeTypePath, Path: "./flake"}}: "path:flake#app^lib,out",
+		{AttrPath: "app", Outputs: "out,,", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}:    "path:/flake#app^out",
+		{AttrPath: "app", Outputs: ",lib,out", Ref: FlakeRef{Type: FlakeTypePath, Path: "/flake"}}: "path:/flake#app^lib,out",
+		{AttrPath: "app", Outputs: ",", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:     "flake:nixpkgs#app",
 
 		// Wildcard replaces other outputs.
-		{AttrPath: "app", Outputs: "*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:     "flake:nixpkgs#app^*",
-		{AttrPath: "app", Outputs: "out,*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^*",
-		{AttrPath: "app", Outputs: ",*", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:    "flake:nixpkgs#app^*",
+		{AttrPath: "app", Outputs: "*", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:     "flake:nixpkgs#app^*",
+		{AttrPath: "app", Outputs: "out,*", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#app^*",
+		{AttrPath: "app", Outputs: ",*", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:    "flake:nixpkgs#app^*",
 
 		// Outputs are not percent-encoded.
-		{AttrPath: "app", Outputs: "%", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:   "flake:nixpkgs#app^%",
-		{AttrPath: "app", Outputs: "/", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}:   "flake:nixpkgs#app^/",
-		{AttrPath: "app", Outputs: "%2F", Ref: FlakeRef{Type: "indirect", ID: "nixpkgs"}}: "flake:nixpkgs#app^%2F",
+		{AttrPath: "app", Outputs: "%", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:   "flake:nixpkgs#app^%",
+		{AttrPath: "app", Outputs: "/", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}:   "flake:nixpkgs#app^/",
+		{AttrPath: "app", Outputs: "%2F", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#app^%2F",
 
 		// Missing or invalid fields.
-		{AttrPath: "app", Ref: FlakeRef{Type: "file", URL: ""}}:     "",
-		{AttrPath: "app", Ref: FlakeRef{Type: "git", URL: ""}}:      "",
-		{AttrPath: "app", Ref: FlakeRef{Type: "github", Owner: ""}}: "",
-		{AttrPath: "app", Ref: FlakeRef{Type: "indirect", ID: ""}}:  "",
-		{AttrPath: "app", Ref: FlakeRef{Type: "path", Path: ""}}:    "",
-		{AttrPath: "app", Ref: FlakeRef{Type: "tarball", URL: ""}}:  "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeFile, URL: ""}}:     "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeGit, URL: ""}}:      "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeGitHub, Owner: ""}}: "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeIndirect, ID: ""}}:  "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypePath, Path: ""}}:    "",
+		{AttrPath: "app", Ref: FlakeRef{Type: FlakeTypeTarball, URL: ""}}:  "",
 	}
 
 	for installable, want := range cases {
