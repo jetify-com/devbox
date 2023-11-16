@@ -24,6 +24,9 @@ const (
 // For example, the string "nixpkgs" and "./flake" are valid flake references,
 // but "nixpkgs#hello" and "./flake#app^bin,dev" are not.
 //
+// The JSON encoding of FlakeRef corresponds to the exploded attribute set
+// form of the flake reference in Nix.
+//
 // See the [Nix manual] for details on flake references.
 //
 // [Nix manual]: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-flake
@@ -350,6 +353,8 @@ func isGitHash(s string) bool {
 }
 
 func isArchive(path string) bool {
+	// As documented under the tarball type:
+	// https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-flake#types
 	return strings.HasSuffix(path, ".tar") ||
 		strings.HasSuffix(path, ".tar.gz") ||
 		strings.HasSuffix(path, ".tgz") ||
@@ -447,14 +452,30 @@ const (
 //
 // [Nix manual]: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix#installables
 type FlakeInstallable struct {
-	Ref      FlakeRef
+	// Ref is the flake reference portion of the installable.
+	Ref FlakeRef
+
+	// AttrPath is an attribute path of the flake, encoded as a URL
+	// fragment.
 	AttrPath string
 
+	// Outputs is the installable's output spec, which is a comma-separated
+	// list of package outputs to install. The outputs spec is anything
+	// after the last caret '^' in an installable. Unlike the
+	// attribute path, output specs are not URL-encoded.
+	//
+	// The special values DefaultOutputs ("") and AllOutputs ("*") specify
+	// the default set of package outputs and all package outputs,
+	// respectively.
+	//
+	// ParseFlakeInstallable cleans the list of outputs by removing empty
+	// elements and sorting the results. Lists containing a "*" are
+	// simplified to a single "*".
 	Outputs string
 }
 
-// ParseFlakeInstallable parses a flake installable. The string s must contain a
-// valid flake reference parsable by ParseFlakeRef, optionally followed by an
+// ParseFlakeInstallable parses a flake installable. The raw string must contain
+// a valid flake reference parsable by ParseFlakeRef, optionally followed by an
 // #attrpath and/or an ^output.
 func ParseFlakeInstallable(raw string) (FlakeInstallable, error) {
 	if raw == "" {
