@@ -131,7 +131,7 @@ type lockmock struct{}
 func (*lockmock) Resolve(pkg string) (*lock.Package, error) {
 	name, _, _ := searcher.ParseVersionedPackage(pkg)
 	return &lock.Package{
-		Resolved: "#" + name,
+		Resolved: "github:NixOS/nixpkgs/b22db301217578a8edfccccf5cedafe5fc54e78b#" + name,
 	}, nil
 }
 
