@@ -21,19 +21,11 @@
                 },
                 {
                     "type": "object",
-                    "description": "Name of each package in {\"name\": \"version\"} format.",
-                    "patternProperties": {
-                        ".*": {
-                            "type": "string",
-                            "description": "Version of the package to install."
-                        }
-                    }
-                },
-                {
-                    "type": "object",
                     "description": "Name of each package in {\"name\": {\"version\": \"1.2.3\"}} format.",
                     "patternProperties": {
                         ".*": {
+                            "oneOf": [
+                            {
                             "type": "object",
                             "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
                             "properties": {
@@ -45,6 +37,12 @@
                                 "excluded_platform": {},
                                 "glibc_patch": {}
                             }
+                        },
+                        {
+                            "type": "string",
+                            "description": "Version of the package to install."
+                        }
+                    ]
                         }
                     }
                 }
