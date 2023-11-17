@@ -16,10 +16,11 @@ import (
 type shellEnvCmdFlags struct {
 	envFlag
 	config            configFlags
-	runInitHook       bool
 	install           bool
-	pure              bool
+	noRefreshAlias    bool
 	preservePathStack bool
+	pure              bool
+	runInitHook       bool
 }
 
 func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
@@ -54,6 +55,11 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 		"Preserves existing PATH order if this project's environment is already in PATH. "+
 			"Useful if you want to avoid overshadowing another devbox project that is already active")
 	_ = command.Flags().MarkHidden("preserve-path-stack")
+	command.Flags().BoolVar(
+		&flags.noRefreshAlias, "no-refresh-alias", false,
+		"By default, devbox will add refresh alias to the environment"+
+			"Use this flag to disable this behavior.")
+	_ = command.Flags().MarkHidden("no-refresh-alias")
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
@@ -89,6 +95,7 @@ func shellEnvFunc(
 
 	envStr, err := box.NixEnv(cmd.Context(), devopt.NixEnvOpts{
 		DontRecomputeEnvironment: !recomputeEnvIfNeeded,
+		NoRefreshAlias:           flags.noRefreshAlias,
 		RunHooks:                 flags.runInitHook,
 	})
 	if err != nil {
