@@ -3,12 +3,10 @@
 {{- end}}
 
 # Installing your devbox project
+USER ${DEVBOX_USER}:${DEVBOX_USER}
 WORKDIR /code
-COPY devbox.json devbox.json
-COPY devbox.lock devbox.lock
-{{- if not .RootUser }}
-RUN sudo chown -R "${DEVBOX_USER}:${DEVBOX_USER}" /code
-{{- end}}
+COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.json devbox.json
+COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.lock devbox.lock
 {{if len .LocalFlakeDirs}}
 # Step 6: Copying local flakes directories
 {{- end}}
