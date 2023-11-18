@@ -3,10 +3,16 @@
 {{- end}}
 
 # Installing your devbox project
-USER ${DEVBOX_USER}:${DEVBOX_USER}
 WORKDIR /code
+{{- if not .RootUser }}
+USER ${DEVBOX_USER}:${DEVBOX_USER}
 COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.json devbox.json
 COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.lock devbox.lock
+{{- else}}
+COPY devbox.json devbox.json
+COPY devbox.json devbox.json
+{{- end}}
+
 {{if len .LocalFlakeDirs}}
 # Step 6: Copying local flakes directories
 {{- end}}
