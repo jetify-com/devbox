@@ -301,7 +301,9 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
-	envStr += "\n" + d.refreshAlias()
+	if !opts.NoRefreshAlias {
+		envStr += "\n" + d.refreshAlias()
+	}
 
 	return envStr, nil
 }

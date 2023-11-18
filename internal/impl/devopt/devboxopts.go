@@ -45,5 +45,6 @@ type UpdateOpts struct {
 
 type NixEnvOpts struct {
 	DontRecomputeEnvironment bool
+	NoRefreshAlias           bool
 	RunHooks                 bool
 }
