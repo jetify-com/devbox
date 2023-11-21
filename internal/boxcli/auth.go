@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/pkg/sandbox/auth/session"
-	"go.jetpack.io/pkg/sandbox/jetauth"
+	"go.jetpack.io/pkg/auth"
+	"go.jetpack.io/pkg/auth/session"
 )
 
 var (
@@ -38,11 +38,11 @@ func loginCmd() *cobra.Command {
 		Short: "Login to devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := jetauth.NewClient(issuer, clientID)
+			c, err := auth.NewClient(issuer, clientID)
 			if err != nil {
 				return err
 			}
-			t, err := c.LoginFlow(cmd.Context())
+			t, err := c.LoginFlow()
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func logoutCmd() *cobra.Command {
 		Short: "logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := jetauth.NewClient(issuer, clientID)
+			c, err := auth.NewClient(issuer, clientID)
 			if err != nil {
 				return err
 			}
@@ -112,7 +112,7 @@ func whoAmICmd() *cobra.Command {
 }
 
 func genSession(ctx context.Context) (*session.Token, error) {
-	c, err := jetauth.NewClient(issuer, clientID)
+	c, err := auth.NewClient(issuer, clientID)
 	if err != nil {
 		return nil, err
 	}

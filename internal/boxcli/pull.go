@@ -17,7 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/pullbox/s3"
-	"go.jetpack.io/pkg/sandbox/auth"
+	"go.jetpack.io/pkg/auth"
 )
 
 type pullCmdFlags struct {

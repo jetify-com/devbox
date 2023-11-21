@@ -14,7 +14,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/pkg/sandbox/runx/impl/types"
+	"go.jetpack.io/pkg/runx/impl/types"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
