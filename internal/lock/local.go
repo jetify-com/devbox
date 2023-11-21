@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
@@ -111,15 +112,9 @@ func localLockFilePath(project devboxProject) string {
 }
 
 func manifestHash(profileDir string) (string, error) {
-	return cuecfg.FileHash(filepath.Join(
-		profileDir,
-		".devbox/nix/profile/default",
-		"manifest.json",
-	))
+	return cachehash.JSONFile(filepath.Join(profileDir, ".devbox/nix/profile/default/manifest.json"))
 }
 
 func printDevEnvCacheHash(profileDir string) (string, error) {
-	return cuecfg.FileHash(
-		filepath.Join(profileDir, ".devbox", ".nix-print-dev-env-cache"),
-	)
+	return cachehash.JSONFile(filepath.Join(profileDir, ".devbox/.nix-print-dev-env-cache"))
 }
