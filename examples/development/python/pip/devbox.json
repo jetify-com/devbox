@@ -1,15 +1,14 @@
 {
-    "packages": [
-        "python@3.10",
-        "python310Packages.pip@23.0.1"
+  "packages": [
+    "python@3.10"
+  ],
+  "shell": {
+    "init_hook": [
+      ". $VENV_DIR/bin/activate",
+      "pip install -r requirements.txt"
     ],
-    "shell": {
-        "init_hook": [
-            ". $VENV_DIR/bin/activate",
-            "pip install -r requirements.txt"
-        ],
-        "scripts": {
-            "run_test": "python main.py"
-        }
+    "scripts": {
+      "run_test": "python main.py"
     }
+  }
 }
