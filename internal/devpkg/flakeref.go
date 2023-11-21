@@ -187,6 +187,8 @@ func parseFlakeURLRef(ref string) (parsed FlakeRef, fragment string, err error) 
 		if err := parseGitHubFlakeRef(refURL, &parsed); err != nil {
 			return FlakeRef{}, "", err
 		}
+	default:
+		return FlakeRef{}, "", redact.Errorf("unsupported flake reference URL scheme: %s", redact.Safe(refURL.Scheme))
 	}
 	return parsed, refURL.Fragment, nil
 }

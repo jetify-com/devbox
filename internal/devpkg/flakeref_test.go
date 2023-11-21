@@ -7,18 +7,7 @@ import (
 )
 
 func TestParseFlakeRef(t *testing.T) {
-	// Test cases use the zero-value to check for invalid flakerefs because
-	// we don't care about the specific error message.
 	cases := map[string]FlakeRef{
-		// Empty string is not a valid flake reference.
-		"": {},
-
-		// Not a path and not a valid URL.
-		"://bad/url": {},
-
-		// Invalid escape.
-		"path:./relative/my%flake": {},
-
 		// Path-like references start with a '.' or '/'.
 		// This distinguishes them from indirect references
 		// (./nixpkgs is a directory; nixpkgs is an indirect).
@@ -34,14 +23,6 @@ func TestParseFlakeRef(t *testing.T) {
 		// path: URL references.
 		"./Ûñî©ôδ€/flake\n": {Type: FlakeTypePath, Path: "./Ûñî©ôδ€/flake\n"},
 		"/Ûñî©ôδ€/flake\n":  {Type: FlakeTypePath, Path: "/Ûñî©ôδ€/flake\n"},
-
-		// Path-like references don't allow paths with a '?' or '#'.
-		"./invalid#path": {},
-		"./invalid?path": {},
-		"/invalid#path":  {},
-		"/invalid?path":  {},
-		"/#":             {},
-		"/?":             {},
 
 		// URL-like path references.
 		"path:":                      {Type: FlakeTypePath, Path: ""},
@@ -81,12 +62,6 @@ func TestParseFlakeRef(t *testing.T) {
 		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":     {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
 		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 		"github:NixOS/nix?host=example.com":                             {Type: FlakeTypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
-
-		// GitHub references with invalid ref + rev combinations.
-		"github:NixOS/nix?ref=v1.2.3&rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":                               {},
-		"github:NixOS/nix/v1.2.3?ref=v4.5.6":                                                                     {},
-		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4": {},
-		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?ref=v1.2.3":                                   {},
 
 		// The github type allows clone-style URLs. The username and
 		// host are ignored.
@@ -142,7 +117,6 @@ func TestParseFlakeRef(t *testing.T) {
 		"http://example.com/flake.git":        {Type: FlakeTypeFile, URL: "http://example.com/flake.git"},
 		"http://example.com/flake?dir=subdir": {Type: FlakeTypeFile, URL: "http://example.com/flake?dir=subdir", Dir: "subdir"},
 	}
-
 	for ref, want := range cases {
 		t.Run(ref, func(t *testing.T) {
 			got, err := ParseFlakeRef(ref)
@@ -154,6 +128,67 @@ func TestParseFlakeRef(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseFlakeRefError(t *testing.T) {
+	t.Run("EmptyString", func(t *testing.T) {
+		ref := ""
+		_, err := ParseFlakeRef(ref)
+		if err == nil {
+			t.Error("got nil error for bad flakeref:", ref)
+		}
+	})
+	t.Run("InvalidURL", func(t *testing.T) {
+		ref := "://bad/url"
+		_, err := ParseFlakeRef(ref)
+		if err == nil {
+			t.Error("got nil error for bad flakeref:", ref)
+		}
+	})
+	t.Run("InvalidURLEscape", func(t *testing.T) {
+		ref := "path:./relative/my%flake"
+		_, err := ParseFlakeRef(ref)
+		if err == nil {
+			t.Error("got nil error for bad flakeref:", ref)
+		}
+	})
+	t.Run("UnsupportedURLScheme", func(t *testing.T) {
+		ref := "runx:mvdan/gofumpt@latest"
+		_, err := ParseFlakeRef(ref)
+		if err == nil {
+			t.Error("got nil error for bad flakeref:", ref)
+		}
+	})
+	t.Run("PathLikeWith?#", func(t *testing.T) {
+		in := []string{
+			"./invalid#path",
+			"./invalid?path",
+			"/invalid#path",
+			"/invalid?path",
+			"/#",
+			"/?",
+		}
+		for _, ref := range in {
+			_, err := ParseFlakeRef(ref)
+			if err == nil {
+				t.Error("got nil error for bad flakeref:", ref)
+			}
+		}
+	})
+	t.Run("GitHubInvalidRefRevCombo", func(t *testing.T) {
+		in := []string{
+			"github:NixOS/nix?ref=v1.2.3&rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+			"github:NixOS/nix/v1.2.3?ref=v4.5.6",
+			"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+			"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?ref=v1.2.3",
+		}
+		for _, ref := range in {
+			_, err := ParseFlakeRef(ref)
+			if err == nil {
+				t.Error("got nil error for bad flakeref:", ref)
+			}
+		}
+	})
 }
 
 func TestFlakeRefString(t *testing.T) {
