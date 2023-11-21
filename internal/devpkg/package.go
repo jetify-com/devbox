@@ -31,7 +31,7 @@ import (
 type Package struct {
 	plugins.BuiltIn
 	lockfile        lock.Locker
-	isDevboxPackage bool
+	IsDevboxPackage bool
 
 	// installable is the flake attribute that the package resolves to.
 	// When it gets set depends on the original package string:
@@ -125,22 +125,8 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	// assume a Devbox package.
 	parsed, err := ParseFlakeInstallable(raw)
 	if err != nil || isAmbiguous(raw, parsed) {
-		pkg.isDevboxPackage = true
-		pkg.resolve = sync.OnceValue(func() error {
-			resolved, err := locker.Resolve(raw)
-			if err != nil {
-				return err
-			}
-			if inCache, err := pkg.IsInBinaryCache(); err == nil && inCache {
-				pkg.storePath = resolved.Systems[nix.System()].StorePath
-			}
-			parsed, err := ParseFlakeInstallable(resolved.Resolved)
-			if err != nil {
-				return err
-			}
-			pkg.setInstallable(parsed, locker.ProjectDir())
-			return nil
-		})
+		pkg.IsDevboxPackage = true
+		pkg.resolve = sync.OnceValue(func() error { return resolve(pkg) })
 		return pkg
 	}
 
@@ -183,21 +169,29 @@ func isAmbiguous(raw string, parsed FlakeInstallable) bool {
 	return false
 }
 
+// resolve is the implementation of Package.resolve, where it is wrapped in a
+// sync.OnceValue function. It should not be called directly.
+func resolve(pkg *Package) error {
+	resolved, err := pkg.lockfile.Resolve(pkg.Raw)
+	if err != nil {
+		return err
+	}
+	if inCache, err := pkg.IsInBinaryCache(); err == nil && inCache {
+		pkg.storePath = resolved.Systems[nix.System()].StorePath
+	}
+	parsed, err := ParseFlakeInstallable(resolved.Resolved)
+	if err != nil {
+		return err
+	}
+	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
+	return nil
+}
+
 func (p *Package) setInstallable(i FlakeInstallable, projectDir string) {
 	if i.Ref.Type == FlakeTypePath && !filepath.IsAbs(i.Ref.Path) {
 		i.Ref.Path = filepath.Join(projectDir, i.Ref.Path)
 	}
 	p.installable = i
-}
-
-// IsDevboxPackage specifies whether this package is a devbox package. Devbox
-// packages have the format `canonicalName@version`and can be resolved by
-// lockfile.Resolve (including runx packages)
-// This also returns true for legacy packages which are just
-// an attribute path. An explicit flake reference is _not_ a devbox package.
-// TODO: Consider renaming to IsResolvable
-func (p *Package) IsDevboxPackage() bool {
-	return p.isDevboxPackage
 }
 
 var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
@@ -216,7 +210,7 @@ func (p *Package) FlakeInputName() string {
 	case FlakeTypeGitHub:
 		isNixOS := strings.ToLower(p.installable.Ref.Owner) == "nixos"
 		isNixpkgs := isNixOS && strings.ToLower(p.installable.Ref.Repo) == "nixpkgs"
-		if isNixpkgs && p.IsDevboxPackage() {
+		if isNixpkgs && p.IsDevboxPackage {
 			commitHash := nix.HashFromNixPkgsURL(p.installable.Ref.String())
 			result = "nixpkgs-" + commitHash[:min(6, len(commitHash))]
 		} else {
@@ -310,7 +304,7 @@ func (p *Package) PackageAttributePath() (string, error) {
 // During happy paths (devbox packages and nix flakes that contains a fragment)
 // it is much faster than NormalizedPackageAttributePath
 func (p *Package) FullPackageAttributePath() (string, error) {
-	if p.IsDevboxPackage() {
+	if p.IsDevboxPackage {
 		reference, err := p.NormalizedDevboxPackageReference()
 		if err != nil {
 			return "", err
@@ -352,7 +346,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	// nix.Search will guarantee that the package exists for the current system.
 	var infos map[string]*nix.Info
 	var err error
-	if p.IsDevboxPackage() && !p.IsRunX() {
+	if p.IsDevboxPackage && !p.IsRunX() {
 		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
 		// use a nix.Search cache.
 		//
@@ -459,7 +453,7 @@ func (p *Package) Equals(other *Package) bool {
 // CanonicalName returns the name of the package without the version
 // it only applies to devbox packages
 func (p *Package) CanonicalName() string {
-	if !p.IsDevboxPackage() {
+	if !p.IsDevboxPackage {
 		return ""
 	}
 	name, _, _ := strings.Cut(p.Raw, "@")
@@ -467,14 +461,14 @@ func (p *Package) CanonicalName() string {
 }
 
 func (p *Package) Versioned() string {
-	if p.IsDevboxPackage() && !p.isVersioned() {
+	if p.IsDevboxPackage && !p.isVersioned() {
 		return p.Raw + "@latest"
 	}
 	return p.Raw
 }
 
 func (p *Package) IsLegacy() bool {
-	return p.IsDevboxPackage() && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
+	return p.IsDevboxPackage && !p.isVersioned() && p.lockfile.Get(p.Raw).GetSource() == ""
 }
 
 func (p *Package) LegacyToVersioned() string {
@@ -518,7 +512,7 @@ func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
 // version returns the version of the package
 // it only applies to devbox packages
 func (p *Package) version() string {
-	if !p.IsDevboxPackage() {
+	if !p.IsDevboxPackage {
 		return ""
 	}
 	_, version, _ := strings.Cut(p.Raw, "@")
@@ -526,7 +520,7 @@ func (p *Package) version() string {
 }
 
 func (p *Package) isVersioned() bool {
-	return p.IsDevboxPackage() && strings.Contains(p.Raw, "@")
+	return p.IsDevboxPackage && strings.Contains(p.Raw, "@")
 }
 
 func (p *Package) HashFromNixPkgsURL() string {
@@ -574,7 +568,7 @@ func (p *Package) StoreName() (string, error) {
 
 func (p *Package) EnsureUninstallableIsInLockfile() error {
 	// TODO savil: Do we need the IsDevboxPackage check here?
-	if !p.IsInstallable() || !p.IsDevboxPackage() {
+	if !p.IsInstallable() || !p.IsDevboxPackage {
 		return nil
 	}
 	_, err := p.lockfile.Resolve(p.Raw)
