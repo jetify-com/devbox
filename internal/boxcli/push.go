@@ -6,7 +6,7 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/pkg/sandbox/auth"
+	"go.jetpack.io/pkg/auth"
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/goutil"
