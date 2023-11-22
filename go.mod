@@ -39,7 +39,7 @@ require (
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	go.jetpack.io/pkg v0.0.0-20231121212119-81d286a4b5f1
+	go.jetpack.io/pkg v0.0.0-20231121223835-1a68fb347275
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
 	golang.org/x/mod v0.12.0
 	golang.org/x/sync v0.3.0
