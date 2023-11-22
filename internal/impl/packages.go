@@ -83,7 +83,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			// about not building on the current system, since user's can continue
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
-		} else if !versionedPkg.IsDevboxPackage() {
+		} else if !versionedPkg.IsDevboxPackage {
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
 			return err

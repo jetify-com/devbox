@@ -90,9 +90,6 @@ func TestInput(t *testing.T) {
 		if name := i.FlakeInputName(); testCase.name != name {
 			t.Errorf("Name() = %v, want %v", name, testCase.name)
 		}
-		if urlWithoutFragment := i.urlWithoutFragment(); testCase.urlWithoutFragment != urlWithoutFragment {
-			t.Errorf("URLWithoutFragment() = %v, want %v", urlWithoutFragment, testCase.urlWithoutFragment)
-		}
 		if urlForInput := i.URLForFlakeInput(); testCase.urlForInput != urlForInput {
 			t.Errorf("URLForFlakeInput() = %v, want %v", urlForInput, testCase.urlForInput)
 		}
@@ -100,7 +97,7 @@ func TestInput(t *testing.T) {
 }
 
 type testInput struct {
-	Package
+	*Package
 }
 
 type lockfile struct {
@@ -137,7 +134,7 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 }
 
 func testInputFromString(s, projectDir string) *testInput {
-	return lo.ToPtr(testInput{Package: *PackageFromString(s, &lockfile{projectDir})})
+	return lo.ToPtr(testInput{Package: PackageFromString(s, &lockfile{projectDir})})
 }
 
 func TestHashFromNixPkgsURL(t *testing.T) {
@@ -244,7 +241,7 @@ func TestCanonicalName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pkgName, func(t *testing.T) {
-			pkg := PackageFromString(tt.pkgName, nil)
+			pkg := PackageFromString(tt.pkgName, &lockfile{})
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
