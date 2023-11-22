@@ -2,4 +2,4 @@
 AKE = "AKE"
 
 [files]
-extend-exclude=["*.svg", "**/testdata/**"]
+extend-exclude=["*.svg", "**/testdata/**", "internal/cachehash/hash_test.go", "internal/devpkg/package_test.go"]
