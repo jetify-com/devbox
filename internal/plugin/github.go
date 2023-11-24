@@ -28,9 +28,9 @@ func newGithubPlugin(rawURL string) (*githubPlugin, error) {
 		return nil, err
 	}
 
-	parts := strings.Split(pluginURL.Path, "/")
+	parts := strings.SplitN(pluginURL.Path, "/", 3)
 
-	if len(parts) < 2 || len(parts) > 3 {
+	if len(parts) < 2 {
 		return nil, usererr.New(
 			"invalid github plugin url %q. Must be of the form org/repo/[revision]",
 			rawURL,

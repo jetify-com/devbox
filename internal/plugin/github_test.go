@@ -40,6 +40,16 @@ func TestNewGithubPlugin(t *testing.T) {
 				dir:      "mongodb",
 			},
 		},
+		{
+			name: "parse github plugin with dir param and rev",
+			expected: githubPlugin{
+				raw:      "jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
+				org:      "jetpack-io",
+				repo:     "devbox-plugins",
+				revision: "initials/my-branch",
+				dir:      "mongodb",
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
