@@ -6,10 +6,10 @@
 package cachehash
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"hash"
-	"hash/fnv"
 	"io"
 	"os"
 
@@ -75,4 +75,4 @@ func JSONFile(path string) (string, error) {
 	return JSONBytes(b)
 }
 
-func newHash() hash.Hash { return fnv.New64a() }
+func newHash() hash.Hash { return sha256.New() }
