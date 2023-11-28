@@ -6,15 +6,15 @@
 package cachehash
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"hash"
 	"io"
 	"os"
 
-	"github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -43,27 +43,16 @@ func File(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// JSON marshals a to canonical JSON and returns its hex-encoded hash.
+// JSON marshals a to JSON and returns its hex-encoded hash.
 func JSON(a any) (string, error) {
 	b, err := json.Marshal(a)
 	if err != nil {
 		return "", redact.Errorf("marshal to json for hashing: %v", err)
 	}
-	return JSONBytes(b)
+	return Bytes(b)
 }
 
-// JSONBytes canonicalizes the raw JSON bytes in b and returns its hex-encoded
-// hash. It modifies b directly. To preserve the original JSON, make a copy of
-// of it before calling JSONBytes.
-func JSONBytes(b []byte) (string, error) {
-	v := jsontext.Value(b)
-	if err := v.Canonicalize(); err != nil {
-		return "", redact.Errorf("canonicalize json for hashing: %v", err)
-	}
-	return Bytes(v)
-}
-
-// JSONFile canonicalizes the JSON in a file and returns its hex-encoded hash.
+// JSONFile compacts the JSON in a file and returns its hex-encoded hash.
 func JSONFile(path string) (string, error) {
 	b, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
@@ -72,7 +61,11 @@ func JSONFile(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return JSONBytes(b)
+	buf := &bytes.Buffer{}
+	if err := json.Compact(buf, b); err != nil {
+		return "", redact.Errorf("compact json for hashing: %v", err)
+	}
+	return Bytes(buf.Bytes())
 }
 
 func newHash() hash.Hash { return sha256.New() }

@@ -46,25 +46,25 @@ func TestFileNotExist(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
-	ab := struct{ A, B string }{"a", "b"}
-	abHash, err := JSON(ab)
+	a := struct{ A, B string }{"a", "b"}
+	aHash, err := JSON(a)
 	if err != nil {
-		t.Errorf("got JSON(%#q) error: %v", ab, err)
+		t.Errorf("got JSON(%#q) error: %v", a, err)
 	}
-	if abHash == "" {
-		t.Errorf(`got JSON(%#q) == ""`, ab)
+	if aHash == "" {
+		t.Errorf(`got JSON(%#q) == ""`, a)
 	}
 
-	ba := struct{ B, A string }{"b", "a"}
-	bHash, err := JSON(ba)
+	b := map[string]string{"A": "a", "B": "b"}
+	bHash, err := JSON(b)
 	if err != nil {
-		t.Errorf("got JSON(%#q) error: %v", ba, err)
+		t.Errorf("got JSON(%#q) error: %v", b, err)
 	}
 	if bHash == "" {
-		t.Errorf(`got JSON(%#q) == ""`, ba)
+		t.Errorf(`got JSON(%#q) == ""`, b)
 	}
-	if abHash != bHash {
-		t.Errorf("got (JSON(%#q) = %q) != (JSON(%#q) = %q), want equal hashes", ab, abHash, ba, bHash)
+	if aHash != bHash {
+		t.Errorf("got (JSON(%#q) = %q) != (JSON(%#q) = %q), want equal hashes", a, aHash, b, bHash)
 	}
 }
 
@@ -76,38 +76,30 @@ func TestJSONUnsupportedType(t *testing.T) {
 	}
 }
 
-func TestJSONBytesInvalid(t *testing.T) {
-	b := []byte("bad")
-	_, err := JSONBytes(b)
-	if err == nil {
-		t.Error("got nil error for invalid JSON")
-	}
-}
-
 func TestJSONFile(t *testing.T) {
 	dir := t.TempDir()
 
-	ab := filepath.Join(dir, "ab.json")
-	err := os.WriteFile(ab, []byte(`{"a":"\n","b":"\u000A"}`), 0o644)
+	compact := filepath.Join(dir, "compact.json")
+	err := os.WriteFile(compact, []byte(`{"key":"value"}`), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ba := filepath.Join(dir, "ba.json")
-	err = os.WriteFile(ba, []byte(`{"b":"\n","a":"\u000A"}`), 0o644)
+	space := filepath.Join(dir, "space.json")
+	err = os.WriteFile(space, []byte(`{ "key": "value" }`), 0o644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	abHash, err := JSONFile(ab)
+	compactHash, err := JSONFile(compact)
 	if err != nil {
 		t.Errorf("got JSONFile(ab) error: %v", err)
 	}
-	baHash, err := JSONFile(ba)
+	spaceHash, err := JSONFile(space)
 	if err != nil {
 		t.Errorf("got JSONFile(ba) error: %v", err)
 	}
-	if abHash != baHash {
-		t.Errorf("got (JSONFile(%q) = %q) != (JSONFile(%q) = %q), want equal hashes", ab, abHash, ba, baHash)
+	if compactHash != spaceHash {
+		t.Errorf("got (JSONFile(%q) = %q) != (JSONFile(%q) = %q), want equal hashes", compact, compactHash, space, spaceHash)
 	}
 }
 

@@ -95,7 +95,7 @@ func (c *Config) Bytes() []byte {
 func (c *Config) Hash() (string, error) {
 	ast := c.ast.root.Clone()
 	ast.Minimize()
-	return cachehash.JSONBytes(ast.Pack())
+	return cachehash.Bytes(ast.Pack())
 }
 
 func (c *Config) Equals(other *Config) bool {
