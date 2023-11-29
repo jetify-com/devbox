@@ -1,29 +1,9 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "python310Packages.pip@23.0.1": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python310Packages.pip",
-      "version": "23.0.1",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/idd0pswjhxrqp7mdgrhw6rmpmlkrya8r-python3.10-pip-23.0.1"
-        },
-        "aarch64-linux": {
-          "store_path": "/nix/store/ma7lp6a1gbss1aa2mzp2jkxgsvp9m0pg-python3.10-pip-23.0.1"
-        },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/77sd3ym5f7p5zn7bmfz36wrnklfq4ic9-python3.10-pip-23.0.1"
-        },
-        "x86_64-linux": {
-          "store_path": "/nix/store/gxb4vyiqip38lzhjsa2ijhb3wjf4sp4b-python3.10-pip-23.0.1"
-        }
-      }
-    },
     "python@3.10": {
       "last_modified": "2023-02-24T18:08:35Z",
-      "plugin_version": "0.0.1",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/806075be2bdde71895359ed18cb530c4d323e6f6#python3",
       "source": "devbox-search",
       "version": "3.10.9",

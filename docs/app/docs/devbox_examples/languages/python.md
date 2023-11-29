@@ -27,14 +27,27 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 [pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
 
-You can install `pip` by running `devbox add python3xxPackages.pip`, where `3xx` is the version of Python you want to install. This will also install the pip plugin for Devbox, which automatically creates a virtual environment for installing your packages locally
+The `python` package automatically comes bundled with `pip`, and the `python` plugin for Devbox will automatically create a virtual environment for installing your packages locally
 
-Your virtual environment is created in the `.devbox/virtenv/pip` directory by default, and can be activated by running `source $VENV_DIR/bin/activate` in your devbox shell. You can activate the virtual environment automatically using the init_hook of your `devbox.json`:
+Your virtual environment is created in the `.devbox/virtenv/python` directory by default, and can be activated by running `source $VENV_DIR/bin/activate` in your devbox shell. You can activate the virtual environment automatically using the init_hook of your `devbox.json`:
 
 ```json
 {
     "packages": [
-        "python310",
+        "python@3.10"
+    ],
+    "shell": {
+        "init_hook": ". $VENV_DIR/bin/activate"
+    }
+}
+```
+
+If you need to install a specific version of Pip, you can run `devbox add python3xxPackages.pip`, where `3xx` is the major + minor version (e.g., python310 = python@3.10) of Python you want to install:
+
+```json
+{
+    "packages": [
+        "python@3.10"
         "python310Packages.pip"
     ],
     "shell": {
