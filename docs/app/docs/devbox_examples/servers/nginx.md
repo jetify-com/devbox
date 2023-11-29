@@ -31,10 +31,13 @@ Use `devbox services start|stop nginx` to start and stop the NGINX service in th
 The following helper files will be created in your project directory:
 
 * devbox.d/nginx/nginx.conf
+* devbox.d/nginx/nginx.template
 * devbox.d/nginx/fastcgi.conf
 * devbox.d/web/index.html
 
-Note that by default, NGINX is configured with `./devbox.d/web` as the root directory. To change this, you should modify `./devbox.d/nginx/nginx.conf`
+Devbox uses [envsubst](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to generate `nginx.conf` from the `nginx.template` file every time Devbox starts a shell, service, or script. This allows you to create an NGINX config using environment variables by modifying `nginx.template`. To edit your NGINX configuration, you should modify the `nginx.template` file. 
+
+Note that by default, NGINX is configured with `./devbox.d/web` as the root directory. To change this, you should modify `./devbox.d/nginx/nginx.template`
 
 ### Environment Variables
 ```bash
