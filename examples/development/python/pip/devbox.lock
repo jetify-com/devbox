@@ -1,21 +1,45 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "python@3.10": {
-      "last_modified": "2023-02-24T18:08:35Z",
-      "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/806075be2bdde71895359ed18cb530c4d323e6f6#python3",
+    "python310Packages.pip@latest": {
+      "last_modified": "2023-11-17T14:14:56Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/a71323f68d4377d12c04a5410e214495ec598d4c#python310Packages.pip",
       "source": "devbox-search",
-      "version": "3.10.9",
+      "version": "23.2.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/n3qask6wrby75704dz3vcwnd3f9vkab8-python3-3.10.9"
+          "store_path": "/nix/store/yfmiqki3zrm2bx3m1lf8022f99kw1r8j-python3.10-pip-23.2.1"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/dp107dx65pm8bkzm5k35lq421874c4ra-python3.10-pip-23.2.1"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/4msj4kpnvqdg2a75x9m44xspas5ynzrd-python3-3.10.9"
+          "store_path": "/nix/store/va6syavjclp874lzcjcsm60acbf3y419-python3.10-pip-23.2.1"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/0pyymzxf7n0fzpaqnvwv92ab72v3jq8d-python3-3.10.9"
+          "store_path": "/nix/store/3vmj4wfr07d6na75wha00ka4548fsxk9-python3.10-pip-23.2.1"
+        }
+      }
+    },
+    "python@3.10": {
+      "last_modified": "2023-11-17T14:14:56Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/a71323f68d4377d12c04a5410e214495ec598d4c#python310",
+      "source": "devbox-search",
+      "version": "3.10.13",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/p56fpsphgx3lal9pqyyj0ciz4all7hwv-python3-3.10.13"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/8w9153kg06wz7kb0lsdg2hxv8ihq3jxd-python3-3.10.13"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/c7s2h40q4wqxfxwzbj5g9c3126wz6ryg-python3-3.10.13"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/50kabpj0s79040a42b7jj2dxn85wmbfd-python3-3.10.13"
         }
       }
     }
