@@ -6,6 +6,7 @@ import (
 
 	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
@@ -20,7 +21,7 @@ func Open(opts *devopt.Opts) ([]devbox.Devbox, error) {
 				return err
 			}
 
-			if !dirEntry.IsDir() && filepath.Base(path) == "devbox.json" {
+			if !dirEntry.IsDir() && devconfig.IsConfigName(filepath.Base(path)) {
 				optsCopy := *opts
 				optsCopy.Dir = path
 				box, err := devbox.Open(&optsCopy)

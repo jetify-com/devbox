@@ -4,15 +4,20 @@
 package devconfig
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
@@ -61,4 +66,46 @@ func initConfigFile(path string) (created bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func Open(projectDir string) (*Config, error) {
+	cfgPath := filepath.Join(projectDir, DefaultName)
+
+	if !featureflag.TySON.Enabled() {
+		return Load(cfgPath)
+	}
+
+	tysonCfgPath := filepath.Join(projectDir, defaultTySONName)
+
+	if fileutil.Exists(tysonCfgPath) && fileutil.Exists(cfgPath) {
+		return nil, errors.New(
+			"both devbox.json and devbox.tson exist. You can only have one of those")
+	}
+
+	if fileutil.Exists(tysonCfgPath) {
+		paths, err := pkgtype.RunXClient().Install(context.TODO(), "jetpack-io/tyson")
+		if err != nil {
+			return nil, err
+		}
+		binPath := filepath.Join(paths[0], "tyson")
+		tmpFile, err := os.CreateTemp("", "*.json")
+		if err != nil {
+			return nil, err
+		}
+		cmd := exec.Command(binPath, "eval", tysonCfgPath)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = tmpFile
+		if err = cmd.Run(); err != nil {
+			return nil, err
+		}
+		cfgPath = tmpFile.Name()
+		config, err := Load(cfgPath)
+		if err != nil {
+			return nil, err
+		}
+		config.format = tsonFormat
+		return config, nil
+	}
+
+	return Load(cfgPath)
 }

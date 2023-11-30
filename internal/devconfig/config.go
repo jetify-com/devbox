@@ -16,12 +16,21 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 )
 
-const DefaultName = "devbox.json"
+const (
+	DefaultName      = "devbox.json"
+	defaultTySONName = "devbox.tson"
+)
+
+const (
+	jsonFormat = iota
+	tsonFormat
+)
 
 // Config defines a devbox environment as JSON.
 type Config struct {
@@ -48,7 +57,8 @@ type Config struct {
 	// This is a similar format to nix inputs
 	Include []string `json:"include,omitempty"`
 
-	ast *configAST
+	ast    *configAST
+	format int
 }
 
 type shellConfig struct {
@@ -128,6 +138,9 @@ func (c *Config) InitHook() *shellcmd.Commands {
 
 // SaveTo writes the config to a file.
 func (c *Config) SaveTo(path string) error {
+	if c.format != jsonFormat {
+		return errors.New("cannot save config to non-json format")
+	}
 	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
 }
 
@@ -223,4 +236,16 @@ func ValidateNixpkg(cfg *Config) error {
 		)
 	}
 	return nil
+}
+
+func IsConfigName(name string) bool {
+	return slices.Contains(ValidConfigNames(), name)
+}
+
+func ValidConfigNames() []string {
+	names := []string{DefaultName}
+	if featureflag.TySON.Enabled() {
+		names = append(names, defaultTySONName)
+	}
+	return names
 }
