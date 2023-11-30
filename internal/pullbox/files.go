@@ -62,7 +62,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 		return false, errors.WithStack(err)
 	}
 	for _, entry := range entries {
-		if entry.Name() != devconfig.DefaultName ||
+		if !devconfig.IsConfigName(entry.Name()) ||
 			isModifiedConfig(filepath.Join(path, entry.Name())) {
 			return true, nil
 		}
@@ -71,7 +71,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 }
 
 func isModifiedConfig(path string) bool {
-	if filepath.Base(path) == devconfig.DefaultName {
+	if devconfig.IsConfigName(filepath.Base(path)) {
 		cfg, err := devconfig.Load(path)
 		if err != nil {
 			return false

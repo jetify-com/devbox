@@ -1,3 +1,3 @@
 package featureflag
 
-var TySON = disable("TYSON")
+var TySON = disable("TYSON").EnableOnDev()

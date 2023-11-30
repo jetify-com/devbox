@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	DefaultName      = "devbox.json"
+	defaultName      = "devbox.json"
 	defaultTySONName = "devbox.tson"
 )
 
@@ -141,7 +141,7 @@ func (c *Config) SaveTo(path string) error {
 	if c.format != jsonFormat {
 		return errors.New("cannot save config to non-json format")
 	}
-	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+	return os.WriteFile(filepath.Join(path, defaultName), c.Bytes(), 0o644)
 }
 
 // Load reads a devbox config file, and validates it.
@@ -243,7 +243,7 @@ func IsConfigName(name string) bool {
 }
 
 func ValidConfigNames() []string {
-	names := []string{DefaultName}
+	names := []string{defaultName}
 	if featureflag.TySON.Enabled() {
 		names = append(names, defaultTySONName)
 	}

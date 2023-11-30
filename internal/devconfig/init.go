@@ -22,7 +22,7 @@ import (
 )
 
 func Init(dir string, writer io.Writer) (created bool, err error) {
-	created, err = initConfigFile(filepath.Join(dir, DefaultName))
+	created, err = initConfigFile(filepath.Join(dir, defaultName))
 	if err != nil || !created {
 		return created, err
 	}
@@ -69,7 +69,7 @@ func initConfigFile(path string) (created bool, err error) {
 }
 
 func Open(projectDir string) (*Config, error) {
-	cfgPath := filepath.Join(projectDir, DefaultName)
+	cfgPath := filepath.Join(projectDir, defaultName)
 
 	if !featureflag.TySON.Enabled() {
 		return Load(cfgPath)
@@ -77,11 +77,9 @@ func Open(projectDir string) (*Config, error) {
 
 	tysonCfgPath := filepath.Join(projectDir, defaultTySONName)
 
-	if fileutil.Exists(tysonCfgPath) && fileutil.Exists(cfgPath) {
-		return nil, errors.New(
-			"both devbox.json and devbox.tson exist. You can only have one of those")
-	}
-
+	// If tyson config exists use it. Otherwise fallback to json config.
+	// In the future we may error out if both configs exist, but for now support
+	// both while we experiment with tyson support.
 	if fileutil.Exists(tysonCfgPath) {
 		paths, err := pkgtype.RunXClient().Install(context.TODO(), "jetpack-io/tyson")
 		if err != nil {
