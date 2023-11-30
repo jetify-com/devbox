@@ -53,7 +53,7 @@ func TestFindProjectDirFromParentDirSearch(t *testing.T) {
 			err = os.MkdirAll(filepath.Join(root, testCase.allDirs), 0o777)
 			assert.NoError(err)
 
-			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
+			absProjectPath, err := filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.ValidConfigNames()[0]))
 			assert.NoError(err)
 			err = os.WriteFile(absProjectPath, []byte("{}"), 0o666)
 			assert.NoError(err)
@@ -97,14 +97,14 @@ func TestFindParentDirAtPath(t *testing.T) {
 			name:        "flag_path_is_file_has_config",
 			allDirs:     "a/b/c",
 			projectDir:  "a/b",
-			flagPath:    "a/b/" + devconfig.DefaultName,
+			flagPath:    "a/b/" + devconfig.ValidConfigNames()[0],
 			expectError: false,
 		},
 		{
 			name:        "flag_path_is_file_missing_config",
 			allDirs:     "a/b/c",
 			projectDir:  "", // missing config
-			flagPath:    "a/b/" + devconfig.DefaultName,
+			flagPath:    "a/b/" + devconfig.ValidConfigNames()[0],
 			expectError: true,
 		},
 	}
@@ -121,7 +121,7 @@ func TestFindParentDirAtPath(t *testing.T) {
 
 			var absProjectPath string
 			if testCase.projectDir != "" {
-				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.DefaultName))
+				absProjectPath, err = filepath.Abs(filepath.Join(root, testCase.projectDir, devconfig.ValidConfigNames()[0]))
 				assert.NoError(err)
 				err = os.WriteFile(absProjectPath, []byte("{}"), 0o666)
 				assert.NoError(err)

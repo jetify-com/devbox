@@ -602,7 +602,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got save error:", err)
 	}
-	out, err := Load(filepath.Join(path, "devbox.json"))
+	out, err := Load(filepath.Join(path, defaultName))
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}

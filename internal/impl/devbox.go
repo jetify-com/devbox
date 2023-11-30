@@ -78,9 +78,8 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfgPath := filepath.Join(projectDir, devconfig.DefaultName)
 
-	cfg, err := devconfig.Load(cfgPath)
+	cfg, err := devconfig.Open(projectDir)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

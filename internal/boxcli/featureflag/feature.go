@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"testing"
 
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 )
@@ -59,6 +60,13 @@ func (f *feature) Enabled() bool {
 		return on
 	}
 	return f.enabled
+}
+
+func (f *feature) EnableOnDev() *feature {
+	if build.IsDev {
+		f.enabled = true
+	}
+	return f
 }
 
 func (f *feature) EnableForTest(t *testing.T) {

@@ -4,20 +4,25 @@
 package devconfig
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
 func Init(dir string, writer io.Writer) (created bool, err error) {
-	created, err = initConfigFile(filepath.Join(dir, DefaultName))
+	created, err = initConfigFile(filepath.Join(dir, defaultName))
 	if err != nil || !created {
 		return created, err
 	}
@@ -61,4 +66,44 @@ func initConfigFile(path string) (created bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func Open(projectDir string) (*Config, error) {
+	cfgPath := filepath.Join(projectDir, defaultName)
+
+	if !featureflag.TySON.Enabled() {
+		return Load(cfgPath)
+	}
+
+	tysonCfgPath := filepath.Join(projectDir, defaultTySONName)
+
+	// If tyson config exists use it. Otherwise fallback to json config.
+	// In the future we may error out if both configs exist, but for now support
+	// both while we experiment with tyson support.
+	if fileutil.Exists(tysonCfgPath) {
+		paths, err := pkgtype.RunXClient().Install(context.TODO(), "jetpack-io/tyson")
+		if err != nil {
+			return nil, err
+		}
+		binPath := filepath.Join(paths[0], "tyson")
+		tmpFile, err := os.CreateTemp("", "*.json")
+		if err != nil {
+			return nil, err
+		}
+		cmd := exec.Command(binPath, "eval", tysonCfgPath)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = tmpFile
+		if err = cmd.Run(); err != nil {
+			return nil, err
+		}
+		cfgPath = tmpFile.Name()
+		config, err := Load(cfgPath)
+		if err != nil {
+			return nil, err
+		}
+		config.format = tsonFormat
+		return config, nil
+	}
+
+	return Load(cfgPath)
 }
