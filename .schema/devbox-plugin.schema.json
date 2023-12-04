@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft-04/schema#",
+  "$id": "https://github.com/jetpack-io/devbox/plugins",
+  "title": "Devbox Plugin Schema",
+  "description": "Defines fields and values for public devbox plugins",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "The schema version of this plugin file.",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the plugin.",
+      "type": "string"
+    },
+    "version": {
+      "description": "The version of the plugin.",
+      "type": "string"
+    },
+    "readme": {
+      "description": "A short description of the plugin and how it works. This will automatically display when the user first installs the plugin, or runs `devbox info`",
+      "type": "string"
+    },
+    "env": {
+      "type": "object",
+      "description": "List of additional environment variables to be set in the Devbox environment. These can be overridden by environment variables set in the user's devbox.json",
+      "patternProperties": {
+        ".*": {
+          "type": "string",
+          "description": "Value of the environment variable."
+        }
+      }
+    },
+    "create_files": {
+      "type": "object",
+      "description": "List of files to create in the user's project directory when the plugin is activated. The key points to the file path where the file will be created. The value points to the default file that should be copied to that location",
+      "patternProperties": {
+        ".*": {
+          "type": "string",
+          "description": "Contents of the file."
+        }
+      }
+    },
+    "shell": {
+      "type": "object",
+      "description": "Shell specific options and hooks for the plugin.",
+      "items": {
+        "init_hook": {
+          "type": ["array", "string"],
+          "description": "Shell command to run right before initializing the user's shell, running a script, or starting a service"
+        }
+      }
+    }
+  },
+  "required": ["name", "version", "readme"]
+}
