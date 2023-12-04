@@ -1,0 +1,36 @@
+# Testscript for exercising devbox update
+
+exec devbox install
+
+exec devbox update
+
+-- devbox.json --
+{
+  "packages": [
+    "hello@latest",
+  ]
+}
+
+-- devbox.lock --
+{
+  "lockfile_version": "1",
+  "packages": {
+    "hello@2.10": {
+      "last_modified": "2022-01-26T13:01:16Z",
+      "resolved": "github:NixOS/nixpkgs/e722007bf05802573b41701c49da6c8814878171#hello",
+      "source": "devbox-search",
+      "version": "2.10",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/c24460c0iw7kai6z5aan6mkgfclpl2qj-hello-2.10"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/6wzargj47480y84cqqnm7n30xwqlbyrm-hello-2.10"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/nndmy96lswhxc4xp49n950i1905qlfpy-hello-2.10"
+        }
+      }
+    }
+  }
+}
