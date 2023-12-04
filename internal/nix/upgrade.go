@@ -10,6 +10,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/vercheck"
 )
 
 func ProfileUpgrade(ProfileDir string, idx int) error {
@@ -28,8 +29,16 @@ func ProfileUpgrade(ProfileDir string, idx int) error {
 }
 
 func FlakeUpdate(ProfileDir string) error {
+	version, err := Version()
+	if err != nil {
+		return err
+	}
 	ux.Finfo(os.Stderr, "Running \"nix flake update\"\n")
-	cmd := exec.Command("nix", "flake", "update", ProfileDir)
+	cmd := exec.Command("nix", "flake", "update")
+	if vercheck.SemverCompare(version, "2.19.0") >= 0 {
+		cmd.Args = append(cmd.Args, "--flake")
+	}
+	cmd.Args = append(cmd.Args, ProfileDir)
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
