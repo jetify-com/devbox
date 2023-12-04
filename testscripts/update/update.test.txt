@@ -11,7 +11,7 @@ exec devbox update
   ]
 }
 
--- devbox.lock -- 
+-- devbox.lock --
 {
   "lockfile_version": "1",
   "packages": {
