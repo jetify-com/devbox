@@ -24,7 +24,7 @@ const BinaryCache = "https://cache.nixos.org"
 // IsInBinaryCache returns true if the package is in the binary cache.
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
 // before calling this function.
-func (p *Package) IsInBinaryCache() (bool, error) {
+func (p *stringPackage) IsInBinaryCache() (bool, error) {
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return false, err
 	} else if !eligible {
@@ -81,7 +81,7 @@ var narInfoStatusFnCache = sync.Map{}
 
 // fetchNarInfoStatusOnce is like fetchNarInfoStatus, but will only ever run
 // once and cache the result.
-func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
+func (p *stringPackage) fetchNarInfoStatusOnce() (bool, error) {
 	type inCacheFunc func() (bool, error)
 	f, ok := narInfoStatusFnCache.Load(p.Raw)
 	if !ok {
@@ -95,7 +95,7 @@ func (p *Package) fetchNarInfoStatusOnce() (bool, error) {
 // true if cache exists, false otherwise.
 // NOTE: This function always performs an HTTP request and should not be called
 // more than once per package.
-func (p *Package) fetchNarInfoStatus() (bool, error) {
+func (p *stringPackage) fetchNarInfoStatus() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
@@ -127,7 +127,7 @@ func (p *Package) fetchNarInfoStatus() (bool, error) {
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
 // the package to query it from the binary cache.
-func (p *Package) isEligibleForBinaryCache() (bool, error) {
+func (p *stringPackage) isEligibleForBinaryCache() (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func (p *Package) isEligibleForBinaryCache() (bool, error) {
 // NOTE: this is called from multiple go-routines and needs to be concurrency safe.
 // Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
 // function from within a goroutine.
-func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
+func (p *stringPackage) sysInfoIfExists() (*lock.SystemInfo, error) {
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return nil, nil
 	}

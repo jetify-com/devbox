@@ -23,7 +23,7 @@ func (m *Manager) ParseInclude(include string) (Includable, error) {
 	if name == "" {
 		return nil, usererr.New("include name is required")
 	} else if includeType == "plugin" {
-		return devpkg.PackageFromString(name, m.lockfile), nil
+		return devpkg.PackageFromStringWithDefaults(name, m.lockfile), nil
 	} else if includeType == "path" {
 		absPath := filepath.Join(m.ProjectDir(), name)
 		return newLocalPlugin(absPath)

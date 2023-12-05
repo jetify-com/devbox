@@ -42,7 +42,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := devpkg.PackagesFromStrings(lo.Uniq(pkgsNames), d.lockfile, opts.DisablePlugin)
+	pkgs := devpkg.PackagesFromStringsWithOptions(lo.Uniq(pkgsNames), d.lockfile, opts)
 
 	// addedPackageNames keeps track of the possibly transformed (versioned)
 	// names of added packages (even if they are already in config). We use this
@@ -111,7 +111,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		return err
 	}
 
-	return d.PrintPostAddMessage(ctx, pkgs, unchangedPackageNames, opts)
+	return d.printPostAddMessage(ctx, pkgs, unchangedPackageNames, opts)
 }
 
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
@@ -151,7 +151,7 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 	return nil
 }
 
-func (d *Devbox) PrintPostAddMessage(
+func (d *Devbox) printPostAddMessage(
 	ctx context.Context,
 	pkgs []*devpkg.Package,
 	unchangedPackageNames []string,

@@ -20,22 +20,35 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
 )
 
-// Package represents a "package" added to the devbox.json config.
-// A unique feature of flakes is that they have well-defined "inputs" and "outputs".
-// This Package will be aggregated into a specific "flake input" (see shellgen.flakeInput).
+// Package is a stringPackage with additional options. Since devbox.json
+// now allows custom options, this struct will support that. We use a new struct
+// because this package has functions like PackageFromString that are not aware
+// of the options and this may lead to mistakes.
 type Package struct {
+	stringPackage
 	plugins.BuiltIn
-	lockfile        lock.Locker
-	IsDevboxPackage bool
 
 	// If package triggers a built-in plugin, setting this to true will disable it.
 	// If package does not trigger plugin, this will have no effect.
 	DisablePlugin bool
+
+	// PatchGlibc applies a function to the package's derivation that
+	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
+	PatchGlibc bool
+}
+
+// stringPackage represents a "package" added to the devbox.json config.
+// A unique feature of flakes is that they have well-defined "inputs" and "outputs".
+// This Package will be aggregated into a specific "flake input" (see shellgen.flakeInput).
+type stringPackage struct {
+	lockfile        lock.Locker
+	IsDevboxPackage bool
 
 	// installable is the flake attribute that the package resolves to.
 	// When it gets set depends on the original package string:
@@ -79,26 +92,28 @@ type Package struct {
 	//    example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
 	Raw string
 
-	// PatchGlibc applies a function to the package's derivation that
-	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
-	PatchGlibc bool
-
 	// isInstallable is true if the package may be enabled on the current platform.
 	isInstallable bool
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
-// PackagesFromStrings constructs Package from the list of package names provided.
+// PackagesFromStringsWithDefaults constructs Package from the list of package names provided.
 // These names correspond to devbox packages from the devbox.json config.
-func PackagesFromStrings(
-	rawNames []string, l lock.Locker, disablePlugin bool,
-) []*Package {
+func PackagesFromStringsWithDefaults(rawNames []string, l lock.Locker) []*Package {
 	packages := []*Package{}
 	for _, rawName := range rawNames {
-		pkg := PackageFromString(rawName, l)
-		pkg.DisablePlugin = disablePlugin
+		pkg := PackageFromStringWithDefaults(rawName, l)
 		packages = append(packages, pkg)
+	}
+	return packages
+}
+
+func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devopt.AddOpts) []*Package {
+	packages := PackagesFromStringsWithDefaults(rawNames, l)
+	for _, pkg := range packages {
+		pkg.DisablePlugin = opts.DisablePlugin
+		// TODO: add patchGlibc flag
 	}
 	return packages
 }
@@ -106,9 +121,11 @@ func PackagesFromStrings(
 func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
 	for _, cfgPkg := range config.Packages.Collection {
-		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
-		pkg.DisablePlugin = cfgPkg.DisablePlugin
-		pkg.PatchGlibc = cfgPkg.PatchGlibc
+		pkg := &Package{
+			stringPackage: *newStringPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l),
+			DisablePlugin: cfgPkg.DisablePlugin,
+			PatchGlibc:    cfgPkg.PatchGlibc,
+		}
 		result = append(result, pkg)
 	}
 	return result
@@ -116,13 +133,19 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 
 // PackageFromString constructs Package from the raw name provided.
 // The raw name corresponds to a devbox package from the devbox.json config.
-func PackageFromString(raw string, locker lock.Locker) *Package {
+func PackageFromString(raw string, locker lock.Locker) *stringPackage {
 	// Packages are installable by default.
-	return newPackage(raw, true /*isInstallable*/, locker)
+	return newStringPackage(raw, true /*isInstallable*/, locker)
 }
 
-func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
-	pkg := &Package{
+func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
+	return &Package{
+		stringPackage: *newStringPackage(raw, true /*isInstallable*/, locker),
+	}
+}
+
+func newStringPackage(raw string, isInstallable bool, locker lock.Locker) *stringPackage {
+	pkg := &stringPackage{
 		Raw:           raw,
 		lockfile:      locker,
 		isInstallable: isInstallable,
@@ -180,7 +203,7 @@ func isAmbiguous(raw string, parsed FlakeInstallable) bool {
 
 // resolve is the implementation of Package.resolve, where it is wrapped in a
 // sync.OnceValue function. It should not be called directly.
-func resolve(pkg *Package) error {
+func resolve(pkg *stringPackage) error {
 	resolved, err := pkg.lockfile.Resolve(pkg.Raw)
 	if err != nil {
 		return err
@@ -196,7 +219,7 @@ func resolve(pkg *Package) error {
 	return nil
 }
 
-func (p *Package) setInstallable(i FlakeInstallable, projectDir string) {
+func (p *stringPackage) setInstallable(i FlakeInstallable, projectDir string) {
 	if i.Ref.Type == FlakeTypePath && !filepath.IsAbs(i.Ref.Path) {
 		i.Ref.Path = filepath.Join(projectDir, i.Ref.Path)
 	}
@@ -209,7 +232,7 @@ var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
 // generated flake.nix to import this package. This name must be unique in that
 // flake so we attach a hash to (quasi) ensure uniqueness.
 // Input name will be different from raw package name
-func (p *Package) FlakeInputName() string {
+func (p *stringPackage) FlakeInputName() string {
 	_ = p.resolve()
 
 	result := ""
@@ -240,7 +263,7 @@ func (p *Package) FlakeInputName() string {
 
 // URLForFlakeInput returns the input url to be used in a flake.nix file. This
 // input can be used to import the package.
-func (p *Package) URLForFlakeInput() string {
+func (p *stringPackage) URLForFlakeInput() string {
 	if err := p.resolve(); err != nil {
 		// TODO(landau): handle error
 		panic(err)
@@ -256,7 +279,7 @@ func (p *Package) IsInstallable() bool {
 
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
-func (p *Package) Installable() (string, error) {
+func (p *stringPackage) Installable() (string, error) {
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return "", err
@@ -280,7 +303,7 @@ func (p *Package) Installable() (string, error) {
 // urlForInstall is used during `nix profile install`.
 // The key difference with URLForFlakeInput is that it has a suffix of
 // `#attributePath`
-func (p *Package) urlForInstall() (string, error) {
+func (p *stringPackage) urlForInstall() (string, error) {
 	if err := p.resolve(); err != nil {
 		return "", err
 	}
@@ -327,7 +350,7 @@ func (p *Package) FullPackageAttributePath() (string, error) {
 // NormalizedPackageAttributePath returns an attribute path normalized by nix
 // search. This is useful for comparing different attribute paths that may
 // point to the same package. Note, it may be an expensive call.
-func (p *Package) NormalizedPackageAttributePath() (string, error) {
+func (p *stringPackage) NormalizedPackageAttributePath() (string, error) {
 	if p.normalizedPackageAttributePathCache != "" {
 		return p.normalizedPackageAttributePathCache, nil
 	}
@@ -341,7 +364,7 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 
 // normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It may be an expensive call (~100ms).
-func (p *Package) normalizePackageAttributePath() (string, error) {
+func (p *stringPackage) normalizePackageAttributePath() (string, error) {
 	if err := p.resolve(); err != nil {
 		return "", err
 	}
@@ -417,7 +440,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 var ErrCannotBuildPackageOnSystem = errors.New("unable to build for system")
 
-func (p *Package) Hash() string {
+func (p *stringPackage) Hash() string {
 	hash := ""
 	if p.installable != (FlakeInstallable{}) {
 		sum := md5.Sum([]byte(p.installable.String()))
@@ -461,7 +484,7 @@ func (p *Package) Equals(other *Package) bool {
 
 // CanonicalName returns the name of the package without the version
 // it only applies to devbox packages
-func (p *Package) CanonicalName() string {
+func (p *stringPackage) CanonicalName() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
@@ -520,7 +543,7 @@ func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
 
 // version returns the version of the package
 // it only applies to devbox packages
-func (p *Package) version() string {
+func (p *stringPackage) version() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
@@ -528,17 +551,17 @@ func (p *Package) version() string {
 	return version
 }
 
-func (p *Package) isVersioned() bool {
+func (p *stringPackage) isVersioned() bool {
 	return p.IsDevboxPackage && strings.Contains(p.Raw, "@")
 }
 
-func (p *Package) HashFromNixPkgsURL() string {
+func (p *stringPackage) HashFromNixPkgsURL() string {
 	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
 // InputAddressedPath is the input-addressed path in /nix/store
 // It is also the key in the BinaryCache for this package
-func (p *Package) InputAddressedPath() (string, error) {
+func (p *stringPackage) InputAddressedPath() (string, error) {
 	if inCache, err := p.IsInBinaryCache(); err != nil {
 		return "", err
 	} else if !inCache {
@@ -584,7 +607,7 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	return err
 }
 
-func (p *Package) IsRunX() bool {
+func (p *stringPackage) IsRunX() bool {
 	return pkgtype.IsRunX(p.Raw)
 }
 

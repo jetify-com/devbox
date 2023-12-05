@@ -355,7 +355,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, e
 	)
 	readme, err := plugin.Readme(
 		ctx,
-		devpkg.PackageFromString(pkg, d.lockfile),
+		devpkg.PackageFromStringWithDefaults(pkg, d.lockfile),
 		d.projectDir,
 		markdown,
 	)
