@@ -232,7 +232,7 @@ func (c *configAST) FindPkgObject(name string) *hujson.Object {
 	}
 
 	// We need to ensure that the package value is a full object
-	// (not a version string) before we can add a bool field.
+	// (not a version string) before we can set a custom field on it.
 	c.convertVersionToObject(&pkgs.Members[i].Value)
 
 	pkgObject := pkgs.Members[i].Value.Value.(*hujson.Object)
