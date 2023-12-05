@@ -1,0 +1,7 @@
+# Testscript for testing plugin
+
+exec devbox init
+exec devbox add python
+stderr 'This plugin'
+
+exec devbox run ls .devbox/virtenv/python

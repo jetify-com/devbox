@@ -5,7 +5,6 @@ import (
 )
 
 type Opts struct {
-	AllowInsecureAdds        bool
 	Dir                      string
 	Env                      map[string]string
 	PreservePathStack        bool
@@ -36,6 +35,13 @@ type Credentials struct {
 	// TODO We can just parse these out, but don't want to add a dependency right now
 	Email string
 	Sub   string
+}
+
+type AddOpts struct {
+	AllowInsecure    bool
+	Platforms        []string
+	ExcludePlatforms []string
+	DisablePlugin    bool
 }
 
 type UpdateOpts struct {

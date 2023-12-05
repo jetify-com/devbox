@@ -1,0 +1,7 @@
+# Testscript for testing disable plugin
+
+exec devbox init
+exec devbox add python --disable-plugin
+! stderr 'This plugin' 
+
+! exec devbox run ls .devbox/virtenv/python

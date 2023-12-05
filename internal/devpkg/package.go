@@ -33,6 +33,10 @@ type Package struct {
 	lockfile        lock.Locker
 	IsDevboxPackage bool
 
+	// If package triggers a built-in plugin, setting this to true will disable it.
+	// If package does not trigger plugin, this will have no effect.
+	DisablePlugin bool
+
 	// installable is the flake attribute that the package resolves to.
 	// When it gets set depends on the original package string:
 	//
@@ -85,12 +89,16 @@ type Package struct {
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
-// PackageFromStrings constructs Package from the list of package names provided.
+// PackagesFromStrings constructs Package from the list of package names provided.
 // These names correspond to devbox packages from the devbox.json config.
-func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
+func PackagesFromStrings(
+	rawNames []string, l lock.Locker, disablePlugin bool,
+) []*Package {
 	packages := []*Package{}
 	for _, rawName := range rawNames {
-		packages = append(packages, PackageFromString(rawName, l))
+		pkg := PackageFromString(rawName, l)
+		pkg.DisablePlugin = disablePlugin
+		packages = append(packages, pkg)
 	}
 	return packages
 }
@@ -99,6 +107,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
 	for _, cfgPkg := range config.Packages.Collection {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
+		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc
 		result = append(result, pkg)
 	}
