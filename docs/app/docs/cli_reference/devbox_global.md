@@ -2,11 +2,11 @@
 
 Top level command for managing global packages.
 
-You can use `devbox global` to install packages that you want to use across all your local devbox projects. For example -- if you usually use `ripgrep` for searching in all your projects, you can use `devbox add ripgrep` to make it available whenever you start a `devbox shell` without adding it to each project's `devbox.json.` 
+You can use `devbox global` to install packages that you want to use across all your local devbox projects. For example -- if you usually use `ripgrep` for searching in all your projects, you can use `devbox global add ripgrep` to make it available whenever you start a `devbox shell` without adding it to each project's `devbox.json.` 
 
 You can also use Devbox as a global package manager by adding the following line to your shellrc: 
 
-`exec "$(devbox global shellenv)"`
+`eval "$(devbox global shellenv)"`
 
 For more details, see [Use Devbox as your Primary Package Manager](../devbox_global.md).
 
