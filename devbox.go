@@ -16,7 +16,7 @@ import (
 
 // Devbox provides an isolated development environment.
 type Devbox interface {
-	Add(ctx context.Context, platforms, excludePlatforms []string, pkgs ...string) error
+	Add(ctx context.Context, pkgs []string, opts devopt.AddOpts) error
 	Config() *devconfig.Config
 	EnvVars(ctx context.Context) ([]string, error)
 	Info(ctx context.Context, pkg string, markdown bool) (string, error)

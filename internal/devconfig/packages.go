@@ -177,6 +177,19 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (pkgs *Packages) DisablePlugin(versionedName string, v bool) error {
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedName)
+	}
+	if pkgs.Collection[i].DisablePlugin != v {
+		pkgs.Collection[i].DisablePlugin = v
+		pkgs.ast.setPackageBool(name, "disable_plugin", v)
+	}
+	return nil
+}
+
 func (pkgs *Packages) index(name, version string) int {
 	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
 		return p.name == name && p.Version == version
@@ -187,6 +200,7 @@ type Package struct {
 	name    string
 	Version string `json:"version,omitempty"`
 
+	DisablePlugin     bool     `json:"disable_plugin,omitempty"`
 	Platforms         []string `json:"platforms,omitempty"`
 	ExcludedPlatforms []string `json:"excluded_platforms,omitempty"`
 

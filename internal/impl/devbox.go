@@ -64,7 +64,6 @@ type Devbox struct {
 	pluginManager            *plugin.Manager
 	preservePathStack        bool
 	pure                     bool
-	allowInsecureAdds        bool
 	customProcessComposeFile string
 
 	// This is needed because of the --quiet flag.
@@ -94,7 +93,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		preservePathStack:        opts.PreservePathStack,
 		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
-		allowInsecureAdds:        opts.AllowInsecureAdds,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -103,7 +101,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
-	if opts.AllowInsecureAdds || lock.HasAllowInsecurePackages() {
+	if lock.HasAllowInsecurePackages() {
 		nix.AllowInsecurePackages()
 	}
 	box.pluginManager.ApplyOptions(
@@ -357,7 +355,7 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, e
 	)
 	readme, err := plugin.Readme(
 		ctx,
-		devpkg.PackageFromString(pkg, d.lockfile),
+		devpkg.PackageFromStringWithDefaults(pkg, d.lockfile),
 		d.projectDir,
 		markdown,
 	)

@@ -134,7 +134,7 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 }
 
 func testInputFromString(s, projectDir string) *testInput {
-	return lo.ToPtr(testInput{Package: PackageFromString(s, &lockfile{projectDir})})
+	return lo.ToPtr(testInput{Package: PackageFromStringWithDefaults(s, &lockfile{projectDir})})
 }
 
 func TestHashFromNixPkgsURL(t *testing.T) {
@@ -241,7 +241,7 @@ func TestCanonicalName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pkgName, func(t *testing.T) {
-			pkg := PackageFromString(tt.pkgName, &lockfile{})
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)

@@ -17,6 +17,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 
@@ -32,8 +33,7 @@ import (
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
-// nolint:revive // warns about cognitive complexity
-func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, pkgsNames ...string) error {
+func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
@@ -42,7 +42,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 
 	// Only add packages that are not already in config. If same canonical exists,
 	// replace it.
-	pkgs := devpkg.PackageFromStrings(lo.Uniq(pkgsNames), d.lockfile)
+	pkgs := devpkg.PackagesFromStringsWithOptions(lo.Uniq(pkgsNames), d.lockfile, opts)
 
 	// addedPackageNames keeps track of the possibly transformed (versioned)
 	// names of added packages (even if they are already in config). We use this
@@ -74,7 +74,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
-		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
+		versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
 
 		packageNameForConfig := pkg.Raw
 		ok, err := versionedPkg.ValidateExists(ctx)
@@ -98,11 +98,33 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
-	for _, pkg := range addedPackageNames {
-		if err := d.cfg.Packages.AddPlatforms(d.stderr, pkg, platforms); err != nil {
+	// Options must be set before ensurePackagesAreInstalled. See comment in function
+	if err := d.setPackageOptions(addedPackageNames, opts); err != nil {
+		return err
+	}
+
+	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
+		return usererr.WithUserMessage(err, "There was an error installing nix packages")
+	}
+
+	if err := d.saveCfg(); err != nil {
+		return err
+	}
+
+	return d.printPostAddMessage(ctx, pkgs, unchangedPackageNames, opts)
+}
+
+func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
+	for _, pkg := range pkgs {
+		if err := d.cfg.Packages.AddPlatforms(
+			d.stderr, pkg, opts.Platforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.ExcludePlatforms(d.stderr, pkg, excludePlatforms); err != nil {
+		if err := d.cfg.Packages.ExcludePlatforms(
+			d.stderr, pkg, opts.ExcludePlatforms); err != nil {
+			return err
+		}
+		if err := d.cfg.Packages.DisablePlugin(pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
 	}
@@ -110,8 +132,9 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 	// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled
 	// which will call print-dev-env. Resolving does not save the lockfile, we
 	// save at the end when everything has succeeded.
-	if d.allowInsecureAdds {
-		for _, name := range addedPackageNames {
+	if opts.AllowInsecure {
+		nix.AllowInsecurePackages()
+		for _, name := range pkgs {
 			p, err := d.lockfile.Resolve(name)
 			if err != nil {
 				return err
@@ -125,14 +148,15 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
-		return usererr.WithUserMessage(err, "There was an error installing nix packages")
-	}
+	return nil
+}
 
-	if err := d.saveCfg(); err != nil {
-		return err
-	}
-
+func (d *Devbox) printPostAddMessage(
+	ctx context.Context,
+	pkgs []*devpkg.Package,
+	unchangedPackageNames []string,
+	opts devopt.AddOpts,
+) error {
 	for _, input := range pkgs {
 		if readme, err := plugin.Readme(
 			ctx,
@@ -145,7 +169,7 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 		}
 	}
 
-	if len(platforms) == 0 && len(excludePlatforms) == 0 && !d.allowInsecureAdds {
+	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && !opts.AllowInsecure {
 		if len(unchangedPackageNames) == 1 {
 			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {
@@ -154,7 +178,6 @@ func (d *Devbox) Add(ctx context.Context, platforms, excludePlatforms []string, 
 			)
 		}
 	}
-
 	return nil
 }
 

@@ -1,0 +1,34 @@
+# Testscript for testing disable plugin
+
+exec devbox init
+exec devbox add python --disable-plugin
+! stderr 'This plugin' 
+
+json.superset devbox.json expected_devbox.json
+
+! exec devbox run ls .devbox/virtenv/python
+
+# remove disable plugin option
+exec devbox add python
+
+json.superset devbox.json expected_devbox2.json
+
+-- expected_devbox.json --
+{
+  "packages": {
+    "python": {
+      "version": "latest",
+      "disable_plugin": true
+    }
+  }
+}
+
+-- expected_devbox2.json --
+{
+  "packages": {
+    "python": {
+      "version": "latest",
+      "disable_plugin": false
+    }
+  }
+}

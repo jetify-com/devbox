@@ -199,7 +199,7 @@ type ProfileInstallArgs struct {
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
-	input := devpkg.PackageFromString(args.Package, args.Lockfile)
+	input := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
 
 	inCache, err := input.IsInBinaryCache()
 	if err != nil {

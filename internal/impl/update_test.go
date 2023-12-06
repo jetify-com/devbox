@@ -14,9 +14,7 @@ func TestUpdateNewPackageIsAdded(t *testing.T) {
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
-	devPkg := &devpkg.Package{
-		Raw: raw,
-	}
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
 	resolved := &lock.Package{
 		Resolved: "resolved-flake-reference",
 	}
@@ -36,9 +34,7 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 
 	raw := "hello@1.2.3"
 	sys := currentSystem(t)
-	devPkg := &devpkg.Package{
-		Raw: raw,
-	}
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
 	resolved := &lock.Package{
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
@@ -71,9 +67,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 	raw := "hello@1.2.3"
 	sys1 := currentSystem(t)
 	sys2 := "system2"
-	devPkg := &devpkg.Package{
-		Raw: raw,
-	}
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
 	resolved := &lock.Package{
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
@@ -115,9 +109,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 	raw := "hello@1.2.3"
 	sys1 := currentSystem(t)
 	sys2 := "system2"
-	devPkg := &devpkg.Package{
-		Raw: raw,
-	}
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
 	resolved := &lock.Package{
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{

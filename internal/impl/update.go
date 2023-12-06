@@ -42,7 +42,10 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 			// Calling Add function with the original package names, since
 			// Add will automatically append @latest if search is able to handle that.
 			// If not, it will fallback to the nixpkg format.
-			if err := d.Add(ctx, cfgPackage.Platforms, cfgPackage.ExcludedPlatforms, pkg.Raw); err != nil {
+			if err := d.Add(ctx, []string{pkg.Raw}, devopt.AddOpts{
+				Platforms:        cfgPackage.Platforms,
+				ExcludePlatforms: cfgPackage.ExcludedPlatforms,
+			}); err != nil {
 				return err
 			}
 		} else {

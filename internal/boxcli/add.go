@@ -20,6 +20,7 @@ const toSearchForPackages = "To search for packages, use the `devbox search` com
 type addCmdFlags struct {
 	config           configFlags
 	allowInsecure    bool
+	disablePlugin    bool
 	platforms        []string
 	excludePlatforms []string
 }
@@ -53,6 +54,9 @@ func addCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.allowInsecure, "allow-insecure", false,
 		"allow adding packages marked as insecure.")
+	command.Flags().BoolVar(
+		&flags.disablePlugin, "disable-plugin", false,
+		"disable plugin (if any) for this package.")
 	command.Flags().StringSliceVarP(
 		&flags.platforms, "platform", "p", []string{},
 		"add packages to run on only this platform.")
@@ -65,13 +69,17 @@ func addCmd() *cobra.Command {
 
 func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:               flags.config.path,
-		Stderr:            cmd.ErrOrStderr(),
-		AllowInsecureAdds: flags.allowInsecure,
+		Dir:    flags.config.path,
+		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return box.Add(cmd.Context(), flags.platforms, flags.excludePlatforms, args...)
+	return box.Add(cmd.Context(), args, devopt.AddOpts{
+		AllowInsecure:    flags.allowInsecure,
+		DisablePlugin:    flags.disablePlugin,
+		Platforms:        flags.platforms,
+		ExcludePlatforms: flags.excludePlatforms,
+	})
 }
