@@ -25,6 +25,10 @@ const BinaryCache = "https://cache.nixos.org"
 // ALERT: Callers in a perf-sensitive code path should call FillNarInfoCache
 // before calling this function.
 func (p *Package) IsInBinaryCache() (bool, error) {
+	// Patched glibc packages are not in the binary cache.
+	if p.PatchGlibc {
+		return false, nil
+	}
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return false, err
 	} else if !eligible {

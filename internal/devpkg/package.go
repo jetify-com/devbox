@@ -127,7 +127,7 @@ func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
 func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
-	// TODO: add patchGlibc flag
+	pkg.PatchGlibc = opts.PatchGlibc
 	return pkg
 }
 

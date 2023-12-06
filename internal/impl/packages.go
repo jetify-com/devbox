@@ -124,7 +124,13 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			d.stderr, pkg, opts.ExcludePlatforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.DisablePlugin(pkg, opts.DisablePlugin); err != nil {
+		if err := d.cfg.Packages.SetDisablePlugin(
+			pkg, opts.DisablePlugin); err != nil {
+			return err
+		}
+
+		if err := d.cfg.Packages.SetPatchGLibc(
+			pkg, opts.PatchGlibc); err != nil {
 			return err
 		}
 	}

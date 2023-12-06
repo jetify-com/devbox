@@ -23,6 +23,7 @@ type addCmdFlags struct {
 	disablePlugin    bool
 	platforms        []string
 	excludePlatforms []string
+	patchGlibc       bool
 }
 
 func addCmd() *cobra.Command {
@@ -63,6 +64,9 @@ func addCmd() *cobra.Command {
 	command.Flags().StringSliceVarP(
 		&flags.excludePlatforms, "exclude-platform", "e", []string{},
 		"exclude packages from a specific platform.")
+	command.Flags().BoolVar(
+		&flags.patchGlibc, "patch-glibc", false,
+		"patch any ELF binaries to use the latest glibc version in nixpkgs")
 
 	return command
 }
@@ -81,5 +85,6 @@ func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 		DisablePlugin:    flags.disablePlugin,
 		Platforms:        flags.platforms,
 		ExcludePlatforms: flags.excludePlatforms,
+		PatchGlibc:       flags.patchGlibc,
 	})
 }
