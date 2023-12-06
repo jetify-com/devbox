@@ -74,7 +74,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
-		versionedPkg := devpkg.PackageFromString(pkg.Versioned(), d.lockfile)
+		versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
 
 		packageNameForConfig := pkg.Raw
 		ok, err := versionedPkg.ValidateExists(ctx)

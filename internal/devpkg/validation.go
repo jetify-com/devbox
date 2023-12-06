@@ -8,7 +8,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func (p *stringPackage) ValidateExists(ctx context.Context) (bool, error) {
+func (p *Package) ValidateExists(ctx context.Context) (bool, error) {
 	if p.IsRunX() {
 		_, err := p.lockfile.Resolve(p.Raw)
 		return err == nil, err
@@ -29,7 +29,7 @@ func (p *stringPackage) ValidateExists(ctx context.Context) (bool, error) {
 	return info != "", err
 }
 
-func (p *stringPackage) ValidateInstallsOnSystem() (bool, error) {
+func (p *Package) ValidateInstallsOnSystem() (bool, error) {
 	u, err := p.urlForInstall()
 	if err != nil {
 		return false, err
