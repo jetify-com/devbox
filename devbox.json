@@ -14,11 +14,15 @@
     ],
     "scripts": {
       "build": "go build -o dist/devbox ./cmd/devbox",
+      "build-darwin-amd64": "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
+      "build-darwin-arm64": "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
+      "build-linux-amd64": "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
+      "build-linux-arm64": "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox",
       "build-all": [
-        "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
-        "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
-        "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
-        "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox"
+        "devbox run build-darwin-amd64",
+        "devbox run build-darwin-arm64",
+        "devbox run build-linux-amd64",
+        "devbox run build-linux-arm64",
       ],
       "code":            "code .",
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
