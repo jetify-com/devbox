@@ -1,9 +1,9 @@
 {
-  "packages": [
-    "go@latest",
-    "runx:golangci/golangci-lint@latest",
-    "runx:mvdan/gofumpt@latest"
-  ],
+  "packages": {
+    "go":                          "latest",
+    "runx:golangci/golangci-lint": "latest",
+    "runx:mvdan/gofumpt":          "latest"
+  },
   "env": {
     "GOENV": "off",
     "PATH":  "$PATH:$PWD/dist"

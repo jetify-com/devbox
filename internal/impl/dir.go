@@ -43,7 +43,7 @@ func findProjectDirAtPath(absPath string) (string, error) {
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		if !fileutil.Exists(filepath.Join(absPath, devconfig.DefaultName)) {
+		if !configExistsIn(absPath) {
 			return "", missingConfigError(absPath, false /*didCheckParents*/)
 		}
 		return absPath, nil
@@ -63,13 +63,13 @@ func findProjectDirFromParentDirSearch(
 	cur := absPath
 	// Search parent directories for a devbox.json
 	for cur != root {
-		debug.Log("finding %s in dir: %s\n", devconfig.DefaultName, cur)
-		if fileutil.Exists(filepath.Join(cur, devconfig.DefaultName)) {
+		debug.Log("finding devbox config in dir: %s\n", cur)
+		if configExistsIn(cur) {
 			return cur, nil
 		}
 		cur = filepath.Dir(cur)
 	}
-	if fileutil.Exists(filepath.Join(cur, devconfig.DefaultName)) {
+	if configExistsIn(cur) {
 		return cur, nil
 	}
 	return "", missingConfigError(absPath, true /*didCheckParents*/)
@@ -106,4 +106,13 @@ func missingConfigError(path string, didCheckParents bool) error {
 		path,
 		parentDirCheckAddendum,
 	)
+}
+
+func configExistsIn(path string) bool {
+	for _, name := range devconfig.ValidConfigNames() {
+		if fileutil.Exists(filepath.Join(path, name)) {
+			return true
+		}
+	}
+	return false
 }

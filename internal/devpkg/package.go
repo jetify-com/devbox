@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
@@ -30,6 +31,10 @@ type Package struct {
 	plugins.BuiltIn
 	lockfile        lock.Locker
 	IsDevboxPackage bool
+
+	// If package triggers a built-in plugin, setting this to true will disable it.
+	// If package does not trigger plugin, this will have no effect.
+	DisablePlugin bool
 
 	// installable is the flake attribute that the package resolves to.
 	// When it gets set depends on the original package string:
@@ -83,12 +88,21 @@ type Package struct {
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
-// PackageFromStrings constructs Package from the list of package names provided.
+// PackagesFromStringsWithDefaults constructs Package from the list of package names provided.
 // These names correspond to devbox packages from the devbox.json config.
-func PackageFromStrings(rawNames []string, l lock.Locker) []*Package {
+func PackagesFromStringsWithDefaults(rawNames []string, l lock.Locker) []*Package {
 	packages := []*Package{}
 	for _, rawName := range rawNames {
-		packages = append(packages, PackageFromString(rawName, l))
+		pkg := PackageFromStringWithDefaults(rawName, l)
+		packages = append(packages, pkg)
+	}
+	return packages
+}
+
+func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devopt.AddOpts) []*Package {
+	packages := []*Package{}
+	for _, name := range rawNames {
+		packages = append(packages, PackageFromStringWithOptions(name, l, opts))
 	}
 	return packages
 }
@@ -97,17 +111,22 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
 	for _, cfgPkg := range config.Packages.Collection {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
-		pkg.PatchGlibc = cfgPkg.PatchGlibc
+		pkg.DisablePlugin = cfgPkg.DisablePlugin
+		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
 		result = append(result, pkg)
 	}
 	return result
 }
 
-// PackageFromString constructs Package from the raw name provided.
-// The raw name corresponds to a devbox package from the devbox.json config.
-func PackageFromString(raw string, locker lock.Locker) *Package {
-	// Packages are installable by default.
+func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
 	return newPackage(raw, true /*isInstallable*/, locker)
+}
+
+func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
+	pkg := PackageFromStringWithDefaults(raw, locker)
+	pkg.DisablePlugin = opts.DisablePlugin
+	pkg.PatchGlibc = opts.PatchGlibc
+	return pkg
 }
 
 func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {

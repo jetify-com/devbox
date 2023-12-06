@@ -157,6 +157,10 @@ func ComputeSystem() error {
 	return nil
 }
 
+func SystemIsLinux() bool {
+	return strings.Contains(System(), "linux")
+}
+
 // version is the cached output of `nix --version`.
 var version = ""
 

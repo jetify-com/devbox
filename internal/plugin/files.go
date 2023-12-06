@@ -29,9 +29,12 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 }
 
 func getBuiltinPluginConfigIfExists(
-	pkg Includable,
+	pkg *devpkg.Package,
 	projectDir string,
 ) (*config, error) {
+	if pkg.DisablePlugin {
+		return nil, nil
+	}
 	content, err := plugins.BuiltInForPackage(pkg.CanonicalName())
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil

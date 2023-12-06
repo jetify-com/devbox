@@ -1,0 +1,32 @@
+# Testscript for testing plugin
+
+exec devbox init
+exec devbox add python
+stderr 'This plugin'
+
+exec devbox run ls .devbox/virtenv/python
+
+json.superset devbox.json expected_devbox.json
+
+exec devbox add python --disable-plugin
+exec devbox add hello
+
+json.superset devbox.json expected_devbox2.json
+
+-- expected_devbox.json --
+{
+  "packages": [
+    "python@latest"
+  ]
+}
+
+-- expected_devbox2.json --
+{
+  "packages": {
+    "hello": "latest",
+    "python": {
+      "version": "latest",
+      "disable_plugin": true
+    }
+  }
+}

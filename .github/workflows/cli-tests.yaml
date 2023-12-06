@@ -137,8 +137,8 @@ jobs:
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
         # 2. nix version 2.17.0 which introduces a new code path that minimizes nixpkgs downloads.
-        # 3. latest nix version (currently, that is 2.17.0, so omitted)
-        nix-version: ["2.12.0", "2.17.0"]
+        # 3. latest nix version
+        nix-version: ["2.12.0", "2.17.0", "2.19.2"]
         exclude:
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
@@ -242,7 +242,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0]
+        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3

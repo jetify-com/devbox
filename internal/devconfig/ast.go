@@ -170,25 +170,37 @@ func (c *configAST) removePackageElement(arr *hujson.Array, name string) {
 	arr.Elements = slices.Delete(arr.Elements, i, i+1)
 }
 
-// appendPlatforms appends a platform to a package's "platforms" or
-// "excluded_platforms" field. It automatically converts the package to an
-// object if it isn't already.
+// setPackageBool sets a bool field on a package.
+func (c *configAST) setPackageBool(name, fieldName string, val bool) {
+	pkgObject := c.FindPkgObject(name)
+	if pkgObject == nil {
+		return
+	}
+	if i := c.memberIndex(pkgObject, fieldName); i == -1 {
+		pkgObject.Members = append(pkgObject.Members, hujson.ObjectMember{
+			Name: hujson.Value{
+				Value:       hujson.String(fieldName),
+				BeforeExtra: []byte{'\n'},
+			},
+			Value: hujson.Value{Value: hujson.Bool(val)},
+		})
+	} else {
+		pkgObject.Members[i].Value.Value = hujson.Bool(val)
+	}
+
+	c.root.Format()
+}
+
 func (c *configAST) appendPlatforms(name, fieldName string, platforms []string) {
 	if len(platforms) == 0 {
 		return
 	}
 
-	pkgs := c.packagesField(true).Value.Value.(*hujson.Object)
-	i := c.memberIndex(pkgs, name)
-	if i == -1 {
+	pkgObject := c.FindPkgObject(name)
+	if pkgObject == nil {
 		return
 	}
 
-	// We need to ensure that the package value is a full object
-	// (not a version string) before we can add a platform.
-	c.convertVersionToObject(&pkgs.Members[i].Value)
-
-	pkgObject := pkgs.Members[i].Value.Value.(*hujson.Object)
 	var arr *hujson.Array
 	if i := c.memberIndex(pkgObject, fieldName); i == -1 {
 		arr = &hujson.Array{
@@ -210,6 +222,21 @@ func (c *configAST) appendPlatforms(name, fieldName string, platforms []string) 
 		arr.Elements = append(arr.Elements, hujson.Value{Value: hujson.String(p)})
 	}
 	c.root.Format()
+}
+
+func (c *configAST) FindPkgObject(name string) *hujson.Object {
+	pkgs := c.packagesField(true).Value.Value.(*hujson.Object)
+	i := c.memberIndex(pkgs, name)
+	if i == -1 {
+		return nil
+	}
+
+	// We need to ensure that the package value is a full object
+	// (not a version string) before we can set a custom field on it.
+	c.convertVersionToObject(&pkgs.Members[i].Value)
+
+	pkgObject := pkgs.Members[i].Value.Value.(*hujson.Object)
+	return pkgObject
 }
 
 // migratePackagesArray migrates a legacy array of package versionedNames to an

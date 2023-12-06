@@ -61,7 +61,7 @@ func (m *Manager) ProcessPluginPackages(
 		}
 		pluginPackages = append(
 			pluginPackages,
-			devpkg.PackageFromStrings(config.Packages, m.lockfile)...,
+			devpkg.PackagesFromStringsWithDefaults(config.Packages, m.lockfile)...,
 		)
 		if config.RemoveTriggerPackage {
 			packagesToRemove = append(packagesToRemove, pkg)
