@@ -177,7 +177,20 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (pkgs *Packages) DisablePlugin(versionedName string, v bool) error {
+func (pkgs *Packages) SetPatchGLibc(versionedName string, v bool) error {
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedName)
+	}
+	if pkgs.Collection[i].PatchGlibc != v {
+		pkgs.Collection[i].PatchGlibc = v
+		pkgs.ast.setPackageBool(name, "patch_glibc", v)
+	}
+	return nil
+}
+
+func (pkgs *Packages) SetDisablePlugin(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {

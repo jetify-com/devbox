@@ -114,7 +114,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	for _, cfgPkg := range config.Packages.Collection {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
-		pkg.PatchGlibc = cfgPkg.PatchGlibc
+		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
 		result = append(result, pkg)
 	}
 	return result
@@ -127,7 +127,7 @@ func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
 func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
-	// TODO: add patchGlibc flag
+	pkg.PatchGlibc = opts.PatchGlibc
 	return pkg
 }
 
