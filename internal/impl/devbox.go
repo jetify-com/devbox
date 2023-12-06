@@ -953,8 +953,10 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 
 	// When ensurePackagesAreInstalled is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
 		return nil, err
+	} else if err != nil {
+		ux.Fwarning(d.stderr, "Error connecting to the internet. Will attempt to use cached environment.\n")
 	}
 
 	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
