@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/pkg/runx/impl/types"
@@ -23,7 +24,7 @@ const lockFileVersion = "1"
 
 // Lightly inspired by package-lock.json
 type File struct {
-	devboxProject
+	devboxProject `json:"-"`
 
 	LockFileVersion string `json:"lockfile_version"`
 
@@ -169,7 +170,7 @@ func (f *File) IsUpToDateAndInstalled() (bool, error) {
 }
 
 func (f *File) isDirty() (bool, error) {
-	currentHash, err := cuecfg.Hash(f)
+	currentHash, err := cachehash.JSON(f)
 	if err != nil {
 		return false, err
 	}
@@ -177,7 +178,7 @@ func (f *File) isDirty() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	filesystemHash, err := cuecfg.Hash(fileSystemLockFile)
+	filesystemHash, err := cachehash.JSON(fileSystemLockFile)
 	if err != nil {
 		return false, err
 	}
@@ -189,7 +190,7 @@ func lockFilePath(project devboxProject) string {
 }
 
 func getLockfileHash(project devboxProject) (string, error) {
-	return cuecfg.FileHash(lockFilePath(project))
+	return cachehash.JSONFile(lockFilePath(project))
 }
 
 func ResolveRunXPackage(ctx context.Context, pkg string) (types.PkgRef, error) {

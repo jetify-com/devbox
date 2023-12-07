@@ -5,6 +5,7 @@
 package impl
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -22,6 +23,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/impl/envpath"
@@ -33,7 +35,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
-	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
@@ -138,15 +139,20 @@ func (d *Devbox) Config() *devconfig.Config {
 }
 
 func (d *Devbox) ConfigHash() (string, error) {
-	pkgHashes := lo.Map(d.configPackages(), func(i *devpkg.Package, _ int) string { return i.Hash() })
-	includeHashes := lo.Map(d.Includes(), func(i plugin.Includable, _ int) string { return i.Hash() })
 	h, err := d.cfg.Hash()
 	if err != nil {
 		return "", err
 	}
-	return cuecfg.Hash(
-		h + strings.Join(pkgHashes, "") + strings.Join(includeHashes, ""),
-	)
+
+	buf := bytes.Buffer{}
+	buf.WriteString(h)
+	for _, pkg := range d.configPackages() {
+		buf.WriteString(pkg.Hash())
+	}
+	for _, inc := range d.Includes() {
+		buf.WriteString(inc.Hash())
+	}
+	return cachehash.Bytes(buf.Bytes())
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
@@ -1145,12 +1151,12 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 }
 
 func (d *Devbox) projectDirHash() string {
-	hash, _ := cuecfg.Hash(d.projectDir)
-	return hash
+	h, _ := cachehash.Bytes([]byte(d.projectDir))
+	return h
 }
 
 func (d *Devbox) addHashToEnv(env map[string]string) error {
-	hash, err := cuecfg.Hash(env)
+	hash, err := cachehash.JSON(env)
 	if err == nil {
 		env[d.shellEnvHashKey()] = hash
 	}

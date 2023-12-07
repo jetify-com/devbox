@@ -18,7 +18,7 @@ import (
 	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/impl/shellcmd"
 )
 
@@ -103,7 +103,9 @@ func (c *Config) Bytes() []byte {
 }
 
 func (c *Config) Hash() (string, error) {
-	return cuecfg.Hash(c)
+	ast := c.ast.root.Clone()
+	ast.Minimize()
+	return cachehash.Bytes(ast.Pack())
 }
 
 func (c *Config) Equals(other *Config) bool {

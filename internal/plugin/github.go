@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/cachehash"
 )
 
 type githubPlugin struct {
@@ -57,7 +57,7 @@ func (p *githubPlugin) CanonicalName() string {
 }
 
 func (p *githubPlugin) Hash() string {
-	h, _ := cuecfg.Hash(p.CanonicalName())
+	h, _ := cachehash.Bytes([]byte(p.CanonicalName()))
 	return h
 }
 

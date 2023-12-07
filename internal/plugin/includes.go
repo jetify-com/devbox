@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devpkg"
 )
 
@@ -75,7 +75,7 @@ func (l *localPlugin) IsLocal() bool {
 }
 
 func (l *localPlugin) Hash() string {
-	h, _ := cuecfg.FileHash(l.path)
+	h, _ := cachehash.Bytes([]byte(l.path))
 	return h
 }
 

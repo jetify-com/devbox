@@ -339,8 +339,6 @@ github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036/go.mod h1:gqRgreBU
 github.com/zaffka/mongodb-boltdb-mock v0.0.0-20221014194232-b4bb03fbe3a0/go.mod h1:GsDD1qsG+86MeeCG7ndi6Ei3iGthKL3wQ7PTFigDfNY=
 github.com/zealic/go2node v0.1.0 h1:ofxpve08cmLJBwFdI0lPCk9jfwGWOSD+s6216x0oAaA=
 github.com/zealic/go2node v0.1.0/go.mod h1:GrkFr+HctXwP7vzcU9RsgtAeJjTQ6Ud0IPCQAqpTfBg=
-go.jetpack.io/pkg v0.0.0-20231121212119-81d286a4b5f1 h1:ey+uP0oDBTuxemD8aA6XKACbU9H1ZxYyD92kd+EGVgU=
-go.jetpack.io/pkg v0.0.0-20231121212119-81d286a4b5f1/go.mod h1:2X/fgSoPjX2GKEiZ50sW5jJp5oMt5cUDs+1PYzKb+60=
 go.jetpack.io/pkg v0.0.0-20231121223835-1a68fb347275 h1:oow+Xe2zqql4z4nvLDYJWkJ/MeMbJ1y4+JiKCchcQbE=
 go.jetpack.io/pkg v0.0.0-20231121223835-1a68fb347275/go.mod h1:2X/fgSoPjX2GKEiZ50sW5jJp5oMt5cUDs+1PYzKb+60=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

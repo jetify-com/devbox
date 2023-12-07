@@ -5,8 +5,6 @@ package devpkg
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -17,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/impl/devopt"
@@ -428,21 +426,17 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 var ErrCannotBuildPackageOnSystem = errors.New("unable to build for system")
 
 func (p *Package) Hash() string {
-	hash := ""
-	if p.installable != (FlakeInstallable{}) {
-		sum := md5.Sum([]byte(p.installable.String()))
-		hash = hex.EncodeToString(sum[:])
-	} else if p.installable.Ref.Type == FlakeTypePath {
+	sum := ""
+	if p.installable.Ref.Type == FlakeTypePath {
 		// For local flakes, use content hash of the flake.nix file to ensure
 		// user always gets newest flake.
-		hash, _ = cuecfg.FileHash(filepath.Join(p.installable.Ref.Path, "flake.nix"))
+		sum, _ = cachehash.File(filepath.Join(p.installable.Ref.Path, "flake.nix"))
 	}
 
-	if hash == "" {
-		sum := md5.Sum([]byte(p.installable.String()))
-		hash = hex.EncodeToString(sum[:])
+	if sum == "" {
+		sum, _ = cachehash.Bytes([]byte(p.installable.String()))
 	}
-	return hash[:min(len(hash), 6)]
+	return sum[:min(len(sum), 6)]
 }
 
 // Equals compares two Packages. This may be an expensive operation since it
