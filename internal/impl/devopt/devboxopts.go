@@ -51,7 +51,7 @@ type UpdateOpts struct {
 	IgnoreMissingPackages bool
 }
 
-type NixEnvOpts struct {
+type DevboxEnvExports struct {
 	DontRecomputeEnvironment bool
 	NoRefreshAlias           bool
 	RunHooks                 bool

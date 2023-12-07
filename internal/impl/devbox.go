@@ -177,7 +177,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	envs, err := d.computeCurrentDevboxEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	env, err := d.computeCurrentDevboxEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,10 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error) {
+// DevboxEnvExports returns a string of the env-vars that would need to be applied
+// to define a Devbox environment. The string is of the form `export KEY=VALUE` for each
+// env-var that needs to be applied.
+func (d *Devbox) DevboxEnvExports(ctx context.Context, opts devopt.DevboxEnvExports) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
 	defer task.End()
 
@@ -297,7 +300,7 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 
 		envs, err = d.computeDevboxEnv(ctx, true /*usePrintDevEnvCache*/)
 	} else {
-		envs, err = d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+		envs, err = d.computeCurrentDevboxEnv(ctx)
 	}
 
 	if err != nil {
@@ -322,7 +325,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	envs, err := d.computeCurrentDevboxEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -895,15 +898,15 @@ func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool)
 
 	markEnvsAsSetByDevbox(pluginEnv, configEnv)
 
-	nixEnvPath := env["PATH"]
-	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
+	devboxEnvPath := env["PATH"]
+	debug.Log("PATH after plugins and config is: %s", devboxEnvPath)
 
 	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
 	// Motivation: if a user removes a package from their devbox it should no longer
 	// be available in their environment.
 	buildInputs := strings.Split(env["buildInputs"], " ")
 	var glibcPatchPath []string
-	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
+	devboxEnvPath = filterPathList(devboxEnvPath, func(path string) bool {
 		// TODO(gcurtis): this is a massive hack. Please get rid
 		// of this and install the package to the profile.
 		if strings.Contains(path, "patched-glibc") {
@@ -920,24 +923,24 @@ func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool)
 		}
 		return true
 	})
-	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
+	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, devboxEnvPath)
 
 	// TODO(gcurtis): this is a massive hack. Please get rid
 	// of this and install the package to the profile.
 	if len(glibcPatchPath) != 0 {
 		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
-		nixEnvPath = envpath.JoinPathLists(patchedPath, nixEnvPath)
-		debug.Log("PATH after glibc-patch hack is: %s", nixEnvPath)
+		devboxEnvPath = envpath.JoinPathLists(patchedPath, devboxEnvPath)
+		debug.Log("PATH after glibc-patch hack is: %s", devboxEnvPath)
 	}
 
 	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
 		return nil, err
 	}
-	nixEnvPath = envpath.JoinPathLists(nixEnvPath, runXPaths)
+	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
-	pathStack.Push(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
+	pathStack.Push(env, d.projectDirHash(), devboxEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
 	debug.Log("New path stack is: %s", pathStack)
 
@@ -957,13 +960,14 @@ func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool)
 	return env, d.addHashToEnv(env)
 }
 
-// ensurePackagesAreInstalledAndComputeEnv does what it says :P
-func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
+// computeCurrentDevboxEnv will return a map of the env-vars for the Devbox  Environment
+// while ensuring these reflect the current (up to date) state of the project.
+func (d *Devbox) computeCurrentDevboxEnv(
 	ctx context.Context,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensurePackagesAreInstalled is called with ensure=true, it always
+	// When ensureProjectStateIsCurrent is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
 	if err := d.ensureProjectStateIsCurrent(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
 		return nil, err

@@ -94,7 +94,7 @@ func shellEnvFunc(
 		}
 	}
 
-	envStr, err := box.NixEnv(cmd.Context(), devopt.NixEnvOpts{
+	envStr, err := box.DevboxEnvExports(cmd.Context(), devopt.DevboxEnvExports{
 		DontRecomputeEnvironment: !recomputeEnvIfNeeded,
 		NoRefreshAlias:           flags.noRefreshAlias,
 		RunHooks:                 flags.runInitHook,

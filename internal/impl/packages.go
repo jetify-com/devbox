@@ -236,12 +236,14 @@ const (
 	ensure installMode = "ensure"
 )
 
-// ensureProjectStateIsCurrent ensures:
+// ensureProjectStateIsCurrent ensures the Devbox project state is up to date.
+// Namely:
 //  1. Packages are installed, in nix-profile or runx.
 //     Extraneous packages are removed (references purged, not uninstalled).
 //  2. Plugins are installed
 //  3. Files for devbox shellenv are generated
-//  4. Lockfile is synced
+//  4. The Devbox environment is re-computed, if necessary, and cached
+//  5. Lockfile is synced
 //
 // The `mode` is used for:
 // 1. Skipping certain operations that may not apply.
