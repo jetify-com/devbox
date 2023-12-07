@@ -957,13 +957,6 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// We need to check the lockfile status prior to ensurePackagesAreInstalled
-	// since it will update the lockfile to be up-to-date.
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
-	if err != nil {
-		return nil, err
-	}
-
 	// When ensurePackagesAreInstalled is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
 	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
@@ -972,7 +965,11 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 		ux.Fwarning(d.stderr, "Error connecting to the internet. Will attempt to use cached environment.\n")
 	}
 
-	return d.computeNixEnv(ctx, upToDate /*usePrintDevEnvCache*/)
+	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
+	// it's ok to use usePrintDevEnvCache=true here always. This does end up
+	// doing some non-nix work twice if lockfile is not up to date.
+	// TODO: Improve this to avoid extra work.
+	return d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {

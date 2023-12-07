@@ -289,6 +289,13 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 		return err
 	}
 
+	// Use the printDevEnvCache if we are adding or removing or updating any package,
+	// AND we are not in the shellenv-enabled environment of the current devbox-project.
+	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
+	if _, err := d.computeNixEnv(ctx, usePrintDevEnvCache); err != nil {
+		return err
+	}
+
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
