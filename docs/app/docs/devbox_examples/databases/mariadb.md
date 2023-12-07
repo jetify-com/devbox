@@ -17,10 +17,10 @@ MariaDB can be automatically configured for your dev environment by Devbox via t
     ]
 ```
 
-You can manually add the MariaDB Plugin to your `devbox.json` by adding it to your `includes` list:
+You can manually add the MariaDB Plugin to your `devbox.json` by adding it to your `include` list:
 
 ```json
-    "includes": [
+    "include": [
         "plugin:mariadb"
     ]
 ```
