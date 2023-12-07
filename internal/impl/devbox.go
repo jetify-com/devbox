@@ -260,7 +260,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	return d.ensurePackagesAreInstalled(ctx, ensure)
+	return d.ensureProjectStateIsCurrent(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -295,7 +295,7 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 			)
 		}
 
-		envs, err = d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+		envs, err = d.computeDevboxEnv(ctx, true /*usePrintDevEnvCache*/)
 	} else {
 		envs, err = d.ensurePackagesAreInstalledAndComputeEnv(ctx)
 	}
@@ -482,7 +482,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensureProjectStateIsCurrent(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -754,7 +754,7 @@ func (d *Devbox) StartProcessManager(
 	)
 }
 
-// computeNixEnv computes the set of environment variables that define a Devbox
+// computeDevboxEnv computes the set of environment variables that define a Devbox
 // environment. The "devbox run" and "devbox shell" commands source these
 // variables into a shell before executing a command or showing an interactive
 // prompt.
@@ -778,11 +778,10 @@ func (d *Devbox) StartProcessManager(
 // programs.
 //
 // Note that the shellrc.tmpl template (which sources this environment) does
-// some additional processing. The computeNixEnv environment won't necessarily
+// some additional processing. The computeDevboxEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-// TODO: Rename to computeDevboxEnv?
-func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
-	defer trace.StartRegion(ctx, "computeNixEnv").End()
+func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+	defer trace.StartRegion(ctx, "computeDevboxEnv").End()
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
@@ -966,17 +965,17 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 
 	// When ensurePackagesAreInstalled is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
+	if err := d.ensureProjectStateIsCurrent(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
 		return nil, err
 	} else if err != nil {
 		ux.Fwarning(d.stderr, "Error connecting to the internet. Will attempt to use cached environment.\n")
 	}
 
-	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
+	// Since ensurePackagesAreInstalled calls computeDevboxEnv when not up do date,
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+	return d.computeDevboxEnv(ctx, true /*usePrintDevEnvCache*/)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
