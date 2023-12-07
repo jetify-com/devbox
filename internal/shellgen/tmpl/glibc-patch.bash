@@ -63,6 +63,9 @@ patch() {
 	         --add-needed libutil.so.1 \
 	         --set-interpreter "$interp" \
                  "$binary"
+
+	# Neaten the runpath by removing extraneous paths. This will likely remove any old glibc.
+	patchelf --shrink-rpath "$binary"
 	chmod "$perm" "$binary"
 }
 
@@ -73,6 +76,3 @@ echo "patching elf binaries count=$count"
 for binary in $elves; do
 	patch "$binary" exe
 done
-
-echo "shrinking binary rpaths"
-echo "$elves" | xargs "$patchelf/bin/patchelf" --shrink-rpath
