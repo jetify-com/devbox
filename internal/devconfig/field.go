@@ -46,7 +46,6 @@ func (c *configAST) setStringField(key, val string) {
 			Name:  hujson.Value{Value: hujson.String(key)},
 			Value: hujson.Value{Value: hujson.String(val)},
 		})
-
 	} else if val != "" {
 		rootObject.Members[i].Value = hujson.Value{Value: hujson.String(val)}
 	} else {

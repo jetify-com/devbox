@@ -32,7 +32,7 @@ func envsecInitCmd() *cobra.Command {
 		Short: "initialize envsec integration",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return envsecInitFunc(cmd, args, flags)
+			return envsecInitFunc(cmd, flags)
 		},
 	}
 
@@ -41,7 +41,7 @@ func envsecInitCmd() *cobra.Command {
 	return cmd
 }
 
-func envsecInitFunc(cmd *cobra.Command, args []string, flags envsecInitCmdFlags) error {
+func envsecInitFunc(cmd *cobra.Command, flags envsecInitCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:    flags.config.path,
 		Stderr: cmd.ErrOrStderr(),
