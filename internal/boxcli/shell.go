@@ -54,10 +54,11 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 	}
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Env:    env,
-		Pure:   flags.pure,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         flags.config.path,
+		Env:         env,
+		Environment: flags.config.environment,
+		Pure:        flags.pure,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

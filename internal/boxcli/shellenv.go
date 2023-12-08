@@ -78,6 +78,7 @@ func shellEnvFunc(
 	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:               flags.config.path,
+		Environment:       flags.config.environment,
 		Stderr:            cmd.ErrOrStderr(),
 		PreservePathStack: flags.preservePathStack,
 		Pure:              flags.pure,

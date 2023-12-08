@@ -7,6 +7,7 @@ import (
 type Opts struct {
 	Dir                      string
 	Env                      map[string]string
+	Environment              string
 	PreservePathStack        bool
 	Pure                     bool
 	IgnoreWarnings           bool

@@ -9,12 +9,16 @@ import (
 
 // to be composed into xyzCmdFlags structs
 type configFlags struct {
-	path string
+	path        string
+	environment string
 }
 
 func (flags *configFlags) register(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+	)
+	cmd.Flags().StringVar(
+		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. envsec supports dev, prod, preview.)",
 	)
 }
 
@@ -22,4 +26,11 @@ func (flags *configFlags) registerPersistent(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
 	)
+	cmd.PersistentFlags().StringVar(
+		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. envsec supports dev, prod, preview.)",
+	)
+}
+
+func (flags *configFlags) Environment() string {
+	return flags.environment
 }
