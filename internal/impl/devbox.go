@@ -969,7 +969,7 @@ func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeNixEnv(ctx, true)
+	return d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
