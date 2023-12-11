@@ -18,7 +18,7 @@ func (c *Config) ComputedEnv(
 	if c.IsEnvsecEnabled() {
 		env, err = envsec.Env(ctx, projectDir)
 		if err != nil {
-			ux.Ferror(os.Stderr, "Error reading secrets from envsec: %s\n\n", err)
+			ux.Fwarning(os.Stderr, "Error reading secrets from envsec: %s\n\n", err)
 			env = map[string]string{}
 		}
 	} else if c.EnvFrom != "" {

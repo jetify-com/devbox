@@ -49,10 +49,10 @@ func envsecInitFunc(cmd *cobra.Command, flags envsecInitCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	box.Config().SetStringField("EnvFrom", "envsec")
-	if err := box.Config().SaveTo(box.ProjectDir()); err != nil {
-		return errors.WithStack(err)
+	if err := envsec.EnsureInitialized(
+		cmd.Context(), box.ProjectDir()); err == nil {
+		return nil
 	}
-
-	return envsec.EnsureInitialized(cmd.Context(), box.ProjectDir())
+	box.Config().SetStringField("EnvFrom", "envsec")
+	return box.Config().SaveTo(box.ProjectDir())
 }
