@@ -1254,6 +1254,9 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 }
 
 func validateEnvironment(environment string) (string, error) {
+	if environment == "" {
+		return "dev", nil
+	}
 	if environment == "dev" || environment == "prod" || environment == "preview" {
 		return environment, nil
 	}
