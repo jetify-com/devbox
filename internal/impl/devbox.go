@@ -59,6 +59,7 @@ const (
 type Devbox struct {
 	cfg                      *devconfig.Config
 	env                      map[string]string
+	environment              string
 	lockfile                 *lock.File
 	nix                      nix.Nixer
 	projectDir               string
@@ -84,9 +85,15 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	environment, err := validateEnvironment(opts.Environment)
+	if err != nil {
+		return nil, err
+	}
+
 	box := &Devbox{
 		cfg:                      cfg,
 		env:                      opts.Env,
+		environment:              environment,
 		nix:                      &nix.Nix{},
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
@@ -1089,7 +1096,7 @@ func (d *Devbox) configEnvs(
 	ctx context.Context,
 	existingEnv map[string]string,
 ) (map[string]string, error) {
-	env, err := d.cfg.ComputedEnv(ctx, d.ProjectDir())
+	env, err := d.cfg.ComputedEnv(ctx, d.ProjectDir(), d.environment)
 	if err != nil {
 		return nil, err
 	}
@@ -1244,4 +1251,14 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 		}
 	}
 	return runxBinPath, nil
+}
+
+func validateEnvironment(environment string) (string, error) {
+	if environment == "" {
+		return "dev", nil
+	}
+	if environment == "dev" || environment == "prod" || environment == "preview" {
+		return environment, nil
+	}
+	return "", usererr.New("invalid environment %q", environment)
 }

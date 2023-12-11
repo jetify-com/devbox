@@ -131,8 +131,9 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 
 func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -147,9 +148,10 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 		return err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Env:    env,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Env:         env,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -169,9 +171,10 @@ func stopServices(
 		return err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    servicesFlags.config.path,
-		Env:    env,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         servicesFlags.config.path,
+		Environment: servicesFlags.config.environment,
+		Env:         env,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -193,9 +196,10 @@ func restartServices(
 		return err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Env:    env,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Env:         env,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -217,6 +221,7 @@ func startProcessManager(
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:                      servicesFlags.config.path,
 		Env:                      env,
+		Environment:              servicesFlags.config.environment,
 		CustomProcessComposeFile: flags.processComposeFile,
 		Stderr:                   cmd.ErrOrStderr(),
 	})

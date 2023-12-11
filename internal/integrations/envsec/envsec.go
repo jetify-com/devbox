@@ -18,7 +18,7 @@ var (
 	binPathCache string
 )
 
-func Env(ctx context.Context, projectDir string) (map[string]string, error) {
+func Env(ctx context.Context, projectDir, environment string) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
 	if envCache != nil {
@@ -29,8 +29,7 @@ func Env(ctx context.Context, projectDir string) (map[string]string, error) {
 		return nil, err
 	}
 
-	var err error
-	envCache, err = envsecList(ctx, projectDir)
+	envCache, err := envsecList(ctx, projectDir, environment)
 
 	return envCache, err
 }
@@ -76,7 +75,7 @@ func EnsureInitialized(ctx context.Context, projectDir string) error {
 
 func envsecList(
 	ctx context.Context,
-	projectDir string,
+	projectDir, environment string,
 ) (map[string]string, error) {
 	binPath, err := EnsureInstalled(ctx)
 	if err != nil {
@@ -85,7 +84,7 @@ func envsecList(
 	cmd := exec.Command(
 		binPath, "ls", "--show",
 		"--format", "json",
-		"--environment", "dev",
+		"--environment", environment,
 		"--json-errors")
 	cmd.Dir = projectDir
 	var bufErr bytes.Buffer

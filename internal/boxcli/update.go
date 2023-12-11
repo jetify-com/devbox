@@ -66,8 +66,9 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	}
 
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:    flags.config.path,
-		Stderr: cmd.ErrOrStderr(),
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
 		return errors.WithStack(err)

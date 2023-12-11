@@ -11,12 +11,12 @@ import (
 
 func (c *Config) ComputedEnv(
 	ctx context.Context,
-	projectDir string,
+	projectDir, environment string,
 ) (map[string]string, error) {
 	env := map[string]string{}
 	var err error
 	if c.IsEnvsecEnabled() {
-		env, err = envsec.Env(ctx, projectDir)
+		env, err = envsec.Env(ctx, projectDir, environment)
 		if err != nil {
 			ux.Fwarning(os.Stderr, "Error reading secrets from envsec: %s\n\n", err)
 			env = map[string]string{}
