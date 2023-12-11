@@ -73,16 +73,7 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	if !hasEntry || entry.Resolved == "" {
 		locked := &Package{}
 		var err error
-		if pkgtype.IsRunX(pkg) {
-			ref, err := ResolveRunXPackage(context.TODO(), pkg)
-			if err != nil {
-				return nil, err
-			}
-			locked = &Package{
-				Resolved: ref.String(),
-				Version:  ref.Version,
-			}
-		} else if _, _, versioned := searcher.ParseVersionedPackage(pkg); versioned {
+		if _, _, versioned := searcher.ParseVersionedPackage(pkg); pkgtype.IsRunX(pkg) || versioned {
 			locked, err = f.FetchResolvedPackage(pkg)
 			if err != nil {
 				return nil, err

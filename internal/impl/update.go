@@ -114,6 +114,14 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 	}
 
 	if existing.Version != resolved.Version {
+		if existing.LastModified > resolved.LastModified {
+			ux.Fwarning(
+				d.stderr,
+				"Resolved version for %s has older last_modified time. Not updating\n",
+				pkg,
+			)
+			return nil
+		}
 		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
 		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil

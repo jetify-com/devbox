@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"golang.org/x/sync/errgroup"
@@ -29,6 +30,17 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
 	if version == "" {
 		return nil, usererr.New("No version specified for %q.", name)
+	}
+
+	if pkgtype.IsRunX(pkg) {
+		ref, err := ResolveRunXPackage(context.TODO(), pkg)
+		if err != nil {
+			return nil, err
+		}
+		return &Package{
+			Resolved: ref.String(),
+			Version:  ref.Version,
+		}, nil
 	}
 
 	packageVersion, err := searcher.Client().Resolve(name, version)

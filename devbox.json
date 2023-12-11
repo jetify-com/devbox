@@ -2,22 +2,22 @@
   "packages": {
     "go":                          "latest",
     "runx:golangci/golangci-lint": "latest",
-    "runx:mvdan/gofumpt":          "latest"
+    "runx:mvdan/gofumpt":          "latest",
   },
   "env": {
     "GOENV": "off",
-    "PATH":  "$PATH:$PWD/dist"
+    "PATH":  "$PATH:$PWD/dist",
   },
   "shell": {
     "init_hook": [
-      "test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK"
+      "test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
     ],
     "scripts": {
-      "build": "go build -o dist/devbox ./cmd/devbox",
+      "build":              "go build -o dist/devbox ./cmd/devbox",
       "build-darwin-amd64": "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
       "build-darwin-arm64": "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
-      "build-linux-amd64": "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
-      "build-linux-arm64": "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox",
+      "build-linux-amd64":  "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
+      "build-linux-arm64":  "GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox",
       "build-all": [
         "devbox run build-darwin-amd64",
         "devbox run build-darwin-arm64",
@@ -28,7 +28,7 @@
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":             "scripts/gofumpt.sh",
       "test":            "go test -race -cover ./...",
-      "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go"
-    }
-  }
+      "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go",
+    },
+  },
 }
