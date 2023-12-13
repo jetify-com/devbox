@@ -10,7 +10,7 @@ import (
 const (
 	// PathStackEnv stores the string representation of the stack, as a ":" separated list.
 	// Each element in the list is also the key to the env-var that stores the
-	// nixEnvPath for that devbox-project. Except for the last element, which is InitPathEnv.
+	// devboxEnvPath for that devbox-project. Except for the last element, which is InitPathEnv.
 	PathStackEnv = "DEVBOX_PATH_STACK"
 
 	// InitPathEnv stores the path prior to any devbox shellenv modifying the environment
@@ -19,9 +19,9 @@ const (
 
 // stack has the following design:
 // 1. The stack enables tracking which sub-paths in PATH come from which devbox-project
-// 2. It is an ordered-list of keys to env-vars that store nixEnvPath values of devbox-projects.
-// 3. The final PATH is reconstructed by concatenating the env-var values of each nixEnvPathKey.
-// 5. The stack is stored in its own env-var PathStackEnv, shared by all devbox-projects in this shell.
+// 2. It is an ordered-list of keys to env-vars that store devboxEnvPath values of devbox-projects.
+// 3. The final PATH is reconstructed by concatenating the env-var values of each of these keys.
+// 4. The stack is stored in its own env-var PathStackEnv, shared by all devbox-projects in this shell.
 type stack struct {
 	// keys holds the stack elements.
 	// Earlier (lower index number) keys get higher priority.
@@ -56,28 +56,27 @@ func (s *stack) Path(env map[string]string) string {
 }
 
 // Key is the element stored in the stack for a devbox-project. It represents
-// a pointer to the nixEnvPath value stored in its own env-var, also using this same
-// Key.
+// a pointer to the devboxEnvPath value stored in its own env-var, also using this same Key.
 func Key(projectHash string) string {
 	return "DEVBOX_NIX_ENV_PATH_" + projectHash
 }
 
-// Push adds the new nixEnvPath for the devbox-project identified by projectHash.
-// The nixEnvPath is pushed to the top of the stack (given highest priority),
+// Push adds the new PATH for the devbox-project identified by projectHash.
+// This PATH is pushed to the top of the stack (given highest priority),
 // unless preservePathStack is enabled.
 //
 // It also updates the env by modifying the PathStack env-var, and the env-var
-// for storing the nixEnvPath.
+// for storing this path.
 func (s *stack) Push(
 	env map[string]string,
 	projectHash string,
-	nixEnvPath string,
+	path string, // new PATH of the devbox-project of projectHash
 	preservePathStack bool,
 ) {
 	key := Key(projectHash)
 
-	// Add this nixEnvPath to env
-	env[key] = nixEnvPath
+	// Add this path to env
+	env[key] = path
 
 	// Common case: ensure this key is at the top of the stack
 	if !preservePathStack ||
@@ -90,8 +89,7 @@ func (s *stack) Push(
 	env[PathStackEnv] = s.String()
 }
 
-// Has tests if the stack has the specified key. Refer to the Key function for constructing
-// the appropriate key for any devbox-project.
+// Has tests if the stack has the key corresponding to projectHash
 func (s *stack) Has(projectHash string) bool {
 	return lo.Contains(s.keys, Key(projectHash))
 }

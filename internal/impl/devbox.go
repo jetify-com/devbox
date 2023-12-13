@@ -177,7 +177,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	return d.ensurePackagesAreInstalled(ctx, ensure)
+	return d.ensureStateIsUpToDate(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -274,8 +274,11 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error) {
-	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
+// EnvExports returns a string of the env-vars that would need to be applied
+// to define a Devbox environment. The string is of the form `export KEY=VALUE` for each
+// env-var that needs to be applied.
+func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxEnvExports")
 	defer task.End()
 
 	var envs map[string]string
@@ -295,9 +298,9 @@ func (d *Devbox) NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, er
 			)
 		}
 
-		envs, err = d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
 	} else {
-		envs, err = d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	}
 
 	if err != nil {
@@ -322,7 +325,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	envs, err := d.ensurePackagesAreInstalledAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -482,7 +485,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil {
+	if err := d.ensureStateIsUpToDate(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -754,7 +757,7 @@ func (d *Devbox) StartProcessManager(
 	)
 }
 
-// computeNixEnv computes the set of environment variables that define a Devbox
+// computeEnv computes the set of environment variables that define a Devbox
 // environment. The "devbox run" and "devbox shell" commands source these
 // variables into a shell before executing a command or showing an interactive
 // prompt.
@@ -778,11 +781,10 @@ func (d *Devbox) StartProcessManager(
 // programs.
 //
 // Note that the shellrc.tmpl template (which sources this environment) does
-// some additional processing. The computeNixEnv environment won't necessarily
+// some additional processing. The computeEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-// TODO: Rename to computeDevboxEnv?
-func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
-	defer trace.StartRegion(ctx, "computeNixEnv").End()
+func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
@@ -896,15 +898,21 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 
 	markEnvsAsSetByDevbox(pluginEnv, configEnv)
 
-	nixEnvPath := env["PATH"]
-	debug.Log("PATH after plugins and config is: %s", nixEnvPath)
+	// devboxEnvPath starts with the initial PATH from print-dev-env, and is
+	// transformed to be the "PATH of the Devbox environment"
+	// TODO: The prior statement is not fully true,
+	//  since env["PATH"] is written to above and so it is already no longer "PATH
+	//  from print-dev-env". Consider moving devboxEnvPath higher up in this function
+	//  where env["PATH"] is written to.
+	devboxEnvPath := env["PATH"]
+	debug.Log("PATH after plugins and config is: %s", devboxEnvPath)
 
 	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
 	// Motivation: if a user removes a package from their devbox it should no longer
 	// be available in their environment.
 	buildInputs := strings.Split(env["buildInputs"], " ")
 	var glibcPatchPath []string
-	nixEnvPath = filterPathList(nixEnvPath, func(path string) bool {
+	devboxEnvPath = filterPathList(devboxEnvPath, func(path string) bool {
 		// TODO(gcurtis): this is a massive hack. Please get rid
 		// of this and install the package to the profile.
 		if strings.Contains(path, "patched-glibc") {
@@ -921,24 +929,24 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 		}
 		return true
 	})
-	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, nixEnvPath)
+	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, devboxEnvPath)
 
 	// TODO(gcurtis): this is a massive hack. Please get rid
 	// of this and install the package to the profile.
 	if len(glibcPatchPath) != 0 {
 		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
-		nixEnvPath = envpath.JoinPathLists(patchedPath, nixEnvPath)
-		debug.Log("PATH after glibc-patch hack is: %s", nixEnvPath)
+		devboxEnvPath = envpath.JoinPathLists(patchedPath, devboxEnvPath)
+		debug.Log("PATH after glibc-patch hack is: %s", devboxEnvPath)
 	}
 
 	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
 		return nil, err
 	}
-	nixEnvPath = envpath.JoinPathLists(nixEnvPath, runXPaths)
+	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
-	pathStack.Push(env, d.projectDirHash(), nixEnvPath, d.preservePathStack)
+	pathStack.Push(env, d.projectDirHash(), devboxEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
 	debug.Log("New path stack is: %s", pathStack)
 
@@ -958,25 +966,27 @@ func (d *Devbox) computeNixEnv(ctx context.Context, usePrintDevEnvCache bool) (m
 	return env, d.addHashToEnv(env)
 }
 
-// ensurePackagesAreInstalledAndComputeEnv does what it says :P
-func (d *Devbox) ensurePackagesAreInstalledAndComputeEnv(
+// ensureStateIsUpToDateAndComputeEnv will return a map of the env-vars for the Devbox  Environment
+// while ensuring these reflect the current (up to date) state of the project.
+// TODO: find a better name for this function.
+func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	ctx context.Context,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensurePackagesAreInstalled is called with ensure=true, it always
+	// When ensureStateIsUpToDate is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensurePackagesAreInstalled(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
+	if err := d.ensureStateIsUpToDate(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
 		return nil, err
 	} else if err != nil {
 		ux.Fwarning(d.stderr, "Error connecting to the internet. Will attempt to use cached environment.\n")
 	}
 
-	// Since ensurePackagesAreInstalled calls computeNixEnv when not up do date,
+	// Since ensureStateIsUpToDate calls computeEnv when not up do date,
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeNixEnv(ctx, true /*usePrintDevEnvCache*/)
+	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {

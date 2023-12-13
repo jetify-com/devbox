@@ -4,6 +4,10 @@ import (
 	"io"
 )
 
+// Naming Convention:
+// - suffix Opts for structs corresponding to a Devbox api function
+// - omit suffix Opts for other structs that are composed into an Opts struct
+
 type Opts struct {
 	Dir                      string
 	Env                      map[string]string
@@ -51,7 +55,7 @@ type UpdateOpts struct {
 	IgnoreMissingPackages bool
 }
 
-type NixEnvOpts struct {
+type EnvExportsOpts struct {
 	DontRecomputeEnvironment bool
 	NoRefreshAlias           bool
 	RunHooks                 bool

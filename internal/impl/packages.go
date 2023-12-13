@@ -98,12 +98,12 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
-	// Options must be set before ensurePackagesAreInstalled. See comment in function
+	// Options must be set before ensureStateIsUpToDate. See comment in function
 	if err := d.setPackageOptions(addedPackageNames, opts); err != nil {
 		return err
 	}
 
-	if err := d.ensurePackagesAreInstalled(ctx, install); err != nil {
+	if err := d.ensureStateIsUpToDate(ctx, install); err != nil {
 		return usererr.WithUserMessage(err, "There was an error installing nix packages")
 	}
 
@@ -135,7 +135,7 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 		}
 	}
 
-	// Resolving here ensures we allow insecure before running ensurePackagesAreInstalled
+	// Resolving here ensures we allow insecure before running ensureStateIsUpToDate
 	// which will call print-dev-env. Resolving does not save the lockfile, we
 	// save at the end when everything has succeeded.
 	if opts.AllowInsecure {
@@ -218,14 +218,14 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	// this will clean up the now-extra package from nix profile and the lockfile
-	if err := d.ensurePackagesAreInstalled(ctx, uninstall); err != nil {
+	if err := d.ensureStateIsUpToDate(ctx, uninstall); err != nil {
 		return err
 	}
 
 	return d.saveCfg()
 }
 
-// installMode is an enum for helping with ensurePackagesAreInstalled implementation
+// installMode is an enum for helping with ensureStateIsUpToDate implementation
 type installMode string
 
 const (
@@ -236,19 +236,20 @@ const (
 	ensure installMode = "ensure"
 )
 
-// ensurePackagesAreInstalled ensures:
+// ensureStateIsUpToDate ensures the Devbox project state is up to date.
+// Namely:
 //  1. Packages are installed, in nix-profile or runx.
 //     Extraneous packages are removed (references purged, not uninstalled).
-//  2. Files for devbox shellenv are generated
-//  3. Env-vars for shellenv are computed
-//  4. Lockfile is synced
+//  2. Plugins are installed
+//  3. Files for devbox shellenv are generated
+//  4. The Devbox environment is re-computed, if necessary, and cached
+//  5. Lockfile is synced
 //
 // The `mode` is used for:
 // 1. Skipping certain operations that may not apply.
 // 2. User messaging to explain what operations are happening, because this function may take time to execute.
-// TODO: Rename method since it does more than just ensure packages are installed.
-func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMode) error {
-	defer trace.StartRegion(ctx, "ensurePackages").End()
+func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) error {
+	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
 
 	// if mode is install or uninstall, then we need to update the nix-profile
@@ -292,7 +293,7 @@ func (d *Devbox) ensurePackagesAreInstalled(ctx context.Context, mode installMod
 	// Use the printDevEnvCache if we are adding or removing or updating any package,
 	// AND we are not in the shellenv-enabled environment of the current devbox-project.
 	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
-	if _, err := d.computeNixEnv(ctx, usePrintDevEnvCache); err != nil {
+	if _, err := d.computeEnv(ctx, usePrintDevEnvCache); err != nil {
 		return err
 	}
 

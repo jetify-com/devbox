@@ -23,7 +23,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	NixEnv(ctx context.Context, opts devopt.NixEnvOpts) (string, error)
+	EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (string, error)
 	PackageNames() []string
 	ProjectDir() string
 	Pull(ctx context.Context, opts devopt.PullboxOpts) error

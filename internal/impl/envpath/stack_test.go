@@ -28,14 +28,14 @@ func TestNewStack(t *testing.T) {
 	// would usually be independent.
 	testSteps := []struct {
 		projectHash        string
-		nixEnvPath         string
+		devboxEnvPath      string
 		preservePathStack  bool
 		expectedKeysLength int
 		expectedEnv        map[string]string
 	}{
 		{
 			projectHash:        "fooProjectHash",
-			nixEnvPath:         "/foo1:/foo2",
+			devboxEnvPath:      "/foo1:/foo2",
 			preservePathStack:  false,
 			expectedKeysLength: 2,
 			expectedEnv: map[string]string{
@@ -46,7 +46,7 @@ func TestNewStack(t *testing.T) {
 		},
 		{
 			projectHash:        "barProjectHash",
-			nixEnvPath:         "/bar1:/bar2",
+			devboxEnvPath:      "/bar1:/bar2",
 			preservePathStack:  false,
 			expectedKeysLength: 3,
 			expectedEnv: map[string]string{
@@ -58,7 +58,7 @@ func TestNewStack(t *testing.T) {
 		},
 		{
 			projectHash:        "fooProjectHash",
-			nixEnvPath:         "/foo3:/foo2",
+			devboxEnvPath:      "/foo3:/foo2",
 			preservePathStack:  false,
 			expectedKeysLength: 3,
 			expectedEnv: map[string]string{
@@ -70,7 +70,7 @@ func TestNewStack(t *testing.T) {
 		},
 		{
 			projectHash:        "barProjectHash",
-			nixEnvPath:         "/bar3:/bar2",
+			devboxEnvPath:      "/bar3:/bar2",
 			preservePathStack:  true,
 			expectedKeysLength: 3,
 			expectedEnv: map[string]string{
@@ -86,7 +86,7 @@ func TestNewStack(t *testing.T) {
 		t.Run(
 			fmt.Sprintf("step_%d", idx), func(t *testing.T) {
 				// Push to stack and update PATH env
-				stack.Push(env, testStep.projectHash, testStep.nixEnvPath, testStep.preservePathStack)
+				stack.Push(env, testStep.projectHash, testStep.devboxEnvPath, testStep.preservePathStack)
 				env["PATH"] = stack.Path(env)
 
 				if len(stack.keys) != testStep.expectedKeysLength {
