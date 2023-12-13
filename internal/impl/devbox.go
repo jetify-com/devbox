@@ -177,7 +177,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	envs, err := d.computeCurrentDevboxEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
-	env, err := d.computeCurrentDevboxEnv(ctx)
+	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (d *Devbox) Install(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "devboxInstall")
 	defer task.End()
 
-	return d.ensureProjectStateIsCurrent(ctx, ensure)
+	return d.ensureStateIsUpToDate(ctx, ensure)
 }
 
 func (d *Devbox) ListScripts() []string {
@@ -274,11 +274,11 @@ func (d *Devbox) ListScripts() []string {
 	return keys
 }
 
-// DevboxEnvExports returns a string of the env-vars that would need to be applied
+// EnvExports returns a string of the env-vars that would need to be applied
 // to define a Devbox environment. The string is of the form `export KEY=VALUE` for each
 // env-var that needs to be applied.
-func (d *Devbox) DevboxEnvExports(ctx context.Context, opts devopt.DevboxEnvExports) (string, error) {
-	ctx, task := trace.NewTask(ctx, "devboxNixEnv")
+func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxEnvExports")
 	defer task.End()
 
 	var envs map[string]string
@@ -298,9 +298,9 @@ func (d *Devbox) DevboxEnvExports(ctx context.Context, opts devopt.DevboxEnvExpo
 			)
 		}
 
-		envs, err = d.computeDevboxEnv(ctx, true /*usePrintDevEnvCache*/)
+		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
 	} else {
-		envs, err = d.computeCurrentDevboxEnv(ctx)
+		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	}
 
 	if err != nil {
@@ -325,7 +325,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	envs, err := d.computeCurrentDevboxEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -485,7 +485,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
-	if err := d.ensureProjectStateIsCurrent(ctx, ensure); err != nil {
+	if err := d.ensureStateIsUpToDate(ctx, ensure); err != nil {
 		return err
 	}
 
@@ -757,7 +757,7 @@ func (d *Devbox) StartProcessManager(
 	)
 }
 
-// computeDevboxEnv computes the set of environment variables that define a Devbox
+// computeEnv computes the set of environment variables that define a Devbox
 // environment. The "devbox run" and "devbox shell" commands source these
 // variables into a shell before executing a command or showing an interactive
 // prompt.
@@ -781,10 +781,10 @@ func (d *Devbox) StartProcessManager(
 // programs.
 //
 // Note that the shellrc.tmpl template (which sources this environment) does
-// some additional processing. The computeDevboxEnv environment won't necessarily
+// some additional processing. The computeEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
-	defer trace.StartRegion(ctx, "computeDevboxEnv").End()
+func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
@@ -898,6 +898,12 @@ func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool)
 
 	markEnvsAsSetByDevbox(pluginEnv, configEnv)
 
+	// devboxEnvPath starts with the initial PATH from print-dev-env, and is
+	// transformed to be the "PATH of the Devbox environment"
+	// TODO: The prior statement is not fully true,
+	//  since env["PATH"] is written to above and so it is already no longer "PATH
+	//  from print-dev-env". Consider moving devboxEnvPath higher up in this function
+	//  where env["PATH"] is written to.
 	devboxEnvPath := env["PATH"]
 	debug.Log("PATH after plugins and config is: %s", devboxEnvPath)
 
@@ -960,26 +966,27 @@ func (d *Devbox) computeDevboxEnv(ctx context.Context, usePrintDevEnvCache bool)
 	return env, d.addHashToEnv(env)
 }
 
-// computeCurrentDevboxEnv will return a map of the env-vars for the Devbox  Environment
+// ensureStateIsUpToDateAndComputeEnv will return a map of the env-vars for the Devbox  Environment
 // while ensuring these reflect the current (up to date) state of the project.
-func (d *Devbox) computeCurrentDevboxEnv(
+// TODO: find a better name for this function.
+func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	ctx context.Context,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensureProjectStateIsCurrent is called with ensure=true, it always
+	// When ensureStateIsUpToDate is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensureProjectStateIsCurrent(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
+	if err := d.ensureStateIsUpToDate(ctx, ensure); err != nil && !strings.Contains(err.Error(), "no such host") {
 		return nil, err
 	} else if err != nil {
 		ux.Fwarning(d.stderr, "Error connecting to the internet. Will attempt to use cached environment.\n")
 	}
 
-	// Since ensurePackagesAreInstalled calls computeDevboxEnv when not up do date,
+	// Since ensureStateIsUpToDate calls computeEnv when not up do date,
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeDevboxEnv(ctx, true /*usePrintDevEnvCache*/)
+	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {

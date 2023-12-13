@@ -23,7 +23,7 @@ type Devbox interface {
 	Install(ctx context.Context) error
 	IsEnvEnabled() bool
 	ListScripts() []string
-	DevboxEnvExports(ctx context.Context, opts devopt.DevboxEnvExports) (string, error)
+	EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (string, error)
 	PackageNames() []string
 	ProjectDir() string
 	Pull(ctx context.Context, opts devopt.PullboxOpts) error

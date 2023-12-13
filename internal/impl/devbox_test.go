@@ -67,21 +67,21 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 	}, nil
 }
 
-func TestComputeDevboxEnv(t *testing.T) {
+func TestComputeEnv(t *testing.T) {
 	d := devboxForTesting(t)
 	d.nix = &testNix{}
 	ctx := context.Background()
-	env, err := d.computeDevboxEnv(ctx, false /*use cache*/)
-	require.NoError(t, err, "computeDevboxEnv should not fail")
-	assert.NotNil(t, env, "computeDevboxEnv should return a valid env")
+	env, err := d.computeEnv(ctx, false /*use cache*/)
+	require.NoError(t, err, "computeEnv should not fail")
+	assert.NotNil(t, env, "computeEnv should return a valid env")
 }
 
 func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeDevboxEnv(ctx, false /*use cache*/)
-	require.NoError(t, err, "computeDevboxEnv should not fail")
+	env, err := devbox.computeEnv(ctx, false /*use cache*/)
+	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
 
@@ -90,8 +90,8 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
 	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
-	env, err = devbox.computeDevboxEnv(ctx, false /*use cache*/)
-	require.NoError(t, err, "computeDevboxEnv should not fail")
+	env, err = devbox.computeEnv(ctx, false /*use cache*/)
+	require.NoError(t, err, "computeEnv should not fail")
 	path2 := env["PATH"]
 
 	assert.Equal(t, path, path2, "path should be the same")
@@ -101,8 +101,8 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
 	ctx := context.Background()
-	env, err := devbox.computeDevboxEnv(ctx, false /*use cache*/)
-	require.NoError(t, err, "computeDevboxEnv should not fail")
+	env, err := devbox.computeEnv(ctx, false /*use cache*/)
+	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
 	assert.Contains(t, path, "/tmp/my/path", "path should contain /tmp/my/path")
@@ -113,8 +113,8 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
 
 	devbox.nix.(*testNix).path = ""
-	env, err = devbox.computeDevboxEnv(ctx, false /*use cache*/)
-	require.NoError(t, err, "computeDevboxEnv should not fail")
+	env, err = devbox.computeEnv(ctx, false /*use cache*/)
+	require.NoError(t, err, "computeEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
 
