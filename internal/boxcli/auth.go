@@ -9,15 +9,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
 )
 
-var (
-	issuer   = envir.GetValueOrDefault("DEVBOX_AUTH_ISSUER", "https://accounts.jetpack.io")
-	clientID = envir.GetValueOrDefault("DEVBOX_AUTH_CLIENT_ID", "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6")
-)
+// This matches default scopes for envsec. TODO: export this in envsec.
+var scopes = []string{"openid", "offline_access", "email", "profile"}
 
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -38,7 +36,7 @@ func loginCmd() *cobra.Command {
 		Short: "Login to devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := auth.NewClient(issuer, clientID)
+			c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
 			if err != nil {
 				return err
 			}
@@ -60,7 +58,7 @@ func logoutCmd() *cobra.Command {
 		Short: "logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := auth.NewClient(issuer, clientID)
+			c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
 			if err != nil {
 				return err
 			}
@@ -112,7 +110,7 @@ func whoAmICmd() *cobra.Command {
 }
 
 func genSession(ctx context.Context) (*session.Token, error) {
-	c, err := auth.NewClient(issuer, clientID)
+	c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
 	if err != nil {
 		return nil, err
 	}

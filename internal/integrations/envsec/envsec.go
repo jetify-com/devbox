@@ -25,7 +25,7 @@ func Env(ctx context.Context, projectDir, environment string) (map[string]string
 		return envCache, nil
 	}
 
-	if err := EnsureInitialized(ctx, projectDir); err != nil {
+	if err := ensureInitialized(ctx, projectDir); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 	return binPathCache, nil
 }
 
-func EnsureInitialized(ctx context.Context, projectDir string) error {
+func ensureInitialized(ctx context.Context, projectDir string) error {
 	binPath, err := EnsureInstalled(ctx)
 	if err != nil {
 		return err
