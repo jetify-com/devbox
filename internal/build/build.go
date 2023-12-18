@@ -4,15 +4,19 @@
 package build
 
 import (
+	"os"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
+var forceProd, _ = strconv.ParseBool(os.Getenv("DEVBOX_PROD"))
+
 // Variables in this file are set via ldflags.
 var (
-	IsDev      = Version == "0.0.0-dev"
+	IsDev      = Version == "0.0.0-dev" && !forceProd
 	Version    = "0.0.0-dev"
 	Commit     = "none"
 	CommitDate = "unknown"
@@ -54,4 +58,25 @@ func OS() string {
 		}
 	})
 	return osName
+}
+
+func Issuer() string {
+	if IsDev {
+		return "https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com"
+	}
+	return "https://accounts.jetpack.io"
+}
+
+func ClientID() string {
+	if IsDev {
+		return "3945b320-bd31-4313-af27-846b67921acb"
+	}
+	return "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6"
+}
+
+func JetpackAPIHost() string {
+	if IsDev {
+		return "https://api.jetpack.dev"
+	}
+	return "https://api.jetpack.io"
 }
