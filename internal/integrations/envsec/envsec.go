@@ -44,7 +44,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 		return binPathCache, nil
 	}
 
-	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec")
+	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.11")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install envsec")
 	}
