@@ -392,7 +392,7 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 				return err
 			}
 			pending = append(pending, pkg)
-		} else if f, _ := pkg.FlakeInstallable(); d.pluginManager.PathIsInVirtenv(f.Ref.Path) {
+		} else if f, err := pkg.FlakeInstallable(); err == nil && d.pluginManager.PathIsInVirtenv(f.Ref.Path) {
 			if err := nix.ProfileUpgrade(profileDir, idx); err != nil {
 				return err
 			}
