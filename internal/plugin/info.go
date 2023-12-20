@@ -74,7 +74,7 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 }
 
 func printServices(cfg *config, pkg *devpkg.Package, w io.Writer, markdown bool) error {
-	contentPath, _ := cfg.ProcessComposeYaml()
+	_, contentPath := cfg.ProcessComposeYaml()
 	if contentPath == "" {
 		return nil
 	}

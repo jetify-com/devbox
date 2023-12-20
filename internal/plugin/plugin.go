@@ -51,16 +51,16 @@ type config struct {
 }
 
 func (c *config) ProcessComposeYaml() (string, string) {
-	for contentPath, file := range c.CreateFiles {
+	for file, contentPath := range c.CreateFiles {
 		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
-			return contentPath, file
+			return file, contentPath
 		}
 	}
 	return "", ""
 }
 
 func (c *config) Services() (services.Services, error) {
-	if _, file := c.ProcessComposeYaml(); file != "" {
+	if file, _ := c.ProcessComposeYaml(); file != "" {
 		return services.FromProcessCompose(file)
 	}
 	return nil, nil
