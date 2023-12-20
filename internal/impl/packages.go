@@ -375,10 +375,12 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 
 	// Last, find the pending packages, and ensure they are added to the nix-profile
 	// Important to maintain the order of packages as specified by
-	// Devbox.InstallablePackages() (higher priority first)
+	// Devbox.InstallablePackages() (higher priority first).
+	// We also run nix profile upgrade on any virtenv flakes. This is a bit of a
+	// blunt approach, but ensured any plugin created flakes are up-to-date.
 	pending := []*devpkg.Package{}
 	for _, pkg := range packages {
-		_, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
+		idx, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
 			Items:      itemsToKeep,
 			Lockfile:   d.lockfile,
 			Writer:     d.stderr,
@@ -390,6 +392,10 @@ func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) er
 				return err
 			}
 			pending = append(pending, pkg)
+		} else if f, err := pkg.FlakeInstallable(); err == nil && d.pluginManager.PathIsInVirtenv(f.Ref.Path) {
+			if err := nix.ProfileUpgrade(profileDir, idx); err != nil {
+				return err
+			}
 		}
 	}
 

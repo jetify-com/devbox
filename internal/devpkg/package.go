@@ -285,6 +285,13 @@ func (p *Package) Installable() (string, error) {
 	return installable, nil
 }
 
+// FlakeInstallable returns a flake installable. The raw string must contain
+// a valid flake reference parsable by ParseFlakeRef, optionally followed by an
+// #attrpath and/or an ^output.
+func (p *Package) FlakeInstallable() (FlakeInstallable, error) {
+	return ParseFlakeInstallable(p.Raw)
+}
+
 // urlForInstall is used during `nix profile install`.
 // The key difference with URLForFlakeInput is that it has a suffix of
 // `#attributePath`
