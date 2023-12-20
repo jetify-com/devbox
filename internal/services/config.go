@@ -10,6 +10,7 @@ import (
 
 	"github.com/f1bonacc1/process-compose/src/types"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
@@ -45,6 +46,18 @@ func FromProcessCompose(path string) (Services, error) {
 	}
 
 	return services, nil
+}
+
+func NamesFromProcessCompose(content []byte) ([]string, error) {
+	var processCompose types.Project
+	if err := yaml.Unmarshal(content, &processCompose); err != nil {
+		return nil, err
+	}
+	names := []string{}
+	for name := range processCompose.Processes {
+		names = append(names, name)
+	}
+	return names, nil
 }
 
 func lookupProcessCompose(projectDir, path string) string {
