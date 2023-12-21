@@ -4,13 +4,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/pkg/envvar"
 )
 
 var (
@@ -25,7 +30,7 @@ func Env(ctx context.Context, projectDir, environment string) (map[string]string
 		return envCache, nil
 	}
 
-	if err := ensureInitialized(ctx, projectDir); err != nil {
+	if err := ensureInitialized(projectDir); err != nil {
 		return nil, err
 	}
 
@@ -44,7 +49,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 		return binPathCache, nil
 	}
 
-	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec")
+	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.13")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install envsec")
 	}
@@ -57,18 +62,13 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 	return binPathCache, nil
 }
 
-func ensureInitialized(ctx context.Context, projectDir string) error {
-	binPath, err := EnsureInstalled(ctx)
+func ensureInitialized(projectDir string) error {
+	envsec := DefaultEnvsec(os.Stderr, projectDir)
+	_, err := envsec.ProjectConfig(projectDir)
 	if err != nil {
-		return err
-	}
-	cmd := exec.Command(binPath, "init", "--json-errors")
-	cmd.Dir = projectDir
-	var bufErr bytes.Buffer
-	cmd.Stderr = &bufErr
-
-	if err := cmd.Run(); err != nil {
-		return handleError(&bufErr, err)
+		return errors.New(
+			"envsec project is not initialized. Use `devbox envsec init` to initialize",
+		)
 	}
 	return nil
 }
@@ -117,4 +117,17 @@ func handleError(stderr *bytes.Buffer, err error) error {
 		return usererr.New(errResponse.Error)
 	}
 	return errors.WithStack(err)
+}
+
+func DefaultEnvsec(stderr io.Writer, workingDir string) *envsec.Envsec {
+	return &envsec.Envsec{
+		APIHost: build.JetpackAPIHost(),
+		Auth: envsec.AuthConfig{
+			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
+			Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
+		},
+		IsDev:      build.IsDev,
+		Stderr:     stderr,
+		WorkingDir: workingDir,
+	}
 }

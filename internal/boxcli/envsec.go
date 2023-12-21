@@ -6,11 +6,9 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/pkg/envvar"
+	envsecIntegration "go.jetpack.io/devbox/internal/integrations/envsec"
 )
 
 type envsecInitCmdFlags struct {
@@ -59,23 +57,10 @@ func envsecInitFunc(cmd *cobra.Command, flags envsecInitCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	envsec := defaultEnvsec(cmd, box.ProjectDir())
+	envsec := envsecIntegration.DefaultEnvsec(cmd.ErrOrStderr(), box.ProjectDir())
 	if err := envsec.NewProject(cmd.Context(), flags.force); err != nil {
 		return errors.WithStack(err)
 	}
 	box.Config().SetStringField("EnvFrom", "envsec")
 	return box.Config().SaveTo(box.ProjectDir())
-}
-
-func defaultEnvsec(cmd *cobra.Command, workingDir string) *envsec.Envsec {
-	return &envsec.Envsec{
-		APIHost: build.JetpackAPIHost(),
-		Auth: envsec.AuthConfig{
-			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
-			Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
-		},
-		IsDev:      build.IsDev,
-		Stderr:     cmd.ErrOrStderr(),
-		WorkingDir: workingDir,
-	}
 }
