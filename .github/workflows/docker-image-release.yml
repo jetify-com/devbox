@@ -20,16 +20,16 @@ jobs:
       - name: Build and push default
         uses: docker/build-push-action@v4
         with:
-          context: ./internal/impl/generate/tmpl/
-          file: ./internal/impl/generate/tmpl/DevboxImageDockerfile
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: jetpackio/devbox:latest
       - name: Build and push root user
         uses: docker/build-push-action@v4
         with:
-          context: ./internal/impl/generate/tmpl/
-          file: ./internal/impl/generate/tmpl/DevboxImageDockerfileRootUser
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
           push: true
           platforms: linux/amd64,linux/arm64
           tags: jetpackio/devbox-root-user:latest
