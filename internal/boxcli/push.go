@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/pkg/auth"
 
-	"go.jetpack.io/devbox"
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/goutil"
-	"go.jetpack.io/devbox/internal/impl/devopt"
 )
 
 type pushCmdFlags struct {

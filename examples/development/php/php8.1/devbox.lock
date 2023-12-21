@@ -42,7 +42,7 @@
     },
     "php@8.1": {
       "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.2",
+      "plugin_version": "0.0.3",
       "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81",
       "source": "devbox-search",
       "version": "8.1.23",

@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 func Readme(ctx context.Context,
@@ -39,7 +40,7 @@ func Readme(ctx context.Context,
 		return "", err
 	}
 
-	if err = printServices(cfg, buf, markdown); err != nil {
+	if err = printServices(cfg, pkg, buf, markdown); err != nil {
 		return "", err
 	}
 
@@ -72,17 +73,25 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printServices(cfg *config, w io.Writer, markdown bool) error {
-	svcs, err := cfg.Services()
+func printServices(cfg *config, pkg *devpkg.Package, w io.Writer, markdown bool) error {
+	_, contentPath := cfg.ProcessComposeYaml()
+	if contentPath == "" {
+		return nil
+	}
+	content, err := pkg.FileContent(contentPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if len(svcs) == 0 {
+	serviceNames, err := services.NamesFromProcessCompose(content)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if len(serviceNames) == 0 {
 		return nil
 	}
 	services := ""
-	for _, service := range svcs {
-		services += fmt.Sprintf("* %[1]s\n", service.Name)
+	for _, serviceName := range serviceNames {
+		services += fmt.Sprintf("* %[1]s\n", serviceName)
 	}
 
 	_, err = fmt.Fprintf(

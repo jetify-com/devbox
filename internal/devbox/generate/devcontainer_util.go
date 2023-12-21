@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/impl/devopt"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 )
 
 //go:embed tmpl/*

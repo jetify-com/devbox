@@ -16,9 +16,9 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/plugins"
@@ -283,6 +283,13 @@ func (p *Package) Installable() (string, error) {
 		return "", err
 	}
 	return installable, nil
+}
+
+// FlakeInstallable returns a flake installable. The raw string must contain
+// a valid flake reference parsable by ParseFlakeRef, optionally followed by an
+// #attrpath and/or an ^output.
+func (p *Package) FlakeInstallable() (FlakeInstallable, error) {
+	return ParseFlakeInstallable(p.Raw)
 }
 
 // urlForInstall is used during `nix profile install`.

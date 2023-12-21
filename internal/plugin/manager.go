@@ -4,6 +4,9 @@
 package plugin
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -73,4 +76,8 @@ func (m *Manager) ProcessPluginPackages(
 	// if this is behavior we want for user plugins. We may need to add an optional
 	// priority field to the config.
 	return append(pluginPackages, netUserPackages...), nil
+}
+
+func (m *Manager) PathIsInVirtenv(absPath string) bool {
+	return strings.HasPrefix(absPath, filepath.Join(m.ProjectDir(), VirtenvPath))
 }

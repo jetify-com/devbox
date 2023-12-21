@@ -19,7 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 )
 
 const (

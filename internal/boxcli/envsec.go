@@ -6,9 +6,9 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox"
-	"go.jetpack.io/devbox/internal/impl/devopt"
-	"go.jetpack.io/devbox/internal/integrations/envsec"
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
+	envsecIntegration "go.jetpack.io/devbox/internal/integrations/envsec"
 )
 
 type envsecInitCmdFlags struct {
@@ -57,7 +57,7 @@ func envsecInitFunc(cmd *cobra.Command, flags envsecInitCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	envsec := envsec.DefaultEnvsec(cmd.ErrOrStderr(), box.ProjectDir())
+	envsec := envsecIntegration.DefaultEnvsec(cmd.ErrOrStderr(), box.ProjectDir())
 	if err := envsec.NewProject(cmd.Context(), flags.force); err != nil {
 		return errors.WithStack(err)
 	}
