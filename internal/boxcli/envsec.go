@@ -6,9 +6,9 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/impl/devopt"
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/envsec/pkg/envsec"
 	"go.jetpack.io/pkg/envvar"
 )

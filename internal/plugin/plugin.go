@@ -17,7 +17,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/impl/shellcmd"
+	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"

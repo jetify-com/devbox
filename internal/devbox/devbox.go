@@ -1,8 +1,8 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-// Package impl creates isolated development environments.
-package impl
+// Package devbox creates isolated development environments.
+package devbox
 
 import (
 	"bytes"
@@ -24,10 +24,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/internal/devbox/envpath"
+	"go.jetpack.io/devbox/internal/devbox/generate"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/impl/envpath"
-	"go.jetpack.io/devbox/internal/impl/generate"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -36,10 +36,10 @@ import (
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/impl/devopt"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
@@ -73,6 +73,10 @@ type Devbox struct {
 }
 
 var legacyPackagesWarningHasBeenShown = false
+
+func InitConfig(dir string, writer io.Writer) (bool, error) {
+	return devconfig.Init(dir, writer)
+}
 
 func Open(opts *devopt.Opts) (*Devbox, error) {
 	projectDir, err := findProjectDir(opts.Dir)
