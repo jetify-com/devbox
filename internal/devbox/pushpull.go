@@ -1,13 +1,13 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package impl
+package devbox
 
 import (
 	"context"
 	"runtime/trace"
 
-	"go.jetpack.io/devbox/internal/impl/devopt"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/pullbox"
 )
 

@@ -169,17 +169,17 @@ func exportedErrType(err error) string {
 // package path and base name components.
 func splitPkgFunc(name string) (pkgPath, funcName string) {
 	// Using the following fully-qualified function name as an example:
-	// go.jetpack.io/devbox/internal/impl.(*Devbox).RunScript
+	// go.jetpack.io/devbox/internal/devbox.(*Devbox).RunScript
 
 	// dir = go.jetpack.io/devbox/internal/
-	// base = impl.(*Devbox).RunScript
+	// base = devbox.(*Devbox).RunScript
 	dir, base := path.Split(name)
 
-	// pkgName = impl
+	// pkgName = devbox
 	// fn = (*Devbox).RunScript
 	pkgName, fn, _ := strings.Cut(base, ".")
 
-	// pkgPath = go.jetpack.io/devbox/internal/impl
+	// pkgPath = go.jetpack.io/devbox/internal/devbox
 	// funcName = (*Devbox).RunScript
 	return dir + pkgName, fn
 }

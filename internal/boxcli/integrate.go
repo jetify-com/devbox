@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
-	"go.jetpack.io/devbox"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/impl/devopt"
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 )
 
 type integrateCmdFlags struct {
