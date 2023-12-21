@@ -50,17 +50,17 @@ type config struct {
 	} `json:"shell,omitempty"`
 }
 
-func (c *config) ProcessComposeYaml() (string, bool) {
-	for file := range c.CreateFiles {
+func (c *config) ProcessComposeYaml() (string, string) {
+	for file, contentPath := range c.CreateFiles {
 		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
-			return file, true
+			return file, contentPath
 		}
 	}
-	return "", false
+	return "", ""
 }
 
 func (c *config) Services() (services.Services, error) {
-	if file, ok := c.ProcessComposeYaml(); ok {
+	if file, _ := c.ProcessComposeYaml(); file != "" {
 		return services.FromProcessCompose(file)
 	}
 	return nil, nil
