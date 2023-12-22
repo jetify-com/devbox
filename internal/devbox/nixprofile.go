@@ -4,54 +4,79 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"slices"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 )
 
-func syncFlakeToProfile(ctx context.Context, flakePath, profilePath string) error {
-	cmd := exec.CommandContext(ctx, "nix", "eval", "--json", flakePath+"#devShells."+nix.System()+".default.buildInputs")
-	b, err := cmd.Output()
+func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
+	profilePath, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+
+	// Get the build inputs (i.e. store paths) from the generated flake's devShell.
+	buildInputPaths, err := nix.Eval(
+		ctx,
+		d.stderr,
+		d.flakeDir()+"#devShells."+nix.System()+".default.buildInputs",
+		"--json",
+	)
 	if err != nil {
 		return fmt.Errorf("nix eval devShells: %v", err)
 	}
 	storePaths := []string{}
-	if err := json.Unmarshal(b, &storePaths); err != nil {
-		return fmt.Errorf("unmarshal store paths: %s: %v", b, err)
+	if err := json.Unmarshal(buildInputPaths, &storePaths); err != nil {
+		return fmt.Errorf("unmarshal store paths: %s: %v", buildInputPaths, err)
 	}
 
-	listCmd := exec.CommandContext(ctx, "nix", "profile", "list", "--json", "--profile", profilePath)
-	b, err = listCmd.Output()
+	// Get the store-paths of the packages currently installed in the nix profile
+	items, err := nixprofile.ProfileListItems(ctx, d.stderr, profilePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("nix profile list: %v", err)
 	}
-	var profile struct {
-		Elements []struct {
-			StorePaths []string
-		}
-	}
-	if err := json.Unmarshal(b, &profile); err != nil {
-		return fmt.Errorf("unmarshal profile: %v", err)
-	}
-	got := make([]string, 0, len(profile.Elements))
-	for _, e := range profile.Elements {
-		got = append(got, e.StorePaths...)
+	got := make([]string, 0, len(items))
+	for _, item := range items {
+		got = append(got, item.StorePaths()...)
 	}
 
+	// Diff the store paths and install/remove packages as needed
 	add, remove := diffStorePaths(got, storePaths)
 	if len(remove) > 0 {
-		removeCmd := exec.CommandContext(ctx, "nix", "profile", "remove", "--profile", profilePath)
-		removeCmd.Args = append(removeCmd.Args, remove...)
-		if err := removeCmd.Run(); err != nil {
+		packagesToRemove := make([]string, 0, len(remove))
+		for _, p := range remove {
+			storePath := nix.NewStorePathParts(p)
+			packagesToRemove = append(packagesToRemove, fmt.Sprintf("%s@%s", storePath.Name, storePath.Version))
+		}
+		if len(packagesToRemove) == 1 {
+			fmt.Fprintf(d.stderr, "Removing %s\n", strings.Join(packagesToRemove, ", "))
+		} else {
+			fmt.Fprintf(d.stderr, "Removing packages: %s\n", strings.Join(packagesToRemove, ", "))
+		}
+
+		if err := nix.ProfileRemove(profilePath, remove...); err != nil {
 			return err
 		}
 	}
 	if len(add) > 0 {
-		addCmd := exec.CommandContext(ctx, "nix", "profile", "install", "--profile", profilePath)
-		addCmd.Args = append(addCmd.Args, add...)
-		if err := addCmd.Run(); err != nil {
-			return err
+		total := len(add)
+		for idx, addPath := range add {
+			stepNum := idx + 1
+			storePath := nix.NewStorePathParts(addPath)
+			nameAndVersion := fmt.Sprintf("%s@%s", storePath.Name, storePath.Version)
+			stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, nameAndVersion)
+
+			if err = nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+				CustomStepMessage: stepMsg,
+				Installable:       addPath,
+				PackageName:       storePath.Name,
+				ProfilePath:       profilePath,
+				Writer:            d.stderr,
+			}); err != nil {
+				return fmt.Errorf("error installing package %s: %w", addPath, err)
+			}
 		}
 	}
 	return nil
@@ -61,27 +86,27 @@ func diffStorePaths(got, want []string) (add, remove []string) {
 	slices.Sort(got)
 	slices.Sort(want)
 
-	var g, w int
+	var gotIdx, wantIdx int
 	for {
-		if g >= len(got) {
-			add = append(add, want[w:]...)
+		if gotIdx >= len(got) {
+			add = append(add, want[wantIdx:]...)
 			break
 		}
-		if w >= len(want) {
-			remove = append(remove, got[g:]...)
+		if wantIdx >= len(want) {
+			remove = append(remove, got[gotIdx:]...)
 			break
 		}
 
 		switch {
-		case got[g] == want[w]:
-			g++
-			w++
-		case got[g] < want[w]:
-			remove = append(remove, got[g])
-			g++
-		case got[g] > want[w]:
-			add = append(add, want[w])
-			w++
+		case got[gotIdx] == want[wantIdx]:
+			gotIdx++
+			wantIdx++
+		case got[gotIdx] < want[wantIdx]:
+			remove = append(remove, got[gotIdx])
+			gotIdx++
+		case got[gotIdx] > want[wantIdx]:
+			add = append(add, want[wantIdx])
+			wantIdx++
 		}
 	}
 	return add, remove

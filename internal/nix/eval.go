@@ -1,7 +1,9 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"strconv"
 )
@@ -46,12 +48,20 @@ func PackageKnownVulnerabilities(path string) []string {
 	return vulnerabilities
 }
 
-// Eval is raw nix eval. Needs to be parsed. Useful for stuff like
+// RawEval is nix eval. Needs to be parsed. Useful for stuff like
 // nix eval --raw nixpkgs/9ef09e06806e79e32e30d17aee6879d69c011037#fuse3
 // to determine if a package if a package can be installed in system.
-func Eval(path string) ([]byte, error) {
+func RawEval(path string) ([]byte, error) {
 	cmd := command("eval", "--raw", path)
 	return cmd.CombinedOutput()
+}
+
+func Eval(ctx context.Context, w io.Writer, installable string, options ...string) ([]byte, error) {
+	args := []string{"eval", installable}
+	args = append(args, options...)
+	cmd := commandContext(ctx, args...)
+	cmd.Stderr = w
+	return cmd.Output()
 }
 
 func AllowInsecurePackages() {

@@ -25,7 +25,7 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 		return err
 	}
 
-	return nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+	return nixprofile.ProfileInstallPackage(ctx, &nixprofile.ProfileInstallPackageArgs{
 		Lockfile:    d.lockfile,
 		Package:     pkg,
 		ProfilePath: profilePath,

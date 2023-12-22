@@ -4,6 +4,7 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,8 +18,8 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 )
 
-func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, error) {
-	cmd := command("profile", "list", "--profile", profilePath)
+func ProfileList(ctx context.Context, writer io.Writer, profilePath string, useJSON bool) (string, error) {
+	cmd := commandContext(ctx, "profile", "list", "--profile", profilePath)
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
@@ -29,7 +30,7 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 	return string(out), nil
 }
 
-func ProfileInstall(writer io.Writer, profilePath, installable string) error {
+func ProfileInstall(ctx context.Context, writer io.Writer, profilePath, installable string) error {
 	if !IsInsecureAllowed() && PackageIsInsecure(installable) {
 		knownVulnerabilities := PackageKnownVulnerabilities(installable)
 		errString := fmt.Sprintf("Package %s is insecure. \n\n", installable)
@@ -40,7 +41,8 @@ func ProfileInstall(writer io.Writer, profilePath, installable string) error {
 		return usererr.New(errString)
 	}
 
-	cmd := command(
+	cmd := commandContext(
+		ctx,
 		"profile", "install",
 		"--profile", profilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
@@ -63,13 +65,13 @@ func ProfileInstall(writer io.Writer, profilePath, installable string) error {
 	return cmd.Run()
 }
 
-func ProfileRemove(profilePath string, indexes []string) error {
+func ProfileRemove(profilePath string, elements ...string) error {
 	cmd := command(
 		append([]string{
 			"profile", "remove",
 			"--profile", profilePath,
 			"--impure", // for NIXPKGS_ALLOW_UNFREE
-		}, indexes...)...,
+		}, elements...)...,
 	)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 

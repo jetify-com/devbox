@@ -4,6 +4,7 @@
 package nixprofile
 
 import (
+	"context"
 	"os"
 
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -11,18 +12,19 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 )
 
-func ProfileUpgrade(ProfileDir string, pkg *devpkg.Package, lock *lock.File) error {
+func ProfileUpgrade(profileDir string, pkg *devpkg.Package, lock *lock.File) error {
 	idx, err := ProfileListIndex(
+		context.TODO(),
 		&ProfileListIndexArgs{
 			Lockfile:   lock,
 			Writer:     os.Stderr,
 			Package:    pkg,
-			ProfileDir: ProfileDir,
+			ProfileDir: profileDir,
 		},
 	)
 	if err != nil {
 		return err
 	}
 
-	return nix.ProfileUpgrade(ProfileDir, idx)
+	return nix.ProfileUpgrade(profileDir, idx)
 }

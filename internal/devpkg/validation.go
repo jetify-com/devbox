@@ -38,7 +38,7 @@ func (p *Package) ValidateInstallsOnSystem() (bool, error) {
 	if len(info) == 0 {
 		return false, nil
 	}
-	if out, err := nix.Eval(u); err != nil &&
+	if out, err := nix.RawEval(u); err != nil &&
 		strings.Contains(string(out), "is not available on the requested hostPlatform") {
 		return false, nil
 	}

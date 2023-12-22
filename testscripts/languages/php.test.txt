@@ -18,7 +18,6 @@ stdout 'done\n'
 {
   "packages": [
     "php81@latest",
-    "php81Packages.composer@latest",
     "php81Extensions.ds@latest"
   ]
 }

@@ -292,11 +292,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		return err
 	}
 
-	profile, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-	if err := syncFlakeToProfile(ctx, d.flakeDir(), profile); err != nil {
+	if err := d.syncFlakeToProfile(ctx); err != nil {
 		return err
 	}
 

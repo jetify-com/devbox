@@ -23,15 +23,17 @@ import (
 )
 
 // ProfileListItems returns a list of the installed packages.
+// TODO drop the Profile prefix from this function name.
 func ProfileListItems(
+	ctx context.Context,
 	writer io.Writer,
 	profileDir string,
 ) ([]*NixProfileListItem, error) {
-	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
+	output, err := nix.ProfileList(ctx, writer, profileDir, true /*useJSON*/)
 	if err != nil {
 		// fallback to legacy profile list
 		// NOTE: maybe we should check the nix version first, instead of falling back on _any_ error.
-		return profileListLegacy(writer, profileDir)
+		return profileListLegacy(ctx, writer, profileDir)
 	}
 
 	type ProfileListElement struct {
@@ -65,11 +67,13 @@ func ProfileListItems(
 }
 
 // profileListLegacy lists the items in a nix profile before nix 2.17.0 introduced --json.
+// TODO drop the Profile prefix from this function name.
 func profileListLegacy(
+	ctx context.Context,
 	writer io.Writer,
 	profileDir string,
 ) ([]*NixProfileListItem, error) {
-	output, err := nix.ProfileList(writer, profileDir, false /*useJSON*/)
+	output, err := nix.ProfileList(ctx, writer, profileDir, false /*useJSON*/)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -99,6 +103,7 @@ func profileListLegacy(
 	return items, nil
 }
 
+// TODO drop the Profile prefix from this name.
 type ProfileListIndexArgs struct {
 	// For performance, you can reuse the same list in multiple operations if you
 	// are confident index has not changed.
@@ -111,11 +116,12 @@ type ProfileListIndexArgs struct {
 
 // ProfileListIndex returns the index of args.Package in the nix profile specified by args.ProfileDir,
 // or -1 if it's not found. Callers can pass in args.Items to avoid having to call `nix-profile list` again.
-func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
+// TODO drop the Profile prefix from this name.
+func ProfileListIndex(ctx context.Context, args *ProfileListIndexArgs) (int, error) {
 	var err error
 	items := args.Items
 	if items == nil {
-		items, err = ProfileListItems(args.Writer, args.ProfileDir)
+		items, err = ProfileListItems(ctx, args.Writer, args.ProfileDir)
 		if err != nil {
 			return -1, err
 		}
@@ -189,7 +195,8 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 	}, nil
 }
 
-type ProfileInstallArgs struct {
+// TODO drop the Profile prefix from this name.
+type ProfileInstallPackageArgs struct {
 	CustomStepMessage string
 	Lockfile          *lock.File
 	Package           string
@@ -197,8 +204,9 @@ type ProfileInstallArgs struct {
 	Writer            io.Writer
 }
 
-// ProfileInstall calls nix profile install with default profile
-func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
+// ProfileInstallPackage installs a Devbox package into a profile.
+// TODO drop the Profile prefix from this name.
+func ProfileInstallPackage(ctx context.Context, args *ProfileInstallPackageArgs) error {
 	input := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
 
 	inCache, err := input.IsInBinaryCache()
@@ -226,7 +234,31 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 			)
 		}
 	}
-	stepMsg := args.Package
+
+	installable, err := input.Installable()
+	if err != nil {
+		return err
+	}
+	return ProfileInstall(ctx, &ProfileInstallArgs{
+		CustomStepMessage: args.CustomStepMessage,
+		Installable:       installable,
+		PackageName:       args.Package,
+		ProfilePath:       args.ProfilePath,
+	})
+}
+
+// TODO drop the Profile prefix from this name.
+type ProfileInstallArgs struct {
+	CustomStepMessage string
+	Installable       string
+	PackageName       string
+	ProfilePath       string
+	Writer            io.Writer
+}
+
+// TODO drop the Profile prefix from this name.
+func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
+	stepMsg := args.PackageName
 	if args.CustomStepMessage != "" {
 		stepMsg = args.CustomStepMessage
 		// Only print this first one if we have a custom message. Otherwise it feels
@@ -234,12 +266,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	installable, err := input.Installable()
-	if err != nil {
-		return err
-	}
-
-	err = nix.ProfileInstall(args.Writer, args.ProfilePath, installable)
+	err := nix.ProfileInstall(ctx, args.Writer, args.ProfilePath, args.Installable)
 	if err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
@@ -249,18 +276,4 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
 	return nil
-}
-
-// ProfileRemoveItems removes the items from the profile, in a single call, using their indexes.
-// It is up to the caller to ensure that the underlying profile has not changed since the items
-// were queried.
-func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
-	if len(items) == 0 {
-		return nil
-	}
-	indexes := []string{}
-	for _, item := range items {
-		indexes = append(indexes, strconv.Itoa(item.index))
-	}
-	return nix.ProfileRemove(profilePath, indexes)
 }
