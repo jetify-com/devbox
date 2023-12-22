@@ -18,7 +18,6 @@ import (
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -274,10 +273,6 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		}
 	}
 
-	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
-		return err
-	}
-
 	if err := d.InstallRunXPackages(ctx); err != nil {
 		return err
 	}
@@ -294,6 +289,14 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	// AND we are not in the shellenv-enabled environment of the current devbox-project.
 	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
 	if _, err := d.computeEnv(ctx, usePrintDevEnvCache); err != nil {
+		return err
+	}
+
+	profile, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+	if err := syncFlakeToProfile(ctx, d.flakeDir(), profile); err != nil {
 		return err
 	}
 
@@ -329,162 +332,6 @@ func (d *Devbox) profilePath() (string, error) {
 	}
 
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
-}
-
-// syncPackagesToProfile can ensure that all packages in devbox.json exist in the nix profile,
-// and no more. However, it may skip some steps depending on the `mode`.
-func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "syncPackagesToProfile").End()
-
-	// First, fetch the profile items from the nix-profile,
-	// and get the installable packages
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
-	if err != nil {
-		return err
-	}
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return err
-	}
-
-	// Remove non-nix packages from the list
-	packages = lo.Filter(packages, devpkg.IsNix)
-
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return err
-	}
-
-	// Second, remove any packages from the nix-profile that are not in the config
-	itemsToKeep := profileItems
-	if mode != install {
-		itemsToKeep, err = d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
-		if err != nil {
-			return err
-		}
-	}
-
-	// we are done if mode is uninstall
-	if mode == uninstall {
-		return nil
-	}
-
-	// Last, find the pending packages, and ensure they are added to the nix-profile
-	// Important to maintain the order of packages as specified by
-	// Devbox.InstallablePackages() (higher priority first).
-	// We also run nix profile upgrade on any virtenv flakes. This is a bit of a
-	// blunt approach, but ensured any plugin created flakes are up-to-date.
-	pending := []*devpkg.Package{}
-	for _, pkg := range packages {
-		idx, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
-			Items:      itemsToKeep,
-			Lockfile:   d.lockfile,
-			Writer:     d.stderr,
-			Package:    pkg,
-			ProfileDir: profileDir,
-		})
-		if err != nil {
-			if !errors.Is(err, nix.ErrPackageNotFound) {
-				return err
-			}
-			pending = append(pending, pkg)
-		} else if f, err := pkg.FlakeInstallable(); err == nil && d.pluginManager.PathIsInVirtenv(f.Ref.Path) {
-			if err := nix.ProfileUpgrade(profileDir, idx); err != nil {
-				return err
-			}
-		}
-	}
-
-	return d.addPackagesToProfile(ctx, pending)
-}
-
-func (d *Devbox) removeExtraItemsFromProfile(
-	ctx context.Context,
-	profileDir string,
-	profileItems []*nixprofile.NixProfileListItem,
-	packages []*devpkg.Package,
-) ([]*nixprofile.NixProfileListItem, error) {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "removeExtraPackagesFromProfile").End()
-
-	itemsToKeep := []*nixprofile.NixProfileListItem{}
-	extras := []*nixprofile.NixProfileListItem{}
-	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
-	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-	for _, item := range profileItems {
-		found := false
-		for _, pkg := range packages {
-			if item.Matches(pkg, d.lockfile) {
-				itemsToKeep = append(itemsToKeep, item)
-				found = true
-				break
-			}
-		}
-		if !found {
-			extras = append(extras, item)
-		}
-	}
-	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
-	if err := nixprofile.ProfileRemoveItems(profileDir, extras); err != nil {
-		return nil, err
-	}
-	return itemsToKeep, nil
-}
-
-// addPackagesToProfile inspects the packages in devbox.json, checks which of them
-// are missing from the nix profile, and then installs each package individually into the
-// nix profile.
-func (d *Devbox) addPackagesToProfile(ctx context.Context, pkgs []*devpkg.Package) error {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "addPackagesToProfile").End()
-
-	if len(pkgs) == 0 {
-		return nil
-	}
-
-	// If packages are in profile but nixpkgs has been purged, the experience
-	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
-	// prefetched for all relevant packages (those not in binary cache).
-	if err := devpkg.EnsureNixpkgsPrefetched(ctx, d.stderr, pkgs); err != nil {
-		return err
-	}
-
-	var msg string
-	if len(pkgs) == 1 {
-		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
-	} else {
-		pkgNames := lo.Map(pkgs, func(p *devpkg.Package, _ int) string { return p.Raw })
-		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgNames, ", "))
-	}
-	fmt.Fprintf(d.stderr, "\n%s\n\n", msg)
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return fmt.Errorf("error getting profile path: %w", err)
-	}
-
-	total := len(pkgs)
-	for idx, pkg := range pkgs {
-		stepNum := idx + 1
-
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-
-		if err = nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
-			CustomStepMessage: stepMsg,
-			Lockfile:          d.lockfile,
-			Package:           pkg.Raw,
-			ProfilePath:       profileDir,
-			Writer:            d.stderr,
-		}); err != nil {
-			return fmt.Errorf("error installing package %s: %w", pkg, err)
-		}
-	}
-
-	return nil
 }
 
 var resetCheckDone = false
