@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/integrations/envsec"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
 )
@@ -44,7 +44,7 @@ func loginCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.ErrOrStderr(), "Logged in as : %s\n", t.IDClaims().Email)
+			fmt.Fprintf(cmd.ErrOrStderr(), "Logged in as: %s\n", t.IDClaims().Email)
 			return nil
 		},
 	}
@@ -79,30 +79,8 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tok, err := genSession(cmd.Context())
-			if err != nil {
-				return err
-			} else if tok == nil {
-				return usererr.New("not logged in")
-			}
-			idClaims := tok.IDClaims()
-
-			fmt.Fprintf(cmd.OutOrStdout(), "Logged in\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "User ID: %s\n", idClaims.Subject)
-
-			if idClaims.OrgID != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Org ID: %s\n", idClaims.OrgID)
-			}
-
-			if idClaims.Email != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Email: %s\n", idClaims.Email)
-			}
-
-			if idClaims.Name != "" {
-				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", idClaims.Name)
-			}
-
-			return nil
+			return envsec.DefaultEnvsec(cmd.ErrOrStderr()).
+				WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
 		},
 	}
 
