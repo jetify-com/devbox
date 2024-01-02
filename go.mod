@@ -39,9 +39,9 @@ require (
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	go.jetpack.io/envsec v0.0.13
-	go.jetpack.io/pkg v0.0.0-20231220195442-0c2f1e897695
-	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
+	go.jetpack.io/envsec v0.0.14-0.20231223002340-852b37835912
+	go.jetpack.io/pkg v0.0.0-20231222235844-de2c9c35ba7c
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/mod v0.14.0
 	golang.org/x/sync v0.5.0
 	golang.org/x/tools v0.16.0
@@ -50,7 +50,7 @@ require (
 )
 
 require (
-	connectrpc.com/connect v1.13.0 // indirect
+	connectrpc.com/connect v1.14.0 // indirect
 	github.com/InVisionApp/go-health/v2 v2.1.3 // indirect
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
@@ -126,5 +126,5 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 )
