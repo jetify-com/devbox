@@ -63,8 +63,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 }
 
 func ensureInitialized(projectDir string) error {
-	envsec := DefaultEnvsec(os.Stderr)
-	envsec.WorkingDir = projectDir
+	envsec := DefaultEnvsec(os.Stderr, projectDir)
 	_, err := envsec.ProjectConfig(projectDir)
 	if err != nil {
 		return errors.New(
@@ -120,14 +119,15 @@ func handleError(stderr *bytes.Buffer, err error) error {
 	return errors.WithStack(err)
 }
 
-func DefaultEnvsec(stderr io.Writer) *envsec.Envsec {
+func DefaultEnvsec(stderr io.Writer, workingDir string) *envsec.Envsec {
 	return &envsec.Envsec{
 		APIHost: build.JetpackAPIHost(),
 		Auth: envsec.AuthConfig{
 			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
 			Issuer:   envvar.Get("ENVSEC_ISSUER", build.Issuer()),
 		},
-		IsDev:  build.IsDev,
-		Stderr: stderr,
+		IsDev:      build.IsDev,
+		Stderr:     stderr,
+		WorkingDir: workingDir,
 	}
 }

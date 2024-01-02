@@ -57,8 +57,7 @@ func envsecInitFunc(cmd *cobra.Command, flags envsecInitCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	envsec := envsecIntegration.DefaultEnvsec(cmd.ErrOrStderr())
-	envsec.WorkingDir = box.ProjectDir()
+	envsec := envsecIntegration.DefaultEnvsec(cmd.ErrOrStderr(), box.ProjectDir())
 	if err := envsec.NewProject(cmd.Context(), flags.force); err != nil {
 		return errors.WithStack(err)
 	}

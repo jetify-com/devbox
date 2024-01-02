@@ -6,6 +6,7 @@ package boxcli
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/build"
@@ -79,7 +80,11 @@ func whoAmICmd() *cobra.Command {
 		Short: "Show the current user",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return envsec.DefaultEnvsec(cmd.ErrOrStderr()).
+			wd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			return envsec.DefaultEnvsec(cmd.ErrOrStderr(), wd).
 				WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
 		},
 	}
