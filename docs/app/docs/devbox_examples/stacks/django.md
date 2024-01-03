@@ -25,7 +25,7 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 1. Start a devbox shell with `devbox shell`, then activate your virtual environment and install your requirements using the commands below.
 
    ```bash
-   source $VENV_DIR/bin/activate
+   . $VENV_DIR/bin/activate
    pip install -r requirements.txt
    ```
 
