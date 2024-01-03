@@ -251,6 +251,7 @@ func ProfileInstallPackage(ctx context.Context, args *ProfileInstallPackageArgs)
 type ProfileInstallArgs struct {
 	CustomStepMessage string
 	Installable       string
+	Offline           bool
 	PackageName       string
 	ProfilePath       string
 	Writer            io.Writer
@@ -266,7 +267,12 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	err := nix.ProfileInstall(ctx, args.Writer, args.ProfilePath, args.Installable)
+	err := nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+		Installable: args.Installable,
+		Offline:     args.Offline,
+		ProfilePath: args.ProfilePath,
+		Writer:      args.Writer,
+	})
 	if err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")

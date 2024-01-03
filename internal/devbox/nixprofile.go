@@ -71,9 +71,12 @@ func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
 			if err = nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
 				CustomStepMessage: stepMsg,
 				Installable:       addPath,
-				PackageName:       storePath.Name,
-				ProfilePath:       profilePath,
-				Writer:            d.stderr,
+				// Install in offline mode for speed. We know we should have all the files
+				// locally in /nix/store since we have run `nix print-dev-env` prior to this.
+				Offline:     true,
+				PackageName: storePath.Name,
+				ProfilePath: profilePath,
+				Writer:      d.stderr,
 			}); err != nil {
 				return fmt.Errorf("error installing package %s: %w", addPath, err)
 			}
