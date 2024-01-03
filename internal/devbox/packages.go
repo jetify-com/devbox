@@ -266,6 +266,13 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
+	// Validate packages. Must be run up-front and definitely prior to computeEnv
+	// and syncFlakeToProfile below that will evaluate the flake and may give
+	// inscrutable errors if the package is uninstallable.
+	if err := d.validatePackages(); err != nil {
+		return err
+	}
+
 	// Create plugin directories first because packages might need them
 	for _, pkg := range d.InstallablePackages() {
 		if err := d.PluginManager().Create(pkg); err != nil {
@@ -285,13 +292,15 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		return err
 	}
 
-	// Use the printDevEnvCache if we are adding or removing or updating any package,
-	// AND we are not in the shellenv-enabled environment of the current devbox-project.
-	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
-	if _, err := d.computeEnv(ctx, usePrintDevEnvCache); err != nil {
+	// Skip the print-dev-env's cache if we are in a devbox-environment. If not,
+	// skip the cache if we're either installing packages or ensuring
+	// the project state is up-to-date.
+	skipPrintDevEnvCache := d.IsEnvEnabled() || (mode == ensure || mode == install)
+	if _, err := d.computeEnv(ctx, !skipPrintDevEnvCache /*usePrintDevEnvCache*/); err != nil {
 		return err
 	}
 
+	// Ensure the nix profile has the packages from the flake.
 	if err := d.syncFlakeToProfile(ctx); err != nil {
 		return err
 	}
@@ -375,6 +384,40 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 			lockedPkg.Resolved,
 		); err != nil {
 			return fmt.Errorf("error installing runx package %s: %w", pkg, err)
+		}
+	}
+	return nil
+}
+
+// validatePackages will ensure that packages are available to be installed
+// in the user's current system.
+func (d *Devbox) validatePackages() error {
+	for _, pkg := range d.InstallablePackages() {
+
+		inCache, err := pkg.IsInBinaryCache()
+		if err != nil {
+			return err
+		}
+
+		if !inCache && nix.IsGithubNixpkgsURL(pkg.URLForFlakeInput()) {
+			if err := nix.EnsureNixpkgsPrefetched(d.stderr, pkg.HashFromNixPkgsURL()); err != nil {
+				return err
+			}
+			if exists, err := pkg.ValidateInstallsOnSystem(); err != nil {
+				return err
+			} else if !exists {
+				platform := nix.System()
+				return usererr.New(
+					"package %s cannot be installed on your platform %s.\n"+
+						"If you know this package is incompatible with %[2]s, then "+
+						"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+						"If you think this package should be compatible with %[2]s, then "+
+						"it's possible this particular version is not available yet from the nix registry. "+
+						"You could try `devbox add` with a different version for this package.\n",
+					pkg.Raw,
+					platform,
+				)
+			}
 		}
 	}
 	return nil

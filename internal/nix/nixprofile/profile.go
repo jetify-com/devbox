@@ -15,7 +15,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -207,35 +206,8 @@ type ProfileInstallPackageArgs struct {
 // ProfileInstallPackage installs a Devbox package into a profile.
 // TODO drop the Profile prefix from this name.
 func ProfileInstallPackage(ctx context.Context, args *ProfileInstallPackageArgs) error {
-	input := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
-
-	inCache, err := input.IsInBinaryCache()
-	if err != nil {
-		return err
-	}
-
-	if !inCache && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
-		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
-			return err
-		}
-		if exists, err := input.ValidateInstallsOnSystem(); err != nil {
-			return err
-		} else if !exists {
-			platform := nix.System()
-			return usererr.New(
-				"package %s cannot be installed on your platform %s.\n"+
-					"If you know this package is incompatible with %[2]s, then "+
-					"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
-					"If you think this package should be compatible with %[2]s, then "+
-					"it's possible this particular version is not available yet from the nix registry. "+
-					"You could try `devbox add` with a different version for this package.\n",
-				input.Raw,
-				platform,
-			)
-		}
-	}
-
-	installable, err := input.Installable()
+	pkg := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
+	installable, err := pkg.Installable()
 	if err != nil {
 		return err
 	}
@@ -244,6 +216,7 @@ func ProfileInstallPackage(ctx context.Context, args *ProfileInstallPackageArgs)
 		Installable:       installable,
 		PackageName:       args.Package,
 		ProfilePath:       args.ProfilePath,
+		Writer:            args.Writer,
 	})
 }
 

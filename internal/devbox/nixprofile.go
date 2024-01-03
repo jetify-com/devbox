@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 )
 
+// syncFlakeToProfile ensures the buildInputs from the flake's devShell are
+// installed in the nix profile.
 func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
 	profilePath, err := d.profilePath()
 	if err != nil {
@@ -73,6 +74,7 @@ func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
 				Installable:       addPath,
 				// Install in offline mode for speed. We know we should have all the files
 				// locally in /nix/store since we have run `nix print-dev-env` prior to this.
+				// Also avoids some "substituter not found for store-path" errors.
 				Offline:     true,
 				PackageName: storePath.Name,
 				ProfilePath: profilePath,
@@ -86,30 +88,24 @@ func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
 }
 
 func diffStorePaths(got, want []string) (add, remove []string) {
-	slices.Sort(got)
-	slices.Sort(want)
+	gotSet := map[string]bool{}
+	for _, g := range got {
+		gotSet[g] = true
+	}
+	wantSet := map[string]bool{}
+	for _, w := range want {
+		wantSet[w] = true
+	}
 
-	var gotIdx, wantIdx int
-	for {
-		if gotIdx >= len(got) {
-			add = append(add, want[wantIdx:]...)
-			break
+	for _, g := range got {
+		if _, ok := wantSet[g]; !ok {
+			remove = append(remove, g)
 		}
-		if wantIdx >= len(want) {
-			remove = append(remove, got[gotIdx:]...)
-			break
-		}
+	}
 
-		switch {
-		case got[gotIdx] == want[wantIdx]:
-			gotIdx++
-			wantIdx++
-		case got[gotIdx] < want[wantIdx]:
-			remove = append(remove, got[gotIdx])
-			gotIdx++
-		case got[gotIdx] > want[wantIdx]:
-			add = append(add, want[wantIdx])
-			wantIdx++
+	for _, w := range want {
+		if _, ok := gotSet[w]; !ok {
+			add = append(add, w)
 		}
 	}
 	return add, remove

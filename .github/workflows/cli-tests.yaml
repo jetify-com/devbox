@@ -129,9 +129,8 @@ jobs:
         run-project-tests: ["project-tests", "project-tests-off"]
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
-        # 2. nix version 2.17.0 which introduces a new code path that minimizes nixpkgs downloads.
-        # 3. latest nix version
-        nix-version: ["2.12.0", "2.17.0", "2.19.2"]
+        # 2. latest nix version, must be > 2.17.0 which introduces a new code path that minimizes nixpkgs downloads.
+        nix-version: ["2.12.0", "2.19.2"]
         exclude:
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
