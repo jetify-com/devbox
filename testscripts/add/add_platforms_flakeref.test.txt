@@ -2,6 +2,7 @@
 
 exec devbox install
 
+# trivial comment
 exec devbox add github:F1bonacc1/process-compose/v0.40.2 --exclude-platform x86_64-darwin
 json.superset devbox.json expected_devbox1.json
 
