@@ -295,7 +295,8 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	// Skip the print-dev-env's cache if we are in a devbox-environment. If not,
 	// skip the cache if we're either installing packages or ensuring
 	// the project state is up-to-date.
-	skipPrintDevEnvCache := d.IsEnvEnabled() || (mode == ensure || mode == install)
+	skipPrintDevEnvCache := true
+	// skipPrintDevEnvCache := d.IsEnvEnabled() || (mode == ensure || mode == install)
 	if _, err := d.computeEnv(ctx, !skipPrintDevEnvCache /*usePrintDevEnvCache*/); err != nil {
 		return err
 	}
