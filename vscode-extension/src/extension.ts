@@ -126,7 +126,6 @@ async function initialCheckDevboxJSON(context: ExtensionContext) {
 			// devbox.json exists setcontext for devbox commands to be available
 			commands.executeCommand('setContext', 'devbox.configFileExists', true);
 			context.workspaceState.update("configFileExists", true);
-
 		} catch (err) {
 			console.log(err);
 			// devbox.json does not exist
@@ -153,7 +152,6 @@ async function runInTerminal(cmd: string, showTerminal: boolean) {
 			'text': `${cmd}\r\n`
 		});
 	}
-
 }
 
 async function getDevboxScripts(): Promise<string[]> {
@@ -192,7 +190,6 @@ async function readDevboxJson(workspaceUri: Uri) {
 	const readStr = Buffer.from(readData).toString('utf8');
 	const devboxJsonData = JSON.parse(readStr);
 	return devboxJsonData;
-
 }
 
 // This method is called when your extension is deactivated
