@@ -23,7 +23,7 @@
 1. Start a devbox shell with `devbox shell`. This will activate your virtual environment and install your requirements using the commands below.
 
    ```bash
-   source $VENV_DIR/bin/activate
+   . $VENV_DIR/bin/activate
    pip install -r requirements.txt
    ```
 
