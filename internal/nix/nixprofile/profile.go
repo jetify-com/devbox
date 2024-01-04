@@ -195,32 +195,6 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 }
 
 // TODO drop the Profile prefix from this name.
-type ProfileInstallPackageArgs struct {
-	CustomStepMessage string
-	Lockfile          *lock.File
-	Package           string
-	ProfilePath       string
-	Writer            io.Writer
-}
-
-// ProfileInstallPackage installs a Devbox package into a profile.
-// TODO drop the Profile prefix from this name.
-func ProfileInstallPackage(ctx context.Context, args *ProfileInstallPackageArgs) error {
-	pkg := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
-	installable, err := pkg.Installable()
-	if err != nil {
-		return err
-	}
-	return ProfileInstall(ctx, &ProfileInstallArgs{
-		CustomStepMessage: args.CustomStepMessage,
-		Installable:       installable,
-		PackageName:       args.Package,
-		ProfilePath:       args.ProfilePath,
-		Writer:            args.Writer,
-	})
-}
-
-// TODO drop the Profile prefix from this name.
 type ProfileInstallArgs struct {
 	CustomStepMessage string
 	Installable       string
@@ -230,6 +204,8 @@ type ProfileInstallArgs struct {
 	Writer            io.Writer
 }
 
+// ProfileInstall installs a package into a profile. Its a convenience wrapper around nix.ProfileInstall
+// that can print nicer output when installing multiple packages.
 // TODO drop the Profile prefix from this name.
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	stepMsg := args.PackageName
