@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -267,9 +268,9 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	}
 
 	// Validate packages. Must be run up-front and definitely prior to computeEnv
-	// and syncFlakeToProfile below that will evaluate the flake and may give
+	// and syncNixProfile below that will evaluate the flake and may give
 	// inscrutable errors if the package is uninstallable.
-	if err := d.validatePackages(); err != nil {
+	if err := d.validatePackagesToBeInstalled(ctx); err != nil {
 		return err
 	}
 
@@ -300,7 +301,13 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	}
 
 	// Ensure the nix profile has the packages from the flake.
-	if err := d.syncFlakeToProfile(ctx, env["buildInputs"]); err != nil {
+	buildInputs := []string{}
+	if env["buildInputs"] != "" {
+		// env["buildInputs"] can be empty string if there are no packages in the project
+		// if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
+		buildInputs = strings.Split(env["buildInputs"], " ")
+	}
+	if err := d.syncNixProfile(ctx, buildInputs); err != nil {
 		return err
 	}
 
@@ -388,11 +395,49 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 	return nil
 }
 
-// validatePackages will ensure that packages are available to be installed
+// validatePackagesToBeInstalled will ensure that packages are available to be installed
 // in the user's current system.
-func (d *Devbox) validatePackages() error {
-	for _, pkg := range d.InstallablePackages() {
+func (d *Devbox) validatePackagesToBeInstalled(ctx context.Context) error {
+	// First, fetch the profile items from the nix-profile,
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return err
+	}
+	profileItems, err := nixprofile.ProfileListItems(ctx, d.stderr, profileDir)
+	if err != nil {
+		return err
+	}
 
+	// Second, get and prepare all the packages that must be installed in this project
+	packages, err := d.AllInstallablePackages()
+	if err != nil {
+		return err
+	}
+	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return err
+	}
+
+	// Third, compute which packages need to be installed
+	packagesToInstall := []*devpkg.Package{}
+	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
+	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
+	for _, pkg := range packages {
+		found := false
+		for _, item := range profileItems {
+			if item.Matches(pkg, d.lockfile) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			packagesToInstall = append(packagesToInstall, pkg)
+		}
+	}
+
+	// Last, validate that packages that need to be installed are in fact installable
+	// on the user's current system.
+	for _, pkg := range packagesToInstall {
 		inCache, err := pkg.IsInBinaryCache()
 		if err != nil {
 			return err

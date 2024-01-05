@@ -9,19 +9,12 @@ import (
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 )
 
-// syncFlakeToProfile ensures the buildInputs from the flake's devShell are
-// installed in the nix profile.
-// buildInputs is a space-separated list of store paths from the nix print-dev-env output's buildInputs.
-func (d *Devbox) syncFlakeToProfile(ctx context.Context, buildInputs string) error {
+// syncNixProfile ensures the nix profile has the packages specified in wantStorePaths.
+// It also removes any packages from the nix profile that are not in wantStorePaths.
+func (d *Devbox) syncNixProfile(ctx context.Context, wantStorePaths []string) error {
 	profilePath, err := d.profilePath()
 	if err != nil {
 		return err
-	}
-
-	// Get the build inputs (i.e. store paths) from the generated flake's print-dev-env output
-	wantStorePaths := []string{}
-	if buildInputs != "" { // if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
-		wantStorePaths = strings.Split(buildInputs, " ")
 	}
 
 	// Get the store-paths of the packages currently installed in the nix profile
