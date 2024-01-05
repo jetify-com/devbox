@@ -35,11 +35,11 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 	})
 }
 
-// addDevboxUtilityPackages adds binaries that we want the user to have access
-// to (e.g. envsec).
+// addUtilitiesToEnv adds binaries that we want the user to have access
+// to (e.g. envsec) and associated env vars.
 // Question: Should we add utilityBinPath here? That would allow user to use
 // process-compose, etc
-func (d *Devbox) addUtilitiesToPath(
+func (d *Devbox) addUtilitiesToEnv(
 	ctx context.Context,
 	env map[string]string,
 ) error {

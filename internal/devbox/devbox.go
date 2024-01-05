@@ -883,7 +883,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		env["PATH"],
 	)
 
-	if err = d.addUtilitiesToPath(ctx, env); err != nil {
+	if err = d.addUtilitiesToEnv(ctx, env); err != nil {
 		return nil, err
 	}
 
