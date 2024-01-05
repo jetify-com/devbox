@@ -292,17 +292,15 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		return err
 	}
 
-	// Skip the print-dev-env's cache if we are in a devbox-environment. If not,
-	// skip the cache if we're either installing packages or ensuring
-	// the project state is up-to-date.
-	skipPrintDevEnvCache := true
-	// skipPrintDevEnvCache := d.IsEnvEnabled() || (mode == ensure || mode == install)
-	if _, err := d.computeEnv(ctx, !skipPrintDevEnvCache /*usePrintDevEnvCache*/); err != nil {
+	// Always re-compute print-dev-env to ensure all packages are installed, and
+	// the correct set of packages are reflected in the nix-profile below.
+	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
+	if err != nil {
 		return err
 	}
 
 	// Ensure the nix profile has the packages from the flake.
-	if err := d.syncFlakeToProfile(ctx); err != nil {
+	if err := d.syncFlakeToProfile(ctx, env["buildInputs"]); err != nil {
 		return err
 	}
 

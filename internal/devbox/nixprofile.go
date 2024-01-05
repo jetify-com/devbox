@@ -2,7 +2,6 @@ package devbox
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -12,25 +11,17 @@ import (
 
 // syncFlakeToProfile ensures the buildInputs from the flake's devShell are
 // installed in the nix profile.
-func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
+// buildInputs is a space-separated list of store paths from the nix print-dev-env output's buildInputs.
+func (d *Devbox) syncFlakeToProfile(ctx context.Context, buildInputs string) error {
 	profilePath, err := d.profilePath()
 	if err != nil {
 		return err
 	}
 
-	// Get the build inputs (i.e. store paths) from the generated flake's devShell.
-	buildInputPaths, err := nix.Eval(
-		ctx,
-		d.stderr,
-		d.flakeDir()+"#devShells."+nix.System()+".default.buildInputs",
-		"--json",
-	)
-	if err != nil {
-		return fmt.Errorf("nix eval devShells: %v", err)
-	}
-	storePaths := []string{}
-	if err := json.Unmarshal(buildInputPaths, &storePaths); err != nil {
-		return fmt.Errorf("unmarshal store paths: %s: %v", buildInputPaths, err)
+	// Get the build inputs (i.e. store paths) from the generated flake's print-dev-env output
+	wantStorePaths := []string{}
+	if buildInputs != "" { // if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
+		wantStorePaths = strings.Split(buildInputs, " ")
 	}
 
 	// Get the store-paths of the packages currently installed in the nix profile
@@ -38,13 +29,13 @@ func (d *Devbox) syncFlakeToProfile(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("nix profile list: %v", err)
 	}
-	got := make([]string, 0, len(items))
+	gotStorePaths := make([]string, 0, len(items))
 	for _, item := range items {
-		got = append(got, item.StorePaths()...)
+		gotStorePaths = append(gotStorePaths, item.StorePaths()...)
 	}
 
 	// Diff the store paths and install/remove packages as needed
-	add, remove := diffStorePaths(got, storePaths)
+	add, remove := diffStorePaths(gotStorePaths, wantStorePaths)
 	if len(remove) > 0 {
 		packagesToRemove := make([]string, 0, len(remove))
 		for _, p := range remove {
