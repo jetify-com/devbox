@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/integrations/envsec"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
@@ -40,16 +41,20 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error 
 // process-compose, etc
 func (d *Devbox) addUtilitiesToPath(
 	ctx context.Context,
-	path string,
-) (string, error) {
+	env map[string]string,
+) error {
 	if d.cfg.IsEnvsecEnabled() {
 		envsecPath, err := envsec.EnsureInstalled(ctx)
 		if err != nil {
-			return "", err
+			return err
 		}
-		path = path + string(os.PathListSeparator) + filepath.Dir(envsecPath)
+		env["PATH"] = env["PATH"] + string(os.PathListSeparator) + filepath.Dir(envsecPath)
+		if build.IsDev {
+			// Ensure that devbox and envsec build envs are the same
+			env["ENVSEC_BUILD_ENV"] = "dev"
+		}
 	}
-	return path, nil
+	return nil
 }
 
 func utilityLookPath(binName string) (string, error) {
