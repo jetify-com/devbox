@@ -87,6 +87,11 @@ func envsecList(
 		"--environment", environment,
 		"--json-errors")
 	cmd.Dir = projectDir
+	if build.IsDev {
+		// Ensure that devbox and envsec build envs are the same
+		cmd.Env = append(os.Environ(), "ENVSEC_BUILD_ENV=dev")
+	}
+
 	var bufErr bytes.Buffer
 	cmd.Stderr = &bufErr
 	out, err := cmd.Output()
