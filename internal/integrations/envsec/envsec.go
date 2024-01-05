@@ -49,7 +49,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 		return binPathCache, nil
 	}
 
-	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.14")
+	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.15")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install envsec")
 	}
@@ -87,6 +87,11 @@ func envsecList(
 		"--environment", environment,
 		"--json-errors")
 	cmd.Dir = projectDir
+	if build.IsDev {
+		// Ensure that devbox and envsec build envs are the same
+		cmd.Env = append(os.Environ(), "ENVSEC_BUILD_ENV=dev")
+	}
+
 	var bufErr bytes.Buffer
 	cmd.Stderr = &bufErr
 	out, err := cmd.Output()
