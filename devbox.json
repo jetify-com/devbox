@@ -29,6 +29,7 @@
       "fmt":             "scripts/gofumpt.sh",
       "test":            "go test -race -cover ./...",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go",
+      "tidy":            "go mod tidy",
     },
   },
 }
