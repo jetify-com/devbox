@@ -49,7 +49,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 		return binPathCache, nil
 	}
 
-	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.13")
+	paths, err := pkgtype.RunXClient().Install(ctx, "jetpack-io/envsec@v0.0.14")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install envsec")
 	}
@@ -64,7 +64,7 @@ func EnsureInstalled(ctx context.Context) (string, error) {
 
 func ensureInitialized(projectDir string) error {
 	envsec := DefaultEnvsec(os.Stderr, projectDir)
-	_, err := envsec.ProjectConfig(projectDir)
+	_, err := envsec.ProjectConfig()
 	if err != nil {
 		return errors.New(
 			"envsec project is not initialized. Use `devbox envsec init` to initialize",
