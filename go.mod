@@ -76,7 +76,7 @@ require (
 	github.com/bodgit/windows v1.0.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/charmbracelet/lipgloss v0.9.1 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/codeclysm/extract/v3 v3.1.1 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/coreos/go-oidc/v3 v3.7.0 // indirect
