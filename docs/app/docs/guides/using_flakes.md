@@ -65,6 +65,16 @@ For example, if you want to install the `hello` package from the `nixos-20.09` b
 github:NixOS/nixpkgs/nixos-20.09#hello
 ```
 
+## Installing Additional Outputs from a Flake
+
+Some packages provide additional outputs that are not installed by default. For example, the `libcap` package provides a `dev` output that contains development headers and libraries, or the `prometheus` package includes the `promtool` CLI in a `cli` output.
+
+You can install these additional outputs by adding a `^` and a comma-separated list of outputs to the end of your flake reference. For example, the following command will install the default (`out`) and `dev` outputs of the `libcap` package:
+
+```nix
+github:nixos/nixpkgs#libcap^out,dev
+```
+
 ## Using a Local Flake
 
 You can also use a local Flake using the `path` attribute in your package list. Using a local flake can be helpful if you want to install your custom packages with Nix, or if you need to modify packages before using them in your Devbox project
