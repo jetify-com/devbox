@@ -108,7 +108,8 @@ func writeInitHookFile(devbox devboxer, body string) (err error) {
 		"InitHookHash": "__DEVBOX_INIT_HOOK_" + devbox.ProjectDirHash(),
 		// TODO put IsFish() in common place so we can call here and in devbox package
 		// without adding more stuff to interface
-		"IsFish": filepath.Base(os.Getenv("SHELL")) == "fish",
+		"IsFish": filepath.Base(os.Getenv("SHELL")) == "fish" ||
+			os.Getenv("FISH_VERSION") != "",
 	})
 }
 
