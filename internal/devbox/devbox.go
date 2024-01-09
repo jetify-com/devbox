@@ -481,12 +481,6 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 				"Remove it or use --force to overwrite it.",
 		)
 	}
-	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if err := nix.EnsureNixInstalled(
-		d.stderr, func() *bool { return lo.ToPtr(false) },
-	); err != nil {
-		return err
-	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script
 	if err := d.ensureStateIsUpToDate(ctx, ensure); err != nil {
