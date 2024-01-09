@@ -1,0 +1,15 @@
+
+{{/* if hash is set, we're in recursive loop, just exit */ -}}
+if [ -n "${{ .InitHookHash }}" ]; then
+    return
+fi
+
+export {{ .InitHookHash }}=true
+
+{{ .Body }}
+
+{{ if .IsFish }}
+    set -e {{ .InitHookHash }}
+{{ else }}
+    unset {{ .InitHookHash }}
+{{ end }}

@@ -76,5 +76,5 @@ func (d *Devbox) IsEnvEnabled() bool {
 	fakeEnv := map[string]string{}
 	// the Stack is initialized in the fakeEnv, from the state in the real os.Environ
 	pathStack := envpath.Stack(fakeEnv, envir.PairsToMap(os.Environ()))
-	return pathStack.Has(d.projectDirHash())
+	return pathStack.Has(d.ProjectDirHash())
 }

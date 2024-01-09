@@ -15,7 +15,7 @@ func (d *Devbox) isRefreshAliasSet() bool {
 }
 
 func (d *Devbox) refreshAliasEnvVar() string {
-	return "DEVBOX_REFRESH_ALIAS_" + d.projectDirHash()
+	return "DEVBOX_REFRESH_ALIAS_" + d.ProjectDirHash()
 }
 
 func (d *Devbox) isGlobal() bool {

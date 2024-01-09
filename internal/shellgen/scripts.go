@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
+
+	_ "embed"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -14,6 +17,9 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/plugin"
 )
+
+//go:embed tmpl/init-hook.tmpl
+var initHookTmpl string
 
 const scriptsDir = ".devbox/gen/scripts"
 
@@ -27,6 +33,7 @@ type devboxer interface {
 	InstallablePackages() []*devpkg.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
+	ProjectDirHash() string
 }
 
 // WriteScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -55,7 +62,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	}
 	hooks := strings.Join(append(pluginHooks, devbox.Config().InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
-	err = writeHookFile(devbox, hooks)
+	err = writeInitHookFile(devbox, hooks)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -84,15 +91,25 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
-func writeHookFile(devbox devboxer, body string) (err error) {
+func writeInitHookFile(devbox devboxer, body string) (err error) {
 	script, err := createScriptFile(devbox, HooksFilename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	defer script.Close() // best effort: close file
 
-	_, err = script.WriteString(body)
-	return errors.WithStack(err)
+	t, err := template.New("init-hook-template").Parse(initHookTmpl)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return t.Execute(script, map[string]any{
+		"Body":         body,
+		"InitHookHash": "__DEVBOX_INIT_HOOK_" + devbox.ProjectDirHash(),
+		// TODO put IsFish() in common place so we can call here and in devbox package
+		// without adding more stuff to interface
+		"IsFish": filepath.Base(os.Getenv("SHELL")) == "fish",
+	})
 }
 
 func WriteScriptFile(devbox devboxer, name, body string) (err error) {
