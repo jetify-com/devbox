@@ -88,7 +88,7 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	t.Setenv("PATH", path)
 	t.Setenv(envpath.InitPathEnv, env[envpath.InitPathEnv])
 	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
-	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
+	t.Setenv(envpath.Key(devbox.ProjectDirHash()), env[envpath.Key(devbox.ProjectDirHash())])
 
 	env, err = devbox.computeEnv(ctx, false /*use cache*/)
 	require.NoError(t, err, "computeEnv should not fail")
@@ -110,7 +110,7 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	t.Setenv("PATH", path)
 	t.Setenv(envpath.InitPathEnv, env[envpath.InitPathEnv])
 	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
-	t.Setenv(envpath.Key(devbox.projectDirHash()), env[envpath.Key(devbox.projectDirHash())])
+	t.Setenv(envpath.Key(devbox.ProjectDirHash()), env[envpath.Key(devbox.ProjectDirHash())])
 
 	devbox.nix.(*testNix).path = ""
 	env, err = devbox.computeEnv(ctx, false /*use cache*/)
