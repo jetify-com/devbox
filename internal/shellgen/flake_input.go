@@ -50,9 +50,48 @@ func (f *flakeInput) PkgImportName() string {
 	return f.Name + "-pkgs"
 }
 
+type SymlinkJoin struct {
+	Name  string
+	Paths []string
+}
+
+// BuildInputsForSymlinkJoin returns a list of SymlinkJoin objects that can be used
+// as the buildInput. Used for packages that have non-default outputs that needs to
+// be combined into a single buildInput.
+func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
+	joins := []*SymlinkJoin{}
+	for _, pkg := range f.Packages {
+		// skip packages that have no non-default outputs
+		if len(pkg.Outputs) == 0 {
+			continue
+		}
+
+		attributePath, err := pkg.FullPackageAttributePath()
+		if err != nil {
+			return nil, err
+		}
+		joins = append(joins, &SymlinkJoin{
+			Name: pkg.String() + "-combined",
+			Paths: lo.Map(pkg.Outputs, func(output string, _ int) string {
+				// TODO: handle !f.IsNixpkgs() case
+				parts := strings.Split(attributePath, ".")
+				return f.PkgImportName() + "." + strings.Join(parts[2:], ".") + "." + output
+			}),
+		})
+	}
+	return joins, nil
+}
+
 func (f *flakeInput) BuildInputs() ([]string, error) {
 	var err error
-	attributePaths := lo.Map(f.Packages, func(pkg *devpkg.Package, _ int) string {
+
+	// Filter out packages that have non-default outputs
+	// These are handled in BuildInputsForSymlinkJoin
+	packages := lo.Filter(f.Packages, func(pkg *devpkg.Package, _ int) bool {
+		return len(pkg.Outputs) == 0
+	})
+
+	attributePaths := lo.Map(packages, func(pkg *devpkg.Package, _ int) string {
 		attributePath, attributePathErr := pkg.FullPackageAttributePath()
 		if attributePathErr != nil {
 			err = attributePathErr
