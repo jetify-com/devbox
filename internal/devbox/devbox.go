@@ -338,7 +338,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 
 func (d *Devbox) shellEnvHashKey() string {
 	// Don't make this a const so we don't use it by itself accidentally
-	return "__DEVBOX_SHELLENV_HASH_" + d.projectDirHash()
+	return "__DEVBOX_SHELLENV_HASH_" + d.ProjectDirHash()
 }
 
 func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, error) {
@@ -949,7 +949,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
-	pathStack.Push(env, d.projectDirHash(), devboxEnvPath, d.preservePathStack)
+	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
 	debug.Log("New path stack is: %s", pathStack)
 
@@ -1170,7 +1170,7 @@ func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
 	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
-func (d *Devbox) projectDirHash() string {
+func (d *Devbox) ProjectDirHash() string {
 	h, _ := cachehash.Bytes([]byte(d.projectDir))
 	return h
 }
