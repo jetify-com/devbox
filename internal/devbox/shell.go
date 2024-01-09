@@ -402,5 +402,6 @@ func filterPathList(pathList string, keep func(string) bool) string {
 }
 
 func isFishShell() bool {
-	return filepath.Base(os.Getenv("SHELL")) == "fish"
+	return filepath.Base(os.Getenv("SHELL")) == "fish" ||
+		os.Getenv("FISH_VERSION") != ""
 }
