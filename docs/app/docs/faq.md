@@ -33,7 +33,7 @@ Yes! Devbox can be installed on any Linux distribution, including NixOS. You can
 
 In order to save space, Devbox and Nix only install the required components of packages by default. Development header files and libraries are often installed in a separate output of the package (usually `dev`), which can be installed using [Flake References](./guides/using_flakes.md).
 
-You can learn more about non-default outputs [here](./guides/using_flakes.md#installing-additional-outputs-from-a-flake)
+You can learn more about non-default outputs [here](./guides/using_flakes.md#installing-additional-outputs-from-a-flake).
 
 ## How can I use custom Nix packages or overrides with Devbox?
 
