@@ -142,6 +142,9 @@ const sidebars = {
                 dirName: 'devbox_examples/stacks'
             }]
         }]
+    }, {
+        type: 'doc',
+        id: 'faq'
     }],
 };
 
