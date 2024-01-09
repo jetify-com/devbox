@@ -196,32 +196,15 @@ func (c *configAST) appendPlatforms(name, fieldName string, platforms []string) 
 		return
 	}
 
-	pkgObject := c.FindPkgObject(name)
-	if pkgObject == nil {
+	c.appendStringSliceField(name, fieldName, platforms)
+}
+
+func (c *configAST) appendOutputs(name, fieldName string, outputs []string) {
+	if len(outputs) == 0 {
 		return
 	}
 
-	var arr *hujson.Array
-	if i := c.memberIndex(pkgObject, fieldName); i == -1 {
-		arr = &hujson.Array{
-			Elements: make([]hujson.Value, 0, len(platforms)),
-		}
-		pkgObject.Members = append(pkgObject.Members, hujson.ObjectMember{
-			Name: hujson.Value{
-				Value:       hujson.String(fieldName),
-				BeforeExtra: []byte{'\n'},
-			},
-			Value: hujson.Value{Value: arr},
-		})
-	} else {
-		arr = pkgObject.Members[i].Value.Value.(*hujson.Array)
-		arr.Elements = slices.Grow(arr.Elements, len(platforms))
-	}
-
-	for _, p := range platforms {
-		arr.Elements = append(arr.Elements, hujson.Value{Value: hujson.String(p)})
-	}
-	c.root.Format()
+	c.appendStringSliceField(name, fieldName, outputs)
 }
 
 func (c *configAST) FindPkgObject(name string) *hujson.Object {
@@ -306,4 +289,33 @@ func joinNameVersion(name, version string) string {
 		return name
 	}
 	return name + "@" + version
+}
+
+func (c *configAST) appendStringSliceField(name, fieldName string, fieldValues []string) {
+	pkgObject := c.FindPkgObject(name)
+	if pkgObject == nil {
+		return
+	}
+
+	var arr *hujson.Array
+	if i := c.memberIndex(pkgObject, fieldName); i == -1 {
+		arr = &hujson.Array{
+			Elements: make([]hujson.Value, 0, len(fieldValues)),
+		}
+		pkgObject.Members = append(pkgObject.Members, hujson.ObjectMember{
+			Name: hujson.Value{
+				Value:       hujson.String(fieldName),
+				BeforeExtra: []byte{'\n'},
+			},
+			Value: hujson.Value{Value: arr},
+		})
+	} else {
+		arr = pkgObject.Members[i].Value.Value.(*hujson.Array)
+		arr.Elements = slices.Grow(arr.Elements, len(fieldValues))
+	}
+
+	for _, p := range fieldValues {
+		arr.Elements = append(arr.Elements, hujson.Value{Value: hujson.String(p)})
+	}
+	c.root.Format()
 }

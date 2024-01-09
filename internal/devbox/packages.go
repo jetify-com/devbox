@@ -128,9 +128,12 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-
 		if err := d.cfg.Packages.SetPatchGLibc(
 			pkg, opts.PatchGlibc); err != nil {
+			return err
+		}
+		if err := d.cfg.Packages.SetOutputs(
+			d.stderr, pkg, opts.Outputs); err != nil {
 			return err
 		}
 	}
@@ -175,7 +178,7 @@ func (d *Devbox) printPostAddMessage(
 		}
 	}
 
-	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && !opts.AllowInsecure {
+	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && len(opts.Outputs) == 0 && !opts.AllowInsecure {
 		if len(unchangedPackageNames) == 1 {
 			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {

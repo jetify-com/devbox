@@ -591,6 +591,68 @@ func TestExcludePlatforms(t *testing.T) {
 	}
 }
 
+func TestSetOutputs(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "prometheus": {
+      "version": "latest"
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "prometheus": {
+      "version": "latest",
+      "outputs": ["cli"]
+    }
+  }
+}`)
+
+	err := in.Packages.SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
+	if err != nil {
+		t.Error(err)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
+func TestSetOutputsMigrateArray(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": ["go", "python@3.10", "prometheus@latest"]
+}
+-- want --
+{
+  "packages": {
+    "go":     "",
+    "python": "3.10",
+    "prometheus": {
+      "version": "latest",
+      "outputs": ["cli"]
+    }
+  }
+}`)
+
+	err := in.Packages.SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
+	if err != nil {
+		t.Error(err)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	in := DefaultConfig()
