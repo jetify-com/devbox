@@ -126,8 +126,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184 h1:8yL+85JpbwrIc6m+7N1iYrjn/22z68jwrTIBOJHNe4k=
 github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184/go.mod h1:tGWUZLZp9ajsxUOnHmFFLnqnlKXsCn6GReG4jAD59H0=
 github.com/cloudflare/circl v1.1.0/go.mod h1:prBCrKB9DV4poKZY1l9zBXg2QJY7mvgRvtMxxK7fi4I=
-github.com/cloudflare/circl v1.3.3 h1:fE/Qz0QdIGqeWfnwq0RE0R7MI51s0M2E4Ga9kq5AEMs=
-github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
+github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vcU=
+github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
 github.com/codeclysm/extract/v3 v3.1.1 h1:iHZtdEAwSTqPrd+1n4jfhr1qBhUWtHlMTjT90+fJVXg=
 github.com/codeclysm/extract/v3 v3.1.1/go.mod h1:ZJi80UG2JtfHqJI+lgJSCACttZi++dHxfWuPaMhlOfQ=
 github.com/connesc/cipherio v0.2.1 h1:FGtpTPMbKNNWByNrr9aEBtaJtXjqOzkIXNYJp6OEycw=
@@ -378,10 +378,10 @@ github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036/go.mod h1:gqRgreBU
 github.com/zaffka/mongodb-boltdb-mock v0.0.0-20221014194232-b4bb03fbe3a0/go.mod h1:GsDD1qsG+86MeeCG7ndi6Ei3iGthKL3wQ7PTFigDfNY=
 github.com/zealic/go2node v0.1.0 h1:ofxpve08cmLJBwFdI0lPCk9jfwGWOSD+s6216x0oAaA=
 github.com/zealic/go2node v0.1.0/go.mod h1:GrkFr+HctXwP7vzcU9RsgtAeJjTQ6Ud0IPCQAqpTfBg=
-go.jetpack.io/envsec v0.0.14 h1:lUrCQzqqxPxvju1vJzk4XVX7ZEkvJC39CGDOMD7R+U0=
-go.jetpack.io/envsec v0.0.14/go.mod h1:1/39qYH1kaYUEFCt0E6ZdbKZCCbipzdbl/N9MTNvS+0=
-go.jetpack.io/pkg v0.0.0-20240105000320-7495266e9298 h1:gVrmcVJ2MPKrjnZHJ/Zx4jFpebhze1+EHxSBgMy9JnU=
-go.jetpack.io/pkg v0.0.0-20240105000320-7495266e9298/go.mod h1:3bunF5jJUIXf8vWXvu4PHWfHuDj3hgzOyhTXeoBH8Dk=
+go.jetpack.io/envsec v0.0.16-0.20240109233012-3e97a7fe973f h1:ELgyeQw+eZn0BSSlhLnBkC7wTrYbluTsYx6vPa0YTds=
+go.jetpack.io/envsec v0.0.16-0.20240109233012-3e97a7fe973f/go.mod h1:8U0fUaXMaoNRqz8J7VaV8kP7N7hayJ9tqOd9OS0epEQ=
+go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15 h1:ztX3CydpNKLePPMRmWgdi4HcxE/AXY6HViOJOmmYNiA=
+go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15/go.mod h1:kGUL8aZ7ddvoGro0AQxXos9GKn5Qw0J18qW7d5FP4Ws=
 go.jetpack.io/typeid v1.0.0 h1:8gQ+iYGdyiQ0Pr40ydSB/PzMOIwlXX5DTojp1CBeSPQ=
 go.jetpack.io/typeid v1.0.0/go.mod h1:+UPEaECUgFxgAjFPn5Yf9eO/3ft/3xZ98Eahv9JW/GQ=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

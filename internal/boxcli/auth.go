@@ -10,7 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/integrations/envsec"
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
 )
@@ -84,8 +85,15 @@ func whoAmICmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return envsec.DefaultEnvsec(cmd.ErrOrStderr(), wd).
-				WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
+			box, err := devbox.Open(&devopt.Opts{Dir: wd, Stderr: cmd.ErrOrStderr()})
+			if err != nil {
+				return err
+			}
+			secrets, err := box.Secrets(cmd.Context())
+			if err != nil {
+				return err
+			}
+			return secrets.WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
 		},
 	}
 

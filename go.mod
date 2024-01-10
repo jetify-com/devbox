@@ -39,8 +39,8 @@ require (
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	go.jetpack.io/envsec v0.0.14
-	go.jetpack.io/pkg v0.0.0-20240105000320-7495266e9298
+	go.jetpack.io/envsec v0.0.16-0.20240109233012-3e97a7fe973f
+	go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 	golang.org/x/mod v0.14.0
 	golang.org/x/sync v0.5.0
@@ -76,7 +76,7 @@ require (
 	github.com/bodgit/windows v1.0.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/charmbracelet/lipgloss v0.9.1 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/codeclysm/extract/v3 v3.1.1 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/coreos/go-oidc/v3 v3.7.0 // indirect
