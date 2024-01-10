@@ -55,7 +55,6 @@ func (f *File) Add(pkgs ...string) error {
 			return err
 		}
 	}
-	fmt.Printf("calling lockfile.Add with pkgs: %v\n", pkgs)
 	return f.Save()
 }
 

@@ -249,7 +249,7 @@ const (
 // 1. Skipping certain operations that may not apply.
 // 2. User messaging to explain what operations are happening, because this function may take time to execute.
 //
-// nolint:revive to turn off linter complaining about function complexity
+// linter:revive is turned off due to complaining about function complexity
 func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) error { //nolint:revive
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
@@ -259,10 +259,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		// then we skip some operations below for speed.
 		// Remove the local.lock file so that we re-compute the project state when
 		// we are in the devbox environment again.
-		fmt.Printf("mode is not ensure and env is not enabled, so will remove local.lock on exit\n")
-
 		defer func() { _ = d.lockfile.RemoveLocal() }()
-		// return nil
 	}
 
 	// if mode is install or uninstall, then we need to update the nix-profile
@@ -275,12 +272,10 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	if mode == ensure {
 		// if mode is ensure and we are up to date, then we can skip the rest
 		if upToDate {
-			fmt.Printf("state is up to date. Returning early\n")
 			return nil
 		}
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
-	fmt.Printf("state is not up to date. Continuing...\n")
 
 	// Validate packages. Must be run up-front and definitely prior to computeEnv
 	// and syncNixProfile below that will evaluate the flake and may give
@@ -299,9 +294,6 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	if err := d.InstallRunXPackages(ctx); err != nil {
 		return err
 	}
-
-	fmt.Printf("mode is %s\n", mode)
-	fmt.Printf("env is enabled: %v\n", d.IsEnvEnabled())
 
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
@@ -341,7 +333,6 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		}
 	}
 
-	fmt.Printf("calling lockfile.tidy\n")
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
@@ -428,14 +419,16 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 
 // installNixPackagesToStore will install all the packages in the nix store, if
 // mode is install or update, and we're not in a devbox environment.
-// This is done by running `nix build` on the flake
+// This is done by running `nix build` on the flake. We do this so that the
+// packages will be available in the nix store when computing the devbox environment
+// and installing in the nix profile (even if offline).
 func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
-	packages, err := d.AllInstallablePackages()
+	packages, err := d.packagesToInstallInProfile(ctx)
 	if err != nil {
 		return err
 	}
-	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
 
+	names := []string{}
 	installables := []string{}
 	for _, pkg := range packages {
 		i, err := pkg.Installable()
@@ -443,11 +436,14 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 			return err
 		}
 		installables = append(installables, i)
+		names = append(names, pkg.String())
 	}
 
 	if len(installables) == 0 {
 		return nil
 	}
+
+	ux.Finfo(d.stderr, "Installing to the nix store: %s. This may take a brief while.\n", strings.Join(names, " "))
 
 	// --no-link to avoid generating the result objects
 	return nix.Build(ctx, []string{"--no-link"}, installables...)
@@ -456,44 +452,13 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 // validatePackagesToBeInstalled will ensure that packages are available to be installed
 // in the user's current system.
 func (d *Devbox) validatePackagesToBeInstalled(ctx context.Context) error {
-	// First, fetch the profile items from the nix-profile,
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-	profileItems, err := nixprofile.ProfileListItems(ctx, d.stderr, profileDir)
+	// First, get the packages to install
+	packagesToInstall, err := d.packagesToInstallInProfile(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Second, get and prepare all the packages that must be installed in this project
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return err
-	}
-	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return err
-	}
-
-	// Third, compute which packages need to be installed
-	packagesToInstall := []*devpkg.Package{}
-	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
-	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-	for _, pkg := range packages {
-		found := false
-		for _, item := range profileItems {
-			if item.Matches(pkg, d.lockfile) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			packagesToInstall = append(packagesToInstall, pkg)
-		}
-	}
-
-	// Last, validate that packages that need to be installed are in fact installable
+	// Then, validate that packages that need to be installed are in fact installable
 	// on the user's current system.
 	for _, pkg := range packagesToInstall {
 		inCache, err := pkg.IsInBinaryCache()
@@ -523,4 +488,44 @@ func (d *Devbox) validatePackagesToBeInstalled(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Package, error) {
+	// First, fetch the profile items from the nix-profile,
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return nil, err
+	}
+	profileItems, err := nixprofile.ProfileListItems(ctx, d.stderr, profileDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// Second, get and prepare all the packages that must be installed in this project
+	packages, err := d.AllInstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return nil, err
+	}
+
+	// Third, compute which packages need to be installed
+	packagesToInstall := []*devpkg.Package{}
+	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
+	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
+	for _, pkg := range packages {
+		found := false
+		for _, item := range profileItems {
+			if item.Matches(pkg, d.lockfile) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			packagesToInstall = append(packagesToInstall, pkg)
+		}
+	}
+	return packagesToInstall, nil
 }

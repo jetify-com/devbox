@@ -5,7 +5,6 @@ package lock
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -51,8 +50,6 @@ func isLocalUpToDate(project devboxProject) (bool, error) {
 }
 
 func updateLocal(project devboxProject) error {
-	fmt.Printf("updating local.lock\n")
-	// debug.PrintStack()
 	l, err := readLocal(project)
 	if err != nil {
 		return err

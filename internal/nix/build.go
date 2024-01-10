@@ -2,10 +2,10 @@ package nix
 
 import (
 	"context"
-	"fmt"
 	"os/exec"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/debug"
 )
 
 func Build(ctx context.Context, flags []string, installables ...string) error {
@@ -15,15 +15,15 @@ func Build(ctx context.Context, flags []string, installables ...string) error {
 	cmd.Args = append(cmd.Args, installables...)
 	// We need to allow Unfree packages to be installed. We choose to not also add os.Environ() to the environment
 	// to keep the command as pure as possible, even though we must pass --impure to nix build.
-	cmd.Env = allowUnfreeEnv([]string{}) // allowUnfreeEnv(os.Environ())
+	cmd.Env = allowUnfreeEnv([]string{})
 
-	out, err := cmd.Output()
+	debug.Log("Running cmd: %s\n", cmd)
+	_, err := cmd.Output()
 	if err != nil {
 		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-			fmt.Printf("Exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
+			debug.Log("Nix build exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
 		}
 		return err
 	}
-	fmt.Printf("Ran nix build, output: %s\n", out)
 	return nil
 }
