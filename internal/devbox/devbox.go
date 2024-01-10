@@ -124,6 +124,11 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 
 	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
+		// HasDeprecatedPackages required nix to be installed. Since not all
+		// commands require nix to be installed, only show this warning for commands
+		// that ensure nix.
+		// This warning can probably be removed soon.
+		nix.Ensured() &&
 		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true
 		globalPath, err := GlobalDataPath()
@@ -480,12 +485,6 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 			"A .envrc is already present in the current directory. " +
 				"Remove it or use --force to overwrite it.",
 		)
-	}
-	// confirm .envrc doesn't exist and don't overwrite an existing .envrc
-	if err := nix.EnsureNixInstalled(
-		d.stderr, func() *bool { return lo.ToPtr(false) },
-	); err != nil {
-		return err
 	}
 
 	// generate all shell files to ensure we can refer to them in the .envrc script

@@ -18,8 +18,9 @@ type envsecInitCmdFlags struct {
 
 func envsecCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "envsec",
-		Short: "envsec commands",
+		Use:     "envsec",
+		Short:   "envsec commands",
+		PreRunE: ensureNixInstalled,
 	}
 	cmd.AddCommand(envsecInitCmd())
 	cmd.Hidden = true
