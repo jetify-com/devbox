@@ -99,7 +99,14 @@ func isRoot() bool {
 	return os.Geteuid() == 0
 }
 
+var ensured = false
+
+func Ensured() bool {
+	return ensured
+}
+
 func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err error) {
+	ensured = true
 	defer func() {
 		if err != nil {
 			return

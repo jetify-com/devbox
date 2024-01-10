@@ -124,6 +124,11 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 
 	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&
+		// HasDeprecatedPackages required nix to be installed. Since not all
+		// commands require nix to be installed, only show this warning for commands
+		// that ensure nix.
+		// This warning can probably be removed soon.
+		nix.Ensured() &&
 		box.HasDeprecatedPackages() {
 		legacyPackagesWarningHasBeenShown = true
 		globalPath, err := GlobalDataPath()
