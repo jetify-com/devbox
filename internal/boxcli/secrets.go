@@ -33,10 +33,11 @@ func secretsCmd() *cobra.Command {
 	}
 	cmd.AddCommand(secretsInitCmd(flags))
 	cmd.AddCommand(secretsListCmd(flags))
+	cmd.AddCommand(secretsRemoveCmd(flags))
 	cmd.AddCommand(secretsSetCmd(flags))
 	cmd.Hidden = true
 
-	flags.config.register(cmd)
+	flags.config.registerPersistent(cmd)
 
 	return cmd
 }
@@ -75,8 +76,9 @@ func secretsSetCmd(flags *secretsFlags) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			box, err := devbox.Open(&devopt.Opts{
-				Dir:    flags.config.path,
-				Stderr: cmd.ErrOrStderr(),
+				Dir:         flags.config.path,
+				Environment: flags.config.environment,
+				Stderr:      cmd.ErrOrStderr(),
 			})
 			if err != nil {
 				return errors.WithStack(err)
@@ -97,6 +99,38 @@ func secretsSetCmd(flags *secretsFlags) *cobra.Command {
 	}
 }
 
+func secretsRemoveCmd(flags *secretsFlags) *cobra.Command {
+	return &cobra.Command{
+		Use:     "remove <NAME1> [<NAME2>]...",
+		Short:   "Remove one or more environment variables",
+		Aliases: []string{"rm"},
+		Args:    cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			box, err := devbox.Open(&devopt.Opts{
+				Dir:         flags.config.path,
+				Environment: flags.config.environment,
+				Stderr:      cmd.ErrOrStderr(),
+			})
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			secrets, err := box.Secrets(ctx)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			envID, err := secrets.EnvID()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			return secrets.DeleteAll(ctx, envID, args...)
+		},
+	}
+}
+
 func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 	flags := secretsListFlags{}
 	cmd := &cobra.Command{
@@ -107,8 +141,9 @@ func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			box, err := devbox.Open(&devopt.Opts{
-				Dir:    commonFlags.config.path,
-				Stderr: cmd.ErrOrStderr(),
+				Dir:         commonFlags.config.path,
+				Environment: commonFlags.config.environment,
+				Stderr:      cmd.ErrOrStderr(),
 			})
 			if err != nil {
 				return errors.WithStack(err)

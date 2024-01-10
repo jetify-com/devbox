@@ -1298,5 +1298,8 @@ func validateEnvironment(environment string) (string, error) {
 	if environment == "dev" || environment == "prod" || environment == "preview" {
 		return environment, nil
 	}
-	return "", usererr.New("invalid environment %q", environment)
+	return "", usererr.New(
+		"invalid environment %q. Environment must be one of dev, prod, or preview.",
+		environment,
+	)
 }
