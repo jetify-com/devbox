@@ -5,7 +5,9 @@ package lock
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 
 	"go.jetpack.io/devbox/internal/build"
@@ -49,6 +51,8 @@ func isLocalUpToDate(project devboxProject) (bool, error) {
 }
 
 func updateLocal(project devboxProject) error {
+	fmt.Printf("updating local.lock\n")
+	// debug.PrintStack()
 	l, err := readLocal(project)
 	if err != nil {
 		return err
@@ -72,6 +76,11 @@ func readLocal(project devboxProject) (*localLockFile, error) {
 		return nil, err
 	}
 	return lockFile, nil
+}
+
+func removeLocal(project devboxProject) error {
+	// RemoveAll to avoid error in case file does not exist.
+	return os.RemoveAll(localLockFilePath(project))
 }
 
 func forProject(project devboxProject) (*localLockFile, error) {

@@ -55,6 +55,7 @@ func (f *File) Add(pkgs ...string) error {
 			return err
 		}
 	}
+	fmt.Printf("calling lockfile.Add with pkgs: %v\n", pkgs)
 	return f.Save()
 }
 
@@ -174,6 +175,11 @@ func (f *File) isDirty() (bool, error) {
 		return false, err
 	}
 	return currentHash != filesystemHash, nil
+}
+
+// RemoveLocal removes the local.lock file
+func (f *File) RemoveLocal() error {
+	return removeLocal(f.devboxProject)
 }
 
 func lockFilePath(project devboxProject) string {

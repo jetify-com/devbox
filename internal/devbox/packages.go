@@ -248,9 +248,22 @@ const (
 // The `mode` is used for:
 // 1. Skipping certain operations that may not apply.
 // 2. User messaging to explain what operations are happening, because this function may take time to execute.
-func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) error {
+//
+// nolint:revive to turn off linter complaining about function complexity
+func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) error { //nolint:revive
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
+
+	if mode != ensure && !d.IsEnvEnabled() {
+		// if mode is install/uninstall/update and we are not in a devbox environment,
+		// then we skip some operations below for speed.
+		// Remove the local.lock file so that we re-compute the project state when
+		// we are in the devbox environment again.
+		fmt.Printf("mode is not ensure and env is not enabled, so will remove local.lock on exit\n")
+
+		defer func() { _ = d.lockfile.RemoveLocal() }()
+		// return nil
+	}
 
 	// if mode is install or uninstall, then we need to update the nix-profile
 	// and lockfile, so we must continue below.
@@ -262,10 +275,12 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	if mode == ensure {
 		// if mode is ensure and we are up to date, then we can skip the rest
 		if upToDate {
+			fmt.Printf("state is up to date. Returning early\n")
 			return nil
 		}
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
+	fmt.Printf("state is not up to date. Continuing...\n")
 
 	// Validate packages. Must be run up-front and definitely prior to computeEnv
 	// and syncNixProfile below that will evaluate the flake and may give
@@ -285,6 +300,9 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		return err
 	}
 
+	fmt.Printf("mode is %s\n", mode)
+	fmt.Printf("env is enabled: %v\n", d.IsEnvEnabled())
+
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
@@ -293,24 +311,37 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		return err
 	}
 
-	// Always re-compute print-dev-env to ensure all packages are installed, and
-	// the correct set of packages are reflected in the nix-profile below.
-	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
-	if err != nil {
-		return err
+	// The steps contained in this if-block of computeEnv and syncNixProfile are a tad
+	// slow. So, we only do it if we are in a devbox environment, or if mode is ensure.
+	if mode == ensure || d.IsEnvEnabled() {
+		// Re-compute print-dev-env to ensure all packages are installed, and
+		// the correct set of packages are reflected in the nix-profile below.
+		env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
+		if err != nil {
+			return err
+		}
+
+		// Ensure the nix profile has the packages from the flake.
+		buildInputs := []string{}
+		if env["buildInputs"] != "" {
+			// env["buildInputs"] can be empty string if there are no packages in the project
+			// if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
+			buildInputs = strings.Split(env["buildInputs"], " ")
+		}
+		if err := d.syncNixProfile(ctx, buildInputs); err != nil {
+			return err
+		}
+
+	} else if mode == install || mode == update {
+		// Else: if we are not in a devbox environment, and we are installing or updating
+		// then we must ensure the new nix packages are in the nix store. This way, the
+		// next time we enter a devbox environment, we will have the packages available locally.
+		if err := d.installNixPackagesToStore(ctx); err != nil {
+			return err
+		}
 	}
 
-	// Ensure the nix profile has the packages from the flake.
-	buildInputs := []string{}
-	if env["buildInputs"] != "" {
-		// env["buildInputs"] can be empty string if there are no packages in the project
-		// if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
-		buildInputs = strings.Split(env["buildInputs"], " ")
-	}
-	if err := d.syncNixProfile(ctx, buildInputs); err != nil {
-		return err
-	}
-
+	fmt.Printf("calling lockfile.tidy\n")
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
@@ -393,6 +424,33 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// installNixPackagesToStore will install all the packages in the nix store, if
+// mode is install or update, and we're not in a devbox environment.
+// This is done by running `nix build` on the flake
+func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
+	packages, err := d.AllInstallablePackages()
+	if err != nil {
+		return err
+	}
+	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
+
+	installables := []string{}
+	for _, pkg := range packages {
+		i, err := pkg.Installable()
+		if err != nil {
+			return err
+		}
+		installables = append(installables, i)
+	}
+
+	if len(installables) == 0 {
+		return nil
+	}
+
+	// --no-link to avoid generating the result objects
+	return nix.Build(ctx, []string{"--no-link"}, installables...)
 }
 
 // validatePackagesToBeInstalled will ensure that packages are available to be installed
