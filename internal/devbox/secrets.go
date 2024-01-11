@@ -32,7 +32,7 @@ func (d *Devbox) Secrets(ctx context.Context) (*secrets, error) {
 	}
 	return &secrets{
 		Envsec:  envsecInstance,
-		EnvName: d.Environment(),
+		EnvName: d.environment,
 	}, nil
 }
 

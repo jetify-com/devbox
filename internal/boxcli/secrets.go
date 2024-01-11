@@ -29,7 +29,7 @@ func secretsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "secrets",
 		Aliases:           []string{"envsec"},
-		Short:             "Interact with devbox secrets.",
+		Short:             "Interact with devbox secrets in jetpack cloud.",
 		PersistentPreRunE: ensureNixInstalled,
 	}
 	cmd.AddCommand(secretsInitCmd(flags))
@@ -175,14 +175,14 @@ func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 		"show",
 		"s",
 		false,
-		"Display the value of each environment variable (secrets included)",
+		"Display secret values in plaintext",
 	)
 	cmd.Flags().StringVarP(
 		&flags.format,
 		"format",
 		"f",
 		"table",
-		"Display the key values in key=value format. Must be one of: table | dotenv | json",
+		"Display the key values of each secret in the specified format, one of: table | dotenv | json.",
 	)
 	return cmd
 }

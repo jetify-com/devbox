@@ -1128,7 +1128,8 @@ func (d *Devbox) configEnvs(
 			}
 		}
 	} else if d.cfg.EnvFrom != "" {
-		return nil, usererr.New("unknown from_env value: %s", d.cfg.EnvFrom)
+		return nil, usererr.New(
+			"unknown from_env value: %s. Supported value is: envsec.", d.cfg.EnvFrom)
 	}
 	for k, v := range d.cfg.Env {
 		env[k] = v
@@ -1284,10 +1285,6 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 		}
 	}
 	return runxBinPath, nil
-}
-
-func (d *Devbox) Environment() string {
-	return d.environment
 }
 
 func validateEnvironment(environment string) (string, error) {

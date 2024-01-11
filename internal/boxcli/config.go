@@ -18,7 +18,7 @@ func (flags *configFlags) register(cmd *cobra.Command) {
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
 	)
 	cmd.Flags().StringVar(
-		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. envsec supports dev, prod, preview.)",
+		&flags.environment, "environment", "dev", "environment to use, when supported (e.g.secrets support dev, prod, preview.)",
 	)
 }
 
@@ -27,7 +27,7 @@ func (flags *configFlags) registerPersistent(cmd *cobra.Command) {
 		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
 	)
 	cmd.PersistentFlags().StringVar(
-		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. envsec supports dev, prod, preview.)",
+		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. secrets support dev, prod, preview.)",
 	)
 }
 
