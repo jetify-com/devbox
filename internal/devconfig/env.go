@@ -1,5 +1,6 @@
 package devconfig
 
 func (c *Config) IsEnvsecEnabled() bool {
-	return c.EnvFrom == "envsec"
+	// envsec for legacy.
+	return c.EnvFrom == "envsec" || c.EnvFrom == "jetpack-cloud"
 }

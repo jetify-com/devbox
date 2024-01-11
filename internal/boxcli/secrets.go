@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/envsec/pkg/envsec"
 )
 
@@ -204,9 +205,18 @@ func secretsInitFunc(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := secrets.NewProject(ctx, flags.force); err != nil {
+
+	if _, err := secrets.ProjectConfig(); err == nil &&
+		box.Config().EnvFrom != "jetpack-cloud" {
+		// Handle edge case where directory is already set up, but devbox.json is
+		// not configured to use jetpack-cloud.
+		ux.Finfo(
+			cmd.ErrOrStderr(),
+			"Secrets already initialized. Adding to devbox config.\n",
+		)
+	} else if err := secrets.NewProject(ctx, flags.force); err != nil {
 		return errors.WithStack(err)
 	}
-	box.Config().SetStringField("EnvFrom", "envsec")
+	box.Config().SetStringField("EnvFrom", "jetpack-cloud")
 	return box.Config().SaveTo(box.ProjectDir())
 }
