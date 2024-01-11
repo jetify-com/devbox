@@ -21,9 +21,13 @@ import (
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/internal/vercheck"
 )
 
-const rootError = "warning: installing Nix as root is not supported by this script!"
+const (
+	minNixVersion = "2.12.0"
+	rootError     = "warning: installing Nix as root is not supported by this script!"
+)
 
 // Install runs the install script for Nix. daemon has 3 states
 // nil is unset. false is --no-daemon. true is --daemon.
@@ -95,13 +99,38 @@ func isRoot() bool {
 	return os.Geteuid() == 0
 }
 
+var ensured = false
+
+func Ensured() bool {
+	return ensured
+}
+
 func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err error) {
+	ensured = true
 	defer func() {
-		if err == nil {
-			// call ComputeSystem to ensure its value is internally cached so other
-			// callers can rely on just calling System
-			err = ComputeSystem()
+		if err != nil {
+			return
 		}
+		version := ""
+		version, err = Version()
+		if err != nil {
+			err = fmt.Errorf("failed to get nix version: %w", err)
+			return
+		}
+
+		// ensure minimum nix version installed
+		if vercheck.SemverCompare(version, minNixVersion) < 0 {
+			err = usererr.New(
+				"Devbox requires nix of version >= %s. Your version is %s. "+
+					"Please upgrade nix and try again.\n",
+				minNixVersion,
+				version,
+			)
+			return
+		}
+		// call ComputeSystem to ensure its value is internally cached so other
+		// callers can rely on just calling System
+		err = ComputeSystem()
 	}()
 
 	if BinaryInstalled() {

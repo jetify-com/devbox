@@ -25,9 +25,10 @@ func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
 	command := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate supporting files for your project",
-		Args:  cobra.MaximumNArgs(0),
+		Use:               "generate",
+		Short:             "Generate supporting files for your project",
+		Args:              cobra.MaximumNArgs(0),
+		PersistentPreRunE: ensureNixInstalled,
 	}
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())

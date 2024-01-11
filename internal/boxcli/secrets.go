@@ -27,9 +27,10 @@ type secretsListFlags struct {
 func secretsCmd() *cobra.Command {
 	flags := &secretsFlags{}
 	cmd := &cobra.Command{
-		Use:     "secrets",
-		Aliases: []string{"envsec"},
-		Short:   "Interact with devbox secrets.",
+		Use:               "secrets",
+		Aliases:           []string{"envsec"},
+		Short:             "Interact with devbox secrets.",
+		PersistentPreRunE: ensureNixInstalled,
 	}
 	cmd.AddCommand(secretsInitCmd(flags))
 	cmd.AddCommand(secretsListCmd(flags))
