@@ -1130,8 +1130,9 @@ func (d *Devbox) configEnvs(
 		}
 	} else if d.cfg.EnvFrom != "" {
 		return nil, usererr.New(
-			"unknown from_env value: %s. Supported value is: \"jetpack-cloud\".",
+			"unknown from_env value: %s. Supported value is: %q.",
 			d.cfg.EnvFrom,
+			"jetpack-cloud",
 		)
 	}
 	for k, v := range d.cfg.Env {
