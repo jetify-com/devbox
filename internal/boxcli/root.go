@@ -61,7 +61,7 @@ func RootCmd() *cobra.Command {
 		command.AddCommand(authCmd())
 	}
 	command.AddCommand(createCmd())
-	command.AddCommand(envsecCmd())
+	command.AddCommand(secretsCmd())
 	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
 	command.AddCommand(infoCmd())

@@ -882,10 +882,6 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		env["PATH"],
 	)
 
-	if err = d.addUtilitiesToEnv(ctx, env); err != nil {
-		return nil, err
-	}
-
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
@@ -1108,9 +1104,35 @@ func (d *Devbox) configEnvs(
 	ctx context.Context,
 	existingEnv map[string]string,
 ) (map[string]string, error) {
-	env, err := d.cfg.ComputedEnv(ctx, d.ProjectDir(), d.environment)
-	if err != nil {
-		return nil, err
+	env := map[string]string{}
+	if d.cfg.IsEnvsecEnabled() {
+		secrets, err := d.Secrets(ctx)
+		if err != nil {
+			return nil, err
+		}
+		envID, err := secrets.EnvID()
+		if err != nil {
+			return nil, err
+		}
+
+		cloudSecrets, err := secrets.List(ctx, envID)
+		if err != nil {
+			ux.Fwarning(
+				os.Stderr,
+				"Error reading secrets from jetpack cloud: %s\n\n",
+				err,
+			)
+		} else {
+			for _, secret := range cloudSecrets[envID] {
+				env[secret.Name] = secret.Value
+			}
+		}
+	} else if d.cfg.EnvFrom != "" {
+		return nil, usererr.New(
+			"unknown from_env value: %s. Supported value is: envsec.", d.cfg.EnvFrom)
+	}
+	for k, v := range d.cfg.Env {
+		env[k] = v
 	}
 	return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
 }
@@ -1272,5 +1294,8 @@ func validateEnvironment(environment string) (string, error) {
 	if environment == "dev" || environment == "prod" || environment == "preview" {
 		return environment, nil
 	}
-	return "", usererr.New("invalid environment %q", environment)
+	return "", usererr.New(
+		"invalid environment %q. Environment must be one of dev, prod, or preview.",
+		environment,
+	)
 }
