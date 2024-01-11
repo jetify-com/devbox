@@ -34,12 +34,12 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 			"compose-file.yaml|yml. Default is directory containing devbox.json",
 	)
 	cmd.Flags().BoolVarP(
-		&flags.background, "background", "b", false, "Run service in background")
+		&flags.background, "background", "b", false, "run service in background")
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(
-		&flags.allProjects, "all-projects", false, "Stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
+		&flags.allProjects, "all-projects", false, "stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
 }
 
 func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
@@ -86,9 +86,8 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	stopCommand := &cobra.Command{
 		Use:     "stop [service]...",
 		Aliases: []string{"down"},
-		Short: `Stop one or more services in the current project. If no service is specified, 
-				 stops all services in the current project.`,
-		Long: `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
+		Short:   `Stop one or more services in the current project. If no service is specified, stops all services in the current project.`,
+		Long:    `Stop one or more services in the current project. If no service is specified, stops all services in the current project. \nIf the --all-projects flag is specified, stops all running services across all your projects. This flag cannot be used with [service] arguments.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return stopServices(cmd, args, flags, serviceStopFlags)
 		},
@@ -116,7 +115,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 		&flags.runInCurrentShell,
 		"run-in-current-shell",
 		false,
-		"Run the command in the current shell instead of a new shell",
+		"run the command in the current shell instead of a new shell",
 	)
 	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)

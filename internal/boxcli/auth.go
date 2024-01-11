@@ -57,7 +57,7 @@ func loginCmd() *cobra.Command {
 func logoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout",
-		Short: "logout from devbox",
+		Short: "Logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)

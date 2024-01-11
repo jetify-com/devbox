@@ -49,15 +49,15 @@ func shellEnvCmd(recomputeEnvIfNeeded *bool) *cobra.Command {
 		&flags.install, "install", false, "install packages before exporting shell environment")
 
 	command.Flags().BoolVar(
-		&flags.pure, "pure", false, "If this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 	command.Flags().BoolVar(
 		&flags.preservePathStack, "preserve-path-stack", false,
-		"Preserves existing PATH order if this project's environment is already in PATH. "+
+		"preserves existing PATH order if this project's environment is already in PATH. "+
 			"Useful if you want to avoid overshadowing another devbox project that is already active")
 	_ = command.Flags().MarkHidden("preserve-path-stack")
 	command.Flags().BoolVar(
 		&flags.noRefreshAlias, "no-refresh-alias", false,
-		"By default, devbox will add refresh alias to the environment"+
+		"by default, devbox will add refresh alias to the environment"+
 			"Use this flag to disable this behavior.")
 	_ = command.Flags().MarkHidden("no-refresh-alias")
 

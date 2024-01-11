@@ -40,14 +40,14 @@ func updateCmd() *cobra.Command {
 		&flags.sync,
 		"sync-lock",
 		false,
-		"Sync all devbox.lock dependencies in multiple projects. "+
+		"sync all devbox.lock dependencies in multiple projects. "+
 			"Dependencies will sync to the latest local version.",
 	)
 	command.Flags().BoolVar(
 		&flags.allProjects,
 		"all-projects",
 		false,
-		"Update all projects in the working directory, recursively.",
+		"update all projects in the working directory, recursively.",
 	)
 	return command
 }
