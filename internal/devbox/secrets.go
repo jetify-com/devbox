@@ -9,12 +9,7 @@ import (
 	"go.jetpack.io/pkg/envvar"
 )
 
-type secrets struct {
-	envsec.Envsec
-	EnvName string
-}
-
-func (d *Devbox) Secrets(ctx context.Context) (*secrets, error) {
+func (d *Devbox) Secrets(ctx context.Context) (*envsec.Envsec, error) {
 	envsecInstance := envsec.Envsec{
 		APIHost: build.JetpackAPIHost(),
 		Auth: envsec.AuthConfig{
@@ -23,27 +18,23 @@ func (d *Devbox) Secrets(ctx context.Context) (*secrets, error) {
 		},
 		IsDev:      build.IsDev,
 		Stderr:     d.stderr,
+		Store:      &jetstore.JetpackAPIStore{},
 		WorkingDir: d.ProjectDir(),
 	}
 
-	store := &jetstore.JetpackAPIStore{}
-	if err := envsecInstance.SetStore(ctx, store); err != nil {
+	project, err := envsecInstance.ProjectConfig()
+	if err != nil {
 		return nil, err
 	}
-	return &secrets{
-		Envsec:  envsecInstance,
-		EnvName: d.environment,
-	}, nil
-}
-
-func (s *secrets) EnvID() (envsec.EnvID, error) {
-	project, err := s.ProjectConfig()
-	if err != nil {
-		return envsec.EnvID{}, err
-	}
-	return envsec.EnvID{
-		EnvName:   s.EnvName,
+	envsecInstance.EnvID = envsec.EnvID{
+		EnvName:   d.environment,
 		ProjectID: project.ProjectID.String(),
 		OrgID:     project.OrgID.String(),
-	}, nil
+	}
+
+	if _, err := envsecInstance.InitForUser(ctx); err != nil {
+		return nil, err
+	}
+
+	return &envsecInstance, nil
 }
