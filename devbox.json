@@ -1,8 +1,11 @@
 {
+  "name": "devbox",
+  "description": "Instant, easy, and predictable development environments",
   "packages": {
-    "go":                          "latest",
-    "runx:golangci/golangci-lint": "latest",
-    "runx:mvdan/gofumpt":          "latest",
+    "go":                                                     "latest",
+    "runx:golangci/golangci-lint":                            "latest",
+    "runx:mvdan/gofumpt":                                     "latest",
+    "nixpkgs/63143ac2c9186be6d9da6035fa22620018c85932#hello": "",
   },
   "env": {
     "GOENV": "off",
@@ -13,7 +16,9 @@
       "test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
     ],
     "scripts": {
-      "build":              "go build -o dist/devbox ./cmd/devbox",
+      "build":
+        // Build devbox for the current platform
+        "go build -o dist/devbox ./cmd/devbox",
       "build-darwin-amd64": "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
       "build-darwin-arm64": "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
       "build-linux-amd64":  "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
@@ -24,7 +29,9 @@
         "devbox run build-linux-amd64",
         "devbox run build-linux-arm64",
       ],
-      "code":            "code .",
+      "code":            
+        // Open VSCode
+        "code .",
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":             "scripts/gofumpt.sh",
       "test":            "go test -race -cover ./...",

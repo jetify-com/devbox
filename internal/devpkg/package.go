@@ -621,3 +621,14 @@ func IsNix(p *Package, _ int) bool {
 func IsRunX(p *Package, _ int) bool {
 	return p.IsRunX()
 }
+
+func (p *Package) DocsURL() string {
+	if p.IsRunX() {
+		path, _, _ := strings.Cut(p.RunXPath(), "@")
+		return fmt.Sprintf("https://www.github.com/%s", path)
+	}
+	if p.IsDevboxPackage {
+		return fmt.Sprintf("https://www.nixhub.io/packages/%s", p.CanonicalName())
+	}
+	return ""
+}

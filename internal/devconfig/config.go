@@ -34,6 +34,9 @@ const (
 
 // Config defines a devbox environment as JSON.
 type Config struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+
 	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
 	Packages Packages `json:"packages"`
@@ -122,13 +125,6 @@ func (c *Config) NixPkgsCommitHash() string {
 		return DefaultNixpkgsCommit
 	}
 	return c.Nixpkgs.Commit
-}
-
-func (c *Config) Scripts() map[string]*shellcmd.Commands {
-	if c == nil || c.Shell == nil {
-		return nil
-	}
-	return c.Shell.Scripts
 }
 
 func (c *Config) InitHook() *shellcmd.Commands {

@@ -304,7 +304,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	d.lockfile.Tidy()
 
 	// Update lockfile with new packages that are not to be installed
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range d.ConfigPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}

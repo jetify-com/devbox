@@ -145,6 +145,8 @@ See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/devbox/
 
 Devbox is an opensource project so contributions are always welcome. Please read [our contributing guide](CONTRIBUTING.md) before submitting pull requests.
 
+[Devbox development readme](devbox.md)
+
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
