@@ -27,9 +27,12 @@ Found 2+ results for "nodejs":
 Warning: Showing top 10 results and truncated versions. Use --show-all to show all.
 ```
 
-### Adding a Specific Version to Devbox
+### Specifying Package Versions
+If you do not include a version string, Devbox will default to using the latest available version of the package in our Nixpkg index. This is the same as adding `<pkg>@<latest>` to your devbox.json.
 
-To add a specific version of a package with `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@20.1.0` or add `nodejs@20.1.0` to the packages list in your `devbox.json`:
+For example, to use the latest version of `ripgrep,` run `devbox add ripgrep`, `devbox add ripgrep@latest`, or add `ripgrep@latest` to your devbox.json package list.
+
+To add a specific version of a package, write `<package_name>@<version>`. For example, to pin the `nodejs` package to version `20.1.0`, you can run `devbox add nodejs@20.1.0` or add `nodejs@20.1.0` to the packages list in your `devbox.json`:
 
 ```json
 "packages": [
@@ -39,18 +42,11 @@ To add a specific version of a package with `<package_name>@<version>`. For exam
 
 For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@20`, it will install the latest minor and patch version of `nodejs >=20.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
+Whenever you run `devbox update`, packages will be updated to their newest versions that matches your criteria. This means
+* Packages with the latest tag will be updated to the latest version available in our index.
+* Packages with a version range will be updated to the newest versions possible under that range
+
 When you run a command that installs your packages (like `devbox shell` or `devbox install`), Devbox will generate a `devbox.lock` file that contains the exact version and commit hash for your packages. You should check this file into source control to ensure that other developers will get the same environment.
-
-### Updating your packages
-
-If you want to update your packages, you can run `devbox update`. This command will update all your pinned packages to the newest compatible version in the Devbox index.
-
-### Using the Latest Version of a Package
-If you do not include a version string, Devbox will default to using the latest available version of the package in our Nixpkg index. This is the same as adding `<pkg>@<latest>` to your devbox.json.
-
-For example, to use the latest version of `ripgrep,` run `devbox add ripgrep`, `devbox add ripgrep@latest`, or add `ripgrep@latest` to your devbox.json package list.
-
-Whenever you run `devbox update`, packages with the latest tag will be updated to the latest version available in our index.
 
 ## Manually Pinning a Nixpkg Commit for a Package
 
