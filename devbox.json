@@ -1,11 +1,10 @@
 {
-  "name": "devbox",
+  "name":        "devbox",
   "description": "Instant, easy, and predictable development environments",
   "packages": {
-    "go":                                                     "latest",
-    "runx:golangci/golangci-lint":                            "latest",
-    "runx:mvdan/gofumpt":                                     "latest",
-    "nixpkgs/63143ac2c9186be6d9da6035fa22620018c85932#hello": "",
+    "go":                          "latest",
+    "runx:golangci/golangci-lint": "latest",
+    "runx:mvdan/gofumpt":          "latest",
   },
   "env": {
     "GOENV": "off",
@@ -29,7 +28,7 @@
         "devbox run build-linux-amd64",
         "devbox run build-linux-arm64",
       ],
-      "code":            
+      "code":
         // Open VSCode
         "code .",
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
