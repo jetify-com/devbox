@@ -4,6 +4,7 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,10 +30,17 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 	return string(out), nil
 }
 
-func ProfileInstall(writer io.Writer, profilePath, installable string) error {
-	if !IsInsecureAllowed() && PackageIsInsecure(installable) {
-		knownVulnerabilities := PackageKnownVulnerabilities(installable)
-		errString := fmt.Sprintf("Package %s is insecure. \n\n", installable)
+type ProfileInstallArgs struct {
+	Installable string
+	Offline     bool
+	ProfilePath string
+	Writer      io.Writer
+}
+
+func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
+	if !IsInsecureAllowed() && PackageIsInsecure(args.Installable) {
+		knownVulnerabilities := PackageKnownVulnerabilities(args.Installable)
+		errString := fmt.Sprintf("Package %s is insecure. \n\n", args.Installable)
 		if len(knownVulnerabilities) > 0 {
 			errString += fmt.Sprintf("Known vulnerabilities: %s \n\n", knownVulnerabilities)
 		}
@@ -40,30 +48,34 @@ func ProfileInstall(writer io.Writer, profilePath, installable string) error {
 		return usererr.New(errString)
 	}
 
-	cmd := command(
+	cmd := commandContext(
+		ctx,
 		"profile", "install",
-		"--profile", profilePath,
+		"--profile", args.ProfilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
 		// Using an arbitrary priority to avoid conflicts with other packages.
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
-		"--priority", nextPriority(profilePath),
-		installable,
+		"--priority", nextPriority(args.ProfilePath),
 	)
+	if args.Offline {
+		cmd.Args = append(cmd.Args, "--offline")
+	}
+	cmd.Args = append(cmd.Args, args.Installable)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	// If nix profile install runs as tty, the output is much nicer. If we ever
 	// need to change this to our own writers, consider that you may need
 	// to implement your own nicer output. --print-build-logs flag may be useful.
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = writer
-	cmd.Stderr = writer
+	cmd.Stdout = args.Writer
+	cmd.Stderr = args.Writer
 
 	debug.Log("running command: %s\n", cmd)
 	return cmd.Run()
 }
 
-func ProfileRemove(profilePath string, indexes []string) error {
+func ProfileRemove(profilePath string, indexes ...string) error {
 	cmd := command(
 		append([]string{
 			"profile", "remove",
