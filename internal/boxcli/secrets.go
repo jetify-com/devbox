@@ -16,7 +16,7 @@ type secretsFlags struct {
 	config configFlags
 }
 
-func (f *secretsFlags) genSecrets(cmd *cobra.Command) (*envsec.Envsec, error) {
+func (f *secretsFlags) envsec(cmd *cobra.Command) (*envsec.Envsec, error) {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         f.config.path,
 		Environment: f.config.environment,
@@ -99,7 +99,7 @@ func secretsSetCmd(flags *secretsFlags) *cobra.Command {
 			return envsec.ValidateSetArgs(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secrets, err := flags.genSecrets(cmd)
+			secrets, err := flags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -116,7 +116,7 @@ func secretsRemoveCmd(flags *secretsFlags) *cobra.Command {
 		Aliases: []string{"rm"},
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secrets, err := flags.genSecrets(cmd)
+			secrets, err := flags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -134,7 +134,7 @@ func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 		Short:   "List all secrets",
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secrets, err := commonFlags.genSecrets(cmd)
+			secrets, err := commonFlags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -171,13 +171,12 @@ func secretsDownloadCmd(commonFlags *secretsFlags) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "download <file1>",
 		Short: "Download environment variables into the specified file",
-		Long:  "Download environment variables stored into the specified file (most commonly a .env file). The format of the file is one NAME=VALUE per line.",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return envsec.ValidateFormat(flags.format)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secrets, err := commonFlags.genSecrets(cmd)
+			secrets, err := commonFlags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -198,15 +197,13 @@ func secretsUploadCmd(commonFlags *secretsFlags) *cobra.Command {
 	flags := &secretsUploadFlags{}
 	command := &cobra.Command{
 		Use:   "upload <file1> [<fileN>]...",
-		Short: "Upload variables defined in a .env file",
-		Long: "Upload variables defined in one or more .env files. The files " +
-			"should have one NAME=VALUE per line.",
-		Args: cobra.MinimumNArgs(1),
+		Short: "Upload variables defined in one or more .env files.",
+		Args:  cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return envsec.ValidateFormat(flags.format)
 		},
 		RunE: func(cmd *cobra.Command, paths []string) error {
-			secrets, err := commonFlags.genSecrets(cmd)
+			secrets, err := commonFlags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}

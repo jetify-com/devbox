@@ -20,9 +20,6 @@ func (d *Devbox) UninitializedSecrets(ctx context.Context) *envsec.Envsec {
 		Stderr:     d.stderr,
 		Store:      &jetstore.JetpackAPIStore{},
 		WorkingDir: d.ProjectDir(),
-		EnvID: envsec.EnvID{
-			EnvName: d.environment,
-		},
 	}
 }
 
@@ -33,8 +30,12 @@ func (d *Devbox) Secrets(ctx context.Context) (*envsec.Envsec, error) {
 	if err != nil {
 		return nil, err
 	}
-	envsecInstance.EnvID.ProjectID = project.ProjectID.String()
-	envsecInstance.EnvID.OrgID = project.OrgID.String()
+
+	envsecInstance.EnvID = envsec.EnvID{
+		EnvName:   d.environment,
+		OrgID:     project.OrgID.String(),
+		ProjectID: project.ProjectID.String(),
+	}
 
 	if _, err := envsecInstance.InitForUser(ctx); err != nil {
 		return nil, err
