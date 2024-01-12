@@ -42,7 +42,7 @@ To add a specific version of a package, write `<package_name>@<version>`. For ex
 
 For packages that use semver, you can pin a range of versions for your project. For example, if you pin `nodejs@20`, it will install the latest minor and patch version of `nodejs >=20.0.0`. You can update to the newest package version that matches your criteria by running `devbox update`.
 
-Whenever you run `devbox update`, packages will be updated to their newest versions that matches your criteria. This menas
+Whenever you run `devbox update`, packages will be updated to their newest versions that matches your criteria. This means
 * Packages with the latest tag will be updated to the latest version available in our index.
 * Packages with a version range will be updated to the newest versions possible under that range
 
