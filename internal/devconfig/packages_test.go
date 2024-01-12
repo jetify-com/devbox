@@ -155,6 +155,25 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "map-with-platforms-and-excluded-platforms-and-outputs-nixpkgs-reference",
+			jsonConfig: `{"packages":{"github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello":` +
+				`{"version":"latest",` +
+				`"platforms":["x86_64-darwin","aarch64-linux"],` +
+				`"excluded_platforms":["x86_64-linux"],` +
+				`"outputs":["cli"]` +
+				`}}}`,
+			expected: Packages{
+				Collection: []Package{
+					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
+						"version":            "latest",
+						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
+						"excluded_platforms": []string{"x86_64-linux"},
+						"outputs":            []string{"cli"},
+					}),
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

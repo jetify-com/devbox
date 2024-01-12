@@ -203,6 +203,28 @@ func (pkgs *Packages) SetDisablePlugin(versionedName string, v bool) error {
 	return nil
 }
 
+func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedName)
+	}
+
+	toAdd := []string{}
+	for _, o := range outputs {
+		if !slices.Contains(pkgs.Collection[i].Outputs, o) {
+			toAdd = append(toAdd, o)
+		}
+	}
+
+	if len(toAdd) > 0 {
+		pkg := &pkgs.Collection[i]
+		pkgs.ast.appendOutputs(pkg.name, "outputs", toAdd)
+		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
+	}
+	return nil
+}
+
 func (pkgs *Packages) index(name, version string) int {
 	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
 		return p.name == name && p.Version == version
@@ -220,6 +242,10 @@ type Package struct {
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
 	PatchGlibc bool `json:"patch_glibc,omitempty"`
+
+	// Outputs is the list of outputs to use for this package, assuming
+	// it is a nix package. If empty, the default output is used.
+	Outputs []string `json:"outputs,omitempty"`
 }
 
 func NewVersionOnlyPackage(name, version string) Package {
@@ -246,12 +272,17 @@ func NewPackage(name string, values map[string]any) Package {
 	if e, ok := values["excluded_platforms"]; ok {
 		excludedPlatforms = e.([]string)
 	}
+	var outputs []string
+	if o, ok := values["outputs"]; ok {
+		outputs = o.([]string)
+	}
 
 	return Package{
 		name:              name,
 		Version:           version.(string),
 		Platforms:         platforms,
 		ExcludedPlatforms: excludedPlatforms,
+		Outputs:           outputs,
 	}
 }
 

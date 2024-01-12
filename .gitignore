@@ -10,6 +10,7 @@
 # Editors
 .idea
 .vscode
+.zed
 
 # NodeJS
 node_modules

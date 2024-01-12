@@ -24,6 +24,7 @@ type addCmdFlags struct {
 	platforms        []string
 	excludePlatforms []string
 	patchGlibc       bool
+	outputs          []string
 }
 
 func addCmd() *cobra.Command {
@@ -67,6 +68,9 @@ func addCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.patchGlibc, "patch-glibc", false,
 		"patch any ELF binaries to use the latest glibc version in nixpkgs")
+	command.Flags().StringSliceVarP(
+		&flags.outputs, "outputs", "o", []string{},
+		"specify the outputs to select for the nix package")
 
 	return command
 }
@@ -87,5 +91,6 @@ func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 		Platforms:        flags.platforms,
 		ExcludePlatforms: flags.excludePlatforms,
 		PatchGlibc:       flags.patchGlibc,
+		Outputs:          flags.outputs,
 	})
 }

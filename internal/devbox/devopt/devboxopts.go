@@ -48,6 +48,7 @@ type AddOpts struct {
 	ExcludePlatforms []string
 	DisablePlugin    bool
 	PatchGlibc       bool
+	Outputs          []string
 }
 
 type UpdateOpts struct {
