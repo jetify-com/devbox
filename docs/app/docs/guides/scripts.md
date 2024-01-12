@@ -2,7 +2,7 @@
 title: Running Scripts
 ---
 
-This doc describes how to configure and run scripts using `devbox run`. Scripts started with `devbox run` are launched in a interactive `devbox shell` that terminates once the script finishes, or is interrupted by CTRL-C.
+Scripts are shell commands that can be defined in your devbox.json file. They can be executed by using the  `devbox run` command. Scripts started with `devbox run` are launched in a interactive `devbox shell` that terminates once the script finishes, or is interrupted by CTRL-C.
 
 Scripts will run after your packages finish installing, and after your `init_hook` completes.
 

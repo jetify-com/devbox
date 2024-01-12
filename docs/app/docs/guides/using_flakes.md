@@ -11,7 +11,7 @@ Devbox currently provides two ways to use Flakes to install packages in your pro
 
 ## What are Flakes?
 
-[Flakes](https://www.jetpack.io/blog/powered-by-flakes/) are a new feature in the Nix language that lets us package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments.
+[Flakes](https://www.jetpack.io/blog/powered-by-flakes/) are a new feature in the Nix language that lets you package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments.
 
 Flakes are defined as a directory with a `flake.nix` and a `flake.lock` file. You import flakes to your project using a flake reference, which describes where to find the Flake, and what version or revision to use
 
@@ -45,7 +45,7 @@ github:F1bonacc1/process-compose/v0.40.2
 
 You can also install a specific attribute or package from a Flake by adding a `#` and the attribute name to the end of the package string. If you don't specify an attribute, Devbox will use `default` or `defaultPackage`
 
-For example, if you want to use [Fenix](https://github.com/nix-community/fenix) to install a specific version of Nix, you can use the following string in your packages list. This example will install the `stable.toolchain` packages from the `fenix` package.
+For example, if you want to use [Fenix](https://github.com/nix-community/fenix) to install a specific version of Rust, you can use the following string in your packages list. This example will install the `stable.toolchain` packages from the `fenix` package.
 
 ```nix
 github:nix-community/fenix#stable.toolchain
