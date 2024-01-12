@@ -236,10 +236,10 @@ func secretsInitFunc(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	secrets, err := box.Secrets(ctx)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+
+	// devbox.Secrets() by default assumes project is initialized (and shows
+	// error if not). So we use UninitializedSecrets() here instead.
+	secrets := box.UninitializedSecrets(ctx)
 
 	if _, err := secrets.ProjectConfig(); err == nil &&
 		box.Config().EnvFrom != "jetpack-cloud" {
