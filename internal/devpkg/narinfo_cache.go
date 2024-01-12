@@ -4,10 +4,8 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
-	"unicode"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -110,8 +108,8 @@ func (p *Package) fetchNarInfoStatus() (bool, error) {
 		)
 	}
 
-	pathParts := newStorePathParts(sysInfo.StorePath)
-	reqURL := BinaryCache + "/" + pathParts.hash + ".narinfo"
+	pathParts := nix.NewStorePathParts(sysInfo.StorePath)
+	reqURL := BinaryCache + "/" + pathParts.Hash + ".narinfo"
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
@@ -180,36 +178,4 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 		return nil, nil
 	}
 	return sysInfo, nil
-}
-
-// storePath are the constituent parts of
-// /nix/store/<hash>-<name>-<version>
-//
-// This is a helper struct for analyzing the string representation
-type storePathParts struct {
-	hash    string
-	name    string
-	version string
-}
-
-// newStorePathParts splits a Nix store path into its hash, name and version
-// components in the same way that Nix does.
-//
-// See https://nixos.org/manual/nix/stable/language/builtins.html#builtins-parseDrvName
-func newStorePathParts(path string) storePathParts {
-	path = strings.TrimPrefix(path, "/nix/store/")
-	// path is now <hash>-<name>-<version
-
-	hash, name := path[:32], path[33:]
-	dashIndex := 0
-	for i, r := range name {
-		if dashIndex != 0 && !unicode.IsLetter(r) {
-			return storePathParts{hash: hash, name: name[:dashIndex], version: name[i:]}
-		}
-		dashIndex = 0
-		if r == '-' {
-			dashIndex = i
-		}
-	}
-	return storePathParts{hash: hash, name: name}
 }
