@@ -1111,12 +1111,8 @@ func (d *Devbox) configEnvs(
 		if err != nil {
 			return nil, err
 		}
-		envID, err := secrets.EnvID()
-		if err != nil {
-			return nil, err
-		}
 
-		cloudSecrets, err := secrets.List(ctx, envID)
+		cloudSecrets, err := secrets.List(ctx)
 		if err != nil {
 			ux.Fwarning(
 				os.Stderr,
@@ -1124,7 +1120,7 @@ func (d *Devbox) configEnvs(
 				err,
 			)
 		} else {
-			for _, secret := range cloudSecrets[envID] {
+			for _, secret := range cloudSecrets {
 				env[secret.Name] = secret.Value
 			}
 		}

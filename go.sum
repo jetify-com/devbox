@@ -378,8 +378,8 @@ github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036/go.mod h1:gqRgreBU
 github.com/zaffka/mongodb-boltdb-mock v0.0.0-20221014194232-b4bb03fbe3a0/go.mod h1:GsDD1qsG+86MeeCG7ndi6Ei3iGthKL3wQ7PTFigDfNY=
 github.com/zealic/go2node v0.1.0 h1:ofxpve08cmLJBwFdI0lPCk9jfwGWOSD+s6216x0oAaA=
 github.com/zealic/go2node v0.1.0/go.mod h1:GrkFr+HctXwP7vzcU9RsgtAeJjTQ6Ud0IPCQAqpTfBg=
-go.jetpack.io/envsec v0.0.16-0.20240109233012-3e97a7fe973f h1:ELgyeQw+eZn0BSSlhLnBkC7wTrYbluTsYx6vPa0YTds=
-go.jetpack.io/envsec v0.0.16-0.20240109233012-3e97a7fe973f/go.mod h1:8U0fUaXMaoNRqz8J7VaV8kP7N7hayJ9tqOd9OS0epEQ=
+go.jetpack.io/envsec v0.0.16-0.20240111222345-e1fd0e1204ca h1:7Ocnr+mVZTCG8MHlcAdW5d8ir7eqZTmD8S/aEskjXWk=
+go.jetpack.io/envsec v0.0.16-0.20240111222345-e1fd0e1204ca/go.mod h1:kCgRGNSHU5AgQXQGUenohPPDoUd87SRL00uOzQsa+Q8=
 go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15 h1:ztX3CydpNKLePPMRmWgdi4HcxE/AXY6HViOJOmmYNiA=
 go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15/go.mod h1:kGUL8aZ7ddvoGro0AQxXos9GKn5Qw0J18qW7d5FP4Ws=
 go.jetpack.io/typeid v1.0.0 h1:8gQ+iYGdyiQ0Pr40ydSB/PzMOIwlXX5DTojp1CBeSPQ=

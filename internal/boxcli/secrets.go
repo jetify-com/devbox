@@ -16,12 +16,33 @@ type secretsFlags struct {
 	config configFlags
 }
 
+func (f *secretsFlags) envsec(cmd *cobra.Command) (*envsec.Envsec, error) {
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:         f.config.path,
+		Environment: f.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return box.Secrets(cmd.Context())
+}
+
 type secretsInitCmdFlags struct {
 	force bool
 }
 
 type secretsListFlags struct {
 	show   bool
+	format string
+}
+
+type secretsDownloadFlags struct {
+	format string
+}
+
+type secretsUploadFlags struct {
 	format string
 }
 
@@ -33,10 +54,12 @@ func secretsCmd() *cobra.Command {
 		Short:             "Interact with devbox secrets in jetpack cloud.",
 		PersistentPreRunE: ensureNixInstalled,
 	}
+	cmd.AddCommand(secretsDownloadCmd(flags))
 	cmd.AddCommand(secretsInitCmd(flags))
 	cmd.AddCommand(secretsListCmd(flags))
 	cmd.AddCommand(secretsRemoveCmd(flags))
 	cmd.AddCommand(secretsSetCmd(flags))
+	cmd.AddCommand(secretsUploadCmd(flags))
 	cmd.Hidden = true
 
 	flags.config.registerPersistent(cmd)
@@ -76,27 +99,12 @@ func secretsSetCmd(flags *secretsFlags) *cobra.Command {
 			return envsec.ValidateSetArgs(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			box, err := devbox.Open(&devopt.Opts{
-				Dir:         flags.config.path,
-				Environment: flags.config.environment,
-				Stderr:      cmd.ErrOrStderr(),
-			})
+			secrets, err := flags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
-			secrets, err := box.Secrets(ctx)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			envID, err := secrets.EnvID()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			return secrets.SetFromArgs(ctx, envID, args)
+			return secrets.SetFromArgs(cmd.Context(), args)
 		},
 	}
 }
@@ -108,27 +116,12 @@ func secretsRemoveCmd(flags *secretsFlags) *cobra.Command {
 		Aliases: []string{"rm"},
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			box, err := devbox.Open(&devopt.Opts{
-				Dir:         flags.config.path,
-				Environment: flags.config.environment,
-				Stderr:      cmd.ErrOrStderr(),
-			})
+			secrets, err := flags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
-			secrets, err := box.Secrets(ctx)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			envID, err := secrets.EnvID()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			return secrets.DeleteAll(ctx, envID, args...)
+			return secrets.DeleteAll(cmd.Context(), args...)
 		},
 	}
 }
@@ -141,33 +134,18 @@ func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 		Short:   "List all secrets",
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-			box, err := devbox.Open(&devopt.Opts{
-				Dir:         commonFlags.config.path,
-				Environment: commonFlags.config.environment,
-				Stderr:      cmd.ErrOrStderr(),
-			})
+			secrets, err := commonFlags.envsec(cmd)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
-			secrets, err := box.Secrets(ctx)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			envID, err := secrets.EnvID()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			vars, err := secrets.List(ctx, envID)
+			vars, err := secrets.List(cmd.Context())
 			if err != nil {
 				return err
 			}
 
-			return envsec.PrintEnvVars(
-				vars, cmd.OutOrStdout(), flags.show, flags.format)
+			return envsec.PrintEnvVar(
+				cmd.OutOrStdout(), secrets.EnvID, vars, flags.show, flags.format)
 		},
 	}
 
@@ -188,6 +166,60 @@ func secretsListCmd(commonFlags *secretsFlags) *cobra.Command {
 	return cmd
 }
 
+func secretsDownloadCmd(commonFlags *secretsFlags) *cobra.Command {
+	flags := secretsDownloadFlags{}
+	command := &cobra.Command{
+		Use:   "download <file1>",
+		Short: "Download environment variables into the specified file",
+		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return envsec.ValidateFormat(flags.format)
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			secrets, err := commonFlags.envsec(cmd)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return secrets.Download(cmd.Context(), args[0], flags.format)
+		},
+	}
+
+	command.Flags().StringVarP(
+		&flags.format, "format", "f", "", "file format: dotenv or json")
+
+	return command
+}
+
+func secretsUploadCmd(commonFlags *secretsFlags) *cobra.Command {
+	flags := &secretsUploadFlags{}
+	command := &cobra.Command{
+		Use:   "upload <file1> [<fileN>]...",
+		Short: "Upload variables defined in one or more .env files.",
+		Args:  cobra.MinimumNArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return envsec.ValidateFormat(flags.format)
+		},
+		RunE: func(cmd *cobra.Command, paths []string) error {
+			secrets, err := commonFlags.envsec(cmd)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return secrets.Upload(cmd.Context(), paths, flags.format)
+		},
+	}
+
+	command.Flags().StringVarP(
+		&flags.format, "format", "f", "", "File format: dotenv or json")
+
+	return command
+}
+
 func secretsInitFunc(
 	cmd *cobra.Command,
 	flags secretsInitCmdFlags,
@@ -201,10 +233,10 @@ func secretsInitFunc(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	secrets, err := box.Secrets(ctx)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+
+	// devbox.Secrets() by default assumes project is initialized (and shows
+	// error if not). So we use UninitializedSecrets() here instead.
+	secrets := box.UninitializedSecrets(ctx)
 
 	if _, err := secrets.ProjectConfig(); err == nil &&
 		box.Config().EnvFrom != "jetpack-cloud" {

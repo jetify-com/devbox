@@ -9,13 +9,8 @@ import (
 	"go.jetpack.io/pkg/envvar"
 )
 
-type secrets struct {
-	envsec.Envsec
-	EnvName string
-}
-
-func (d *Devbox) Secrets(ctx context.Context) (*secrets, error) {
-	envsecInstance := envsec.Envsec{
+func (d *Devbox) UninitializedSecrets(ctx context.Context) *envsec.Envsec {
+	return &envsec.Envsec{
 		APIHost: build.JetpackAPIHost(),
 		Auth: envsec.AuthConfig{
 			ClientID: envvar.Get("ENVSEC_CLIENT_ID", build.ClientID()),
@@ -23,27 +18,28 @@ func (d *Devbox) Secrets(ctx context.Context) (*secrets, error) {
 		},
 		IsDev:      build.IsDev,
 		Stderr:     d.stderr,
+		Store:      &jetstore.JetpackAPIStore{},
 		WorkingDir: d.ProjectDir(),
 	}
-
-	store := &jetstore.JetpackAPIStore{}
-	if err := envsecInstance.SetStore(ctx, store); err != nil {
-		return nil, err
-	}
-	return &secrets{
-		Envsec:  envsecInstance,
-		EnvName: d.environment,
-	}, nil
 }
 
-func (s *secrets) EnvID() (envsec.EnvID, error) {
-	project, err := s.ProjectConfig()
+func (d *Devbox) Secrets(ctx context.Context) (*envsec.Envsec, error) {
+	envsecInstance := d.UninitializedSecrets(ctx)
+
+	project, err := envsecInstance.ProjectConfig()
 	if err != nil {
-		return envsec.EnvID{}, err
+		return nil, err
 	}
-	return envsec.EnvID{
-		EnvName:   s.EnvName,
-		ProjectID: project.ProjectID.String(),
+
+	envsecInstance.EnvID = envsec.EnvID{
+		EnvName:   d.environment,
 		OrgID:     project.OrgID.String(),
-	}, nil
+		ProjectID: project.ProjectID.String(),
+	}
+
+	if _, err := envsecInstance.InitForUser(ctx); err != nil {
+		return nil, err
+	}
+
+	return envsecInstance, nil
 }
