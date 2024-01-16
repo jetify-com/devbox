@@ -89,11 +89,8 @@ func whoAmICmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			secrets, err := box.Secrets(cmd.Context())
-			if err != nil {
-				return err
-			}
-			return secrets.WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
+			return box.UninitializedSecrets(cmd.Context()).
+				WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
 		},
 	}
 
