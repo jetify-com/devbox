@@ -255,13 +255,14 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
 
-	// if mode is install or uninstall, then we need to update the nix-profile
-	// and lockfile, so we must continue below.
 	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
 	if err != nil {
 		return err
 	}
 
+	// if mode is install or uninstall, then we need to compute some state
+	// like updating the flake or installing packages locally, so must continue
+	// below
 	if mode == ensure {
 		// if mode is ensure and we are up to date, then we can skip the rest
 		if upToDate {
@@ -270,6 +271,48 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
+	recomputeState := mode == ensure || d.IsEnvEnabled()
+	if recomputeState {
+		if err := d.recomputeState(ctx, mode); err != nil {
+			return err
+		}
+	} else {
+		// TODO: in the next PR, we will only `nix build` the packages that are being
+		// added or updated. For now, we continue to call recomputeState here.
+		if err := d.recomputeState(ctx, mode); err != nil {
+			return err
+		}
+	}
+
+	// If we're in a devbox shell (global or project), then the environment might
+	// be out of date after the user installs something. If have direnv active
+	// it should reload automatically so we don't need to refresh.
+	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
+		ux.Fwarning(
+			d.stderr,
+			"Your shell environment may be out of date. Run `%s` to update it.\n",
+			d.refreshAliasOrCommand(),
+		)
+	}
+
+	if err := d.lockfile.Save(); err != nil {
+		return err
+	}
+
+	// If we are recomputing state, then we need to update the local.lock file.
+	// If not, we leave the local.lock in a stale state.
+	if recomputeState {
+		return d.lockfile.UpdateAndSaveLocalLock()
+	}
+	return nil
+}
+
+// recomputeState updates the local state comprising of:
+// - plugins directories
+// - devbox.lock file
+// - the generated flake
+// - the nix-profile
+func (d *Devbox) recomputeState(ctx context.Context, mode installMode) error {
 	// Create plugin directories first because packages might need them
 	for _, pkg := range d.InstallablePackages() {
 		if err := d.PluginManager().Create(pkg); err != nil {
@@ -310,18 +353,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		}
 	}
 
-	// If we're in a devbox shell (global or project), then the environment might
-	// be out of date after the user installs something. If have direnv active
-	// it should reload automatically so we don't need to refresh.
-	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
-		ux.Fwarning(
-			d.stderr,
-			"Your shell environment may be out of date. Run `%s` to update it.\n",
-			d.refreshAliasOrCommand(),
-		)
-	}
-
-	return d.lockfile.Save()
+	return nil
 }
 
 func (d *Devbox) profilePath() (string, error) {
