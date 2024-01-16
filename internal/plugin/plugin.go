@@ -124,7 +124,7 @@ func (m *Manager) create(pkg Includable, locked *lock.Package) error {
 		locked.PluginVersion = cfg.Version
 	}
 
-	return nil
+	return m.lockfile.Save()
 }
 
 func (m *Manager) createFile(
