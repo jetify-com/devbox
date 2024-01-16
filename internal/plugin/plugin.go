@@ -124,6 +124,7 @@ func (m *Manager) create(pkg Includable, locked *lock.Package) error {
 		locked.PluginVersion = cfg.Version
 	}
 
+	// An innocuous comment to trigger cicd run
 	return m.lockfile.Save()
 }
 
