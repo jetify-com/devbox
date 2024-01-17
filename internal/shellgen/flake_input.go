@@ -2,6 +2,7 @@ package shellgen
 
 import (
 	"context"
+	"errors"
 	"runtime/trace"
 	"slices"
 	"strings"
@@ -70,10 +71,16 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if pkg.PatchGlibc {
+			return nil, errors.New("patch_glibc is not yet supported for packages with non-default outputs")
+		}
 		joins = append(joins, &SymlinkJoin{
 			Name: pkg.String() + "-combined",
 			Paths: lo.Map(pkg.Outputs, func(output string, _ int) string {
-				// TODO: handle !f.IsNixpkgs() case
+				if !f.IsNixpkgs() {
+					return f.Name + "." + attributePath + "." + output
+				}
 				parts := strings.Split(attributePath, ".")
 				return f.PkgImportName() + "." + strings.Join(parts[2:], ".") + "." + output
 			}),
