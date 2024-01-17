@@ -56,7 +56,7 @@ type SymlinkJoin struct {
 }
 
 // BuildInputsForSymlinkJoin returns a list of SymlinkJoin objects that can be used
-// as the buildInput. Used for packages that have non-default outputs that needs to
+// as the buildInput. Used for packages that have non-default outputs that need to
 // be combined into a single buildInput.
 func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 	joins := []*SymlinkJoin{}

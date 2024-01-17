@@ -27,7 +27,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 	if p.PatchGlibc {
 		return false, nil
 	}
-	// Packages with non-default outputs are not used to be taken from the binary cache.
+	// Packages with non-default outputs are not to be taken from the binary cache.
 	if len(p.Outputs) > 0 {
 		return false, nil
 	}
