@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
@@ -271,15 +272,15 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		fmt.Fprintln(d.stderr, "Ensuring packages are installed.")
 	}
 
-	recomputeState := mode == ensure || d.IsEnvEnabled()
-	if recomputeState {
-		if err := d.recomputeState(ctx, mode); err != nil {
+	if mode == install || mode == update || mode == ensure {
+		if err := d.installPackages(ctx); err != nil {
 			return err
 		}
-	} else {
-		// TODO: in the next PR, we will only `nix build` the packages that are being
-		// added or updated. For now, we continue to call recomputeState here.
-		if err := d.recomputeState(ctx, mode); err != nil {
+	}
+
+	recomputeState := mode == ensure || d.IsEnvEnabled()
+	if recomputeState {
+		if err := d.recomputeState(ctx); err != nil {
 			return err
 		}
 	}
@@ -295,12 +296,30 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		)
 	}
 
+	return d.updateLockfile(recomputeState)
+}
+
+// updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
+// If recomputeState is true, then we will also update the local.lock file.
+func (d *Devbox) updateLockfile(recomputeState bool) error {
+	// Ensure we clean out packages that are no longer needed.
+	d.lockfile.Tidy()
+
+	// Update lockfile with new packages that are not to be installed
+	for _, pkg := range d.configPackages() {
+		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
+			return err
+		}
+	}
+
+	// Save the lockfile at the very end, after all other operations were successful.
 	if err := d.lockfile.Save(); err != nil {
 		return err
 	}
 
 	// If we are recomputing state, then we need to update the local.lock file.
-	// If not, we leave the local.lock in a stale state.
+	// If not, we leave the local.lock in a stale state, so that state is recomputed
+	// on the next ensureStateIsUpToDate call with mode=ensure.
 	if recomputeState {
 		return d.lockfile.UpdateAndSaveLocalLock()
 	}
@@ -312,48 +331,18 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 // - devbox.lock file
 // - the generated flake
 // - the nix-profile
-func (d *Devbox) recomputeState(ctx context.Context, mode installMode) error {
-	// Create plugin directories first because packages might need them
-	for _, pkg := range d.InstallablePackages() {
-		if err := d.PluginManager().Create(pkg); err != nil {
-			return err
-		}
-	}
-
-	if err := d.syncPackagesToProfile(ctx, mode); err != nil {
-		return err
-	}
-
-	if err := d.InstallRunXPackages(ctx); err != nil {
-		return err
-	}
-
+func (d *Devbox) recomputeState(ctx context.Context) error {
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
 
+	// TODO: should this be moved into GenerateForPrintEnv?
+	// OR into a plugin.GenerateFiles() along with d.pluginManager().Create()?
 	if err := plugin.RemoveInvalidSymlinks(d.projectDir); err != nil {
 		return err
 	}
 
-	// Use the printDevEnvCache if we are adding or removing or updating any package,
-	// AND we are not in the shellenv-enabled environment of the current devbox-project.
-	usePrintDevEnvCache := mode != ensure && !d.IsEnvEnabled()
-	if _, err := d.computeEnv(ctx, usePrintDevEnvCache); err != nil {
-		return err
-	}
-
-	// Ensure we clean out packages that are no longer needed.
-	d.lockfile.Tidy()
-
-	// Update lockfile with new packages that are not to be installed
-	for _, pkg := range d.configPackages() {
-		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return d.syncNixProfileFromFlake(ctx)
 }
 
 func (d *Devbox) profilePath() (string, error) {
@@ -364,162 +353,6 @@ func (d *Devbox) profilePath() (string, error) {
 	}
 
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
-}
-
-// syncPackagesToProfile can ensure that all packages in devbox.json exist in the nix profile,
-// and no more. However, it may skip some steps depending on the `mode`.
-func (d *Devbox) syncPackagesToProfile(ctx context.Context, mode installMode) error {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "syncPackagesToProfile").End()
-
-	// First, fetch the profile items from the nix-profile,
-	// and get the installable packages
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return err
-	}
-	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
-	if err != nil {
-		return err
-	}
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return err
-	}
-
-	// Remove non-nix packages from the list
-	packages = lo.Filter(packages, devpkg.IsNix)
-
-	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
-		return err
-	}
-
-	// Second, remove any packages from the nix-profile that are not in the config
-	itemsToKeep := profileItems
-	if mode != install {
-		itemsToKeep, err = d.removeExtraItemsFromProfile(ctx, profileDir, profileItems, packages)
-		if err != nil {
-			return err
-		}
-	}
-
-	// we are done if mode is uninstall
-	if mode == uninstall {
-		return nil
-	}
-
-	// Last, find the pending packages, and ensure they are added to the nix-profile
-	// Important to maintain the order of packages as specified by
-	// Devbox.InstallablePackages() (higher priority first).
-	// We also run nix profile upgrade on any virtenv flakes. This is a bit of a
-	// blunt approach, but ensured any plugin created flakes are up-to-date.
-	pending := []*devpkg.Package{}
-	for _, pkg := range packages {
-		idx, err := nixprofile.ProfileListIndex(&nixprofile.ProfileListIndexArgs{
-			Items:      itemsToKeep,
-			Lockfile:   d.lockfile,
-			Writer:     d.stderr,
-			Package:    pkg,
-			ProfileDir: profileDir,
-		})
-		if err != nil {
-			if !errors.Is(err, nix.ErrPackageNotFound) {
-				return err
-			}
-			pending = append(pending, pkg)
-		} else if f, err := pkg.FlakeInstallable(); err == nil && d.pluginManager.PathIsInVirtenv(f.Ref.Path) {
-			if err := nix.ProfileUpgrade(profileDir, idx); err != nil {
-				return err
-			}
-		}
-	}
-
-	return d.addPackagesToProfile(ctx, pending)
-}
-
-func (d *Devbox) removeExtraItemsFromProfile(
-	ctx context.Context,
-	profileDir string,
-	profileItems []*nixprofile.NixProfileListItem,
-	packages []*devpkg.Package,
-) ([]*nixprofile.NixProfileListItem, error) {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "removeExtraPackagesFromProfile").End()
-
-	itemsToKeep := []*nixprofile.NixProfileListItem{}
-	extras := []*nixprofile.NixProfileListItem{}
-	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
-	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-	for _, item := range profileItems {
-		found := false
-		for _, pkg := range packages {
-			if item.Matches(pkg, d.lockfile) {
-				itemsToKeep = append(itemsToKeep, item)
-				found = true
-				break
-			}
-		}
-		if !found {
-			extras = append(extras, item)
-		}
-	}
-	// Remove by index to avoid comparing nix.ProfileListItem <> nix.Inputs again.
-	if err := nixprofile.ProfileRemoveItems(profileDir, extras); err != nil {
-		return nil, err
-	}
-	return itemsToKeep, nil
-}
-
-// addPackagesToProfile inspects the packages in devbox.json, checks which of them
-// are missing from the nix profile, and then installs each package individually into the
-// nix profile.
-func (d *Devbox) addPackagesToProfile(ctx context.Context, pkgs []*devpkg.Package) error {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "addPackagesToProfile").End()
-
-	if len(pkgs) == 0 {
-		return nil
-	}
-
-	// If packages are in profile but nixpkgs has been purged, the experience
-	// will be poor when we try to run print-dev-env. So we ensure nixpkgs is
-	// prefetched for all relevant packages (those not in binary cache).
-	if err := devpkg.EnsureNixpkgsPrefetched(ctx, d.stderr, pkgs); err != nil {
-		return err
-	}
-
-	var msg string
-	if len(pkgs) == 1 {
-		msg = fmt.Sprintf("Installing package: %s.", pkgs[0])
-	} else {
-		pkgNames := lo.Map(pkgs, func(p *devpkg.Package, _ int) string { return p.Raw })
-		msg = fmt.Sprintf("Installing %d packages: %s.", len(pkgs), strings.Join(pkgNames, ", "))
-	}
-	fmt.Fprintf(d.stderr, "\n%s\n\n", msg)
-
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return fmt.Errorf("error getting profile path: %w", err)
-	}
-
-	total := len(pkgs)
-	for idx, pkg := range pkgs {
-		stepNum := idx + 1
-
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-
-		if err = nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
-			CustomStepMessage: stepMsg,
-			Lockfile:          d.lockfile,
-			Package:           pkg.Raw,
-			ProfilePath:       profileDir,
-			Writer:            d.stderr,
-		}); err != nil {
-			return fmt.Errorf("error installing package %s: %w", pkg, err)
-		}
-	}
-
-	return nil
 }
 
 var resetCheckDone = false
@@ -556,6 +389,21 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	return errors.WithStack(os.Remove(profileDir))
 }
 
+func (d *Devbox) installPackages(ctx context.Context) error {
+	// Create plugin directories first because packages might need them
+	for _, pkg := range d.InstallablePackages() {
+		if err := d.PluginManager().Create(pkg); err != nil {
+			return err
+		}
+	}
+
+	if err := d.installNixPackagesToStore(ctx); err != nil {
+		return err
+	}
+
+	return d.InstallRunXPackages(ctx)
+}
+
 func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 	for _, pkg := range lo.Filter(d.InstallablePackages(), devpkg.IsRunX) {
 		lockedPkg, err := d.lockfile.Resolve(pkg.Raw)
@@ -570,4 +418,109 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// installNixPackagesToStore will install all the packages in the nix store, if
+// mode is install or update, and we're not in a devbox environment.
+// This is done by running `nix build` on the flake. We do this so that the
+// packages will be available in the nix store when computing the devbox environment
+// and installing in the nix profile (even if offline).
+func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
+	packages, err := d.packagesToInstallInProfile(ctx)
+	if err != nil {
+		return err
+	}
+
+	stepNum := 0
+	total := len(packages)
+	for _, pkg := range packages {
+		stepNum += 1
+
+		installable, err := pkg.Installable()
+		if err != nil {
+			return err
+		}
+
+		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+		fmt.Fprintf(d.stderr, stepMsg+"\n")
+
+		// --no-link to avoid generating the result objects
+		err = nix.Build(ctx, []string{"--no-link"}, installable)
+		if err != nil {
+			fmt.Fprintf(d.stderr, "%s: ", stepMsg)
+			color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
+
+			// Check if the user is installing a package that cannot be installed on their platform.
+			// For example, glibcLocales on MacOS will give the following error:
+			// flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
+			// This is because glibcLocales is only available on Linux.
+			// The user should try `devbox add` again with `--exclude-platform`
+			errMessage := strings.TrimSpace(err.Error())
+			fmt.Printf("errMessage is %s\n", errMessage)
+			maybePackageSystemCompatibilityError := strings.Contains(errMessage, "error: flake output attribute") &&
+				strings.Contains(errMessage, "is not a derivation or path")
+
+			if maybePackageSystemCompatibilityError {
+				platform := nix.System()
+				return usererr.WithUserMessage(
+					err,
+					"package %s cannot be installed on your platform %s.\n"+
+						"If you know this package is incompatible with %[2]s, then "+
+						"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+						"If you think this package should be compatible with %[2]s, then "+
+						"it's possible this particular version is not available yet from the nix registry. "+
+						"You could try `devbox add` with a different version for this package.\n\n"+
+						"Underlying Error from nix is:",
+					pkg.Raw,
+					platform,
+				)
+			}
+
+			return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
+		}
+
+		fmt.Fprintf(d.stderr, "%s: ", stepMsg)
+		color.New(color.FgGreen).Fprintf(d.stderr, "Success\n")
+	}
+	return err
+}
+
+func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Package, error) {
+	// First, fetch the profile items from the nix-profile,
+	profileDir, err := d.profilePath()
+	if err != nil {
+		return nil, err
+	}
+	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// Second, get and prepare all the packages that must be installed in this project
+	packages, err := d.AllInstallablePackages()
+	if err != nil {
+		return nil, err
+	}
+	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
+	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
+		return nil, err
+	}
+
+	// Third, compute which packages need to be installed
+	packagesToInstall := []*devpkg.Package{}
+	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
+	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
+	for _, pkg := range packages {
+		found := false
+		for _, item := range profileItems {
+			if item.Matches(pkg, d.lockfile) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			packagesToInstall = append(packagesToInstall, pkg)
+		}
+	}
+	return packagesToInstall, nil
 }
