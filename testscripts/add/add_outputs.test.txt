@@ -1,0 +1,32 @@
+# Testscript to add packages with non-default outputs
+
+exec devbox init
+
+# Add prometheus with default outputs. It will not have promtool.
+exec devbox add prometheus
+exec devbox run -- prometheus --version
+! exec devbox run -- promtool --version
+
+# Add prometheus with cli and out outputs. It will have promtool as well.
+exec devbox add prometheus --outputs cli,out
+json.superset devbox.json expected_devbox.json
+exec devbox run -- promtool --version
+exec devbox run -- prometheus --version
+
+
+
+-- devbox.json --
+{
+  "packages": [
+  ]
+}
+
+-- expected_devbox.json --
+{
+  "packages": {
+    "prometheus": {
+      "version": "latest",
+      "outputs": ["cli", "out"]
+    }
+  }
+}
