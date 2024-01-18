@@ -10,6 +10,7 @@ import (
 	"go.jetpack.io/devbox/internal/cloud"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/docgen"
 )
 
 type generateCmdFlags struct {
@@ -26,6 +27,7 @@ func generateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:               "generate",
+		Aliases:           []string{"gen"},
 		Short:             "Generate supporting files for your project",
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: ensureNixInstalled,
@@ -34,6 +36,7 @@ func generateCmd() *cobra.Command {
 	command.AddCommand(dockerfileCmd())
 	command.AddCommand(debugCmd())
 	command.AddCommand(direnvCmd())
+	command.AddCommand(genReadmeCmd())
 	command.AddCommand(sshConfigCmd())
 	flags.config.register(command)
 
@@ -132,6 +135,28 @@ func sshConfigCmd() *cobra.Command {
 	command.Flags().StringVarP(
 		&flags.githubUsername, "username", "u", "", "GitHub username to use for ssh",
 	)
+	flags.config.register(command)
+	return command
+}
+
+func genReadmeCmd() *cobra.Command {
+	flags := &generateCmdFlags{}
+	command := &cobra.Command{
+		Use:   "readme [filename]",
+		Short: "Generate markdown readme file for this project",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			box, err := devbox.Open(&devopt.Opts{
+				Dir:         flags.config.path,
+				Environment: flags.config.environment,
+				Stderr:      cmd.ErrOrStderr(),
+			})
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return docgen.GenerateReadme(box, args[0])
+		},
+	}
 	flags.config.register(command)
 	return command
 }
