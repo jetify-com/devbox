@@ -1,20 +1,19 @@
 exec devbox run php index.php
 stdout 'done\n'
 
-exec devbox rm php81Extensions.ds
+exec devbox rm php83Extensions.ds
 exec devbox run php index.php
 stdout 'ds extension is not enabled'
 
-exec devbox add php81Extensions.ds
+exec devbox add php83Extensions.ds
 exec devbox run php index.php
 stdout 'done\n'
 
 -- devbox.json --
 {
   "packages": [
-    "php81@latest",
-    "php81Packages.composer@latest",
-    "php81Extensions.ds@latest"
+    "php@latest",
+    "php83Extensions.ds@latest"
   ]
 }
 
