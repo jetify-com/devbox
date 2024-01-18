@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
 	"go.jetpack.io/devbox/internal/xdg"
@@ -20,21 +19,15 @@ import (
 // It's used to install applications devbox might need, like process-compose
 // This is an alternative to a global install which would modify a user's
 // environment.
-func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) error {
-	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
-	installable, err := pkg.Installable()
-	if err != nil {
-		return err
-	}
-
+func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkg string) error {
 	profilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err
 	}
 
 	return nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
-		Installable: installable,
-		PackageName: pkgName,
+		Lockfile:    d.lockfile,
+		Package:     pkg,
 		ProfilePath: profilePath,
 		Writer:      d.stderr,
 	})
