@@ -2,23 +2,23 @@
   "lockfile_version": "1",
   "packages": {
     "mariadb@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#mariadb_110",
+      "last_modified": "2024-01-14T03:55:27Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/dd5621df6dcb90122b50da5ec31c411a0de3e538#mariadb_110",
       "source": "devbox-search",
-      "version": "11.0.3",
+      "version": "11.0.4",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/d5nb44vw8yy22lc21ld75nndmn9c3cgr-mariadb-server-11.0.3"
+          "store_path": "/nix/store/kslavfq486v9nsw6mkgxxk9njmvsi75n-mariadb-server-11.0.4"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/sz5n9bkcjxklk4jd0p5h26yi5j79wh7h-mariadb-server-11.0.3"
+          "store_path": "/nix/store/94v1z5jnk00flh0x7crhnkvkzbprh6r8-mariadb-server-11.0.4"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/4l6h83flncplm3kmry1w08msyy7b7vdw-mariadb-server-11.0.3"
+          "store_path": "/nix/store/ykmll4wccnrw42nf4dric08g7axv60r1-mariadb-server-11.0.4"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/047g9nxp6jb2bqj1f53qk86sjzrscbmj-mariadb-server-11.0.3"
+          "store_path": "/nix/store/qx6dp64yxjazv7nkamiyy1vx9zji77k7-mariadb-server-11.0.4"
         }
       }
     }

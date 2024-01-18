@@ -2,7 +2,7 @@ version: "0.5"
 
 processes:
   mysql:
-    command: "mysqld 2> $MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mysql_logs for details'"
+    command: "mysqld --log-error=$MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mysql_logs for details'"
     is_daemon: true
     shutdown:
       command: "mysqladmin -u root shutdown"
