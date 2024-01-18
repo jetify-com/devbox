@@ -98,10 +98,9 @@ func (f *File) ForceResolve(pkg string) (*Package, error) {
 }
 
 func (f *File) Save() error {
-	return cuecfg.WriteFile(lockFilePath(f.devboxProject), f)
-}
-
-func (f *File) UpdateAndSaveLocalLock() error {
+	if err := cuecfg.WriteFile(lockFilePath(f.devboxProject), f); err != nil {
+		return err
+	}
 	return updateLocal(f.devboxProject)
 }
 

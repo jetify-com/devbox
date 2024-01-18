@@ -30,7 +30,7 @@ var tmplFS embed.FS
 // devbox.PrintEnv, which is the core function from which devbox shell/run/direnv
 // functionality is derived.
 func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
-	defer trace.StartRegion(ctx, "GenerateForPrintEnv").End()
+	defer trace.StartRegion(ctx, "generateShellFiles").End()
 
 	plan, err := newFlakePlan(ctx, devbox)
 	if err != nil {
