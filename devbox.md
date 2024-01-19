@@ -3,23 +3,42 @@
 
 Instant, easy, and predictable development environments
 
+## Getting Started
+This project uses [devbox](https://github.com/jetpack-io/devbox) to manage its development environment.
+
+Install devbox:
+```sh
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Start the devbox shell:
+```sh 
+devbox shell
+```
+
+Run a script in the devbox environment:
+```sh
+devbox run <script>
+```
 ## Scripts
+Scripts are custom commands that can be run using this project's environment. This project has the following scripts:
 
-* [build](#build)
-* [build-all](#build-all)
-* [build-darwin-amd64](#build-darwin-amd64)
-* [build-darwin-arm64](#build-darwin-arm64)
-* [build-linux-amd64](#build-linux-amd64)
-* [build-linux-arm64](#build-linux-arm64)
-* [code](#code)
-* [fmt](#fmt)
-* [lint](#lint)
-* [test](#test)
-* [tidy](#tidy)
-* [update-examples](#update-examples)
+* [build](#devbox-run-build)
+* [build-all](#devbox-run-build-all)
+* [build-darwin-amd64](#devbox-run-build-darwin-amd64)
+* [build-darwin-arm64](#devbox-run-build-darwin-arm64)
+* [build-linux-amd64](#devbox-run-build-linux-amd64)
+* [build-linux-arm64](#devbox-run-build-linux-arm64)
+* [code](#devbox-run-code)
+* [fmt](#devbox-run-fmt)
+* [lint](#devbox-run-lint)
+* [test](#devbox-run-test)
+* [tidy](#devbox-run-tidy)
+* [update-examples](#devbox-run-update-examples)
 
-## Init Hook
-
+## Shell Init Hook
+The Shell Init Hook is a script that runs whenever the devbox environment is instantiated. It runs 
+on `devbox shell` and on `devbox run`.
 ```sh
 test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK
 ```
@@ -29,74 +48,85 @@ test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS
 * [go@latest](https://www.nixhub.io/packages/go)
 * [runx:golangci/golangci-lint@latest](https://www.github.com/golangci/golangci-lint)
 * [runx:mvdan/gofumpt@latest](https://www.github.com/mvdan/gofumpt)
-* nixpkgs/63143ac2c9186be6d9da6035fa22620018c85932#hello
 
 ## Script Details
 
-### build
+### devbox run build
 Build devbox for the current platform
 ```sh
 go build -o dist/devbox ./cmd/devbox
 ```
+&ensp;
 
-### build-all
+### devbox run build-all
 ```sh
 devbox run build-darwin-amd64
 devbox run build-darwin-arm64
 devbox run build-linux-amd64
 devbox run build-linux-arm64
 ```
+&ensp;
 
-### build-darwin-amd64
+### devbox run build-darwin-amd64
 ```sh
 GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox
 ```
+&ensp;
 
-### build-darwin-arm64
+### devbox run build-darwin-arm64
 ```sh
 GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox
 ```
+&ensp;
 
-### build-linux-amd64
+### devbox run build-linux-amd64
 ```sh
 GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox
 ```
+&ensp;
 
-### build-linux-arm64
+### devbox run build-linux-arm64
 ```sh
 GOOS=linux GOARCH=arm64 go build -o dist/devbox-linux-arm64 ./cmd/devbox
 ```
+&ensp;
 
-### code
+### devbox run code
 Open VSCode
 ```sh
 code .
 ```
+&ensp;
 
-### fmt
+### devbox run fmt
 ```sh
 scripts/gofumpt.sh
 ```
+&ensp;
 
-### lint
+### devbox run lint
 ```sh
 golangci-lint run --timeout 5m && scripts/gofumpt.sh
 ```
+&ensp;
 
-### test
+### devbox run test
 ```sh
 go test -race -cover ./...
 ```
+&ensp;
 
-### tidy
+### devbox run tidy
 ```sh
 go mod tidy
 ```
+&ensp;
 
-### update-examples
+### devbox run update-examples
 ```sh
 devbox run build && go run testscripts/testrunner/updater/main.go
 ```
+&ensp;
 
 
 

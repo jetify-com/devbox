@@ -7,11 +7,29 @@
 {{- if .Description }}
 {{ .Description }}
 {{ end }}
+## Getting Started
+This project uses [devbox](https://github.com/jetpack-io/devbox) to manage its development environment.
+
+Install devbox:
+```sh
+curl -fsSL https://get.jetpack.io/devbox | bash
+```
+
+Start the devbox shell:
+```sh 
+devbox shell
+```
+
+Run a script in the devbox environment:
+```sh
+devbox run <script>
+```
 
 {{- if .Scripts }}
 ## Scripts
+Scripts are custom commands that can be run using this project's environment. This project has the following scripts:
 {{ range $name, $_ := .Scripts }}
-* [{{ $name }}](#{{ $name }})
+* [{{ $name }}](#devbox-run-{{ $name }})
 {{- end }}
 {{ end }}
 
@@ -26,8 +44,9 @@
 {{ end }}
 
 {{- if .InitHook }}
-## Init Hook
-
+## Shell Init Hook
+The Shell Init Hook is a script that runs whenever the devbox environment is instantiated. It runs 
+on `devbox shell` and on `devbox run`.
 ```sh
 {{ .InitHook }}
 ```
@@ -43,13 +62,14 @@
 {{- if .Scripts }}
 ## Script Details
 {{ range $name, $commands := .Scripts }}
-### {{ $name }}
+### devbox run {{ $name }}
 {{- if .Comments }}
 {{ .Comments }}
 {{-  end }}
 ```sh
 {{ $commands }}
 ```
+&ensp;
 {{ end }}
 {{ end }}
 
