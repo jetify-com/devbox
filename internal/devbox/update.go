@@ -76,7 +76,7 @@ func (d *Devbox) inputsToUpdate(
 	opts devopt.UpdateOpts,
 ) ([]*devpkg.Package, error) {
 	if len(opts.Pkgs) == 0 {
-		return d.configPackages(), nil
+		return d.ConfigPackages(), nil
 	}
 
 	var pkgsToUpdate []*devpkg.Package

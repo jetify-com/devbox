@@ -2,6 +2,7 @@ package devconfig
 
 import (
 	"bytes"
+	"regexp"
 	"slices"
 
 	"github.com/tailscale/hujson"
@@ -318,4 +319,36 @@ func (c *configAST) appendStringSliceField(name, fieldName string, fieldValues [
 		arr.Elements = append(arr.Elements, hujson.Value{Value: hujson.String(p)})
 	}
 	c.root.Format()
+}
+
+func (c *configAST) beforeComment(path ...any) []byte {
+	elem := c.root
+	for _, pathItem := range path {
+		obj := elem.Value.(*hujson.Object)
+		i, ok := pathItem.(int)
+		if !ok {
+			i = c.memberIndex(obj, pathItem.(string))
+		}
+		if i == -1 {
+			return nil
+		}
+		elem = obj.Members[i].Value
+	}
+
+	// Match all single are multi line comments.
+	re := regexp.MustCompile(`(?:\/\/(.*?)\n)|(?s:\/\*(.*?)\*\/)`)
+
+	return bytes.TrimSpace(
+		re.ReplaceAllFunc(elem.BeforeExtra, func(s []byte) []byte {
+			singleLineRe := regexp.MustCompile(`\/\/(.*?)\n`)
+			multiLineRe := regexp.MustCompile(`(?s:\/\*(.*?)\*\/)`)
+
+			if singleLineRe.Match(s) {
+				return singleLineRe.ReplaceAll(s, []byte("$1\n"))
+			} else if multiLineRe.Match(s) {
+				return multiLineRe.ReplaceAll(s, []byte("$1"))
+			}
+			return s
+		}),
+	)
 }

@@ -162,7 +162,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 
 	buf := bytes.Buffer{}
 	buf.WriteString(h)
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range d.ConfigPackages() {
 		buf.WriteString(pkg.Hash())
 	}
 	for _, inc := range d.Includes() {
@@ -1002,15 +1002,15 @@ func (d *Devbox) PackageNames() []string {
 	return d.cfg.Packages.VersionedNames()
 }
 
-// configPackages returns the packages that are defined in devbox.json
+// ConfigPackages returns the packages that are defined in devbox.json
 // NOTE: the return type is different from devconfig.Packages
-func (d *Devbox) configPackages() []*devpkg.Package {
+func (d *Devbox) ConfigPackages() []*devpkg.Package {
 	return devpkg.PackagesFromConfig(d.cfg, d.lockfile)
 }
 
 // InstallablePackages returns the packages that are to be installed
 func (d *Devbox) InstallablePackages() []*devpkg.Package {
-	return lo.Filter(d.configPackages(), func(pkg *devpkg.Package, _ int) bool {
+	return lo.Filter(d.ConfigPackages(), func(pkg *devpkg.Package, _ int) bool {
 		return pkg.IsInstallable()
 	})
 }
@@ -1033,7 +1033,7 @@ func (d *Devbox) Includes() []plugin.Includable {
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range d.ConfigPackages() {
 		if pkg.IsLegacy() {
 			return true
 		}
@@ -1046,7 +1046,7 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 		return nil, errors.New("package name cannot be empty")
 	}
 	results := map[*devpkg.Package]bool{}
-	for _, pkg := range d.configPackages() {
+	for _, pkg := range d.ConfigPackages() {
 		if pkg.Raw == name || pkg.CanonicalName() == name {
 			results[pkg] = true
 		}

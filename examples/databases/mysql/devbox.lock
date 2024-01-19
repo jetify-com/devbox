@@ -2,10 +2,25 @@
   "lockfile_version": "1",
   "packages": {
     "mysql80@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#mysql80",
-      "version": "8.0.33"
+      "last_modified": "2024-01-14T03:55:27Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/dd5621df6dcb90122b50da5ec31c411a0de3e538#mysql80",
+      "source": "devbox-search",
+      "version": "8.0.35",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/pimnmdghivjx1xbym1p0rcqqcr522pxd-mysql-8.0.35"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/w3c48ad6didigbvahxhcjyjjda0g01vh-mysql-8.0.35"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/y4lza0lv90fggfrc5pak0q0i3x8jjav5-mysql-8.0.35"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/ca1q2q9h5k3hs8shivgmh9bfi51hw97p-mysql-8.0.35"
+        }
+      }
     }
   }
 }
