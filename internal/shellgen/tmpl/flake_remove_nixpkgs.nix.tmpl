@@ -46,7 +46,17 @@
             })
             {{- end }}
             {{- end }}
-            {{- range .FlakeInputs }}
+            {{- range $_, $flakeInput := .FlakeInputs }}
+            {{- range .BuildInputsForSymlinkJoin }}
+            (pkgs.symlinkJoin {
+              name = "{{.Name}}";
+              paths = [
+                {{- range .Paths }}
+                {{.}}
+                {{- end }}
+              ];
+            })
+            {{- end }}
             {{- range .BuildInputs }}
             {{.}}
             {{- end }}
