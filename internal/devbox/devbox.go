@@ -204,7 +204,6 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	}
 
 	opts := []ShellOption{
-		WithHooksFilePath(shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)),
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),

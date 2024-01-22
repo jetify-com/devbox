@@ -21,10 +21,17 @@ import (
 //go:embed tmpl/init-hook.tmpl
 var initHookTmpl string
 
+//go:embed tmpl/init-hook-fish.tmpl
+var initHookFishTmpl string
+
 const scriptsDir = ".devbox/gen/scripts"
 
 // HooksFilename is the name of the file that contains the project's init-hooks and plugin hooks
 const HooksFilename = ".hooks"
+
+// This is only used in shellrc_fish.tmpl. A bit of a hack, because scripts use
+// sh instead of fish.
+const HooksFishFilename = ".hooks.fish"
 
 type devboxer interface {
 	Config() *devconfig.Config
@@ -62,11 +69,16 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	}
 	hooks := strings.Join(append(pluginHooks, devbox.Config().InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
-	err = writeInitHookFile(devbox, hooks)
+	err = writeInitHookFile(devbox, hooks, initHookTmpl, HooksFilename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	written[HooksFilename] = struct{}{}
+	err = writeInitHookFile(devbox, hooks, initHookFishTmpl, HooksFishFilename)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	written[HooksFishFilename] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range devbox.Config().Scripts() {
@@ -91,14 +103,14 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
-func writeInitHookFile(devbox devboxer, body string) (err error) {
-	script, err := createScriptFile(devbox, HooksFilename)
+func writeInitHookFile(devbox devboxer, body, tmpl, filename string) (err error) {
+	script, err := createScriptFile(devbox, filename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	defer script.Close() // best effort: close file
 
-	t, err := template.New("init-hook-template").Parse(initHookTmpl)
+	t, err := template.New(filename).Parse(tmpl)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -106,10 +118,6 @@ func writeInitHookFile(devbox devboxer, body string) (err error) {
 	return t.Execute(script, map[string]any{
 		"Body":         body,
 		"InitHookHash": "__DEVBOX_INIT_HOOK_" + devbox.ProjectDirHash(),
-		// TODO put IsFish() in common place so we can call here and in devbox package
-		// without adding more stuff to interface
-		"IsFish": filepath.Base(os.Getenv("SHELL")) == "fish" ||
-			os.Getenv("FISH_VERSION") != "",
 	})
 }
 

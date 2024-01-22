@@ -17,6 +17,7 @@ import (
 
 	"github.com/alessio/shellescape"
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -59,8 +60,7 @@ type DevboxShell struct {
 	env             map[string]string
 	userShellrcPath string
 
-	hooksFilePath string
-	historyFile   string
+	historyFile string
 
 	// shellStartTime is the unix timestamp for when the command was invoked
 	shellStartTime time.Time
@@ -180,12 +180,6 @@ func initShellBinaryFields(path string) *DevboxShell {
 func WithHistoryFile(historyFile string) ShellOption {
 	return func(s *DevboxShell) {
 		s.historyFile = historyFile
-	}
-}
-
-func WithHooksFilePath(hooksFilePath string) ShellOption {
-	return func(s *DevboxShell) {
-		s.hooksFilePath = hooksFilePath
 	}
 }
 
@@ -317,8 +311,10 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 	}()
 
 	tmpl := shellrcTmpl
+	hooksFilePath := shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename)
 	if s.name == shFish {
 		tmpl = fishrcTmpl
+		hooksFilePath = shellgen.ScriptPath(s.projectDir, shellgen.HooksFishFilename)
 	}
 
 	err = tmpl.Execute(shellrcf, struct {
@@ -337,7 +333,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ProjectDir:         s.projectDir,
 		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath:   s.userShellrcPath,
-		HooksFilePath:      s.hooksFilePath,
+		HooksFilePath:      hooksFilePath,
 		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.env),
