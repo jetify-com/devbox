@@ -1108,20 +1108,27 @@ func (d *Devbox) configEnvs(
 	env := map[string]string{}
 	if d.cfg.IsEnvsecEnabled() {
 		secrets, err := d.Secrets(ctx)
-		if err != nil {
+		// TODO: replace this with error.Is check once envsec exports it.
+		if err != nil && !strings.Contains(err.Error(), "project not initialized") {
 			return nil, err
-		}
-
-		cloudSecrets, err := secrets.List(ctx)
-		if err != nil {
+		} else if err != nil {
 			ux.Fwarning(
-				os.Stderr,
-				"Error reading secrets from jetpack cloud: %s\n\n",
-				err,
+				d.stderr,
+				"Ignoring env_from directive. jetpack cloud secrets is not "+
+					"initialized. Run `devbox secrets init` to initialize it.\n",
 			)
 		} else {
-			for _, secret := range cloudSecrets {
-				env[secret.Name] = secret.Value
+			cloudSecrets, err := secrets.List(ctx)
+			if err != nil {
+				ux.Fwarning(
+					os.Stderr,
+					"Error reading secrets from jetpack cloud: %s\n\n",
+					err,
+				)
+			} else {
+				for _, secret := range cloudSecrets {
+					env[secret.Name] = secret.Value
+				}
 			}
 		}
 	} else if d.cfg.EnvFrom != "" {
