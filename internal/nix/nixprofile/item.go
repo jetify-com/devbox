@@ -83,7 +83,3 @@ func (i *NixProfileListItem) String() string {
 		i.nixStorePaths,
 	)
 }
-
-func (i *NixProfileListItem) StorePaths() []string {
-	return i.nixStorePaths
-}

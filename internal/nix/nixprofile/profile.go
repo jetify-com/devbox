@@ -15,6 +15,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -190,16 +191,42 @@ func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
 
 type ProfileInstallArgs struct {
 	CustomStepMessage string
-	Installable       string
-	Offline           bool
-	PackageName       string
+	Lockfile          *lock.File
+	Package           string
 	ProfilePath       string
 	Writer            io.Writer
 }
 
 // ProfileInstall calls nix profile install with default profile
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
-	stepMsg := args.PackageName
+	input := devpkg.PackageFromStringWithDefaults(args.Package, args.Lockfile)
+
+	inCache, err := input.IsInBinaryCache()
+	if err != nil {
+		return err
+	}
+
+	if !inCache && nix.IsGithubNixpkgsURL(input.URLForFlakeInput()) {
+		if err := nix.EnsureNixpkgsPrefetched(args.Writer, input.HashFromNixPkgsURL()); err != nil {
+			return err
+		}
+		if exists, err := input.ValidateInstallsOnSystem(); err != nil {
+			return err
+		} else if !exists {
+			platform := nix.System()
+			return usererr.New(
+				"package %s cannot be installed on your platform %s.\n"+
+					"If you know this package is incompatible with %[2]s, then "+
+					"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+					"If you think this package should be compatible with %[2]s, then "+
+					"it's possible this particular version is not available yet from the nix registry. "+
+					"You could try `devbox add` with a different version for this package.\n",
+				input.Raw,
+				platform,
+			)
+		}
+	}
+	stepMsg := args.Package
 	if args.CustomStepMessage != "" {
 		stepMsg = args.CustomStepMessage
 		// Only print this first one if we have a custom message. Otherwise it feels
@@ -207,12 +234,12 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
 	}
 
-	err := nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
-		Installable: args.Installable,
-		Offline:     args.Offline,
-		ProfilePath: args.ProfilePath,
-		Writer:      args.Writer,
-	})
+	installable, err := input.Installable()
+	if err != nil {
+		return err
+	}
+
+	err = nix.ProfileInstall(args.Writer, args.ProfilePath, installable)
 	if err != nil {
 		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
@@ -222,4 +249,18 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
 	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
 	return nil
+}
+
+// ProfileRemoveItems removes the items from the profile, in a single call, using their indexes.
+// It is up to the caller to ensure that the underlying profile has not changed since the items
+// were queried.
+func ProfileRemoveItems(profilePath string, items []*NixProfileListItem) error {
+	if len(items) == 0 {
+		return nil
+	}
+	indexes := []string{}
+	for _, item := range items {
+		indexes = append(indexes, strconv.Itoa(item.index))
+	}
+	return nix.ProfileRemove(profilePath, indexes)
 }
