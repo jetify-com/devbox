@@ -38,10 +38,13 @@ enough approximation for now.
 set fish_history devbox
 {{- end }}
 
-# Prepend to the prompt to make it clear we're in a devbox shell.
-functions -c fish_prompt __devbox_fish_prompt_orig
-function fish_prompt
-    echo "(devbox)" (__devbox_fish_prompt_orig)
+# If the user hasn't specified they want to handle the prompt themselves,
+# prepend to the prompt to make it clear we're in a devbox shell.
+if not set -q devbox_no_prompt
+    functions -c fish_prompt __devbox_fish_prompt_orig
+    function fish_prompt
+        echo "(devbox)" (__devbox_fish_prompt_orig)
+    end
 end
 
 {{- if .ShellStartTime }}
