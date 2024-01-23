@@ -4,7 +4,7 @@
 ! exec vim --version
 exec devbox global add ripgrep vim
 
-exec devbox global shellenv --recompute
+exec devbox global shellenv
 source.path
 exec rg --version
 exec vim --version
