@@ -1,12 +1,12 @@
-
+{{/* Fish version */ -}}
 {{/* if hash is set, we're in recursive loop, just exit */ -}}
 
-if [ -n "${{ .InitHookHash }}" ]; then
+if set -q {{ .InitHookHash }}; then
     return
-fi
+end
 
 export {{ .InitHookHash }}=true
 
 {{ .Body }}
 
-unset {{ .InitHookHash }}
+set -e {{ .InitHookHash }}
