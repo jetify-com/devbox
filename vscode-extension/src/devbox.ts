@@ -64,7 +64,6 @@ export async function devboxReopen() {
           // handle CLI finishing the env and sending  "finished"
           child.on('message', function (msg: Message, handle) {
             if (msg.status === "finished") {
-              logToFile(dotdevbox, 'Finished setting up! Reloading the window');
               progress.report({ message: 'Finished setting up! Reloading the window...', increment: 100 });
               resolve();
               commands.executeCommand("workbench.action.closeWindow");

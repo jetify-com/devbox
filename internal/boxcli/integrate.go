@@ -6,13 +6,16 @@ package boxcli
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"log"
+	"os"
 	"os/exec"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 )
@@ -57,19 +60,22 @@ type parentMessage struct {
 
 func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 	// Setup process communication with node as parent
+	logToFile("Devbox process initiated. Setting up communication channel with VSCode process")
 	channel, err := go2node.RunAsNodeChild()
 	if err != nil {
+		logToFile(err.Error())
 		return err
 	}
-
 	// Get config dir as a message from parent process
 	msg, err := channel.Read()
 	if err != nil {
+		logToFile(err.Error())
 		return err
 	}
 	// Parse node process' message
 	var message parentMessage
 	if err = json.Unmarshal(msg.Message, &message); err != nil {
+		logToFile(err.Error())
 		return err
 	}
 
@@ -79,11 +85,14 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
+		logToFile(err.Error())
 		return err
 	}
 	// Get env variables of a devbox shell
+	logToFile("Computing devbox environment")
 	envVars, err := box.EnvVars(cmd.Context())
 	if err != nil {
+		logToFile(err.Error())
 		return err
 	}
 	envVars = slices.DeleteFunc(envVars, func(s string) bool {
@@ -96,10 +105,12 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 	})
 
 	// Send message to parent process to terminate
+	logToFile("Signaling VSCode to close")
 	err = channel.Write(&go2node.NodeMessage{
 		Message: []byte(`{"status": "finished"}`),
 	})
 	if err != nil {
+		logToFile(err.Error())
 		return err
 	}
 	// Open vscode with devbox shell environment
@@ -108,10 +119,28 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command) error {
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
 	cmnd.Stderr = &errb
+	logToFile("Re-opening VSCode in computed devbox environment")
 	err = cmnd.Run()
 	if err != nil {
-		debug.Log("out: %s \n err: %s", outb.String(), errb.String())
+		logToFile(fmt.Sprintf("stdout: %s \n stderr: %s", outb.String(), errb.String()))
+		logToFile(err.Error())
 		return err
+	}
+	return nil
+}
+
+func logToFile(msg string) error {
+	file, err := os.OpenFile(".devbox/extension.log", os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	timestamp := time.Now().UTC().Format(time.RFC1123)
+	_, err = file.WriteString("[" + timestamp + "] " + msg + "\n")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = file.Close(); err != nil {
+		log.Fatal(err)
 	}
 	return nil
 }
