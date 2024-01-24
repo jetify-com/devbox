@@ -1,18 +1,13 @@
 exec devbox run php index.php
 stdout 'done\n'
 
-# temporarily disable rm test until we fix. It requires ensuring that package 
-# in profile matches the flake we are installing.
-# For non-flakes, this involves comparing versions. For flakes we need to compare 
-# the content (or hash)
+exec devbox rm php83Extensions.ds
+exec devbox run php index.php
+stdout 'ds extension is not enabled'
 
-# exec devbox rm php81Extensions.ds
-# exec devbox run php index.php
-# stdout 'ds extension is not enabled'
-
-# exec devbox add php81Extensions.ds
-# exec devbox run php index.php
-# stdout 'done\n'
+exec devbox add php83Extensions.ds
+exec devbox run php index.php
+stdout 'done\n'
 
 -- devbox.json --
 {
