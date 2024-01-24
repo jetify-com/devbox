@@ -225,6 +225,29 @@ func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs
 	return nil
 }
 
+func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
+	name, version := parseVersionedName(versionedName)
+	i := pkgs.index(name, version)
+	if i == -1 {
+		return errors.Errorf("package %s not found", versionedName)
+	}
+
+	toAdd := []string{}
+	for _, w := range whitelist {
+		if !slices.Contains(pkgs.Collection[i].AllowInsecure, w) {
+			toAdd = append(toAdd, w)
+		}
+	}
+
+	if len(toAdd) > 0 {
+		pkg := &pkgs.Collection[i]
+		pkgs.ast.appendAllowInsecure(pkg.name, "allow_insecure", toAdd)
+		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
+		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
+	}
+	return nil
+}
+
 func (pkgs *Packages) index(name, version string) int {
 	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
 		return p.name == name && p.Version == version
@@ -246,6 +269,10 @@ type Package struct {
 	// Outputs is the list of outputs to use for this package, assuming
 	// it is a nix package. If empty, the default output is used.
 	Outputs []string `json:"outputs,omitempty"`
+
+	// AllowInsecure is a whitelist of packages that may be marked insecure
+	// in nixpkgs, but are allowed by the user to be installed.
+	AllowInsecure []string `json:"allow_insecure,omitempty"`
 }
 
 func NewVersionOnlyPackage(name, version string) Package {
@@ -276,6 +303,10 @@ func NewPackage(name string, values map[string]any) Package {
 	if o, ok := values["outputs"]; ok {
 		outputs = o.([]string)
 	}
+	var allowInsecure []string
+	if a, ok := values["allow_insecure"]; ok {
+		allowInsecure = a.([]string)
+	}
 
 	return Package{
 		name:              name,
@@ -283,6 +314,7 @@ func NewPackage(name string, values map[string]any) Package {
 		Platforms:         platforms,
 		ExcludedPlatforms: excludedPlatforms,
 		Outputs:           outputs,
+		AllowInsecure:     allowInsecure,
 	}
 }
 

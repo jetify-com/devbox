@@ -19,7 +19,7 @@ const toSearchForPackages = "To search for packages, use the `devbox search` com
 
 type addCmdFlags struct {
 	config           configFlags
-	allowInsecure    bool
+	allowInsecure    []string
 	disablePlugin    bool
 	platforms        []string
 	excludePlatforms []string
@@ -53,8 +53,8 @@ func addCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
-	command.Flags().BoolVar(
-		&flags.allowInsecure, "allow-insecure", false,
+	command.Flags().StringSliceVar(
+		&flags.allowInsecure, "allow-insecure", []string{},
 		"allow adding packages marked as insecure.")
 	command.Flags().BoolVar(
 		&flags.disablePlugin, "disable-plugin", false,

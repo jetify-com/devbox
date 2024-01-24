@@ -208,6 +208,14 @@ func (c *configAST) appendOutputs(name, fieldName string, outputs []string) {
 	c.appendStringSliceField(name, fieldName, outputs)
 }
 
+func (c *configAST) appendAllowInsecure(name, fieldName string, whitelist []string) {
+	if len(whitelist) == 0 {
+		return
+	}
+
+	c.appendStringSliceField(name, fieldName, whitelist)
+}
+
 func (c *configAST) FindPkgObject(name string) *hujson.Object {
 	pkgs := c.packagesField(true).Value.Value.(*hujson.Object)
 	i := c.memberIndex(pkgs, name)

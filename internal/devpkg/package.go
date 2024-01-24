@@ -86,6 +86,10 @@ type Package struct {
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
 	PatchGlibc bool
 
+	// AllowInsecure are a list of nix packages that are whitelisted to be
+	// installed even if they are marked as insecure.
+	AllowInsecure []string
+
 	// isInstallable is true if the package may be enabled on the current platform.
 	isInstallable bool
 
@@ -118,6 +122,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
 		pkg.Outputs = cfgPkg.Outputs
+		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
 	}
 	return result
@@ -132,6 +137,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
 	pkg.Outputs = opts.Outputs
+	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
 
@@ -572,8 +578,8 @@ func (p *Package) InputAddressedPath() (string, error) {
 	return sysInfo.StorePath, nil
 }
 
-func (p *Package) AllowInsecure() bool {
-	return p.lockfile.Get(p.Raw).IsAllowInsecure()
+func (p *Package) HasAllowInsecure() bool {
+	return len(p.AllowInsecure) > 0
 }
 
 // StoreName returns the last section of the store path. Example:

@@ -25,8 +25,10 @@
           config.allowUnfree = true;
           config.permittedInsecurePackages = [
             {{- range $flake.Packages }}
-            {{- if .AllowInsecure }}
-            "{{ .StoreName }}"
+            {{- if .HasAllowInsecure }}
+            {{- range .AllowInsecure }}
+            "{{ . }}"
+            {{- end }}
             {{- end }}
             {{- end }}
           ];

@@ -653,6 +653,38 @@ func TestSetOutputsMigrateArray(t *testing.T) {
 	}
 }
 
+func TestSetAllowInsecure(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "python": {
+      "version": "2.7"
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "python": {
+      "version":        "2.7",
+      "allow_insecure": ["python-2.7.18.1"]
+    }
+  }
+}`)
+
+	err := in.Packages.SetAllowInsecure(io.Discard, "python@2.7", []string{"python-2.7.18.1"})
+	if err != nil {
+		t.Error(err)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	in := DefaultConfig()
