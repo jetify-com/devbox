@@ -50,7 +50,7 @@ func integrateVSCodeCmd() *cobra.Command {
 			return runIntegrateVSCodeCmd(cmd, flags)
 		},
 	}
-	command.Flags().BoolVar(&flags.debugmode, "debugmdoe", false, "enable debug outputs to a file.")
+	command.Flags().BoolVar(&flags.debugmode, "debugmode", false, "enable debug outputs to a file.")
 	flags.config.register(command)
 
 	return command
