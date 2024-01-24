@@ -61,26 +61,26 @@ type parentMessage struct {
 }
 
 func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
-	d := debugMode{
+	dm := debugMode{
 		enabled: flags.debugmode,
 	}
 	// Setup process communication with node as parent
-	d.logToFile("Devbox process initiated. Setting up communication channel with VSCode process")
+	dm.logToFile("Devbox process initiated. Setting up communication channel with VSCode process")
 	channel, err := go2node.RunAsNodeChild()
 	if err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 	// Get config dir as a message from parent process
 	msg, err := channel.Read()
 	if err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 	// Parse node process' message
 	var message parentMessage
 	if err = json.Unmarshal(msg.Message, &message); err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 
@@ -90,14 +90,14 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		Stderr: cmd.ErrOrStderr(),
 	})
 	if err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 	// Get env variables of a devbox shell
-	d.logToFile("Computing devbox environment")
+	dm.logToFile("Computing devbox environment")
 	envVars, err := box.EnvVars(cmd.Context())
 	if err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 	envVars = slices.DeleteFunc(envVars, func(s string) bool {
@@ -110,12 +110,12 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 	})
 
 	// Send message to parent process to terminate
-	d.logToFile("Signaling VSCode to close")
+	dm.logToFile("Signaling VSCode to close")
 	err = channel.Write(&go2node.NodeMessage{
 		Message: []byte(`{"status": "finished"}`),
 	})
 	if err != nil {
-		d.logToFile(err.Error())
+		dm.logToFile(err.Error())
 		return err
 	}
 	// Open vscode with devbox shell environment
@@ -124,11 +124,11 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
 	cmnd.Stderr = &errb
-	d.logToFile("Re-opening VSCode in computed devbox environment")
+	dm.logToFile("Re-opening VSCode in computed devbox environment")
 	err = cmnd.Run()
 	if err != nil {
-		d.logToFile(fmt.Sprintf("stdout: %s \n stderr: %s", outb.String(), errb.String()))
-		d.logToFile(err.Error())
+		dm.logToFile(fmt.Sprintf("stdout: %s \n stderr: %s", outb.String(), errb.String()))
+		dm.logToFile(err.Error())
 		return err
 	}
 	return nil
