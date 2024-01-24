@@ -2,8 +2,11 @@
 
 
 
-# Prepend to the prompt to make it clear we're in a devbox shell.
-export PS1="(devbox) $PS1"
+# If the user hasn't specified they want to handle the prompt themselves,
+# prepend to the prompt to make it clear we're in a devbox shell.
+if [ -z "$DEVBOX_NO_PROMPT" ]; then
+  export PS1="(devbox) $PS1"
+fi
 
 # End Devbox Post-init Hook
 
