@@ -48,7 +48,8 @@ export async function devboxReopen() {
           // To use a custom compiled devbox when testing, change this to an absolute path.
           const devbox = 'devbox';
           // run devbox integrate and then close this window
-          let child = spawn(devbox, ['integrate', 'vscode'], {
+          const debugModeFlag = workspace.getConfiguration("devbox").get("enableDebugMode");
+          let child = spawn(devbox, ['integrate', 'vscode', '--debugmode='+debugModeFlag], {
             cwd: workingDir.path,
             stdio: [0, 1, 2, 'ipc']
           });
@@ -136,15 +137,18 @@ function updateVSCodeConf() {
 }
 
 async function logToFile(dotDevboxPath: Uri, message: string) {
-  try {   
-    const logFilePath = Uri.joinPath(dotDevboxPath, 'extension.log');
-    const timestamp = new Date().toUTCString();
-    const fileHandler = await open(logFilePath.fsPath, 'a');
-    const logData = new Uint8Array(Buffer.from(`[${timestamp}] ${message}\n`));
-    await writeFile(fileHandler, logData, {flag: 'a'} );
-    await fileHandler.close();
-  } catch (error) {
-    console.log("failed to write to extension.log file");
-    console.error(error);
+  // only print to log file if debug mode config is set to true
+  if (workspace.getConfiguration("devbox").get("enableDebugMode")){
+    try {   
+      const logFilePath = Uri.joinPath(dotDevboxPath, 'extension.log');
+      const timestamp = new Date().toUTCString();
+      const fileHandler = await open(logFilePath.fsPath, 'a');
+      const logData = new Uint8Array(Buffer.from(`[${timestamp}] ${message}\n`));
+      await writeFile(fileHandler, logData, {flag: 'a'} );
+      await fileHandler.close();
+    } catch (error) {
+      console.log("failed to write to extension.log file");
+      console.error(error);
+    }
   }
 }
