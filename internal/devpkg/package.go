@@ -78,6 +78,10 @@ type Package struct {
 	//    example: github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello
 	Raw string
 
+	// Outputs is a list of outputs to build from the package's derivation.
+	// If empty, the default output is used.
+	Outputs []string
+
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
 	PatchGlibc bool
@@ -113,6 +117,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
+		pkg.Outputs = cfgPkg.Outputs
 		result = append(result, pkg)
 	}
 	return result
@@ -126,6 +131,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
+	pkg.Outputs = opts.Outputs
 	return pkg
 }
 
