@@ -33,7 +33,7 @@ export async function devboxReopen() {
         if (workspace.workspaceFolders) {
           const workingDir = workspace.workspaceFolders[0].uri;
           const dotdevbox = Uri.joinPath(workingDir, '/.devbox');
-          await logToFile(dotdevbox, 'Installing devbox pacakges');
+          await logToFile(dotdevbox, 'Installing devbox packages');
           progress.report({ message: 'Installing devbox packages...', increment: 25 });
           await setupDotDevbox(workingDir, dotdevbox);
           
