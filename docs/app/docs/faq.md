@@ -35,13 +35,29 @@ In order to save space, Devbox and Nix only install the required components of p
 
 You can learn more about non-default outputs [here](./guides/using_flakes.md#installing-additional-outputs-from-a-flake).
 
+## I'm trying to build a project, but it says that I'm missing `libstdc++`. How do I install this library in my project?
+
+This message means that your project requires an implementation of the C++ Standard Library installed and linked within your shell. You can add the libstdc++ libraries and object files using `devbox add stdenv.cc.cc.lib`. 
+
 ## How can I use custom Nix packages or overrides with Devbox?
 
 You can add customized packages to your Devbox environment using our [Flake support](./guides/using_flakes.md). You can use these flakes to modify or override packages from nixpkgs, or to create your own custom packages.
 
 ## Can I use Devbox if I use [Fish](https://fishshell.com/)?
 
-Yes. In addition to supporting POSIX compliant shells like Zsh and Bash, Devbox also works with Fish.
+Yes. In addition to supporting POSIX compliant shells like Zsh and Bash, Devbox also works with Fish. 
+
+Note that `init_hooks` in Devbox will be run directly in your host shell, so you may have encounter some compatibility issues if you try to start a shell that uses a POSIX-compatible script in the init_hook.  
+
+## How can I rollback to a previous version of Devbox?
+
+You can use any previous version of Devbox by setting the `DEVBOX_USE_VERSION` environment variable. For example, to use version 0.8.0, you can run the following or add it to your shell's rcfile: 
+
+```bash
+export DEVBOX_USE_VERSION=0.8.0
+```
+
+You can upgrade to the latest version of Devbox by unsetting the variable, and running `devbox version update`
 
 ## How can I uninstall Devbox?
 
