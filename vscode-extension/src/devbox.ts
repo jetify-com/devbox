@@ -1,4 +1,5 @@
 import { window, workspace, commands, ProgressLocation, Uri, ConfigurationTarget, env } from 'vscode';
+import { writeFile, open } from 'fs/promises';
 import { spawn, spawnSync } from 'node:child_process';
 
 
@@ -32,25 +33,30 @@ export async function devboxReopen() {
         if (workspace.workspaceFolders) {
           const workingDir = workspace.workspaceFolders[0].uri;
           const dotdevbox = Uri.joinPath(workingDir, '/.devbox');
+          await logToFile(dotdevbox, 'Installing devbox packages');
           progress.report({ message: 'Installing devbox packages...', increment: 25 });
           await setupDotDevbox(workingDir, dotdevbox);
-
+          
           // setup required vscode settings
+          await logToFile(dotdevbox, 'Updating VSCode configurations');
           progress.report({ message: 'Updating configurations...', increment: 50 });
           updateVSCodeConf();
 
           // Calling CLI to compute devbox env
+          await logToFile(dotdevbox, 'Calling "devbox integrate" to setup environment');
           progress.report({ message: 'Calling Devbox to setup environment...', increment: 80 });
           // To use a custom compiled devbox when testing, change this to an absolute path.
           const devbox = 'devbox';
           // run devbox integrate and then close this window
-          let child = spawn(devbox, ['integrate', 'vscode'], {
+          const debugModeFlag = workspace.getConfiguration("devbox").get("enableDebugMode");
+          let child = spawn(devbox, ['integrate', 'vscode', '--debugmode='+debugModeFlag], {
             cwd: workingDir.path,
             stdio: [0, 1, 2, 'ipc']
           });
           // if CLI closes before sending "finished" message
           child.on('close', (code: number) => {
             console.log("child process closed with exit code:", code);
+            logToFile(dotdevbox, 'child process closed with exit code: ' + code);
             window.showErrorMessage("Failed to setup devbox environment.");
             reject();
           });
@@ -65,6 +71,7 @@ export async function devboxReopen() {
             }
             else {
               console.log(msg);
+              logToFile(dotdevbox, 'Failed to setup devbox environment.' + String(msg));
               window.showErrorMessage("Failed to setup devbox environment.");
               reject();
             }
@@ -126,5 +133,22 @@ function updateVSCodeConf() {
       'devboxCompatibleShell',
       ConfigurationTarget.Workspace
     );
+  }
+}
+
+async function logToFile(dotDevboxPath: Uri, message: string) {
+  // only print to log file if debug mode config is set to true
+  if (workspace.getConfiguration("devbox").get("enableDebugMode")){
+    try {   
+      const logFilePath = Uri.joinPath(dotDevboxPath, 'extension.log');
+      const timestamp = new Date().toUTCString();
+      const fileHandler = await open(logFilePath.fsPath, 'a');
+      const logData = new Uint8Array(Buffer.from(`[${timestamp}] ${message}\n`));
+      await writeFile(fileHandler, logData, {flag: 'a'} );
+      await fileHandler.close();
+    } catch (error) {
+      console.log("failed to write to extension.log file");
+      console.error(error);
+    }
   }
 }
