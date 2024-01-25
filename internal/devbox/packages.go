@@ -456,7 +456,6 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 			// This is because glibcLocales is only available on Linux.
 			// The user should try `devbox add` again with `--exclude-platform`
 			errMessage := strings.TrimSpace(err.Error())
-			fmt.Printf("errMessage is %s\n", errMessage)
 			maybePackageSystemCompatibilityError := strings.Contains(errMessage, "error: flake output attribute") &&
 				strings.Contains(errMessage, "is not a derivation or path")
 
