@@ -103,6 +103,15 @@ prefix = [ "/absolute/path/to/project" ]
 
 ```
 
+### Direnv Limitations
+
+Direnv works by creating a sub-shell using your `.envrc` file, your `devbox.json`, and other direnv related files, and then exporting the diff in environment variables into your current shell. This imposes some limitations on what it can load into your shell: 
+
+1. Direnv cannot load shell aliases or shell functions that are sourced in your project's `init_hook`. If you want to use direnv and also configure custom aliases, we recommend using [Devbox Scripts](../guides/scripts.md). 
+2. Direnv does not allow modifications to the $PS1 environment variable. This means `init_hooks` that modify your prompt will not work as expected. For more information, see the [direnv wiki](https://github.com/direnv/direnv/wiki/PS1)
+
+Note that sourcing aliases, functions, and `$PS1` should work as expected when using `devbox shell`, `devbox run`, and `devbox services`
+
 ### VSCode setup with direnv
 
 To seamlessly integrate VSCode with a direnv environment, follow these steps:

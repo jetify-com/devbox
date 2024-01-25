@@ -85,8 +85,34 @@ To install on a non NixOS:
 nix-env -iA nixpkgs.devbox
 ```
 
+or 
+
+```bash
+nix profile install nixpkgs#devbox
+```
+
 </TabItem>
 </Tabs>
+
+## Updating Devbox
+
+Devbox will notify you when a new version is available. To update to the latest released version of Devbox, you can run `devbox version update`. 
+
+If you installed Devbox with Nix, you can update Devbox via Nix using `nix-env -u devbox`, or `nix profile upgrade`.
+
+You can find release notes and details on the [Releases page](http://github.com/jetpack-io/devbox/releases) of the Devbox Github repo.
+
+## Rolling Back or Pinning a Specific Version of Devbox
+
+You can rollback or pin the version of Devbox on your system using the `DEVBOX_USE_VERSION` environment variable. For example, to use version 0.8.0: 
+
+```bash
+export DEVBOX_USE_VERSION=0.8.0
+```
+
+Setting this variable will use the specified version of Devbox even if a newer version has been installed on your machine. 
+
+If you installed Devbox with Nixpkgs, you will need to pin Devbox in your profile or Nix configuration. You can find the Nixpkg commits for previous versions of Devbox on [Nixhub](https://www.nixhub.io/packages/devbox). 
 
 ## Next Steps
 
