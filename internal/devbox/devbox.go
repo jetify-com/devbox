@@ -113,9 +113,16 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
-	if lock.HasAllowInsecurePackages() {
-		nix.AllowInsecurePackages()
+	if err := box.moveAllowInsecureFromLockfile(box.stderr, lock, cfg); err != nil {
+		ux.Fwarning(
+			box.stderr,
+			"Failed to move allow_insecure from devbox.lock to devbox.json. An insecure package may "+
+				"not work until you invoke `devbox add <pkg> --allow-insecure=<packages>` again: %s\n",
+			err,
+		)
+		// continue on, since we do not want to block user.
 	}
+
 	box.pluginManager.ApplyOptions(
 		plugin.WithDevbox(box),
 		plugin.WithLockfile(lock),

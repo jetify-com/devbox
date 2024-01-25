@@ -75,12 +75,6 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 			return nil
 		}
 
-		if strings.Contains(path, "insecure") {
-			// TODO: next PR will fix this
-			t.Logf("skipping insecure, config at: %s\n", path)
-			return nil
-		}
-
 		t.Logf("running testscript for example: %s\n", path)
 		runSingleDevboxTestscript(t, dir, path)
 		return nil
