@@ -32,7 +32,7 @@ direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
 
-This will generate a `.envrc` file in your project directory that contains `devbox.json`. Run `direnv allow` to activate your shell upon directory navigation. Run `direnv revoke` to stop. Changes to `devbox.json` automatically trigger direnv to reset the environment.
+This will generate a `.envrc` file in your project directory that contains `devbox.json`. Run `direnv allow` to activate your shell upon directory navigation. Run `direnv revoke` to stop. Changes to `devbox.json` automatically trigger direnv to reset the environment. The generated `.envrc` file doesn't need any further configuration. Just having the generated file along with installed direnv and Devbox, is enough to make direnv integration with Devbox work.
 
 
 #### Existing Project
@@ -46,6 +46,8 @@ Success: ran `direnv allow`
 direnv: loading ~/src/devbox/docs/.envrc
 direnv: using devbox
 ```
+
+The generated `.envrc` file doesn't need any further configuration. Just having the generated file along with installed direnv and Devbox, is enough to make direnv integration with Devbox work.
 
 #### Adding Custom Env Variables or Env Files to your Direnv Config
 
