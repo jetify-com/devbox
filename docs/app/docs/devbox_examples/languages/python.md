@@ -29,13 +29,36 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 The `python` package automatically comes bundled with `pip`, and the `python` plugin for Devbox will automatically create a virtual environment for installing your packages locally
 
-Your virtual environment is created in the `.devbox/virtenv/python` directory by default, and can be activated by running `. $VENV_DIR/bin/activate` in your devbox shell. You can activate the virtual environment automatically using the init_hook of your `devbox.json`:
+Your virtual environment is created in the `.devbox/virtenv/python` directory by default, and can be activated by running `. $VENV_DIR/bin/activate` in your Devbox shell. You can activate the virtual environment automatically using the init_hook of your `devbox.json`:
 
 ```json
 {
     "packages": [
         "python@3.10"
     ],
+    "shell": {
+        "init_hook": ". $VENV_DIR/bin/activate"
+    }
+}
+```
+
+:::info
+
+For Fish or other shells, you may need to use a different activation script. See the [venv docs](https://docs.python.org/3/library/venv.html#how-venvs-work) for more details.
+
+:::
+
+Devbox installs the virtual environment in `.devbox/virtenv/python/.venv` by default. You can modify this path by setting the `VENV_DIR` environment variable in your devbox.json: 
+
+```json
+{
+    "packages": [
+        "python@3.10"
+    ],
+    "env": {
+        // Install your virtual environment in `.venv`
+        "VENV_DIR": ".venv"
+    },
     "shell": {
         "init_hook": ". $VENV_DIR/bin/activate"
     }
