@@ -325,7 +325,13 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	envStr := exportify(envs)
 
 	if opts.RunHooks {
-		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
+		hooksFilename := shellgen.HooksFilename
+		if isFishShell() {
+			hooksFilename = shellgen.HooksFishFilename
+		}
+
+		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), hooksFilename)
+
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
