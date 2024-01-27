@@ -25,10 +25,8 @@
           config.allowUnfree = true;
           config.permittedInsecurePackages = [
             {{- range $flake.Packages }}
-            {{- if .HasAllowInsecure }}
             {{- range .AllowInsecure }}
             "{{ . }}"
-            {{- end }}
             {{- end }}
             {{- end }}
           ];
