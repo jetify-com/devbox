@@ -4,6 +4,10 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.4]
+
+- Added debug mode in extension settings (only supports logs for "Reopen in Devbox Shell environment" feature).
+
 ## [0.1.3]
 
 - Added json validation for devbox.json files.

@@ -48,6 +48,10 @@ No need to take any action for this feature. When writing a devbox.json, if this
 
 ---
 
+### Debug Mode
+
+Enabling debug mode in extension settings will create a seqience of logs in the file `.devbox/extension.log`. This feature only tracks the logs for `"Devbox: Reopen in Devbox Shell environment"` feature.
+
 ## Following extension guidelines
 
 Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
