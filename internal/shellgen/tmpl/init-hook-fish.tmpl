@@ -2,7 +2,7 @@
 {{/* if hash is set, we're in recursive loop, just exit */ -}}
 
 if set -q {{ .InitHookHash }}; then
-    return
+    exit 0
 end
 
 export {{ .InitHookHash }}=true
