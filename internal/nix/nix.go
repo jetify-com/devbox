@@ -6,6 +6,7 @@ package nix
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -72,7 +73,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
 		data, err = cmd.Output()
-		if insecure, insecureErr := isExitErrorInsecurePackage(err); insecure {
+		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
 			return nil, errors.Wrapf(err, "Command: %s", cmd)
@@ -223,18 +224,58 @@ func ProfileBinPath(projectDir string) string {
 	return filepath.Join(projectDir, ProfilePath, "bin")
 }
 
-func isExitErrorInsecurePackage(err error) (bool, error) {
+func IsExitErrorInsecurePackage(err error, installableOrEmpty string) (bool, error) {
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
 		if strings.Contains(string(exitErr.Stderr), "is marked as insecure") {
-			re := regexp.MustCompile(`Package ([^ ]+)`)
-			match := re.FindStringSubmatch(string(exitErr.Stderr))
-			return true, usererr.New(
-				"Package %s is insecure. \n\n"+
-					"To override use `devbox add <pkg> --allow-insecure`",
-				match[0],
-			)
+			packageRegex := regexp.MustCompile(`Package ([^ ]+)`)
+			packageMatch := packageRegex.FindStringSubmatch(string(exitErr.Stderr))
+
+			knownVulnerabilities := []string{}
+			if installableOrEmpty != "" {
+				knownVulnerabilities = PackageKnownVulnerabilities(installableOrEmpty)
+			}
+
+			insecurePackages := parseInsecurePackagesFromExitError(string(exitErr.Stderr))
+
+			// Construct the error message.
+			errMessages := []string{}
+			errMessages = append(errMessages, fmt.Sprintf("Package %s is insecure.", packageMatch[1]))
+			if len(knownVulnerabilities) > 0 {
+				errMessages = append(errMessages,
+					fmt.Sprintf("Known vulnerabilities:\n%s", strings.Join(knownVulnerabilities, "\n")))
+			}
+			errMessages = append(errMessages,
+				fmt.Sprintf("To override, use `devbox add <pkg> --allow-insecure=%s`", strings.Join(insecurePackages, ", ")))
+
+			return true, usererr.New(strings.Join(errMessages, "\n\n"))
 		}
 	}
 	return false, nil
+}
+
+func parseInsecurePackagesFromExitError(errorMsg string) []string {
+	insecurePackages := []string{}
+
+	// permittedRegex is designed to match the following:
+	// permittedInsecurePackages = [
+	//    "package-one"
+	//    "package-two"
+	// ];
+	permittedRegex := regexp.MustCompile(`permittedInsecurePackages\s*=\s*\[([\s\S]*?)\]`)
+	permittedMatch := permittedRegex.FindStringSubmatch(errorMsg)
+	if len(permittedMatch) > 1 {
+		packagesList := permittedMatch[1]
+		// pick out the package name strings inside the quotes
+		packageMatches := regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(packagesList, -1)
+
+		// Extract the insecure package names from the matches
+		for _, packageMatch := range packageMatches {
+			if len(packageMatch) > 1 {
+				insecurePackages = append(insecurePackages, packageMatch[1])
+			}
+		}
+	}
+
+	return insecurePackages
 }

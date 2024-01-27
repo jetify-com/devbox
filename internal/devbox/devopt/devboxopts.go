@@ -43,7 +43,7 @@ type Credentials struct {
 }
 
 type AddOpts struct {
-	AllowInsecure    bool
+	AllowInsecure    []string
 	Platforms        []string
 	ExcludePlatforms []string
 	DisablePlugin    bool

@@ -174,6 +174,22 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "map-with-allow-insecure-nixpkgs-reference",
+			jsonConfig: `{"packages":{"github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#python":` +
+				`{"version":"2.7",` +
+				`"allow_insecure":["python-2.7.18.1"]` +
+				`}}}`,
+
+			expected: Packages{
+				Collection: []Package{
+					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#python", map[string]any{
+						"version":        "2.7",
+						"allow_insecure": []string{"python-2.7.18.1"},
+					}),
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

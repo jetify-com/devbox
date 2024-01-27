@@ -137,24 +137,9 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			d.stderr, pkg, opts.Outputs); err != nil {
 			return err
 		}
-	}
-
-	// Resolving here ensures we allow insecure before running ensureStateIsUpToDate
-	// which will call print-dev-env. Resolving does not save the lockfile, we
-	// save at the end when everything has succeeded.
-	if opts.AllowInsecure {
-		nix.AllowInsecurePackages()
-		for _, name := range pkgs {
-			p, err := d.lockfile.Resolve(name)
-			if err != nil {
-				return err
-			}
-			// TODO: Now that config packages can have fields,
-			// we should set this in the config, not the lockfile.
-			if !p.AllowInsecure {
-				fmt.Fprintf(d.stderr, "Allowing insecure for %s\n", name)
-			}
-			p.AllowInsecure = true
+		if err := d.cfg.Packages.SetAllowInsecure(
+			d.stderr, pkg, opts.AllowInsecure); err != nil {
+			return err
 		}
 	}
 
@@ -179,7 +164,7 @@ func (d *Devbox) printPostAddMessage(
 		}
 	}
 
-	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && len(opts.Outputs) == 0 && !opts.AllowInsecure {
+	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && len(opts.Outputs) == 0 && len(opts.AllowInsecure) == 0 {
 		if len(unchangedPackageNames) == 1 {
 			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {
@@ -444,8 +429,12 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
 		fmt.Fprintf(d.stderr, stepMsg+"\n")
 
-		// --no-link to avoid generating the result objects
-		err = nix.Build(ctx, []string{"--no-link"}, installable)
+		args := &nix.BuildArgs{
+			AllowInsecure: pkg.HasAllowInsecure(),
+			// --no-link to avoid generating the result objects
+			Flags: []string{"--no-link"},
+		}
+		err = nix.Build(ctx, args, installable)
 		if err != nil {
 			fmt.Fprintf(d.stderr, "%s: ", stepMsg)
 			color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
@@ -473,6 +462,10 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 					pkg.Raw,
 					platform,
 				)
+			}
+
+			if isInsecureErr, userErr := nix.IsExitErrorInsecurePackage(err, installable); isInsecureErr {
+				return userErr
 			}
 
 			return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
