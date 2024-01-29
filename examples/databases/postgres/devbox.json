@@ -1,7 +1,11 @@
 {
-  "packages": [
-    "postgresql@latest"
-  ],
+  "packages": {
+    "postgresql": "latest",
+    "glibcLocales": {
+      "version":   "latest",
+      "platforms": ["x86_64-linux", "aarch64-linux"]
+    }
+  },
   "shell": {
     "init_hook": null
   }
