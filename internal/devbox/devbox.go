@@ -1225,7 +1225,9 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 
 // parseEnvAndExcludeSpecialCases converts env as []string to map[string]string
 // In case of pure shell, it leaks HOME and it leaks PATH with some modifications
+// For fish shells, we skip most of the current env-vars.
 func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string]string, error) {
+
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
 		key, val, found := strings.Cut(kv, "=")
@@ -1235,16 +1237,17 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		if ignoreCurrentEnvVar[key] {
 			continue
 		}
-		// handling special cases for pure shell
+
+		// handling special cases for pure shell and fish shell
 		// - HOME required for devbox binary to work
 		// - PATH to find the nix installation. It is cleaned for pure mode below.
 		// - TERM to enable colored text in the pure shell
-		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
+		if (!d.pure && !isFishShell()) || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
 	}
 
-	// handling special case for PATH
+	// For pure shells, we restrict PATH to only include directories that may contain the nix executable
 	if d.pure {
 		// Finding nix executables in path and passing it through
 		// As well as adding devbox itself to PATH
