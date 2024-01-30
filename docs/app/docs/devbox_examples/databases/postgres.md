@@ -9,7 +9,7 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
 
 ## Adding Postgres to your Shell
 
-You can install the PostgreSQL server and client by running`devbox add postgresql`. In some Linux distributions, you may also need to add `glibcLocales`, which can be added using `devbox add glibcLocales -p x86_64-linux,aarch64-linux`.
+You can install the PostgreSQL server and client by running`devbox add postgresql`. In some Linux distributions, you may also need to add `glibcLocales`, which can be added using `devbox add glibcLocales --platform=x86_64-linux,aarch64-linux`.
 
 Alternatively, you can add the following to your devbox.json:
 
