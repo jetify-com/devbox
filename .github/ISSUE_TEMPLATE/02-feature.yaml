@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest an idea or new feature
+labels:
+  - feature
+  - triage
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: >-
+        Describe the problem you're trying to solve with this feature.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What solution would you like?
+      description: >-
+        Describe the feature you would like to see implemented and explain how
+        it would address the problem you described above.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: >-
+        Describe any alternative solutions or features you've considered. If you
+        know of any similar features requested before, please include links to
+        them.

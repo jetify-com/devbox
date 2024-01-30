@@ -1,0 +1,28 @@
+name: Package Issue
+description: Report a problem with an existing package on either Devbox or Nixhub
+labels:
+  - package
+  - bug
+  - triage
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Package name
+      placeholder: go@1.21.6, python@3.10.13, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What changes are you requesting?
+      description: >-
+        Describe what's going wrong or what changes you'd like to see to the
+        package.
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Nixhub link
+      placeholder: https://www.nixhub.io/packages/go

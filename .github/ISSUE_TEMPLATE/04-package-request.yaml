@@ -1,0 +1,31 @@
+name: Package Request
+description: Request a new package to be added to Devbox and Nixhub
+labels:
+  - package
+  - triage
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Package name
+      description: What name are you requesting for the new package?
+    validations:
+      required: true
+  - type: input
+    id: nixpkgs
+    attributes:
+      label: Nix package link
+      description: >-
+        Are you able to find the package on https://search.nixos.org/packages?
+        If so, please include a link to the search results. Otherwise, leave
+        blank.
+  - type: textarea
+    id: software
+    attributes:
+      label: Software
+      description: >-
+        Provide a description of the software that should be added to the new
+        package. Include any relevant links such as websites,
+        GitHub repositories, etc.
+    validations:
+      required: true
