@@ -81,6 +81,7 @@ type Stage struct {
 
 func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(`{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
   "packages": [],
   "shell": {
     "init_hook": [
