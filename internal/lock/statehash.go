@@ -13,6 +13,8 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
+var ignoreShellMismatch = false
+
 // stateHashFile is a non-shared lock file that helps track the state of the
 // local devbox environment. It contains hashes that may not be the same across
 // machines (e.g. manifest hash).
@@ -46,6 +48,12 @@ func UpdateAndSaveStateHashFile(args UpdateStateHashFileArgs) error {
 	return cuecfg.WriteFile(stateHashFilePath(args.ProjectDir), newLock)
 }
 
+// SetIgnoreShellMismatch is used to disable the shell comparison when checking
+// if the state is up to date. This is useful when we don't load shellrc (e.g. running)
+func SetIgnoreShellMismatch(ignore bool) {
+	ignoreShellMismatch = ignore
+}
+
 func isStateUpToDate(args UpdateStateHashFileArgs) (bool, error) {
 	filesystemStateHash, err := readStateHashFile(args.ProjectDir)
 	if err != nil {
@@ -54,6 +62,10 @@ func isStateUpToDate(args UpdateStateHashFileArgs) (bool, error) {
 	newStateHash, err := getCurrentStateHash(args)
 	if err != nil {
 		return false, err
+	}
+
+	if ignoreShellMismatch {
+		filesystemStateHash.IsFish = newStateHash.IsFish
 	}
 
 	return *filesystemStateHash == *newStateHash, nil
