@@ -244,7 +244,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
 
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled()
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 	if err != nil {
 		return err
 	}
@@ -309,7 +309,15 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 	// If not, we leave the local.lock in a stale state, so that state is recomputed
 	// on the next ensureStateIsUpToDate call with mode=ensure.
 	if recomputeState {
-		return d.lockfile.UpdateAndSaveLocalLock()
+		configHash, err := d.ConfigHash()
+		if err != nil {
+			return err
+		}
+		return lock.UpdateAndSaveStateHashFile(lock.UpdateStateHashFileArgs{
+			ProjectDir: d.projectDir,
+			ConfigHash: configHash,
+			IsFish:     isFishShell(),
+		})
 	}
 	return nil
 }

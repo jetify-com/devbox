@@ -39,7 +39,7 @@ func GetFile(project devboxProject) (*File, error) {
 		LockFileVersion: lockFileVersion,
 		Packages:        map[string]*Package{},
 	}
-	err := cuecfg.ParseFile(lockFilePath(project), lockFile)
+	err := cuecfg.ParseFile(lockFilePath(project.ProjectDir()), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
 		return lockFile, nil
 	}
@@ -98,11 +98,7 @@ func (f *File) ForceResolve(pkg string) (*Package, error) {
 }
 
 func (f *File) Save() error {
-	return cuecfg.WriteFile(lockFilePath(f.devboxProject), f)
-}
-
-func (f *File) UpdateAndSaveLocalLock() error {
-	return updateLocal(f.devboxProject)
+	return cuecfg.WriteFile(lockFilePath(f.devboxProject.ProjectDir()), f)
 }
 
 func (f *File) LegacyNixpkgsPath(pkg string) string {
@@ -152,13 +148,21 @@ func (f *File) Tidy() {
 // IsUpToDateAndInstalled returns true if the lockfile is up to date and the
 // local hashes match, which generally indicates all packages are correctly
 // installed and print-dev-env has been computed and cached.
-func (f *File) IsUpToDateAndInstalled() (bool, error) {
+func (f *File) IsUpToDateAndInstalled(isFish bool) (bool, error) {
 	if dirty, err := f.isDirty(); err != nil {
 		return false, err
 	} else if dirty {
 		return false, nil
 	}
-	return isLocalUpToDate(f.devboxProject)
+	configHash, err := f.devboxProject.ConfigHash()
+	if err != nil {
+		return false, err
+	}
+	return isStateUpToDate(UpdateStateHashFileArgs{
+		ProjectDir: f.devboxProject.ProjectDir(),
+		ConfigHash: configHash,
+		IsFish:     isFish,
+	})
 }
 
 func (f *File) isDirty() (bool, error) {
@@ -177,12 +181,8 @@ func (f *File) isDirty() (bool, error) {
 	return currentHash != filesystemHash, nil
 }
 
-func lockFilePath(project devboxProject) string {
-	return filepath.Join(project.ProjectDir(), "devbox.lock")
-}
-
-func getLockfileHash(project devboxProject) (string, error) {
-	return cachehash.JSONFile(lockFilePath(project))
+func lockFilePath(projectDir string) string {
+	return filepath.Join(projectDir, "devbox.lock")
 }
 
 func ResolveRunXPackage(ctx context.Context, pkg string) (types.PkgRef, error) {

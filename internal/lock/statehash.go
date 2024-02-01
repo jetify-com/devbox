@@ -1,0 +1,116 @@
+// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package lock
+
+import (
+	"errors"
+	"io/fs"
+	"path/filepath"
+
+	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/internal/cuecfg"
+)
+
+// stateHashFile is a non-shared lock file that helps track the state of the
+// local devbox environment. It contains hashes that may not be the same across
+// machines (e.g. manifest hash).
+// When we do implement a shared lock file, it may contain some shared fields
+// with this one but not all.
+type stateHashFile struct {
+	ConfigHash    string `json:"config_hash"`
+	DevboxVersion string `json:"devbox_version"`
+	// fish has different generated scripts so we need to recompute them if user
+	// changes shell.
+	IsFish                 bool   `json:"is_fish"`
+	LockFileHash           string `json:"lock_file_hash"`
+	NixPrintDevEnvHash     string `json:"nix_print_dev_env_hash"`
+	NixProfileManifestHash string `json:"nix_profile_manifest_hash"`
+}
+
+type UpdateStateHashFileArgs struct {
+	ProjectDir string
+	ConfigHash string
+	// IsFish is an arg because in the future we may allow the user
+	// to specify shell in devbox.json which should be passed in here.
+	IsFish bool
+}
+
+func UpdateAndSaveStateHashFile(args UpdateStateHashFileArgs) error {
+	newLock, err := getCurrentStateHash(args)
+	if err != nil {
+		return err
+	}
+
+	return cuecfg.WriteFile(stateHashFilePath(args.ProjectDir), newLock)
+}
+
+func isStateUpToDate(args UpdateStateHashFileArgs) (bool, error) {
+	filesystemLock, err := readStateHashFile(args.ProjectDir)
+	if err != nil {
+		return false, err
+	}
+	newLock, err := getCurrentStateHash(args)
+	if err != nil {
+		return false, err
+	}
+
+	return *filesystemLock == *newLock, nil
+}
+
+func readStateHashFile(projectDir string) (*stateHashFile, error) {
+	lockFile := &stateHashFile{}
+	err := cuecfg.ParseFile(stateHashFilePath(projectDir), lockFile)
+	if errors.Is(err, fs.ErrNotExist) {
+		return lockFile, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return lockFile, nil
+}
+
+func getCurrentStateHash(args UpdateStateHashFileArgs) (*stateHashFile, error) {
+	nixHash, err := manifestHash(args.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	printDevEnvCacheHash, err := printDevEnvCacheHash(args.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	lockfileHash, err := getLockfileHash(args.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	newLock := &stateHashFile{
+		ConfigHash:             args.ConfigHash,
+		DevboxVersion:          build.Version,
+		IsFish:                 args.IsFish,
+		LockFileHash:           lockfileHash,
+		NixPrintDevEnvHash:     printDevEnvCacheHash,
+		NixProfileManifestHash: nixHash,
+	}
+
+	return newLock, nil
+}
+
+func stateHashFilePath(projectDir string) string {
+	return filepath.Join(projectDir, ".devbox", "local.lock")
+}
+
+func manifestHash(profileDir string) (string, error) {
+	return cachehash.JSONFile(filepath.Join(profileDir, ".devbox/nix/profile/default/manifest.json"))
+}
+
+func printDevEnvCacheHash(profileDir string) (string, error) {
+	return cachehash.JSONFile(filepath.Join(profileDir, ".devbox/.nix-print-dev-env-cache"))
+}
+
+func getLockfileHash(projectDir string) (string, error) {
+	return cachehash.JSONFile(lockFilePath(projectDir))
+}
