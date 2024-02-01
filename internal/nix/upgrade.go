@@ -4,7 +4,6 @@
 package nix
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -13,11 +12,11 @@ import (
 	"go.jetpack.io/devbox/internal/vercheck"
 )
 
-func ProfileUpgrade(ProfileDir string, idx int) error {
+func ProfileUpgrade(ProfileDir, indexOrName string) error {
 	cmd := command(
 		"profile", "upgrade",
 		"--profile", ProfileDir,
-		fmt.Sprintf("%d", idx),
+		indexOrName,
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

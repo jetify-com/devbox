@@ -129,8 +129,9 @@ jobs:
         run-project-tests: ["project-tests", "project-tests-off"]
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
-        # 2. latest nix version
-        nix-version: ["2.12.0", "2.19.2"]
+        # 2. nix 2.19.2: version before nix profile changes
+        # 2. latest nix version (note, 2.20.1 introduced a new profile change)
+        nix-version: ["2.12.0", "2.19.2", "2.20.1"]
         exclude:
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
