@@ -49,10 +49,10 @@ func TestNixProfileListItem(t *testing.T) {
 			),
 			expected: expectedTestData{
 				item: &NixProfileListItem{
-					2,
-					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
-					"github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
-					[]string{"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3"},
+					index:             2,
+					unlockedReference: "github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
+					lockedReference:   "github:NixOS/nixpkgs/52e3e80afff4b16ccb7c52e9f0f5220552f03d04#legacyPackages.x86_64-darwin.python39Packages.numpy",
+					nixStorePaths:     []string{"/nix/store/qly36iy1p4q1h5p4rcbvsn3ll0zsd9pd-python3.9-numpy-1.23.3"},
 				},
 				attrPath:    "legacyPackages.x86_64-darwin.python39Packages.numpy",
 				packageName: "python39Packages.numpy",
