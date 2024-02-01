@@ -1,5 +1,9 @@
-{{/* Fish version */ -}}
-{{/* if hash is set, we're in recursive loop, just exit */ -}}
+{{/* 
+    Fish version 
+    Note: This template is not used if init hook is empty or default
+
+    If hash is set, we're in recursive loop, just exit
+*/ -}}
 
 if set -q {{ .InitHookHash }}; then
     exit 0
