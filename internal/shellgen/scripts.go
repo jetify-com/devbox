@@ -110,6 +110,11 @@ func writeInitHookFile(devbox devboxer, body, tmpl, filename string) (err error)
 	}
 	defer script.Close() // best effort: close file
 
+	if body == devconfig.DefaultInitHook || strings.TrimSpace(body) == "" {
+		_, err = script.WriteString(body)
+		return errors.WithStack(err)
+	}
+
 	t, err := template.New(filename).Parse(tmpl)
 	if err != nil {
 		return errors.WithStack(err)

@@ -300,7 +300,7 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	var err error
 
 	if opts.DontRecomputeEnvironment {
-		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
+		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 		if !upToDate {
 			cmd := `eval "$(devbox global shellenv --recompute)"`
 			if isFishShell() {

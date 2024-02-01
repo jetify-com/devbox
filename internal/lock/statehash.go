@@ -13,58 +13,55 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
-// localLockFile is a non-shared lock file that helps track the state of the
+// stateHashFile is a non-shared lock file that helps track the state of the
 // local devbox environment. It contains hashes that may not be the same across
 // machines (e.g. manifest hash).
 // When we do implement a shared lock file, it may contain some shared fields
 // with this one but not all.
-type localLockFile struct {
-	project                devboxProject
-	ConfigHash             string `json:"config_hash"`
-	DevboxVersion          string `json:"devbox_version"`
+type stateHashFile struct {
+	ConfigHash    string `json:"config_hash"`
+	DevboxVersion string `json:"devbox_version"`
+	// fish has different generated scripts so we need to recompute them if user
+	// changes shell.
+	IsFish                 bool   `json:"is_fish"`
 	LockFileHash           string `json:"lock_file_hash"`
-	NixProfileManifestHash string `json:"nix_profile_manifest_hash"`
 	NixPrintDevEnvHash     string `json:"nix_print_dev_env_hash"`
+	NixProfileManifestHash string `json:"nix_profile_manifest_hash"`
 }
 
-func (l *localLockFile) equals(other *localLockFile) bool {
-	return l.ConfigHash == other.ConfigHash &&
-		l.LockFileHash == other.LockFileHash &&
-		l.NixProfileManifestHash == other.NixProfileManifestHash &&
-		l.NixPrintDevEnvHash == other.NixPrintDevEnvHash &&
-		l.DevboxVersion == other.DevboxVersion
+type UpdateStateHashFileArgs struct {
+	ProjectDir string
+	ConfigHash string
+	// IsFish is an arg because in the future we may allow the user
+	// to specify shell in devbox.json which should be passed in here.
+	IsFish bool
 }
 
-func isLocalUpToDate(project devboxProject) (bool, error) {
-	filesystemLock, err := readLocal(project)
-	if err != nil {
-		return false, err
-	}
-	newLock, err := forProject(project)
-	if err != nil {
-		return false, err
-	}
-
-	return filesystemLock.equals(newLock), nil
-}
-
-func updateLocal(project devboxProject) error {
-	l, err := readLocal(project)
+func UpdateAndSaveStateHashFile(args UpdateStateHashFileArgs) error {
+	newLock, err := getCurrentStateHash(args)
 	if err != nil {
 		return err
 	}
-	newLock, err := forProject(l.project)
-	if err != nil {
-		return err
-	}
-	*l = *newLock
 
-	return cuecfg.WriteFile(localLockFilePath(l.project), l)
+	return cuecfg.WriteFile(stateHashFilePath(args.ProjectDir), newLock)
 }
 
-func readLocal(project devboxProject) (*localLockFile, error) {
-	lockFile := &localLockFile{project: project}
-	err := cuecfg.ParseFile(localLockFilePath(project), lockFile)
+func isStateUpToDate(args UpdateStateHashFileArgs) (bool, error) {
+	filesystemLock, err := readStateHashFile(args.ProjectDir)
+	if err != nil {
+		return false, err
+	}
+	newLock, err := getCurrentStateHash(args)
+	if err != nil {
+		return false, err
+	}
+
+	return *filesystemLock == *newLock, nil
+}
+
+func readStateHashFile(projectDir string) (*stateHashFile, error) {
+	lockFile := &stateHashFile{}
+	err := cuecfg.ParseFile(stateHashFilePath(projectDir), lockFile)
 	if errors.Is(err, fs.ErrNotExist) {
 		return lockFile, nil
 	}
@@ -74,41 +71,36 @@ func readLocal(project devboxProject) (*localLockFile, error) {
 	return lockFile, nil
 }
 
-func forProject(project devboxProject) (*localLockFile, error) {
-	configHash, err := project.ConfigHash()
+func getCurrentStateHash(args UpdateStateHashFileArgs) (*stateHashFile, error) {
+	nixHash, err := manifestHash(args.ProjectDir)
 	if err != nil {
 		return nil, err
 	}
 
-	nixHash, err := manifestHash(project.ProjectDir())
+	printDevEnvCacheHash, err := printDevEnvCacheHash(args.ProjectDir)
 	if err != nil {
 		return nil, err
 	}
 
-	printDevEnvCacheHash, err := printDevEnvCacheHash(project.ProjectDir())
+	lockfileHash, err := getLockfileHash(args.ProjectDir)
 	if err != nil {
 		return nil, err
 	}
 
-	lockfileHash, err := getLockfileHash(project)
-	if err != nil {
-		return nil, err
-	}
-
-	newLock := &localLockFile{
-		project:                project,
-		ConfigHash:             configHash,
+	newLock := &stateHashFile{
+		ConfigHash:             args.ConfigHash,
 		DevboxVersion:          build.Version,
+		IsFish:                 args.IsFish,
 		LockFileHash:           lockfileHash,
-		NixProfileManifestHash: nixHash,
 		NixPrintDevEnvHash:     printDevEnvCacheHash,
+		NixProfileManifestHash: nixHash,
 	}
 
 	return newLock, nil
 }
 
-func localLockFilePath(project devboxProject) string {
-	return filepath.Join(project.ProjectDir(), ".devbox", "local.lock")
+func stateHashFilePath(projectDir string) string {
+	return filepath.Join(projectDir, ".devbox", "local.lock")
 }
 
 func manifestHash(profileDir string) (string, error) {
@@ -117,4 +109,8 @@ func manifestHash(profileDir string) (string, error) {
 
 func printDevEnvCacheHash(profileDir string) (string, error) {
 	return cachehash.JSONFile(filepath.Join(profileDir, ".devbox/.nix-print-dev-env-cache"))
+}
+
+func getLockfileHash(projectDir string) (string, error) {
+	return cachehash.JSONFile(lockFilePath(projectDir))
 }
