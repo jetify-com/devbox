@@ -183,7 +183,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 
 	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
-		ux.Ferror(
+		ux.Fwarning(
 			d.stderr,
 			"Failed to upgrade %s using `nix profile upgrade`: %s\n",
 			pkg.Raw,
