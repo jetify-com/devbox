@@ -113,7 +113,7 @@ func writeInitHookFile(devbox devboxer, body, tmpl, filename string) (err error)
 	// skip adding init-hook recursion guard for the
 	// default hook or any empty hook
 	// there's nothing to guard, and it introduces complexity
-	if body == devconfig.DefaultInitHook || strings.TrimSpace(body) == "" {
+	if !featureflag.InitHookRecursionGuard.Enabled() || body == devconfig.DefaultInitHook || strings.TrimSpace(body) == "" {
 		_, err = script.WriteString(body)
 		return errors.WithStack(err)
 	}
