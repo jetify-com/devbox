@@ -15,7 +15,10 @@ type expectedTestData struct {
 	packageName string
 }
 
-func TestNixProfileListItem(t *testing.T) {
+// TestNixProfileListItemLegacy tests the parsing of legacy nix profile list items.
+// It only applies to much older nix versions. Newer nix versions rely on the --json output
+// instead parsing the legacy output.
+func TestNixProfileListItemLegacy(t *testing.T) {
 	testCases := map[string]struct {
 		line     string
 		expected expectedTestData
@@ -68,7 +71,7 @@ func TestNixProfileListItem(t *testing.T) {
 }
 
 func testItem(t *testing.T, line string, expected expectedTestData) {
-	item, err := parseNixProfileListItem(line)
+	item, err := parseNixProfileListItemLegacy(line)
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}

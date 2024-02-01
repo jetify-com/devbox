@@ -62,13 +62,13 @@ func ProfileListItems(
 	}
 	// Fall back to trying format for nix < version 2.20
 
-	// ProfileListOutput for nix < version 2.20 relied on index instead
-	// of name for each package installed.
-	type ProfileListOutputPreNix2Dot20 struct {
+	// ProfileListOutputJSONLegacy is for parsing `nix profile list --json` in nix < version 2.20
+	// that relied on index instead of name for each package installed.
+	type ProfileListOutputJSONLegacy struct {
 		Elements []ProfileListElement `json:"elements"`
 		Version  int                  `json:"version"`
 	}
-	var structOutput2 ProfileListOutputPreNix2Dot20
+	var structOutput2 ProfileListOutputJSONLegacy
 	if err := json.Unmarshal([]byte(output), &structOutput2); err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func profileListLegacy(
 		if line == "" {
 			continue
 		}
-		item, err := parseNixProfileListItem(line)
+		item, err := parseNixProfileListItemLegacy(line)
 		if err != nil {
 			return nil, err
 		}
@@ -172,9 +172,10 @@ func ProfileListNameOrIndex(args *ProfileListNameOrIndexArgs) (string, error) {
 	return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 }
 
-// parseNixProfileListItem reads each line of output (from `nix profile list`) and converts
+// parseNixProfileListItemLegacy reads each line of output (from `nix profile list`) and converts
 // into a golang struct. Refer to NixProfileListItem struct definition for explanation of each field.
-func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
+// NOTE: this API is for legacy nix. Newer nix versions use --json output.
+func parseNixProfileListItemLegacy(line string) (*NixProfileListItem, error) {
 	scanner := bufio.NewScanner(strings.NewReader(line))
 	scanner.Split(bufio.ScanWords)
 
