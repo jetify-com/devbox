@@ -47,28 +47,28 @@ func UpdateAndSaveStateHashFile(args UpdateStateHashFileArgs) error {
 }
 
 func isStateUpToDate(args UpdateStateHashFileArgs) (bool, error) {
-	filesystemLock, err := readStateHashFile(args.ProjectDir)
+	filesystemStateHash, err := readStateHashFile(args.ProjectDir)
 	if err != nil {
 		return false, err
 	}
-	newLock, err := getCurrentStateHash(args)
+	newStateHash, err := getCurrentStateHash(args)
 	if err != nil {
 		return false, err
 	}
 
-	return *filesystemLock == *newLock, nil
+	return *filesystemStateHash == *newStateHash, nil
 }
 
 func readStateHashFile(projectDir string) (*stateHashFile, error) {
-	lockFile := &stateHashFile{}
-	err := cuecfg.ParseFile(stateHashFilePath(projectDir), lockFile)
+	hashFile := &stateHashFile{}
+	err := cuecfg.ParseFile(stateHashFilePath(projectDir), hashFile)
 	if errors.Is(err, fs.ErrNotExist) {
-		return lockFile, nil
+		return hashFile, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return lockFile, nil
+	return hashFile, nil
 }
 
 func getCurrentStateHash(args UpdateStateHashFileArgs) (*stateHashFile, error) {
@@ -100,7 +100,7 @@ func getCurrentStateHash(args UpdateStateHashFileArgs) (*stateHashFile, error) {
 }
 
 func stateHashFilePath(projectDir string) string {
-	return filepath.Join(projectDir, ".devbox", "local.lock")
+	return filepath.Join(projectDir, ".devbox", "state.json")
 }
 
 func manifestHash(profileDir string) (string, error) {

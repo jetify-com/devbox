@@ -1,5 +1,8 @@
+{{/* 
+    Note: This template is not used if init hook is empty or default
 
-{{/* if hash is set, we're in recursive loop, just exit */ -}}
+    If hash is set, we're in recursive loop, just exit
+*/ -}}
 
 if [ -n "${{ .InitHookHash }}" ]; then
     return
