@@ -311,10 +311,8 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 	}()
 
 	tmpl := shellrcTmpl
-	hooksFilePath := shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename)
 	if s.name == shFish {
 		tmpl = fishrcTmpl
-		hooksFilePath = shellgen.ScriptPath(s.projectDir, shellgen.HooksFishFilename)
 	}
 
 	err = tmpl.Execute(shellrcf, struct {
@@ -333,7 +331,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ProjectDir:         s.projectDir,
 		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath:   s.userShellrcPath,
-		HooksFilePath:      hooksFilePath,
+		HooksFilePath:      shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename),
 		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.env),

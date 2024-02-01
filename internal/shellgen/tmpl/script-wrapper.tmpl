@@ -1,0 +1,15 @@
+{{/* 
+    This wraps user scripts in devbox.json. The idea is to only run the init 
+    hooks once, even if the init hook calls devbox run again. This will also
+    protect against using devbox service in the init hook.
+*/ -}}
+
+if [ -z "${{ .InitHookHash }}" ]; then
+    export {{ .InitHookHash }}=true
+    . {{ .InitHookPath }}
+fi
+
+{{ .Body }}
+
+{{/* # unset not strictly required, but it can't hurt. */ -}}
+unset {{ .InitHookHash }}
