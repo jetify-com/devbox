@@ -31,8 +31,10 @@ const scriptsDir = ".devbox/gen/scripts"
 
 // HooksFilename is the name of the file that contains a wrapper of the
 // project's init-hooks and plugin hooks
-const HooksFilename = ".hooks"
-const rawHooksFilename = ".raw-hooks"
+const (
+	HooksFilename    = ".hooks"
+	rawHooksFilename = ".raw-hooks"
+)
 
 type devboxer interface {
 	Config() *devconfig.Config
