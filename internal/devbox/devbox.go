@@ -258,7 +258,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
-		err := shellgen.WriteScriptFile(d, arbitraryCmdFilename, shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n"))
+		scriptBody, err := shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n")
+		if err != nil {
+			return err
+		}
+		err = shellgen.WriteScriptFile(d, arbitraryCmdFilename, scriptBody)
 		if err != nil {
 			return err
 		}
@@ -325,13 +329,7 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	envStr := exportify(envs)
 
 	if opts.RunHooks {
-		hooksFilename := shellgen.HooksFilename
-		if isFishShell() {
-			hooksFilename = shellgen.HooksFishFilename
-		}
-
-		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), hooksFilename)
-
+		hooksStr := ". " + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename)
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
