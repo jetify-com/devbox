@@ -16,6 +16,11 @@ type NixProfileListItem struct {
 	// invocations of nix profile remove and nix profile upgrade.
 	index int
 
+	// name of the package
+	// nix 2.20 introduced a new format for the output of nix profile list, which includes the package name.
+	// This field is used instead of index for `list`, `remove` and `upgrade` subcommands of `nix profile`.
+	name string
+
 	// The original ("unlocked") flake reference and output attribute path used at installation time.
 	// NOTE that this will be empty if the package was added to the nix profile via store path.
 	unlockedReference string
@@ -74,10 +79,10 @@ func (i *NixProfileListItem) addedByStorePath() bool {
 	return i.unlockedReference == ""
 }
 
-// String serializes the NixProfileListItem back into the format printed by `nix profile list`
+// String serializes the NixProfileListItem for debuggability
 func (i *NixProfileListItem) String() string {
-	return fmt.Sprintf("{%d %s %s %s}",
-		i.index,
+	return fmt.Sprintf("{nameOrIndex:%s unlockedRef:%s lockedRef:%s, nixStorePaths:%s}",
+		i.NameOrIndex(),
 		i.unlockedReference,
 		i.lockedReference,
 		i.nixStorePaths,
@@ -86,4 +91,14 @@ func (i *NixProfileListItem) String() string {
 
 func (i *NixProfileListItem) StorePaths() []string {
 	return i.nixStorePaths
+}
+
+// NameOrIndex is a helper method to get the name of the package if it exists, or the index if it doesn't.
+// `nix profile` subcommands `list`, `remove`, and `upgrade` use either name (nix >= 2.20) or index (nix < 2.20)
+// to identify the package.
+func (i *NixProfileListItem) NameOrIndex() string {
+	if i.name != "" {
+		return i.name
+	}
+	return fmt.Sprintf("%d", i.index)
 }

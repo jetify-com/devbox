@@ -42,17 +42,38 @@ func ProfileListItems(
 		URL         string   `json:"url"`
 	}
 	type ProfileListOutput struct {
+		Elements map[string]ProfileListElement `json:"elements"`
+		Version  int                           `json:"version"`
+	}
+
+	// Modern nix profiles: nix >= 2.20
+	var structOutput ProfileListOutput
+	if err := json.Unmarshal([]byte(output), &structOutput); err == nil {
+		items := []*NixProfileListItem{}
+		for name, element := range structOutput.Elements {
+			items = append(items, &NixProfileListItem{
+				name:              name,
+				unlockedReference: lo.Ternary(element.OriginalURL != "", element.OriginalURL+"#"+element.AttrPath, ""),
+				lockedReference:   lo.Ternary(element.URL != "", element.URL+"#"+element.AttrPath, ""),
+				nixStorePaths:     element.StorePaths,
+			})
+		}
+		return items, nil
+	}
+	// Fall back to trying format for nix < version 2.20
+
+	// ProfileListOutputJSONLegacy is for parsing `nix profile list --json` in nix < version 2.20
+	// that relied on index instead of name for each package installed.
+	type ProfileListOutputJSONLegacy struct {
 		Elements []ProfileListElement `json:"elements"`
 		Version  int                  `json:"version"`
 	}
-
-	var structOutput ProfileListOutput
-	if err := json.Unmarshal([]byte(output), &structOutput); err != nil {
+	var structOutput2 ProfileListOutputJSONLegacy
+	if err := json.Unmarshal([]byte(output), &structOutput2); err != nil {
 		return nil, err
 	}
-
 	items := []*NixProfileListItem{}
-	for index, element := range structOutput.Elements {
+	for index, element := range structOutput2.Elements {
 		items = append(items, &NixProfileListItem{
 			index:             index,
 			unlockedReference: lo.Ternary(element.OriginalURL != "", element.OriginalURL+"#"+element.AttrPath, ""),
@@ -60,6 +81,7 @@ func ProfileListItems(
 			nixStorePaths:     element.StorePaths,
 		})
 	}
+
 	return items, nil
 }
 
@@ -88,7 +110,7 @@ func profileListLegacy(
 		if line == "" {
 			continue
 		}
-		item, err := parseNixProfileListItem(line)
+		item, err := parseNixProfileListItemLegacy(line)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +120,7 @@ func profileListLegacy(
 	return items, nil
 }
 
-type ProfileListIndexArgs struct {
+type ProfileListNameOrIndexArgs struct {
 	// For performance, you can reuse the same list in multiple operations if you
 	// are confident index has not changed.
 	Items      []*NixProfileListItem
@@ -108,21 +130,21 @@ type ProfileListIndexArgs struct {
 	ProfileDir string
 }
 
-// ProfileListIndex returns the index of args.Package in the nix profile specified by args.ProfileDir,
-// or -1 if it's not found. Callers can pass in args.Items to avoid having to call `nix-profile list` again.
-func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
+// ProfileListNameOrIndex returns the name or index of args.Package in the nix profile specified by args.ProfileDir,
+// or nix.ErrPackageNotFound if it's not found. Callers can pass in args.Items to avoid having to call `nix-profile list` again.
+func ProfileListNameOrIndex(args *ProfileListNameOrIndexArgs) (string, error) {
 	var err error
 	items := args.Items
 	if items == nil {
 		items, err = ProfileListItems(args.Writer, args.ProfileDir)
 		if err != nil {
-			return -1, err
+			return "", err
 		}
 	}
 
 	inCache, err := args.Package.IsInBinaryCache()
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	if !inCache && args.Package.IsDevboxPackage {
@@ -131,28 +153,29 @@ func ProfileListIndex(args *ProfileListIndexArgs) (int, error) {
 		// of an existing profile item.
 		ref, err := args.Package.NormalizedDevboxPackageReference()
 		if err != nil {
-			return -1, errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
+			return "", errors.Wrapf(err, "failed to get installable for %s", args.Package.String())
 		}
 
 		for _, item := range items {
 			if ref == item.unlockedReference {
-				return item.index, nil
+				return item.NameOrIndex(), nil
 			}
 		}
-		return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
+		return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
 	for _, item := range items {
 		if item.Matches(args.Package, args.Lockfile) {
-			return item.index, nil
+			return item.NameOrIndex(), nil
 		}
 	}
-	return -1, errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
+	return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 }
 
-// parseNixProfileListItem reads each line of output (from `nix profile list`) and converts
+// parseNixProfileListItemLegacy reads each line of output (from `nix profile list`) and converts
 // into a golang struct. Refer to NixProfileListItem struct definition for explanation of each field.
-func parseNixProfileListItem(line string) (*NixProfileListItem, error) {
+// NOTE: this API is for legacy nix. Newer nix versions use --json output.
+func parseNixProfileListItemLegacy(line string) (*NixProfileListItem, error) {
 	scanner := bufio.NewScanner(strings.NewReader(line))
 	scanner.Split(bufio.ScanWords)
 

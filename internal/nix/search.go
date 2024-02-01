@@ -98,7 +98,8 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 		_ = EnsureNixpkgsPrefetched(writer, hash)
 	}
 
-	cmd := exec.Command("nix", "search", "--json", url)
+	// The `^` is added to indicate we want to show all packages
+	cmd := exec.Command("nix", "search", url, "^" /*regex*/, "--json")
 	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
@@ -106,7 +107,13 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	debug.Log("running command: %s\n", cmd)
 	out, err := cmd.Output()
 	if err != nil {
+		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
+			err = fmt.Errorf("nix search exit code: %d, stderr: %s, original error: %w", exitErr.ExitCode(), exitErr.Stderr, err)
+		}
+
 		// for now, assume all errors are invalid packages.
+		// TODO: check the error string for "did not find attribute" and
+		// return ErrPackageNotFound only for that case.
 		return nil, fmt.Errorf("error searching for pkg %s: %w", url, err)
 	}
 	return parseSearchResults(out), nil

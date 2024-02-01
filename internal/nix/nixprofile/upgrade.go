@@ -12,8 +12,8 @@ import (
 )
 
 func ProfileUpgrade(ProfileDir string, pkg *devpkg.Package, lock *lock.File) error {
-	idx, err := ProfileListIndex(
-		&ProfileListIndexArgs{
+	nameOrIndex, err := ProfileListNameOrIndex(
+		&ProfileListNameOrIndexArgs{
 			Lockfile:   lock,
 			Writer:     os.Stderr,
 			Package:    pkg,
@@ -24,5 +24,5 @@ func ProfileUpgrade(ProfileDir string, pkg *devpkg.Package, lock *lock.File) err
 		return err
 	}
 
-	return nix.ProfileUpgrade(ProfileDir, idx)
+	return nix.ProfileUpgrade(ProfileDir, nameOrIndex)
 }
