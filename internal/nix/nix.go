@@ -84,7 +84,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 				}
 				safeArgs = append(safeArgs, a)
 			}
-			return nil, redact.Errorf("nix command: %s", cmd)
+			return nil, redact.Errorf("nix command: %s", redact.Safe(safeArgs))
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
