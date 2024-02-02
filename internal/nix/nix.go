@@ -183,12 +183,13 @@ func Version() (string, error) {
 	cmd := command("--version")
 	outBytes, err := cmd.Output()
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", redact.Errorf("nix command: %s", redact.Safe(cmd))
 	}
 	out := string(outBytes)
 	const prefix = "nix (Nix) "
 	if !strings.HasPrefix(out, prefix) {
-		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
+		return "", redact.Errorf(`nix command %s: expected %q prefix, but output was: %s`,
+			redact.Safe(cmd), redact.Safe(prefix), redact.Safe(out))
 	}
 	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
 	return version, nil
