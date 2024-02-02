@@ -233,6 +233,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
+	lock.SetIgnoreShellMismatch(true)
 	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
