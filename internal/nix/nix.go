@@ -18,7 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/redact"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -82,22 +81,15 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			safeArgs := make([]string, 0, len(cmd.Args))
-			for _, a := range cmd.Args {
-				if a == args.FlakeDir {
-					a = "<redacted path>"
-				}
-				safeArgs = append(safeArgs, a)
-			}
-			return nil, redact.Errorf("nix command: %s", redact.Safe(safeArgs))
+			return nil, errors.Wrapf(err, "Command: %s", cmd)
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
-			return nil, redact.Errorf("unmarshal nix print-dev-env output: %w", redact.Safe(err))
+			return nil, errors.WithStack(err)
 		}
 
 		if err = savePrintDevEnvCache(args.PrintDevEnvCachePath, out); err != nil {
-			return nil, redact.Errorf("savePrintDevEnvCache: %w", redact.Safe(err))
+			return nil, errors.WithStack(err)
 		}
 	}
 
@@ -188,13 +180,12 @@ func Version() (string, error) {
 	cmd := command("--version")
 	outBytes, err := cmd.Output()
 	if err != nil {
-		return "", redact.Errorf("nix command: %s", redact.Safe(cmd))
+		return "", errors.WithStack(err)
 	}
 	out := string(outBytes)
 	const prefix = "nix (Nix) "
 	if !strings.HasPrefix(out, prefix) {
-		return "", redact.Errorf(`nix command %s: expected %q prefix, but output was: %s`,
-			redact.Safe(cmd), redact.Safe(prefix), redact.Safe(out))
+		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
 	}
 	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
 	return version, nil
