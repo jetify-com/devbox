@@ -64,11 +64,16 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		}
 	}
 
+	flakeDirResolved, err := filepath.EvalSymlinks(args.FlakeDir)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	if len(data) == 0 {
 		cmd := exec.CommandContext(
 			ctx,
 			"nix", "print-dev-env",
-			args.FlakeDir,
+			"path:"+flakeDirResolved,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
