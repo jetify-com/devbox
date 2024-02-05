@@ -456,11 +456,11 @@ const (
 // [Nix manual]: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix#installables
 type Installable struct {
 	// Ref is the flake reference portion of the installable.
-	Ref Ref
+	Ref Ref `json:"ref,omitempty"`
 
 	// AttrPath is an attribute path of the flake, encoded as a URL
 	// fragment.
-	AttrPath string
+	AttrPath string `json:"attr_path,omitempty"`
 
 	// Outputs is the installable's output spec, which is a comma-separated
 	// list of package outputs to install. The outputs spec is anything
@@ -474,7 +474,7 @@ type Installable struct {
 	// ParseInstallable cleans the list of outputs by removing empty
 	// elements and sorting the results. Lists containing a "*" are
 	// simplified to a single "*".
-	Outputs string
+	Outputs string `json:"outputs,omitempty"`
 }
 
 // ParseInstallable parses a flake installable. The raw string must contain
