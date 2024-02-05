@@ -82,14 +82,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			safeArgs := make([]string, 0, len(cmd.Args))
-			for _, a := range cmd.Args {
-				if a == args.FlakeDir {
-					a = "<redacted path>"
-				}
-				safeArgs = append(safeArgs, a)
-			}
-			return nil, redact.Errorf("nix command: %s", redact.Safe(safeArgs))
+			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
