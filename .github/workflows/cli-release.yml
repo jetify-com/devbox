@@ -74,6 +74,7 @@ jobs:
         with:
           environment: development
           version:  ${{ env.EDGE_TAG }}
+          version_prefix: "devbox@"
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v1
         with:
@@ -119,6 +120,7 @@ jobs:
         with:
           environment: production
           version: ${{ github.ref }}
+          version_prefix: "devbox@"
       - name: Release with goreleaser
         uses: goreleaser/goreleaser-action@v3
         with:

@@ -39,7 +39,7 @@ func initSentryClient(appName string) bool {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              build.SentryDSN,
 		Environment:      environment,
-		Release:          build.Version,
+		Release:          appName + "@" + build.Version,
 		Transport:        transport,
 		TracesSampleRate: 1,
 		BeforeSend: func(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
