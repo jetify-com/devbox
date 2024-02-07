@@ -22,6 +22,12 @@ type generateCmdFlags struct {
 	rootUser          bool
 }
 
+type GenerateReadmeCmdFlags struct {
+	generateCmdFlags
+	saveTemplate bool
+	template     string
+}
+
 func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
@@ -140,11 +146,12 @@ func sshConfigCmd() *cobra.Command {
 }
 
 func genReadmeCmd() *cobra.Command {
-	flags := &generateCmdFlags{}
+	flags := &GenerateReadmeCmdFlags{}
+
 	command := &cobra.Command{
 		Use:   "readme [filename]",
 		Short: "Generate markdown readme file for this project",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			box, err := devbox.Open(&devopt.Opts{
 				Dir:         flags.config.path,
@@ -154,10 +161,22 @@ func genReadmeCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			return docgen.GenerateReadme(box, args[0])
+			outPath := ""
+			if len(args) > 0 {
+				outPath = args[0]
+			}
+			if flags.saveTemplate {
+				return docgen.SaveDefaultReadmeTemplate(outPath)
+			}
+			return docgen.GenerateReadme(box, outPath, flags.template)
 		},
 	}
 	flags.config.register(command)
+	command.Flags().BoolVar(
+		&flags.saveTemplate, "save-template", false, "Save default template for the README file")
+	command.Flags().StringVarP(
+		&flags.template, "template", "t", "", "Path to a custom template for the README file")
+
 	return command
 }
 

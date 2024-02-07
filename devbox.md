@@ -36,6 +36,13 @@ Scripts are custom commands that can be run using this project's environment. Th
 * [tidy](#devbox-run-tidy)
 * [update-examples](#devbox-run-update-examples)
 
+## Environment
+
+```sh
+GOENV="off"
+PATH="$PATH:$PWD/dist"
+```
+
 ## Shell Init Hook
 The Shell Init Hook is a script that runs whenever the devbox environment is instantiated. It runs 
 on `devbox shell` and on `devbox run`.
