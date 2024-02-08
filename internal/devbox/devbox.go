@@ -961,8 +961,6 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
-	d.setCommonHelperEnvVars(env)
-
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
@@ -1199,14 +1197,6 @@ var ignoreDevEnvVar = map[string]bool{
 	"TMPDIR":             true,
 	"TZ":                 true,
 	"UID":                true,
-}
-
-// setCommonHelperEnvVars sets environment variables that are required by some
-// common setups (e.g. gradio, rust)
-func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
-	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
-	env["LD_LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
-	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
 func (d *Devbox) ProjectDirHash() string {
