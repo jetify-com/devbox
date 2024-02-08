@@ -1,14 +1,10 @@
 {
-    "packages": [
-        "zig@0.10"
-    ],
-    "shell": {
-        "init_hook": null,
-        "scripts": {
-            "run_test": [
-                "zig build install",
-                "zig build run"
-            ]
-        }
+  "packages": {
+    "zig": "latest"
+  },
+  "shell": {
+    "scripts": {
+      "run_test": "zig build run test --summary all"
     }
+  }
 }
