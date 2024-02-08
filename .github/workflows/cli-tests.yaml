@@ -21,9 +21,10 @@ on:
     inputs:
       run-mac-tests:
         type: boolean
-      # run the example tests with DEVBOX_DEBUG=1
+        description: Run tests on macOS
       example-debug:
         type: boolean
+        description: Run example tests with DEVBOX_DEBUG=1 to increase verbosity
 
 permissions:
   contents: read
@@ -138,7 +139,7 @@ jobs:
           - is-main: "is-main"
             run-project-tests: "project-tests-off"
           - run-project-tests: "project-tests"
-            os: macos-latest
+            os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 37
