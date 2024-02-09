@@ -32,8 +32,8 @@ Use `devbox services start|stop apache` to start and stop httpd in the backgroun
 ### Helper Files
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/apache/httpd.conf
-* {PROJECT_DIR}/devbox.d/web/index.html
+* \{PROJECT_DIR\}/devbox.d/apache/httpd.conf
+* \{PROJECT_DIR\}/devbox.d/web/index.html
 
 Note that by default, Apache is configured with `./devbox.d/web` as the DocumentRoot. To change this, you should copy and modify the default `./devbox.d/apache/httpd.conf`.
 
