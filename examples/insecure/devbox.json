@@ -1,15 +1,14 @@
 {
-  "packages": [
-    "nodejs@16"
-  ],
+  "packages": {
+    "nodejs": {
+      "version":        "16",
+      "allow_insecure": ["nodejs-16.20.2"]
+    }
+  },
   "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
+    "init_hook": "echo 'Welcome to devbox!' > /dev/null",
     "scripts": {
-      "run_test": [
-        "node --version"
-      ]
+      "run_test": "node --version"
     }
   }
 }
