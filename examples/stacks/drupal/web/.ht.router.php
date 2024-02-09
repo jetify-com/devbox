@@ -39,7 +39,7 @@ if (file_exists(__DIR__ . $url['path'])) {
 // Work around the PHP bug.
 $path = $url['path'];
 $script = 'index.php';
-if (strpos($path, '.php') !== FALSE) {
+if (str_contains($path, '.php')) {
   // Work backwards through the path to check if a script exists. Otherwise
   // fallback to index.php.
   do {

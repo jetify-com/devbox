@@ -37,7 +37,15 @@ Allow: /profiles/*.svg
 Disallow: /core/
 Disallow: /profiles/
 # Files
-Disallow: /README.txt
+Disallow: /README.md
+Disallow: /composer/Metapackage/README.txt
+Disallow: /composer/Plugin/ProjectMessage/README.md
+Disallow: /composer/Plugin/Scaffold/README.md
+Disallow: /composer/Plugin/VendorHardening/README.txt
+Disallow: /composer/Template/README.txt
+Disallow: /modules/README.txt
+Disallow: /sites/README.txt
+Disallow: /themes/README.txt
 Disallow: /web.config
 # Paths (clean URLs)
 Disallow: /admin/

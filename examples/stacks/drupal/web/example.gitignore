@@ -25,7 +25,7 @@ sites/*/services*.yml
 sites/*/files
 sites/*/private
 
-# Ignore SimpleTest multi-site environment.
+# Ignore multi-site test environment.
 sites/simpletest
 
 # If you prefer to store your .gitignore file in the sites/ folder, comment
@@ -38,5 +38,5 @@ sites/simpletest
 # */files
 # */private
 
-# Ignore SimpleTest multi-site environment.
+# Ignore multi-site test environment.
 # simpletest
