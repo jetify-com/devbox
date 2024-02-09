@@ -49,7 +49,6 @@ func Push(
 		),
 		Body: io.Reader(file),
 	})
-
 	if err != nil {
 		return err
 	}
