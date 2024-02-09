@@ -59,6 +59,16 @@ export DEVBOX_USE_VERSION=0.8.0
 
 You can upgrade to the latest version of Devbox by unsetting the variable, and running `devbox version update`
 
+## How can I prevent Devbox from modifying my prompt while inside a shell?
+
+By default, Devbox will prefix your prompt with `(devbox)` when inside a `devbox shell`. You can disable this behavior by setting this environment variable in your shell's rcfile:
+
+```bash
+DEVBOX_NO_PROMPT=true
+```
+
+You can now detect being inside a `devbox shell` and change your prompt using the method of your choosing.
+
 ## How can I uninstall Devbox?
 
 To uninstall Devbox:
