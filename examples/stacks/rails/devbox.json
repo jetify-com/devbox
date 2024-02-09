@@ -1,21 +1,21 @@
 {
-    "packages": [
-        "ruby@3.1",
-        "bundler@latest",
-        "nodejs@19",
-        "yarn@1.22",
-        "curl@latest",
-        "sqlite@latest"
+  "packages": {
+    "ruby":    "3.3",
+    "bundler": "2.5",
+    "nodejs":  "21",
+    "yarn":    "1.22",
+    "curl":    "latest",
+    "sqlite":  "latest"
+  },
+  "shell": {
+    "init_hook": [
+      "gem install rails",
+      "./blog/bin/bundle install",
+      "./blog/bin/rails -f ./blog/Rakefile db:prepare"
     ],
-    "shell": {
-        "init_hook": [
-            "gem install rails",
-            "./blog/bin/bundle install",
-            "./blog/bin/rails -f ./blog/Rakefile db:prepare"
-        ],
-        "scripts": {
-            "run_test": ["./blog/bin/rails test"],
-            "start_server": ["./blog/bin/rails server"]
-        }
+    "scripts": {
+      "run_test":     ["./blog/bin/rails test"],
+      "start_server": ["./blog/bin/rails server"]
     }
+  }
 }
