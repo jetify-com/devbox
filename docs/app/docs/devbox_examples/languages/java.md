@@ -53,10 +53,10 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
         }
         ```
     - While in devbox shell, run `echo $JAVA_HOME` and take note of its value.
-    - Create a `gradle.properties` file like below and put value of `$JAVA_HOME` instead of <JAVA_HOME_VALUE> in the file.
+    - Create a `gradle.properties` file like below and put value of `$JAVA_HOME` instead of \<JAVA_HOME_VALUE\> in the file.
       ```gradle
       /* gradle.properties */
-      org.gradle.java.home=<JAVA_HOME_VALUE>
+      org.gradle.java.home=\<JAVA_HOME_VALUE\>
       ```
 4. `gradle build` should compile the package and create a `build/` directory that contains an executable jar file.
 5. `gradle run` should print "Hello World!".

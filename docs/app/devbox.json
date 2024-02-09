@@ -1,7 +1,6 @@
 {
   "packages": {
-    "yarn": "latest",
-    "nodejs": "latest"
-  },
-  "shell": {},
+    "nodejs": "latest",
+    "yarn":   "latest"
+  }
 }

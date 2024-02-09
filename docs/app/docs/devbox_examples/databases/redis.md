@@ -34,7 +34,7 @@ Use `devbox services start|stop [service]` to interact with services
 
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/redis/redis.conf
+* \{PROJECT_DIR\}/devbox.d/redis/redis.conf
 
 
 ### Environment Variables
