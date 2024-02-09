@@ -26,13 +26,6 @@ AddEncoding gzip svgz
 # sites/default/default.settings.php and
 # Drupal\Core\DrupalKernel::bootEnvironment() for settings that can be
 # changed at runtime.
-
-# PHP 7, Apache 1 and 2.
-<IfModule mod_php7.c>
-  php_value assert.active                   0
-</IfModule>
-
-# PHP 8, Apache 1 and 2.
 <IfModule mod_php.c>
   php_value assert.active                   0
 </IfModule>
@@ -42,8 +35,8 @@ AddEncoding gzip svgz
   # Enable expirations.
   ExpiresActive On
 
-  # Cache all files and redirects for 2 weeks after access (A).
-  ExpiresDefault A1209600
+  # Cache all files for 1 year after access.
+  ExpiresDefault "access plus 1 year"
 
   <FilesMatch \.php$>
     # Do not allow PHP scripts to be cached unless they explicitly send cache
@@ -180,7 +173,13 @@ AddEncoding gzip svgz
 
 # Various header fixes.
 <IfModule mod_headers.c>
-  # Disable content sniffing, since it's an attack vector.
+  # Disable content sniffing for all responses, since it's an attack vector.
+  # This header is also set in FinishResponseSubscriber, which depending on
+  # Apache configuration might get placed in the 'onsuccess' table. To prevent
+  # header duplication, unset that one prior to setting in the 'always' table.
+  # See "To circumvent this limitation..." in
+  # https://httpd.apache.org/docs/current/mod/mod_headers.html.
+  Header onsuccess unset X-Content-Type-Options
   Header always set X-Content-Type-Options nosniff
   # Disable Proxy header, since it's an attack vector.
   RequestHeader unset Proxy

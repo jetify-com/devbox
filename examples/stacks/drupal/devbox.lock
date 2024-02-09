@@ -1,6 +1,26 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "curl@latest": {
+      "last_modified": "2024-02-08T11:55:47Z",
+      "resolved": "github:NixOS/nixpkgs/c0b7a892fb042ede583bdaecbbdc804acb85eabe#curl",
+      "source": "devbox-search",
+      "version": "8.5.0",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/d785m1nyahmrn9bczvqvvlc877gj18zj-curl-8.5.0-bin"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/sd6baacv8sk7nfrfhs66nw52s5i1r097-curl-8.5.0-bin"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/1zia3iiqlg684043gn34pcz4psbzflk3-curl-8.5.0-bin"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/j1yhiywlyh13ayzx46lzh7h1y7cq9p9c-curl-8.5.0-bin"
+        }
+      }
+    },
     "git@latest": {
       "last_modified": "2023-08-30T00:25:28Z",
       "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#git",
@@ -23,7 +43,7 @@
     },
     "mariadb@latest": {
       "last_modified": "2023-08-30T00:25:28Z",
-      "plugin_version": "0.0.2",
+      "plugin_version": "0.0.4",
       "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#mariadb_110",
       "source": "devbox-search",
       "version": "11.0.3",
@@ -44,7 +64,7 @@
     },
     "nginx@latest": {
       "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.3",
+      "plugin_version": "0.0.4",
       "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#nginx",
       "source": "devbox-search",
       "version": "1.24.0",
@@ -85,7 +105,7 @@
     },
     "php@8.1": {
       "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.2",
+      "plugin_version": "0.0.3",
       "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81",
       "source": "devbox-search",
       "version": "8.1.23",

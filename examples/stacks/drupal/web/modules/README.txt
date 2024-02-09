@@ -38,5 +38,5 @@ pattern may be used to restrict modules to a specific site instance.
 MORE INFORMATION
 ----------------
 
-Refer to the “Developing for Drupal” section of the README.txt in the Drupal
+Refer to the “Developing for Drupal” section of the README.md in the Drupal
 root directory for further information on extending Drupal with custom modules.
