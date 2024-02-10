@@ -9,12 +9,26 @@ permissions:
 
 jobs:
   job1:
+    uses: ./.github/workflows/cli-tests.yaml
+  job2:
     runs-on: ubuntu-latest
+    needs: job1
+    if: cancelled() || failure()
     steps:
-      - uses: actions/checkout@v3
-      - name: tests
-        uses: ./.github/workflows/cli-tests.yaml
       - name: Notify jetpack.io slack of release status
         id: slack
-        if: always()
-        run: echo job is ${{ job.status }}
+        run: echo previous job status ${{ needs.job1.result }}
+
+  job3:
+    runs-on: ubuntu-latest
+    steps:
+      - name: error step
+        run: exit 1
+  job4:
+    runs-on: ubuntu-latest
+    needs: job3
+    if: cancelled() || failure()
+    steps:
+      - name: Notify jetpack.io slack of release status
+        id: slack
+        run: echo previous job status ${{ needs.job3.result }}
