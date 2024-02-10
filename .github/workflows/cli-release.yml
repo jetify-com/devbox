@@ -38,7 +38,6 @@ jobs:
     steps:
       - name: Notify jetpack.io slack of release status (only if tests fail)
         id: slack
-        if: failure()
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
