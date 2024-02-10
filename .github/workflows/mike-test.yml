@@ -9,11 +9,14 @@ jobs:
     steps:
       - name: cause a failure
         run: exit 1
-        
+
   job2:
     runs-on: ubuntu-latest
     needs: job1
+    if: always()
     steps:
-      - name: do something
+      - name: do something sometimes
+        run: "echo job status: ${{ job.status }}"
+      - name: do something always
         if: always()
         run: "echo job status: ${{ job.status }}"
