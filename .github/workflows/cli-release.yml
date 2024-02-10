@@ -40,7 +40,7 @@ jobs:
         with:
           payload: |
             {
-              "status": "${{ job.status }}",
+              "status": "${{ job.status }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
@@ -154,7 +154,7 @@ jobs:
         with:
           payload: |
             {
-              "status": "${{ job.status }}",
+              "status": "${{ job.status }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
