@@ -3,6 +3,10 @@ name: mike-test
 on:
   pull_request:
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   job1:
     runs-on: ubuntu-latest
