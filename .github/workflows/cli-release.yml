@@ -133,8 +133,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      - name: Notify jetpack.io slack of release
+      - name: Notify jetpack.io slack of release status
         id: slack
+        if: always()
         uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "status": "${{ job.status }}",
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
