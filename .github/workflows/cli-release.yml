@@ -25,14 +25,17 @@ permissions:
 
 jobs:
   tests:
+    uses: ./.github/workflows/cli-tests.yaml
+    with:
+      # This will run the basic testscript unit tests on MacOS.
+      # NOTE: cli-tests will NEVER run project-tests on MacOS.
+      run-mac-tests: true
+
+  report-test-failures:
     runs-on: ubuntu-latest
+    needs: tests
+    if: failure() || cancelled()
     steps:
-      - name: tests
-        uses: ./.github/workflows/cli-tests.yaml
-        with:
-          # This will run the basic testscript unit tests on MacOS.
-          # NOTE: cli-tests will NEVER run project-tests on MacOS.
-          run-mac-tests: true
       - name: Notify jetpack.io slack of release status (only if tests fail)
         id: slack
         if: failure()
@@ -40,7 +43,7 @@ jobs:
         with:
           payload: |
             {
-              "status": "${{ job.status }}"
+              "status": "test ${{ needs.tests.result }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
@@ -154,7 +157,7 @@ jobs:
         with:
           payload: |
             {
-              "status": "${{ job.status }}"
+              "status": "release ${{ job.status }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
