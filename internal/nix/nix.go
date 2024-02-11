@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/redact"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -63,11 +64,16 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		}
 	}
 
+	flakeDirResolved, err := filepath.EvalSymlinks(args.FlakeDir)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	if len(data) == 0 {
 		cmd := exec.CommandContext(
 			ctx,
 			"nix", "print-dev-env",
-			args.FlakeDir,
+			"path:"+flakeDirResolved,
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
@@ -76,15 +82,15 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			return nil, errors.Wrapf(err, "Command: %s", cmd)
+			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, redact.Errorf("unmarshal nix print-dev-env output: %w", redact.Safe(err))
 		}
 
 		if err = savePrintDevEnvCache(args.PrintDevEnvCachePath, out); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, redact.Errorf("savePrintDevEnvCache: %w", redact.Safe(err))
 		}
 	}
 
@@ -175,12 +181,13 @@ func Version() (string, error) {
 	cmd := command("--version")
 	outBytes, err := cmd.Output()
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", redact.Errorf("nix command: %s", redact.Safe(cmd))
 	}
 	out := string(outBytes)
 	const prefix = "nix (Nix) "
 	if !strings.HasPrefix(out, prefix) {
-		return "", errors.Errorf(`Expected "%s" prefix, but output from nix --version was: %s`, prefix, out)
+		return "", redact.Errorf(`nix command %s: expected %q prefix, but output was: %s`,
+			redact.Safe(cmd), redact.Safe(prefix), redact.Safe(out))
 	}
 	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
 	return version, nil

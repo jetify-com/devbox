@@ -6,6 +6,7 @@ package fileutil
 import (
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -69,4 +70,20 @@ func EnsureDirExists(path string, perm fs.FileMode, chmod bool) error {
 		}
 	}
 	return nil
+}
+
+func EnsureAbsolutePaths(paths []string) ([]string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	absPaths := make([]string, len(paths))
+	for i, path := range paths {
+		if filepath.IsAbs(path) {
+			absPaths[i] = path
+		} else {
+			absPaths[i] = filepath.Join(wd, path)
+		}
+	}
+	return absPaths, nil
 }

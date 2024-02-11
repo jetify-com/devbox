@@ -94,8 +94,8 @@ func ProfileRemove(profilePath string, indexes ...string) error {
 
 type manifest struct {
 	Elements []struct {
-		Priority int `json:"priority"`
-	} `json:"elements"`
+		Priority int
+	}
 }
 
 func readManifest(profilePath string) (manifest, error) {
@@ -107,8 +107,37 @@ func readManifest(profilePath string) (manifest, error) {
 		return manifest{}, err
 	}
 
-	var m manifest
-	return m, json.Unmarshal(data, &m)
+	type manifestModern struct {
+		Elements map[string]struct {
+			Priority int `json:"priority"`
+		} `json:"elements"`
+	}
+	var modernMani manifestModern
+	if err := json.Unmarshal(data, &modernMani); err == nil {
+		// Convert to the result format
+		result := manifest{}
+		for _, e := range modernMani.Elements {
+			result.Elements = append(result.Elements, struct{ Priority int }{e.Priority})
+		}
+		return result, nil
+	}
+
+	type manifestLegacy struct {
+		Elements []struct {
+			Priority int `json:"priority"`
+		} `json:"elements"`
+	}
+	var legacyMani manifestLegacy
+	if err := json.Unmarshal(data, &legacyMani); err != nil {
+		return manifest{}, err
+	}
+
+	// Convert to the result format
+	result := manifest{}
+	for _, e := range legacyMani.Elements {
+		result.Elements = append(result.Elements, struct{ Priority int }{e.Priority})
+	}
+	return result, nil
 }
 
 const DefaultPriority = 5

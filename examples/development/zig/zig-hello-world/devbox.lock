@@ -1,23 +1,23 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "zig@0.10": {
-      "last_modified": "2023-08-09T23:50:43Z",
-      "resolved": "github:NixOS/nixpkgs/3d6ebeb283be256f008541ce2b089eb5fb0e4e01#zig",
+    "zig@latest": {
+      "last_modified": "2024-01-27T14:55:31Z",
+      "resolved": "github:NixOS/nixpkgs/160b762eda6d139ac10ae081f8f78d640dd523eb#zig",
       "source": "devbox-search",
-      "version": "0.10.1",
+      "version": "0.11.0",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/wdl373cbxsbsgkbrhcm8rsjxf1nyzda5-zig-0.10.1"
+          "store_path": "/nix/store/l7jy40r7xqzjyijq4p4jw5bvpxcnqx6h-zig-0.11.0"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/kffa3f61affmlms4r8xmmrq7ksz7lx7k-zig-0.10.1"
+          "store_path": "/nix/store/vysivb9bazavcq994cn4k044mlickyd0-zig-0.11.0"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/0a267lbl7hy45rlg5i9azxb3s5jggnkm-zig-0.10.1"
+          "store_path": "/nix/store/dh721al3vdr3akb6zsjykjr6qv65fqwj-zig-0.11.0"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/rg6yk06fhxbnq9xm32v1ccfrdilwhx17-zig-0.10.1"
+          "store_path": "/nix/store/g3ndnazkx9brkyindbiq8zan942mcsvg-zig-0.11.0"
         }
       }
     }

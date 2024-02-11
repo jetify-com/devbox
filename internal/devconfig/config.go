@@ -6,6 +6,7 @@ package devconfig
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -79,13 +80,15 @@ type Stage struct {
 	Command string `json:"command"`
 }
 
+const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
+
 func DefaultConfig() *Config {
-	cfg, err := loadBytes([]byte(`{
+	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
   "packages": [],
   "shell": {
     "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
+      "%s"
     ],
     "scripts": {
       "test": [
@@ -94,7 +97,7 @@ func DefaultConfig() *Config {
     }
   }
 }
-`))
+`, DefaultInitHook)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}

@@ -16,6 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/searcher"
 	"golang.org/x/sync/errgroup"
 )
@@ -42,6 +43,9 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 			Version:  ref.Version,
 		}, nil
 	}
+	if featureflag.ResolveV2.Enabled() {
+		return resolveV2(context.TODO(), name, version)
+	}
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
 	if err != nil {
@@ -55,9 +59,9 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 			return nil, err
 		}
 	}
-	packageInfo, err := selectForSystem(packageVersion)
+	packageInfo, err := selectForSystem(packageVersion.Systems)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("no systems found for package %q", name)
 	}
 
 	if len(packageInfo.AttrPaths) == 0 {
@@ -78,17 +82,45 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	}, nil
 }
 
-func selectForSystem(pkg *searcher.PackageVersion) (searcher.PackageInfo, error) {
-	if pi, ok := pkg.Systems[nix.System()]; ok {
-		return pi, nil
+func resolveV2(ctx context.Context, name, version string) (*Package, error) {
+	resolved, err := searcher.Client().ResolveV2(ctx, name, version)
+	if errors.Is(err, searcher.ErrNotFound) {
+		return nil, redact.Errorf("%s@%s: %w", name, version, nix.ErrPackageNotFound)
 	}
-	if pi, ok := pkg.Systems["x86_64-linux"]; ok {
-		return pi, nil
+	if err != nil {
+		return nil, err
 	}
-	for _, v := range pkg.Systems {
+
+	// /v2/resolve never returns a success with no systems.
+	sysPkg, _ := selectForSystem(resolved.Systems)
+	pkg := &Package{
+		LastModified: sysPkg.LastUpdated.Format(time.RFC3339),
+		Resolved:     sysPkg.FlakeInstallable.String(),
+		Source:       devboxSearchSource,
+		Version:      resolved.Version,
+		Systems:      make(map[string]*SystemInfo, len(resolved.Systems)),
+	}
+	for sys, info := range resolved.Systems {
+		if len(info.Outputs) != 0 {
+			pkg.Systems[sys] = &SystemInfo{
+				StorePath: info.Outputs[0].Path,
+			}
+		}
+	}
+	return pkg, nil
+}
+
+func selectForSystem[V any](systems map[string]V) (v V, err error) {
+	if v, ok := systems[nix.System()]; ok {
 		return v, nil
 	}
-	return searcher.PackageInfo{}, fmt.Errorf("no systems found for package %q", pkg.Name)
+	if v, ok := systems["x86_64-linux"]; ok {
+		return v, nil
+	}
+	for _, v := range systems {
+		return v, nil
+	}
+	return v, redact.Errorf("no systems found")
 }
 
 func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo, error) {

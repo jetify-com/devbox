@@ -8,4 +8,4 @@ mysql -u root < setup_db.sql
 composer install
 
 echo "Your Drupal demo website is ready,"
-echo "Open localhost:8000 in your browser."
+echo "Open localhost:8081 in your browser."

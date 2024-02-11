@@ -1,0 +1,86 @@
+name: Bug Report
+description: File a bug report
+labels:
+  - bug
+  - triage
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: >-
+        Also include what you expected to happen and any other relevant details.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        What specific steps can we take to reproduce this issue?
+        Including a script would be much appreciated!
+      value: |
+        1.
+        2.
+        3.
+  - type: dropdown
+    id: commands
+    attributes:
+      label: Command
+      description: What Devbox command were you running when the bug occurred?
+      multiple: true
+      options:
+        - add
+        - auth
+        - create
+        - generate
+        - global
+        - info
+        - init
+        - install
+        - rm
+        - run
+        - search
+        - services
+        - shell
+        - shellenv
+        - update
+        - version
+  - type: textarea
+    id: devbox-json
+    attributes:
+      label: devbox.json
+      description: Please include a copy of your devbox.json file.
+      render: "jsonc"
+  - type: input
+    id: devbox-version
+    attributes:
+      label: Devbox version
+      description: "Paste the output of `devbox version`."
+    validations:
+      required: true
+  - type: input
+    id: nix-version
+    attributes:
+      label: Nix version
+      description: "Paste the output of `nix --version`."
+  - type: dropdown
+    id: system
+    attributes:
+      label: What system does this bug occur on?
+      options:
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux (x86-64)
+        - Linux (ARM64)
+        - Other (please include in the description above)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: >-
+        If possible, reproduce the bug with the `DEVBOX_DEBUG=1` environment
+        variable set and paste any output here.
+        For example: `DEVBOX_DEBUG=1 devbox run -- mycrash.sh`.

@@ -1,8 +1,23 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "glibcLocales@latest": {
+      "last_modified": "2024-01-14T03:55:27Z",
+      "resolved": "github:NixOS/nixpkgs/dd5621df6dcb90122b50da5ec31c411a0de3e538#glibcLocales",
+      "source": "devbox-search",
+      "version": "2.38-27",
+      "systems": {
+        "aarch64-linux": {
+          "store_path": "/nix/store/i0aff1lm1js9j9ggw7js7n5869bfxm6z-glibc-locales-2.38-27"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/wyl74hap7bh513hp3rz1j608gs7267af-glibc-locales-2.38-27"
+        }
+      }
+    },
     "postgresql@latest": {
       "last_modified": "2023-05-01T16:53:22Z",
+      "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
       "version": "14.7"
     }

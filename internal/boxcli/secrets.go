@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/envsec/pkg/envsec"
 )
@@ -60,7 +61,6 @@ func secretsCmd() *cobra.Command {
 	cmd.AddCommand(secretsRemoveCmd(flags))
 	cmd.AddCommand(secretsSetCmd(flags))
 	cmd.AddCommand(secretsUploadCmd(flags))
-	cmd.Hidden = true
 
 	flags.config.registerPersistent(cmd)
 
@@ -183,7 +183,11 @@ func secretsDownloadCmd(commonFlags *secretsFlags) *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			return secrets.Download(cmd.Context(), args[0], flags.format)
+			absPaths, err := fileutil.EnsureAbsolutePaths(args)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return secrets.Download(cmd.Context(), absPaths[0], flags.format)
 		},
 	}
 
@@ -210,7 +214,11 @@ func secretsUploadCmd(commonFlags *secretsFlags) *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			return secrets.Upload(cmd.Context(), paths, flags.format)
+			absPaths, err := fileutil.EnsureAbsolutePaths(paths)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return secrets.Upload(cmd.Context(), absPaths, flags.format)
 		},
 	}
 

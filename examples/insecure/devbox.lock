@@ -2,7 +2,6 @@
   "lockfile_version": "1",
   "packages": {
     "nodejs@16": {
-      "allow_insecure": true,
       "last_modified": "2023-08-30T00:25:28Z",
       "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_16",
       "source": "devbox-search",

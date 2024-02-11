@@ -12,12 +12,15 @@
   },
   "shell": {
     "init_hook": [
-      "test -z $FISH_VERSION && unset CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
+      // Remove Go environment variables that might've been inherited from the
+      // user's environment and could affect the build.
+      "test -z $FISH_VERSION && \\",
+      "unset       CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK || \\",
+      "set --erase CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
     ],
     "scripts": {
-      "build":
-        // Build devbox for the current platform
-        "go build -o dist/devbox ./cmd/devbox",
+      // Build devbox for the current platform
+      "build":              "go build -o dist/devbox ./cmd/devbox",
       "build-darwin-amd64": "GOOS=darwin GOARCH=amd64 go build -o dist/devbox-darwin-amd64 ./cmd/devbox",
       "build-darwin-arm64": "GOOS=darwin GOARCH=arm64 go build -o dist/devbox-darwin-arm64 ./cmd/devbox",
       "build-linux-amd64":  "GOOS=linux GOARCH=amd64 go build -o dist/devbox-linux-amd64 ./cmd/devbox",
@@ -28,9 +31,8 @@
         "devbox run build-linux-amd64",
         "devbox run build-linux-arm64",
       ],
-      "code":
-        // Open VSCode
-        "code .",
+      // Open VSCode
+      "code":            "code .",
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":             "scripts/gofumpt.sh",
       "test":            "go test -race -cover ./...",

@@ -32,8 +32,8 @@ Use `devbox services start|stop caddy` to start and stop httpd in the background
 ### Helper Files
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/caddy/Caddyfile
-* {PROJECT_DIR}/devbox.d/web/index.html
+* \{PROJECT_DIR\}/devbox.d/caddy/Caddyfile
+* \{PROJECT_DIR\}/devbox.d/web/index.html
 
 Note that by default, Caddy is configured with `./devbox.d/web` as the root. To change this, you should modify the default `./devbox.d/caddy/Caddyfile` or change the `CADDY_ROOT_DIR` environment variable
 

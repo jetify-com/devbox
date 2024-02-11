@@ -75,7 +75,12 @@ func logoutCmd() *cobra.Command {
 	return cmd
 }
 
+type whoAmICmdFlags struct {
+	showTokens bool
+}
+
 func whoAmICmd() *cobra.Command {
+	flags := &whoAmICmdFlags{}
 	cmd := &cobra.Command{
 		Use:   "whoami",
 		Short: "Show the current user",
@@ -90,9 +95,16 @@ func whoAmICmd() *cobra.Command {
 				return err
 			}
 			return box.UninitializedSecrets(cmd.Context()).
-				WhoAmI(cmd.Context(), cmd.OutOrStdout(), false)
+				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
 		},
 	}
+
+	cmd.Flags().BoolVar(
+		&flags.showTokens,
+		"show-tokens",
+		false,
+		"Show the access, id, and refresh tokens",
+	)
 
 	return cmd
 }

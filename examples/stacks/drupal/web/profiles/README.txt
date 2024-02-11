@@ -24,5 +24,5 @@ available to all sites during their initial site installation.
 MORE INFORMATION
 ----------------
 
-Refer to the "Installation profiles" section of the README.txt in the Drupal
+Refer to the "Installation profiles" section of the README.md in the Drupal
 root directory for further information on extending Drupal with custom profiles.

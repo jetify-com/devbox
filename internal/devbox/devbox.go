@@ -233,6 +233,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		return err
 	}
 
+	lock.SetIgnoreShellMismatch(true)
 	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
 	if err != nil {
 		return err
@@ -258,7 +259,11 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
-		err := shellgen.WriteScriptFile(d, arbitraryCmdFilename, shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n"))
+		scriptBody, err := shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n")
+		if err != nil {
+			return err
+		}
+		err = shellgen.WriteScriptFile(d, arbitraryCmdFilename, scriptBody)
 		if err != nil {
 			return err
 		}
@@ -300,7 +305,7 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	var err error
 
 	if opts.DontRecomputeEnvironment {
-		upToDate, _ := d.lockfile.IsUpToDateAndInstalled()
+		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 		if !upToDate {
 			cmd := `eval "$(devbox global shellenv --recompute)"`
 			if isFishShell() {
@@ -956,8 +961,6 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 
 	debug.Log("computed environment PATH is: %s", env["PATH"])
 
-	d.setCommonHelperEnvVars(env)
-
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
@@ -1194,14 +1197,6 @@ var ignoreDevEnvVar = map[string]bool{
 	"TMPDIR":             true,
 	"TZ":                 true,
 	"UID":                true,
-}
-
-// setCommonHelperEnvVars sets environment variables that are required by some
-// common setups (e.g. gradio, rust)
-func (d *Devbox) setCommonHelperEnvVars(env map[string]string) {
-	profileLibDir := filepath.Join(d.projectDir, nix.ProfilePath, "lib")
-	env["LD_LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LD_LIBRARY_PATH"])
-	env["LIBRARY_PATH"] = envpath.JoinPathLists(profileLibDir, env["LIBRARY_PATH"])
 }
 
 func (d *Devbox) ProjectDirHash() string {

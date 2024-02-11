@@ -37,6 +37,13 @@ parameters:
     # @default none
     # cookie_domain: '.example.com'
     #
+    # Set the SameSite cookie attribute: 'None', 'Lax', or 'Strict'. If set,
+    # this value will override the server value. See
+    # https://www.php.net/manual/en/session.security.ini.php for more
+    # information.
+    # @default no value
+    cookie_samesite: Lax
+    #
     # Set the session ID string length. The length can be between 22 to 256. The
     # PHP recommended value is 48. See
     # https://www.php.net/manual/session.security.ini.php for more information.
@@ -207,9 +214,17 @@ parameters:
     # Configure requests allowed from specific origins. Do not include trailing
     # slashes with URLs.
     allowedOrigins: ['*']
+    # Configure requests allowed from origins, matching against regex patterns.
+    allowedOriginsPatterns: []
     # Sets the Access-Control-Expose-Headers header.
     exposedHeaders: false
     # Sets the Access-Control-Max-Age header.
     maxAge: false
     # Sets the Access-Control-Allow-Credentials header.
     supportsCredentials: false
+
+  queue.config:
+    # The maximum number of seconds to wait if a queue is temporarily suspended.
+    # This is not applicable when a queue is suspended but does not specify
+    # how long to wait before attempting to resume.
+    suspendMaximumWait: 30

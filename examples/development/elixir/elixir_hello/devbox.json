@@ -1,22 +1,22 @@
 {
-    "packages": [
-        "elixir@latest"
+  "packages": {
+    "elixir": "latest"
+  },
+  "env": {
+    "MIX_HOME":   "$PWD/.nix-mix",
+    "HEX_HOME":   "$PWD/.nix-hex",
+    "ERL_AFLAGS": "-kernel shell_history enabled"
+  },
+  "shell": {
+    "init_hook": [
+      "mkdir -p .nix-mix",
+      "mkdir -p .nix-hex",
+      "mix local.hex --force",
+      "mix local.rebar --force",
+      "mix deps.get"
     ],
-    "env": {
-        "MIX_HOME": "$PWD/.nix-mix",
-        "HEX_HOME": "$PWD/.nix-hex",
-        "ERL_AFLAGS": "-kernel shell_history enabled"
-    },
-    "shell": {
-        "init_hook": [
-            "mkdir -p .nix-mix",
-            "mkdir -p .nix-hex",
-            "mix local.hex --force",
-            "mix local.rebar --force",
-            "mix deps.get"
-        ],
-        "scripts": {
-            "run_test": "mix run"
-        }
+    "scripts": {
+      "run_test": "mix run"
     }
+  }
 }
