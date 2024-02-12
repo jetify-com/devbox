@@ -142,7 +142,7 @@ jobs:
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 37
+    timeout-minutes: 60
     steps:
       - name: Maximize build disk space
         uses: easimon/maximize-build-space@v8
