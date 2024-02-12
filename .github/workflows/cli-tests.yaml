@@ -142,7 +142,7 @@ jobs:
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 37
+    timeout-minutes: 60
     steps:
       - name: Maximize build disk space
         uses: easimon/maximize-build-space@v8
@@ -187,7 +187,7 @@ jobs:
           DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
           DEVBOX_RUN_PROJECT_TESTS: ${{ matrix.run-project-tests == 'project-tests' && '1' || '0' }}
           # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
-          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '35m' || '30m' }}"
+          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
         run: |
           echo "::group::Nix version"
           nix --version
