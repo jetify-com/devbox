@@ -33,11 +33,11 @@ Scripts are custom commands that can be run using this project's environment. Th
 {{- end }}
 {{ end }}
 
-{{- if .Env }}
+{{- if .EnvVars }}
 ## Environment
 
 ```sh
-{{- range $key, $value := .Env }}
+{{- range $key, $value := .EnvVars }}
 {{ $key }}="{{ $value }}"
 {{- end }}
 ```
