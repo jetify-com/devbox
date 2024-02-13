@@ -31,6 +31,22 @@ jobs:
       # NOTE: cli-tests will NEVER run project-tests on MacOS.
       run-mac-tests: true
 
+  report-test-failures:
+    runs-on: ubuntu-latest
+    needs: tests
+    if: failure() || cancelled()
+    steps:
+      - name: Notify jetpack.io slack of release status (only if tests fail)
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "status": "test ${{ needs.tests.result }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+
   edge:
     runs-on: ubuntu-latest
     environment: release
@@ -133,3 +149,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      - name: Notify jetpack.io slack of release status
+        id: slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "status": "release ${{ job.status }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
