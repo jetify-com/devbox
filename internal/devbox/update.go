@@ -123,7 +123,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			return nil
 		}
 		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
-		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+		lockfile.UpdatePackage(pkg.Raw, resolved)
 		return nil
 	}
 
@@ -149,14 +149,14 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 				// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
 				// come from the same package version.
 				existingSysInfo, exists := existing.Systems[sysName]
-				if !exists || existingSysInfo.StorePath != newSysInfo.StorePath {
+				if !exists || !existingSysInfo.Equals(newSysInfo) {
 					updated = true
 				}
 			}
 		}
 		if updated {
 			// if we are updating the system info, then we should also update the other fields
-			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+			lockfile.UpdatePackage(pkg.Raw, resolved)
 
 			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
 			return nil
@@ -192,14 +192,4 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 	}
 
 	return nil
-}
-
-func useResolvedPackageInLockfile(
-	lockfile *lock.File,
-	pkg *devpkg.Package,
-	resolved *lock.Package,
-	existing *lock.Package,
-) {
-	lockfile.Packages[pkg.Raw] = resolved
-	lockfile.Packages[pkg.Raw].AllowInsecure = existing.AllowInsecure
 }

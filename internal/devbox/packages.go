@@ -107,6 +107,10 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		return err
 	}
 
+	if err := d.lockfile.Add(addedPackageNames...); err != nil {
+		return err
+	}
+
 	if err := d.ensureStateIsUpToDate(ctx, install); err != nil {
 		return usererr.WithUserMessage(err, "There was an error installing nix packages")
 	}
@@ -206,6 +210,10 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	if err := plugin.Remove(d.projectDir, packagesToUninstall); err != nil {
+		return err
+	}
+
+	if err := d.lockfile.Remove(packagesToUninstall...); err != nil {
 		return err
 	}
 

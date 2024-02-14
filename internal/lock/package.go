@@ -3,6 +3,10 @@
 
 package lock
 
+import (
+	"fmt"
+)
+
 const (
 	nixpkgSource       string = "nixpkg"
 	devboxSearchSource string = "devbox-search"
@@ -22,11 +26,28 @@ type Package struct {
 }
 
 type SystemInfo struct {
-	// StorePath is the input-addressed path for the nix package in /nix/store
-	// It is the cache key in the Binary Cache Store (cache.nixos.org)
-	// It is of the form /nix/store/<hash>-<name>-<version>
-	// <name> may be different from the canonicalName so we store the full store path.
+	Outputs []*Output `json:"outputs,omitempty"`
+
+	// Legacy Format
 	StorePath string `json:"store_path,omitempty"`
+}
+
+// Output refers to a nix package output. This struct is derived from searcher.Output
+type Output struct {
+	// Name is the output's name. Nix appends the name to
+	// the output's store path unless it's the default name
+	// of "out". Output names can be anything, but
+	// conventionally they follow the various "make install"
+	// directories such as "bin", "lib", "src", "man", etc.
+	Name string `json:"name,omitempty"`
+
+	// Path is the absolute store path (with the /nix/store/
+	// prefix) of the output.
+	Path string `json:"path,omitempty"`
+
+	// Default indicates if Nix installs this output by
+	// default.
+	Default bool `json:"default,omitempty"`
 }
 
 func (p *Package) GetSource() string {
@@ -43,9 +64,50 @@ func (p *Package) IsAllowInsecure() bool {
 	return p.AllowInsecure
 }
 
+// Useful for debugging when we print the struct
+func (i *SystemInfo) String() string {
+	return fmt.Sprintf("SystemInfo{Outputs:%v, StorePath:%s}", i.Outputs, i.StorePath)
+}
+
+func (i *SystemInfo) DefaultStorePath() string {
+	if i == nil || len(i.Outputs) == 0 {
+		return ""
+	}
+
+	for _, output := range i.Outputs {
+		if output.Default {
+			return output.Path
+		}
+	}
+
+	return i.Outputs[0].Path
+}
+
 func (i *SystemInfo) Equals(other *SystemInfo) bool {
 	if i == nil || other == nil {
 		return i == other
 	}
-	return *i == *other
+
+	isEqual := true
+	if len(i.Outputs) != len(other.Outputs) {
+		return false
+	}
+	for i, o := range i.Outputs {
+		if !o.Equals(other.Outputs[i]) {
+			return false
+		}
+	}
+	return isEqual
+}
+
+// Useful for debugging when we print the struct
+func (o *Output) String() string {
+	return fmt.Sprintf("%v", *o)
+}
+
+func (o *Output) Equals(other *Output) bool {
+	if o == nil || other == nil {
+		return o == other
+	}
+	return o.Name == other.Name && o.Path == other.Path && o.Default == other.Default
 }
