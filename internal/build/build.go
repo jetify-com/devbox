@@ -80,3 +80,10 @@ func JetpackAPIHost() string {
 	}
 	return "https://api.jetpack.io"
 }
+
+func SuccessRedirect() string {
+	if IsDev {
+		return "https://auth.jetpack.dev/account/login/success"
+	}
+	return "https://auth.jetpack.io/account/login/success"
+}

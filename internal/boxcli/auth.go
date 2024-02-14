@@ -38,7 +38,7 @@ func loginCmd() *cobra.Command {
 		Short: "Login to devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
+			c, err := newAuthClient()
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func logoutCmd() *cobra.Command {
 		Short: "Logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
+			c, err := newAuthClient()
 			if err != nil {
 				return err
 			}
@@ -110,9 +110,18 @@ func whoAmICmd() *cobra.Command {
 }
 
 func genSession(ctx context.Context) (*session.Token, error) {
-	c, err := auth.NewClient(build.Issuer(), build.ClientID(), scopes)
+	c, err := newAuthClient()
 	if err != nil {
 		return nil, err
 	}
 	return c.GetSession(ctx)
+}
+
+func newAuthClient() (*auth.Client, error) {
+	return auth.NewClient(
+		build.Issuer(),
+		build.ClientID(),
+		scopes,
+		build.SuccessRedirect(),
+	)
 }
