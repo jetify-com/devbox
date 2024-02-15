@@ -39,7 +39,7 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys: {
-				Outputs: []*lock.Output{
+				Outputs: []lock.Output{
 					{
 						Name:    "out",
 						Default: true,
@@ -78,7 +78,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys1: {
-				Outputs: []*lock.Output{
+				Outputs: []lock.Output{
 					{
 						Name:    "out",
 						Default: true,
@@ -87,7 +87,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 				},
 			},
 			sys2: {
-				Outputs: []*lock.Output{
+				Outputs: []lock.Output{
 					{
 						Name:    "out",
 						Default: true,
@@ -103,7 +103,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 				Resolved: "resolved-flake-reference",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
-						Outputs: []*lock.Output{
+						Outputs: []lock.Output{
 							{
 								Name:    "out",
 								Default: true,
@@ -138,7 +138,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 		Resolved: "resolved-flake-reference",
 		Systems: map[string]*lock.SystemInfo{
 			sys1: {
-				Outputs: []*lock.Output{
+				Outputs: []lock.Output{
 					{
 						Name:    "out",
 						Default: true,
@@ -147,7 +147,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 				},
 			},
 			sys2: {
-				Outputs: []*lock.Output{
+				Outputs: []lock.Output{
 					{
 						Name:    "out",
 						Default: true,
@@ -163,7 +163,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 				Resolved: "resolved-flake-reference",
 				Systems: map[string]*lock.SystemInfo{
 					sys1: {
-						Outputs: []*lock.Output{
+						Outputs: []lock.Output{
 							{
 								Name:    "out",
 								Default: true,
@@ -172,7 +172,7 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 						},
 					},
 					sys2: {
-						Outputs: []*lock.Output{
+						Outputs: []lock.Output{
 							{
 								Name:    "out",
 								Default: true,

@@ -5,6 +5,7 @@ package lock
 
 import (
 	"fmt"
+	"slices"
 )
 
 const (
@@ -26,7 +27,7 @@ type Package struct {
 }
 
 type SystemInfo struct {
-	Outputs []*Output `json:"outputs,omitempty"`
+	Outputs []Output `json:"outputs,omitempty"`
 
 	// Legacy Format
 	StorePath string `json:"store_path,omitempty"`
@@ -88,26 +89,5 @@ func (i *SystemInfo) Equals(other *SystemInfo) bool {
 		return i == other
 	}
 
-	isEqual := true
-	if len(i.Outputs) != len(other.Outputs) {
-		return false
-	}
-	for i, o := range i.Outputs {
-		if !o.Equals(other.Outputs[i]) {
-			return false
-		}
-	}
-	return isEqual
-}
-
-// Useful for debugging when we print the struct
-func (o *Output) String() string {
-	return fmt.Sprintf("%v", *o)
-}
-
-func (o *Output) Equals(other *Output) bool {
-	if o == nil || other == nil {
-		return o == other
-	}
-	return o.Name == other.Name && o.Path == other.Path && o.Default == other.Default
+	return slices.Equal(i.Outputs, other.Outputs)
 }

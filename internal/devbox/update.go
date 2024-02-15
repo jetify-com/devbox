@@ -123,7 +123,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 			return nil
 		}
 		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
-		lockfile.UpdatePackage(pkg.Raw, resolved)
+		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil
 	}
 
@@ -156,7 +156,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		}
 		if updated {
 			// if we are updating the system info, then we should also update the other fields
-			lockfile.UpdatePackage(pkg.Raw, resolved)
+			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 
 			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
 			return nil
@@ -192,4 +192,14 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 	}
 
 	return nil
+}
+
+func useResolvedPackageInLockfile(
+	lockfile *lock.File,
+	pkg *devpkg.Package,
+	resolved *lock.Package,
+	existing *lock.Package,
+) {
+	lockfile.Packages[pkg.Raw] = resolved
+	lockfile.Packages[pkg.Raw].AllowInsecure = existing.AllowInsecure
 }

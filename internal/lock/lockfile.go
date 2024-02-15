@@ -30,10 +30,6 @@ type File struct {
 
 	// Packages is keyed by "canonicalName@version"
 	Packages map[string]*Package `json:"packages"`
-
-	// legacySystemsFormat aids in managing the legacy and/or modern format of
-	// the Package.Systems in this lockfile
-	legacySystemsFormat bool `json:"-"`
 }
 
 func GetFile(project devboxProject) (*File, error) {
@@ -57,15 +53,13 @@ func GetFile(project devboxProject) (*File, error) {
 			// If we have a StorePath and no Outputs, we need to convert to the new format.
 			// Note: for a non-empty StorePath, Outputs should be empty, but being cautious.
 			if sysInfo.StorePath != "" && len(sysInfo.Outputs) == 0 {
-				lockFile.Packages[pkgName].Systems[sys].Outputs = []*Output{
+				lockFile.Packages[pkgName].Systems[sys].Outputs = []Output{
 					{
 						Default: true,
 						Name:    "out",
 						Path:    sysInfo.StorePath,
 					},
 				}
-				// Track that we read from the legacy format
-				lockFile.legacySystemsFormat = true
 			}
 		}
 	}
@@ -79,7 +73,6 @@ func (f *File) Add(pkgs ...string) error {
 			return err
 		}
 	}
-	f.legacySystemsFormat = false
 	return f.Save()
 }
 
@@ -87,13 +80,7 @@ func (f *File) Remove(pkgs ...string) error {
 	for _, p := range pkgs {
 		delete(f.Packages, p)
 	}
-	f.legacySystemsFormat = false
 	return f.Save()
-}
-
-func (f *File) UpdatePackage(name string, pkg *Package) {
-	f.Packages[name] = pkg
-	f.legacySystemsFormat = false
 }
 
 // Resolve updates the in memory copy for performance but does not write to disk
@@ -124,12 +111,16 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 }
 
 func (f *File) Save() error {
+	isDirty, err := f.isDirty()
+	if err != nil {
+		return err
+	}
 	// In SystemInfo, preserve legacy StorePath field and clear out modern Outputs before writing
 	// Reason: We want to update `devbox.lock` file only upon a user action
 	// such as `devbox update` or `devbox add` or `devbox remove`.
 	for pkgName, pkg := range f.Packages {
-		for sys := range pkg.Systems {
-			if f.legacySystemsFormat {
+		for sys, sysInfo := range pkg.Systems {
+			if !isDirty && sysInfo.StorePath != "" {
 				f.Packages[pkgName].Systems[sys].Outputs = nil
 			} else {
 				f.Packages[pkgName].Systems[sys].StorePath = ""
