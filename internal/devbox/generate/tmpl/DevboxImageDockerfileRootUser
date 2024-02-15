@@ -5,7 +5,8 @@ RUN apt-get update
 RUN apt-get -y install bash binutils git xz-utils wget sudo
 
 # Step 2: Installing Nix
-RUN wget --output-document=/dev/stdout https://nixos.org/nix/install | sh -s -- --daemon
+RUN mkdir -p /etc/nix/
+RUN echo "filter-syscalls = false" >> /etc/nix/nix.conf && wget --output-document=/dev/stdout https://nixos.org/nix/install | sh -s -- --daemon
 RUN . ~/.nix-profile/etc/profile.d/nix.sh
 
 ENV PATH="/root/.nix-profile/bin:$PATH"
