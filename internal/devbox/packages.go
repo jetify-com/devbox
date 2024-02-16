@@ -98,7 +98,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		}
 
 		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
-		d.cfg.Packages.Add(packageNameForConfig)
+		d.cfg.FilePackages().Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
@@ -120,27 +120,27 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 	for _, pkg := range pkgs {
-		if err := d.cfg.Packages.AddPlatforms(
+		if err := d.cfg.FilePackages().AddPlatforms(
 			d.stderr, pkg, opts.Platforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.ExcludePlatforms(
+		if err := d.cfg.FilePackages().ExcludePlatforms(
 			d.stderr, pkg, opts.ExcludePlatforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetDisablePlugin(
+		if err := d.cfg.FilePackages().SetDisablePlugin(
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetPatchGLibc(
+		if err := d.cfg.FilePackages().SetPatchGLibc(
 			pkg, opts.PatchGlibc); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetOutputs(
+		if err := d.cfg.FilePackages().SetOutputs(
 			d.stderr, pkg, opts.Outputs); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetAllowInsecure(
+		if err := d.cfg.FilePackages().SetAllowInsecure(
 			d.stderr, pkg, opts.AllowInsecure); err != nil {
 			return err
 		}
@@ -191,7 +191,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
 			packagesToUninstall = append(packagesToUninstall, found.Raw)
-			d.cfg.Packages.Remove(found.Raw)
+			d.cfg.FilePackages().Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
@@ -533,7 +533,7 @@ func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Pack
 //
 // NOTE: ideally, this function would be in devconfig, but it leads to an import cycle with devpkg, so
 // leaving in this "top-level" devbox package where we can import devconfig, devpkg and lock.
-func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.File, cfg *devconfig.Config) error {
+func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.File, cfg devconfig.Config) error {
 	if !lockfile.HasAllowInsecurePackages() {
 		return nil
 	}
@@ -553,7 +553,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 		if err != nil {
 			return fmt.Errorf("failed to get package's store name for package %q with error %w", versionedName, err)
 		}
-		if err := cfg.Packages.SetAllowInsecure(writer, versionedName, []string{storeName}); err != nil {
+		if err := cfg.FilePackages().SetAllowInsecure(writer, versionedName, []string{storeName}); err != nil {
 			return fmt.Errorf("failed to set allow_insecure in devbox.json for package %q with error %w", versionedName, err)
 		}
 	}

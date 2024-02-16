@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/assert"
 	"github.com/tailscale/hujson"
 	"golang.org/x/tools/txtar"
 )
@@ -28,7 +29,7 @@ Tests begin by defining their JSON with:
   { "packages": { "go": "latest" } }`)
 */
 
-func parseConfigTxtarTest(t *testing.T, test string) (in *Config, want []byte) {
+func parseConfigTxtarTest(t *testing.T, test string) (in Config, want []byte) {
 	t.Helper()
 
 	ar := txtar.Parse([]byte(test))
@@ -79,10 +80,10 @@ func TestNoChanges(t *testing.T) {
 -- want --
 { "packages": { "go": "latest" } }`)
 
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -98,11 +99,11 @@ func TestAddPackageEmptyConfig(t *testing.T) {
   }
 }`)
 
-	in.Packages.Add("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -120,11 +121,11 @@ func TestAddPackageEmptyConfigWhitespace(t *testing.T) {
   }
 }`)
 
-	in.Packages.Add("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -142,11 +143,11 @@ func TestAddPackageEmptyConfigComment(t *testing.T) {
   },
 }`)
 
-	in.Packages.Add("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -162,11 +163,11 @@ func TestAddPackageNull(t *testing.T) {
   }
 }`)
 
-	in.Packages.Add("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -187,11 +188,11 @@ func TestAddPackageObject(t *testing.T) {
   }
 }`)
 
-	in.Packages.Add("python@3.10")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("python@3.10")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -214,11 +215,11 @@ func TestAddPackageObjectComment(t *testing.T) {
   },
 }`)
 
-	in.Packages.Add("python@3.10")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("python@3.10")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -234,11 +235,11 @@ func TestAddPackageEmptyArray(t *testing.T) {
   "packages": ["go@latest"]
 }`)
 
-	in.Packages.Add("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -257,11 +258,11 @@ func TestAddPackageOneLineArray(t *testing.T) {
   ]
 }`)
 
-	in.Packages.Add("python@3.10")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("python@3.10")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -282,11 +283,11 @@ func TestAddPackageMultiLineArray(t *testing.T) {
   ]
 }`)
 
-	in.Packages.Add("python@3.10")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("python@3.10")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -315,11 +316,11 @@ func TestAddPackageArrayComments(t *testing.T) {
   ],
 }`)
 
-	in.Packages.Add("hello@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Add("hello@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -340,11 +341,11 @@ func TestRemovePackageObject(t *testing.T) {
   }
 }`)
 
-	in.Packages.Remove("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Remove("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -364,11 +365,11 @@ func TestRemovePackageLastMember(t *testing.T) {
   "packages": {}
 }`)
 
-	in.Packages.Remove("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Remove("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optBytesToStrings()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optBytesToStrings()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -384,11 +385,11 @@ func TestRemovePackageArray(t *testing.T) {
   "packages": ["python@3.10"]
 }`)
 
-	in.Packages.Remove("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Remove("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -410,11 +411,11 @@ func TestRemovePackageLastElement(t *testing.T) {
   }
 }`)
 
-	in.Packages.Remove("go@latest")
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	in.FilePackages().Remove("go@latest")
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -466,22 +467,22 @@ func TestAddPlatforms(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.AddPlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin", "x86_64-darwin"})
+	err := in.FilePackages().AddPlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin", "x86_64-darwin"})
 	if err != nil {
 		t.Error(err)
 	}
-	err = in.Packages.AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin"})
+	err = in.FilePackages().AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin"})
 	if err != nil {
 		t.Error(err)
 	}
-	err = in.Packages.AddPlatforms(io.Discard, "hello@latest", []string{"x86_64-darwin"})
+	err = in.FilePackages().AddPlatforms(io.Discard, "hello@latest", []string{"x86_64-darwin"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -506,18 +507,18 @@ func TestAddPlatformsMigrateArray(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.AddPlatforms(io.Discard, "go", []string{"aarch64-darwin"})
+	err := in.FilePackages().AddPlatforms(io.Discard, "go", []string{"aarch64-darwin"})
 	if err != nil {
 		t.Error(err)
 	}
-	err = in.Packages.AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin", "x86_64-linux"})
+	err = in.FilePackages().AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin", "x86_64-linux"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -547,14 +548,14 @@ func TestAddPlatformsMigrateArrayComments(t *testing.T) {
   },
 }`)
 
-	err := in.Packages.AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin", "x86_64-linux"})
+	err := in.FilePackages().AddPlatforms(io.Discard, "python@3.10", []string{"x86_64-darwin", "x86_64-linux"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -579,14 +580,14 @@ func TestExcludePlatforms(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.ExcludePlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin"})
+	err := in.FilePackages().ExcludePlatforms(io.Discard, "go@1.20", []string{"aarch64-darwin"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -611,14 +612,14 @@ func TestSetOutputs(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
+	err := in.FilePackages().SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -641,14 +642,14 @@ func TestSetOutputsMigrateArray(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
+	err := in.FilePackages().SetOutputs(io.Discard, "prometheus@latest", []string{"cli"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -673,14 +674,14 @@ func TestSetAllowInsecure(t *testing.T) {
   }
 }`)
 
-	err := in.Packages.SetAllowInsecure(io.Discard, "python@2.7", []string{"python-2.7.18.1"})
+	err := in.FilePackages().SetAllowInsecure(io.Discard, "python@2.7", []string{"python-2.7.18.1"})
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes(), optParseHujson()); diff != "" {
 		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+	if diff := cmp.Diff(want, in.bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
 	}
 }
@@ -688,7 +689,7 @@ func TestSetAllowInsecure(t *testing.T) {
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	in := DefaultConfig()
-	inBytes := in.Bytes()
+	inBytes := in.bytes()
 	if _, err := hujson.Parse(inBytes); err != nil {
 		t.Fatalf("default config JSON is invalid: %v\n%s", err, inBytes)
 	}
@@ -700,15 +701,42 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}
-	if diff := cmp.Diff(in, out, cmpopts.IgnoreUnexported(Config{}, Packages{})); diff != "" {
+	if diff := cmp.Diff(in, out, cmpopts.IgnoreUnexported(configFile{}, packages{})); diff != "" {
 		t.Errorf("configs not equal (-in +out):\n%s", diff)
 	}
 
-	outBytes := out.Bytes()
+	outBytes := out.bytes()
 	if _, err := hujson.Parse(outBytes); err != nil {
 		t.Fatalf("loaded default config JSON is invalid: %v\n%s", err, outBytes)
 	}
 	if string(inBytes) != string(outBytes) {
 		t.Errorf("got different JSON after load/save/load:\ninput:\n%s\noutput:\n%s", inBytes, outBytes)
+	}
+}
+
+func TestNixpkgsValidation(t *testing.T) {
+	testCases := map[string]struct {
+		commit   string
+		isErrant bool
+	}{
+		"invalid_nixpkg_commit": {"1234545", true},
+		"valid_nixpkg_commit":   {"af9e00071d0971eb292fd5abef334e66eda3cb69", false},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			err := ValidateNixpkg(&configFile{
+				Nixpkgs: &NixpkgsConfig{
+					Commit: testCase.commit,
+				},
+			})
+			if testCase.isErrant {
+				assert.Error(err)
+			} else {
+				assert.NoError(err)
+			}
+		})
 	}
 }
