@@ -116,6 +116,11 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		return Ref{}, "", redact.Errorf("parse flake reference as URL: %v", err)
 	}
 
+	// ensure that the fragment is excluded from the parsed URL
+	// since those are not valid in flake references.
+	fragment = refURL.Fragment
+	refURL.Fragment = ""
+
 	switch refURL.Scheme {
 	case "", "flake":
 		// [flake:]<flake-id>(/<rev-or-ref>(/rev)?)?
@@ -191,7 +196,7 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 	default:
 		return Ref{}, "", redact.Errorf("unsupported flake reference URL scheme: %s", redact.Safe(refURL.Scheme))
 	}
-	return parsed, refURL.Fragment, nil
+	return parsed, fragment, nil
 }
 
 func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
