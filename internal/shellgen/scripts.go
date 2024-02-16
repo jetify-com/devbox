@@ -65,7 +65,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	written := map[string]struct{}{} // set semantics; value is irrelevant
 	pluginHooks, err := devbox.PluginManager().InitHooks(
 		devbox.InstallablePackages(),
-		devbox.Config().Include,
+		devbox.Config().Include(),
 	)
 	if err != nil {
 		return errors.WithStack(err)

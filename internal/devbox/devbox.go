@@ -522,11 +522,11 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 
 // saveCfg writes the config file to the devbox directory.
 func (d *Devbox) saveCfg() error {
-	return d.cfg.SaveTo(d.ProjectDir())
+	return d.cfg.Root.SaveTo(d.ProjectDir())
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := d.pluginManager.GetServices(d.InstallablePackages(), d.cfg.Include)
+	pluginSvcs, err := d.pluginManager.GetServices(d.InstallablePackages(), d.cfg.Include())
 	if err != nil {
 		return nil, err
 	}
@@ -881,7 +881,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	// We still need to be able to add env variables to non-service binaries
 	// (e.g. ruby). This would involve understanding what binaries are associated
 	// to a given plugin.
-	pluginEnv, err := d.pluginManager.Env(d.InstallablePackages(), d.cfg.Include, env)
+	pluginEnv, err := d.pluginManager.Env(d.InstallablePackages(), d.cfg.Include(), env)
 	if err != nil {
 		return nil, err
 	}
@@ -1008,7 +1008,7 @@ func (d *Devbox) flakeDir() string {
 func (d *Devbox) PackageNames() []string {
 	// TODO savil: centralize implementation by calling d.configPackages and getting pkg.Raw
 	// Skipping for now to avoid propagating the error value.
-	return d.cfg.Packages.VersionedNames()
+	return d.cfg.PackagesVersionedNames()
 }
 
 // ConfigPackages returns the packages that are defined in devbox.json
@@ -1033,7 +1033,7 @@ func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 
 func (d *Devbox) Includes() []plugin.Includable {
 	includes := []plugin.Includable{}
-	for _, includePath := range d.cfg.Include {
+	for _, includePath := range d.cfg.Include() {
 		if include, err := d.pluginManager.ParseInclude(includePath); err == nil {
 			includes = append(includes, include)
 		}
@@ -1140,14 +1140,14 @@ func (d *Devbox) configEnvs(
 				}
 			}
 		}
-	} else if d.cfg.EnvFrom != "" {
+	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
 			"unknown from_env value: %s. Supported value is: %q.",
-			d.cfg.EnvFrom,
+			d.cfg.Root.EnvFrom,
 			"jetpack-cloud",
 		)
 	}
-	for k, v := range d.cfg.Env {
+	for k, v := range d.cfg.Env() {
 		env[k] = v
 	}
 	return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil

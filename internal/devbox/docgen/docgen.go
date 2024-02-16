@@ -51,10 +51,10 @@ func GenerateReadme(
 	}
 
 	return tmpl.Execute(f, map[string]any{
-		"Name":        devbox.Config().Name,
-		"Description": devbox.Config().Description,
+		"Name":        devbox.Config().Root.Name,
+		"Description": devbox.Config().Root.Description,
 		"Scripts":     devbox.Config().Scripts(),
-		"EnvVars":     devbox.Config().Env,
+		"EnvVars":     devbox.Config().Env(),
 		"InitHook":    devbox.Config().InitHook(),
 		"Packages":    devbox.ConfigPackages(),
 	})

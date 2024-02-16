@@ -9,7 +9,7 @@ type script struct {
 
 type scripts map[string]*script
 
-func (c *Config) Scripts() scripts {
+func (c *configFile) Scripts() scripts {
 	if c == nil || c.Shell == nil {
 		return nil
 	}

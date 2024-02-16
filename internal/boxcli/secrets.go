@@ -247,7 +247,7 @@ func secretsInitFunc(
 	secrets := box.UninitializedSecrets(ctx)
 
 	if _, err := secrets.ProjectConfig(); err == nil &&
-		box.Config().EnvFrom != "jetpack-cloud" {
+		!box.Config().IsEnvsecEnabled() {
 		// Handle edge case where directory is already set up, but devbox.json is
 		// not configured to use jetpack-cloud.
 		ux.Finfo(
@@ -257,6 +257,6 @@ func secretsInitFunc(
 	} else if err := secrets.NewProject(ctx, flags.force); err != nil {
 		return errors.WithStack(err)
 	}
-	box.Config().SetStringField("EnvFrom", "jetpack-cloud")
-	return box.Config().SaveTo(box.ProjectDir())
+	box.Config().Root.SetStringField("EnvFrom", "jetpack-cloud")
+	return box.Config().Root.SaveTo(box.ProjectDir())
 }

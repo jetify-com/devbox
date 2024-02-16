@@ -31,7 +31,7 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 			fmt.Fprintf(d.stderr, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
 
 			// Get the package from the config to get the Platforms and ExcludedPlatforms later
-			cfgPackage, ok := d.cfg.Packages.Get(pkg.Raw)
+			cfgPackage, ok := d.cfg.Root.GetPackage(pkg.Raw)
 			if !ok {
 				return fmt.Errorf("package %s not found in config", pkg.Raw)
 			}
