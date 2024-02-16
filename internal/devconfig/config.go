@@ -28,7 +28,7 @@ func Load(path string) (*Config, error) {
 	return &Config{Root: baseConfig}, nil
 }
 
-func (c *Config) Mutator() *packagesMutator {
+func (c *Config) PackageMutator() *packagesMutator {
 	return &c.Root.PackagesMutator
 }
 
