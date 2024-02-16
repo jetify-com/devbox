@@ -57,7 +57,7 @@ func initConfigFile(path string) (created bool, err error) {
 		}
 	}()
 
-	_, err = file.Write(DefaultConfig().bytes())
+	_, err = file.Write(DefaultConfig().Bytes())
 	if err != nil {
 		file.Close()
 		return false, err
@@ -68,7 +68,7 @@ func initConfigFile(path string) (created bool, err error) {
 	return true, nil
 }
 
-func Open(projectDir string) (Config, error) {
+func Open(projectDir string) (*Config, error) {
 	cfgPath := filepath.Join(projectDir, defaultName)
 
 	if !featureflag.TySON.Enabled() {
@@ -97,7 +97,7 @@ func Open(projectDir string) (Config, error) {
 			return nil, err
 		}
 		cfgPath = tmpFile.Name()
-		config, err := load(cfgPath)
+		config, err := Load(cfgPath)
 		if err != nil {
 			return nil, err
 		}

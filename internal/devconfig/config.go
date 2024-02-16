@@ -33,51 +33,20 @@ const (
 	tsonFormat
 )
 
-// This interface is added in preparation for supporting imports. We split functions
-// depending on whether they will be affected by imports or not.
-type Config interface {
-	// Not affected by imports support
-	bytes() []byte
-	Description() string
-	Equals(other Config) bool
-	FilePackages() *packages // only used to modify current config file.
-	Name() string
-	SaveTo(path string) error
-	SetStringField(key, value string)
+// Config defines a devbox environment as JSON.
+type Config struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 
-	// Possibly affected by imports support or require discussion
-	Hash() (string, error)     // Supporting recursive hash may be slow with remote imports
-	NixPkgsCommitHash() string // We should probably not support nix package conflicts?
-
-	// The following will be modified once we support imports. Their result will
-	// be an aggregation of the current config and the imported ones.
-	Env() map[string]string
-	EnvFrom() string
-	IncludedPlugins() []string
-	InitHook() *shellcmd.Commands
-	IsEnvsecEnabled() bool
-	Packages() []*Package
-	Scripts() scripts
-}
-
-var _ Config = (*configFile)(nil)
-
-// configFile defines a devbox environment as a single JSON. We don't export
-// it because in the near future configs will be able to import other configs
-// so we need to abstract that away.
-type configFile struct {
-	NameVal        string `json:"name,omitempty"`
-	DescriptionVal string `json:"description,omitempty"`
-
-	// PackagesVal is the slice of packages that devbox makes available in
+	// Packages is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	PackagesVal packages `json:"packages"`
+	Packages Packages `json:"packages"`
 
-	// EnvVal allows specifying env variables
-	EnvVal map[string]string `json:"env,omitempty"`
+	// Env allows specifying env variables
+	Env map[string]string `json:"env,omitempty"`
 
-	// Only allows "envsec or jetpack-cloud" for now
-	EnvFromVal string `json:"env_from,omitempty"`
+	// Only allows "envsec" for now
+	EnvFrom string `json:"env_from,omitempty"`
 
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
@@ -113,7 +82,7 @@ type Stage struct {
 
 const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
-func DefaultConfig() Config {
+func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
   "packages": [],
@@ -135,24 +104,24 @@ func DefaultConfig() Config {
 	return cfg
 }
 
-func (c *configFile) bytes() []byte {
+func (c *Config) Bytes() []byte {
 	b := c.ast.root.Pack()
 	return bytes.ReplaceAll(b, []byte("\t"), []byte("  "))
 }
 
-func (c *configFile) Hash() (string, error) {
+func (c *Config) Hash() (string, error) {
 	ast := c.ast.root.Clone()
 	ast.Minimize()
 	return cachehash.Bytes(ast.Pack())
 }
 
-func (c *configFile) Equals(other Config) bool {
+func (c *Config) Equals(other *Config) bool {
 	hash1, _ := c.Hash()
 	hash2, _ := other.Hash()
 	return hash1 == hash2
 }
 
-func (c *configFile) NixPkgsCommitHash() string {
+func (c *Config) NixPkgsCommitHash() string {
 	// The commit hash for nixpkgs-unstable on 2023-10-25 from status.nixos.org
 	const DefaultNixpkgsCommit = "75a52265bda7fd25e06e3a67dee3f0354e73243c"
 
@@ -162,7 +131,7 @@ func (c *configFile) NixPkgsCommitHash() string {
 	return c.Nixpkgs.Commit
 }
 
-func (c *configFile) InitHook() *shellcmd.Commands {
+func (c *Config) InitHook() *shellcmd.Commands {
 	if c == nil || c.Shell == nil {
 		return nil
 	}
@@ -170,47 +139,15 @@ func (c *configFile) InitHook() *shellcmd.Commands {
 }
 
 // SaveTo writes the config to a file.
-func (c *configFile) SaveTo(path string) error {
+func (c *Config) SaveTo(path string) error {
 	if c.format != jsonFormat {
 		return errors.New("cannot save config to non-json format")
 	}
-	return os.WriteFile(filepath.Join(path, defaultName), c.bytes(), 0o644)
-}
-
-func (c *configFile) FilePackages() *packages {
-	return &c.PackagesVal
-}
-
-func (c *configFile) IncludedPlugins() []string {
-	return c.Include
-}
-
-func (c *configFile) Packages() []*Package {
-	return c.PackagesVal.collection
-}
-
-func (c *configFile) EnvFrom() string {
-	return c.EnvFromVal
-}
-
-func (c *configFile) Env() map[string]string {
-	return c.EnvVal
-}
-
-func (c *configFile) Name() string {
-	return c.NameVal
-}
-
-func (c *configFile) Description() string {
-	return c.DescriptionVal
+	return os.WriteFile(filepath.Join(path, defaultName), c.Bytes(), 0o644)
 }
 
 // Load reads a devbox config file, and validates it.
-func Load(path string) (Config, error) {
-	return load(path)
-}
-
-func load(path string) (*configFile, error) {
+func Load(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -218,7 +155,7 @@ func load(path string) (*configFile, error) {
 	return loadBytes(b)
 }
 
-func loadBytes(b []byte) (*configFile, error) {
+func loadBytes(b []byte) (*Config, error) {
 	jsonb, err := hujson.Standardize(slices.Clone(b))
 	if err != nil {
 		return nil, err
@@ -228,9 +165,9 @@ func loadBytes(b []byte) (*configFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := &configFile{
-		PackagesVal: packages{ast: ast},
-		ast:         ast,
+	cfg := &Config{
+		Packages: Packages{ast: ast},
+		ast:      ast,
 	}
 	if err := json.Unmarshal(jsonb, cfg); err != nil {
 		return nil, err
@@ -238,7 +175,7 @@ func loadBytes(b []byte) (*configFile, error) {
 	return cfg, validateConfig(cfg)
 }
 
-func LoadConfigFromURL(url string) (Config, error) {
+func LoadConfigFromURL(url string) (*Config, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -252,8 +189,8 @@ func LoadConfigFromURL(url string) (Config, error) {
 	return loadBytes(data)
 }
 
-func validateConfig(cfg *configFile) error {
-	fns := []func(cfg Config) error{
+func validateConfig(cfg *Config) error {
+	fns := []func(cfg *Config) error{
 		ValidateNixpkg,
 		validateScripts,
 	}
@@ -268,7 +205,7 @@ func validateConfig(cfg *configFile) error {
 
 var whitespace = regexp.MustCompile(`\s`)
 
-func validateScripts(cfg Config) error {
+func validateScripts(cfg *Config) error {
 	scripts := cfg.Scripts()
 	for k := range scripts {
 		if strings.TrimSpace(k) == "" {
@@ -286,7 +223,7 @@ func validateScripts(cfg Config) error {
 	return nil
 }
 
-func ValidateNixpkg(cfg Config) error {
+func ValidateNixpkg(cfg *Config) error {
 	hash := cfg.NixPkgsCommitHash()
 	if hash == "" {
 		return nil
