@@ -42,7 +42,7 @@ func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, a
 
 	data := script.ReadFile(args[0])
 	list := devconfig.Config{}
-	err := json.Unmarshal([]byte(data), &list)
+	err := json.Unmarshal([]byte(data), &list.Root)
 	script.Check(err)
 
 	expected := args[1]
