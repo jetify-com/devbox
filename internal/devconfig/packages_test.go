@@ -19,28 +19,28 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "empty-list",
 			jsonConfig: `{"packages":[]}`,
 			expected: packagesMutator{
-				Collection: []Package{},
+				collection: []Package{},
 			},
 		},
 		{
 			name:       "empty-map",
 			jsonConfig: `{"packages":{}}`,
 			expected: packagesMutator{
-				Collection: []Package{},
+				collection: []Package{},
 			},
 		},
 		{
 			name:       "flat-list",
 			jsonConfig: `{"packages":["python","hello@latest","go@1.20"]}`,
 			expected: packagesMutator{
-				Collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
+				collection: packagesFromLegacyList([]string{"python", "hello@latest", "go@1.20"}),
 			},
 		},
 		{
 			name:       "map-with-string-value",
 			jsonConfig: `{"packages":{"python":"latest","go":"1.20"}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewVersionOnlyPackage("python", "latest"),
 					NewVersionOnlyPackage("go", "1.20"),
 				},
@@ -51,7 +51,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "map-with-struct-value",
 			jsonConfig: `{"packages":{"python":{"version":"latest"}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("python", map[string]any{"version": "latest"}),
 				},
 			},
@@ -60,7 +60,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			name:       "map-with-string-and-struct-values",
 			jsonConfig: `{"packages":{"go":"1.20","emacs":"latest","python":{"version":"latest"}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewVersionOnlyPackage("go", "1.20"),
 					NewVersionOnlyPackage("emacs", "latest"),
 					NewPackage("python", map[string]any{"version": "latest"}),
@@ -72,7 +72,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			jsonConfig: `{"packages":{"python":{"version":"latest",` +
 				`"platforms":["x86_64-darwin","aarch64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":   "latest",
 						"platforms": []string{"x86_64-darwin", "aarch64-linux"},
@@ -85,7 +85,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			jsonConfig: `{"packages":{"python":{"version":"latest",` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":            "latest",
 						"excluded_platforms": []string{"x86_64-linux"},
@@ -99,7 +99,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("python", map[string]any{
 						"version":            "latest",
 						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
@@ -114,7 +114,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("path:my-php-flake#hello", map[string]any{
 						"version":            "latest",
 						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
@@ -130,7 +130,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("github:F1bonacc1/process-compose/v0.43.1", map[string]any{
 						"version":            "latest",
 						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
@@ -146,7 +146,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"],` +
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
 						"version":            "latest",
 						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
@@ -164,7 +164,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"outputs":["cli"]` +
 				`}}}`,
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
 						"version":            "latest",
 						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
@@ -182,7 +182,7 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`}}}`,
 
 			expected: packagesMutator{
-				Collection: []Package{
+				collection: []Package{
 					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#python", map[string]any{
 						"version":        "2.7",
 						"allow_insecure": []string{"python-2.7.18.1"},

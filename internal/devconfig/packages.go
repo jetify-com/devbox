@@ -16,8 +16,8 @@ import (
 )
 
 type packagesMutator struct {
-	// Collection contains the set of package definitions
-	Collection []Package
+	// collection contains the set of package definitions
+	collection []Package
 
 	ast *configAST
 }
@@ -28,7 +28,7 @@ func (pkgs *packagesMutator) Add(versionedName string) {
 	if pkgs.index(name, version) != -1 {
 		return
 	}
-	pkgs.Collection = append(pkgs.Collection, NewVersionOnlyPackage(name, version))
+	pkgs.collection = append(pkgs.collection, NewVersionOnlyPackage(name, version))
 	pkgs.ast.appendPackage(name, version)
 }
 
@@ -39,7 +39,7 @@ func (pkgs *packagesMutator) Remove(versionedName string) {
 	if i == -1 {
 		return
 	}
-	pkgs.Collection = slices.Delete(pkgs.Collection, i, i+1)
+	pkgs.collection = slices.Delete(pkgs.collection, i, i+1)
 	pkgs.ast.removePackage(name)
 }
 
@@ -60,7 +60,7 @@ func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string
 
 	// Adding any platform will restrict installation to it, so
 	// the ExcludedPlatforms are no longer needed
-	pkg := &pkgs.Collection[i]
+	pkg := &pkgs.collection[i]
 	if len(pkg.ExcludedPlatforms) > 0 {
 		return usererr.New(
 			"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
@@ -101,7 +101,7 @@ func (pkgs *packagesMutator) ExcludePlatforms(writer io.Writer, versionedName st
 		return errors.Errorf("package %s not found", versionedName)
 	}
 
-	pkg := &pkgs.Collection[i]
+	pkg := &pkgs.collection[i]
 	if len(pkg.Platforms) > 0 {
 		return usererr.New(
 			"cannot exclude any platform for package %s because it already has `platforms` defined. "+
@@ -128,7 +128,7 @@ func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a list of strings (legacy format)
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {
-		pkgs.Collection = packagesFromLegacyList(packages)
+		pkgs.collection = packagesFromLegacyList(packages)
 		return nil
 	}
 
@@ -150,7 +150,7 @@ func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
 		pkg.name = pair.Key
 		packagesList = append(packagesList, pkg)
 	}
-	pkgs.Collection = packagesList
+	pkgs.collection = packagesList
 	return nil
 }
 
@@ -160,8 +160,8 @@ func (pkgs *packagesMutator) SetPatchGLibc(versionedName string, v bool) error {
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
-	if pkgs.Collection[i].PatchGlibc != v {
-		pkgs.Collection[i].PatchGlibc = v
+	if pkgs.collection[i].PatchGlibc != v {
+		pkgs.collection[i].PatchGlibc = v
 		pkgs.ast.setPackageBool(name, "patch_glibc", v)
 	}
 	return nil
@@ -173,8 +173,8 @@ func (pkgs *packagesMutator) SetDisablePlugin(versionedName string, v bool) erro
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
-	if pkgs.Collection[i].DisablePlugin != v {
-		pkgs.Collection[i].DisablePlugin = v
+	if pkgs.collection[i].DisablePlugin != v {
+		pkgs.collection[i].DisablePlugin = v
 		pkgs.ast.setPackageBool(name, "disable_plugin", v)
 	}
 	return nil
@@ -189,13 +189,13 @@ func (pkgs *packagesMutator) SetOutputs(writer io.Writer, versionedName string, 
 
 	toAdd := []string{}
 	for _, o := range outputs {
-		if !slices.Contains(pkgs.Collection[i].Outputs, o) {
+		if !slices.Contains(pkgs.collection[i].Outputs, o) {
 			toAdd = append(toAdd, o)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		pkg := &pkgs.Collection[i]
+		pkg := &pkgs.collection[i]
 		pkgs.ast.appendOutputs(pkg.name, "outputs", toAdd)
 		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
@@ -211,13 +211,13 @@ func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName st
 
 	toAdd := []string{}
 	for _, w := range whitelist {
-		if !slices.Contains(pkgs.Collection[i].AllowInsecure, w) {
+		if !slices.Contains(pkgs.collection[i].AllowInsecure, w) {
 			toAdd = append(toAdd, w)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		pkg := &pkgs.Collection[i]
+		pkg := &pkgs.collection[i]
 		pkgs.ast.appendAllowInsecure(pkg.name, "allow_insecure", toAdd)
 		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
 		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
@@ -226,7 +226,7 @@ func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName st
 }
 
 func (pkgs *packagesMutator) index(name, version string) int {
-	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
+	return slices.IndexFunc(pkgs.collection, func(p Package) bool {
 		return p.name == name && p.Version == version
 	})
 }

@@ -32,14 +32,18 @@ func (c *Config) PackageMutator() *packagesMutator {
 	return &c.Root.PackagesMutator
 }
 
+func (c *Config) Packages() []Package {
+	return c.Root.PackagesMutator.collection
+}
+
 // PackagesVersionedNames returns a list of package names with versions.
 // NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
 //
 // example:
 // ["package1", "package2@latest", "package3@1.20"]
 func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.PackagesMutator.Collection))
-	for _, p := range c.Root.PackagesMutator.Collection {
+	result := make([]string, 0, len(c.Root.PackagesMutator.collection))
+	for _, p := range c.Root.PackagesMutator.collection {
 		result = append(result, p.VersionedName())
 	}
 	return result

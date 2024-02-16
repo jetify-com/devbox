@@ -153,7 +153,7 @@ func (c *configFile) GetPackage(versionedName string) (*Package, bool) {
 	if i == -1 {
 		return nil, false
 	}
-	return &c.PackagesMutator.Collection[i], true
+	return &c.PackagesMutator.collection[i], true
 }
 
 func loadBytes(b []byte) (*configFile, error) {
