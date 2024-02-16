@@ -37,7 +37,7 @@
         inherit pkg;
 
         # Programs needed by glibc-patch.bash.
-        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc patchelf ripgrep;
+        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc gnused patchelf ripgrep;
 
         builder = "${bash}/bin/bash";
         args = [ ./glibc-patch.bash ];
