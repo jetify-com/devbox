@@ -139,30 +139,3 @@ func TestFindParentDirAtPath(t *testing.T) {
 		})
 	}
 }
-
-func TestNixpkgsValidation(t *testing.T) {
-	testCases := map[string]struct {
-		commit   string
-		isErrant bool
-	}{
-		"invalid_nixpkg_commit": {"1234545", true},
-		"valid_nixpkg_commit":   {"af9e00071d0971eb292fd5abef334e66eda3cb69", false},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			assert := assert.New(t)
-
-			err := devconfig.ValidateNixpkg(&devconfig.Config{
-				Nixpkgs: &devconfig.NixpkgsConfig{
-					Commit: testCase.commit,
-				},
-			})
-			if testCase.isErrant {
-				assert.Error(err)
-			} else {
-				assert.NoError(err)
-			}
-		})
-	}
-}

@@ -46,17 +46,17 @@ func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, a
 	script.Check(err)
 
 	expected := args[1]
-	for _, actual := range list.Packages.VersionedNames() {
+	for _, actual := range list.PackagesVersionedNames() {
 		if actual == expected {
 			if neg {
-				script.Fatalf("value '%s' found in '%s'", expected, list.Packages.VersionedNames())
+				script.Fatalf("value '%s' found in '%s'", expected, list.PackagesVersionedNames())
 			}
 			return
 		}
 	}
 
 	if !neg {
-		script.Fatalf("value '%s' not found in '%s'", expected, list.Packages.VersionedNames())
+		script.Fatalf("value '%s' not found in '%s'", expected, list.PackagesVersionedNames())
 	}
 }
 

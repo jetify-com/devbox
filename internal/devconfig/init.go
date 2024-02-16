@@ -101,7 +101,7 @@ func Open(projectDir string) (*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		config.format = tsonFormat
+		config.Root.format = tsonFormat
 		return config, nil
 	}
 

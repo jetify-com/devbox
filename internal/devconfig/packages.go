@@ -15,38 +15,15 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-type Packages struct {
+type packagesMutator struct {
 	// Collection contains the set of package definitions
 	Collection []Package
 
 	ast *configAST
 }
 
-// VersionedNames returns a list of package names with versions.
-// NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
-//
-// example:
-// ["package1", "package2@latest", "package3@1.20"]
-func (pkgs *Packages) VersionedNames() []string {
-	result := make([]string, 0, len(pkgs.Collection))
-	for _, p := range pkgs.Collection {
-		result = append(result, p.VersionedName())
-	}
-	return result
-}
-
-// Get returns the package with the given versionedName
-func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
-	name, version := parseVersionedName(versionedName)
-	i := pkgs.index(name, version)
-	if i == -1 {
-		return nil, false
-	}
-	return &pkgs.Collection[i], true
-}
-
 // Add adds a package to the list of packages
-func (pkgs *Packages) Add(versionedName string) {
+func (pkgs *packagesMutator) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	if pkgs.index(name, version) != -1 {
 		return
@@ -56,7 +33,7 @@ func (pkgs *Packages) Add(versionedName string) {
 }
 
 // Remove removes a package from the list of packages
-func (pkgs *Packages) Remove(versionedName string) {
+func (pkgs *packagesMutator) Remove(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -67,7 +44,7 @@ func (pkgs *Packages) Remove(versionedName string) {
 }
 
 // AddPlatforms adds a platform to the list of platforms for a given package
-func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
+func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -110,7 +87,7 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 }
 
 // ExcludePlatforms adds a platform to the list of excluded platforms for a given package
-func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
+func (pkgs *packagesMutator) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -147,7 +124,7 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 	return nil
 }
 
-func (pkgs *Packages) UnmarshalJSON(data []byte) error {
+func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a list of strings (legacy format)
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {
@@ -177,7 +154,7 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (pkgs *Packages) SetPatchGLibc(versionedName string, v bool) error {
+func (pkgs *packagesMutator) SetPatchGLibc(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -190,7 +167,7 @@ func (pkgs *Packages) SetPatchGLibc(versionedName string, v bool) error {
 	return nil
 }
 
-func (pkgs *Packages) SetDisablePlugin(versionedName string, v bool) error {
+func (pkgs *packagesMutator) SetDisablePlugin(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -203,7 +180,7 @@ func (pkgs *Packages) SetDisablePlugin(versionedName string, v bool) error {
 	return nil
 }
 
-func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
+func (pkgs *packagesMutator) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -225,7 +202,7 @@ func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs
 	return nil
 }
 
-func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
+func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -248,7 +225,7 @@ func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, w
 	return nil
 }
 
-func (pkgs *Packages) index(name, version string) int {
+func (pkgs *packagesMutator) index(name, version string) int {
 	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
 		return p.name == name && p.Version == version
 	})
