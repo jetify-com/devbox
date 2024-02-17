@@ -53,8 +53,8 @@ import (
 const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
-	shellHistoryFile = ".devbox/shell_history"
-
+	shellHistoryFile     = ".devbox/shell_history"
+	pcTargetVersion      = "v0.85.0"
 	arbitraryCmdFilename = ".cmd"
 )
 
@@ -748,7 +748,7 @@ func (d *Devbox) StartProcessManager(
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.80.0"); err != nil {
+		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+pcTargetVersion); err != nil {
 			return err
 		}
 
@@ -769,14 +769,14 @@ func (d *Devbox) StartProcessManager(
 
 	pcVersion := re.FindStringSubmatch(strings.TrimSpace(string(pcVersionString)))[1]
 
-	if vercheck.SemverCompare(pcVersion, "v0.85.0") < 0 {
-		fmt.Fprintln(d.stderr, "Upgrading process-compose to v0.85.0.")
+	if vercheck.SemverCompare(pcVersion, pcTargetVersion) < 0 {
+		fmt.Fprintln(d.stderr, "Upgrading process-compose to "+pcTargetVersion+"...")
 		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(ctx, pcVersion); err != nil {
+		if err := d.removeDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+pcVersion); err != nil {
 			return err
 		}
 
-		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.85.0"); err != nil {
+		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+pcTargetVersion); err != nil {
 			return err
 		}
 	}

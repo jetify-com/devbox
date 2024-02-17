@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -41,7 +42,13 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) er
 	})
 }
 
-func (d *Devbox) removeDevboxUtilityPackage(ctx context.Context, pcVersion string) error {
+func (d *Devbox) removeDevboxUtilityPackage(ctx context.Context, pkgName string) error {
+	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
+	installable, err := pkg.Installable()
+	if err != nil {
+		return err
+	}
+
 	utilProfile := nix.NixProfile{}
 	utilityProfilePath, err := utilityNixProfilePath()
 	if err != nil {
@@ -57,16 +64,33 @@ func (d *Devbox) removeDevboxUtilityPackage(ctx context.Context, pcVersion strin
 	}
 
 	index := -1
-	for i := range utilProfile.Elements {
-		if utilProfile.Elements[i].OriginalUrl == "github:F1bonacc1/process-compose/"+pcVersion {
-			index = i
-			break
+	// Handle utils from Nixpkgs (e.g. flake:nixpkgs#hello)
+	if installable[:13] == "flake:nixpkgs" {
+		installable = installable[14:]
+		for i := range utilProfile.Elements {
+			// check that the end of the attribute path is the same as the package name
+			// These have the format "legacyPackages.<platform>.<package>", so split into 3 substrings and check the last one
+			// TODO: This is hacky, find a better way.
+			attrPath := strings.SplitAfterN(utilProfile.Elements[i].AttrPath, ".", 3)
+			originalURL := utilProfile.Elements[i].OriginalUrl
+			if attrPath[len(attrPath)-1] == installable && originalURL == "flake:nixpkgs" {
+				index = i
+				break
+			}
 		}
-	}
+	} else {
+		// Handle utils from other Flakes. Here we just remove the entry whose originalUrl matches the installable.
+		for i := range utilProfile.Elements {
+			if utilProfile.Elements[i].OriginalUrl == installable {
+				index = i
+				break
+			}
+		}
 
-	if index >= 0 {
-		if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(index)); err != nil {
-			return err
+		if index >= 0 {
+			if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(index)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
