@@ -146,9 +146,9 @@ type NixProfile struct {
 	Elements []struct {
 		AttrPath    string   `json:"attrPath"`
 		Active      bool     `json:"active"`
-		OriginalUrl string   `json:"originalUrl"`
+		OriginalURL string   `json:"originalUrl"`
 		StorePaths  []string `json:"storePaths"`
-		Url         string   `json:"url"`
+		URL         string   `json:"url"`
 	} `json:"elements"`
 }
 

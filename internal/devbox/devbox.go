@@ -761,7 +761,6 @@ func (d *Devbox) StartProcessManager(
 	}
 	re := regexp.MustCompile(`(?m)Version:\s*(v\d*\.\d*\.\d*)`)
 	pcVersionString, err := exec.Command(processComposePath, "version").Output()
-
 	if err != nil {
 		fmt.Fprintln(d.stderr, "failed to get process-compose version")
 		return err
@@ -772,7 +771,7 @@ func (d *Devbox) StartProcessManager(
 	if vercheck.SemverCompare(pcVersion, pcTargetVersion) < 0 {
 		fmt.Fprintln(d.stderr, "Upgrading process-compose to "+pcTargetVersion+"...")
 		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+pcVersion); err != nil {
+		if err := d.removeDevboxUtilityPackage("github:F1bonacc1/process-compose/" + pcVersion); err != nil {
 			return err
 		}
 
