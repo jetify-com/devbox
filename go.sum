@@ -136,8 +136,8 @@ github.com/dsnet/compress v0.0.1/go.mod h1:Aw8dCMJ7RioblQeTqt88akK31OvO8Dhf5Jflh
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/f1bonacc1/process-compose v0.43.1 h1:XAN7ohegNfMFxYnj59g2jN7y6HfnJWhDCGtD/nN/TbE=
-github.com/f1bonacc1/process-compose v0.43.1/go.mod h1:jvg1NakjJd8V1LjGKu21HLLOVxbwkOHEgkaDjSWRXc0=
+github.com/f1bonacc1/process-compose v0.85.0 h1:BD3nRHRTLO5jqB5zG1Bu6UJ1Qh5wAkyOWQQ6OKtRRnQ=
+github.com/f1bonacc1/process-compose v0.85.0/go.mod h1:NFkS+lyAyKCokif7KvtO3H8MpjD0W4r3PReLn3x4yiQ=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
@@ -361,12 +361,8 @@ github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036/go.mod h1:gqRgreBU
 github.com/zaffka/mongodb-boltdb-mock v0.0.0-20221014194232-b4bb03fbe3a0/go.mod h1:GsDD1qsG+86MeeCG7ndi6Ei3iGthKL3wQ7PTFigDfNY=
 github.com/zealic/go2node v0.1.0 h1:ofxpve08cmLJBwFdI0lPCk9jfwGWOSD+s6216x0oAaA=
 github.com/zealic/go2node v0.1.0/go.mod h1:GrkFr+HctXwP7vzcU9RsgtAeJjTQ6Ud0IPCQAqpTfBg=
-go.jetpack.io/envsec v0.0.16-0.20240111222345-e1fd0e1204ca h1:7Ocnr+mVZTCG8MHlcAdW5d8ir7eqZTmD8S/aEskjXWk=
-go.jetpack.io/envsec v0.0.16-0.20240111222345-e1fd0e1204ca/go.mod h1:kCgRGNSHU5AgQXQGUenohPPDoUd87SRL00uOzQsa+Q8=
 go.jetpack.io/envsec v0.0.16-0.20240214025624-d233cf877eec h1:IvdOF1C8tAxvKEauWBd/4IWXZfeyXh5vmcfTrcTBPvQ=
 go.jetpack.io/envsec v0.0.16-0.20240214025624-d233cf877eec/go.mod h1:koTmI1q2QKqtxaX4P/7r5ygODwgJQ56FKoKRfzpZ0bM=
-go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15 h1:ztX3CydpNKLePPMRmWgdi4HcxE/AXY6HViOJOmmYNiA=
-go.jetpack.io/pkg v0.0.0-20240108193620-a28b84329d15/go.mod h1:kGUL8aZ7ddvoGro0AQxXos9GKn5Qw0J18qW7d5FP4Ws=
 go.jetpack.io/pkg v0.0.0-20240213204231-ec96be3d78fb h1:ELaZEV3BL+/GDfPxWPXt6ODNig/VlywWhfAC4P8EG5A=
 go.jetpack.io/pkg v0.0.0-20240213204231-ec96be3d78fb/go.mod h1:kGUL8aZ7ddvoGro0AQxXos9GKn5Qw0J18qW7d5FP4Ws=
 go.jetpack.io/typeid v1.0.0 h1:8gQ+iYGdyiQ0Pr40ydSB/PzMOIwlXX5DTojp1CBeSPQ=

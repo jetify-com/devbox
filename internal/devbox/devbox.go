@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime/trace"
 	"slices"
 	"strconv"
@@ -31,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/internal/vercheck"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -746,7 +748,7 @@ func (d *Devbox) StartProcessManager(
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.43.1"); err != nil {
+		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.80.0"); err != nil {
 			return err
 		}
 
@@ -754,6 +756,27 @@ func (d *Devbox) StartProcessManager(
 		processComposePath, err = utilityLookPath("process-compose")
 		if err != nil {
 			fmt.Fprintln(d.stderr, "failed to find process-compose after installing it.")
+			return err
+		}
+	}
+	re := regexp.MustCompile(`(?m)Version:\s*(v\d*\.\d*\.\d*)`)
+	pcVersionString, err := exec.Command(processComposePath, "version").Output()
+
+	if err != nil {
+		fmt.Fprintln(d.stderr, "failed to get process-compose version")
+		return err
+	}
+
+	pcVersion := re.FindStringSubmatch(strings.TrimSpace(string(pcVersionString)))[1]
+
+	if vercheck.SemverCompare(pcVersion, "v0.85.0") < 0 {
+		fmt.Fprintln(d.stderr, "Upgrading process-compose to v0.85.0.")
+		// Find the old process Compose package
+		if err := d.removeDevboxUtilityPackage(ctx, pcVersion); err != nil {
+			return err
+		}
+
+		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/v0.85.0"); err != nil {
 			return err
 		}
 	}

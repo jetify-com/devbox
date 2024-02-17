@@ -5,13 +5,15 @@ package devbox
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
+	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -32,12 +34,42 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) er
 		return err
 	}
 
-	return nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+	return nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
 		Installable: installable,
-		PackageName: pkgName,
 		ProfilePath: profilePath,
 		Writer:      d.stderr,
 	})
+}
+
+func (d *Devbox) removeDevboxUtilityPackage(ctx context.Context, pcVersion string) error {
+	utilProfile := nix.NixProfile{}
+	utilityProfilePath, err := utilityNixProfilePath()
+	if err != nil {
+		return err
+	}
+	profileString, err := nix.ProfileList(d.stderr, utilityProfilePath, true)
+	if err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal([]byte(profileString), &utilProfile); err != nil {
+		return err
+	}
+
+	index := -1
+	for i := range utilProfile.Elements {
+		if utilProfile.Elements[i].OriginalUrl == "github:F1bonacc1/process-compose/"+pcVersion {
+			index = i
+			break
+		}
+	}
+
+	if index >= 0 {
+		if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(index)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func utilityLookPath(binName string) (string, error) {
