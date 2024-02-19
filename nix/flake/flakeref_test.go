@@ -189,6 +189,13 @@ func TestParseFlakeRefError(t *testing.T) {
 			}
 		}
 	})
+	t.Run("URLFragment", func(t *testing.T) {
+		ref := "https://github.com/NixOS/patchelf/archive/master.tar.gz#patchelf"
+		_, err := ParseRef(ref)
+		if err == nil {
+			t.Error("got nil error for flakeref with fragment:", ref)
+		}
+	})
 }
 
 func TestFlakeRefString(t *testing.T) {
@@ -288,11 +295,14 @@ func TestParseFlakeInstallable(t *testing.T) {
 		"nixpkgs#app^out,lib": {AttrPath: "app", Outputs: "lib,out", Ref: Ref{Type: TypeIndirect, ID: "nixpkgs"}},
 		"nixpkgs^out":         {Outputs: "out", Ref: Ref{Type: TypeIndirect, ID: "nixpkgs"}},
 
-		"%23#app":                        {AttrPath: "app", Ref: Ref{Type: TypeIndirect, ID: "#"}},
-		"./%23#app":                      {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "./#"}},
-		"/%23#app":                       {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "/#"}},
-		"path:/%23#app":                  {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "/#"}},
-		"http://example.com/%23.tar#app": {AttrPath: "app", Ref: Ref{Type: TypeTarball, URL: "http://example.com/%23.tar#app"}},
+		"%23#app":       {AttrPath: "app", Ref: Ref{Type: TypeIndirect, ID: "#"}},
+		"./%23#app":     {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "./#"}},
+		"/%23#app":      {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "/#"}},
+		"path:/%23#app": {AttrPath: "app", Ref: Ref{Type: TypePath, Path: "/#"}},
+
+		"http://example.com/%23.tar#app":   {AttrPath: "app", Ref: Ref{Type: TypeTarball, URL: "http://example.com/%23.tar"}},
+		"file:///flake#app":                {AttrPath: "app", Ref: Ref{Type: TypeFile, URL: "file:///flake"}},
+		"git://example.com/repo/flake#app": {AttrPath: "app", Ref: Ref{Type: TypeGit, URL: "git://example.com/repo/flake"}},
 	}
 
 	for installable, want := range cases {
