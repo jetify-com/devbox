@@ -25,7 +25,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	ctx, task := trace.NewTask(ctx, "devboxFlakePlan")
 	defer task.End()
 
-	for _, included := range devbox.Config().Include {
+	for _, included := range devbox.Config().Include() {
 		// This is a slightly weird place to put this, but since includes can't be
 		// added via command and we need them to be added before we call
 		// plugin manager.Include

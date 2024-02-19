@@ -15,59 +15,36 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-type Packages struct {
-	// Collection contains the set of package definitions
-	Collection []Package
+type packagesMutator struct {
+	// collection contains the set of package definitions
+	collection []Package
 
 	ast *configAST
 }
 
-// VersionedNames returns a list of package names with versions.
-// NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
-//
-// example:
-// ["package1", "package2@latest", "package3@1.20"]
-func (pkgs *Packages) VersionedNames() []string {
-	result := make([]string, 0, len(pkgs.Collection))
-	for _, p := range pkgs.Collection {
-		result = append(result, p.VersionedName())
-	}
-	return result
-}
-
-// Get returns the package with the given versionedName
-func (pkgs *Packages) Get(versionedName string) (*Package, bool) {
-	name, version := parseVersionedName(versionedName)
-	i := pkgs.index(name, version)
-	if i == -1 {
-		return nil, false
-	}
-	return &pkgs.Collection[i], true
-}
-
 // Add adds a package to the list of packages
-func (pkgs *Packages) Add(versionedName string) {
+func (pkgs *packagesMutator) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	if pkgs.index(name, version) != -1 {
 		return
 	}
-	pkgs.Collection = append(pkgs.Collection, NewVersionOnlyPackage(name, version))
+	pkgs.collection = append(pkgs.collection, NewVersionOnlyPackage(name, version))
 	pkgs.ast.appendPackage(name, version)
 }
 
 // Remove removes a package from the list of packages
-func (pkgs *Packages) Remove(versionedName string) {
+func (pkgs *packagesMutator) Remove(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
 		return
 	}
-	pkgs.Collection = slices.Delete(pkgs.Collection, i, i+1)
+	pkgs.collection = slices.Delete(pkgs.collection, i, i+1)
 	pkgs.ast.removePackage(name)
 }
 
 // AddPlatforms adds a platform to the list of platforms for a given package
-func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
+func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -83,7 +60,7 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 
 	// Adding any platform will restrict installation to it, so
 	// the ExcludedPlatforms are no longer needed
-	pkg := &pkgs.Collection[i]
+	pkg := &pkgs.collection[i]
 	if len(pkg.ExcludedPlatforms) > 0 {
 		return usererr.New(
 			"cannot add any platform for package %s because it already has `excluded_platforms` defined. "+
@@ -110,7 +87,7 @@ func (pkgs *Packages) AddPlatforms(writer io.Writer, versionedname string, platf
 }
 
 // ExcludePlatforms adds a platform to the list of excluded platforms for a given package
-func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
+func (pkgs *packagesMutator) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -124,7 +101,7 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 		return errors.Errorf("package %s not found", versionedName)
 	}
 
-	pkg := &pkgs.Collection[i]
+	pkg := &pkgs.collection[i]
 	if len(pkg.Platforms) > 0 {
 		return usererr.New(
 			"cannot exclude any platform for package %s because it already has `platforms` defined. "+
@@ -147,11 +124,11 @@ func (pkgs *Packages) ExcludePlatforms(writer io.Writer, versionedName string, p
 	return nil
 }
 
-func (pkgs *Packages) UnmarshalJSON(data []byte) error {
+func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a list of strings (legacy format)
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {
-		pkgs.Collection = packagesFromLegacyList(packages)
+		pkgs.collection = packagesFromLegacyList(packages)
 		return nil
 	}
 
@@ -173,37 +150,37 @@ func (pkgs *Packages) UnmarshalJSON(data []byte) error {
 		pkg.name = pair.Key
 		packagesList = append(packagesList, pkg)
 	}
-	pkgs.Collection = packagesList
+	pkgs.collection = packagesList
 	return nil
 }
 
-func (pkgs *Packages) SetPatchGLibc(versionedName string, v bool) error {
+func (pkgs *packagesMutator) SetPatchGLibc(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
-	if pkgs.Collection[i].PatchGlibc != v {
-		pkgs.Collection[i].PatchGlibc = v
+	if pkgs.collection[i].PatchGlibc != v {
+		pkgs.collection[i].PatchGlibc = v
 		pkgs.ast.setPackageBool(name, "patch_glibc", v)
 	}
 	return nil
 }
 
-func (pkgs *Packages) SetDisablePlugin(versionedName string, v bool) error {
+func (pkgs *packagesMutator) SetDisablePlugin(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
-	if pkgs.Collection[i].DisablePlugin != v {
-		pkgs.Collection[i].DisablePlugin = v
+	if pkgs.collection[i].DisablePlugin != v {
+		pkgs.collection[i].DisablePlugin = v
 		pkgs.ast.setPackageBool(name, "disable_plugin", v)
 	}
 	return nil
 }
 
-func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
+func (pkgs *packagesMutator) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -212,20 +189,20 @@ func (pkgs *Packages) SetOutputs(writer io.Writer, versionedName string, outputs
 
 	toAdd := []string{}
 	for _, o := range outputs {
-		if !slices.Contains(pkgs.Collection[i].Outputs, o) {
+		if !slices.Contains(pkgs.collection[i].Outputs, o) {
 			toAdd = append(toAdd, o)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		pkg := &pkgs.Collection[i]
+		pkg := &pkgs.collection[i]
 		pkgs.ast.appendOutputs(pkg.name, "outputs", toAdd)
 		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
 
-func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
+func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -234,13 +211,13 @@ func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, w
 
 	toAdd := []string{}
 	for _, w := range whitelist {
-		if !slices.Contains(pkgs.Collection[i].AllowInsecure, w) {
+		if !slices.Contains(pkgs.collection[i].AllowInsecure, w) {
 			toAdd = append(toAdd, w)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		pkg := &pkgs.Collection[i]
+		pkg := &pkgs.collection[i]
 		pkgs.ast.appendAllowInsecure(pkg.name, "allow_insecure", toAdd)
 		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
 		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
@@ -248,8 +225,8 @@ func (pkgs *Packages) SetAllowInsecure(writer io.Writer, versionedName string, w
 	return nil
 }
 
-func (pkgs *Packages) index(name, version string) int {
-	return slices.IndexFunc(pkgs.Collection, func(p Package) bool {
+func (pkgs *packagesMutator) index(name, version string) int {
+	return slices.IndexFunc(pkgs.collection, func(p Package) bool {
 		return p.name == name && p.Version == version
 	})
 }

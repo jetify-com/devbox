@@ -118,7 +118,7 @@ func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devop
 
 func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 	result := []*Package{}
-	for _, cfgPkg := range config.Packages.Collection {
+	for _, cfgPkg := range config.Packages() {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()

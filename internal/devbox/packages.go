@@ -98,7 +98,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		}
 
 		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
-		d.cfg.Packages.Add(packageNameForConfig)
+		d.cfg.PackageMutator().Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
 
@@ -120,27 +120,27 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 	for _, pkg := range pkgs {
-		if err := d.cfg.Packages.AddPlatforms(
+		if err := d.cfg.PackageMutator().AddPlatforms(
 			d.stderr, pkg, opts.Platforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.ExcludePlatforms(
+		if err := d.cfg.PackageMutator().ExcludePlatforms(
 			d.stderr, pkg, opts.ExcludePlatforms); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetDisablePlugin(
+		if err := d.cfg.PackageMutator().SetDisablePlugin(
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetPatchGLibc(
+		if err := d.cfg.PackageMutator().SetPatchGLibc(
 			pkg, opts.PatchGlibc); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetOutputs(
+		if err := d.cfg.PackageMutator().SetOutputs(
 			d.stderr, pkg, opts.Outputs); err != nil {
 			return err
 		}
-		if err := d.cfg.Packages.SetAllowInsecure(
+		if err := d.cfg.PackageMutator().SetAllowInsecure(
 			d.stderr, pkg, opts.AllowInsecure); err != nil {
 			return err
 		}
@@ -191,7 +191,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
 			packagesToUninstall = append(packagesToUninstall, found.Raw)
-			d.cfg.Packages.Remove(found.Raw)
+			d.cfg.PackageMutator().Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
@@ -553,7 +553,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 		if err != nil {
 			return fmt.Errorf("failed to get package's store name for package %q with error %w", versionedName, err)
 		}
-		if err := cfg.Packages.SetAllowInsecure(writer, versionedName, []string{storeName}); err != nil {
+		if err := cfg.PackageMutator().SetAllowInsecure(writer, versionedName, []string{storeName}); err != nil {
 			return fmt.Errorf("failed to set allow_insecure in devbox.json for package %q with error %w", versionedName, err)
 		}
 	}
