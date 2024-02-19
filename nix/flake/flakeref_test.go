@@ -189,6 +189,13 @@ func TestParseFlakeRefError(t *testing.T) {
 			}
 		}
 	})
+	t.Run("URLFragment", func(t *testing.T) {
+		ref := "https://github.com/NixOS/patchelf/archive/master.tar.gz#patchelf"
+		_, err := ParseRef(ref)
+		if err == nil {
+			t.Error("got nil error for flakeref with fragment:", ref)
+		}
+	})
 }
 
 func TestFlakeRefString(t *testing.T) {
