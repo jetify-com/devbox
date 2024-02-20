@@ -7,26 +7,29 @@ declare -r glibc # new glibc that we're patching in
 declare -r out   # nix output path that will contain the patched package
 
 # Paths to this script's dependencies set by nix.
-declare -r coreutils file findutils patchelf ripgrep
+declare -r coreutils file findutils gnused patchelf ripgrep
 
 # Explicitly declare the specific commands that this script depends on.
 hash -p "$coreutils/bin/cp" cp
 hash -p "$coreutils/bin/chmod" chmod
-hash -p "$coreutils/bin/cut" cut
+hash -p "$coreutils/bin/dirname" dirname
 hash -p "$coreutils/bin/echo" echo
 hash -p "$coreutils/bin/head" head
-hash -p "$coreutils/bin/mktemp" mktemp
-hash -p "$coreutils/bin/rm" rm
 hash -p "$coreutils/bin/stat" stat
 hash -p "$coreutils/bin/wc" wc
 hash -p "$file/bin/file" file
 hash -p "$findutils/bin/find" find
-hash -p "$findutils/bin/xargs" xargs
+hash -p "$gnused/bin/sed" sed
 hash -p "$patchelf/bin/patchelf" patchelf
 hash -p "$ripgrep/bin/rg" rg
 
 # Copy the contents of the original package so we can patch them.
 cp -R "$pkg" "$out"
+
+# Because we copied an existing store path, our new $out directory might be
+# read-only. This might've caused issues with some versions of Nix, so make it
+# writable again just to be safe.
+chmod u+rwx "$out"
 
 # Find the new linker that we'll patch into all of the package's executables as
 # the interpreter.
@@ -75,4 +78,31 @@ count="$(echo "$elves" | wc -l)"
 echo "patching elf binaries count=$count"
 for binary in $elves; do
 	patch "$binary" exe
+done
+
+patch_store_path() {
+	declare -r path="$1"
+	declare -r perm=$(stat -c "%a" "$path")
+
+	# sed creates a temporary sibling file for in-place edits, so we need to
+	# ensure that the file's directory is writeable.
+	declare -r dir="$(dirname "$path")"
+	declare -r dperm=$(stat -c "%a" "$dir")
+
+	echo "running sed file=$path file_perm=$perm dir=$dir dir_perm=$dperm"
+	chmod u+w "$path" "$dir"
+	sed -i -e "$sedexpr" "$path"
+	chmod "$perm" "$path"
+	chmod "$dperm" "$dir"
+}
+
+# -uu search ignored and hidden files
+# -l list filenames
+# -F exact substring search (faster, no escaping needed)
+files="$(rg -uu -l -F "$pkg" "$out")"
+count="$(echo "$files" | wc -l)"
+sedexpr="s|$pkg|$out|g"
+echo "patching files with old store path references count=$count sed=$sedexpr"
+for f in $files; do
+	patch_store_path "$f"
 done
