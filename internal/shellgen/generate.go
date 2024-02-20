@@ -10,7 +10,6 @@ import (
 	"embed"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime/trace"
 	"strings"
@@ -60,9 +59,8 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 			return redact.Errorf("write glibc patch flake to directory: %v", err)
 		}
 	}
-	err = makeFlakeFile(devbox, outPath, plan)
-	if err != nil {
-		return errors.WithStack(err)
+	if err := makeFlakeFile(devbox, plan); err != nil {
+		return err
 	}
 
 	return WriteScriptsToFiles(devbox)
@@ -184,68 +182,11 @@ var templateFuncs = template.FuncMap{
 	"debug":    debug.IsEnabled,
 }
 
-func makeFlakeFile(d devboxer, outPath string, plan *flakePlan) error {
+func makeFlakeFile(d devboxer, plan *flakePlan) error {
 	flakeDir := FlakePath(d)
 	templateName := "flake.nix"
 	if featureflag.RemoveNixpkgs.Enabled() {
 		templateName = "flake_remove_nixpkgs.nix"
 	}
-	err := writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if !isProjectInGitRepo(outPath) {
-		// if we are not in a git repository, then carry on
-		return nil
-	}
-	// if we are in a git repository, then nix requires that the flake.nix file be tracked by git
-
-	// make an empty git repo
-	// Alternatively consider: git add intent-to-add path/to/flake.nix, and
-	// git update-index --assume-unchanged path/to/flake.nix
-	// https://nixos.wiki/wiki/Flakes#How_to_add_a_file_locally_in_git_but_not_include_it_in_commits
-	cmd := exec.Command("git", "-C", flakeDir, "init")
-	if debug.IsEnabled() {
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	err = cmd.Run()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Any files that flake.nix needs at build time must be in git.
-	// Otherwise, Nix won't copy it into the flake's build environment.
-	cmd = exec.Command("git", "-C", flakeDir, "add", "flake.nix")
-	if plan.needsGlibcPatch() {
-		cmd.Args = append(cmd.Args, "glibc-patch/flake.nix")
-	}
-	if debug.IsEnabled() {
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	return errors.WithStack(cmd.Run())
-}
-
-func isProjectInGitRepo(dir string) bool {
-	for dir != "/" {
-		// Look for a .git directory in `dir`
-		_, err := os.Stat(filepath.Join(dir, ".git"))
-		if err == nil {
-			// Found a .git
-			return true
-		}
-		if !errors.Is(err, fs.ErrNotExist) {
-			// An error means we will not find a git repo so return false
-			return false
-		}
-		// No .git directory found, so loop again into the parent dir
-		dir = filepath.Dir(dir)
-	}
-	// We reached the fs-root dir, climbed the highest mountain and
-	// we still haven't found what we're looking for.
-	return false
+	return writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
 }
