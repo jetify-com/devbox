@@ -5,10 +5,6 @@ package devconfig
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -62,6 +57,8 @@ type ConfigFile struct {
 	// This is a similar format to nix inputs
 	Include []string `json:"include,omitempty"`
 
+	Imports []string `json:"imports,omitempty"`
+
 	ast    *configAST
 	format int
 }
@@ -79,30 +76,6 @@ type NixpkgsConfig struct {
 // Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `json:"command"`
-}
-
-const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
-
-func DefaultConfig() *ConfigFile {
-	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
-  "packages": [],
-  "shell": {
-    "init_hook": [
-      "%s"
-    ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
-  }
-}
-`, DefaultInitHook)))
-	if err != nil {
-		panic("default devbox.json is invalid: " + err.Error())
-	}
-	return cfg
 }
 
 func (c *ConfigFile) Bytes() []byte {
@@ -155,40 +128,6 @@ func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 		return nil, false
 	}
 	return &c.PackagesMutator.collection[i], true
-}
-
-func loadBytes(b []byte) (*ConfigFile, error) {
-	jsonb, err := hujson.Standardize(slices.Clone(b))
-	if err != nil {
-		return nil, err
-	}
-
-	ast, err := parseConfig(b)
-	if err != nil {
-		return nil, err
-	}
-	cfg := &ConfigFile{
-		PackagesMutator: packagesMutator{ast: ast},
-		ast:             ast,
-	}
-	if err := json.Unmarshal(jsonb, cfg); err != nil {
-		return nil, err
-	}
-	return cfg, validateConfig(cfg)
-}
-
-func LoadConfigFromURL(url string) (*ConfigFile, error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return loadBytes(data)
 }
 
 func validateConfig(cfg *ConfigFile) error {

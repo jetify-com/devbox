@@ -39,11 +39,11 @@ func parseConfigTxtarTest(t *testing.T, test string) (in *ConfigFile, want []byt
 	for _, f := range ar.Files {
 		switch f.Name {
 		case "in":
-			var err error
-			in, err = loadBytes(f.Data)
+			config, err := loadBytes(f.Data)
 			if err != nil {
 				t.Fatalf("input devbox.json is invalid: %v\n%s", err, f.Data)
 			}
+			in = &config.Root
 
 		case "want":
 			want = f.Data
@@ -689,11 +689,11 @@ func TestSetAllowInsecure(t *testing.T) {
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	in := DefaultConfig()
-	inBytes := in.Bytes()
+	inBytes := in.Root.Bytes()
 	if _, err := hujson.Parse(inBytes); err != nil {
 		t.Fatalf("default config JSON is invalid: %v\n%s", err, inBytes)
 	}
-	err := in.SaveTo(path)
+	err := in.Root.SaveTo(path)
 	if err != nil {
 		t.Fatal("got save error:", err)
 	}

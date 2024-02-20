@@ -198,11 +198,11 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			if err != nil {
 				t.Errorf("load error: %v", err)
 			}
-			if diff := diffPackages(t, config.PackagesMutator, testCase.expected); diff != "" {
+			if diff := diffPackages(t, config.Root.PackagesMutator, testCase.expected); diff != "" {
 				t.Errorf("got wrong packages (-want +got):\n%s", diff)
 			}
 
-			got, err := hujson.Minimize(config.Bytes())
+			got, err := hujson.Minimize(config.Root.Bytes())
 			if err != nil {
 				t.Fatal(err)
 			}

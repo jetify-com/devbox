@@ -57,7 +57,7 @@ func initConfigFile(path string) (created bool, err error) {
 		}
 	}()
 
-	_, err = file.Write(DefaultConfig().Bytes())
+	_, err = file.Write(DefaultConfig().Root.Bytes())
 	if err != nil {
 		file.Close()
 		return false, err

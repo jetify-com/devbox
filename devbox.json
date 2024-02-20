@@ -40,4 +40,8 @@
       "tidy":            "go mod tidy",
     },
   },
+  "imports": [
+    // "./examples/plugins/local/devbox.json",
+    // "github:jetpack-io/devbox",
+  ]
 }

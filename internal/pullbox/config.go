@@ -37,7 +37,7 @@ func (p *pullbox) pullTextDevboxConfig() error {
 	if err != nil {
 		return err
 	}
-	if err = cfg.SaveTo(tmpDir); err != nil {
+	if err = cfg.Root.SaveTo(tmpDir); err != nil {
 		return err
 	}
 
