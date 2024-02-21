@@ -25,7 +25,7 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
-	// If nix profile install runs as tty, the output is much nicer. If we ever
+	// If nix build runs as tty, the output is much nicer. If we ever
 	// need to change this to our own writers, consider that you may need
 	// to implement your own nicer output. --print-build-logs flag may be useful.
 	cmd.Stdin = os.Stdin
