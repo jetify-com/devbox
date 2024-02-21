@@ -149,7 +149,7 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 				// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
 				// come from the same package version.
 				existingSysInfo, exists := existing.Systems[sysName]
-				if !exists || existingSysInfo.StorePath != newSysInfo.StorePath {
+				if !exists || !existingSysInfo.Equals(newSysInfo) {
 					updated = true
 				}
 			}

@@ -102,8 +102,16 @@ func resolveV2(ctx context.Context, name, version string) (*Package, error) {
 	}
 	for sys, info := range resolved.Systems {
 		if len(info.Outputs) != 0 {
+			outputs := make([]Output, len(info.Outputs))
+			for i, out := range info.Outputs {
+				outputs[i] = Output{
+					Name:    out.Name,
+					Path:    out.Path,
+					Default: out.Default,
+				}
+			}
 			pkg.Systems[sys] = &SystemInfo{
-				StorePath: info.Outputs[0].Path,
+				Outputs: outputs,
 			}
 		}
 	}
@@ -166,6 +174,13 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, storePath := range sysStorePaths {
 		sysInfos[sysName] = &SystemInfo{
+			Outputs: []Output{
+				{
+					Default: true,
+					Name:    "out",
+					Path:    storePath,
+				},
+			},
 			StorePath: storePath,
 		}
 	}

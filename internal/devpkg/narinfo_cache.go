@@ -112,7 +112,7 @@ func (p *Package) fetchNarInfoStatus() (bool, error) {
 		)
 	}
 
-	pathParts := nix.NewStorePathParts(sysInfo.StorePath)
+	pathParts := nix.NewStorePathParts(sysInfo.DefaultStorePath())
 	reqURL := BinaryCache + "/" + pathParts.Hash + ".narinfo"
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

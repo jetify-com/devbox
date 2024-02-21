@@ -207,7 +207,7 @@ func resolve(pkg *Package) error {
 		return err
 	}
 	if inCache, err := pkg.IsInBinaryCache(); err == nil && inCache {
-		pkg.storePath = resolved.Systems[nix.System()].StorePath
+		pkg.storePath = resolved.Systems[nix.System()].DefaultStorePath()
 	}
 	parsed, err := flake.ParseInstallable(resolved.Resolved)
 	if err != nil {
@@ -576,7 +576,7 @@ func (p *Package) InputAddressedPath() (string, error) {
 	}
 
 	sysInfo := entry.Systems[nix.System()]
-	return sysInfo.StorePath, nil
+	return sysInfo.DefaultStorePath(), nil
 }
 
 func (p *Package) HasAllowInsecure() bool {
@@ -600,6 +600,7 @@ func (p *Package) StoreName() (string, error) {
 }
 
 func (p *Package) EnsureUninstallableIsInLockfile() error {
+	// TODO savil: Should !p.isInstallable() be the opposite i.e. p.IsInstallable()?
 	// TODO savil: Do we need the IsDevboxPackage check here?
 	if !p.IsInstallable() || !p.IsDevboxPackage {
 		return nil

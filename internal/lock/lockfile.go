@@ -46,6 +46,10 @@ func GetFile(project devboxProject) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// If the lockfile has legacy StorePath fields, we need to convert them to the new format
+	ensurePackagesHaveOutputs(lockFile.Packages)
+
 	return lockFile, nil
 }
 
@@ -92,12 +96,27 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	return f.Packages[pkg], nil
 }
 
-func (f *File) ForceResolve(pkg string) (*Package, error) {
-	delete(f.Packages, pkg)
-	return f.Resolve(pkg)
-}
-
 func (f *File) Save() error {
+	isDirty, err := f.isDirty()
+	if err != nil {
+		return err
+	}
+	// In SystemInfo, preserve legacy StorePath field and clear out modern Outputs before writing
+	// Reason: We want to update `devbox.lock` file only upon a user action
+	// such as `devbox update` or `devbox add` or `devbox remove`.
+	for pkgName, pkg := range f.Packages {
+		for sys, sysInfo := range pkg.Systems {
+			if !isDirty && sysInfo.StorePath != "" {
+				f.Packages[pkgName].Systems[sys].Outputs = nil
+			} else {
+				f.Packages[pkgName].Systems[sys].StorePath = ""
+			}
+		}
+	}
+	// We set back the Outputs, if needed, after writing the file, so that future
+	// users of the `lock.File` struct will have the correct data.
+	defer ensurePackagesHaveOutputs(f.Packages)
+
 	return cuecfg.WriteFile(lockFilePath(f.devboxProject.ProjectDir()), f)
 }
 
