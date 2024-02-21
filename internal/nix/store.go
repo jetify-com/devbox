@@ -3,6 +3,7 @@ package nix
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -31,7 +32,7 @@ func StorePathFromInstallable(ctx context.Context, installable string) (string, 
 func StorePathIsInStore(ctx context.Context, storePath string) (bool, error) {
 	cmd := commandContext(ctx, "store", "ls", storePath)
 	if err := cmd.Run(); err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
+		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
 			return false, nil
 		}
 		return false, err
@@ -42,15 +43,26 @@ func StorePathIsInStore(ctx context.Context, storePath string) (bool, error) {
 // parseStorePathFromInstallableOutput parses the output of `nix store path-from-installable --json`
 // This function is decomposed out of StorePathFromInstallable to make it testable.
 func parseStorePathFromInstallableOutput(installable string, output []byte) (string, error) {
-	var o map[string]any
-	if err := json.Unmarshal(output, &o); err != nil {
-		return "", err
+	var out1 map[string]any
+	if err := json.Unmarshal(output, &out1); err == nil {
+		if len(out1) > 1 {
+			return "", fmt.Errorf("found multiple store paths for installable: %s", installable)
+		}
+		for storePath := range out1 {
+			return storePath, nil
+		}
+		return "", fmt.Errorf("did not find store path for installable: %s", installable)
 	}
-	if len(o) > 1 {
-		return "", fmt.Errorf("Found multiple store paths for installable: %s", installable)
+
+	var out2 []struct {
+		Path  string `json:"path"`
+		Valid bool   `json:"valid"`
 	}
-	for storePath := range o {
-		return storePath, nil
+	if err := json.Unmarshal(output, &out2); err == nil {
+		for _, outValue := range out2 {
+			return outValue.Path, nil
+		}
 	}
-	return "", fmt.Errorf("Did not find store path for installable: %s", installable)
+
+	return "", fmt.Errorf("failed to parse store path from installable output: %s", output)
 }

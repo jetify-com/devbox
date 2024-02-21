@@ -2,8 +2,6 @@ package nix
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestParseStorePathFromInstallableOutput(t *testing.T) {
@@ -13,9 +11,14 @@ func TestParseStorePathFromInstallableOutput(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "go-basic",
+			name: "go-basic-nix-2-20-1",
 			// snipped the actual output for brevity. We mainly care about the first key in the JSON.
 			input:    `{"/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0":{"deriver":"/nix/store/clr3bm8njqysvyw4r4x4xmldhz4knrff-go-1.22.0.drv"}}`,
+			expected: "/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0",
+		},
+		{
+			name:     "go-basic-nix-2-17-0",
+			input:    `[{"path":"/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0","valid":false}]`,
 			expected: "/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0",
 		},
 	}
@@ -23,8 +26,12 @@ func TestParseStorePathFromInstallableOutput(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			actual, err := parseStorePathFromInstallableOutput(tc.name, []byte(tc.input))
-			require.NoError(t, err)
-			require.Equal(t, tc.expected, actual)
+			if err != nil {
+				t.Errorf("Expected no error but got error: %s", err)
+			}
+			if tc.expected != actual {
+				t.Errorf("Expected store path %s but got %s", tc.expected, actual)
+			}
 		})
 	}
 }
