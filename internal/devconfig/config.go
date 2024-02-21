@@ -13,7 +13,6 @@ import (
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/nix/flake"
-	"golang.org/x/exp/maps"
 )
 
 // Config represents a base devbox.json as well as any imports it may have.
@@ -115,16 +114,30 @@ func (c *Config) PackageMutator() *packagesMutator {
 }
 
 func (c *Config) Packages() []Package {
-	packages := map[string]Package{}
+	packages := []Package{}
+	packagesMap := map[string]int{}
+
+	// Adds a package to the list of packages,
+	// removing any existing package with the same name.
+	add := func(p Package) {
+		if idx, ok := packagesMap[p.name]; ok {
+			delete(packagesMap, p.name)
+			packages = append(packages[:idx], packages[idx+1:]...)
+		}
+
+		packagesMap[p.name] = len(packages)
+		packages = append(packages, p)
+	}
+
 	for _, i := range c.imports {
 		for _, p := range i.Packages() {
-			packages[p.name] = p
+			add(p)
 		}
 	}
 	for _, p := range c.Root.PackagesMutator.collection {
-		packages[p.name] = p
+		add(p)
 	}
-	return maps.Values(packages)
+	return packages
 }
 
 // PackagesVersionedNames returns a list of package names with versions.
