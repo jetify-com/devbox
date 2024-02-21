@@ -67,7 +67,7 @@ func (p *Package) IsAllowInsecure() bool {
 
 // Useful for debugging when we print the struct
 func (i *SystemInfo) String() string {
-	return fmt.Sprintf("SystemInfo{Outputs:%v, StorePath:%s}", i.Outputs, i.StorePath)
+	return fmt.Sprintf("%+v", *i)
 }
 
 func (i *SystemInfo) DefaultStorePath() string {
