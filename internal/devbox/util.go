@@ -58,23 +58,12 @@ func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 		return err
 	}
 
-	pkgIndex := findUtilPackage(installable, profile)
-
-	if pkgIndex >= 0 {
-		if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(pkgIndex)); err != nil {
-			return err
+	for i, profileItem := range profile {
+		if profileItem.MatchesUnlockedReference(installable) {
+			return nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
 		}
 	}
 	return nil
-}
-
-func findUtilPackage(installable string, profile []*nixprofile.NixProfileListItem) int {
-	for i := range profile {
-		if profile[i].MatchesInstallable(installable) {
-			return i
-		}
-	}
-	return -1
 }
 
 func utilityLookPath(binName string) (string, error) {

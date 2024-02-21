@@ -142,16 +142,6 @@ func readManifest(profilePath string) (manifest, error) {
 
 const DefaultPriority = 5
 
-type NixProfile struct {
-	Elements []struct {
-		AttrPath    string   `json:"attrPath"`
-		Active      bool     `json:"active"`
-		OriginalURL string   `json:"originalUrl"`
-		StorePaths  []string `json:"storePaths"`
-		URL         string   `json:"url"`
-	} `json:"elements"`
-}
-
 func nextPriority(profilePath string) string {
 	// error is ignored because it's ok if the file doesn't exist
 	m, _ := readManifest(profilePath)

@@ -8,7 +8,7 @@
   ],
   "env": {
     "PGHOST": "/tmp/devbox/lapp",
-    "PGPORT": "5432",
+    "PGPORT": "5432"
   },
   "shell": {
     "scripts": {
@@ -23,7 +23,7 @@
         "rm -rf $PGDATA",
         "initdb",
         "devbox services up -b",
-        "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
+        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql",

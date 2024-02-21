@@ -161,14 +161,11 @@ func ProfileListNameOrIndex(args *ProfileListNameOrIndexArgs) (string, error) {
 		return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
-	if args.Lockfile != nil {
-		for _, item := range items {
-			if item.Matches(args.Package, args.Lockfile) {
-				return item.NameOrIndex(), nil
-			}
+	for _, item := range items {
+		if item.Matches(args.Package, args.Lockfile) {
+			return item.NameOrIndex(), nil
 		}
 	}
-
 	return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 }
 
