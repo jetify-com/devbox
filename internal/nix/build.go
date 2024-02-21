@@ -2,17 +2,16 @@ package nix
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"os"
-	"os/exec"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
 type BuildArgs struct {
 	AllowInsecure bool
 	Flags         []string
+	Writer        io.Writer
 }
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
@@ -26,14 +25,13 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
+	// If nix build runs as tty, the output is much nicer. If we ever
+	// need to change this to our own writers, consider that you may need
+	// to implement your own nicer output. --print-build-logs flag may be useful.
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = args.Writer
+	cmd.Stderr = args.Writer
+
 	debug.Log("Running cmd: %s\n", cmd)
-	_, err := cmd.Output()
-	if err != nil {
-		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-			debug.Log("Nix build exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
-			return fmt.Errorf("nix build exit code: %d, output: %s, err: %w", exitErr.ExitCode(), exitErr.Stderr, err)
-		}
-		return err
-	}
-	return nil
+	return cmd.Run()
 }

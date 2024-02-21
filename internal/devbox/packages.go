@@ -443,7 +443,8 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 		args := &nix.BuildArgs{
 			AllowInsecure: pkg.HasAllowInsecure(),
 			// --no-link to avoid generating the result objects
-			Flags: []string{"--no-link"},
+			Flags:  []string{"--no-link"},
+			Writer: d.stderr,
 		}
 		err = nix.Build(ctx, args, installable)
 		if err != nil {
