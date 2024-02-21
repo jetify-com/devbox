@@ -5,16 +5,15 @@ package devbox
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -49,50 +48,33 @@ func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 		return err
 	}
 
-	utilProfile := nix.NixProfile{}
 	utilityProfilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err
 	}
-	profileString, err := nix.ProfileList(d.stderr, utilityProfilePath, true)
+
+	profile, err := nixprofile.ProfileListItems(d.stderr, utilityProfilePath)
 	if err != nil {
 		return err
 	}
 
-	if err = json.Unmarshal([]byte(profileString), &utilProfile); err != nil {
-		return err
-	}
+	pkgIndex := findUtilPackage(installable, profile)
 
-	index := -1
-	// Handle utils from Nixpkgs (e.g. flake:nixpkgs#hello)
-	if installable[:13] == "flake:nixpkgs" {
-		installable = installable[14:]
-		for i := range utilProfile.Elements {
-			// check that attrPath matches the package name
-			// AttrPath has the format "legacyPackages.<platform>.<package>"
-			attrPath := strings.SplitAfterN(utilProfile.Elements[i].AttrPath, ".", 3)
-			originalURL := utilProfile.Elements[i].OriginalURL
-			if attrPath[len(attrPath)-1] == installable && originalURL == "flake:nixpkgs" {
-				index = i
-				break
-			}
-		}
-	} else {
-		// Handle utils from other Flakes. Here we just remove the entry whose originalUrl matches the installable.
-		for i := range utilProfile.Elements {
-			if utilProfile.Elements[i].OriginalURL == installable {
-				index = i
-				break
-			}
-		}
-	}
-
-	if index >= 0 {
-		if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(index)); err != nil {
+	if pkgIndex >= 0 {
+		if err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(pkgIndex)); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func findUtilPackage(installable string, profile []*nixprofile.NixProfileListItem) int {
+	for i := range profile {
+		if profile[i].MatchesInstallable(installable) {
+			return i
+		}
+	}
+	return -1
 }
 
 func utilityLookPath(binName string) (string, error) {

@@ -5,14 +5,11 @@ package nixprofile
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -164,11 +161,14 @@ func ProfileListNameOrIndex(args *ProfileListNameOrIndexArgs) (string, error) {
 		return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 	}
 
-	for _, item := range items {
-		if item.Matches(args.Package, args.Lockfile) {
-			return item.NameOrIndex(), nil
+	if args.Lockfile != nil {
+		for _, item := range items {
+			if item.Matches(args.Package, args.Lockfile) {
+				return item.NameOrIndex(), nil
+			}
 		}
 	}
+
 	return "", errors.Wrap(nix.ErrPackageNotFound, args.Package.String())
 }
 
@@ -209,40 +209,4 @@ func parseNixProfileListItemLegacy(line string) (*NixProfileListItem, error) {
 		lockedReference:   lockedReference,
 		nixStorePaths:     nixStorePaths,
 	}, nil
-}
-
-type ProfileInstallArgs struct {
-	CustomStepMessage string
-	Installable       string
-	Offline           bool
-	PackageName       string
-	ProfilePath       string
-	Writer            io.Writer
-}
-
-// ProfileInstall calls nix profile install with default profile
-func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
-	stepMsg := args.PackageName
-	if args.CustomStepMessage != "" {
-		stepMsg = args.CustomStepMessage
-		// Only print this first one if we have a custom message. Otherwise it feels
-		// repetitive.
-		fmt.Fprintf(args.Writer, "%s\n", stepMsg)
-	}
-
-	err := nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
-		Installable: args.Installable,
-		Offline:     args.Offline,
-		ProfilePath: args.ProfilePath,
-		Writer:      args.Writer,
-	})
-	if err != nil {
-		fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-		color.New(color.FgRed).Fprintf(args.Writer, "Fail\n")
-		return redact.Errorf("error running \"nix profile install\": %w", err)
-	}
-
-	fmt.Fprintf(args.Writer, "%s: ", stepMsg)
-	color.New(color.FgGreen).Fprintf(args.Writer, "Success\n")
-	return nil
 }
