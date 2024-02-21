@@ -130,6 +130,14 @@ func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	return &c.PackagesMutator.collection[i], true
 }
 
+func (c *ConfigFile) PackagesVersionedNames() []string {
+	result := make([]string, 0, len(c.PackagesMutator.collection))
+	for _, p := range c.PackagesMutator.collection {
+		result = append(result, p.VersionedName())
+	}
+	return result
+}
+
 func validateConfig(cfg *ConfigFile) error {
 	fns := []func(cfg *ConfigFile) error{
 		ValidateNixpkg,

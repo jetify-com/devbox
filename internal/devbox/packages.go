@@ -52,7 +52,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
-	existingPackageNames := d.PackageNames()
+	existingPackageNames := d.cfg.Root.PackagesVersionedNames()
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.

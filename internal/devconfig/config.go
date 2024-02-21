@@ -10,8 +10,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/nix/flake"
+	"golang.org/x/exp/maps"
 )
 
 // Config represents a base devbox.json as well as any imports it may have.
@@ -113,7 +115,16 @@ func (c *Config) PackageMutator() *packagesMutator {
 }
 
 func (c *Config) Packages() []Package {
-	return c.Root.PackagesMutator.collection
+	packages := map[string]Package{}
+	for _, i := range c.imports {
+		for _, p := range i.Packages() {
+			packages[p.name] = p
+		}
+	}
+	for _, p := range c.Root.PackagesMutator.collection {
+		packages[p.name] = p
+	}
+	return maps.Values(packages)
 }
 
 // PackagesVersionedNames returns a list of package names with versions.
@@ -122,37 +133,80 @@ func (c *Config) Packages() []Package {
 // example:
 // ["package1", "package2@latest", "package3@1.20"]
 func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.PackagesMutator.collection))
-	for _, p := range c.Root.PackagesMutator.collection {
+	result := make([]string, 0, len(c.Packages()))
+	for _, p := range c.Packages() {
 		result = append(result, p.VersionedName())
 	}
 	return result
 }
 
 func (c *Config) NixPkgsCommitHash() string {
+	// TODO: Only top level matters?
 	return c.Root.NixPkgsCommitHash()
 }
 
 func (c *Config) Env() map[string]string {
-	return c.Root.Env
+	env := map[string]string{}
+	for _, i := range c.imports {
+		for k, v := range i.Env() {
+			env[k] = v
+		}
+	}
+	for k, v := range c.Root.Env {
+		env[k] = v
+	}
+	return env
 }
 
 func (c *Config) InitHook() *shellcmd.Commands {
-	return c.Root.InitHook()
+	commands := shellcmd.Commands{}
+	for _, i := range c.imports {
+		commands.Cmds = append(commands.Cmds, i.InitHook().Cmds...)
+	}
+	commands.Cmds = append(commands.Cmds, c.Root.InitHook().Cmds...)
+	return &commands
 }
 
 func (c *Config) Scripts() scripts {
-	return c.Root.Scripts()
+	scripts := scripts{}
+	for _, i := range c.imports {
+		for k, v := range i.Scripts() {
+			scripts[k] = v
+		}
+	}
+	for k, v := range c.Root.Scripts() {
+		scripts[k] = v
+	}
+	return scripts
 }
 
 func (c *Config) Hash() (string, error) {
-	return c.Root.Hash()
+	data := []byte{}
+	for _, i := range c.imports {
+		hash, err := i.Hash()
+		if err != nil {
+			return "", err
+		}
+		data = append(data, []byte(hash)...)
+	}
+	data = append(data, c.Root.Bytes()...)
+	return cachehash.Bytes(data)
 }
 
 func (c *Config) Include() []string {
-	return c.Root.Include
+	includes := []string{}
+	for _, i := range c.imports {
+		includes = append(includes, i.Include()...)
+	}
+	includes = append(includes, c.Root.Include...)
+	return includes
 }
 
 func (c *Config) IsEnvsecEnabled() bool {
+	for _, i := range c.imports {
+		if i.IsEnvsecEnabled() {
+			return true
+		}
+	}
 	return c.Root.IsEnvsecEnabled()
 }
