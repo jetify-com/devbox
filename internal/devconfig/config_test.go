@@ -701,7 +701,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}
-	if diff := cmp.Diff(in, &out.Root, cmpopts.IgnoreUnexported(ConfigFile{}, packagesMutator{})); diff != "" {
+	if diff := cmp.Diff(in, out, cmpopts.IgnoreUnexported(Config{}, ConfigFile{}, packagesMutator{})); diff != "" {
 		t.Errorf("configs not equal (-in +out):\n%s", diff)
 	}
 

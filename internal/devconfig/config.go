@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"slices"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
@@ -115,29 +117,17 @@ func (c *Config) PackageMutator() *packagesMutator {
 
 func (c *Config) Packages() []Package {
 	packages := []Package{}
-	packagesMap := map[string]int{}
-
-	// Adds a package to the list of packages,
-	// removing any existing package with the same name.
-	add := func(p Package) {
-		if idx, ok := packagesMap[p.name]; ok {
-			delete(packagesMap, p.name)
-			packages = append(packages[:idx], packages[idx+1:]...)
-		}
-
-		packagesMap[p.name] = len(packages)
-		packages = append(packages, p)
-	}
 
 	for _, i := range c.imports {
-		for _, p := range i.Packages() {
-			add(p)
-		}
+		packages = append(packages, i.Packages()...)
 	}
-	for _, p := range c.Root.PackagesMutator.collection {
-		add(p)
-	}
-	return packages
+	packages = append(packages, c.Root.PackagesMutator.collection...)
+
+	// Keep only the last occurrence of each package (by name).
+	return lo.Reverse(lo.UniqBy(
+		lo.Reverse(packages),
+		func(p Package) string { return p.name },
+	))
 }
 
 // PackagesVersionedNames returns a list of package names with versions.
@@ -161,13 +151,9 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.imports {
-		for k, v := range i.Env() {
-			env[k] = v
-		}
+		maps.Copy(env, i.Env())
 	}
-	for k, v := range c.Root.Env {
-		env[k] = v
-	}
+	maps.Copy(env, c.Root.Env)
 	return env
 }
 
@@ -183,13 +169,9 @@ func (c *Config) InitHook() *shellcmd.Commands {
 func (c *Config) Scripts() scripts {
 	scripts := scripts{}
 	for _, i := range c.imports {
-		for k, v := range i.Scripts() {
-			scripts[k] = v
-		}
+		maps.Copy(scripts, i.Scripts())
 	}
-	for k, v := range c.Root.Scripts() {
-		scripts[k] = v
-	}
+	maps.Copy(scripts, c.Root.Scripts())
 	return scripts
 }
 
@@ -200,7 +182,7 @@ func (c *Config) Hash() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		data = append(data, []byte(hash)...)
+		data = append(data, hash...)
 	}
 	data = append(data, c.Root.Bytes()...)
 	return cachehash.Bytes(data)
@@ -212,7 +194,8 @@ func (c *Config) Include() []string {
 		includes = append(includes, i.Include()...)
 	}
 	includes = append(includes, c.Root.Include...)
-	return includes
+	// Keep only the last occurrence of each include.
+	return lo.Reverse(lo.Uniq(lo.Reverse(includes)))
 }
 
 func (c *Config) IsEnvsecEnabled() bool {
