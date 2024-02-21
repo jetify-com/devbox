@@ -48,21 +48,7 @@ func GetFile(project devboxProject) (*File, error) {
 	}
 
 	// If the lockfile has legacy StorePath fields, we need to convert them to the new format
-	for pkgName, pkg := range lockFile.Packages {
-		for sys, sysInfo := range pkg.Systems {
-			// If we have a StorePath and no Outputs, we need to convert to the new format.
-			// Note: for a non-empty StorePath, Outputs should be empty, but being cautious.
-			if sysInfo.StorePath != "" && len(sysInfo.Outputs) == 0 {
-				lockFile.Packages[pkgName].Systems[sys].Outputs = []Output{
-					{
-						Default: true,
-						Name:    "out",
-						Path:    sysInfo.StorePath,
-					},
-				}
-			}
-		}
-	}
+	ensurePackagesHaveOutputs(lockFile.Packages)
 
 	return lockFile, nil
 }
@@ -127,6 +113,9 @@ func (f *File) Save() error {
 			}
 		}
 	}
+	// We set back the Outputs, if needed, after writing the file, so that future
+	// users of the `lock.File` struct will have the correct data.
+	defer ensurePackagesHaveOutputs(f.Packages)
 
 	return cuecfg.WriteFile(lockFilePath(f.devboxProject.ProjectDir()), f)
 }
