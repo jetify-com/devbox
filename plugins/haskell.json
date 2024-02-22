@@ -2,7 +2,7 @@
   "name": "haskell",
   "version": "0.0.2",
   "readme": "Haskell plugin",
-  "__packages": [
+  "packages": [
     "path:{{ .Virtenv }}/flake"
   ],
   "__remove_trigger_package": true,

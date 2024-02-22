@@ -9,7 +9,7 @@ import (
 // Config represents a base devbox.json as well as any imports it may have.
 // TODO: All the functions below will be modified to include all imported configs.
 type Config struct {
-	Root configFile
+	Root ConfigFile
 
 	// This will support imports in the future.
 	// imported []*Config

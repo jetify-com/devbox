@@ -33,10 +33,11 @@ const (
 	tsonFormat
 )
 
-// configFile defines a devbox environment as JSON.
-type configFile struct {
+// ConfigFile defines a devbox environment as JSON.
+type ConfigFile struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+	Version     string `json:"version"`
 
 	// PackagesMutator is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
@@ -82,7 +83,7 @@ type Stage struct {
 
 const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
-func DefaultConfig() *configFile {
+func DefaultConfig() *ConfigFile {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
   "packages": [],
@@ -104,24 +105,24 @@ func DefaultConfig() *configFile {
 	return cfg
 }
 
-func (c *configFile) Bytes() []byte {
+func (c *ConfigFile) Bytes() []byte {
 	b := c.ast.root.Pack()
 	return bytes.ReplaceAll(b, []byte("\t"), []byte("  "))
 }
 
-func (c *configFile) Hash() (string, error) {
+func (c *ConfigFile) Hash() (string, error) {
 	ast := c.ast.root.Clone()
 	ast.Minimize()
 	return cachehash.Bytes(ast.Pack())
 }
 
-func (c *configFile) Equals(other *configFile) bool {
+func (c *ConfigFile) Equals(other *ConfigFile) bool {
 	hash1, _ := c.Hash()
 	hash2, _ := other.Hash()
 	return hash1 == hash2
 }
 
-func (c *configFile) NixPkgsCommitHash() string {
+func (c *ConfigFile) NixPkgsCommitHash() string {
 	// The commit hash for nixpkgs-unstable on 2023-10-25 from status.nixos.org
 	const DefaultNixpkgsCommit = "75a52265bda7fd25e06e3a67dee3f0354e73243c"
 
@@ -131,7 +132,7 @@ func (c *configFile) NixPkgsCommitHash() string {
 	return c.Nixpkgs.Commit
 }
 
-func (c *configFile) InitHook() *shellcmd.Commands {
+func (c *ConfigFile) InitHook() *shellcmd.Commands {
 	if c == nil || c.Shell == nil {
 		return nil
 	}
@@ -139,7 +140,7 @@ func (c *configFile) InitHook() *shellcmd.Commands {
 }
 
 // SaveTo writes the config to a file.
-func (c *configFile) SaveTo(path string) error {
+func (c *ConfigFile) SaveTo(path string) error {
 	if c.format != jsonFormat {
 		return errors.New("cannot save config to non-json format")
 	}
@@ -147,7 +148,7 @@ func (c *configFile) SaveTo(path string) error {
 }
 
 // Get returns the package with the given versionedName
-func (c *configFile) GetPackage(versionedName string) (*Package, bool) {
+func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	name, version := parseVersionedName(versionedName)
 	i := c.PackagesMutator.index(name, version)
 	if i == -1 {
@@ -156,7 +157,7 @@ func (c *configFile) GetPackage(versionedName string) (*Package, bool) {
 	return &c.PackagesMutator.collection[i], true
 }
 
-func loadBytes(b []byte) (*configFile, error) {
+func loadBytes(b []byte) (*ConfigFile, error) {
 	jsonb, err := hujson.Standardize(slices.Clone(b))
 	if err != nil {
 		return nil, err
@@ -166,7 +167,7 @@ func loadBytes(b []byte) (*configFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := &configFile{
+	cfg := &ConfigFile{
 		PackagesMutator: packagesMutator{ast: ast},
 		ast:             ast,
 	}
@@ -176,7 +177,7 @@ func loadBytes(b []byte) (*configFile, error) {
 	return cfg, validateConfig(cfg)
 }
 
-func LoadConfigFromURL(url string) (*configFile, error) {
+func LoadConfigFromURL(url string) (*ConfigFile, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -190,8 +191,8 @@ func LoadConfigFromURL(url string) (*configFile, error) {
 	return loadBytes(data)
 }
 
-func validateConfig(cfg *configFile) error {
-	fns := []func(cfg *configFile) error{
+func validateConfig(cfg *ConfigFile) error {
+	fns := []func(cfg *ConfigFile) error{
 		ValidateNixpkg,
 		validateScripts,
 	}
@@ -206,7 +207,7 @@ func validateConfig(cfg *configFile) error {
 
 var whitespace = regexp.MustCompile(`\s`)
 
-func validateScripts(cfg *configFile) error {
+func validateScripts(cfg *ConfigFile) error {
 	scripts := cfg.Scripts()
 	for k := range scripts {
 		if strings.TrimSpace(k) == "" {
@@ -224,7 +225,7 @@ func validateScripts(cfg *configFile) error {
 	return nil
 }
 
-func ValidateNixpkg(cfg *configFile) error {
+func ValidateNixpkg(cfg *ConfigFile) error {
 	hash := cfg.NixPkgsCommitHash()
 	if hash == "" {
 		return nil

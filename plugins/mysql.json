@@ -15,7 +15,7 @@
       "{{ .Virtenv }}/setup_db.sh": "mysql/setup_db.sh",
       "{{ .Virtenv }}/process-compose.yaml": "mysql/process-compose.yaml"
     },
-    "__packages": [
+    "packages": [
       "path:{{ .Virtenv }}/flake"
     ],
     "__remove_trigger_package": true,
