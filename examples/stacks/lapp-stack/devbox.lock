@@ -81,24 +81,23 @@
         }
       }
     },
-    "postgresql@latest": {
-      "last_modified": "2024-02-08T11:55:47Z",
-      "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/c0b7a892fb042ede583bdaecbbdc804acb85eabe#postgresql",
+    "postgresql@14": {
+      "last_modified": "2023-10-21T19:15:59Z",
+      "resolved": "github:NixOS/nixpkgs/51d906d2341c9e866e48c2efcaac0f2d70bfd43e#postgresql",
       "source": "devbox-search",
-      "version": "15.5",
+      "version": "14.9",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/vy01fhl2hh055kyvnzspl4qbh35garak-postgresql-15.5"
+          "store_path": "/nix/store/fp6hphss6sm5r4bflhl35y9mfpl1hmqv-postgresql-14.9"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/r7ivv96hmcrp223cj7047db2b29lj83d-postgresql-15.5"
+          "store_path": "/nix/store/ijc70wkgbgc2l8y2va049wrdgrlxd6js-postgresql-14.9"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/c6ik2ryz8rp6hjq85n5s29k49f7i9bxl-postgresql-15.5"
+          "store_path": "/nix/store/rbicral6k0rzk99wvmj1fd24qc2dc7g3-postgresql-14.9"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/xgjcnbg2qj6kly471hgg6bn80bsn43d7-postgresql-15.5"
+          "store_path": "/nix/store/ki3srrjjzqalvh0hd9lmqavp5v9wr9jp-postgresql-14.9"
         }
       }
     }

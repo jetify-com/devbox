@@ -4,7 +4,7 @@
     "php@8.1",
     "php81Extensions.pgsql@latest",
     "apache@2.4",
-    "postgresql@latest"
+    "postgresql@14"
   ],
   "env": {
     "PGHOST": "/tmp/devbox/lapp",
@@ -19,11 +19,11 @@
       ],
       "init_db": "initdb",
       "run_test": [
-        "devbox services stop --all-projects",
         "mkdir -p /tmp/devbox/lapp", 
         "initdb",
         "devbox services up -b",
         "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
+        "cat .devbox/compose.log",
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql",
