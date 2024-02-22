@@ -4,10 +4,11 @@
 package cmdutil
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"os/exec"
 	"sort"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // Exists indicates if the command exists

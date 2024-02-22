@@ -6,12 +6,12 @@ package midcobra
 import (
 	"context"
 	"errors"
-	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/cmdutil"
 	"os"
 	"os/exec"
 
+	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/ux"
 )
