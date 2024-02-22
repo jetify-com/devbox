@@ -533,11 +533,11 @@ func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Pack
 		if err != nil {
 			return nil, err
 		}
-		storePath, err := nix.StorePathFromInstallable(ctx, installable)
+		storePaths, err := nix.StorePathsFromInstallable(ctx, installable)
 		if err != nil {
 			return nil, err
 		}
-		isInStore, err := nix.StorePathIsInStore(ctx, storePath)
+		isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
 		if err != nil {
 			return nil, err
 		}
