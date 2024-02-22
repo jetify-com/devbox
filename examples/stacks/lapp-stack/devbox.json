@@ -7,6 +7,7 @@
     "postgresql@latest"
   ],
   "env": {
+    "PGHOST": "/tmp/devbox/lapp",
     "PGPORT": "5432"
   },
   "shell": {
@@ -18,6 +19,8 @@
       ],
       "init_db": "initdb",
       "run_test": [
+        "devbox services stop --all-projects",
+        "mkdir -p /tmp/devbox/lapp", 
         "initdb",
         "devbox services up -b",
         "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
