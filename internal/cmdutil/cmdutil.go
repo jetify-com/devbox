@@ -4,7 +4,10 @@
 package cmdutil
 
 import (
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"os/exec"
+	"sort"
 )
 
 // Exists indicates if the command exists
@@ -22,4 +25,18 @@ func GetPathOrDefault(command, def string) string {
 	}
 
 	return path
+}
+
+func GetSubcommand(cmd *cobra.Command, args []string) (subcmd *cobra.Command, flags []string, err error) {
+	if cmd.TraverseChildren {
+		subcmd, _, err = cmd.Traverse(args)
+	} else {
+		subcmd, _, err = cmd.Find(args)
+	}
+
+	subcmd.Flags().Visit(func(f *pflag.Flag) {
+		flags = append(flags, "--"+f.Name)
+	})
+	sort.Strings(flags)
+	return subcmd, flags, err
 }
