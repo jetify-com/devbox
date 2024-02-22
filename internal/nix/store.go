@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
+
+	"go.jetpack.io/devbox/internal/debug"
 )
 
 func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string, error) {
@@ -19,7 +22,10 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 }
 
 func StorePathFromInstallable(ctx context.Context, installable string) (string, error) {
-	cmd := commandContext(ctx, "path-info", installable, "--json")
+	// --impure for NIXPKGS_ALLOW_UNFREE
+	cmd := commandContext(ctx, "path-info", installable, "--json", "--impure")
+	cmd.Env = allowUnfreeEnv(os.Environ())
+	debug.Log("Running cmd %s", cmd)
 	resultBytes, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -31,6 +37,7 @@ func StorePathFromInstallable(ctx context.Context, installable string) (string, 
 // It relies on `nix store ls` to check if the store path is in the store
 func StorePathIsInStore(ctx context.Context, storePath string) (bool, error) {
 	cmd := commandContext(ctx, "store", "ls", storePath)
+	debug.Log("Running cmd %s", cmd)
 	if err := cmd.Run(); err != nil {
 		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
 			return false, nil
