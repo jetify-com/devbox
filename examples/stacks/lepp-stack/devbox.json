@@ -25,7 +25,7 @@
         "rm -rf .devbox/virtenv/postgresql/data",
         "initdb",
         "devbox services up -b",
-        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
+        "echo 'sleep 10 second for the postgres server to initialize.' && sleep 10",
         "dropdb --if-exists devbox_lepp",
         "createdb devbox_lepp",
         "psql devbox_lepp < setup_postgres_db.sql",
