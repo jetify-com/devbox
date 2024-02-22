@@ -134,7 +134,7 @@ func (c *ConfigFile) NixPkgsCommitHash() string {
 
 func (c *ConfigFile) InitHook() *shellcmd.Commands {
 	if c == nil || c.Shell == nil {
-		return nil
+		return &shellcmd.Commands{}
 	}
 	return c.Shell.InitHook
 }

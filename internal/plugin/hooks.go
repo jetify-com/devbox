@@ -31,7 +31,7 @@ func (m *Manager) InitHooks(
 		if c == nil {
 			continue
 		}
-		hooks = append(hooks, c.Shell.InitHook.Cmds...)
+		hooks = append(hooks, c.InitHook().Cmds...)
 	}
 	return hooks, nil
 }
