@@ -1,14 +1,14 @@
 {
   "packages": [
     "curl@8.0",
-    "postgresql@14",
     "php@8.1",
     "php81Extensions.pgsql@latest",
-    "apache@2.4"
+    "apache@2.4",
+    "postgresql@14"
   ],
   "env": {
-    "PGPORT": "5432",
-    "PGHOST": "/tmp/devbox/lapp"
+    "PGHOST": "/tmp/devbox/lapp",
+    "PGPORT": "5432"
   },
   "shell": {
     "scripts": {
@@ -19,10 +19,11 @@
       ],
       "init_db": "initdb",
       "run_test": [
-        "mkdir -p /tmp/devbox/lapp",
+        "mkdir -p /tmp/devbox/lapp", 
         "initdb",
-        "devbox services start",
-        "echo 'sleep 1 second for the postgres server to initialize.' && sleep 1",
+        "devbox services up -b",
+        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
+        "cat .devbox/compose.log",
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql",

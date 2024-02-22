@@ -5,12 +5,14 @@ package devbox
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
 	"go.jetpack.io/devbox/internal/xdg"
@@ -32,12 +34,36 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) er
 		return err
 	}
 
-	return nixprofile.ProfileInstall(ctx, &nixprofile.ProfileInstallArgs{
+	return nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
 		Installable: installable,
-		PackageName: pkgName,
 		ProfilePath: profilePath,
 		Writer:      d.stderr,
 	})
+}
+
+func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
+	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
+	installable, err := pkg.Installable()
+	if err != nil {
+		return err
+	}
+
+	utilityProfilePath, err := utilityNixProfilePath()
+	if err != nil {
+		return err
+	}
+
+	profile, err := nixprofile.ProfileListItems(d.stderr, utilityProfilePath)
+	if err != nil {
+		return err
+	}
+
+	for i, profileItem := range profile {
+		if profileItem.MatchesUnlockedReference(installable) {
+			return nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
+		}
+	}
+	return nil
 }
 
 func utilityLookPath(binName string) (string, error) {

@@ -75,6 +75,10 @@ func (i *NixProfileListItem) Matches(pkg *devpkg.Package, locker lock.Locker) bo
 	return pkg.Equals(devpkg.PackageFromStringWithDefaults(i.unlockedReference, locker))
 }
 
+func (i *NixProfileListItem) MatchesUnlockedReference(installable string) bool {
+	return i.unlockedReference == installable
+}
+
 func (i *NixProfileListItem) addedByStorePath() bool {
 	return i.unlockedReference == ""
 }

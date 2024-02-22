@@ -219,7 +219,8 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 }
 
 func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string) error {
-	logfile, err := os.OpenFile(processComposeLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0o664)
+	logdir := filepath.Join(projectDir, processComposeLogfile)
+	logfile, err := os.OpenFile(logdir, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0o664)
 	if err != nil {
 		return fmt.Errorf("failed to open process-compose log file: %w", err)
 	}

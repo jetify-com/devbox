@@ -14,7 +14,7 @@ import (
 	"github.com/f1bonacc1/process-compose/src/types"
 )
 
-type processStates = types.ProcessStates
+type processStates = types.ProcessesState
 
 type Process struct {
 	Name     string
