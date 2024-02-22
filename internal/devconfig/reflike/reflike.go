@@ -1,4 +1,4 @@
-package flake
+package reflike
 
 import (
 	"fmt"
@@ -11,25 +11,26 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 // RefLike is like a flake ref, but in some ways more general. It can be used
 // to reference other types of files, e.g. devbox.json.
 type RefLike struct {
-	Ref
+	flake.Ref
 	filename string
 }
 
-func ParseRefLike(s, filename string) (RefLike, error) {
-	r, e := ParseRef(s)
+func Parse(s, filename string) (RefLike, error) {
+	r, e := flake.ParseRef(s)
 	return RefLike{r, filename}, e
 }
 
 func (r RefLike) Fetch() ([]byte, error) {
 	switch r.Type {
-	case TypePath:
+	case flake.TypePath:
 		return os.ReadFile(r.withFilename(r.Path))
-	case TypeGitHub:
+	case flake.TypeGitHub:
 		return r.fetchGithub()
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", r.Type)

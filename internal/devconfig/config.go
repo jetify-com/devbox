@@ -14,7 +14,7 @@ import (
 	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetpack.io/devbox/internal/devconfig/reflike"
 )
 
 // Config represents a base devbox.json as well as any imports it may have.
@@ -93,7 +93,7 @@ func loadBytes(b []byte) (*Config, error) {
 	imports := make([]*Config, 0, len(baseConfig.Imports))
 
 	for _, importRef := range baseConfig.Imports {
-		ref, _ := flake.ParseRefLike(importRef, "devbox.json")
+		ref, _ := reflike.Parse(importRef, "devbox.json")
 		childConfig, err := ref.Fetch()
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch import %s: %w", importRef, err)
