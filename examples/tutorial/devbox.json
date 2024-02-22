@@ -9,7 +9,7 @@
             "clear && PAGER=cat glow README.md"
         ],
         "scripts": {
-            "readme": "clear && PAGER=cat glow README.md"
+            "description": "clear && PAGER=cat glow README.md"
         }
     }
 }

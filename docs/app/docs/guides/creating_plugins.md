@@ -63,7 +63,7 @@ Plugins are defined as Go JSON Template files, using the following schema:
 {
   "name": "",
   "version": "",
-  "readme": "",
+  "description": "",
   "env": {
     "<key>": "<value>"
   },
@@ -153,7 +153,7 @@ The plugin.json below sets the environment variables and config needed to run Mo
 {
   "name": "mongodb",
   "version": "0.0.1",
-  "readme": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
+  "description": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
   "env": {
     "MONGODB_DATA": "{{.Virtenv}}/data",
     "MONGODB_CONFIG": "{{.DevboxDir}}/mongod.conf"

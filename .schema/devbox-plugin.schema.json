@@ -17,7 +17,7 @@
       "description": "The version of the plugin.",
       "type": "string"
     },
-    "readme": {
+    "description": {
       "description": "A short description of the plugin and how it works. This will automatically display when the user first installs the plugin, or runs `devbox info`",
       "type": "string"
     },
