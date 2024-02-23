@@ -70,6 +70,8 @@ func (i *SystemInfo) String() string {
 	return fmt.Sprintf("%+v", *i)
 }
 
+// TODO savil. There are multiple possible default store paths.
+// Remove. Only used in update_test.go
 func (i *SystemInfo) DefaultStorePath() string {
 	if i == nil || len(i.Outputs) == 0 {
 		return ""
@@ -81,7 +83,45 @@ func (i *SystemInfo) DefaultStorePath() string {
 		}
 	}
 
+	// TODO: should this be "out" output always, instead of first one?
 	return i.Outputs[0].Path
+}
+
+func (i *SystemInfo) Output(name string) (Output, error) {
+	if i == nil {
+		return Output{}, nil
+	}
+
+	for _, output := range i.Outputs {
+		if output.Name == name {
+			return output, nil
+		}
+	}
+
+	return Output{}, fmt.Errorf("Output %s not found", name)
+}
+
+func (i *SystemInfo) DefaultOutputs() []Output {
+	if i == nil {
+		return nil
+	}
+
+	if len(i.Outputs) == 0 {
+		return nil
+	}
+
+	res := []Output{}
+	for _, output := range i.Outputs {
+		if output.Default {
+			res = append(res, output)
+		}
+	}
+	if len(res) > 0 {
+		return res
+	}
+
+	// If no default outputs, return the first one
+	return []Output{i.Outputs[0]}
 }
 
 func (i *SystemInfo) Equals(other *SystemInfo) bool {

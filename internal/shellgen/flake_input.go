@@ -62,8 +62,12 @@ type SymlinkJoin struct {
 func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 	joins := []*SymlinkJoin{}
 	for _, pkg := range f.Packages {
-		// skip packages that have no non-default outputs
-		if len(pkg.Outputs) == 0 {
+		// skip packages that are already in the binary cache
+		inCache, err := pkg.IsInBinaryCache()
+		if err != nil {
+			return nil, err
+		}
+		if inCache {
 			continue
 		}
 
@@ -75,9 +79,15 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 		if pkg.PatchGlibc {
 			return nil, errors.New("patch_glibc is not yet supported for packages with non-default outputs")
 		}
+
+		outputNames, err := pkg.GetOutputNames()
+		if err != nil {
+			return nil, err
+		}
+
 		joins = append(joins, &SymlinkJoin{
 			Name: pkg.String() + "-combined",
-			Paths: lo.Map(pkg.Outputs, func(output string, _ int) string {
+			Paths: lo.Map(outputNames, func(output string, _ int) string {
 				if !f.IsNixpkgs() {
 					return f.Name + "." + attributePath + "." + output
 				}
@@ -92,10 +102,9 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 func (f *flakeInput) BuildInputs() ([]string, error) {
 	var err error
 
-	// Filter out packages that have non-default outputs
-	// These are handled in BuildInputsForSymlinkJoin
+	// Filter packages that have multiple outputs. Those are handled by SymlinkJoin.
 	packages := lo.Filter(f.Packages, func(pkg *devpkg.Package, _ int) bool {
-		return len(pkg.Outputs) == 0
+		return len(pkg.Outputs) == 1
 	})
 
 	attributePaths := lo.Map(packages, func(pkg *devpkg.Package, _ int) string {
