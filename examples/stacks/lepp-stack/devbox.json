@@ -14,7 +14,7 @@
   "shell": {
     "init_hook": [
       "test -r .devbox/ports || echo \"export PGPORT=$(devbox services free-port)\nexport NGINX_WEB_PORT=$(devbox services free-port)\" > .devbox/ports",
-      ". $PWD/.devbox/port",
+      ". $PWD/.devbox/ports",
     ],
     "scripts": {
       "create_db": [
