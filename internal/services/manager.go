@@ -30,7 +30,7 @@ const (
 	fileLockTimeout       = 5 * time.Second
 )
 
-func getAvailablePort(config *globalProcessComposeConfig) (int, error) {
+func getAvailablePort() (int, error) {
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
 		return 0, errors.WithStack(err)
@@ -142,7 +142,7 @@ func StartProcessManager(
 	config.File = configFile
 
 	// Get the port to use for this project
-	port, err := getAvailablePort(config)
+	port, err := getAvailablePort()
 	if err != nil {
 		return err
 	}
