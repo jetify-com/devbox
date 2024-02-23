@@ -11,8 +11,8 @@
   },
   "shell": {
     "init_hook": [
-      "test -r .devbox/port || echo \"export PGPORT=$(devbox services free-port)\" > .devbox/port",
-      ". $PWD/.devbox/port",
+      "test -r .devbox/ports || echo \"export PGPORT=$(devbox services free-port)\nexport HTTPD_PORT=$(devbox services free-port)\" > .devbox/ports",
+      ". $PWD/.devbox/ports",
     ],
     "scripts": {
       "create_db": [
