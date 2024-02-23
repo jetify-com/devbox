@@ -11,7 +11,7 @@
   },
   "shell": {
     "init_hook": [
-      "test -r .devbox/port || echo \"PGPORT=$(devbox services free-port)\" > .devbox/port",
+      "test -r .devbox/port || echo \"export PGPORT=$(devbox services free-port)\" > .devbox/port",
       ". $PWD/.devbox/port",
     ],
     "scripts": {
