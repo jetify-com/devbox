@@ -24,26 +24,8 @@ import (
 
 const (
 	processComposeLogfile = ".devbox/compose.log"
-	startingPort          = 8260
-	maxPortTries          = 10
 	fileLockTimeout       = 5 * time.Second
 )
-
-func getAvailablePort(config *globalProcessComposeConfig) (int, bool) {
-	for i := 0; i < maxPortTries; i++ {
-		port := startingPort + i
-		available := true
-		for _, instance := range config.Instances {
-			if instance.Port == port {
-				available = false
-			}
-		}
-		if available {
-			return port, true
-		}
-	}
-	return 0, false
-}
 
 type instance struct {
 	Pid  int `json:"pid"`
@@ -143,9 +125,9 @@ func StartProcessManager(
 	config.File = configFile
 
 	// Get the port to use for this project
-	port, available := getAvailablePort(config)
-	if !available {
-		return fmt.Errorf("no available ports to start process-compose. You should run `devbox services stop` in your projects to free up ports")
+	port, err := getAvailablePort()
+	if err != nil {
+		return err
 	}
 
 	// Start building the process-compose command
