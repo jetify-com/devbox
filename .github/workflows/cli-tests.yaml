@@ -101,7 +101,7 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
@@ -204,7 +204,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
@@ -236,7 +236,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
