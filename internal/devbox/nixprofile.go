@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
-	"go.jetpack.io/devbox/internal/ux"
 )
 
 // syncNixProfileFromFlake ensures the nix profile has the packages from the buildInputs
@@ -53,11 +53,7 @@ func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 			storePath := nix.NewStorePathParts(p)
 			packagesToRemove = append(packagesToRemove, fmt.Sprintf("%s@%s", storePath.Name, storePath.Version))
 		}
-		if len(packagesToRemove) == 1 {
-			ux.Finfo(d.stderr, "Removing %s\n", strings.Join(packagesToRemove, ", "))
-		} else {
-			ux.Finfo(d.stderr, "Removing packages: %s\n", strings.Join(packagesToRemove, ", "))
-		}
+		debug.Log("Removing packages from nix profile: %s\n", strings.Join(packagesToRemove, ", "))
 
 		if err := nix.ProfileRemove(profilePath, remove...); err != nil {
 			return err
