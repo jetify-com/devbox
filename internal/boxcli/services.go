@@ -4,6 +4,9 @@
 package boxcli
 
 import (
+	"fmt"
+	"net"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
@@ -109,6 +112,26 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 		},
 	}
 
+	freePortCommand := &cobra.Command{
+		Use:   "free-port",
+		Short: "Find a free port",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+			if err != nil {
+				return err
+			}
+
+			l, err := net.ListenTCP("tcp", addr)
+			if err != nil {
+				return err
+			}
+			defer l.Close()
+			fmt.Fprintf(cmd.OutOrStdout(), "%d\n", l.Addr().(*net.TCPAddr).Port)
+			return nil
+		},
+	}
+
 	flags.envFlag.register(servicesCommand)
 	flags.config.registerPersistent(servicesCommand)
 	servicesCommand.PersistentFlags().BoolVar(
@@ -125,6 +148,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
+	servicesCommand.AddCommand(freePortCommand)
 	return servicesCommand
 }
 

@@ -9,10 +9,13 @@
   "env": {
     "NGINX_WEB_PORT": "8089",
     "NGINX_WEB_ROOT": "../../../my_app",
-    "PGPORT": "5433",
     "PGHOST": "/tmp/devbox/lepp"
   },
   "shell": {
+    "init_hook": [
+      "test -r .devbox/port || echo \"PGPORT=$(devbox services free-port)\" > .devbox/port",
+      ". $PWD/.devbox/port",
+    ],
     "scripts": {
       "create_db": [
         "dropdb --if-exists devbox_lepp",

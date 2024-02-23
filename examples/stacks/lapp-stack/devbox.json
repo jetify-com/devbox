@@ -8,9 +8,12 @@
   ],
   "env": {
     "PGHOST": "/tmp/devbox/lapp",
-    "PGPORT": "5432"
   },
   "shell": {
+    "init_hook": [
+      "test -r .devbox/port || echo \"PGPORT=$(devbox services free-port)\" > .devbox/port",
+      ". $PWD/.devbox/port",
+    ],
     "scripts": {
       "create_db": [
         "dropdb --if-exists devbox_lapp",
