@@ -8,7 +8,7 @@
   ],
   "env": {
     "PGHOST": "/tmp/devbox/lapp",
-    "PGPORT": "5432"
+    "PGPORT": "5434"
   },
   "shell": {
     "scripts": {
