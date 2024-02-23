@@ -1,2 +1,3 @@
 env DEVBOX_FEATURE_SCRIPT_EXIT_ON_ERROR=1
+exec devbox install
 exec devbox run run_test
