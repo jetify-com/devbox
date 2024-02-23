@@ -1,23 +1,48 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "nodejs@16": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_16",
+    "python@2": {
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python2",
       "source": "devbox-search",
-      "version": "16.20.2",
+      "version": "2.7.18.7",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/xps0q3f7xbxqpdm4xmlz1drv6qyyb4a5-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/znpn8yi2jla1gxa3afqjar4rlc1rd7if-python-2.7.18.7",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/qvxwbmwxacc1jlsnqyy45vnzdfbagns0-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/s4pkisaafvvlg2jscaxqds2dfjx7fc6g-python-2.7.18.7",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/6fipdgsh4vmixx3zficbknjmw7k4n4hm-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vz08ikszkcv50f0jriw6pw94dkvnq8bc-python-2.7.18.7",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/ds8p6kc8n165gy4f3x72dkpx4aizxjaw-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cwlvwfrs4lwbiqx195hlxbxfk1cygs9m-python-2.7.18.7",
+              "default": true
+            }
+          ]
         }
       }
     }
