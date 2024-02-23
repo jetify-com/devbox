@@ -60,7 +60,7 @@ jobs:
       - name: Build devbox
         run: go build -o dist/devbox ./cmd/devbox
       - name: Upload devbox artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
           path: ./dist/devbox
