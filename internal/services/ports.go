@@ -7,7 +7,7 @@ import (
 )
 
 var disallowedPorts = map[int]string{
-	// Anything < 1024
+	// Anything <= 1024
 	1433: "MS-SQL (Microsoft SQL Server database management system)",
 	1434: "MS-SQL (Microsoft SQL Server database management system)",
 	1521: "Oracle SQL",
