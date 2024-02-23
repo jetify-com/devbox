@@ -25,8 +25,6 @@ import (
 
 const (
 	processComposeLogfile = ".devbox/compose.log"
-	startingPort          = 8260
-	maxPortTries          = 10
 	fileLockTimeout       = 5 * time.Second
 )
 
