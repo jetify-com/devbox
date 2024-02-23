@@ -7,7 +7,6 @@
     "nginx@latest"
   ],
   "env": {
-    "NGINX_WEB_PORT": "8089",
     "NGINX_WEB_ROOT": "../../../my_app",
     "PGHOST": "/tmp/devbox/lepp"
   },
@@ -28,7 +27,7 @@
         "rm -rf .devbox/virtenv/postgresql/data",
         "initdb",
         "devbox services up -b",
-        "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
+        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
         "dropdb --if-exists devbox_lepp",
         "createdb devbox_lepp",
         "psql devbox_lepp < setup_postgres_db.sql",
