@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,25 +25,21 @@ import (
 
 const (
 	processComposeLogfile = ".devbox/compose.log"
-	startingPort          = 8260
-	maxPortTries          = 10
 	fileLockTimeout       = 5 * time.Second
 )
 
-func getAvailablePort(config *globalProcessComposeConfig) (int, bool) {
-	for i := 0; i < maxPortTries; i++ {
-		port := startingPort + i
-		available := true
-		for _, instance := range config.Instances {
-			if instance.Port == port {
-				available = false
-			}
-		}
-		if available {
-			return port, true
-		}
+func GetAvailablePort() (int, error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return 0, errors.WithStack(err)
 	}
-	return 0, false
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
 type instance struct {
@@ -143,9 +140,9 @@ func StartProcessManager(
 	config.File = configFile
 
 	// Get the port to use for this project
-	port, available := getAvailablePort(config)
-	if !available {
-		return fmt.Errorf("no available ports to start process-compose. You should run `devbox services stop` in your projects to free up ports")
+	port, err := GetAvailablePort()
+	if err != nil {
+		return err
 	}
 
 	// Start building the process-compose command

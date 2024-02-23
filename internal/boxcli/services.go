@@ -5,12 +5,12 @@ package boxcli
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/services"
 )
 
 type servicesCmdFlags struct {
@@ -117,17 +117,11 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 		Short: "Find a free port",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+			port, err := services.GetAvailablePort()
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
-
-			l, err := net.ListenTCP("tcp", addr)
-			if err != nil {
-				return err
-			}
-			defer l.Close()
-			fmt.Fprintf(cmd.OutOrStdout(), "%d\n", l.Addr().(*net.TCPAddr).Port)
+			fmt.Fprintf(cmd.OutOrStdout(), "%d\n", port)
 			return nil
 		},
 	}
