@@ -422,7 +422,7 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 // packages will be available in the nix store when computing the devbox environment
 // and installing in the nix profile (even if offline).
 func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
-	packages, err := d.packagesToInstallInProfile(ctx)
+	packages, err := d.packagesToInstallInStore(ctx)
 	if err != nil {
 		return err
 	}
@@ -489,7 +489,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 	return err
 }
 
-func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Package, error) {
+func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Package, error) {
 	// First, fetch the profile items from the nix-profile,
 	profileDir, err := d.profilePath()
 	if err != nil {
