@@ -54,7 +54,7 @@ jobs:
     if: ${{ inputs.create_edge_release || github.event.schedule }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Determine edge tag
@@ -68,7 +68,7 @@ jobs:
           custom_tag: ${{ env.EDGE_TAG }}
           tag_prefix: ""
       - name: Set up go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
       - name: Build snapshot with goreleaser
@@ -120,11 +120,11 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
       - name: Create Sentry release

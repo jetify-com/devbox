@@ -14,7 +14,7 @@ In your project's workflow YAML, add the following step:
 
 ```yaml
 - name: Install devbox
-  uses: jetpack-io/devbox-install-action@v0.6.0
+  uses: jetpack-io/devbox-install-action@v0.8.0
 ```
 
 ## Example Workflow
@@ -30,10 +30,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.6.0
+        uses: jetpack-io/devbox-install-action@v0.8.0
 
       - name: Run arbitrary commands
         run: devbox run -- echo "done!"
