@@ -1,5 +1,10 @@
 {
-  "packages": {},
+  "packages": {
+    "electron_11": {
+      "version":        "11.5.0",
+      "allow_insecure": ["electron-11.5.0"]
+    }
+  },
   "shell": {
     "init_hook": "echo 'Welcome to devbox!' > /dev/null",
     "scripts": {
