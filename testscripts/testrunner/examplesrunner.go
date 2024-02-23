@@ -98,6 +98,7 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 		// We set a custom XDG_STATE_HOME to an intentionally short path.
 		// Reason: devbox plugins like postgres store unix socket files in their state dir.
 		envs.Setenv(envir.XDGStateHome, xdgStateHomeDir)
+		envs.Setenv("DEVBOX_DEBUG", "1")
 
 		// setup the devbox testscript environment
 		if err := setup(envs); err != nil {
