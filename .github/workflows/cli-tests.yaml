@@ -53,14 +53,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
       - name: Build devbox
         run: go build -o dist/devbox ./cmd/devbox
       - name: Upload devbox artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
           path: ./dist/devbox
@@ -71,7 +71,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: crate-ci/typos@v1.16.26
 
   golangci-lint:
@@ -82,23 +82,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
-
-      # We can remove this once we fix nix golangci-lint issue and move to devbox
-      - uses: actions/setup-go@v4
-        with:
-          go-version-file: ./go.mod
-          cache: false
+      - uses: actions/checkout@v4
 
       # This can be reanabled once released version supports runx
       # and we can remove needs: build-devbox
       # - name: Install devbox
-      #   uses: jetpack-io/devbox-install-action@v0.7.0
+      #   uses: jetpack-io/devbox-install-action@v0.8.0
       #   with:
       #     enable-cache: true
 
       - name: Mount golang cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/golangci-lint
@@ -107,7 +101,7 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
@@ -154,17 +148,18 @@ jobs:
           remove-android: true
           remove-haskell: true
           remove-codeql: true
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version-file: ./go.mod
+      - uses: actions/checkout@v4
       - name: Mount golang cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg
           key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
+      # TODO Use devbox directly
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
       - name: Install additional shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -207,9 +202,9 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
@@ -239,9 +234,9 @@ jobs:
         nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download devbox
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path

@@ -422,7 +422,7 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 // packages will be available in the nix store when computing the devbox environment
 // and installing in the nix profile (even if offline).
 func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
-	packages, err := d.packagesToInstallInProfile(ctx)
+	packages, err := d.packagesToInstallInStore(ctx)
 	if err != nil {
 		return err
 	}
@@ -489,7 +489,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 	return err
 }
 
-func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Package, error) {
+func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Package, error) {
 	// First, fetch the profile items from the nix-profile,
 	profileDir, err := d.profilePath()
 	if err != nil {
@@ -511,7 +511,7 @@ func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Pack
 	}
 
 	// Third, compute which packages need to be installed
-	packagesToInstall := []*devpkg.Package{}
+	packagesNotInProfile := []*devpkg.Package{}
 	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
 	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
 	for _, pkg := range packages {
@@ -523,9 +523,29 @@ func (d *Devbox) packagesToInstallInProfile(ctx context.Context) ([]*devpkg.Pack
 			}
 		}
 		if !found {
+			packagesNotInProfile = append(packagesNotInProfile, pkg)
+		}
+	}
+
+	packagesToInstall := []*devpkg.Package{}
+	for _, pkg := range packagesNotInProfile {
+		installable, err := pkg.Installable()
+		if err != nil {
+			return nil, err
+		}
+		storePaths, err := nix.StorePathsFromInstallable(ctx, installable)
+		if err != nil {
+			return nil, err
+		}
+		isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
+		if err != nil {
+			return nil, err
+		}
+		if !isInStore {
 			packagesToInstall = append(packagesToInstall, pkg)
 		}
 	}
+
 	return packagesToInstall, nil
 }
 
