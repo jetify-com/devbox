@@ -1,18 +1,17 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "python@2": {
+    "electron_11@11.5.0": {
       "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python2",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#electron_11",
       "source": "devbox-search",
-      "version": "2.7.18.7",
+      "version": "11.5.0",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/znpn8yi2jla1gxa3afqjar4rlc1rd7if-python-2.7.18.7",
+              "path": "/nix/store/bv0dirczs5kbqyhgg8vp9kxw9vc1xsjg-electron-11.5.0",
               "default": true
             }
           ]
@@ -21,7 +20,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/s4pkisaafvvlg2jscaxqds2dfjx7fc6g-python-2.7.18.7",
+              "path": "/nix/store/592hyiqjb10mavzirbawpwcpkcb10ayw-electron-11.5.0",
               "default": true
             }
           ]
@@ -30,7 +29,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/vz08ikszkcv50f0jriw6pw94dkvnq8bc-python-2.7.18.7",
+              "path": "/nix/store/7853zqvg3z2n99nfaz7090321qsr1c6b-electron-11.5.0",
               "default": true
             }
           ]
@@ -39,7 +38,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/cwlvwfrs4lwbiqx195hlxbxfk1cygs9m-python-2.7.18.7",
+              "path": "/nix/store/5znn138v1yigr72if4apa6xpvl1d3r1x-electron-11.5.0",
               "default": true
             }
           ]

@@ -1,14 +1,14 @@
 {
   "packages": {
-    "python": {
-      "version":        "2",
-      "allow_insecure": ["python-2.7.18.7"]
+    "electron_11": {
+      "version":        "11.5.0",
+      "allow_insecure": ["electron-11.5.0"]
     }
   },
   "shell": {
     "init_hook": "echo 'Welcome to devbox!' > /dev/null",
     "scripts": {
-      "run_test": "python --version"
+      "run_test": "electron --version"
     }
   }
 }
