@@ -166,7 +166,6 @@ jobs:
           enable-cache: true
       - name: Run fast tests
         if: matrix.run-project-tests == 'project-tests-off'
-        
         run: |
           echo "::group::Nix version"
           nix --version
