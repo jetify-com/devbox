@@ -2,22 +2,62 @@
   "lockfile_version": "1",
   "packages": {
     "nodejs@18": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_18",
+      "last_modified": "2024-02-15T12:53:33Z",
+      "resolved": "github:NixOS/nixpkgs/085589047343aad800c4d305cf7b98e8a3d51ae2#nodejs_18",
       "source": "devbox-search",
-      "version": "18.17.1",
+      "version": "18.19.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/xpqj3zg5lx25abv9qybiqd7gcs8b81fp-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/85siw3p53ki5lldcshgah2rrlrcgi527-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/x482ciyp76afmsr9qsdan716lvza8ndb-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/svc3bwhi6i1jd5387w8dwps23s7d4a62-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/v15fm8wlssnfg1vygh9xiw7f2z99v4vn-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/gvbr6wm4b0749gyfgziq5q2zn8msg2pw-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/kjsf1qk9w4rknr02silyfq4lxlkh53xq-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2a5cxm45616hxg9ynfp25mxa0xinpwr3-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/84340aw7k8nc3fcb0cm79bl1vvbjydl5-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/51nhk6ycfnj895q07v94jsrwmk2jmz8j-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1ihd9lyhn8q73n9s3iaxbilx4mn4nc5b-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/1ivbwnpcr46sdncfry4yz61k96587faf-nodejs-18.19.1-libv8"
+            }
+          ]
         }
       }
     }

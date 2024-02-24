@@ -1,16 +1,15 @@
 {
-    "packages": [
-        "python310",
-        "poetry",
-        "stdenv.cc.cc.lib",
-        "cudatoolkit"
-    ],
-    "env": {},
-    "shell": {
-        "init_hook": [],
-        "scripts": {
-            "install": "poetry install",
-            "main": "poetry run python main.py"
-        }
+  "packages": [
+    "poetry",
+    "stdenv.cc.cc.lib",
+    "cudatoolkit"
+  ],
+  "env": {},
+  "shell": {
+    "init_hook": [],
+    "scripts": {
+      "install": "poetry install",
+      "main":    "poetry run python main.py"
     }
+  }
 }

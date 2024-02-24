@@ -1,7 +1,6 @@
 {
   "packages": [
-    "python@3.10",
-    "python310Packages.pip@latest"
+    "python@latest",
   ],
   "shell": {
     "init_hook": [

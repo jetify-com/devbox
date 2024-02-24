@@ -1,21 +1,20 @@
 {
-    "packages": [
-        "wget",
-        "github:ggerganov/llama.cpp"
-    ],
-    "shell": {
-        "init_hook": null,
-        "scripts": {
-            "get_model": [
-                "mkdir -p models/vic7B/",
-                "cd models/vic7B",
-                "wget https://huggingface.co/eachadea/ggml-vicuna-7b-1.1/resolve/main/ggml-vic7b-q5_0.bin"
-            ],
-            "llama": "llama -m ./models/vic7B/ggml-vic7b-q5_0.bin -n 512 -p \"hello world\""
-        }
-    },
-    "nixpkgs": {
-        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  "packages": [
+    "github:ggerganov/llama.cpp",
+    "wget@latest"
+  ],
+  "shell": {
+    "init_hook": null,
+    "scripts": {
+      "get_model": [
+        "mkdir -p models/vic7B/",
+        "cd models/vic7B",
+        "wget https://huggingface.co/eachadea/ggml-vicuna-7b-1.1/resolve/main/ggml-vic7b-q5_0.bin"
+      ],
+      "llama": "llama -m ./models/vic7B/ggml-vic7b-q5_0.bin -n 512 -p \"hello world\""
     }
+  },
+  "nixpkgs": {
+    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+  }
 }
-

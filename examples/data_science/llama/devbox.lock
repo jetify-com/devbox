@@ -1,0 +1,49 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "wget@latest": {
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#wget",
+      "source": "devbox-search",
+      "version": "1.21.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4",
+              "default": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
