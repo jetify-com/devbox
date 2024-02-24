@@ -1,7 +1,7 @@
 {
   "packages": [
-    "curl@8.0",
-    "postgresql@14",
+    "curl@latest",
+    "postgresql@latest",
     "php@latest",
     "php83Extensions.pgsql@latest",
     "nginx@latest"
