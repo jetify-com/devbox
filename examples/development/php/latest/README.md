@@ -8,7 +8,7 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 ## Adding PHP to your Project
 
-Run `devbox add php php81Packages.composer`, or add the following to your `devbox.json`:
+Run `devbox add php php83Packages.composer`, or add the following to your `devbox.json`:
 
 ```json
     "packages": [
