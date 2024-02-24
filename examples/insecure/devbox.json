@@ -8,7 +8,7 @@
   "shell": {
     "init_hook": "echo 'Welcome to devbox!' > /dev/null",
     "scripts": {
-      "run_test_disabled": "node --version"
+      "run_test": "node --version"
     }
   }
 }
