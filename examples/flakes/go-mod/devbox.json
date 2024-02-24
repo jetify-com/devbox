@@ -1,6 +1,6 @@
 {
   "packages": [
-    "path:ory-cli"
+    "path:ory-cli#ory-cli"
   ],
   "shell": {
     "init_hook": null
