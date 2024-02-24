@@ -2,10 +2,48 @@
   "lockfile_version": "1",
   "packages": {
     "fnm@latest": {
-      "last_modified": "2023-05-06T16:57:53Z",
-      "resolved": "github:NixOS/nixpkgs/16b3b0c53b1ee8936739f8c588544e7fcec3fc60#fnm",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#fnm",
       "source": "devbox-search",
-      "version": "1.33.1"
+      "version": "1.35.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c72hyfsgrz5r6hxwybyl274lvz7i9y7g-fnm-1.35.1",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bkl5sz9ac6w7z3insbb2gvajgr75i7ni-fnm-1.35.1",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3l9khc6ckzgj81kgb8fv4j6ifx9mfz8w-fnm-1.35.1",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3y176slfix5xp9v35d2frp6980bz8z06-fnm-1.35.1",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "nodejs@16.8": {
       "last_modified": "2021-09-06T20:58:52Z",

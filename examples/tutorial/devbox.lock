@@ -1,0 +1,77 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "gh": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#gh",
+      "source": "nixpkg"
+    },
+    "glow": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#glow",
+      "source": "nixpkg"
+    },
+    "vim@latest": {
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#vim",
+      "source": "devbox-search",
+      "version": "9.1.0004",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/y3vw3apw0m6imbcx1gznx7sk3mq70rmb-vim-9.1.0004",
+              "default": true
+            },
+            {
+              "name": "xxd",
+              "path": "/nix/store/060fknqjv1r0xgn4jdqwcvwnvbhqd0q6-vim-9.1.0004-xxd",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cfi77h8sy9sz9x3ry419b58yxv887csw-vim-9.1.0004",
+              "default": true
+            },
+            {
+              "name": "xxd",
+              "path": "/nix/store/9jfb25qxxfw3f3xqdn78zk9qfl8v5gpq-vim-9.1.0004-xxd",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ids4w90k9g87r942yrbqrfvqni2916fq-vim-9.1.0004",
+              "default": true
+            },
+            {
+              "name": "xxd",
+              "path": "/nix/store/dk9zj3v5hi0hwbl4gkc4aa2538zhf1j1-vim-9.1.0004-xxd",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4229601k0hwih452nf5qvzn9cgj50vab-vim-9.1.0004",
+              "default": true
+            },
+            {
+              "name": "xxd",
+              "path": "/nix/store/bw5bx2lkwpkvxy5bxzzrzjb607v6ja8p-vim-9.1.0004-xxd",
+              "default": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
