@@ -1,9 +1,12 @@
 {
-  "packages": [
-    "poetry",
-    "stdenv.cc.cc.lib",
-    "cudatoolkit"
-  ],
+  "packages": {
+    "poetry":           "",
+    "stdenv.cc.cc.lib": "",
+    "cudatoolkit": {
+      "version":            "latest",
+      "excluded_platforms": ["aarch64-darwin", "x86_64-darwin"]
+    }
+  },
   "env": {},
   "shell": {
     "init_hook": [],

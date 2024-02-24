@@ -1,7 +1,5 @@
 {
-  "packages": [
-    "redis"
-  ],
+  "packages": ["redis@latest"],
   "shell": {
     "init_hook": "",
     "scripts": {

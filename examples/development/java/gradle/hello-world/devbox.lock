@@ -2,55 +2,161 @@
   "lockfile_version": "1",
   "packages": {
     "binutils@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#binutils",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#binutils",
+      "source": "devbox-search",
       "version": "2.40",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/9s260h7wxnb6lc5sdpm3mnkvnln9pymd-binutils-wrapper-2.40"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/72v83qn1k6pr4kxcjlryynskq3bj3h9d-binutils-wrapper-2.40",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/fhd1r6qk3i5nm68qiv9p8bs0xcc6iwzv-binutils-wrapper-2.40-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/cfsi6sp6b92w8y7m0mqp45pyhyy1r6vf-binutils-wrapper-2.40-info"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/1j5h9v08436jjm9lxpqyrcqbp40d13xi-binutils-wrapper-2.40"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/i9sn0vb5q396nd4pza5j8jlvx4481cl1-binutils-wrapper-2.40",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/fh8ygh36nak7y1bhp3mnk06nc4bq6kyk-binutils-wrapper-2.40-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/h72hdlcah3qb7xyn8i46bjppjynfg4j0-binutils-wrapper-2.40-info"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/7bac4s1gyclv2sxczqqvj6bmdg0h4xz2-binutils-wrapper-2.40"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2fa09bf11m22ya0q2kv8kh1ngfw2d7fp-binutils-wrapper-2.40",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/cnnhp31cib3izbc27sds4hq9havxihcs-binutils-wrapper-2.40-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/p8psm83qbdbvpgsbgglmdghbl7wm7awh-binutils-wrapper-2.40-info"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/cyb4bb44krf4ghw8qasa03sxi2k4g6a4-binutils-wrapper-2.40"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c53f8hagyblvx52zylsnqcc0b3nxbrcl-binutils-wrapper-2.40",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/hwki1x4g9i0i5msg19d36im92sczd0mf-binutils-wrapper-2.40-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/p939zzxcwdsqh6z50dw5wz5y6d2ibl0x-binutils-wrapper-2.40-info"
+            }
+          ]
         }
       }
     },
     "gradle@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#gradle",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#gradle",
       "source": "devbox-search",
-      "version": "8.3",
+      "version": "8.6",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/4xjjls354jr8w7083qxsrpfs1fgl80fj-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/f0l5fscvcl9yand9jfpk5icr2ac8qx2v-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/rxm9mpxswrd77fd6lafqcxaxizjlk1l4-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/qvp5jiik6q27qwlgiq80fx96wyh0r0nb-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6",
+              "default": true
+            }
+          ]
         }
       }
     },
     "jdk@19": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#jdk",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#jdk",
+      "source": "devbox-search",
       "version": "19.0.2+7",
       "systems": {
         "aarch64-linux": {
-          "store_path": "/nix/store/bdqk85ckifa9xjnz6p2hznc6y54156nn-openjdk-19.0.2+7"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4k80c38mzlndgwmhlh7w38ymnw0dbd8p-openjdk-19.0.2+7",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/c3vdy8163ga3za7dk0gcz4887l56537d-openjdk-19.0.2+7-debug"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/i2j4s6qcjzlya4ssi2dpf7qnxw2vsaxm-openjdk-19.0.2+7"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jz5ppnr1133z7a4vj53jd3a0gkv0iw6v-openjdk-19.0.2+7",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/bdwn277irnz2dyx5yypxzz55qff2if11-openjdk-19.0.2+7-debug"
+            }
+          ]
         }
       }
     }
