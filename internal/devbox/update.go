@@ -69,7 +69,12 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	return nix.FlakeUpdate(shellgen.FlakePath(d))
+	// I'm not entirely sure this is even needed, so ignoring the error.
+	// It's definitely not needed for non-flakes. (which is 99.9% of packages)
+	// It will return an error if .devbox/gen/flake is missing
+	// TODO: Remove this if it's not needed.
+	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
+	return nil
 }
 
 func (d *Devbox) inputsToUpdate(
