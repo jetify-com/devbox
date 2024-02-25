@@ -1,18 +1,18 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "caddy@latest": {
+    "redis@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#caddy",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#redis",
       "source": "devbox-search",
-      "version": "2.7.6",
+      "version": "7.2.4",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/8yh01f19xiq5gqdak9pbk9paj6mxwrvc-caddy-2.7.6",
+              "path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4",
               "default": true
             }
           ]
@@ -21,7 +21,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n7m5i7hqvr87f49f9vx97c1chc7bhs17-caddy-2.7.6",
+              "path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4",
               "default": true
             }
           ]
@@ -30,7 +30,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/2v5c154s2pp4mcb7687vfi1kr62fb6i8-caddy-2.7.6",
+              "path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4",
               "default": true
             }
           ]
@@ -39,7 +39,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/qwaf4dkar63z1yrhhz6wyjpgsgafw0a5-caddy-2.7.6",
+              "path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4",
               "default": true
             }
           ]

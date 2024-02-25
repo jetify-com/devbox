@@ -2,23 +2,63 @@
   "lockfile_version": "1",
   "packages": {
     "nginx@latest": {
-      "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#nginx",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#nginx",
       "source": "devbox-search",
       "version": "1.24.0",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/prz9lx44d3hicpmsri5rm9qk44r79ng8-nginx-1.24.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/188s0g20lmxn4zdcfwahql7h2jzkcgaj-nginx-1.24.0",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/a3gms7r11g56kvxlb4fpwac9y6sm51sa-nginx-1.24.0-doc"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/b2v5yw11gmywahlyhbqajml7hjdkhsar-nginx-1.24.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1k0jjpzk8sbk6bcwlxvlhyyz0p1abf30-nginx-1.24.0",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/qqpi6w0wb6i9gnhhb3q7ypaaj77j0rrn-nginx-1.24.0-doc"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/1nyjvgj3hbhck80wkwi0h18561xbp3sy-nginx-1.24.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/07cp4pma5zqbaylwn6ajh5wfma2x75lp-nginx-1.24.0",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/hhc6kwnvs508nqp62yn8iqd47nhbzwvf-nginx-1.24.0-doc"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/vc66rk5b86lx1myxr18qkgzha0fjx2ks-nginx-1.24.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/30s15lisqd796fs7ffwv4cxqryhkamh8-nginx-1.24.0",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/xzff10qhh3c4z61c3q1kjljycyrvr7cx-nginx-1.24.0-doc"
+            }
+          ]
         }
       }
     }

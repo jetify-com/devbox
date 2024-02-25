@@ -1,23 +1,23 @@
 {
-    "packages": [
-        "python310",
-        "python310Packages.pip",
-        "python310Packages.pylint",
-        "python310Packages.black",
-        "python310Packages.isort",
-        "python310Packages.mypy",
-        "temporalite",
-        "temporal-cli"
+  "packages": [
+    "python310Packages.pip",
+    "python310Packages.pylint",
+    "python310Packages.black",
+    "python310Packages.isort",
+    "python310Packages.mypy",
+    "temporalite",
+    "temporal-cli",
+    "python310@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Setting flags to allow Python C extension compilation'",
+      "export NIX_CFLAGS_COMPILE=\"$NIX_CFLAGS_COMPILE $(cat $(dirname $(command -v clang))/../nix-support/libcxx-cxxflags)\"",
+      "echo 'Setting up virtual environment'",
+      ". $VENV_DIR/bin/activate"
     ],
-    "shell": {
-        "init_hook": [
-            "echo 'Setting flags to allow Python C extension compilation'",
-            "export NIX_CFLAGS_COMPILE=\"$NIX_CFLAGS_COMPILE $(cat $(dirname $(command -v clang))/../nix-support/libcxx-cxxflags)\"",
-            "echo 'Setting up virtual environment'",
-            ". $VENV_DIR/bin/activate"
-        ],
-        "scripts": {
-            "start-temporal": "temporalite start --namespace default --log-level warn --log-format pretty --ephemeral"
-        }
+    "scripts": {
+      "start-temporal": "temporalite start --namespace default --log-level warn --log-format pretty --ephemeral"
     }
+  }
 }

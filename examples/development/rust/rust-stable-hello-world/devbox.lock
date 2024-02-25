@@ -2,37 +2,73 @@
   "lockfile_version": "1",
   "packages": {
     "libiconv@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#libiconv",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#libiconv",
       "source": "devbox-search",
-      "version": "50",
+      "version": "2.38",
       "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/43jk41xdl1z3f96yskrc6i7y8i0bp2dn-libiconv-50"
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g531k3yl8rbcv7g0vxhkr28wcwnqfr1l-glibc-iconv-2.38",
+              "default": true
+            }
+          ]
         },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/lbz6562d7h0bnrab89pa9s6r1igw54ir-libiconv-50"
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/r9ar62xlmqismp2f4s4l6inhixmb1a6z-glibc-iconv-2.38",
+              "default": true
+            }
+          ]
         }
       }
     },
     "rustup@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#rustup",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#rustup",
       "source": "devbox-search",
       "version": "1.26.0",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/czgq818h808rv819mq84rj74b7kqxli6-rustup-1.26.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ipk044pwn4bqpf4sizdi401hrsg1k7nw-rustup-1.26.0",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/fjpdncxs4bzhd2a46xc0khydj737zpgi-rustup-1.26.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/41jqx3sj0wwy4jzslcn2577s5cn499pi-rustup-1.26.0",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/8ca304imc6101rii0l4vjfpfywc2vacq-rustup-1.26.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/0y4kar3ffvqxri118m6n91g5wwf18947-rustup-1.26.0",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/hpjl2zcps8l0h928z0xmhzawanrks22j-rustup-1.26.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z9qf2b4a2098zvb9qvgf2yb8k0l3w4r2-rustup-1.26.0",
+              "default": true
+            }
+          ]
         }
       }
     }

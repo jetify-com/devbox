@@ -1,0 +1,67 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "python310@latest": {
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python310",
+      "source": "devbox-search",
+      "version": "3.10.13",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/sjaac1kz2w3v11y46gb4qmm6haavn9l7-python3-3.10.13",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jizydgmn8vr8zfqkbjw7vdp7p8c0zirg-python3-3.10.13",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/id4zmd37pdbr4zbgaa052vndk40pshrn-python3-3.10.13-debug"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bv85yjjkmrc67yqc8a35qnl6h7z0a82g-python3-3.10.13",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/qjk5lc0c7spkxbqvyzmil58plrvlkvaj-python3-3.10.13",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/xcrklp0kskyldwb07dvy9aw1vysfil2c-python3-3.10.13-debug"
+            }
+          ]
+        }
+      }
+    },
+    "python310Packages.pip": {
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#python310Packages.pip",
+      "source": "nixpkg"
+    },
+    "stdenv.cc.cc.lib": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62#stdenv.cc.cc.lib",
+      "source": "nixpkg"
+    }
+  }
+}

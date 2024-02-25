@@ -2,22 +2,62 @@
   "lockfile_version": "1",
   "packages": {
     "nodejs@16": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_16",
+      "last_modified": "2023-11-17T14:14:56Z",
+      "resolved": "github:NixOS/nixpkgs/a71323f68d4377d12c04a5410e214495ec598d4c#nodejs_16",
       "source": "devbox-search",
       "version": "16.20.2",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/xps0q3f7xbxqpdm4xmlz1drv6qyyb4a5-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/h5jbaplxw31idlxxbylhsrb9gj78sf19-nodejs-16.20.2",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/rv1afi7lr4cc2408k4pq0h9vfvcijpm4-nodejs-16.20.2-libv8"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/qvxwbmwxacc1jlsnqyy45vnzdfbagns0-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/y45jykjwjia6mn18fn6rzcv584wbfhbb-nodejs-16.20.2",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/spgywd3zcw2fmivjr4bgk2iw7ivjisqb-nodejs-16.20.2-libv8"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/6fipdgsh4vmixx3zficbknjmw7k4n4hm-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/0dg1ysgnbh1hrh5cw0wqd6l4hn0mksk3-nodejs-16.20.2",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/7vb82mbm500ilkq285w04c4bvg78zyn6-nodejs-16.20.2-libv8"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/ds8p6kc8n165gy4f3x72dkpx4aizxjaw-nodejs-16.20.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/fmgj6cxiryan0b7ggmi52zdrzbfv3d25-nodejs-16.20.2",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/m3453yc9sw7699jvrr29lm8nsqqlbryp-nodejs-16.20.2-libv8"
+            }
+          ]
         }
       }
     }
