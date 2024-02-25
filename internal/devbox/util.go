@@ -24,26 +24,32 @@ import (
 // environment.
 func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) error {
 	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
-	installable, err := pkg.Installable()
+	installables, err := pkg.Installables()
 	if err != nil {
 		return err
 	}
-
 	profilePath, err := utilityNixProfilePath()
 	if err != nil {
 		return err
 	}
 
-	return nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
-		Installable: installable,
-		ProfilePath: profilePath,
-		Writer:      d.stderr,
-	})
+	for _, installable := range installables {
+
+		err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+			Installable: installable,
+			ProfilePath: profilePath,
+			Writer:      d.stderr,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
-	installable, err := pkg.Installable()
+	installables, err := pkg.Installables()
 	if err != nil {
 		return err
 	}
@@ -58,9 +64,16 @@ func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 		return err
 	}
 
-	for i, profileItem := range profile {
-		if profileItem.MatchesUnlockedReference(installable) {
-			return nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
+	for _, installable := range installables {
+		for i, profileItem := range profile {
+			if profileItem.MatchesUnlockedReference(installable) {
+				err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
+				if err != nil {
+					return err
+				}
+				// We are done with this installable. Now, remove the next installable:
+				break
+			}
 		}
 	}
 	return nil
