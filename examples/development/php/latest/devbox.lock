@@ -1,0 +1,138 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "php83Extensions.imagick@latest": {
+      "last_modified": "2024-02-16T04:19:51Z",
+      "resolved": "github:NixOS/nixpkgs/5e55f0bb65124b05d0a52e164514c03596023634#php83Extensions.imagick",
+      "source": "devbox-search",
+      "version": "3.7.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bd5rqgdwhxqacl3qjxwh35h0j4j16vwr-php-imagick-3.7.0",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vskrg93njklsxy2byabhmd47cg0y1n20-php-imagick-3.7.0",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wcw1d9lhad2nx229d81h8df3jgrvnvq5-php-imagick-3.7.0",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wj3fr33lnlhla148235qqdbq6iw2nszd-php-imagick-3.7.0",
+              "default": true
+            }
+          ]
+        }
+      }
+    },
+    "php83Extensions.xdebug@latest": {
+      "last_modified": "2024-02-16T04:19:51Z",
+      "resolved": "github:NixOS/nixpkgs/5e55f0bb65124b05d0a52e164514c03596023634#php83Extensions.xdebug",
+      "source": "devbox-search",
+      "version": "3.3.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/psykrfyzncx3y4b36731bm2xikynp3h6-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wh573r9b83d0cf9qldai9qbd8p3figxh-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l38w9v9cigxx6czi3dmsgslcjyfbda62-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g5hfjgd00n7w31ccmydyhjgrqc4cp9rg-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
+        }
+      }
+    },
+    "php@latest": {
+      "last_modified": "2024-02-16T04:19:51Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/5e55f0bb65124b05d0a52e164514c03596023634#php83",
+      "source": "devbox-search",
+      "version": "8.3.3",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/bv8bflifyqabsprqcb5mazjac6kg68xa-php-with-extensions-8.3.3",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a2i586p9b1blqgi576iazysqkhcbrprl-php-with-extensions-8.3.3",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/j3zxdajivi55ngc51p0658crvf4aps21-php-with-extensions-8.3.3",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/0a0pxd336ldm8gir7ii3gii2jixbj8i5-php-with-extensions-8.3.3",
+              "default": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

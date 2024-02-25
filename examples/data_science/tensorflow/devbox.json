@@ -1,8 +1,8 @@
 {
   "packages": [
-    "python310",
     "python310Packages.pip",
-    "stdenv.cc.cc.lib"
+    "stdenv.cc.cc.lib",
+    "python310@latest"
   ],
   "shell": {
     "init_hook": [

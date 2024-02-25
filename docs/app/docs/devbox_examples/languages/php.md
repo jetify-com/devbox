@@ -4,18 +4,18 @@ title: PHP
 
 PHP projects can manage most of their dependencies locally with `composer`. Some PHP extensions, however, need to be bundled with PHP at compile time.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/php8.1)
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/latest)
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
 
 ## Adding PHP to your Project
 
-Run `devbox add php php81Packages.composer`, or add the following to your `devbox.json`:
+Run `devbox add php php83Packages.composer`, or add the following to your `devbox.json`:
 
 ```json
     "packages": [
-        "php@8.1",
-        "php81Packages.composer@latest
+        "php@latest",
+        "php83Packages.composer@latest
     ]
 ```
 
@@ -25,13 +25,13 @@ If you want a different version of PHP for your project, you can search for avai
 
 You can compile additional extensions into PHP by adding them to `packages` in your `devbox.json`. Devbox will automatically ensure that your extensions are included in PHP at compile time.
 
-For example -- to add the `ds` extension, run `devbox add php81Extensions.ds`, or update your packages to include the following:
+For example -- to add the `ds` extension, run `devbox add php83Extensions.ds`, or update your packages to include the following:
 
 ```json
     "packages": [
-        "php@8.1",
-        "php81Packages.composer",
-        "php81Extensions.ds"
+        "php@latest",
+        "php83Packages.composer",
+        "php83Extensions.ds"
     ]
 ```
 

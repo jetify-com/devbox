@@ -1,18 +1,17 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "caddy@latest": {
+    "wget@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#caddy",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#wget",
       "source": "devbox-search",
-      "version": "2.7.6",
+      "version": "1.21.4",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/8yh01f19xiq5gqdak9pbk9paj6mxwrvc-caddy-2.7.6",
+              "path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4",
               "default": true
             }
           ]
@@ -21,7 +20,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n7m5i7hqvr87f49f9vx97c1chc7bhs17-caddy-2.7.6",
+              "path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4",
               "default": true
             }
           ]
@@ -30,7 +29,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/2v5c154s2pp4mcb7687vfi1kr62fb6i8-caddy-2.7.6",
+              "path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4",
               "default": true
             }
           ]
@@ -39,7 +38,7 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/qwaf4dkar63z1yrhhz6wyjpgsgafw0a5-caddy-2.7.6",
+              "path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4",
               "default": true
             }
           ]

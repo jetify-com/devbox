@@ -1,15 +1,15 @@
 {
-    "packages": [
-        "vim",
-        "gh",
-        "glow"
+  "packages": [
+    "gh",
+    "glow",
+    "vim@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "clear && PAGER=cat glow README.md"
     ],
-    "shell": {
-        "init_hook": [
-            "clear && PAGER=cat glow README.md"
-        ],
-        "scripts": {
-            "readme": "clear && PAGER=cat glow README.md"
-        }
+    "scripts": {
+      "readme": "clear && PAGER=cat glow README.md"
     }
+  }
 }

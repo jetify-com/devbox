@@ -1,10 +1,10 @@
 {
   "packages": [
-    "curl@8.0",
-    "php@8.1",
-    "php81Extensions.pgsql@latest",
-    "apache@2.4",
-    "postgresql@14"
+    "curl@latest",
+    "php@latest",
+    "php83Extensions.pgsql@latest",
+    "apache@latest",
+    "postgresql@latest"
   ],
   "env": {
     "PGHOST": "/tmp/devbox/lapp",
