@@ -36,6 +36,7 @@
       "lint":            "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":             "scripts/gofumpt.sh",
       "test":            "go test -race -cover ./...",
+      "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go",
       "tidy":            "go mod tidy",
     },

@@ -75,7 +75,6 @@ jobs:
       - uses: crate-ci/typos@v1.16.26
 
   golangci-lint:
-    needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -84,12 +83,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # This can be reanabled once released version supports runx
-      # and we can remove needs: build-devbox
-      # - name: Install devbox
-      #   uses: jetpack-io/devbox-install-action@v0.8.0
-      #   with:
-      #     enable-cache: true
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.8.0
+        with:
+          enable-cache: true
 
       - name: Mount golang cache
         uses: actions/cache@v4
@@ -99,15 +96,6 @@ jobs:
             ~/.cache/go-build
             ~/go/pkg
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
-
-      - name: Download devbox
-        uses: actions/download-artifact@v4
-        with:
-          name: devbox-${{ runner.os }}-${{ runner.arch }}
-      - name: Add devbox to path
-        run: |
-          chmod +x ./devbox
-          sudo mv ./devbox /usr/local/bin/
 
       - run:  devbox run lint
 
@@ -121,7 +109,7 @@ jobs:
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
-        run-project-tests: ["project-tests", "project-tests-off"]
+        run-project-tests: ["project-tests-only", "project-tests-off"]
         # Run tests on:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
         # 2. nix 2.19.2: version before nix profile changes
@@ -130,16 +118,19 @@ jobs:
         exclude:
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
-          - is-main: "is-main"
-            run-project-tests: "project-tests-off"
-          - run-project-tests: "project-tests"
+          - run-project-tests: "project-tests-only"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
+    env:
+      # For devbox.json tests, we default to non-debug mode since the debug output is less useful than for unit testscripts.
+      # But we allow overriding via inputs.example-debug
+      DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
+      DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
     steps:
       - name: Maximize build disk space
-        uses: easimon/maximize-build-space@v8
+        uses: easimon/maximize-build-space@v10
         if: matrix.os == 'ubuntu-latest'
         with:
           root-reserve-mb: 32768
@@ -156,10 +147,6 @@ jobs:
             ~/.cache/go-build
             ~/go/pkg
           key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
-      # TODO Use devbox directly
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: ./go.mod
       - name: Install additional shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -169,20 +156,12 @@ jobs:
             brew update
             brew install dash zsh
           fi
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.8.0
         with:
-          logger: pretty
-          extra-conf: experimental-features = ca-derivations fetch-closure
-          nix-package-url: https://releases.nixos.org/nix/nix-${{ matrix.nix-version }}/nix-${{ matrix.nix-version }}-${{ runner.arch == 'X64' && 'x86_64' || 'aarch64' }}-${{ runner.os == 'macOS' && 'darwin' || 'linux' }}.tar.xz
-      - name: Run tests
-        env:
-          # For devbox.json tests, we default to non-debug mode since the debug output is less useful than for unit testscripts.
-          # But we allow overriding via inputs.example-debug
-          DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
-          DEVBOX_RUN_PROJECT_TESTS: ${{ matrix.run-project-tests == 'project-tests' && '1' || '0' }}
-          # Used in `go test -timeout` flag. Needs a value that time.ParseDuration can parse.
-          DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
+          enable-cache: true
+      - name: Run fast tests
+        if: matrix.run-project-tests == 'project-tests-off'
         run: |
           echo "::group::Nix version"
           nix --version
@@ -193,7 +172,10 @@ jobs:
           echo "::group::Resolved Nix config"
           nix show-config --extra-experimental-features nix-command
           echo "::endgroup::"
-          go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          devbox run test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+      - name: Run project (slow) tests
+        if:  matrix.run-project-tests == 'project-tests-only'
+        run: devbox run test-projects-only
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     needs: build-devbox
