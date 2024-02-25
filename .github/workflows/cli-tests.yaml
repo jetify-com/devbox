@@ -147,10 +147,6 @@ jobs:
             ~/.cache/go-build
             ~/go/pkg
           key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
-      # TODO Use devbox directly
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: ./go.mod
       - name: Install additional shells (dash, zsh)
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -176,7 +172,7 @@ jobs:
           echo "::group::Resolved Nix config"
           nix show-config --extra-experimental-features nix-command
           echo "::endgroup::"
-          go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          devbox run test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
         run: devbox run test-projects-only
