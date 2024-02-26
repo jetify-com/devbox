@@ -116,8 +116,10 @@ jobs:
         # 2. latest nix version (note, 2.20.1 introduced a new profile change)
         nix-version: ["2.12.0", "2.19.2", "2.20.1"]
         exclude:
+          # Dont run mac tests on not-main unless explicitly requested.
           - is-main: "not-main"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
+          # Only runs project tests on macos if explicitly requested
           - run-project-tests: "project-tests-only"
             os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
 
@@ -172,7 +174,7 @@ jobs:
           echo "::group::Resolved Nix config"
           nix show-config --extra-experimental-features nix-command
           echo "::endgroup::"
-          devbox run test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          devbox run go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
         run: devbox run test-projects-only
