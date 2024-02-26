@@ -14,11 +14,11 @@ type githubPlugin struct {
 	RefLike
 }
 
-func newGithubPlugin(ref RefLike) (*githubPlugin, error) {
+func newGithubPlugin(ref RefLike) *githubPlugin {
 	if ref.Ref.Ref == "" && ref.Rev == "" {
 		ref.Ref.Ref = "master"
 	}
-	return &githubPlugin{RefLike: ref}, nil
+	return &githubPlugin{RefLike: ref}
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
