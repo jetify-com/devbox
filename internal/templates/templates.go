@@ -46,7 +46,7 @@ var templates = map[string]string{
 	"node-pnpm":       "examples/development/nodejs/nodejs-pnpm/",
 	"node-typescript": "examples/development/nodejs/nodejs-typescript/",
 	"node-yarn":       "examples/development/nodejs/nodejs-yarn/",
-	"php":             "examples/development/php/php8.1/",
+	"php":             "examples/development/php/latest/",
 	"postgres":        "examples/databases/postgres/",
 	"python-pip":      "examples/development/python/pip/",
 	"python-pipenv":   "examples/development/python/pipenv/",

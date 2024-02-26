@@ -2,23 +2,63 @@
   "lockfile_version": "1",
   "packages": {
     "mysql80@latest": {
-      "last_modified": "2024-01-14T03:55:27Z",
+      "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/dd5621df6dcb90122b50da5ec31c411a0de3e538#mysql80",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#mysql80",
       "source": "devbox-search",
-      "version": "8.0.35",
+      "version": "8.0.36",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/pimnmdghivjx1xbym1p0rcqqcr522pxd-mysql-8.0.35"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/lhg44jksdla9j4m3g6wmlrrb55j5l3y8-mysql-8.0.36-static"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/w3c48ad6didigbvahxhcjyjjda0g01vh-mysql-8.0.35"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/29zyqbla4d9ax6hyv4myxdiy2xb109g5-mysql-8.0.36-static"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/y4lza0lv90fggfrc5pak0q0i3x8jjav5-mysql-8.0.35"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/s030q0ibyw32sa755qygi8m0zyf8qn8s-mysql-8.0.36-static"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/ca1q2q9h5k3hs8shivgmh9bfi51hw97p-mysql-8.0.35"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/x8rlbq0z80nqldwvxs4w2rblp3yjwn0z-mysql-8.0.36-static"
+            }
+          ]
         }
       }
     }

@@ -2,22 +2,46 @@
   "lockfile_version": "1",
   "packages": {
     "dotnet-sdk@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#dotnet-sdk",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#dotnet-sdk",
       "source": "devbox-search",
-      "version": "6.0.412",
+      "version": "6.0.418",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/36llvbismbz4xkjv98m20pm2hlabhyq6-dotnet-sdk-6.0.412"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cihwkz2j3rj798kvjczp0wyy08yqrjk1-dotnet-sdk-6.0.418",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/8ym2xmbqrqb9cy7axicnp510dc5wp5nf-dotnet-sdk-6.0.412"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2k701f6xriajl3hi5az6sz8pw7yjdbl3-dotnet-sdk-6.0.418",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/bbn41r9yb1df9hdx6in34yn4wjh0s8dy-dotnet-sdk-6.0.412"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/03xnhsz61h2m83sj4cm3ag4ck5wwy7ji-dotnet-sdk-6.0.418",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/cfwscwh904f689glcgsslghl1svapbn6-dotnet-sdk-6.0.412"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/7523v2ypcvgmli44gsfvrx2mf33syp07-dotnet-sdk-6.0.418",
+              "default": true
+            }
+          ]
         }
       }
     }

@@ -2,36 +2,136 @@
   "lockfile_version": "1",
   "packages": {
     "gradle@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
+      "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#gradle",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#gradle",
       "source": "devbox-search",
-      "version": "8.3",
+      "version": "8.6",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/4xjjls354jr8w7083qxsrpfs1fgl80fj-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/f0l5fscvcl9yand9jfpk5icr2ac8qx2v-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/rxm9mpxswrd77fd6lafqcxaxizjlk1l4-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/qvp5jiik6q27qwlgiq80fx96wyh0r0nb-gradle-8.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6",
+              "default": true
+            }
+          ]
         }
       }
     },
     "jdk@17": {
-      "last_modified": "2023-06-29T16:20:38Z",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#jdk17",
-      "version": "17.0.7+7"
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#jdk17",
+      "source": "devbox-search",
+      "version": "17.0.10",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cj4knn6zm57bgxqm7xyspyyf65inzq43-zulu-ca-jdk-17.0.10",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/d5g0pn5mnn02p8nsyfdr8z0557jr1civ-zulu-ca-jdk-17.0.10",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "mysql80@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#mysql80",
-      "version": "8.0.33"
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#mysql80",
+      "source": "devbox-search",
+      "version": "8.0.36",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/lhg44jksdla9j4m3g6wmlrrb55j5l3y8-mysql-8.0.36-static"
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/29zyqbla4d9ax6hyv4myxdiy2xb109g5-mysql-8.0.36-static"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/s030q0ibyw32sa755qygi8m0zyf8qn8s-mysql-8.0.36-static"
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/x8rlbq0z80nqldwvxs4w2rblp3yjwn0z-mysql-8.0.36-static"
+            }
+          ]
+        }
+      }
     }
   }
 }

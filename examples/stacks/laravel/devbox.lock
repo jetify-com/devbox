@@ -2,133 +2,307 @@
   "lockfile_version": "1",
   "packages": {
     "mariadb@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#mariadb_110",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#mariadb_110",
       "source": "devbox-search",
-      "version": "11.0.3",
+      "version": "11.0.4",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/d5nb44vw8yy22lc21ld75nndmn9c3cgr-mariadb-server-11.0.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/k29pbnr3qa0npl65hhx7zzwsv9jg2zcj-mariadb-server-11.0.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/fk8x76797swrpha11z4hqljw3w57840g-mariadb-server-11.0.4-man",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/sz5n9bkcjxklk4jd0p5h26yi5j79wh7h-mariadb-server-11.0.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3i23xqjc57v79jb8n218rbaknln65sw5-mariadb-server-11.0.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/2584cazgzhq4qig39kniz68z8s71rwx2-mariadb-server-11.0.4-man",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/4l6h83flncplm3kmry1w08msyy7b7vdw-mariadb-server-11.0.3"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z13nwdm01gav16nhdz553vjghb7l34gk-mariadb-server-11.0.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/v12rb0yvvy0swlym9rxk4jcl3c12mb54-mariadb-server-11.0.4-man",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/047g9nxp6jb2bqj1f53qk86sjzrscbmj-mariadb-server-11.0.3"
-        }
-      }
-    },
-    "nginx@latest": {
-      "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#nginx",
-      "source": "devbox-search",
-      "version": "1.24.0",
-      "systems": {
-        "aarch64-darwin": {
-          "store_path": "/nix/store/prz9lx44d3hicpmsri5rm9qk44r79ng8-nginx-1.24.0"
-        },
-        "aarch64-linux": {
-          "store_path": "/nix/store/b2v5yw11gmywahlyhbqajml7hjdkhsar-nginx-1.24.0"
-        },
-        "x86_64-darwin": {
-          "store_path": "/nix/store/1nyjvgj3hbhck80wkwi0h18561xbp3sy-nginx-1.24.0"
-        },
-        "x86_64-linux": {
-          "store_path": "/nix/store/vc66rk5b86lx1myxr18qkgzha0fjx2ks-nginx-1.24.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3dar9ams7hgcws5494jp9akjhakczsmb-mariadb-server-11.0.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/xgmra2d3lq52lx2kkw4y862s07k9dpx4-mariadb-server-11.0.4-man",
+              "default": true
+            }
+          ]
         }
       }
     },
     "nodejs@18": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#nodejs_18",
+      "last_modified": "2024-02-15T12:53:33Z",
+      "resolved": "github:NixOS/nixpkgs/085589047343aad800c4d305cf7b98e8a3d51ae2#nodejs_18",
       "source": "devbox-search",
-      "version": "18.17.1",
+      "version": "18.19.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/xpqj3zg5lx25abv9qybiqd7gcs8b81fp-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/85siw3p53ki5lldcshgah2rrlrcgi527-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/x482ciyp76afmsr9qsdan716lvza8ndb-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/svc3bwhi6i1jd5387w8dwps23s7d4a62-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/v15fm8wlssnfg1vygh9xiw7f2z99v4vn-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/gvbr6wm4b0749gyfgziq5q2zn8msg2pw-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/kjsf1qk9w4rknr02silyfq4lxlkh53xq-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2a5cxm45616hxg9ynfp25mxa0xinpwr3-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/84340aw7k8nc3fcb0cm79bl1vvbjydl5-nodejs-18.19.1-libv8"
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/51nhk6ycfnj895q07v94jsrwmk2jmz8j-nodejs-18.17.1"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1ihd9lyhn8q73n9s3iaxbilx4mn4nc5b-nodejs-18.19.1",
+              "default": true
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/1ivbwnpcr46sdncfry4yz61k96587faf-nodejs-18.19.1-libv8"
+            }
+          ]
         }
       }
     },
     "php81Extensions.xdebug@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Extensions.xdebug",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#php81Extensions.xdebug",
       "source": "devbox-search",
-      "version": "3.2.2",
+      "version": "3.3.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/isd181vs56d55xarvlzqr0cl2c65skq7-php-xdebug-3.2.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ybcs3bpwkjaaxd2wlqh230vpyk3fd1ss-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/c0ij58mr8mqcbx6kkrs1wa6x0m433hzc-php-xdebug-3.2.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z83cq1nyr3ab43kzrf431dhf3z6rfgdf-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/v4i2qbb7aivj3x4i7ipjg1vnfdc3ynvw-php-xdebug-3.2.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vbbcbid35ccflc3mgyaknh0m58cr712d-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/q6gp1rn2p6319l8rbwk0arvbbi8kx6bg-php-xdebug-3.2.2"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/b91hzmbzcglzi064ga8y2x8zrqd1d2kk-php-xdebug-3.3.1",
+              "default": true
+            }
+          ]
         }
       }
     },
     "php81Packages.composer@latest": {
-      "last_modified": "2023-08-30T00:25:28Z",
-      "resolved": "github:NixOS/nixpkgs/a63a64b593dcf2fe05f7c5d666eb395950f36bc9#php81Packages.composer",
+      "last_modified": "2024-02-16T14:24:08Z",
+      "resolved": "github:NixOS/nixpkgs/c7763249f02b7786b4ca36e13a4d7365cfba162f#php81Packages.composer",
       "source": "devbox-search",
-      "version": "2.5.8",
+      "version": "2.6.6",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/7hxmkxa9bmaplyy1ixl0yxv3j0qvxvc3-php-composer-2.5.8"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pz81gn9xk9bm836qryay2wjzjh94c7b3-composer-2.6.6",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/vwrbpz9wr7blr7alx0fl3x79ym3jbdqa-php-composer-2.5.8"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wkkz4s0dcqzhc8p0ahm1bjr1y5qd1hr8-composer-2.6.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/fjy357jpj9q2bfahsgnak4mrh8y07izw-php-composer-2.5.8"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/g9vkwdzi6185r9864csmqgx5whia91g1-composer-2.6.6",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/6w2vrfjdwhr3mj1magr2rmbycln379f8-php-composer-2.5.8"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jnxixmrdvlj66jfqwy6lpk5fxwm9cdw9-composer-2.6.6",
+              "default": true
+            }
+          ]
         }
       }
     },
     "php@8.1": {
-      "last_modified": "2023-09-04T16:24:30Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/3c15feef7770eb5500a4b8792623e2d6f598c9c1#php81",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#php81",
       "source": "devbox-search",
-      "version": "8.1.23",
+      "version": "8.1.27",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/lb1kvhs6brfphpmxa36kn9fki89ijx7f-php-with-extensions-8.1.23"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/hxam94q1czcx9yh57hlk943h5h2vppkz-php-with-extensions-8.1.27",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/2f935v7hg56faxdp0myam0v8ppdidrd1-php-with-extensions-8.1.23"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/mdg9mg0yv3x45irkvqr01a24k82nhk5s-php-with-extensions-8.1.27",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/v5fdxi8pasc8mxacmg76q9qzqpsr04w6-php-with-extensions-8.1.23"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/j9zvid90fd9b4670lw89ml7rlm6gcmmb-php-with-extensions-8.1.27",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/ky5w9izkk4yyhni3nh31nicmcfch5ndz-php-with-extensions-8.1.23"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kwy1az3h0bg5zs1smiksvilf449w8yh1-php-with-extensions-8.1.27",
+              "default": true
+            }
+          ]
         }
       }
     },
     "redis@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#redis",
-      "version": "7.0.11"
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#redis",
+      "source": "devbox-search",
+      "version": "7.2.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4",
+              "default": true
+            }
+          ]
+        }
+      }
     }
   }
 }

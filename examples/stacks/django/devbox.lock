@@ -2,27 +2,363 @@
   "lockfile_version": "1",
   "packages": {
     "openssl@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#openssl",
-      "version": "3.0.8"
+      "last_modified": "2024-02-20T22:56:03Z",
+      "resolved": "github:NixOS/nixpkgs/5eeded8e3518579daa13887297efa79f5be74b41#openssl",
+      "source": "devbox-search",
+      "version": "3.0.13",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/qmk76w9w3av54k6j1glgbc42i2grl1g7-openssl-3.0.13-bin",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/6dqb6vlgwj2vjlqfra40mdszw88dmwy1-openssl-3.0.13-man",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/97gixfjyghg4njrylhpzs64m5bhslnd6-openssl-3.0.13-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/vsgi225xvqhrka82l7r5awn7myi6vsi1-openssl-3.0.13-doc"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/xz5mqc76y815g71y6fh68f9wld9ddw22-openssl-3.0.13"
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/pk1ykxbkbkmxp3i0c7fkqsqkvhjrfmkz-openssl-3.0.13-bin",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/z9ag0fmfy1fbrgqd096cq3hbw7mvfqg3-openssl-3.0.13-man",
+              "default": true
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/0s0y3y6bca91akkr8yyqncmgqkxyrngk-openssl-3.0.13"
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/4d8d5md3gdywj9mqgv80x1mp6n2gk3bf-openssl-3.0.13-debug"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/3k7wg1lfy79v1g3n47pa34fjvrf1nqck-openssl-3.0.13-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/y5mp15ph8x4jxv7wl3ip98x05vhh0lf6-openssl-3.0.13-doc"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/1wf2nicq5f8ddzfkjy90qa4fx0ryzxvb-openssl-3.0.13-bin",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/96pfjyhk9h1cxaqk8vnw6x61whf90fkw-openssl-3.0.13-man",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/m8y9m2s56v14syy6h97vbfvqwf095hjg-openssl-3.0.13-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/80mv5swmp32b9kp5d30dry69mm1ryq6h-openssl-3.0.13-doc"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/fb5m7g1s45f4gckqf97wixiybmfql5qp-openssl-3.0.13"
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/68xavaskkydpk2bgzg4xhzx8rnhsqf05-openssl-3.0.13-bin",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/7fp8zyrvm887hsjw5iqxi6mwgdhkiyjc-openssl-3.0.13-man",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/rz5nz6ykb0rbqkwkglkq3h92qrk8mnzr-openssl-3.0.13-debug"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/06ixhcln8jli5mffl6d1r93jx25hy9zc-openssl-3.0.13-dev"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/khk92kz5idqmirbg99ywqbr2bqijfnpv-openssl-3.0.13-doc"
+            },
+            {
+              "name": "out",
+              "path": "/nix/store/h24v1xs4i9l3k18ygxvs62361rl77804-openssl-3.0.13"
+            }
+          ]
+        }
+      }
     },
     "postgresql@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
+      "last_modified": "2024-02-22T01:07:56Z",
       "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#postgresql",
-      "version": "14.7"
+      "resolved": "github:NixOS/nixpkgs/98b00b6947a9214381112bdb6f89c25498db4959#postgresql",
+      "source": "devbox-search",
+      "version": "15.5",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6cn0kmav77wba54xibfg9clqzbpan74b-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/588y60371pqh3vc9rasjawfwmchpac9d-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/dxivb9x0iwssqzz8wsswis9q9r1sjm18-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/dbc9hjh5ll5pjgxwl3r9nymdxw7sw8cl-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kvpjir3cjbijs2w8b20yzqjq0nsd63mp-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/4kcdjf0gg9jl4n9kxvj5iq92byry6b7l-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/srqwd7alwglrsjclsfnrlx01n69iyy9s-postgresql-15.5-debug"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/5fn32sdar6nk5ha9d5zb6rfpndgdbg68-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/addi70hgggl75jm74p0s435bfaay6m1w-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/v5ym92k3kss1af7n1788653vis1d6qsc-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/x9hm4ip61cichmhzhzpykzypn3pqkh01-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/nd1mhmgpm9w5rfpiibg6m7g4difpl5af-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/q8lijs7rmlkx4qssmh0sjyy77f41y2jh-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vvd65gjggb2n8wxbsk1cyxx0wpfidagf-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/88jhk99imah1v19xqkldi1lfyaayni71-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/w109qgbl14afcg5akhnahf8r0hkdqqb6-postgresql-15.5-lib"
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/ia44jr4m4jyf3a48qwpf6vgrr95jig46-postgresql-15.5-debug"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/7vfnvfb6scmf23y6yj5zx8p5r3wsgnq5-postgresql-15.5-doc"
+            }
+          ]
+        }
+      }
     },
     "python311Packages.pip@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311Packages.pip",
-      "version": "23.0.1"
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python311Packages.pip",
+      "source": "devbox-search",
+      "version": "23.3.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/k6snj78rgh2x8vwifg7dgr1fjcgpsfdx-python3.11-pip-23.3.1",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/pzaf53l42g6vkifk0ds6nzp4xbjb7rcq-python3.11-pip-23.3.1-man",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/93lazq44rfpkz6ibfk18rbkhc88hkb02-python3.11-pip-23.3.1-dist"
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2f2666vr91manr2290mc6r8ysjspj32s-python3.11-pip-23.3.1",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/i5mjfwavfy5zi9i52bm2hznkzapa2y01-python3.11-pip-23.3.1-man",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/cazjlkbrsj4d9rvjvj5lmy52bjszz55q-python3.11-pip-23.3.1-dist"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/k7pk07yj3ich8q93w6g4c60ac6zwm5cd-python3.11-pip-23.3.1",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/74p97gd82q10ngfgypv7p6d0w9b5s2mw-python3.11-pip-23.3.1-man",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/cg5s3fj3g6pzc2zxqv9sfqvrci2jg9jb-python3.11-pip-23.3.1-dist"
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9mywabcbd363zr20bl2cvz09hij0ywiw-python3.11-pip-23.3.1",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/f5m5mxqq4nhnkl9i8qzpx0ypwhs7xd3p-python3.11-pip-23.3.1-man",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/z9232w9zq46dypkka116bbbjqdhj6wnc-python3.11-pip-23.3.1-dist"
+            }
+          ]
+        }
+      }
     },
     "python@latest": {
-      "last_modified": "2023-05-01T16:53:22Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/8670e496ffd093b60e74e7fa53526aa5920d09eb#python311",
-      "version": "3.11.3"
+      "last_modified": "2024-02-10T18:15:24Z",
+      "plugin_version": "0.0.3",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python312",
+      "source": "devbox-search",
+      "version": "3.12.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/s1mr5bmvfcy4hm7669d2xx3gqgj481qk-python3-3.12.1",
+              "default": true
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/qv710q1p74qb7bswpwh59px28gfj51b1-python3-3.12.1",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/6i8r0lq7m7rf7lcqjrwizkcaznmhd2cm-python3-3.12.1-debug"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/051hdrw5qmgbplch184mplcnv4djfb8a-python3-3.12.1",
+              "default": true
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/y4dxr00qg40pwgxx9nxj61091zk8bsvl-python3-3.12.1",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/n8jysaqvk89q6fbif4mlacni6wwq0sgc-python3-3.12.1-debug"
+            }
+          ]
+        }
+      }
     }
   }
 }

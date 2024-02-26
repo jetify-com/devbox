@@ -1,0 +1,32 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "curl": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#curl",
+      "source": "nixpkg"
+    },
+    "glow": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#glow",
+      "source": "nixpkg"
+    },
+    "gnuplot": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#gnuplot",
+      "source": "nixpkg"
+    },
+    "graphviz": {
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#graphviz",
+      "source": "nixpkg"
+    },
+    "openjdk17@latest": {
+      "last_modified": "2023-02-24T09:01:09Z",
+      "resolved": "github:NixOS/nixpkgs/7d0ed7f2e5aea07ab22ccb338d27fbe347ed2f11#openjdk17",
+      "source": "devbox-search",
+      "version": "17.0.5+8"
+    },
+    "ruby_3_1": {
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#ruby_3_1",
+      "source": "nixpkg"
+    }
+  }
+}
