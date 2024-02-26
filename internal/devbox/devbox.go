@@ -1058,7 +1058,7 @@ func (d *Devbox) AllInstallablePackages() ([]*devpkg.Package, error) {
 func (d *Devbox) Includes() []plugin.Includable {
 	includes := []plugin.Includable{}
 	for _, includePath := range d.cfg.Include() {
-		if include, err := d.pluginManager.ParseInclude(includePath); err == nil {
+		if include, err := plugin.Parse(includePath); err == nil {
 			includes = append(includes, include)
 		}
 	}

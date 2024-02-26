@@ -27,6 +27,7 @@ import (
 const (
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
+	pluginConfigName    = "plugin.json"
 )
 
 var (
@@ -62,7 +63,7 @@ func (c *config) Services() (services.Services, error) {
 }
 
 func (m *Manager) Include(included string) error {
-	name, err := m.ParseInclude(included)
+	name, err := Parse(included)
 	if err != nil {
 		return err
 	}
@@ -189,7 +190,7 @@ func (m *Manager) Env(
 		allPkgs = append(allPkgs, pkg)
 	}
 	for _, included := range includes {
-		input, err := m.ParseInclude(included)
+		input, err := Parse(included)
 		if err != nil {
 			return nil, err
 		}

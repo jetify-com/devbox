@@ -129,7 +129,7 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		// [flake:]<flake-id>(/<rev-or-ref>(/rev)?)?
 
 		parsed.Type = TypeIndirect
-		split, err := splitPathOrOpaque(refURL)
+		split, err := splitPathOrOpaque(refURL, false)
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL path: %v", err)
 		}
@@ -206,7 +206,7 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
 	parsed.Type = TypeGitHub
-	split, err := splitPathOrOpaque(refURL)
+	split, err := splitPathOrOpaque(refURL, true)
 	if err != nil {
 		return err
 	}
@@ -239,6 +239,7 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 		}
 		parsed.Rev = qRev
 	}
+	parsed.Dir = refURL.Query().Get("dir")
 	return nil
 }
 
@@ -379,7 +380,7 @@ func isArchive(path string) bool {
 // the opaque instead. Splitting happens before unescaping the path or opaque,
 // ensuring that path elements with an encoded '/' (%2F) are not split.
 // For example, "/dir/file%2Fname" becomes the elements "dir" and "file/name".
-func splitPathOrOpaque(u *url.URL) ([]string, error) {
+func splitPathOrOpaque(u *url.URL, allowSlashesIfRef bool) ([]string, error) {
 	upath := u.EscapedPath()
 	if upath == "" {
 		upath = u.Opaque
@@ -396,7 +397,13 @@ func splitPathOrOpaque(u *url.URL) ([]string, error) {
 	upath = path.Clean(upath)
 
 	var err error
-	split := strings.Split(upath, "/")
+	var split []string
+	if allowSlashesIfRef {
+		split = strings.SplitN(upath, "/", 3)
+	} else {
+		split = strings.Split(upath, "/")
+	}
+
 	for i := range split {
 		split[i], err = url.PathUnescape(split[i])
 		if err != nil {

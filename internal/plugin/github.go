@@ -4,56 +4,56 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 )
 
 type githubPlugin struct {
-	raw      string
-	org      string
-	repo     string
-	revision string
-	dir      string
+	RefLike
 }
 
-// newGithubPlugin returns a plugin that is hosted on github.
-// url is of the form org/repo?dir=<dir>
-// The (optional) dir must have a plugin.json"
-func newGithubPlugin(rawURL string) (*githubPlugin, error) {
-	pluginURL, err := url.Parse(rawURL)
+func newGithubPlugin(ref RefLike) (*githubPlugin, error) {
+	if ref.Ref.Ref == "" && ref.Rev == "" {
+		ref.Ref.Ref = "master"
+	}
+	return &githubPlugin{RefLike: ref}, nil
+}
+
+func (p *githubPlugin) Fetch() ([]byte, error) {
+	// Github redirects "master" to "main" in new repos. They don't do the reverse
+	// so setting master here is better.
+	contentURL, err := url.JoinPath(
+		"https://raw.githubusercontent.com/",
+		p.Owner,
+		p.Repo,
+		lo.Ternary(p.Rev == "", "master", p.Rev),
+		p.withFilename(p.Dir),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	parts := strings.SplitN(pluginURL.Path, "/", 3)
-
-	if len(parts) < 2 {
+	res, err := http.Get(contentURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
-			"invalid github plugin url %q. Must be of the form org/repo/[revision]",
-			rawURL,
+			"failed to fetch github import:%s (Status code %d). \nPlease make sure a "+
+				"%s file exists in the directory.",
+			contentURL,
+			res.StatusCode,
+			p.filename,
 		)
 	}
-
-	plugin := &githubPlugin{
-		raw:      rawURL,
-		org:      parts[0],
-		repo:     parts[1],
-		revision: "master",
-		dir:      pluginURL.Query().Get("dir"),
-	}
-
-	if len(parts) == 3 {
-		plugin.revision = parts[2]
-	}
-
-	return plugin, nil
+	return io.ReadAll(res.Body)
 }
 
 func (p *githubPlugin) CanonicalName() string {
-	return p.org + "-" + p.repo
+	return p.Owner + "-" + p.Repo
 }
 
 func (p *githubPlugin) Hash() string {
@@ -66,10 +66,10 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	// so setting master here is better.
 	contentURL, err := url.JoinPath(
 		"https://raw.githubusercontent.com/",
-		p.org,
-		p.repo,
-		p.revision,
-		p.dir,
+		p.Owner,
+		p.Repo,
+		lo.Ternary(p.Rev == "", "master", p.Rev),
+		p.withFilename(p.Dir),
 		subpath,
 	)
 	if err != nil {
@@ -85,17 +85,9 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		return nil, usererr.New(
 			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
 				"plugin.json file exists in plugin directory.",
-			p.raw,
+			p.String(),
 			res.StatusCode,
 		)
 	}
 	return io.ReadAll(res.Body)
-}
-
-func (p *githubPlugin) buildConfig(projectDir string) (*config, error) {
-	content, err := p.FileContent("plugin.json")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buildConfig(p, projectDir, string(content))
 }

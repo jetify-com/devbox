@@ -22,7 +22,7 @@ func (m *Manager) GetServices(
 		allPkgs = append(allPkgs, pkg)
 	}
 	for _, include := range includes {
-		name, err := m.ParseInclude(include)
+		name, err := Parse(include)
 		if err != nil {
 			return nil, err
 		}
