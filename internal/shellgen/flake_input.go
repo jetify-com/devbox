@@ -62,8 +62,21 @@ type SymlinkJoin struct {
 func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 	joins := []*SymlinkJoin{}
 	for _, pkg := range f.Packages {
-		// skip packages that have no non-default outputs
-		if len(pkg.Outputs) == 0 {
+
+		// Skip packages that don't need a symlink join.
+		if needs, err := needsSymlinkJoin(pkg); err != nil {
+			return nil, err
+		} else if !needs {
+			continue
+		}
+
+		// Skip packages that are already in the binary cache. These will be directly
+		// included in the buildInputs using `builtins.fetchClosure` of their store paths.
+		inCache, err := pkg.IsInBinaryCache()
+		if err != nil {
+			return nil, err
+		}
+		if inCache {
 			continue
 		}
 
@@ -75,9 +88,15 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 		if pkg.PatchGlibc {
 			return nil, errors.New("patch_glibc is not yet supported for packages with non-default outputs")
 		}
+
+		outputNames, err := pkg.GetOutputNames()
+		if err != nil {
+			return nil, err
+		}
+
 		joins = append(joins, &SymlinkJoin{
 			Name: pkg.String() + "-combined",
-			Paths: lo.Map(pkg.Outputs, func(output string, _ int) string {
+			Paths: lo.Map(outputNames, func(output string, _ int) string {
 				if !f.IsNixpkgs() {
 					return f.Name + "." + attributePath + "." + output
 				}
@@ -92,11 +111,15 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 func (f *flakeInput) BuildInputs() ([]string, error) {
 	var err error
 
-	// Filter out packages that have non-default outputs
-	// These are handled in BuildInputsForSymlinkJoin
-	packages := lo.Filter(f.Packages, func(pkg *devpkg.Package, _ int) bool {
-		return len(pkg.Outputs) == 0
-	})
+	// Skip packages that will be handled in BuildInputsForSymlinkJoin
+	packages := []*devpkg.Package{}
+	for _, pkg := range f.Packages {
+		if needs, err := needsSymlinkJoin(pkg); err != nil {
+			return nil, err
+		} else if !needs {
+			packages = append(packages, pkg)
+		}
+	}
 
 	attributePaths := lo.Map(packages, func(pkg *devpkg.Package, _ int) string {
 		attributePath, attributePathErr := pkg.FullPackageAttributePath()
@@ -200,4 +223,15 @@ func (k *keyedSlice) getOrAppend(key string) *flakeInput {
 	k.slice = append(k.slice, flakeInput{})
 	k.lookup[key] = len(k.slice) - 1
 	return &k.slice[len(k.slice)-1]
+}
+
+// needsSymlinkJoin is used to filter packages with multiple outputs.
+// Multiple outputs -> SymlinkJoin.
+// Single or no output -> directly use in buildInputs
+func needsSymlinkJoin(pkg *devpkg.Package) (bool, error) {
+	outputNames, err := pkg.GetOutputNames()
+	if err != nil {
+		return false, err
+	}
+	return len(outputNames) > 1, nil
 }

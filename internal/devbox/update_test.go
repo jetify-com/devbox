@@ -63,7 +63,7 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 
 	require.Contains(t, lockfile.Packages, raw)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys)
-	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys].DefaultStorePath())
+	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys].Outputs[0].Path)
 }
 
 func TestUpdateNewSysInfoIsAdded(t *testing.T) {
@@ -123,7 +123,7 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 	require.Contains(t, lockfile.Packages, raw)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys1)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys2)
-	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].DefaultStorePath())
+	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].Outputs[0].Path)
 }
 
 func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
@@ -191,8 +191,8 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 	require.Contains(t, lockfile.Packages, raw)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys1)
 	require.Contains(t, lockfile.Packages[raw].Systems, sys2)
-	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys1].DefaultStorePath())
-	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].DefaultStorePath())
+	require.Equal(t, "store_path1", lockfile.Packages[raw].Systems[sys1].Outputs[0].Path)
+	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].Outputs[0].Path)
 }
 
 func currentSystem(_t *testing.T) string {

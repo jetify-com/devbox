@@ -61,10 +61,6 @@ type Package struct {
 	// For flake packages (non-devbox packages), resolve is a no-op.
 	resolve func() error
 
-	// storePath is set by resolve if the package exists in the Nix binary
-	// cache.
-	storePath string
-
 	// Raw is the devbox package name from the devbox.json config.
 	// Raw has a few forms:
 	// 1. Devbox Packages
@@ -80,8 +76,7 @@ type Package struct {
 	Raw string
 
 	// Outputs is a list of outputs to build from the package's derivation.
-	// If empty, the default output is used.
-	Outputs []string
+	outputs *outputs
 
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
@@ -122,7 +117,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		pkg.Outputs = cfgPkg.Outputs
+		pkg.outputs = initOutputs(cfgPkg.Outputs)
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
 	}
@@ -137,7 +132,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
-	pkg.Outputs = opts.Outputs
+	pkg.outputs = initOutputs(opts.Outputs)
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
@@ -147,6 +142,7 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 		Raw:           raw,
 		lockfile:      locker,
 		isInstallable: isInstallable,
+		outputs:       initOutputs([]string{}),
 	}
 
 	// The raw string is either a Devbox package ("name" or "name@version")
@@ -206,13 +202,14 @@ func resolve(pkg *Package) error {
 	if err != nil {
 		return err
 	}
-	if inCache, err := pkg.IsInBinaryCache(); err == nil && inCache {
-		pkg.storePath = resolved.Systems[nix.System()].DefaultStorePath()
-	}
 	parsed, err := flake.ParseInstallable(resolved.Resolved)
 	if err != nil {
 		return err
 	}
+
+	// TODO savil. Check with Greg about setting the user-specified outputs
+	// somehow here.
+
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
 }
@@ -278,19 +275,46 @@ func (p *Package) IsInstallable() bool {
 // Installable for this package. Installable is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
 func (p *Package) Installable() (string, error) {
-	inCache, err := p.IsInBinaryCache()
+	outputs, err := p.GetOutputNames()
+	if err != nil {
+		return "", err
+	}
+	installables := []string{}
+	for _, output := range outputs {
+		i, err := p.InstallableForOutput(output)
+		if err != nil {
+			return "", err
+		}
+		installables = append(installables, i)
+	}
+	if len(installables) == 0 {
+		// This means that the package is not in the binary cache
+		// OR it is a flake (??)
+		installable, err := p.urlForInstall()
+		if err != nil {
+			return "", err
+		}
+		return installable, nil
+	}
+	// TODO savil: return all installables
+	return installables[0], nil
+}
+
+func (p *Package) InstallableForOutput(output string) (string, error) {
+	inCache, err := p.IsOutputInBinaryCache(output)
 	if err != nil {
 		return "", err
 	}
 
 	if inCache {
-		installable, err := p.InputAddressedPath()
+		installable, err := p.InputAddressedPathForOutput(output)
 		if err != nil {
 			return "", err
 		}
 		return installable, nil
 	}
 
+	// TODO savil: does this work for outputs?
 	installable, err := p.urlForInstall()
 	if err != nil {
 		return "", err
@@ -576,7 +600,32 @@ func (p *Package) InputAddressedPath() (string, error) {
 	}
 
 	sysInfo := entry.Systems[nix.System()]
-	return sysInfo.DefaultStorePath(), nil
+	outputs := sysInfo.DefaultOutputs()
+
+	// TODO return an array of outputs
+	return p.InputAddressedPathForOutput(outputs[0].Name)
+}
+
+func (p *Package) InputAddressedPathForOutput(output string) (string, error) {
+	if inCache, err := p.IsInBinaryCache(); err != nil {
+		return "", err
+	} else if !inCache {
+		return "",
+			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+	}
+
+	entry, err := p.lockfile.Resolve(p.Raw)
+	if err != nil {
+		return "", err
+	}
+
+	sysInfo := entry.Systems[nix.System()]
+	for _, out := range sysInfo.Outputs {
+		if out.Name == output {
+			return out.Path, nil
+		}
+	}
+	return "", errors.Errorf("Output %q not found for package %q", output, p.Raw)
 }
 
 func (p *Package) HasAllowInsecure() bool {
@@ -645,4 +694,13 @@ func (p *Package) DocsURL() string {
 		return fmt.Sprintf("https://www.nixhub.io/packages/%s", p.CanonicalName())
 	}
 	return ""
+}
+
+// GetOutputNames returns the names of the nix package outputs.
+// It may be empty if the package is not in the lockfile.
+func (p *Package) GetOutputNames() ([]string, error) {
+	if p.IsRunX() {
+		return []string{}, nil
+	}
+	return p.outputs.GetNames(p)
 }
