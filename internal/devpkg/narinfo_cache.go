@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -21,8 +20,12 @@ import (
 // It is used as FromStore in builtins.fetchClosure.
 const BinaryCache = "https://cache.nixos.org"
 
+// useDefaultOutput is a special value for the outputName parameter of
+// fetchNarInfoStatusOnce, which indicates that the default outputs should be
+// used.
+const useDefaultOutput = "__default_output__"
+
 func (p *Package) IsOutputInBinaryCache(outputName string) (bool, error) {
-	fmt.Fprintf(os.Stderr, "IsOutputInBinaryCache with outputName %s\n", outputName)
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
 		return false, err
 	} else if !eligible {
@@ -42,7 +45,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 		return false, nil
 	}
 
-	return p.fetchNarInfoStatusOnce(UseDefaultOutput)
+	return p.fetchNarInfoStatusOnce(useDefaultOutput)
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
@@ -116,6 +119,9 @@ func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
 // true if cache exists, false otherwise.
 // NOTE: This function always performs an HTTP request and should not be called
 // more than once per package.
+//
+// The outputName parameter is the name of the output to check for in the cache.
+// If outputName is UseDefaultOutput, the default outputs will be checked.
 func (p *Package) fetchNarInfoStatus(outputName string) (bool, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil {
@@ -128,7 +134,7 @@ func (p *Package) fetchNarInfoStatus(outputName string) (bool, error) {
 	}
 
 	var outputs []lock.Output
-	if outputName == UseDefaultOutput {
+	if outputName == useDefaultOutput {
 		outputs = sysInfo.DefaultOutputs()
 	} else {
 		out, err := sysInfo.Output(outputName)

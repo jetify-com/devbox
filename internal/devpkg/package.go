@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -77,11 +76,7 @@ type Package struct {
 	Raw string
 
 	// Outputs is a list of outputs to build from the package's derivation.
-	// If empty, the default output is used.
-	//
-	// Note the distinction: these are user-selected outputs, whereas the lockfile has outputs
-	// whose store-paths are available outputs with store-paths.
-	Outputs []string
+	outputs *outputs
 
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
@@ -122,7 +117,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		pkg.Outputs = initOutputsField(cfgPkg.Outputs)
+		pkg.outputs = initOutputs(cfgPkg.Outputs)
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
 	}
@@ -137,7 +132,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
-	pkg.Outputs = initOutputsField(opts.Outputs)
+	pkg.outputs = initOutputs(opts.Outputs)
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
@@ -147,7 +142,7 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 		Raw:           raw,
 		lockfile:      locker,
 		isInstallable: isInstallable,
-		Outputs:       initOutputsField([]string{}),
+		outputs:       initOutputs([]string{}),
 	}
 
 	// The raw string is either a Devbox package ("name" or "name@version")
@@ -166,20 +161,6 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	pkg.resolve = sync.OnceValue(func() error { return nil })
 	pkg.setInstallable(parsed, locker.ProjectDir())
 	return pkg
-}
-
-// UseDefaultOutput is a special signifier to use the default outputs of a package.
-// It is used to indicate that the user hasn't explicitly specified the outputs they want.
-const UseDefaultOutput = "__useDefaultOutput__"
-
-// initOutputsField initializes the outputs field of a package. It is meant to be used in the
-// Package struct constructor functions
-func initOutputsField(selectedOutputs []string) []string {
-	outputs := []string{UseDefaultOutput}
-	if len(selectedOutputs) > 0 {
-		outputs = selectedOutputs
-	}
-	return outputs
 }
 
 // isAmbiguous returns true if a package string could be a Devbox package or
@@ -228,7 +209,6 @@ func resolve(pkg *Package) error {
 
 	// TODO savil. Check with Greg about setting the user-specified outputs
 	// somehow here.
-	// NOTE: The below code fails with the php testscript.
 
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
@@ -299,7 +279,6 @@ func (p *Package) Installable() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Fprintf(os.Stderr, "Package.Installable: outputs for package %s: %v\n", p.Raw, outputs)
 	installables := []string{}
 	for _, output := range outputs {
 		i, err := p.InstallableForOutput(output)
@@ -328,7 +307,6 @@ func (p *Package) InstallableForOutput(output string) (string, error) {
 	}
 
 	if inCache {
-		fmt.Fprintf(os.Stderr, "InstallableForOutput: Package %s output %s is in the binary cache\n", p.Raw, output)
 		installable, err := p.InputAddressedPathForOutput(output)
 		if err != nil {
 			return "", err
@@ -336,13 +314,11 @@ func (p *Package) InstallableForOutput(output string) (string, error) {
 		return installable, nil
 	}
 
-	// TODO savil: make work for output
+	// TODO savil: does this work for outputs?
 	installable, err := p.urlForInstall()
 	if err != nil {
 		return "", err
 	}
-	fmt.Fprintf(os.Stderr, "InstallableForOutput: Package %s output %s is NOT in the binary cache\n", p.Raw, output)
-	fmt.Fprintf(os.Stderr, "InstallableForOutput: Package %s output %s installable: %s \n", p.Raw, output, installable)
 	return installable, nil
 }
 
@@ -726,28 +702,5 @@ func (p *Package) GetOutputNames() ([]string, error) {
 	if p.IsRunX() {
 		return []string{}, nil
 	}
-
-	// if p.Outputs has user specified outputs:
-	if len(p.Outputs) > 1 || p.Outputs[0] != UseDefaultOutput {
-		fmt.Fprintf(os.Stderr, "Returning user specified outputs: %v\n", p.Outputs)
-		return p.Outputs, nil
-	}
-	// else, get the default outputs from the lockfile
-
-	sysInfo, err := p.sysInfoIfExists()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error getting sysInfo: %v\n", err)
-		return []string{}, err
-	} else if sysInfo == nil {
-		fmt.Fprintf(os.Stderr, "No sysInfo found for pkg %s\n", p.Raw)
-		// TODO should this be "out" or empty?
-		return []string{}, nil
-	}
-
-	names := []string{}
-	for _, output := range sysInfo.DefaultOutputs() {
-		names = append(names, output.Name)
-	}
-	fmt.Fprintf(os.Stderr, "for package %s returning default outputs : %v\n", p.Raw, names)
-	return names, nil
+	return p.outputs.GetNames(p)
 }

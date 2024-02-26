@@ -70,23 +70,6 @@ func (i *SystemInfo) String() string {
 	return fmt.Sprintf("%+v", *i)
 }
 
-// TODO savil. There are multiple possible default store paths.
-// Remove. Only used in update_test.go
-func (i *SystemInfo) DefaultStorePath() string {
-	if i == nil || len(i.Outputs) == 0 {
-		return ""
-	}
-
-	for _, output := range i.Outputs {
-		if output.Default {
-			return output.Path
-		}
-	}
-
-	// TODO: should this be "out" output always, instead of first one?
-	return i.Outputs[0].Path
-}
-
 func (i *SystemInfo) Output(name string) (Output, error) {
 	if i == nil {
 		return Output{}, nil
