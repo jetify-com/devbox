@@ -63,7 +63,7 @@ func (c *config) Services() (services.Services, error) {
 }
 
 func (m *Manager) Include(included string) error {
-	name, err := Parse(included)
+	name, err := m.ParseInclude(included)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (m *Manager) Env(
 		allPkgs = append(allPkgs, pkg)
 	}
 	for _, included := range includes {
-		input, err := Parse(included)
+		input, err := m.ParseInclude(included)
 		if err != nil {
 			return nil, err
 		}

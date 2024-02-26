@@ -17,7 +17,7 @@ func (m *Manager) InitHooks(
 		allPkgs = append(allPkgs, pkg)
 	}
 	for _, include := range includes {
-		name, err := Parse(include)
+		name, err := m.ParseInclude(include)
 		if err != nil {
 			return nil, err
 		}

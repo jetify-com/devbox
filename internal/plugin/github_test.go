@@ -80,7 +80,7 @@ func TestNewGithubPlugin(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, _ := Parse(testCase.Include)
+			actual, _ := parseReflike(testCase.Include)
 			assert.Equal(t, &testCase.expected, actual)
 		})
 	}

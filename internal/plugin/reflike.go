@@ -21,7 +21,7 @@ type Includable interface {
 	FileContent(subpath string) ([]byte, error)
 }
 
-func Parse(s string) (Includable, error) {
+func parseReflike(s string) (Includable, error) {
 	ref, err := flake.ParseRef(s)
 	if err != nil {
 		return nil, err

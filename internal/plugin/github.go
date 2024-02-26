@@ -69,7 +69,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		p.Owner,
 		p.Repo,
 		lo.Ternary(p.Rev == "", "master", p.Rev),
-		p.withFilename(p.Dir),
+		p.Dir,
 		subpath,
 	)
 	if err != nil {
