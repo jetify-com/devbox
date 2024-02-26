@@ -191,13 +191,21 @@ func resolve(pkg *Package) error {
 	if err != nil {
 		return err
 	}
+
+	// Add the output names to the resolved URL, if any.
+	outputNames, err := pkg.GetOutputNames()
+	if err != nil {
+		return err
+	}
+	resolvedURL := resolved.Resolved
+	if len(outputNames) > 0 {
+		resolvedURL += "^" + strings.Join(outputNames, ",")
+	}
+
 	parsed, err := flake.ParseInstallable(resolved.Resolved)
 	if err != nil {
 		return err
 	}
-
-	// TODO savil. Check with Greg about setting the user-specified outputs
-	// somehow here.
 
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
