@@ -25,6 +25,8 @@ on:
       example-debug:
         type: boolean
         description: Run example tests with DEVBOX_DEBUG=1 to increase verbosity
+  schedule:
+    - cron: '30 8 * * *' # Run nightly at 8:30 UTC
 
 permissions:
   contents: read
@@ -116,12 +118,9 @@ jobs:
         # 2. latest nix version (note, 2.20.1 introduced a new profile change)
         nix-version: ["2.12.0", "2.19.2", "2.20.1"]
         exclude:
-          # Dont run mac tests on not-main unless explicitly requested.
-          - is-main: "not-main"
-            os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
-          # Only runs project tests on macos if explicitly requested
-          - run-project-tests: "project-tests-only"
-            os: "${{ inputs.run-mac-tests && 'dummy' || 'macos-latest' }}"
+          # Only runs tests on macos if explicitly requested, or on a schedule
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
+            
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
