@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/plugins"
 )
 
@@ -50,12 +51,16 @@ func getBuiltinPluginConfigIfExists(
 	return buildConfig(pkg, projectDir, string(content))
 }
 
-func GetBuiltinsForPackages(packages []configfile.Package) ([]*Config, error) {
+func GetBuiltinsForPackages(
+	packages []configfile.Package,
+	projectDir string,
+) ([]*Config, error) {
 	builtIns := []*Config{}
-	// TODO: lockfile is missing
-	for i, pkg := range devpkg.PackagesFromConfig(packages, nil) {
-		// TODO: projectDir is missing
-		config, err := getBuiltinPluginConfigIfExists(pkg, "")
+	for i, pkg := range devpkg.PackagesFromConfig(
+		packages,
+		&lock.DummyLocker{ProjectDirVal: projectDir},
+	) {
+		config, err := getBuiltinPluginConfigIfExists(pkg, projectDir)
 		if err != nil {
 			return nil, err
 		}

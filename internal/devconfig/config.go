@@ -99,7 +99,10 @@ func loadRecursive(config *configfile.ConfigFile, projectDir string) (*Config, e
 		included = append(included, includable)
 	}
 
-	builtIns, err := plugin.GetBuiltinsForPackages(config.PackagesMutator.Collection)
+	builtIns, err := plugin.GetBuiltinsForPackages(
+		config.PackagesMutator.Collection,
+		projectDir,
+	)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
