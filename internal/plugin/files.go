@@ -56,7 +56,7 @@ func GetBuiltinsForPackages(
 	projectDir string,
 ) ([]*Config, error) {
 	builtIns := []*Config{}
-	for i, pkg := range devpkg.PackagesFromConfig(
+	for _, pkg := range devpkg.PackagesFromConfig(
 		packages,
 		&lock.DummyLocker{ProjectDirVal: projectDir},
 	) {
@@ -65,7 +65,6 @@ func GetBuiltinsForPackages(
 			return nil, err
 		}
 		if config != nil {
-			config.TriggerPackage = packages[i]
 			builtIns = append(builtIns, config)
 		}
 	}

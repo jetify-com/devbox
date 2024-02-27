@@ -148,7 +148,9 @@ func (c *Config) Packages() []configfile.Package {
 	for _, i := range c.included {
 		packages = append(packages, i.Packages()...)
 		if i.pluginData.RemoveTriggerPackage {
-			packagesToRemove[i.pluginData.TriggerPackage.VersionedName()] = true
+			if pkg, ok := i.pluginData.Source.(any).(*configfile.Package); ok {
+				packagesToRemove[pkg.VersionedName()] = true
+			}
 		}
 	}
 

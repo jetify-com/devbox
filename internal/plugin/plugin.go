@@ -37,7 +37,6 @@ var (
 type Config struct {
 	configfile.ConfigFile
 	PluginOnlyData
-	source Includable
 }
 
 type PluginOnlyData struct {
@@ -45,9 +44,9 @@ type PluginOnlyData struct {
 	DeprecatedDescription string            `json:"readme"`
 	// If true, we remove the package that triggered this plugin from the environment
 	// Useful when we want to replace with flake
-	RemoveTriggerPackage bool `json:"__remove_trigger_package,omitempty"`
-	TriggerPackage       configfile.Package
+	RemoveTriggerPackage bool   `json:"__remove_trigger_package,omitempty"`
 	Version              string `json:"version"`
+	Source               Includable
 }
 
 func (c *Config) ProcessComposeYaml() (string, string) {
@@ -84,7 +83,7 @@ func (m *Manager) create(pkg Includable) error {
 
 func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
-	pkg := cfg.source
+	pkg := cfg.Source
 	locked := m.lockfile.Packages[pkg.LockfileKey()]
 
 	name := pkg.CanonicalName()
@@ -180,7 +179,7 @@ func (m *Manager) createFile(
 }
 
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
-	cfg := &Config{source: pkg}
+	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)
 	if err != nil {
