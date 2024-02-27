@@ -22,7 +22,6 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
 	"go.jetpack.io/devbox/internal/shellgen"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -492,17 +491,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 }
 
 func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Package, error) {
-	// First, fetch the profile items from the nix-profile,
-	profileDir, err := d.profilePath()
-	if err != nil {
-		return nil, err
-	}
-	profileItems, err := nixprofile.ProfileListItems(d.stderr, profileDir)
-	if err != nil {
-		return nil, err
-	}
-
-	// Second, get and prepare all the packages that must be installed in this project
+	// First, get and prepare all the packages that must be installed in this project
 	packages, err := d.AllInstallablePackages()
 	if err != nil {
 		return nil, err
@@ -512,25 +501,9 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Packag
 		return nil, err
 	}
 
-	// Third, compute which packages need to be installed
-	packagesNotInProfile := []*devpkg.Package{}
-	// Note: because devpkg.Package uses memoization when normalizing attribute paths (slow operation),
-	// and since we're reusing the Package objects, this O(n*m) loop becomes O(n+m) wrt the slow operation.
-	for _, pkg := range packages {
-		found := false
-		for _, item := range profileItems {
-			if item.Matches(pkg, d.lockfile) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			packagesNotInProfile = append(packagesNotInProfile, pkg)
-		}
-	}
-
+	// Second, check which packages are not in the nix store
 	packagesToInstall := []*devpkg.Package{}
-	for _, pkg := range packagesNotInProfile {
+	for _, pkg := range packages {
 		installables, err := pkg.Installables()
 		if err != nil {
 			return nil, err
