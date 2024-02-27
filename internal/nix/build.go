@@ -2,9 +2,12 @@ package nix
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
@@ -33,5 +36,12 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd.Stderr = args.Writer
 
 	debug.Log("Running cmd: %s\n", cmd)
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
+			debug.Log("Nix build exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
+			return fmt.Errorf("nix build exit code: %d, output: %s, err: %w", exitErr.ExitCode(), exitErr.Stderr, err)
+		}
+		return err
+	}
+	return nil
 }
