@@ -18,9 +18,9 @@ import (
 
 // Config represents a base devbox.json as well as any included plugins it may have.
 type Config struct {
-	Root *configfile.ConfigFile
+	Root configfile.ConfigFile
 
-	pluginData *plugin.PluginOnlyData
+	pluginData *plugin.PluginOnlyData // pointer by design, to allow for nil
 
 	included []*Config
 }
@@ -118,7 +118,7 @@ func loadRecursive(config *configfile.ConfigFile, projectDir string) (*Config, e
 	}
 
 	return &Config{
-		Root:     config,
+		Root:     *config,
 		included: included,
 	}, nil
 }
@@ -134,7 +134,7 @@ func (c *Config) PluginConfigs() []*plugin.Config {
 	}
 	if c.pluginData != nil {
 		configs = append(configs, &plugin.Config{
-			ConfigFile:     *c.Root,
+			ConfigFile:     c.Root,
 			PluginOnlyData: *c.pluginData,
 		})
 	}
@@ -220,7 +220,11 @@ func (c *Config) Hash() (string, error) {
 		}
 		data = append(data, hash...)
 	}
-	data = append(data, c.Root.Bytes()...)
+	hash, err := c.Root.Hash()
+	if err != nil {
+		return "", err
+	}
+	data = append(data, hash...)
 	return cachehash.Bytes(data)
 }
 

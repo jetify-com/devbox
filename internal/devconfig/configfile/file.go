@@ -6,8 +6,6 @@ package configfile
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -86,6 +84,9 @@ func (c *ConfigFile) Bytes() []byte {
 }
 
 func (c *ConfigFile) Hash() (string, error) {
+	if c.ast == nil {
+		return cachehash.JSON(c)
+	}
 	ast := c.ast.root.Clone()
 	ast.Minimize()
 	return cachehash.Bytes(ast.Pack())
@@ -150,20 +151,6 @@ func LoadBytes(b []byte) (*ConfigFile, error) {
 		return nil, err
 	}
 	return cfg, validateConfig(cfg)
-}
-
-func LoadConfigFromURL(url string) (*ConfigFile, error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return LoadBytes(data)
 }
 
 func validateConfig(cfg *ConfigFile) error {

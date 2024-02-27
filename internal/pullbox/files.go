@@ -77,7 +77,7 @@ func isModifiedConfig(path string) bool {
 		if err != nil {
 			return false
 		}
-		return !cfg.Root.Equals(devconfig.DefaultConfig().Root)
+		return !cfg.Root.Equals(&devconfig.DefaultConfig().Root)
 	}
 	return false
 }
