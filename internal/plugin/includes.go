@@ -16,7 +16,7 @@ func LoadConfigFromInclude(include, projectDir string) (*Config, error) {
 			&lock.DummyLocker{ProjectDirVal: projectDir},
 		)
 	} else {
-		includable, err = parseReflike(include)
+		includable, err = parseReflike(include, projectDir)
 		if err != nil {
 			return nil, err
 		}

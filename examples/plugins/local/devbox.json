@@ -11,6 +11,6 @@
     }
   },
   "include": [
-    "path:my-plugin/my-plugin.json"
+    "path:my-plugin/plugin.json"
   ]
 }

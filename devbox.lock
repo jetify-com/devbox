@@ -8,16 +8,40 @@
       "version": "1.22.0",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/2022s0jnrn2iyxjaikfy51w5fvifp38b-go-1.22.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2022s0jnrn2iyxjaikfy51w5fvifp38b-go-1.22.0",
+              "default": true
+            }
+          ]
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/7wxzkvjv8qc2awhagpz0r8q9ay38q3wj-go-1.22.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/7wxzkvjv8qc2awhagpz0r8q9ay38q3wj-go-1.22.0",
+              "default": true
+            }
+          ]
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0",
+              "default": true
+            }
+          ]
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/88y9r33p3j8f7bc8sqiy9jdlk7yqfrlg-go-1.22.0"
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/88y9r33p3j8f7bc8sqiy9jdlk7yqfrlg-go-1.22.0",
+              "default": true
+            }
+          ]
         }
       }
     },

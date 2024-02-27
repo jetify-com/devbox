@@ -11,14 +11,15 @@ import (
 )
 
 type localPlugin struct {
-	ref  RefLike
-	name string
+	ref        RefLike
+	name       string
+	projectDir string
 }
 
 var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
 
-func newLocalPlugin(ref RefLike) (*localPlugin, error) {
-	plugin := &localPlugin{ref: ref}
+func newLocalPlugin(ref RefLike, projectDir string) (*localPlugin, error) {
+	plugin := &localPlugin{ref: ref, projectDir: projectDir}
 	content, err := plugin.Fetch()
 	if err != nil {
 		return nil, err
@@ -30,12 +31,12 @@ func newLocalPlugin(ref RefLike) (*localPlugin, error) {
 	name, ok := m["name"].(string)
 	if !ok || name == "" {
 		return nil,
-			usererr.New("plugin %s is missing a required field 'name'", plugin.ref.Path)
+			usererr.New("plugin %s is missing a required field 'name'", plugin.Path())
 	}
 	if !nameRegex.MatchString(name) {
 		return nil, usererr.New(
 			"plugin %s has an invalid name %q. Name must match %s",
-			plugin.ref.Path, name, nameRegex,
+			plugin.Path(), name, nameRegex,
 		)
 	}
 	plugin.name = name
@@ -43,7 +44,7 @@ func newLocalPlugin(ref RefLike) (*localPlugin, error) {
 }
 
 func (l *localPlugin) Fetch() ([]byte, error) {
-	return os.ReadFile(l.ref.withFilename(l.ref.Path))
+	return os.ReadFile(l.ref.withFilename(l.Path()))
 }
 
 func (l *localPlugin) CanonicalName() string {
@@ -55,14 +56,21 @@ func (l *localPlugin) IsLocal() bool {
 }
 
 func (l *localPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(l.ref.Path))
+	h, _ := cachehash.Bytes([]byte(l.Path()))
 	return h
 }
 
 func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(filepath.Dir(l.ref.Path), subpath))
+	return os.ReadFile(filepath.Join(filepath.Dir(l.Path()), subpath))
 }
 
 func (l *localPlugin) LockfileKey() string {
 	return l.ref.raw
+}
+
+func (l *localPlugin) Path() string {
+	if filepath.IsAbs(l.ref.Ref.Path) {
+		return l.ref.Ref.Path
+	}
+	return filepath.Join(l.projectDir, l.ref.Ref.Path)
 }

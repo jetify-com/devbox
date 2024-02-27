@@ -24,6 +24,7 @@ func TestNewGithubPlugin(t *testing.T) {
 						Owner: "jetpack-io",
 						Repo:  "devbox-plugins",
 					},
+					raw:      "github:jetpack-io/devbox-plugins",
 					filename: pluginConfigName,
 				},
 			},
@@ -40,6 +41,7 @@ func TestNewGithubPlugin(t *testing.T) {
 						Repo:  "devbox-plugins",
 						Dir:   "mongodb",
 					},
+					raw:      "github:jetpack-io/devbox-plugins?dir=mongodb",
 					filename: pluginConfigName,
 				},
 			},
@@ -57,6 +59,7 @@ func TestNewGithubPlugin(t *testing.T) {
 						Ref:   "my-branch",
 						Dir:   "mongodb",
 					},
+					raw:      "github:jetpack-io/devbox-plugins/my-branch?dir=mongodb",
 					filename: pluginConfigName,
 				},
 			},
@@ -74,6 +77,7 @@ func TestNewGithubPlugin(t *testing.T) {
 						Ref:   "initials/my-branch",
 						Dir:   "mongodb",
 					},
+					raw:      "github:jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
 					filename: pluginConfigName,
 				},
 			},
@@ -83,7 +87,7 @@ func TestNewGithubPlugin(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, _ := parseReflike(testCase.Include)
+			actual, _ := parseReflike(testCase.Include, "")
 			assert.Equal(t, &testCase.expected, actual)
 			u, err := testCase.expected.url("")
 			assert.Nil(t, err)

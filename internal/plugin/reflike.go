@@ -23,7 +23,7 @@ type Includable interface {
 	LockfileKey() string
 }
 
-func parseReflike(s string) (Includable, error) {
+func parseReflike(s, projectDir string) (Includable, error) {
 	ref, err := flake.ParseRef(s)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func parseReflike(s string) (Includable, error) {
 	reflike := RefLike{ref, pluginConfigName, s}
 	switch ref.Type {
 	case flake.TypePath:
-		return newLocalPlugin(reflike)
+		return newLocalPlugin(reflike, projectDir)
 	case flake.TypeGitHub:
 		return &githubPlugin{ref: reflike}, nil
 	default:
