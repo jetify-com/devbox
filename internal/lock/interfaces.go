@@ -33,6 +33,9 @@ func (d *DummyLocker) ProjectDir() string {
 	return d.ProjectDirVal
 }
 
-func (d *DummyLocker) Resolve(string) (*Package, error) {
-	return nil, nil
+func (d *DummyLocker) Resolve(s string) (*Package, error) {
+	return &Package{
+		Resolved: "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#" + s,
+		Source:   nixpkgSource,
+	}, nil
 }
