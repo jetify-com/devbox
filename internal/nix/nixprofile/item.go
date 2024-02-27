@@ -62,14 +62,17 @@ func (i *NixProfileListItem) Matches(pkg *devpkg.Package, locker lock.Locker) bo
 	if i.addedByStorePath() {
 		// If an Item was added via store path, the best we can do when comparing to a Package is to check
 		// if its store path matches that of the Package. Note that the item should only have 1 store path.
-		path, err := pkg.InputAddressedPath()
+		paths, err := pkg.InputAddressedPaths()
 		if err != nil {
 			// pkg couldn't have been added by store path if we can't get the store path for it, so return
 			// false. There are some edge cases (e.g. cache is down, index changed, etc., but it's OK to
 			// err on the side of false).
 			return false
 		}
-		return len(i.nixStorePaths) == 1 && i.nixStorePaths[0] == path
+		for _, path := range paths {
+			return len(i.nixStorePaths) == 1 && i.nixStorePaths[0] == path
+		}
+		return false
 	}
 
 	return pkg.Equals(devpkg.PackageFromStringWithDefaults(i.unlockedReference, locker))

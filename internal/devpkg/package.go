@@ -272,18 +272,18 @@ func (p *Package) IsInstallable() bool {
 	return p.isInstallable
 }
 
-// Installable for this package. Installable is a nix concept defined here:
+// Installables for this package. Installables is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
-func (p *Package) Installable() (string, error) {
+func (p *Package) Installables() ([]string, error) {
 	outputs, err := p.GetOutputNames()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	installables := []string{}
 	for _, output := range outputs {
 		i, err := p.InstallableForOutput(output)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		installables = append(installables, i)
 	}
@@ -292,12 +292,11 @@ func (p *Package) Installable() (string, error) {
 		// OR it is a flake (??)
 		installable, err := p.urlForInstall()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return installable, nil
+		return []string{installable}, nil
 	}
-	// TODO savil: return all installables
-	return installables[0], nil
+	return installables, nil
 }
 
 func (p *Package) InstallableForOutput(output string) (string, error) {
@@ -586,24 +585,31 @@ func (p *Package) HashFromNixPkgsURL() string {
 
 // InputAddressedPath is the input-addressed path in /nix/store
 // It is also the key in the BinaryCache for this package
-func (p *Package) InputAddressedPath() (string, error) {
+func (p *Package) InputAddressedPaths() ([]string, error) {
 	if inCache, err := p.IsInBinaryCache(); err != nil {
-		return "", err
+		return nil, err
 	} else if !inCache {
-		return "",
+		return nil,
 			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
 	entry, err := p.lockfile.Resolve(p.Raw)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	sysInfo := entry.Systems[nix.System()]
 	outputs := sysInfo.DefaultOutputs()
 
-	// TODO return an array of outputs
-	return p.InputAddressedPathForOutput(outputs[0].Name)
+	paths := []string{}
+	for _, output := range outputs {
+		p, err := p.InputAddressedPathForOutput(output.Name)
+		if err != nil {
+			return nil, err
+		}
+		paths = append(paths, p)
+	}
+	return paths, nil
 }
 
 func (p *Package) InputAddressedPathForOutput(output string) (string, error) {
