@@ -65,22 +65,6 @@ func (c *Config) Services() (services.Services, error) {
 	return nil, nil
 }
 
-func (m *Manager) Create(pkg *devpkg.Package) error {
-	return m.create(pkg)
-}
-
-func (m *Manager) create(pkg Includable) error {
-	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
-	if err != nil {
-		return err
-	}
-	if cfg == nil {
-		return nil
-	}
-
-	return m.CreateFilesForConfig(cfg)
-}
-
 func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
 	pkg := cfg.Source
