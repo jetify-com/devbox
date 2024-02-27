@@ -16,3 +16,23 @@ type Locker interface {
 	ProjectDir() string
 	Resolve(string) (*Package, error)
 }
+
+type DummyLocker struct {
+	ProjectDirVal string
+}
+
+func (d *DummyLocker) Get(string) *Package {
+	return nil
+}
+
+func (d *DummyLocker) LegacyNixpkgsPath(string) string {
+	return ""
+}
+
+func (d *DummyLocker) ProjectDir() string {
+	return d.ProjectDirVal
+}
+
+func (d *DummyLocker) Resolve(string) (*Package, error) {
+	return nil, nil
+}

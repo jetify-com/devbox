@@ -39,7 +39,6 @@ const (
 type devboxer interface {
 	Config() *devconfig.Config
 	Lockfile() *lock.File
-	AllInstallablePackages() ([]*devpkg.Package, error)
 	InstallablePackages() []*devpkg.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
@@ -63,16 +62,8 @@ func WriteScriptsToFiles(devbox devboxer) error {
 
 	// Write all hooks to a file.
 	written := map[string]struct{}{} // set semantics; value is irrelevant
-	pluginHooks, err := devbox.PluginManager().InitHooks(
-		devbox.InstallablePackages(),
-		devbox.Config().Include(),
-	)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	hooks := strings.Join(append(pluginHooks, devbox.Config().InitHook().String()), "\n\n")
 	// always write it, even if there are no hooks, because scripts will source it.
-	err = writeRawInitHookFile(devbox, hooks)
+	err = writeRawInitHookFile(devbox, devbox.Config().InitHook().String())
 	if err != nil {
 		return errors.WithStack(err)
 	}

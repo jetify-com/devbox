@@ -1,12 +1,11 @@
 // Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
-package devconfig
+package configfile
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -24,13 +23,13 @@ import (
 )
 
 const (
-	defaultName      = "devbox.json"
-	defaultTySONName = "devbox.tson"
+	DefaultName      = "devbox.json"
+	DefaultTySONName = "devbox.tson"
 )
 
 const (
-	jsonFormat = iota
-	tsonFormat
+	JSONFormat = iota
+	TSONFormat
 )
 
 // ConfigFile defines a devbox environment as JSON.
@@ -40,7 +39,7 @@ type ConfigFile struct {
 
 	// PackagesMutator is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
-	PackagesMutator packagesMutator `json:"packages"`
+	PackagesMutator PackagesMutator `json:"packages"`
 
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
@@ -61,8 +60,9 @@ type ConfigFile struct {
 	// This is a similar format to nix inputs
 	Include []string `json:"include,omitempty"`
 
-	ast    *configAST
-	format int
+	ast *configAST
+	// TODO Remove tyson support and this field.
+	Format int
 }
 
 type shellConfig struct {
@@ -78,30 +78,6 @@ type NixpkgsConfig struct {
 // Stage contains a subset of fields from plansdk.Stage
 type Stage struct {
 	Command string `json:"command"`
-}
-
-const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
-
-func DefaultConfig() *ConfigFile {
-	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
-  "packages": [],
-  "shell": {
-    "init_hook": [
-      "%s"
-    ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
-  }
-}
-`, DefaultInitHook)))
-	if err != nil {
-		panic("default devbox.json is invalid: " + err.Error())
-	}
-	return cfg
 }
 
 func (c *ConfigFile) Bytes() []byte {
@@ -140,10 +116,10 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 
 // SaveTo writes the config to a file.
 func (c *ConfigFile) SaveTo(path string) error {
-	if c.format != jsonFormat {
+	if c.Format != JSONFormat {
 		return errors.New("cannot save config to non-json format")
 	}
-	return os.WriteFile(filepath.Join(path, defaultName), c.Bytes(), 0o644)
+	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
 }
 
 // Get returns the package with the given versionedName
@@ -153,10 +129,10 @@ func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	if i == -1 {
 		return nil, false
 	}
-	return &c.PackagesMutator.collection[i], true
+	return &c.PackagesMutator.Collection[i], true
 }
 
-func loadBytes(b []byte) (*ConfigFile, error) {
+func LoadBytes(b []byte) (*ConfigFile, error) {
 	jsonb, err := hujson.Standardize(slices.Clone(b))
 	if err != nil {
 		return nil, err
@@ -167,7 +143,7 @@ func loadBytes(b []byte) (*ConfigFile, error) {
 		return nil, err
 	}
 	cfg := &ConfigFile{
-		PackagesMutator: packagesMutator{ast: ast},
+		PackagesMutator: PackagesMutator{ast: ast},
 		ast:             ast,
 	}
 	if err := json.Unmarshal(jsonb, cfg); err != nil {
@@ -187,7 +163,7 @@ func LoadConfigFromURL(url string) (*ConfigFile, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return loadBytes(data)
+	return LoadBytes(data)
 }
 
 func validateConfig(cfg *ConfigFile) error {
@@ -246,9 +222,9 @@ func IsConfigName(name string) bool {
 }
 
 func ValidConfigNames() []string {
-	names := []string{defaultName}
+	names := []string{DefaultName}
 	if featureflag.TySON.Enabled() {
-		names = append(names, defaultTySONName)
+		names = append(names, DefaultTySONName)
 	}
 	return names
 }

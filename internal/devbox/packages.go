@@ -462,11 +462,8 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 
 func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Package, error) {
 	// First, get and prepare all the packages that must be installed in this project
-	packages, err := d.AllInstallablePackages()
-	if err != nil {
-		return nil, err
-	}
-	packages = lo.Filter(packages, devpkg.IsNix) // Remove non-nix packages from the list
+	// and remove non-nix packages from the list
+	packages := lo.Filter(d.InstallablePackages(), devpkg.IsNix)
 	if err := devpkg.FillNarInfoCache(ctx, packages...); err != nil {
 		return nil, err
 	}

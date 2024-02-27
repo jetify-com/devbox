@@ -25,22 +25,13 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	ctx, task := trace.NewTask(ctx, "devboxFlakePlan")
 	defer task.End()
 
-	for _, included := range devbox.Config().Include() {
-		// This is a slightly weird place to put this, but since includes can't be
-		// added via command and we need them to be added before we call
-		// plugin manager.Include
-		if err := devbox.Lockfile().Add(included); err != nil {
-			return nil, err
-		}
-		if err := devbox.PluginManager().Include(included); err != nil {
+	for _, pluginConfig := range devbox.Config().PluginConfigs() {
+		if err := devbox.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
 			return nil, err
 		}
 	}
 
-	packages, err := devbox.AllInstallablePackages()
-	if err != nil {
-		return nil, err
-	}
+	packages := devbox.InstallablePackages()
 
 	// Fill the NarInfo Cache concurrently as a perf-optimization, prior to invoking
 	// IsInBinaryCache in flakeInputs() and in the flake.nix template.

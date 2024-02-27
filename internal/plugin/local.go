@@ -62,3 +62,7 @@ func (l *localPlugin) Hash() string {
 func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(filepath.Dir(l.ref.Path), subpath))
 }
+
+func (l *localPlugin) LockfileKey() string {
+	return l.ref.raw
+}

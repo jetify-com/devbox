@@ -16,13 +16,14 @@ import (
 	"github.com/fatih/color"
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/initrec"
 )
 
 func Init(dir string, writer io.Writer) (created bool, err error) {
-	created, err = initConfigFile(filepath.Join(dir, defaultName))
+	created, err = initConfigFile(filepath.Join(dir, configfile.DefaultName))
 	if err != nil || !created {
 		return created, err
 	}
@@ -57,7 +58,7 @@ func initConfigFile(path string) (created bool, err error) {
 		}
 	}()
 
-	_, err = file.Write(DefaultConfig().Bytes())
+	_, err = file.Write(DefaultConfig().Root.Bytes())
 	if err != nil {
 		file.Close()
 		return false, err
@@ -69,13 +70,13 @@ func initConfigFile(path string) (created bool, err error) {
 }
 
 func Open(projectDir string) (*Config, error) {
-	cfgPath := filepath.Join(projectDir, defaultName)
+	cfgPath := filepath.Join(projectDir, configfile.DefaultName)
 
 	if !featureflag.TySON.Enabled() {
 		return Load(cfgPath)
 	}
 
-	tysonCfgPath := filepath.Join(projectDir, defaultTySONName)
+	tysonCfgPath := filepath.Join(projectDir, configfile.DefaultTySONName)
 
 	// If tyson config exists use it. Otherwise fallback to json config.
 	// In the future we may error out if both configs exist, but for now support
@@ -101,7 +102,7 @@ func Open(projectDir string) (*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		config.Root.format = tsonFormat
+		config.Root.Format = configfile.TSONFormat
 		return config, nil
 	}
 

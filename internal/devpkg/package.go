@@ -17,7 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -100,9 +100,9 @@ func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devop
 	return packages
 }
 
-func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
+func PackagesFromConfig(packages []configfile.Package, l lock.Locker) []*Package {
 	result := []*Package{}
-	for _, cfgPkg := range config.Packages() {
+	for _, cfgPkg := range packages {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
@@ -669,6 +669,10 @@ func (p *Package) String() string {
 	if p.installable.AttrPath != "" {
 		return p.installable.AttrPath
 	}
+	return p.Raw
+}
+
+func (p *Package) LockfileKey() string {
 	return p.Raw
 }
 

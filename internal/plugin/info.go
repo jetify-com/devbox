@@ -59,7 +59,7 @@ func Readme(ctx context.Context,
 	return buf.String(), nil
 }
 
-func printReadme(cfg *config, w io.Writer, markdown bool) error {
+func printReadme(cfg *Config, w io.Writer, markdown bool) error {
 	if cfg.Description() == "" {
 		return nil
 	}
@@ -73,7 +73,7 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printServices(cfg *config, pkg *devpkg.Package, w io.Writer, markdown bool) error {
+func printServices(cfg *Config, pkg *devpkg.Package, w io.Writer, markdown bool) error {
 	_, contentPath := cfg.ProcessComposeYaml()
 	if contentPath == "" {
 		return nil
@@ -103,7 +103,7 @@ func printServices(cfg *config, pkg *devpkg.Package, w io.Writer, markdown bool)
 	return errors.WithStack(err)
 }
 
-func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
+func printCreateFiles(cfg *Config, w io.Writer, markdown bool) error {
 	if len(cfg.CreateFiles) == 0 {
 		return nil
 	}
@@ -124,7 +124,7 @@ func printCreateFiles(cfg *config, w io.Writer, markdown bool) error {
 	return errors.WithStack(err)
 }
 
-func printEnv(cfg *config, w io.Writer, markdown bool) error {
+func printEnv(cfg *Config, w io.Writer, markdown bool) error {
 	if len(cfg.Env) == 0 {
 		return nil
 	}
