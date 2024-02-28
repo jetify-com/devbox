@@ -25,7 +25,7 @@ Plugins are defined as Go JSON Template files, using the following schema:
 {
   "name": "",
   "version": "",
-  "readme": "",
+  "description": "",
   "env": {
     "<key>": "<value>"
   },

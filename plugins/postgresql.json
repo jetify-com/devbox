@@ -1,7 +1,7 @@
 {
     "name": "postgresql",
     "version": "0.0.2",
-    "readme": "To initialize the database run `initdb`.",
+    "description": "To initialize the database run `initdb`.",
     "env": {
         "PGDATA": "{{ .Virtenv }}/data",
         "PGHOST": "{{ .Virtenv }}"

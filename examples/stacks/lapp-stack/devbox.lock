@@ -279,7 +279,6 @@
     },
     "php@latest": {
       "last_modified": "2024-02-16T04:19:51Z",
-      "plugin_version": "0.0.3",
       "resolved": "github:NixOS/nixpkgs/5e55f0bb65124b05d0a52e164514c03596023634#php83",
       "source": "devbox-search",
       "version": "8.3.3",

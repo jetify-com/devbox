@@ -29,7 +29,7 @@ Tests begin by defining their JSON with:
   { "packages": { "go": "latest" } }`)
 */
 
-func parseConfigTxtarTest(t *testing.T, test string) (in *configFile, want []byte) {
+func parseConfigTxtarTest(t *testing.T, test string) (in *ConfigFile, want []byte) {
 	t.Helper()
 
 	ar := txtar.Parse([]byte(test))
@@ -701,7 +701,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}
-	if diff := cmp.Diff(in, &out.Root, cmpopts.IgnoreUnexported(configFile{}, packagesMutator{})); diff != "" {
+	if diff := cmp.Diff(in, &out.Root, cmpopts.IgnoreUnexported(ConfigFile{}, packagesMutator{})); diff != "" {
 		t.Errorf("configs not equal (-in +out):\n%s", diff)
 	}
 
@@ -727,7 +727,7 @@ func TestNixpkgsValidation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			err := ValidateNixpkg(&configFile{
+			err := ValidateNixpkg(&ConfigFile{
 				Nixpkgs: &NixpkgsConfig{
 					Commit: testCase.commit,
 				},

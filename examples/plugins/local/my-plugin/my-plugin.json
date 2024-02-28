@@ -1,7 +1,7 @@
 {
   "name": "my-plugin",
   "version": "0.0.1",
-  "readme": "Example custom plugin",
+  "description": "Example custom plugin",
   "env": {
     "MY_FOO_VAR": "BAR"
   },

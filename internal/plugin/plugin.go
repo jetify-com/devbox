@@ -5,6 +5,7 @@ package plugin
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"io/fs"
 	"os"
@@ -13,11 +14,11 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg"
 
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
@@ -34,20 +35,15 @@ var (
 )
 
 type config struct {
-	Name        string            `json:"name"`
-	Version     string            `json:"version"`
+	devconfig.ConfigFile
+
 	CreateFiles map[string]string `json:"create_files"`
-	Packages    []string          `json:"__packages"`
-	Env         map[string]string `json:"env"`
-	Readme      string            `json:"readme"`
+
+	DeprecatedDescription string `json:"readme"`
 	// If true, we remove the package that triggered this plugin from the environment
 	// Useful when we want to replace with flake
-	RemoveTriggerPackage bool `json:"__remove_trigger_package,omitempty"`
-
-	Shell struct {
-		// InitHook contains commands that will run at shell startup.
-		InitHook shellcmd.Commands `json:"init_hook,omitempty"`
-	} `json:"shell,omitempty"`
+	RemoveTriggerPackage bool   `json:"__remove_trigger_package,omitempty"`
+	Version              string `json:"version"`
 }
 
 func (c *config) ProcessComposeYaml() (string, string) {
@@ -280,4 +276,11 @@ func (m *Manager) shouldCreateFile(
 	_, err := os.Stat(filePath)
 	// File doesn't exist, so we should create it.
 	return errors.Is(err, fs.ErrNotExist)
+}
+
+func (c *config) Description() string {
+	if c == nil {
+		return ""
+	}
+	return cmp.Or(c.ConfigFile.Description, c.DeprecatedDescription)
 }

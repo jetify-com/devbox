@@ -7,7 +7,7 @@ import (
 	"github.com/tailscale/hujson"
 )
 
-func (c *configFile) SetStringField(fieldName, val string) {
+func (c *ConfigFile) SetStringField(fieldName, val string) {
 	valueOfStruct := reflect.ValueOf(c).Elem()
 
 	field := valueOfStruct.FieldByName(fieldName)
@@ -16,7 +16,7 @@ func (c *configFile) SetStringField(fieldName, val string) {
 	c.ast.setStringField(c.jsonNameOfField(fieldName), val)
 }
 
-func (c *configFile) jsonNameOfField(fieldName string) string {
+func (c *ConfigFile) jsonNameOfField(fieldName string) string {
 	valueOfStruct := reflect.ValueOf(c).Elem()
 
 	var name string

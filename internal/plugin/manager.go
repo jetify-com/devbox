@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 )
@@ -64,7 +65,8 @@ func (m *Manager) ProcessPluginPackages(
 		}
 		pluginPackages = append(
 			pluginPackages,
-			devpkg.PackagesFromStringsWithDefaults(config.Packages, m.lockfile)...,
+			devpkg.PackagesFromConfig(
+				&devconfig.Config{Root: config.ConfigFile}, m.lockfile)...,
 		)
 		if config.RemoveTriggerPackage {
 			packagesToRemove = append(packagesToRemove, pkg)

@@ -60,7 +60,7 @@ func Readme(ctx context.Context,
 }
 
 func printReadme(cfg *config, w io.Writer, markdown bool) error {
-	if cfg.Readme == "" {
+	if cfg.Description() == "" {
 		return nil
 	}
 	_, err := fmt.Fprintf(
@@ -68,7 +68,7 @@ func printReadme(cfg *config, w io.Writer, markdown bool) error {
 		"%s%s NOTES:\n%s\n\n",
 		lo.Ternary(markdown, "### ", ""),
 		cfg.Name,
-		cfg.Readme,
+		cfg.Description(),
 	)
 	return errors.WithStack(err)
 }

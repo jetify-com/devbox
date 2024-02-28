@@ -92,17 +92,6 @@ type Package struct {
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
 
-// PackagesFromStringsWithDefaults constructs Package from the list of package names provided.
-// These names correspond to devbox packages from the devbox.json config.
-func PackagesFromStringsWithDefaults(rawNames []string, l lock.Locker) []*Package {
-	packages := []*Package{}
-	for _, rawName := range rawNames {
-		pkg := PackageFromStringWithDefaults(rawName, l)
-		packages = append(packages, pkg)
-	}
-	return packages
-}
-
 func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devopt.AddOpts) []*Package {
 	packages := []*Package{}
 	for _, name := range rawNames {

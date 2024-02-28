@@ -1,7 +1,7 @@
 {
   "name": "rustup",
   "version": "0.0.1",
-  "readme": "If using this on macOS you may need to install `libiconv` as well",
+  "description": "If using this on macOS you may need to install `libiconv` as well",
   "env": {
     "RUSTUP_HOME": "{{ .Virtenv }}",
     "LIBRARY_PATH": "{{ .DevboxProfileDefault }}/lib"
