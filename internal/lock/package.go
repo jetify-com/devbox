@@ -30,7 +30,8 @@ type SystemInfo struct {
 	Outputs []Output `json:"outputs,omitempty"`
 
 	// Legacy Format
-	StorePath string `json:"store_path,omitempty"`
+	StorePath             string `json:"store_path,omitempty"`
+	outputIsFromStorePath bool
 }
 
 // Output refers to a nix package output. This struct is derived from searcher.Output
@@ -115,22 +116,29 @@ func (i *SystemInfo) Equals(other *SystemInfo) bool {
 	return slices.Equal(i.Outputs, other.Outputs)
 }
 
+// If we have a StorePath and no Outputs, we need to convert to the new format.
+// Note: non-empty Outputs may have StorePath alongside it for backwards-compatibility
+// but we should ignore that legacy StorePath.
+func (i *SystemInfo) addOutputFromLegacyStorePath() {
+	if i.StorePath != "" && len(i.Outputs) == 0 {
+		i.Outputs = []Output{
+			{
+				Default: true,
+				Name:    "out",
+				Path:    i.StorePath,
+			},
+		}
+		i.outputIsFromStorePath = true
+	}
+}
+
 // ensurePackagesHaveOutputs is used for backwards-compatibility with the old
 // lockfile format where each SystemInfo had a StorePath but no Outputs.
 func ensurePackagesHaveOutputs(packages map[string]*Package) {
 	for _, pkg := range packages {
 		for sys, sysInfo := range pkg.Systems {
-			// If we have a StorePath and no Outputs, we need to convert to the new format.
-			// Note: for a non-empty StorePath, Outputs should be empty, but being cautious.
-			if sysInfo.StorePath != "" && len(sysInfo.Outputs) == 0 {
-				pkg.Systems[sys].Outputs = []Output{
-					{
-						Default: true,
-						Name:    "out",
-						Path:    sysInfo.StorePath,
-					},
-				}
-			}
+			sysInfo.addOutputFromLegacyStorePath()
+			pkg.Systems[sys] = sysInfo
 		}
 	}
 }

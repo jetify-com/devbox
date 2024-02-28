@@ -106,10 +106,8 @@ func (f *File) Save() error {
 	// such as `devbox update` or `devbox add` or `devbox remove`.
 	for pkgName, pkg := range f.Packages {
 		for sys, sysInfo := range pkg.Systems {
-			if !isDirty && sysInfo.StorePath != "" {
+			if !isDirty && sysInfo.outputIsFromStorePath {
 				f.Packages[pkgName].Systems[sys].Outputs = nil
-			} else {
-				f.Packages[pkgName].Systems[sys].StorePath = ""
 			}
 		}
 	}
