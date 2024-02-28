@@ -5,6 +5,7 @@ package plugin
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"io/fs"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devpkg"
 
@@ -42,7 +42,8 @@ type config struct {
 	DeprecatedDescription string `json:"readme"`
 	// If true, we remove the package that triggered this plugin from the environment
 	// Useful when we want to replace with flake
-	RemoveTriggerPackage bool `json:"__remove_trigger_package,omitempty"`
+	RemoveTriggerPackage bool   `json:"__remove_trigger_package,omitempty"`
+	Version              string `json:"version"`
 }
 
 func (c *config) ProcessComposeYaml() (string, string) {
@@ -281,9 +282,5 @@ func (c *config) Description() string {
 	if c == nil {
 		return ""
 	}
-	return lo.Ternary(
-		c.ConfigFile.Description != "",
-		c.ConfigFile.Description,
-		c.DeprecatedDescription,
-	)
+	return cmp.Or(c.ConfigFile.Description, c.DeprecatedDescription)
 }
