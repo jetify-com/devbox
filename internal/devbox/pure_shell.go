@@ -46,7 +46,7 @@ func findNixInPATH(env map[string]string) ([]string, error) {
 // so that devbox can be available inside a pure shell
 func createDevboxSymlink(d *Devbox) error {
 	// Get absolute path for where devbox is called
-	devboxPath, err := filepath.Abs(os.Args[0])
+	devboxPath, err := os.Executable()
 	if err != nil {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
