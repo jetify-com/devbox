@@ -12,7 +12,7 @@
       "run_test": [
         "test -n \"$PLUGIN1_INIT_HOOK\" || exit 1",
         "test -n \"$PLUGIN1_ENV\" || exit 1",
-        "if [ \"$PLUGIN1_ENV2\" == \"override\" ]; then echo success; else exit 1; fi;",
+        "if [ \"$PLUGIN1_ENV2\" != \"override\" ]; then exit 1; fi;",
         "devbox run plugin_1_script",
         "hello"
       ]
