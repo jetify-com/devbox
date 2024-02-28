@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/exp/maps"
 )
 
@@ -36,8 +37,14 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 	resultBytes, err := cmd.Output()
 	if err != nil {
 		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-			return nil, fmt.Errorf("nix path-info exit code: %d, output: %s, err: %w", exitErr.ExitCode(), exitErr.Stderr, err)
+			return nil, redact.Errorf(
+				"nix path-info exit code: %d, output: %s, err: %w",
+				redact.Safe(exitErr.ExitCode()),
+				exitErr.Stderr,
+				err,
+			)
 		}
+
 		return nil, err
 	}
 	return parseStorePathFromInstallableOutput(installable, resultBytes)

@@ -2,13 +2,13 @@ package nix
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/redact"
 )
 
 type BuildArgs struct {
@@ -39,7 +39,11 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	if err := cmd.Run(); err != nil {
 		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
 			debug.Log("Nix build exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
-			return fmt.Errorf("nix build exit code: %d, output: %s, err: %w", exitErr.ExitCode(), exitErr.Stderr, err)
+			return redact.Errorf("nix build exit code: %d, output: %s, err: %w",
+				redact.Safe(exitErr.ExitCode()),
+				exitErr.Stderr,
+				err,
+			)
 		}
 		return err
 	}
