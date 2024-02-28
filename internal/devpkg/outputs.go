@@ -1,14 +1,20 @@
 package devpkg
 
+import "strings"
+
 // outputs are the nix package outputs
 type outputs struct {
 	selectedNames []string
 	defaultNames  []string
 }
 
-// initOutputs creates a new outputs struct.
-func initOutputs(selectedNames []string) *outputs {
-	return &outputs{selectedNames: selectedNames}
+// initOutputs initializes output for package. Outputs can be specified as part
+// of devbox.json or as part of flake reference.
+func (p *Package) initOutputs(selectedNames []string) {
+	if len(selectedNames) == 0 && p.installable.Outputs != "" {
+		selectedNames = strings.Split(p.installable.Outputs, ",")
+	}
+	p.outputs = outputs{selectedNames: selectedNames}
 }
 
 func (out *outputs) GetNames(pkg *Package) ([]string, error) {
