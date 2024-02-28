@@ -106,7 +106,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		pkg.initOutputs(cfgPkg.Outputs)
+		pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, cfgPkg.Outputs...))
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
 	}
@@ -121,7 +121,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
-	pkg.initOutputs(opts.Outputs)
+	pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, opts.Outputs...))
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
@@ -148,6 +148,7 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	// nothing to resolve.
 	pkg.resolve = sync.OnceValue(func() error { return nil })
 	pkg.setInstallable(parsed, locker.ProjectDir())
+	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
 	return pkg
 }
 
