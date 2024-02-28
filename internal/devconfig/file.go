@@ -37,7 +37,6 @@ const (
 type ConfigFile struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	Version     string `json:"version"`
 
 	// PackagesMutator is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.

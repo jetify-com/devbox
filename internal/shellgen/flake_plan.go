@@ -137,16 +137,20 @@ func (g *glibcPatchFlake) addPackageOutput(pkg *devpkg.Package) error {
 	return nil
 }
 
+// TODO: this only handles the first store path, but we should handle all of them
 func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) {
-	storePath, err := pkg.InputAddressedPath()
+	storePaths, err := pkg.InputAddressedPaths()
 	if err != nil {
 		return "", err
+	}
+	if len(storePaths) == 0 {
+		return "", fmt.Errorf("no store path for package %s", pkg.Raw)
 	}
 	return fmt.Sprintf(`builtins.fetchClosure {
   fromStore = "%s";
   fromPath = "%s";
   inputAddressed = true;
-}`, devpkg.BinaryCache, storePath), nil
+}`, devpkg.BinaryCache, storePaths[0]), nil
 }
 
 func (g *glibcPatchFlake) writeTo(dir string) error {

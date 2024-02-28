@@ -432,55 +432,57 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 	for _, pkg := range packages {
 		stepNum += 1
 
-		installable, err := pkg.Installable()
+		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
+		fmt.Fprintf(d.stderr, stepMsg+"\n")
+
+		installables, err := pkg.Installables()
 		if err != nil {
 			return err
 		}
 
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		fmt.Fprintf(d.stderr, stepMsg+"\n")
-
-		args := &nix.BuildArgs{
-			AllowInsecure: pkg.HasAllowInsecure(),
-			// --no-link to avoid generating the result objects
-			Flags:  []string{"--no-link"},
-			Writer: d.stderr,
-		}
-		err = nix.Build(ctx, args, installable)
-		if err != nil {
-			fmt.Fprintf(d.stderr, "%s: ", stepMsg)
-			color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
-
-			// Check if the user is installing a package that cannot be installed on their platform.
-			// For example, glibcLocales on MacOS will give the following error:
-			// flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
-			// This is because glibcLocales is only available on Linux.
-			// The user should try `devbox add` again with `--exclude-platform`
-			errMessage := strings.TrimSpace(err.Error())
-			maybePackageSystemCompatibilityError := strings.Contains(errMessage, "error: flake output attribute") &&
-				strings.Contains(errMessage, "is not a derivation or path")
-
-			if maybePackageSystemCompatibilityError {
-				platform := nix.System()
-				return usererr.WithUserMessage(
-					err,
-					"package %s cannot be installed on your platform %s.\n"+
-						"If you know this package is incompatible with %[2]s, then "+
-						"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
-						"If you think this package should be compatible with %[2]s, then "+
-						"it's possible this particular version is not available yet from the nix registry. "+
-						"You could try `devbox add` with a different version for this package.\n\n"+
-						"Underlying Error from nix is:",
-					pkg.Raw,
-					platform,
-				)
+		for _, installable := range installables {
+			args := &nix.BuildArgs{
+				AllowInsecure: pkg.HasAllowInsecure(),
+				// --no-link to avoid generating the result objects
+				Flags:  []string{"--no-link"},
+				Writer: d.stderr,
 			}
+			err = nix.Build(ctx, args, installable)
+			if err != nil {
+				fmt.Fprintf(d.stderr, "%s: ", stepMsg)
+				color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
 
-			if isInsecureErr, userErr := nix.IsExitErrorInsecurePackage(err, installable); isInsecureErr {
-				return userErr
+				// Check if the user is installing a package that cannot be installed on their platform.
+				// For example, glibcLocales on MacOS will give the following error:
+				// flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
+				// This is because glibcLocales is only available on Linux.
+				// The user should try `devbox add` again with `--exclude-platform`
+				errMessage := strings.TrimSpace(err.Error())
+				maybePackageSystemCompatibilityError := strings.Contains(errMessage, "error: flake output attribute") &&
+					strings.Contains(errMessage, "is not a derivation or path")
+
+				if maybePackageSystemCompatibilityError {
+					platform := nix.System()
+					return usererr.WithUserMessage(
+						err,
+						"package %s cannot be installed on your platform %s.\n"+
+							"If you know this package is incompatible with %[2]s, then "+
+							"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+							"If you think this package should be compatible with %[2]s, then "+
+							"it's possible this particular version is not available yet from the nix registry. "+
+							"You could try `devbox add` with a different version for this package.\n\n"+
+							"Underlying Error from nix is:",
+						pkg.Raw,
+						platform,
+					)
+				}
+
+				if isInsecureErr, userErr := nix.IsExitErrorInsecurePackage(err, installable); isInsecureErr {
+					return userErr
+				}
+
+				return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
 			}
-
-			return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
 		}
 
 		fmt.Fprintf(d.stderr, "%s: ", stepMsg)
@@ -529,20 +531,22 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Packag
 
 	packagesToInstall := []*devpkg.Package{}
 	for _, pkg := range packagesNotInProfile {
-		installable, err := pkg.Installable()
+		installables, err := pkg.Installables()
 		if err != nil {
 			return nil, err
 		}
-		storePaths, err := nix.StorePathsFromInstallable(ctx, installable)
-		if err != nil {
-			return nil, err
-		}
-		isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
-		if err != nil {
-			return nil, err
-		}
-		if !isInStore {
-			packagesToInstall = append(packagesToInstall, pkg)
+		for _, installable := range installables {
+			storePaths, err := nix.StorePathsFromInstallable(ctx, installable)
+			if err != nil {
+				return nil, err
+			}
+			isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
+			if err != nil {
+				return nil, err
+			}
+			if !isInStore {
+				packagesToInstall = append(packagesToInstall, pkg)
+			}
 		}
 	}
 
