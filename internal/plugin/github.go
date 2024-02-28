@@ -1,11 +1,11 @@
 package plugin
 
 import (
+	"cmp"
 	"io"
 	"net/http"
 	"net/url"
 
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 )
@@ -28,7 +28,7 @@ func (p *githubPlugin) Fetch() ([]byte, error) {
 		"https://raw.githubusercontent.com/",
 		p.Owner,
 		p.Repo,
-		lo.Ternary(p.Rev == "", "master", p.Rev),
+		cmp.Or(p.Rev, "master"),
 		p.withFilename(p.Dir),
 	)
 	if err != nil {
@@ -68,7 +68,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		"https://raw.githubusercontent.com/",
 		p.Owner,
 		p.Repo,
-		lo.Ternary(p.Rev == "", "master", p.Rev),
+		cmp.Or(p.Rev, "master"),
 		p.Dir,
 		subpath,
 	)
