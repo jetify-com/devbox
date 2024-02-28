@@ -58,10 +58,13 @@ func TestParseFlakeRef(t *testing.T) {
 		"github:NixOS/nix/v1.2.3":     {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
 		"github:NixOS/nix?ref=v1.2.3": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
 		"github:NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":     {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
-		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix?host=example.com":                             {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
+		"github:NixOS/nix/main": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "main"},
+		"github:NixOS/nix/main/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "main/5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":      {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
+		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c":      {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":  {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
+		"github:NixOS/nix?host=example.com":                              {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
+		"github:NixOS/nix?host=example.com&dir=subdir":                   {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir"},
 
 		// The github type allows clone-style URLs. The username and
 		// host are ignored.
