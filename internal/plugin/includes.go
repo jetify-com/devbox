@@ -7,19 +7,19 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 )
 
-func LoadConfigFromInclude(include, projectDir string) (*Config, error) {
+func LoadConfigFromInclude(include string, lockfile *lock.File) (*Config, error) {
 	var includable Includable
 	var err error
 	if t, name, _ := strings.Cut(include, ":"); t == "plugin" {
 		includable = devpkg.PackageFromStringWithDefaults(
 			name,
-			&lock.DummyLocker{ProjectDirVal: projectDir},
+			lockfile,
 		)
 	} else {
-		includable, err = parseReflike(include, projectDir)
+		includable, err = parseReflike(include, lockfile.ProjectDir())
 		if err != nil {
 			return nil, err
 		}
 	}
-	return getConfigIfAny(includable, projectDir)
+	return getConfigIfAny(includable, lockfile.ProjectDir())
 }

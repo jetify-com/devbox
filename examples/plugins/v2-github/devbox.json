@@ -1,0 +1,18 @@
+{
+  "packages": [],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "run_test": [
+        "./test.sh"
+      ]
+    }
+  },
+  "include": [
+    // TODO, make these more interesting by adding v2 capabilities
+    "github:jetpack-io/devbox-plugin-example",
+    "github:jetpack-io/devbox-plugin-example?dir=custom-dir"
+  ]
+}

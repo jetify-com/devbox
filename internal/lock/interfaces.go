@@ -3,8 +3,6 @@
 
 package lock
 
-import "strings"
-
 type devboxProject interface {
 	ConfigHash() (string, error)
 	NixPkgsCommitHash() string
@@ -17,28 +15,4 @@ type Locker interface {
 	LegacyNixpkgsPath(string) string
 	ProjectDir() string
 	Resolve(string) (*Package, error)
-}
-
-type DummyLocker struct {
-	ProjectDirVal string
-}
-
-func (d *DummyLocker) Get(string) *Package {
-	return nil
-}
-
-func (d *DummyLocker) LegacyNixpkgsPath(string) string {
-	return ""
-}
-
-func (d *DummyLocker) ProjectDir() string {
-	return d.ProjectDirVal
-}
-
-func (d *DummyLocker) Resolve(s string) (*Package, error) {
-	a, _, _ := strings.Cut(s, "@")
-	return &Package{
-		Resolved: "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#" + a,
-		Source:   nixpkgSource,
-	}, nil
 }

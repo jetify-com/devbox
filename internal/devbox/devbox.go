@@ -113,6 +113,11 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if err := cfg.LoadRecursive(lock); err != nil {
+		return nil, err
+	}
+
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
 	if err := box.moveAllowInsecureFromLockfile(box.stderr, lock, cfg); err != nil {

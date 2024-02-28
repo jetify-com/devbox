@@ -73,7 +73,7 @@ func Open(projectDir string) (*Config, error) {
 	cfgPath := filepath.Join(projectDir, configfile.DefaultName)
 
 	if !featureflag.TySON.Enabled() {
-		return Load(cfgPath)
+		return readFromFile(cfgPath)
 	}
 
 	tysonCfgPath := filepath.Join(projectDir, configfile.DefaultTySONName)
@@ -98,7 +98,7 @@ func Open(projectDir string) (*Config, error) {
 			return nil, err
 		}
 		cfgPath = tmpFile.Name()
-		config, err := Load(cfgPath)
+		config, err := readFromFile(cfgPath)
 		if err != nil {
 			return nil, err
 		}
@@ -106,5 +106,5 @@ func Open(projectDir string) (*Config, error) {
 		return config, nil
 	}
 
-	return Load(cfgPath)
+	return readFromFile(cfgPath)
 }

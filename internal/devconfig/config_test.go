@@ -21,7 +21,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got save error:", err)
 	}
-	out, err := Load(filepath.Join(path, configfile.DefaultName))
+	out, err := LoadForTest(filepath.Join(path, configfile.DefaultName))
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}

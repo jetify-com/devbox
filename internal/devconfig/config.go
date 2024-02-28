@@ -6,13 +6,13 @@ import (
 	"maps"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/plugin"
 )
 
@@ -42,20 +42,35 @@ func DefaultConfig() *Config {
     }
   }
 }
-`, defaultInitHook)), "")
+`, defaultInitHook)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}
 	return cfg
 }
 
-// Load reads a devbox config file, and validates it.
-func Load(path string) (*Config, error) {
+func IsNotDefault(path string) bool {
+	cfg, err := readFromFile(path)
+	if err != nil {
+		return false
+	}
+	return !cfg.Root.Equals(&DefaultConfig().Root)
+}
+
+func LoadForTest(path string) (*Config, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return loadBytes(b, filepath.Dir(path))
+	return loadBytes(b)
+}
+
+func readFromFile(path string) (*Config, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return loadBytes(b)
 }
 
 func LoadConfigFromURL(url string) (*Config, error) {
@@ -69,58 +84,63 @@ func LoadConfigFromURL(url string) (*Config, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return loadBytes(data, "")
+	return loadBytes(data)
 }
 
-func loadBytes(b []byte, projectDir string) (*Config, error) {
-	baseConfig, err := configfile.LoadBytes(b)
+func loadBytes(b []byte) (*Config, error) {
+	root, err := configfile.LoadBytes(b)
 	if err != nil {
 		return nil, err
 	}
 
-	return loadRecursive(baseConfig, projectDir)
+	return &Config{
+		Root: *root,
+	}, nil
 }
 
-func loadRecursive(config *configfile.ConfigFile, projectDir string) (*Config, error) {
-	included := make([]*Config, 0, len(config.Include))
+func (c *Config) LoadRecursive(lockfile *lock.File) error {
+	included := make([]*Config, 0, len(c.Root.Include))
 
-	for _, importRef := range config.Include {
-		pluginConfig, err := plugin.LoadConfigFromInclude(importRef, projectDir)
+	for _, importRef := range c.Root.Include {
+		pluginConfig, err := plugin.LoadConfigFromInclude(importRef, lockfile)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return errors.WithStack(err)
 		}
 
-		includable, err := loadRecursive(&pluginConfig.ConfigFile, projectDir)
-		includable.pluginData = &pluginConfig.PluginOnlyData
-		if err != nil {
-			return nil, errors.WithStack(err)
+		includable := &Config{
+			Root:       pluginConfig.ConfigFile,
+			pluginData: &pluginConfig.PluginOnlyData,
+		}
+		if err := includable.LoadRecursive(lockfile); err != nil {
+			return errors.WithStack(err)
 		}
 
 		included = append(included, includable)
 	}
 
 	builtIns, err := plugin.GetBuiltinsForPackages(
-		config.PackagesMutator.Collection,
-		projectDir,
+		c.Root.PackagesMutator.Collection,
+		lockfile,
 	)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	for _, builtIn := range builtIns {
-		includable, err := loadRecursive(&builtIn.ConfigFile, projectDir)
-		if err != nil {
-			return nil, errors.WithStack(err)
+		includable := &Config{
+			Root:       builtIn.ConfigFile,
+			pluginData: &builtIn.PluginOnlyData,
+		}
+		if err := includable.LoadRecursive(lockfile); err != nil {
+			return errors.WithStack(err)
 		}
 		pluginData := builtIn.PluginOnlyData
 		includable.pluginData = &pluginData
 		included = append(included, includable)
 	}
 
-	return &Config{
-		Root:     *config,
-		included: included,
-	}, nil
+	c.included = included
+	return nil
 }
 
 func (c *Config) PackageMutator() *configfile.PackagesMutator {
@@ -147,7 +167,6 @@ func (c *Config) Packages() []configfile.Package {
 
 	for _, i := range c.included {
 		packages = append(packages, i.Packages()...)
-		fmt.Println("i.pluginData.RemoveTriggerPackage", i.pluginData.RemoveTriggerPackage)
 		if i.pluginData.RemoveTriggerPackage {
 			if pkg, ok := i.pluginData.Source.(interface{ LockfileKey() string }); ok {
 				packagesToRemove[pkg.LockfileKey()] = true

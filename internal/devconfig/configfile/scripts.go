@@ -15,9 +15,13 @@ func (c *ConfigFile) Scripts() Scripts {
 	}
 	result := make(Scripts)
 	for name, commands := range c.Shell.Scripts {
+		comments := ""
+		if c.ast != nil {
+			comments = string(c.ast.beforeComment("shell", "scripts", name))
+		}
 		result[name] = &script{
 			Commands: *commands,
-			Comments: string(c.ast.beforeComment("shell", "scripts", name)),
+			Comments: comments,
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -69,8 +70,12 @@ func (l *localPlugin) LockfileKey() string {
 }
 
 func (l *localPlugin) Path() string {
-	if filepath.IsAbs(l.ref.Ref.Path) {
-		return l.ref.Ref.Path
+	path := l.ref.Ref.Path
+	if !strings.HasSuffix(path, l.ref.filename) {
+		path = filepath.Join(path, l.ref.filename)
 	}
-	return filepath.Join(l.projectDir, l.ref.Ref.Path)
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(l.projectDir, path)
 }

@@ -5,7 +5,7 @@
       "echo 'Welcome to devbox!' > /dev/null"
     ],
     "scripts": {
-      "test": [
+      "run_test": [
         "test -n \"$PHPRC\" || exit 1"
       ]
     }

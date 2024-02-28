@@ -73,11 +73,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 
 func isModifiedConfig(path string) bool {
 	if configfile.IsConfigName(filepath.Base(path)) {
-		cfg, err := devconfig.Load(path)
-		if err != nil {
-			return false
-		}
-		return !cfg.Root.Equals(&devconfig.DefaultConfig().Root)
+		return devconfig.IsNotDefault(path)
 	}
 	return false
 }

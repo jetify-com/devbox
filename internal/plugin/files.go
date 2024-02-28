@@ -53,14 +53,11 @@ func getBuiltinPluginConfigIfExists(
 
 func GetBuiltinsForPackages(
 	packages []configfile.Package,
-	projectDir string,
+	lockfile *lock.File,
 ) ([]*Config, error) {
 	builtIns := []*Config{}
-	for _, pkg := range devpkg.PackagesFromConfig(
-		packages,
-		&lock.DummyLocker{ProjectDirVal: projectDir},
-	) {
-		config, err := getBuiltinPluginConfigIfExists(pkg, projectDir)
+	for _, pkg := range devpkg.PackagesFromConfig(packages, lockfile) {
+		config, err := getBuiltinPluginConfigIfExists(pkg, lockfile.ProjectDir())
 		if err != nil {
 			return nil, err
 		}
