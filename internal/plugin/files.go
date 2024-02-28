@@ -23,7 +23,7 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 		}
 		return buildConfig(pkg, projectDir, string(content))
 	case *localPlugin:
-		content, err := os.ReadFile(pkg.Path)
+		content, err := os.ReadFile(pkg.ref.Path)
 		if err != nil && !os.IsNotExist(err) {
 			return nil, errors.WithStack(err)
 		}

@@ -9,3 +9,6 @@ else
   echo "ERROR: MY_ENV_VAR environment variable is not set to '$expected' OR MY_ENV_VAR_CUSTOM variable is not set to '$custom_expected'"
   exit 1
 fi
+
+echo BRANCH_ENV_VAR=$BRANCH_ENV_VAR
+if [ "$BRANCH_ENV_VAR" != "I AM A BRANCH VAR" ]; then exit 1; fi;

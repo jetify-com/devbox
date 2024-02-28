@@ -17,7 +17,7 @@ func TestNewGithubPlugin(t *testing.T) {
 			name:    "parse basic github plugin",
 			Include: "github:jetpack-io/devbox-plugins",
 			expected: githubPlugin{
-				RefLike: RefLike{
+				ref: RefLike{
 					Ref: flake.Ref{
 						Type:  "github",
 						Owner: "jetpack-io",
@@ -32,7 +32,7 @@ func TestNewGithubPlugin(t *testing.T) {
 			name:    "parse github plugin with dir param",
 			Include: "github:jetpack-io/devbox-plugins?dir=mongodb",
 			expected: githubPlugin{
-				RefLike: RefLike{
+				ref: RefLike{
 					Ref: flake.Ref{
 						Type:  "github",
 						Owner: "jetpack-io",
@@ -48,7 +48,7 @@ func TestNewGithubPlugin(t *testing.T) {
 			name:    "parse github plugin with dir param and rev",
 			Include: "github:jetpack-io/devbox-plugins/my-branch?dir=mongodb",
 			expected: githubPlugin{
-				RefLike: RefLike{
+				ref: RefLike{
 					Ref: flake.Ref{
 						Type:  "github",
 						Owner: "jetpack-io",
@@ -64,7 +64,7 @@ func TestNewGithubPlugin(t *testing.T) {
 			name:    "parse github plugin with dir param and rev",
 			Include: "github:jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
 			expected: githubPlugin{
-				RefLike: RefLike{
+				ref: RefLike{
 					Ref: flake.Ref{
 						Type:  "github",
 						Owner: "jetpack-io",

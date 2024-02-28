@@ -31,7 +31,7 @@ func parseReflike(s string) (Includable, error) {
 	case flake.TypePath:
 		return newLocalPlugin(reflike)
 	case flake.TypeGitHub:
-		return newGithubPlugin(reflike), nil
+		return &githubPlugin{ref: reflike}, nil
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
 	}
