@@ -40,11 +40,11 @@
             {{- range $_, $pkg := .Packages }}
             {{- range $_, $outputName := $pkg.GetOutputNames }}
             {{ if and ($pkg.IsOutputInBinaryCache $outputName) (not $pkg.PatchGlibc) -}}
-            (builtins.fetchClosure {
+            (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
               fromStore = "{{ $.BinaryCache }}";
               fromPath = "{{ $pkg.InputAddressedPathForOutput $outputName }}";
               inputAddressed = true;
-            })
+            }))
             {{- end }}
             {{- end }}
             {{- end }}
@@ -54,13 +54,13 @@
               name = "{{.Name}}";
               paths = [
                 {{- range .Paths }}
-                {{.}}
+                (builtins.trace "evaluating {{.}}" {{.}})
                 {{- end }}
               ];
             })
             {{- end }}
             {{- range .BuildInputs }}
-            {{.}}
+            (builtins.trace "evaluating {{.}}" {{.}})
             {{- end }}
             {{- end }}
           ];
