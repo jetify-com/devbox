@@ -51,10 +51,10 @@ func Recover() {
 
 	sentry.CurrentHub().Recover(r)
 	if enabled {
-		log.Println("Allowing panic because debug mode is enabled.")
+		fmt.Fprintln(os.Stderr, "Allowing panic because debug mode is enabled.")
 		panic(r)
 	}
-	fmt.Println("Error:", r)
+	fmt.Fprintln(os.Stderr, "Error:", r)
 }
 
 func EarliestStackTrace(err error) error {

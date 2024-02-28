@@ -89,7 +89,7 @@ type glibcPatchFlake struct {
 func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (glibcPatchFlake, error) {
 	flake := glibcPatchFlake{NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev}
 	for _, pkg := range packages {
-		if !pkg.PatchGlibc {
+		if !pkg.PatchGlibc() {
 			continue
 		}
 

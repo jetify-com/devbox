@@ -177,7 +177,7 @@ func (p *Package) fetchNarInfoStatus(outputName string) (bool, error) {
 // the package to query it from the binary cache.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	// Patched glibc packages are not in the binary cache.
-	if p.PatchGlibc {
+	if p.PatchGlibc() {
 		return false, nil
 	}
 	sysInfo, err := p.sysInfoIfExists()

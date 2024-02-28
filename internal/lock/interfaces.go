@@ -3,6 +3,8 @@
 
 package lock
 
+import "strings"
+
 type devboxProject interface {
 	ConfigHash() (string, error)
 	NixPkgsCommitHash() string
@@ -34,8 +36,9 @@ func (d *DummyLocker) ProjectDir() string {
 }
 
 func (d *DummyLocker) Resolve(s string) (*Package, error) {
+	a, _, _ := strings.Cut(s, "@")
 	return &Package{
-		Resolved: "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#" + s,
+		Resolved: "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#" + a,
 		Source:   nixpkgSource,
 	}, nil
 }

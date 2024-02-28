@@ -85,7 +85,7 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 			return nil, err
 		}
 
-		if pkg.PatchGlibc {
+		if pkg.PatchGlibc() {
 			return nil, errors.New("patch_glibc is not yet supported for packages with non-default outputs")
 		}
 
@@ -126,7 +126,7 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 		if attributePathErr != nil {
 			err = attributePathErr
 		}
-		if pkg.PatchGlibc {
+		if pkg.PatchGlibc() {
 			// When the package comes from the glibc flake, the
 			// "legacyPackages" portion of the attribute path
 			// becomes just "packages" (matching the standard flake
@@ -182,7 +182,7 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 		// Packages that need a glibc patch are assigned to the special
 		// glibc-patched flake input. This input refers to the
 		// glibc-patch.nix flake.
-		if pkg.PatchGlibc {
+		if pkg.PatchGlibc() {
 			nixpkgsGlibc := flakeInputs.getOrAppend(glibcPatchFlakeRef)
 			nixpkgsGlibc.Name = "glibc-patch"
 			nixpkgsGlibc.URL = glibcPatchFlakeRef
