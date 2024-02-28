@@ -70,18 +70,41 @@ func (i *SystemInfo) String() string {
 	return fmt.Sprintf("%+v", *i)
 }
 
-func (i *SystemInfo) DefaultStorePath() string {
-	if i == nil || len(i.Outputs) == 0 {
-		return ""
+func (i *SystemInfo) Output(name string) (Output, error) {
+	if i == nil {
+		return Output{}, nil
 	}
 
 	for _, output := range i.Outputs {
-		if output.Default {
-			return output.Path
+		if output.Name == name {
+			return output, nil
 		}
 	}
 
-	return i.Outputs[0].Path
+	return Output{}, fmt.Errorf("Output %s not found", name)
+}
+
+func (i *SystemInfo) DefaultOutputs() []Output {
+	if i == nil {
+		return nil
+	}
+
+	if len(i.Outputs) == 0 {
+		return nil
+	}
+
+	res := []Output{}
+	for _, output := range i.Outputs {
+		if output.Default {
+			res = append(res, output)
+		}
+	}
+	if len(res) > 0 {
+		return res
+	}
+
+	// If no default outputs, return the first one
+	return []Output{i.Outputs[0]}
 }
 
 func (i *SystemInfo) Equals(other *SystemInfo) bool {

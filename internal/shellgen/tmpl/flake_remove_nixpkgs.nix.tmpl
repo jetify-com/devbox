@@ -37,13 +37,15 @@
       {
         devShells.{{ .System }}.default = pkgs.mkShell {
           buildInputs = [
-            {{- range .Packages }}
-            {{ if and .IsInBinaryCache (not .PatchGlibc) -}}
+            {{- range $_, $pkg := .Packages }}
+            {{- range $_, $outputName := $pkg.GetOutputNames }}
+            {{ if and ($pkg.IsOutputInBinaryCache $outputName) (not $pkg.PatchGlibc) -}}
             (builtins.fetchClosure {
               fromStore = "{{ $.BinaryCache }}";
-              fromPath = "{{ .InputAddressedPath }}";
+              fromPath = "{{ $pkg.InputAddressedPathForOutput $outputName }}";
               inputAddressed = true;
             })
+            {{- end }}
             {{- end }}
             {{- end }}
             {{- range $_, $flakeInput := .FlakeInputs }}
