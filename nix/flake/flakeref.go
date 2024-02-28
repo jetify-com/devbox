@@ -129,7 +129,7 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		// [flake:]<flake-id>(/<rev-or-ref>(/rev)?)?
 
 		parsed.Type = TypeIndirect
-		split, err := splitPathOrOpaque(refURL, false)
+		split, err := splitPathOrOpaque(refURL, -1)
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL path: %v", err)
 		}
@@ -206,7 +206,11 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
 	parsed.Type = TypeGitHub
-	split, err := splitPathOrOpaque(refURL, true)
+
+	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
+	// refs that have slashes in them. For example,
+	// "github:jetpack-io/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
+	split, err := splitPathOrOpaque(refURL, 3)
 	if err != nil {
 		return err
 	}
@@ -221,6 +225,7 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 	}
 
 	parsed.Host = refURL.Query().Get("host")
+	parsed.Dir = refURL.Query().Get("dir")
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
 			return redact.Errorf("github flake reference has a ref and a rev")
@@ -380,7 +385,8 @@ func isArchive(path string) bool {
 // the opaque instead. Splitting happens before unescaping the path or opaque,
 // ensuring that path elements with an encoded '/' (%2F) are not split.
 // For example, "/dir/file%2Fname" becomes the elements "dir" and "file/name".
-func splitPathOrOpaque(u *url.URL, allowSlashesIfRef bool) ([]string, error) {
+// The count limits the number of substrings per [strings.SplitN]
+func splitPathOrOpaque(u *url.URL, n int) ([]string, error) {
 	upath := u.EscapedPath()
 	if upath == "" {
 		upath = u.Opaque
@@ -397,13 +403,7 @@ func splitPathOrOpaque(u *url.URL, allowSlashesIfRef bool) ([]string, error) {
 	upath = path.Clean(upath)
 
 	var err error
-	var split []string
-	if allowSlashesIfRef {
-		split = strings.SplitN(upath, "/", 3)
-	} else {
-		split = strings.Split(upath, "/")
-	}
-
+	split := strings.SplitN(upath, "/", n)
 	for i := range split {
 		split[i], err = url.PathUnescape(split[i])
 		if err != nil {

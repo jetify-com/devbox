@@ -76,7 +76,7 @@ type Package struct {
 	Raw string
 
 	// Outputs is a list of outputs to build from the package's derivation.
-	outputs *outputs
+	outputs outputs
 
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
@@ -106,7 +106,7 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
 		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		pkg.outputs = initOutputs(cfgPkg.Outputs)
+		pkg.initOutputs(cfgPkg.Outputs)
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
 	}
@@ -121,7 +121,7 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
 	pkg.PatchGlibc = opts.PatchGlibc
-	pkg.outputs = initOutputs(opts.Outputs)
+	pkg.initOutputs(opts.Outputs)
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
@@ -131,7 +131,6 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 		Raw:           raw,
 		lockfile:      locker,
 		isInstallable: isInstallable,
-		outputs:       initOutputs([]string{}),
 	}
 
 	// The raw string is either a Devbox package ("name" or "name@version")
@@ -691,11 +690,12 @@ func (p *Package) DocsURL() string {
 	return ""
 }
 
-// GetOutputNames returns the names of the nix package outputs.
-// It may be empty if the package is not in the lockfile.
+// GetOutputNames returns the names of the nix package outputs. Outputs can be
+// specified in devbox.json package fields or as part of the flake reference.
 func (p *Package) GetOutputNames() ([]string, error) {
 	if p.IsRunX() {
 		return []string{}, nil
 	}
+
 	return p.outputs.GetNames(p)
 }
