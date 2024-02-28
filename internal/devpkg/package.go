@@ -697,5 +697,10 @@ func (p *Package) GetOutputNames() ([]string, error) {
 	if p.IsRunX() {
 		return []string{}, nil
 	}
+
+	if p.installable.Outputs != "" {
+		return strings.Split(p.installable.Outputs, ","), nil
+	}
+
 	return p.outputs.GetNames(p)
 }
