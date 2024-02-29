@@ -1,59 +1,25 @@
 package plugin
 
 import (
+	"cmp"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
-	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 )
 
 type githubPlugin struct {
-	raw      string
-	org      string
-	repo     string
-	revision string
-	dir      string
+	ref RefLike
 }
 
-// newGithubPlugin returns a plugin that is hosted on github.
-// url is of the form org/repo?dir=<dir>
-// The (optional) dir must have a plugin.json"
-func newGithubPlugin(rawURL string) (*githubPlugin, error) {
-	pluginURL, err := url.Parse(rawURL)
-	if err != nil {
-		return nil, err
-	}
-
-	parts := strings.SplitN(pluginURL.Path, "/", 3)
-
-	if len(parts) < 2 {
-		return nil, usererr.New(
-			"invalid github plugin url %q. Must be of the form org/repo/[revision]",
-			rawURL,
-		)
-	}
-
-	plugin := &githubPlugin{
-		raw:      rawURL,
-		org:      parts[0],
-		repo:     parts[1],
-		revision: "master",
-		dir:      pluginURL.Query().Get("dir"),
-	}
-
-	if len(parts) == 3 {
-		plugin.revision = parts[2]
-	}
-
-	return plugin, nil
+func (p *githubPlugin) Fetch() ([]byte, error) {
+	return p.FileContent(pluginConfigName)
 }
 
 func (p *githubPlugin) CanonicalName() string {
-	return p.org + "-" + p.repo
+	return p.ref.Owner + "-" + p.ref.Repo
 }
 
 func (p *githubPlugin) Hash() string {
@@ -62,16 +28,7 @@ func (p *githubPlugin) Hash() string {
 }
 
 func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
-	// Github redirects "master" to "main" in new repos. They don't do the reverse
-	// so setting master here is better.
-	contentURL, err := url.JoinPath(
-		"https://raw.githubusercontent.com/",
-		p.org,
-		p.repo,
-		p.revision,
-		p.dir,
-		subpath,
-	)
+	contentURL, err := p.url(subpath)
 	if err != nil {
 		return nil, err
 	}
@@ -83,19 +40,25 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
-			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
-				"plugin.json file exists in plugin directory.",
-			p.raw,
+			"failed to get plugin github:%s @ %s (Status code %d). \nPlease make "+
+				"sure a plugin.json file exists in plugin directory.",
+			p.ref.String(),
+			contentURL,
 			res.StatusCode,
 		)
 	}
 	return io.ReadAll(res.Body)
 }
 
-func (p *githubPlugin) buildConfig(projectDir string) (*config, error) {
-	content, err := p.FileContent("plugin.json")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buildConfig(p, projectDir, string(content))
+func (p *githubPlugin) url(subpath string) (string, error) {
+	// Github redirects "master" to "main" in new repos. They don't do the reverse
+	// so setting master here is better.
+	return url.JoinPath(
+		"https://raw.githubusercontent.com/",
+		p.ref.Owner,
+		p.ref.Repo,
+		cmp.Or(p.ref.Rev, p.ref.Ref.Ref, "master"),
+		p.ref.Dir,
+		subpath,
+	)
 }

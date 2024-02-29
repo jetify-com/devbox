@@ -17,9 +17,13 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 	case *devpkg.Package:
 		return getBuiltinPluginConfigIfExists(pkg, projectDir)
 	case *githubPlugin:
-		return pkg.buildConfig(projectDir)
+		content, err := pkg.Fetch()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return buildConfig(pkg, projectDir, string(content))
 	case *localPlugin:
-		content, err := os.ReadFile(pkg.path)
+		content, err := os.ReadFile(pkg.ref.Path)
 		if err != nil && !os.IsNotExist(err) {
 			return nil, errors.WithStack(err)
 		}

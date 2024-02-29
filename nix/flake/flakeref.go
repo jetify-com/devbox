@@ -244,6 +244,7 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 		}
 		parsed.Rev = qRev
 	}
+	parsed.Dir = refURL.Query().Get("dir")
 	return nil
 }
 

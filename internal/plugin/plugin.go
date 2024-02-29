@@ -27,6 +27,7 @@ import (
 const (
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
+	pluginConfigName    = "plugin.json"
 )
 
 var (

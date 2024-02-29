@@ -4,58 +4,90 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 func TestNewGithubPlugin(t *testing.T) {
 	testCases := []struct {
-		name     string
-		expected githubPlugin
+		name        string
+		Include     string
+		expected    githubPlugin
+		expectedURL string
 	}{
 		{
-			name: "parse basic github plugin",
+			name:    "parse basic github plugin",
+			Include: "github:jetpack-io/devbox-plugins",
 			expected: githubPlugin{
-				raw:      "jetpack-io/devbox-plugins",
-				org:      "jetpack-io",
-				repo:     "devbox-plugins",
-				revision: "master",
+				ref: RefLike{
+					Ref: flake.Ref{
+						Type:  "github",
+						Owner: "jetpack-io",
+						Repo:  "devbox-plugins",
+					},
+					filename: pluginConfigName,
+				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master",
 		},
 		{
-			name: "parse github plugin with dir param",
+			name:    "parse github plugin with dir param",
+			Include: "github:jetpack-io/devbox-plugins?dir=mongodb",
 			expected: githubPlugin{
-				raw:      "jetpack-io/devbox-plugins?dir=mongodb",
-				org:      "jetpack-io",
-				repo:     "devbox-plugins",
-				revision: "master",
-				dir:      "mongodb",
+				ref: RefLike{
+					Ref: flake.Ref{
+						Type:  "github",
+						Owner: "jetpack-io",
+						Repo:  "devbox-plugins",
+						Dir:   "mongodb",
+					},
+					filename: pluginConfigName,
+				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/mongodb",
 		},
 		{
-			name: "parse github plugin with dir param and rev",
+			name:    "parse github plugin with dir param and rev",
+			Include: "github:jetpack-io/devbox-plugins/my-branch?dir=mongodb",
 			expected: githubPlugin{
-				raw:      "jetpack-io/devbox-plugins/my-branch?dir=mongodb",
-				org:      "jetpack-io",
-				repo:     "devbox-plugins",
-				revision: "my-branch",
-				dir:      "mongodb",
+				ref: RefLike{
+					Ref: flake.Ref{
+						Type:  "github",
+						Owner: "jetpack-io",
+						Repo:  "devbox-plugins",
+						Ref:   "my-branch",
+						Dir:   "mongodb",
+					},
+					filename: pluginConfigName,
+				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/my-branch/mongodb",
 		},
 		{
-			name: "parse github plugin with dir param and rev",
+			name:    "parse github plugin with dir param and rev",
+			Include: "github:jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
 			expected: githubPlugin{
-				raw:      "jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
-				org:      "jetpack-io",
-				repo:     "devbox-plugins",
-				revision: "initials/my-branch",
-				dir:      "mongodb",
+				ref: RefLike{
+					Ref: flake.Ref{
+						Type:  "github",
+						Owner: "jetpack-io",
+						Repo:  "devbox-plugins",
+						Ref:   "initials/my-branch",
+						Dir:   "mongodb",
+					},
+					filename: pluginConfigName,
+				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/initials/my-branch/mongodb",
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, _ := newGithubPlugin(testCase.expected.raw)
-			assert.Equal(t, actual, &testCase.expected)
+			actual, _ := parseReflike(testCase.Include)
+			assert.Equal(t, &testCase.expected, actual)
+			u, err := testCase.expected.url("")
+			assert.Nil(t, err)
+			assert.Equal(t, testCase.expectedURL, u)
 		})
 	}
 }
