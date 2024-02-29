@@ -15,7 +15,7 @@ type githubPlugin struct {
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
-	return p.FileContent(p.ref.withFilename(p.ref.Dir))
+	return p.FileContent(pluginConfigName)
 }
 
 func (p *githubPlugin) CanonicalName() string {
@@ -40,9 +40,10 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
-			"failed to get plugin github:%s (Status code %d). \nPlease make sure a "+
-				"plugin.json file exists in plugin directory.",
+			"failed to get plugin github:%s @ %s (Status code %d). \nPlease make "+
+				"sure a plugin.json file exists in plugin directory.",
 			p.ref.String(),
+			contentURL,
 			res.StatusCode,
 		)
 	}
