@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/exp/maps"
 )
 
@@ -22,13 +23,28 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 	return strings.TrimSpace(string(resultBytes)), nil
 }
 
-func StorePathsFromInstallable(ctx context.Context, installable string) ([]string, error) {
+func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	// --impure for NIXPKGS_ALLOW_UNFREE
 	cmd := commandContext(ctx, "path-info", installable, "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
+
+	if allowInsecure {
+		debug.Log("Setting Allow-insecure env-var\n")
+		cmd.Env = allowInsecureEnv(cmd.Env)
+	}
+
 	debug.Log("Running cmd %s", cmd)
 	resultBytes, err := cmd.Output()
 	if err != nil {
+		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
+			return nil, redact.Errorf(
+				"nix path-info exit code: %d, output: %s, err: %w",
+				redact.Safe(exitErr.ExitCode()),
+				exitErr.Stderr,
+				err,
+			)
+		}
+
 		return nil, err
 	}
 	return parseStorePathFromInstallableOutput(installable, resultBytes)
