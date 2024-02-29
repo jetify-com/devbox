@@ -79,7 +79,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
 		data, err = cmd.Output()
-		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*installable*/); insecure {
+		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
 			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
@@ -231,7 +231,7 @@ func ProfileBinPath(projectDir string) string {
 	return filepath.Join(projectDir, ProfilePath, "bin")
 }
 
-func IsExitErrorInsecurePackage(err error, installableOrEmpty string) (bool, error) {
+func IsExitErrorInsecurePackage(err error, pkgNameOrEmpty, installableOrEmpty string) (bool, error) {
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
 		if strings.Contains(string(exitErr.Stderr), "is marked as insecure") {
@@ -252,8 +252,12 @@ func IsExitErrorInsecurePackage(err error, installableOrEmpty string) (bool, err
 				errMessages = append(errMessages,
 					fmt.Sprintf("Known vulnerabilities:\n%s", strings.Join(knownVulnerabilities, "\n")))
 			}
+			pkgName := pkgNameOrEmpty
+			if pkgName == "" {
+				pkgName = "<pkg>"
+			}
 			errMessages = append(errMessages,
-				fmt.Sprintf("To override, use `devbox add <pkg> --allow-insecure=%s`", strings.Join(insecurePackages, ", ")))
+				fmt.Sprintf("To override, use `devbox add %s --allow-insecure=%s`", pkgName, strings.Join(insecurePackages, ", ")))
 
 			return true, usererr.New(strings.Join(errMessages, "\n\n"))
 		}
