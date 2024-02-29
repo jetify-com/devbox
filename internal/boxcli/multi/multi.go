@@ -21,7 +21,7 @@ func Open(opts *devopt.Opts) ([]*devbox.Devbox, error) {
 				return err
 			}
 
-			if !dirEntry.IsDir() && configfile.IsConfigName(filepath.Base(path)) {
+			if !dirEntry.IsDir() && filepath.Base(path) == configfile.DefaultName {
 				optsCopy := *opts
 				optsCopy.Dir = path
 				box, err := devbox.Open(&optsCopy)

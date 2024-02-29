@@ -67,6 +67,8 @@ type Ref struct {
 	// or "git". Note that the URL is not the same as the raw unparsed
 	// flake ref.
 	URL string `json:"url,omitempty"`
+
+	Raw string `json:"raw,omitempty"`
 }
 
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
@@ -90,7 +92,7 @@ func ParseRef(ref string) (Ref, error) {
 	}
 
 	// Handle path-style references first.
-	parsed := Ref{}
+	parsed := Ref{Raw: ref}
 	if ref[0] == '.' || ref[0] == '/' {
 		if strings.ContainsAny(ref, "?#") {
 			// The Nix CLI does seem to allow paths with a '?'
