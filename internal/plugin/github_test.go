@@ -9,9 +9,10 @@ import (
 
 func TestNewGithubPlugin(t *testing.T) {
 	testCases := []struct {
-		name     string
-		Include  string
-		expected githubPlugin
+		name        string
+		Include     string
+		expected    githubPlugin
+		expectedURL string
 	}{
 		{
 			name:    "parse basic github plugin",
@@ -22,11 +23,11 @@ func TestNewGithubPlugin(t *testing.T) {
 						Type:  "github",
 						Owner: "jetpack-io",
 						Repo:  "devbox-plugins",
-						Ref:   "master",
 					},
 					filename: pluginConfigName,
 				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master",
 		},
 		{
 			name:    "parse github plugin with dir param",
@@ -37,12 +38,12 @@ func TestNewGithubPlugin(t *testing.T) {
 						Type:  "github",
 						Owner: "jetpack-io",
 						Repo:  "devbox-plugins",
-						Ref:   "master",
 						Dir:   "mongodb",
 					},
 					filename: pluginConfigName,
 				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
@@ -59,6 +60,7 @@ func TestNewGithubPlugin(t *testing.T) {
 					filename: pluginConfigName,
 				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/my-branch/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
@@ -75,6 +77,7 @@ func TestNewGithubPlugin(t *testing.T) {
 					filename: pluginConfigName,
 				},
 			},
+			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/initials/my-branch/mongodb",
 		},
 	}
 
@@ -82,6 +85,9 @@ func TestNewGithubPlugin(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			actual, _ := parseReflike(testCase.Include)
 			assert.Equal(t, &testCase.expected, actual)
+			u, err := testCase.expected.url("")
+			assert.Nil(t, err)
+			assert.Equal(t, testCase.expectedURL, u)
 		})
 	}
 }
