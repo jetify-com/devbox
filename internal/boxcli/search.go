@@ -5,12 +5,16 @@ package boxcli
 
 import (
 	"fmt"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/spf13/cobra"
 	"io"
 	"math"
+	"net/url"
+	"slices"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/mitchellh/go-wordwrap"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
@@ -86,24 +90,51 @@ func printSearchResults(
 		pkgs = results.Packages[:int(math.Min(10, float64(len(results.Packages))))]
 	}
 
+	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
+
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"Package", "Versions", "Platforms"}, rowConfigAutoMerge)
 	for _, pkg := range pkgs {
-		nonEmptyVersions := []string{}
+		systemKey := ""
+		var versions []string
 		for i, v := range pkg.Versions {
-			if !showAll && i >= 10 {
-				resultsAreTrimmed = true
-				break
-			}
 			if v.Version != "" {
-				nonEmptyVersions = append(nonEmptyVersions, v.Version)
+				if !showAll && i >= 10 {
+					resultsAreTrimmed = true
+					break
+				}
+
+				var systems []string
+				for _, sys := range v.Systems {
+					systems = append(systems, sys.System)
+				}
+				slices.Sort(systems)
+				key := strings.Join(systems, " ")
+				if systemKey != key && systemKey != "" {
+					wrappedVersions := wordwrap.WrapString(strings.Join(versions[:], " "), 35)
+					wrappedSystems := wordwrap.WrapString(systemKey, 15)
+					t.AppendRow(table.Row{pkg.Name, wrappedVersions, wrappedSystems}, rowConfigAutoMerge)
+					versions = nil
+				}
+				systemKey = key
+				versions = append(versions, v.Version)
 			}
 		}
 
-		versionString := ""
-		if len(nonEmptyVersions) > 0 {
-			versionString = fmt.Sprintf(" (%s)", strings.Join(nonEmptyVersions, ", "))
+		if len(versions) > 0 {
+			wrappedVersions := wordwrap.WrapString(strings.Join(versions[:], " "), 35)
+			wrappedSystems := wordwrap.WrapString(systemKey, 15)
+			t.AppendRow(table.Row{pkg.Name, wrappedVersions, wrappedSystems}, rowConfigAutoMerge)
 		}
-		fmt.Fprintf(w, "* %s %s\n", pkg.Name, versionString)
 	}
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 1, AutoMerge: true, VAlign: text.VAlignMiddle},
+		{Number: 2, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter},
+		{Number: 3, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter},
+	})
+	t.SetStyle(table.StyleLight)
+	t.Style().Options.SeparateRows = true
+	fmt.Println(t.Render())
 
 	if resultsAreTrimmed {
 		fmt.Println()
@@ -113,6 +144,7 @@ func printSearchResults(
 				"show all.\n\n",
 		)
 	}
+	ux.Finfo(w, "For more information go to: https://www.nixhub.io/search?q=%s\n\n", url.QueryEscape(query))
 
 	return nil
 }
