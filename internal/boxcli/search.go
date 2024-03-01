@@ -6,13 +6,14 @@ package boxcli
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"math"
 	"net/url"
 	"slices"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/spf13/cobra"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -93,46 +94,46 @@ func printSearchResults(
 
 	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 
-	t := table.NewWriter()
-	t.AppendHeader(table.Row{"Package", "Versions", "Platforms"}, rowConfigAutoMerge)
+	tableWriter := table.NewWriter()
+	tableWriter.AppendHeader(table.Row{"Package", "Versions", "Platforms"}, rowConfigAutoMerge)
 	for _, pkg := range pkgs {
 		systemKey := ""
 		var versions []string
-		for i, v := range pkg.Versions {
-			if v.Version != "" {
+		for i, pkgVersion := range pkg.Versions {
+			if pkgVersion.Version != "" {
 				if !showAll && i >= 10 {
 					resultsAreTrimmed = true
 					break
 				}
 
 				var systems []string
-				for _, sys := range v.Systems {
+				for _, sys := range pkgVersion.Systems {
 					systems = append(systems, sys.System)
 				}
 				slices.Sort(systems)
 				key := strings.Join(systems, " ")
 				if systemKey != key && systemKey != "" {
-					t.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
+					tableWriter.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
 					versions = nil
 				}
 				systemKey = key
-				versions = append(versions, v.Version)
+				versions = append(versions, pkgVersion.Version)
 			}
 		}
 
 		if len(versions) > 0 {
-			t.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
+			tableWriter.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
 		}
 	}
 
-	t.SetColumnConfigs([]table.ColumnConfig{
+	tableWriter.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, AutoMerge: true, VAlign: text.VAlignMiddle},
 		{Number: 2, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter},
 		{Number: 3, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter, WidthMaxEnforcer: text.WrapSoft, WidthMin: 15, WidthMax: 15},
 	})
-	t.SetStyle(table.StyleLight)
-	t.Style().Options.SeparateRows = true
-	fmt.Println(t.Render())
+	tableWriter.SetStyle(table.StyleLight)
+	tableWriter.Style().Options.SeparateRows = true
+	fmt.Println(tableWriter.Render())
 
 	if resultsAreTrimmed {
 		fmt.Println()
