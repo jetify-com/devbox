@@ -102,6 +102,9 @@ func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
 	if err != nil {
 		return err
 	}
+	if resolved == nil {
+		return nil
+	}
 
 	return d.mergeResolvedPackageToLockfile(pkg, resolved, d.lockfile)
 }

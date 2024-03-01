@@ -238,7 +238,7 @@ func (p *Package) FlakeInputName() string {
 			}
 		}
 	default:
-		result = p.installable.String() + "-" + p.Hash()
+		result = p.installable.Ref.URL + "-" + p.Hash()
 	}
 
 	// replace all non-alphanumeric with dashes
