@@ -138,7 +138,7 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	// ("nixpkgs" is a devbox package and a flake). When that happens, we
 	// assume a Devbox package.
 	parsed, err := flake.ParseInstallable(raw)
-	if err != nil || isAmbiguous(raw, parsed) {
+	if err != nil || pkgtype.IsAmbiguous(raw, parsed) {
 		pkg.IsDevboxPackage = true
 		pkg.resolve = sync.OnceValue(func() error { return resolve(pkg) })
 		return pkg
@@ -150,38 +150,6 @@ func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
 	pkg.setInstallable(parsed, locker.ProjectDir())
 	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
 	return pkg
-}
-
-// isAmbiguous returns true if a package string could be a Devbox package or
-// a flake installable. For example, "nixpkgs" is both a Devbox package and a
-// flake.
-func isAmbiguous(raw string, parsed flake.Installable) bool {
-	// Devbox package strings never have a #attr_path in them.
-	if parsed.AttrPath != "" {
-		return false
-	}
-
-	// Indirect installables must have a "flake:" scheme to disambiguate
-	// them from legacy (unversioned) devbox package strings.
-	if parsed.Ref.Type == flake.TypeIndirect {
-		return !strings.HasPrefix(raw, "flake:")
-	}
-
-	// Path installables must have a "path:" scheme, start with "/" or start
-	// with "./" to disambiguate them from devbox package strings.
-	if parsed.Ref.Type == flake.TypePath {
-		if raw[0] == '.' || raw[0] == '/' {
-			return false
-		}
-		if strings.HasPrefix(raw, "path:") {
-			return false
-		}
-		return true
-	}
-
-	// All other flakeref types must have a scheme, so we know those can't
-	// be devbox package strings.
-	return false
 }
 
 // resolve is the implementation of Package.resolve, where it is wrapped in a

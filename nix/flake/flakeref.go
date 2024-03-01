@@ -103,7 +103,10 @@ func ParseRef(ref string) (Ref, error) {
 		parsed.Path = ref
 		return parsed, nil
 	}
-	parsed, _, err := parseURLRef(ref)
+	parsed, fragment, err := parseURLRef(ref)
+	if fragment != "" {
+		return Ref{}, redact.Errorf("flake reference %q contains a URL fragment", ref)
+	}
 	return parsed, err
 }
 
