@@ -1,8 +1,9 @@
 package pkgtype
 
 import (
-	"go.jetpack.io/devbox/nix/flake"
 	"strings"
+
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 func IsFlake(s string) bool {

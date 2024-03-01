@@ -486,18 +486,18 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 		for _, installable := range installables {
 			if mode == update {
 				packagesToInstall = append(packagesToInstall, pkg)
-			} else {
-				storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
-				if err != nil {
-					return nil, packageInstallErrorHandler(err, pkg, installable)
-				}
-				isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
-				if err != nil {
-					return nil, err
-				}
-				if !isInStore {
-					packagesToInstall = append(packagesToInstall, pkg)
-				}
+				continue
+			}
+			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
+			if err != nil {
+				return nil, packageInstallErrorHandler(err, pkg, installable)
+			}
+			isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
+			if err != nil {
+				return nil, err
+			}
+			if !isInStore {
+				packagesToInstall = append(packagesToInstall, pkg)
 			}
 		}
 	}
