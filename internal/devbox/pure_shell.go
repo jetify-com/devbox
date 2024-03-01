@@ -6,36 +6,10 @@ package devbox
 import (
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
 )
-
-// findNixInPATH looks for locations in PATH which nix might exist and
-// it returns the path that contains nix.
-func findNixInPATH() (string, error) {
-	path, err := exec.LookPath("nix")
-	if err != nil {
-		if errors.Is(err, exec.ErrDot) {
-			err = nil
-			workingDirectory, err := os.Getwd()
-			if err != nil {
-				return "", errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again")
-			}
-			path = workingDirectory
-		}
-		if err != nil {
-			return "", errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again")
-		}
-	} else {
-		path = filepath.Dir(path)
-	}
-
-	debug.Log("found nix in PATH: %s", path)
-	return path, nil
-}
 
 // Creates a symlink for devbox in .devbox/bin
 // so that devbox can be available inside a pure shell
