@@ -4,12 +4,13 @@
 package devbox
 
 import (
-	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/debug"
 )
 
 // findNixInPATH looks for locations in PATH which nix might exist and
