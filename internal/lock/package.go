@@ -142,3 +142,22 @@ func ensurePackagesHaveOutputs(packages map[string]*Package) {
 		}
 	}
 }
+
+// ensurePackagesHaveStorePath is used for backwards-compatibility with the old
+// lockfile format where each SystemInfo had a StorePath but no Outputs.
+// This is a temporary function to help with a smooth transition to the new format
+// for teams using Devbox, who may upgrade their Devbox version in a staggered
+// or rolling fashion.
+func ensurePackagesHaveStorePath(packages map[string]*Package) {
+	for _, pkg := range packages {
+		for sys, sysInfo := range pkg.Systems {
+			if sysInfo.StorePath == "" && len(sysInfo.Outputs) > 0 {
+				defaultOutputs := sysInfo.DefaultOutputs()
+				if len(defaultOutputs) > 0 {
+					sysInfo.StorePath = defaultOutputs[0].Path
+					pkg.Systems[sys] = sysInfo
+				}
+			}
+		}
+	}
+}

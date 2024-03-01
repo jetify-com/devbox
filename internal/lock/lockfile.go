@@ -49,6 +49,9 @@ func GetFile(project devboxProject) (*File, error) {
 
 	// If the lockfile has legacy StorePath fields, we need to convert them to the new format
 	ensurePackagesHaveOutputs(lockFile.Packages)
+	// If the lockfile has Outputs, but missing the legacy StorePath, we (temporarily) add
+	// the legacy StorePath for backwards compatibility.
+	ensurePackagesHaveStorePath(lockFile.Packages)
 
 	return lockFile, nil
 }
