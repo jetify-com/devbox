@@ -228,3 +228,18 @@ func ResolveRunXPackage(ctx context.Context, pkg string) (types.PkgRef, error) {
 	}
 	return registry.ResolveVersion(ref)
 }
+
+func (f *File) EnsureStorePaths() error {
+	for _, pkg := range f.Packages {
+		for sys, sysInfo := range pkg.Systems {
+			if sysInfo.StorePath == "" && len(sysInfo.Outputs) > 0 {
+				defaultOutputs := sysInfo.DefaultOutputs()
+				if len(defaultOutputs) > 0 {
+					sysInfo.StorePath = defaultOutputs[0].Path
+					pkg.Systems[sys] = sysInfo
+				}
+			}
+		}
+	}
+	return nil
+}

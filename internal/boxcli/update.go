@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -14,9 +16,10 @@ import (
 )
 
 type updateCmdFlags struct {
-	config      configFlags
-	sync        bool
-	allProjects bool
+	config          configFlags
+	sync            bool
+	allProjects     bool
+	pathsInLockfile bool
 }
 
 func updateCmd() *cobra.Command {
@@ -49,6 +52,12 @@ func updateCmd() *cobra.Command {
 		false,
 		"update all projects in the working directory, recursively.",
 	)
+	command.Flags().BoolVar(
+		&flags.pathsInLockfile,
+		"paths-in-lockfile",
+		false,
+		"Ensure all lockfiles have store_path in each system_info.",
+	)
 	return command
 }
 
@@ -59,6 +68,11 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 
 	if flags.allProjects {
 		return updateAllProjects(cmd, args)
+	}
+
+	if flags.pathsInLockfile {
+		fmt.Printf("calling pathsInLockfile\n")
+		return ensureStorePathsInLockfiles(cmd)
 	}
 
 	if flags.sync {
@@ -95,4 +109,25 @@ func updateAllProjects(cmd *cobra.Command, args []string) error {
 		}
 	}
 	return multi.SyncLockfiles(args)
+}
+
+func ensureStorePathsInLockfiles(cmd *cobra.Command) error {
+	boxes, err := multi.Open(&devopt.Opts{
+		Stderr: cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Printf("Found %d boxes", len(boxes))
+	for _, box := range boxes {
+		fmt.Printf("project Dir is %s", box.ProjectDir())
+		lock := box.Lockfile()
+		if err := lock.EnsureStorePaths(); err != nil {
+			return fmt.Errorf("failed to EnsureStorePaths for project: %s", box.ProjectDir())
+		}
+		if err := lock.Save(); err != nil {
+			return fmt.Errorf("failed to save lockfile for project: %s", box.ProjectDir())
+		}
+	}
+	return nil
 }
