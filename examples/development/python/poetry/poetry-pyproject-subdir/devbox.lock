@@ -19,7 +19,8 @@
               "name": "dist",
               "path": "/nix/store/rs4ya5784629m6842b4g1fc360dscc9n-python3.11-poetry-1.7.1-dist"
             }
-          ]
+          ],
+          "store_path": "/nix/store/0pf30mblcl4clvagdzybfgfyzjqkjkqi-python3.11-poetry-1.7.1"
         },
         "aarch64-linux": {
           "outputs": [
@@ -32,7 +33,8 @@
               "name": "dist",
               "path": "/nix/store/xmfkj29vxivcmzsy02lvxrk8fagzp71b-python3.11-poetry-1.7.1-dist"
             }
-          ]
+          ],
+          "store_path": "/nix/store/knc1livlnrnaxbnfs9118nq69i78jj39-python3.11-poetry-1.7.1"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -45,7 +47,8 @@
               "name": "dist",
               "path": "/nix/store/0xg2c7pcfa5kcazibw503ni49lclprj7-python3.11-poetry-1.7.1-dist"
             }
-          ]
+          ],
+          "store_path": "/nix/store/qf2px4ic22dpra0s6mlmjm5q4vvc6dr7-python3.11-poetry-1.7.1"
         },
         "x86_64-linux": {
           "outputs": [
@@ -58,7 +61,8 @@
               "name": "dist",
               "path": "/nix/store/jgn140k0ag3yyl1ysqgz7wikbzgzifdh-python3.11-poetry-1.7.1-dist"
             }
-          ]
+          ],
+          "store_path": "/nix/store/fq4cf1xzwlvbhg98ih8dvsq2hsalhzyp-python3.11-poetry-1.7.1"
         }
       }
     },
@@ -76,7 +80,8 @@
               "path": "/nix/store/flkpbg20pfzfa9f2lwzrzjl718i2ccw7-python3-3.11.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/flkpbg20pfzfa9f2lwzrzjl718i2ccw7-python3-3.11.7"
         },
         "aarch64-linux": {
           "outputs": [
@@ -89,7 +94,8 @@
               "name": "debug",
               "path": "/nix/store/l6ynf9cbcm3nzghg4n8dyvzbl062312k-python3-3.11.7-debug"
             }
-          ]
+          ],
+          "store_path": "/nix/store/xg7f3xg4l3w4apmialnid8lm61jdrf57-python3-3.11.7"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -98,7 +104,8 @@
               "path": "/nix/store/pwr22740f2pv36q5g28l1gjdg1bw43zm-python3-3.11.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/pwr22740f2pv36q5g28l1gjdg1bw43zm-python3-3.11.7"
         },
         "x86_64-linux": {
           "outputs": [
@@ -111,7 +118,8 @@
               "name": "debug",
               "path": "/nix/store/pl0w66819jcbq8azq4acl7wwak59wj3s-python3-3.11.7-debug"
             }
-          ]
+          ],
+          "store_path": "/nix/store/y027d3bvlaizbri04c1bzh28hqd6lj01-python3-3.11.7"
         }
       }
     }

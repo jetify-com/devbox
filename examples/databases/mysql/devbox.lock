@@ -19,7 +19,8 @@
               "name": "static",
               "path": "/nix/store/lhg44jksdla9j4m3g6wmlrrb55j5l3y8-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36"
         },
         "aarch64-linux": {
           "outputs": [
@@ -32,7 +33,8 @@
               "name": "static",
               "path": "/nix/store/29zyqbla4d9ax6hyv4myxdiy2xb109g5-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -45,7 +47,8 @@
               "name": "static",
               "path": "/nix/store/s030q0ibyw32sa755qygi8m0zyf8qn8s-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36"
         },
         "x86_64-linux": {
           "outputs": [
@@ -58,7 +61,8 @@
               "name": "static",
               "path": "/nix/store/x8rlbq0z80nqldwvxs4w2rblp3yjwn0z-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36"
         }
       }
     }

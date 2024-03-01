@@ -14,7 +14,8 @@
               "path": "/nix/store/g531k3yl8rbcv7g0vxhkr28wcwnqfr1l-glibc-iconv-2.38",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/g531k3yl8rbcv7g0vxhkr28wcwnqfr1l-glibc-iconv-2.38"
         },
         "x86_64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/r9ar62xlmqismp2f4s4l6inhixmb1a6z-glibc-iconv-2.38",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/r9ar62xlmqismp2f4s4l6inhixmb1a6z-glibc-iconv-2.38"
         }
       }
     },
@@ -41,7 +43,8 @@
               "path": "/nix/store/ipk044pwn4bqpf4sizdi401hrsg1k7nw-rustup-1.26.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/ipk044pwn4bqpf4sizdi401hrsg1k7nw-rustup-1.26.0"
         },
         "aarch64-linux": {
           "outputs": [
@@ -50,7 +53,8 @@
               "path": "/nix/store/41jqx3sj0wwy4jzslcn2577s5cn499pi-rustup-1.26.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/41jqx3sj0wwy4jzslcn2577s5cn499pi-rustup-1.26.0"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -59,7 +63,8 @@
               "path": "/nix/store/0y4kar3ffvqxri118m6n91g5wwf18947-rustup-1.26.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/0y4kar3ffvqxri118m6n91g5wwf18947-rustup-1.26.0"
         },
         "x86_64-linux": {
           "outputs": [
@@ -68,7 +73,8 @@
               "path": "/nix/store/z9qf2b4a2098zvb9qvgf2yb8k0l3w4r2-rustup-1.26.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/z9qf2b4a2098zvb9qvgf2yb8k0l3w4r2-rustup-1.26.0"
         }
       }
     }

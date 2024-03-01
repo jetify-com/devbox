@@ -15,7 +15,8 @@
               "path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6"
         },
         "aarch64-linux": {
           "outputs": [
@@ -24,7 +25,8 @@
               "path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -33,7 +35,8 @@
               "path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6"
         },
         "x86_64-linux": {
           "outputs": [
@@ -42,7 +45,8 @@
               "path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6"
         }
       }
     },
@@ -59,7 +63,8 @@
               "path": "/nix/store/cj4knn6zm57bgxqm7xyspyyf65inzq43-zulu-ca-jdk-17.0.10",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/cj4knn6zm57bgxqm7xyspyyf65inzq43-zulu-ca-jdk-17.0.10"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -68,7 +73,8 @@
               "path": "/nix/store/d5g0pn5mnn02p8nsyfdr8z0557jr1civ-zulu-ca-jdk-17.0.10",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/d5g0pn5mnn02p8nsyfdr8z0557jr1civ-zulu-ca-jdk-17.0.10"
         }
       }
     },
@@ -90,7 +96,8 @@
               "name": "static",
               "path": "/nix/store/lhg44jksdla9j4m3g6wmlrrb55j5l3y8-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36"
         },
         "aarch64-linux": {
           "outputs": [
@@ -103,7 +110,8 @@
               "name": "static",
               "path": "/nix/store/29zyqbla4d9ax6hyv4myxdiy2xb109g5-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -116,7 +124,8 @@
               "name": "static",
               "path": "/nix/store/s030q0ibyw32sa755qygi8m0zyf8qn8s-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36"
         },
         "x86_64-linux": {
           "outputs": [
@@ -129,7 +138,8 @@
               "name": "static",
               "path": "/nix/store/x8rlbq0z80nqldwvxs4w2rblp3yjwn0z-mysql-8.0.36-static"
             }
-          ]
+          ],
+          "store_path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36"
         }
       }
     }

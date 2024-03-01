@@ -31,7 +31,8 @@
               "name": "dev",
               "path": "/nix/store/b923n2s4grj1crf41d2x2rg6b88i4yhi-curl-8.6.0-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/hkhsc8b35q7q329pl5srwj8bkkhz5253-curl-8.6.0-bin"
         },
         "aarch64-linux": {
           "outputs": [
@@ -61,7 +62,8 @@
               "name": "out",
               "path": "/nix/store/jsi315py5vzr07ckrw6v2nzf4p224l1i-curl-8.6.0"
             }
-          ]
+          ],
+          "store_path": "/nix/store/s9y0vwd8i7dy7cycj71qfdj6klvz5vbp-curl-8.6.0-bin"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -87,7 +89,8 @@
               "name": "out",
               "path": "/nix/store/sw1wxldgm3awjmp2i4kq6jwhj6qjnwql-curl-8.6.0"
             }
-          ]
+          ],
+          "store_path": "/nix/store/i7fa8s6xczlalkmxy28amfyb6j3ymng4-curl-8.6.0-bin"
         },
         "x86_64-linux": {
           "outputs": [
@@ -117,7 +120,8 @@
               "name": "out",
               "path": "/nix/store/2hapkajcapp9vzwrlj58jwsrjpr4vj70-curl-8.6.0"
             }
-          ]
+          ],
+          "store_path": "/nix/store/x23aqwc39pp4zx5iiz0mqyh5mnvrz43z-curl-8.6.0-bin"
         }
       }
     },
@@ -139,7 +143,8 @@
               "name": "doc",
               "path": "/nix/store/a3gms7r11g56kvxlb4fpwac9y6sm51sa-nginx-1.24.0-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/188s0g20lmxn4zdcfwahql7h2jzkcgaj-nginx-1.24.0"
         },
         "aarch64-linux": {
           "outputs": [
@@ -152,7 +157,8 @@
               "name": "doc",
               "path": "/nix/store/qqpi6w0wb6i9gnhhb3q7ypaaj77j0rrn-nginx-1.24.0-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/1k0jjpzk8sbk6bcwlxvlhyyz0p1abf30-nginx-1.24.0"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -165,7 +171,8 @@
               "name": "doc",
               "path": "/nix/store/hhc6kwnvs508nqp62yn8iqd47nhbzwvf-nginx-1.24.0-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/07cp4pma5zqbaylwn6ajh5wfma2x75lp-nginx-1.24.0"
         },
         "x86_64-linux": {
           "outputs": [
@@ -178,7 +185,8 @@
               "name": "doc",
               "path": "/nix/store/xzff10qhh3c4z61c3q1kjljycyrvr7cx-nginx-1.24.0-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/30s15lisqd796fs7ffwv4cxqryhkamh8-nginx-1.24.0"
         }
       }
     },
@@ -199,7 +207,8 @@
               "name": "dev",
               "path": "/nix/store/1fvz4d4yky25f2cfvs0i5lfg8kj0ccs5-php-pgsql-8.3.3-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/1cxmsrg34fs35186ha7mq01xy4qs2c37-php-pgsql-8.3.3"
         },
         "aarch64-linux": {
           "outputs": [
@@ -212,7 +221,8 @@
               "name": "dev",
               "path": "/nix/store/91mj6jw9qqnzbzdy5ymx95v0i2msza9a-php-pgsql-8.3.3-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/ckagpah5z5ql36k8p1msyi2cziv97gwp-php-pgsql-8.3.3"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -225,7 +235,8 @@
               "name": "dev",
               "path": "/nix/store/j5d34vdiik69i16i6aswvy0fkiwgzip5-php-pgsql-8.3.3-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/d1f6asgibxzkmkm79z0jih6i8fky0im4-php-pgsql-8.3.3"
         },
         "x86_64-linux": {
           "outputs": [
@@ -238,7 +249,8 @@
               "name": "dev",
               "path": "/nix/store/z82wqxd1mp86rajpw0rh18pm1yxxwh92-php-pgsql-8.3.3-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/g29i5hahnc9pgl9axrfn0alah34c09mn-php-pgsql-8.3.3"
         }
       }
     },
@@ -256,7 +268,8 @@
               "path": "/nix/store/bv8bflifyqabsprqcb5mazjac6kg68xa-php-with-extensions-8.3.3",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/bv8bflifyqabsprqcb5mazjac6kg68xa-php-with-extensions-8.3.3"
         },
         "aarch64-linux": {
           "outputs": [
@@ -265,7 +278,8 @@
               "path": "/nix/store/a2i586p9b1blqgi576iazysqkhcbrprl-php-with-extensions-8.3.3",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/a2i586p9b1blqgi576iazysqkhcbrprl-php-with-extensions-8.3.3"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -274,7 +288,8 @@
               "path": "/nix/store/j3zxdajivi55ngc51p0658crvf4aps21-php-with-extensions-8.3.3",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/j3zxdajivi55ngc51p0658crvf4aps21-php-with-extensions-8.3.3"
         },
         "x86_64-linux": {
           "outputs": [
@@ -283,7 +298,8 @@
               "path": "/nix/store/0a0pxd336ldm8gir7ii3gii2jixbj8i5-php-with-extensions-8.3.3",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/0a0pxd336ldm8gir7ii3gii2jixbj8i5-php-with-extensions-8.3.3"
         }
       }
     },
@@ -313,7 +329,8 @@
               "name": "lib",
               "path": "/nix/store/dbc9hjh5ll5pjgxwl3r9nymdxw7sw8cl-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/6cn0kmav77wba54xibfg9clqzbpan74b-postgresql-15.5"
         },
         "aarch64-linux": {
           "outputs": [
@@ -339,7 +356,8 @@
               "name": "lib",
               "path": "/nix/store/addi70hgggl75jm74p0s435bfaay6m1w-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/kvpjir3cjbijs2w8b20yzqjq0nsd63mp-postgresql-15.5"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -361,7 +379,8 @@
               "name": "lib",
               "path": "/nix/store/q8lijs7rmlkx4qssmh0sjyy77f41y2jh-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/v5ym92k3kss1af7n1788653vis1d6qsc-postgresql-15.5"
         },
         "x86_64-linux": {
           "outputs": [
@@ -387,7 +406,8 @@
               "name": "doc",
               "path": "/nix/store/7vfnvfb6scmf23y6yj5zx8p5r3wsgnq5-postgresql-15.5-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/vvd65gjggb2n8wxbsk1cyxx0wpfidagf-postgresql-15.5"
         }
       }
     }

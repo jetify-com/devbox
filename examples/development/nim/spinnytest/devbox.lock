@@ -14,7 +14,8 @@
               "path": "/nix/store/75v4pnfm89v763sx84wd5z6v3kj7fxrb-aarch64-apple-darwin-nim-wrapper-1.6.12",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/75v4pnfm89v763sx84wd5z6v3kj7fxrb-aarch64-apple-darwin-nim-wrapper-1.6.12"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/8mjn0fbmkqmkwms247z1x5lrwmmi905g-aarch64-unknown-linux-gnu-nim-wrapper-1.6.12",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/8mjn0fbmkqmkwms247z1x5lrwmmi905g-aarch64-unknown-linux-gnu-nim-wrapper-1.6.12"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/kaw747z588rfri82kj11z8aqb20ymmhc-x86_64-apple-darwin-nim-wrapper-1.6.12",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/kaw747z588rfri82kj11z8aqb20ymmhc-x86_64-apple-darwin-nim-wrapper-1.6.12"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/igkv5iavkhil5bqkqyg38sqa5s0fij82-x86_64-unknown-linux-gnu-nim-wrapper-1.6.12",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/igkv5iavkhil5bqkqyg38sqa5s0fij82-x86_64-unknown-linux-gnu-nim-wrapper-1.6.12"
         }
       }
     },
@@ -58,7 +62,8 @@
               "path": "/nix/store/q6r7j3c9x72jxjywbir9dfvbaq1zyrbj-nimble-unwrapped-0.14.2",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/q6r7j3c9x72jxjywbir9dfvbaq1zyrbj-nimble-unwrapped-0.14.2"
         },
         "aarch64-linux": {
           "outputs": [
@@ -67,7 +72,8 @@
               "path": "/nix/store/hzwfa38fgjx9ivxpfqajv0v3c32nrrmc-nimble-unwrapped-0.14.2",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/hzwfa38fgjx9ivxpfqajv0v3c32nrrmc-nimble-unwrapped-0.14.2"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -76,7 +82,8 @@
               "path": "/nix/store/kqxkfsms7ljbpincv8p34rj3252k3jxr-nimble-unwrapped-0.14.2",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/kqxkfsms7ljbpincv8p34rj3252k3jxr-nimble-unwrapped-0.14.2"
         },
         "x86_64-linux": {
           "outputs": [
@@ -85,7 +92,8 @@
               "path": "/nix/store/5dzqirk447l6aw2d3s74gl364w9kprg5-nimble-unwrapped-0.14.2",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/5dzqirk447l6aw2d3s74gl364w9kprg5-nimble-unwrapped-0.14.2"
         }
       }
     },
@@ -119,7 +127,8 @@
               "name": "doc",
               "path": "/nix/store/hnpbgsiakm0dzr30f439ddxfjk7a34jd-openssl-1.1.1w-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/8bdriwfhk7x1mpizsd9csr79i6pksbh3-openssl-1.1.1w-bin"
         },
         "aarch64-linux": {
           "outputs": [
@@ -149,7 +158,8 @@
               "name": "doc",
               "path": "/nix/store/ixcg9yab45qdvzfv42f12l3lblw84cir-openssl-1.1.1w-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/lqm2i80f2h2y6ycz0vq95s6pkdnf7c0f-openssl-1.1.1w-bin"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -175,7 +185,8 @@
               "name": "out",
               "path": "/nix/store/s7dxw6x8mqsnz5aijxb3aisnh8v26x8j-openssl-1.1.1w"
             }
-          ]
+          ],
+          "store_path": "/nix/store/z4rscjdayvw5wxmhbhncmn1jj1a4x9qs-openssl-1.1.1w-bin"
         },
         "x86_64-linux": {
           "outputs": [
@@ -205,7 +216,8 @@
               "name": "out",
               "path": "/nix/store/2asvfq7dz6gnkx3nb7698ai3yaryywc0-openssl-1.1.1w"
             }
-          ]
+          ],
+          "store_path": "/nix/store/bcmajf8fcyz47k6kbz4mjk99kq29apyf-openssl-1.1.1w-bin"
         }
       }
     }
