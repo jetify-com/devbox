@@ -4,17 +4,18 @@
 package boxcli
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 	"io"
 	"math"
 	"net/url"
 	"slices"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/mitchellh/go-wordwrap"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/ux"
@@ -111,9 +112,7 @@ func printSearchResults(
 				slices.Sort(systems)
 				key := strings.Join(systems, " ")
 				if systemKey != key && systemKey != "" {
-					wrappedVersions := wordwrap.WrapString(strings.Join(versions[:], " "), 35)
-					wrappedSystems := wordwrap.WrapString(systemKey, 15)
-					t.AppendRow(table.Row{pkg.Name, wrappedVersions, wrappedSystems}, rowConfigAutoMerge)
+					t.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
 					versions = nil
 				}
 				systemKey = key
@@ -122,15 +121,14 @@ func printSearchResults(
 		}
 
 		if len(versions) > 0 {
-			wrappedVersions := wordwrap.WrapString(strings.Join(versions[:], " "), 35)
-			wrappedSystems := wordwrap.WrapString(systemKey, 15)
-			t.AppendRow(table.Row{pkg.Name, wrappedVersions, wrappedSystems}, rowConfigAutoMerge)
+			t.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
 		}
 	}
+
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, AutoMerge: true, VAlign: text.VAlignMiddle},
 		{Number: 2, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter},
-		{Number: 3, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter},
+		{Number: 3, AutoMerge: true, Align: text.AlignJustify, AlignHeader: text.AlignCenter, WidthMaxEnforcer: text.WrapSoft, WidthMin: 15, WidthMax: 15},
 	})
 	t.SetStyle(table.StyleLight)
 	t.Style().Options.SeparateRows = true
@@ -147,4 +145,27 @@ func printSearchResults(
 	ux.Finfo(w, "For more information go to: https://www.nixhub.io/search?q=%s\n\n", url.QueryEscape(query))
 
 	return nil
+}
+
+func columnize(data []string, maxColumns int) string {
+	columns := maxColumns
+	if len(data) <= columns {
+		columns = 1
+	}
+
+	buf := bytes.NewBufferString("")
+	var versionsGroup []string
+	writer := tabwriter.NewWriter(buf, 0, 8, 1, '\t', tabwriter.AlignRight)
+	for _, version := range data {
+		if len(versionsGroup) == columns {
+			_, _ = fmt.Fprintf(writer, "%s\n", strings.Join(versionsGroup, "\t"))
+			versionsGroup = nil
+		}
+		versionsGroup = append(versionsGroup, version)
+	}
+	if len(versionsGroup) > 0 {
+		_, _ = fmt.Fprintf(writer, "%s\n", strings.Join(versionsGroup, "\t"))
+	}
+	_ = writer.Flush()
+	return buf.String()
 }
