@@ -20,7 +20,8 @@
               "path": "/nix/store/fk8x76797swrpha11z4hqljw3w57840g-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/k29pbnr3qa0npl65hhx7zzwsv9jg2zcj-mariadb-server-11.0.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -34,7 +35,8 @@
               "path": "/nix/store/2584cazgzhq4qig39kniz68z8s71rwx2-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3i23xqjc57v79jb8n218rbaknln65sw5-mariadb-server-11.0.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -48,7 +50,8 @@
               "path": "/nix/store/v12rb0yvvy0swlym9rxk4jcl3c12mb54-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/z13nwdm01gav16nhdz553vjghb7l34gk-mariadb-server-11.0.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -62,7 +65,8 @@
               "path": "/nix/store/xgmra2d3lq52lx2kkw4y862s07k9dpx4-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3dar9ams7hgcws5494jp9akjhakczsmb-mariadb-server-11.0.4"
         }
       }
     },
@@ -83,7 +87,8 @@
               "name": "libv8",
               "path": "/nix/store/x482ciyp76afmsr9qsdan716lvza8ndb-nodejs-18.19.1-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/85siw3p53ki5lldcshgah2rrlrcgi527-nodejs-18.19.1"
         },
         "aarch64-linux": {
           "outputs": [
@@ -96,7 +101,8 @@
               "name": "libv8",
               "path": "/nix/store/gvbr6wm4b0749gyfgziq5q2zn8msg2pw-nodejs-18.19.1-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/v15fm8wlssnfg1vygh9xiw7f2z99v4vn-nodejs-18.19.1"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -109,7 +115,8 @@
               "name": "libv8",
               "path": "/nix/store/84340aw7k8nc3fcb0cm79bl1vvbjydl5-nodejs-18.19.1-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/2a5cxm45616hxg9ynfp25mxa0xinpwr3-nodejs-18.19.1"
         },
         "x86_64-linux": {
           "outputs": [
@@ -122,7 +129,8 @@
               "name": "libv8",
               "path": "/nix/store/1ivbwnpcr46sdncfry4yz61k96587faf-nodejs-18.19.1-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/1ihd9lyhn8q73n9s3iaxbilx4mn4nc5b-nodejs-18.19.1"
         }
       }
     },
@@ -139,7 +147,8 @@
               "path": "/nix/store/ybcs3bpwkjaaxd2wlqh230vpyk3fd1ss-php-xdebug-3.3.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/ybcs3bpwkjaaxd2wlqh230vpyk3fd1ss-php-xdebug-3.3.1"
         },
         "aarch64-linux": {
           "outputs": [
@@ -148,7 +157,8 @@
               "path": "/nix/store/z83cq1nyr3ab43kzrf431dhf3z6rfgdf-php-xdebug-3.3.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/z83cq1nyr3ab43kzrf431dhf3z6rfgdf-php-xdebug-3.3.1"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -157,7 +167,8 @@
               "path": "/nix/store/vbbcbid35ccflc3mgyaknh0m58cr712d-php-xdebug-3.3.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/vbbcbid35ccflc3mgyaknh0m58cr712d-php-xdebug-3.3.1"
         },
         "x86_64-linux": {
           "outputs": [
@@ -166,7 +177,8 @@
               "path": "/nix/store/b91hzmbzcglzi064ga8y2x8zrqd1d2kk-php-xdebug-3.3.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/b91hzmbzcglzi064ga8y2x8zrqd1d2kk-php-xdebug-3.3.1"
         }
       }
     },
@@ -183,7 +195,8 @@
               "path": "/nix/store/pz81gn9xk9bm836qryay2wjzjh94c7b3-composer-2.6.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/pz81gn9xk9bm836qryay2wjzjh94c7b3-composer-2.6.6"
         },
         "aarch64-linux": {
           "outputs": [
@@ -192,7 +205,8 @@
               "path": "/nix/store/wkkz4s0dcqzhc8p0ahm1bjr1y5qd1hr8-composer-2.6.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/wkkz4s0dcqzhc8p0ahm1bjr1y5qd1hr8-composer-2.6.6"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -201,7 +215,8 @@
               "path": "/nix/store/g9vkwdzi6185r9864csmqgx5whia91g1-composer-2.6.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/g9vkwdzi6185r9864csmqgx5whia91g1-composer-2.6.6"
         },
         "x86_64-linux": {
           "outputs": [
@@ -210,7 +225,8 @@
               "path": "/nix/store/jnxixmrdvlj66jfqwy6lpk5fxwm9cdw9-composer-2.6.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/jnxixmrdvlj66jfqwy6lpk5fxwm9cdw9-composer-2.6.6"
         }
       }
     },
@@ -228,7 +244,8 @@
               "path": "/nix/store/hxam94q1czcx9yh57hlk943h5h2vppkz-php-with-extensions-8.1.27",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/hxam94q1czcx9yh57hlk943h5h2vppkz-php-with-extensions-8.1.27"
         },
         "aarch64-linux": {
           "outputs": [
@@ -237,7 +254,8 @@
               "path": "/nix/store/mdg9mg0yv3x45irkvqr01a24k82nhk5s-php-with-extensions-8.1.27",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/mdg9mg0yv3x45irkvqr01a24k82nhk5s-php-with-extensions-8.1.27"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -246,7 +264,8 @@
               "path": "/nix/store/j9zvid90fd9b4670lw89ml7rlm6gcmmb-php-with-extensions-8.1.27",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/j9zvid90fd9b4670lw89ml7rlm6gcmmb-php-with-extensions-8.1.27"
         },
         "x86_64-linux": {
           "outputs": [
@@ -255,7 +274,8 @@
               "path": "/nix/store/kwy1az3h0bg5zs1smiksvilf449w8yh1-php-with-extensions-8.1.27",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/kwy1az3h0bg5zs1smiksvilf449w8yh1-php-with-extensions-8.1.27"
         }
       }
     },
@@ -273,7 +293,8 @@
               "path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -282,7 +303,8 @@
               "path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -291,7 +313,8 @@
               "path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -300,7 +323,8 @@
               "path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4"
         }
       }
     }

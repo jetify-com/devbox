@@ -15,7 +15,8 @@
               "path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/xcd9bqfpasb0bap2whanbpliy15fy4gj-redis-7.2.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -24,7 +25,8 @@
               "path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/l7f1x08bcgrhqpr8l5n5xsfs3dhk1jnd-redis-7.2.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -33,7 +35,8 @@
               "path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/a7arff33sa07290b2jyalbq27f49qdx3-redis-7.2.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -42,7 +45,8 @@
               "path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/vynr8ih2mb0by4rzhwx323j05ka570v7-redis-7.2.4"
         }
       }
     }

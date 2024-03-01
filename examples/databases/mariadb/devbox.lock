@@ -20,7 +20,8 @@
               "path": "/nix/store/fk8x76797swrpha11z4hqljw3w57840g-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/k29pbnr3qa0npl65hhx7zzwsv9jg2zcj-mariadb-server-11.0.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -34,7 +35,8 @@
               "path": "/nix/store/2584cazgzhq4qig39kniz68z8s71rwx2-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3i23xqjc57v79jb8n218rbaknln65sw5-mariadb-server-11.0.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -48,7 +50,8 @@
               "path": "/nix/store/v12rb0yvvy0swlym9rxk4jcl3c12mb54-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/z13nwdm01gav16nhdz553vjghb7l34gk-mariadb-server-11.0.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -62,7 +65,8 @@
               "path": "/nix/store/xgmra2d3lq52lx2kkw4y862s07k9dpx4-mariadb-server-11.0.4-man",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3dar9ams7hgcws5494jp9akjhakczsmb-mariadb-server-11.0.4"
         }
       }
     }

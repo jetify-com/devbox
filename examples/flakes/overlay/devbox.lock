@@ -14,7 +14,8 @@
               "path": "/nix/store/c72hyfsgrz5r6hxwybyl274lvz7i9y7g-fnm-1.35.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/c72hyfsgrz5r6hxwybyl274lvz7i9y7g-fnm-1.35.1"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/bkl5sz9ac6w7z3insbb2gvajgr75i7ni-fnm-1.35.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/bkl5sz9ac6w7z3insbb2gvajgr75i7ni-fnm-1.35.1"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/3l9khc6ckzgj81kgb8fv4j6ifx9mfz8w-fnm-1.35.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3l9khc6ckzgj81kgb8fv4j6ifx9mfz8w-fnm-1.35.1"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/3y176slfix5xp9v35d2frp6980bz8z06-fnm-1.35.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/3y176slfix5xp9v35d2frp6980bz8z06-fnm-1.35.1"
         }
       }
     },

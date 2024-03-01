@@ -14,7 +14,8 @@
               "path": "/nix/store/cihwkz2j3rj798kvjczp0wyy08yqrjk1-dotnet-sdk-6.0.418",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/cihwkz2j3rj798kvjczp0wyy08yqrjk1-dotnet-sdk-6.0.418"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/2k701f6xriajl3hi5az6sz8pw7yjdbl3-dotnet-sdk-6.0.418",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/2k701f6xriajl3hi5az6sz8pw7yjdbl3-dotnet-sdk-6.0.418"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/03xnhsz61h2m83sj4cm3ag4ck5wwy7ji-dotnet-sdk-6.0.418",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/03xnhsz61h2m83sj4cm3ag4ck5wwy7ji-dotnet-sdk-6.0.418"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/7523v2ypcvgmli44gsfvrx2mf33syp07-dotnet-sdk-6.0.418",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/7523v2ypcvgmli44gsfvrx2mf33syp07-dotnet-sdk-6.0.418"
         }
       }
     }

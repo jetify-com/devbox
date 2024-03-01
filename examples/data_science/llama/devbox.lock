@@ -14,7 +14,8 @@
               "path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4"
         }
       }
     }

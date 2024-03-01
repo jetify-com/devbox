@@ -14,7 +14,8 @@
               "path": "/nix/store/kf294q6pwmqv8hb5ivis509y1wjjgm09-elixir-1.15.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/kf294q6pwmqv8hb5ivis509y1wjjgm09-elixir-1.15.7"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/f5x2w7df45vahjcpjf76dv101il8xq98-elixir-1.15.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/f5x2w7df45vahjcpjf76dv101il8xq98-elixir-1.15.7"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/6vv8qlvhpi62nk5d06lhi5isvlg7bcj9-elixir-1.15.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/6vv8qlvhpi62nk5d06lhi5isvlg7bcj9-elixir-1.15.7"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/dlq14nswvq479pmnrwlyn2hyk6cwp65a-elixir-1.15.7",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/dlq14nswvq479pmnrwlyn2hyk6cwp65a-elixir-1.15.7"
         }
       }
     }

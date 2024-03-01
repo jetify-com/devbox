@@ -14,7 +14,8 @@
               "path": "/nix/store/jpi5mf9pgl1n8v5c7829ckw680azad6p-bundler-2.5.5",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/jpi5mf9pgl1n8v5c7829ckw680azad6p-bundler-2.5.5"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/kx7rp6mnyw4gd696rdzqycfhpma62j2c-bundler-2.5.5",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/kx7rp6mnyw4gd696rdzqycfhpma62j2c-bundler-2.5.5"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +34,8 @@
               "path": "/nix/store/6xyharaxdiiplfdi1l9b72y7wairy7mr-bundler-2.5.5",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/6xyharaxdiiplfdi1l9b72y7wairy7mr-bundler-2.5.5"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +44,8 @@
               "path": "/nix/store/nfrdd8k4q5qwwhnghkvxaap96vlxmbmm-bundler-2.5.5",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/nfrdd8k4q5qwwhnghkvxaap96vlxmbmm-bundler-2.5.5"
         }
       }
     },
@@ -71,7 +75,8 @@
               "name": "dev",
               "path": "/nix/store/3cxqis2l84yx5bi1564qhjnzca4iwynr-libffi-3.4.4-dev"
             }
-          ]
+          ],
+          "store_path": "/nix/store/m0xglhw9hx07ismjsk9r34ffbdf3m1wr-libffi-3.4.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -93,7 +98,8 @@
               "name": "info",
               "path": "/nix/store/1fpwq51k6h3i9fbbpgld619jx5yhaq64-libffi-3.4.4-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/z9fxh9kmdk6bqsh4l0w51a2dpfd447v9-libffi-3.4.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -115,7 +121,8 @@
               "name": "info",
               "path": "/nix/store/xnaikhpgvv0g9dlr4y0qvnnxgry0kky5-libffi-3.4.4-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/3hxzjdfb88ni8f7h7xbqirsm7massl90-libffi-3.4.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -137,7 +144,8 @@
               "name": "info",
               "path": "/nix/store/lyzfnlw0l042vqw2rgyzqdbgnzxk8vff-libffi-3.4.4-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/zabxhfpsgkb9c4sb7fy50pn1l1kczzv2-libffi-3.4.4"
         }
       }
     },
@@ -159,7 +167,8 @@
               "name": "devdoc",
               "path": "/nix/store/sajs21b1434k8w5k0k7awi94cjv8vkzy-ruby-3.1.4-devdoc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/xsajgsjbv3b2fxicp6hmjwn0ahdz2q2d-ruby-3.1.4"
         },
         "aarch64-linux": {
           "outputs": [
@@ -172,7 +181,8 @@
               "name": "devdoc",
               "path": "/nix/store/izwxhxf05h298hlddgk77iq1m2l4zg0f-ruby-3.1.4-devdoc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/8wfhp1239j8k0471g53r7gk216kn9bpy-ruby-3.1.4"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -185,7 +195,8 @@
               "name": "devdoc",
               "path": "/nix/store/wqjyg189wdv6jpm2gav33gy4nj64f9f4-ruby-3.1.4-devdoc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/g2bccwl6k3swk3h423qy66412sk0qyns-ruby-3.1.4"
         },
         "x86_64-linux": {
           "outputs": [
@@ -198,7 +209,8 @@
               "name": "devdoc",
               "path": "/nix/store/5vmg2wf2286nf2gsv522y8d2v0w1wd76-ruby-3.1.4-devdoc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/lpp53qxl39gc5vwvd8qn6ps6nh6kkffk-ruby-3.1.4"
         }
       }
     }

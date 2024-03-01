@@ -15,7 +15,8 @@
               "path": "/nix/store/8yh01f19xiq5gqdak9pbk9paj6mxwrvc-caddy-2.7.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/8yh01f19xiq5gqdak9pbk9paj6mxwrvc-caddy-2.7.6"
         },
         "aarch64-linux": {
           "outputs": [
@@ -24,7 +25,8 @@
               "path": "/nix/store/n7m5i7hqvr87f49f9vx97c1chc7bhs17-caddy-2.7.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/n7m5i7hqvr87f49f9vx97c1chc7bhs17-caddy-2.7.6"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -33,7 +35,8 @@
               "path": "/nix/store/2v5c154s2pp4mcb7687vfi1kr62fb6i8-caddy-2.7.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/2v5c154s2pp4mcb7687vfi1kr62fb6i8-caddy-2.7.6"
         },
         "x86_64-linux": {
           "outputs": [
@@ -42,7 +45,8 @@
               "path": "/nix/store/qwaf4dkar63z1yrhhz6wyjpgsgafw0a5-caddy-2.7.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/qwaf4dkar63z1yrhhz6wyjpgsgafw0a5-caddy-2.7.6"
         }
       }
     }
