@@ -96,20 +96,32 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	return f.Packages[pkg], nil
 }
 
+// TODO:
+// Consider a design change to have the File struct match disk to make this system
+// easier to reason about, and have isDirty() compare the in-memory struct to the
+// on-disk struct.
+//
+// Proposal:
+// 1. Have an OutputsRaw field and a method called Outputs() to access it.
+// Outputs() will check if OutputsRaw is zero-value and fills it in from StorePath.
+// 2. Then, in Save(), we can check if OutputsRaw is zero and fill it in prior to writing
+// to disk.
 func (f *File) Save() error {
 	isDirty, err := f.isDirty()
 	if err != nil {
 		return err
 	}
+	if !isDirty {
+		return nil
+	}
+
 	// In SystemInfo, preserve legacy StorePath field and clear out modern Outputs before writing
 	// Reason: We want to update `devbox.lock` file only upon a user action
 	// such as `devbox update` or `devbox add` or `devbox remove`.
 	for pkgName, pkg := range f.Packages {
 		for sys, sysInfo := range pkg.Systems {
-			if !isDirty && sysInfo.StorePath != "" {
+			if sysInfo.outputIsFromStorePath {
 				f.Packages[pkgName].Systems[sys].Outputs = nil
-			} else {
-				f.Packages[pkgName].Systems[sys].StorePath = ""
 			}
 		}
 	}
