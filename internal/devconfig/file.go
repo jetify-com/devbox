@@ -100,8 +100,8 @@ func DefaultConfig() *ConfigFile {
   }
 }
 `,
-		DefaultInitHook,
 		lo.Ternary(build.IsDev, "main", build.Version),
+		DefaultInitHook,
 	)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
