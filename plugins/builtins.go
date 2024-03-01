@@ -30,6 +30,7 @@ var builtInMap = map[*regexp.Regexp]string{
 	regexp.MustCompile(`^(ghc|haskell\.compiler\.(.*))$`):              "haskell",
 	regexp.MustCompile(`^mariadb(-embedded)?_?[0-9]*$`):                "mariadb",
 	regexp.MustCompile(`^mysql?[0-9]*$`):                               "mysql",
+	regexp.MustCompile(`^nodejs(-slim)?_?[0-9]*$`):                     "nodejs",
 	regexp.MustCompile(`^php[0-9]*$`):                                  "php",
 	regexp.MustCompile(`^python3[0-9]*Packages.pip$`):                  "pip",
 	regexp.MustCompile(`^(\w*\.)?poetry$`):                             "poetry",
