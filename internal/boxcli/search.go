@@ -100,25 +100,26 @@ func printSearchResults(
 		systemKey := ""
 		var versions []string
 		for i, pkgVersion := range pkg.Versions {
-			if pkgVersion.Version != "" {
-				if !showAll && i >= 10 {
-					resultsAreTrimmed = true
-					break
-				}
-
-				var systems []string
-				for _, sys := range pkgVersion.Systems {
-					systems = append(systems, sys.System)
-				}
-				slices.Sort(systems)
-				key := strings.Join(systems, " ")
-				if systemKey != key && systemKey != "" {
-					tableWriter.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
-					versions = nil
-				}
-				systemKey = key
-				versions = append(versions, pkgVersion.Version)
+			if pkgVersion.Version == "" {
+				continue
 			}
+			if !showAll && i >= 10 {
+				resultsAreTrimmed = true
+				break
+			}
+
+			var systems []string
+			for _, sys := range pkgVersion.Systems {
+				systems = append(systems, sys.System)
+			}
+			slices.Sort(systems)
+			key := strings.Join(systems, " ")
+			if systemKey != key && systemKey != "" {
+				tableWriter.AppendRow(table.Row{pkg.Name, columnize(versions, 2), systemKey}, rowConfigAutoMerge)
+				versions = nil
+			}
+			systemKey = key
+			versions = append(versions, pkgVersion.Version)
 		}
 
 		if len(versions) > 0 {
