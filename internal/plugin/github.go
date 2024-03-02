@@ -41,9 +41,9 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
-			"failed to get plugin github:%s @ %s (Status code %d). \nPlease make "+
+			"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
 				"sure a plugin.json file exists in plugin directory.",
-			p.ref.String(),
+			p.LockfileKey(),
 			contentURL,
 			res.StatusCode,
 		)
@@ -65,5 +65,5 @@ func (p *githubPlugin) url(subpath string) (string, error) {
 }
 
 func (p *githubPlugin) LockfileKey() string {
-	return p.ref.Raw
+	return p.ref.String()
 }

@@ -191,7 +191,7 @@ func isAmbiguous(raw string, parsed flake.Installable) bool {
 // resolve is the implementation of Package.resolve, where it is wrapped in a
 // sync.OnceValue function. It should not be called directly.
 func resolve(pkg *Package) error {
-	resolved, err := pkg.lockfile.Resolve(pkg.Raw)
+	resolved, err := pkg.lockfile.Resolve(pkg.LockfileKey())
 	if err != nil {
 		return err
 	}
@@ -590,7 +590,7 @@ func (p *Package) InputAddressedPaths() ([]string, error) {
 			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
-	entry, err := p.lockfile.Resolve(p.Raw)
+	entry, err := p.lockfile.Resolve(p.LockfileKey())
 	if err != nil {
 		return nil, err
 	}
@@ -617,7 +617,7 @@ func (p *Package) InputAddressedPathForOutput(output string) (string, error) {
 			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
 	}
 
-	entry, err := p.lockfile.Resolve(p.Raw)
+	entry, err := p.lockfile.Resolve(p.LockfileKey())
 	if err != nil {
 		return "", err
 	}
@@ -657,7 +657,7 @@ func (p *Package) EnsureUninstallableIsInLockfile() error {
 	if !p.IsInstallable() || !p.IsDevboxPackage {
 		return nil
 	}
-	_, err := p.lockfile.Resolve(p.Raw)
+	_, err := p.lockfile.Resolve(p.LockfileKey())
 	return err
 }
 
@@ -681,6 +681,9 @@ func (p *Package) String() string {
 }
 
 func (p *Package) LockfileKey() string {
+	// Use p.Raw instead of p.installable.Ref.String() because that will have
+	// absolute paths. TODO: We may want to change SetInstallable to avoid making
+	// flake ref absolute.
 	return p.Raw
 }
 

@@ -71,7 +71,7 @@ func TestNewGithubPlugin(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, _ := parseReflike(testCase.Include, "")
+			actual, _ := parseIncludable(testCase.Include, "")
 			assert.Equal(t, &testCase.expected, actual)
 			u, err := testCase.expected.url("")
 			assert.Nil(t, err)

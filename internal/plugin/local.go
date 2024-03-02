@@ -67,7 +67,7 @@ func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
 }
 
 func (l *localPlugin) LockfileKey() string {
-	return l.ref.Raw
+	return l.ref.String()
 }
 
 func (l *localPlugin) Path() string {
