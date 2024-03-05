@@ -71,7 +71,7 @@ func readFromFile(path string) (*Config, error) {
 }
 
 func LoadConfigFromURL(ctx context.Context, url string) (*Config, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -120,7 +120,7 @@ func (c *Config) LoadRecursive(lockfile *lock.File) error {
 	}
 
 	builtIns, err := plugin.GetBuiltinsForPackages(
-		c.Root.SingleFilePackages(),
+		c.Root.TopLevelPackages(),
 		lockfile,
 	)
 	if err != nil {
@@ -175,7 +175,7 @@ func (c *Config) Packages() []configfile.Package {
 
 	// Packages to remove in built ins only affect the devbox.json where they are defined.
 	// They should not remove packages that are part of other imports.
-	for _, pkg := range c.Root.SingleFilePackages() {
+	for _, pkg := range c.Root.TopLevelPackages() {
 		if !packagesToRemove[pkg.VersionedName()] {
 			packages = append(packages, pkg)
 		}
@@ -194,8 +194,8 @@ func (c *Config) Packages() []configfile.Package {
 // example:
 // ["package1", "package2@latest", "package3@1.20"]
 func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.SingleFilePackages()))
-	for _, p := range c.Root.SingleFilePackages() {
+	result := make([]string, 0, len(c.Root.TopLevelPackages()))
+	for _, p := range c.Root.TopLevelPackages() {
 		result = append(result, p.VersionedName())
 	}
 	return result

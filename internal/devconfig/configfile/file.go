@@ -133,9 +133,9 @@ func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	return &c.PackagesMutator.collection[i], true
 }
 
-// SingleFilePackages returns the packages in the config file, but not the included ones.
+// TopLevelPackages returns the packages in the config file, but not the included ones.
 // Semi-awkwardly named to avoid confusion with the Packages method on Config.
-func (c *ConfigFile) SingleFilePackages() []Package {
+func (c *ConfigFile) TopLevelPackages() []Package {
 	return c.PackagesMutator.collection
 }
 
