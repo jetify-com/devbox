@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -21,6 +22,10 @@ import (
 // Config represents a base devbox.json as well as any included plugins it may have.
 type Config struct {
 	Root configfile.ConfigFile
+
+	// absRootPath is the absolute path to the devbox.json or plugin.json file
+	// it will not be set for github plugins.
+	absRootPath string
 
 	pluginData *plugin.PluginOnlyData // pointer by design, to allow for nil
 
@@ -71,7 +76,12 @@ func readFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loadBytes(b)
+	config, err := loadBytes(b)
+	if err != nil {
+		return nil, err
+	}
+	config.absRootPath = filepath.Dir(path)
+	return config, nil
 }
 
 func LoadConfigFromURL(ctx context.Context, url string) (*Config, error) {
@@ -104,19 +114,36 @@ func loadBytes(b []byte) (*Config, error) {
 }
 
 func (c *Config) LoadRecursive(lockfile *lock.File) error {
+	return c.loadRecursive(lockfile, map[string]bool{})
+}
+
+func (c *Config) loadRecursive(
+	lockfile *lock.File,
+	seen map[string]bool,
+) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
 	for _, includeRef := range c.Root.Include {
-		pluginConfig, err := plugin.LoadConfigFromInclude(includeRef, lockfile)
+		pluginConfig, err := plugin.LoadConfigFromInclude(
+			includeRef, lockfile, c.absRootPath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
+
+		if seen[pluginConfig.Source.Hash()] {
+			return errors.Errorf("circular include detected: %s", includeRef)
+		}
+		seen[pluginConfig.Source.Hash()] = true
 
 		includable := &Config{
 			Root:       pluginConfig.ConfigFile,
 			pluginData: &pluginConfig.PluginOnlyData,
 		}
-		if err := includable.LoadRecursive(lockfile); err != nil {
+		if hasDir, ok := pluginConfig.Source.(*plugin.LocalPlugin); ok {
+			includable.absRootPath = filepath.Dir(hasDir.Path())
+		}
+
+		if err := includable.loadRecursive(lockfile, maps.Clone(seen)); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -136,7 +163,7 @@ func (c *Config) LoadRecursive(lockfile *lock.File) error {
 			Root:       builtIn.ConfigFile,
 			pluginData: &builtIn.PluginOnlyData,
 		}
-		if err := includable.LoadRecursive(lockfile); err != nil {
+		if err := includable.loadRecursive(lockfile, maps.Clone(seen)); err != nil {
 			return errors.WithStack(err)
 		}
 		included = append(included, includable)

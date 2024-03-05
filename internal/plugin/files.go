@@ -14,24 +14,24 @@ import (
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg Includable, projectDir string) (*Config, error) {
-	switch pkg := pkg.(type) {
+func getConfigIfAny(inc Includable, projectDir string) (*Config, error) {
+	switch includable := inc.(type) {
 	case *devpkg.Package:
-		return getBuiltinPluginConfigIfExists(pkg, projectDir)
+		return getBuiltinPluginConfigIfExists(includable, projectDir)
 	case *githubPlugin:
-		content, err := pkg.Fetch()
+		content, err := includable.Fetch()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return buildConfig(pkg, projectDir, string(content))
-	case *localPlugin:
-		content, err := os.ReadFile(pkg.Path())
+		return buildConfig(includable, projectDir, string(content))
+	case *LocalPlugin:
+		content, err := os.ReadFile(includable.Path())
 		if err != nil && !os.IsNotExist(err) {
 			return nil, errors.WithStack(err)
 		}
-		return buildConfig(pkg, projectDir, string(content))
+		return buildConfig(includable, projectDir, string(content))
 	}
-	return nil, errors.Errorf("unknown plugin type %T", pkg)
+	return nil, errors.Errorf("unknown plugin type %T", inc)
 }
 
 func getBuiltinPluginConfigIfExists(

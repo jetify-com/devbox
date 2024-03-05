@@ -1,0 +1,20 @@
+{
+  "name": "plugin1a",
+  "packages": ["cowsay@latest"],
+  "env": {
+    "PLUGIN1A_ENV": "success"
+  },
+  "shell": {
+    "init_hook": [
+      "export PLUGIN1A_INIT_HOOK=success"
+    ],
+    "scripts": {
+      "plugin_1A_script": [
+        "echo success"
+      ]
+    }
+  },
+  "include": [
+    "../../plugin2"
+  ]
+}

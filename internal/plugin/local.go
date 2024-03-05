@@ -12,16 +12,16 @@ import (
 	"go.jetpack.io/devbox/nix/flake"
 )
 
-type localPlugin struct {
-	ref        flake.Ref
-	name       string
-	projectDir string
+type LocalPlugin struct {
+	ref       flake.Ref
+	name      string
+	pluginDir string
 }
 
 var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
 
-func newLocalPlugin(ref flake.Ref, projectDir string) (*localPlugin, error) {
-	plugin := &localPlugin{ref: ref, projectDir: projectDir}
+func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
+	plugin := &LocalPlugin{ref: ref, pluginDir: pluginDir}
 	content, err := plugin.Fetch()
 	if err != nil {
 		return nil, err
@@ -45,32 +45,32 @@ func newLocalPlugin(ref flake.Ref, projectDir string) (*localPlugin, error) {
 	return plugin, nil
 }
 
-func (l *localPlugin) Fetch() ([]byte, error) {
+func (l *LocalPlugin) Fetch() ([]byte, error) {
 	return os.ReadFile(addFilenameIfMissing(l.Path()))
 }
 
-func (l *localPlugin) CanonicalName() string {
+func (l *LocalPlugin) CanonicalName() string {
 	return l.name
 }
 
-func (l *localPlugin) IsLocal() bool {
+func (l *LocalPlugin) IsLocal() bool {
 	return true
 }
 
-func (l *localPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(l.Path()))
+func (l *LocalPlugin) Hash() string {
+	h, _ := cachehash.Bytes([]byte(filepath.Clean(l.Path())))
 	return h
 }
 
-func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
+func (l *LocalPlugin) FileContent(subpath string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(filepath.Dir(l.Path()), subpath))
 }
 
-func (l *localPlugin) LockfileKey() string {
+func (l *LocalPlugin) LockfileKey() string {
 	return l.ref.String()
 }
 
-func (l *localPlugin) Path() string {
+func (l *LocalPlugin) Path() string {
 	path := l.ref.Path
 	if !strings.HasSuffix(path, pluginConfigName) {
 		path = filepath.Join(path, pluginConfigName)
@@ -78,7 +78,7 @@ func (l *localPlugin) Path() string {
 	if filepath.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(l.projectDir, path)
+	return filepath.Join(l.pluginDir, path)
 }
 
 func addFilenameIfMissing(s string) string {

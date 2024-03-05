@@ -11,10 +11,14 @@
     "scripts": {
       "run_test": [
         "test -n \"$PLUGIN1_INIT_HOOK\" || exit 1",
+        "test -n \"$PLUGIN1A_INIT_HOOK\" || exit 1",
         "test -n \"$PLUGIN1_ENV\" || exit 1",
+        "test -n \"$PLUGIN1A_ENV\" || exit 1",
         "if [ \"$PLUGIN1_ENV2\" != \"override\" ]; then exit 1; fi;",
         "devbox run plugin_1_script",
-        "hello"
+        "devbox run plugin_1A_script",
+        "hello",
+        "cowsay 'Hello, world!'"
       ]
     }
   },

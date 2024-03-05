@@ -1,6 +1,74 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "cowsay@latest": {
+      "last_modified": "2024-02-24T23:06:34Z",
+      "resolved": "github:NixOS/nixpkgs/9a9dae8f6319600fa9aebde37f340975cab4b8c0#cowsay",
+      "source": "devbox-search",
+      "version": "3.7.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jbd4ibcidgicsvfrw7485j7dvgxxaaw2-cowsay-3.7.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/kr3azp5dzznk5ra7a09m2j3kqrmn7n5p-cowsay-3.7.0-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/jbd4ibcidgicsvfrw7485j7dvgxxaaw2-cowsay-3.7.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/snpdm0421rfd2m0r45hmrfrsnv8i1bhs-cowsay-3.7.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/fnagjxw72d9mff2jjw5lz7l8nvlnwg46-cowsay-3.7.0-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/snpdm0421rfd2m0r45hmrfrsnv8i1bhs-cowsay-3.7.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pp6rki1vdvbafli7ghx44dghj6aw9za4-cowsay-3.7.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/z199j4f78l0kpqb3d94whradvbr449vi-cowsay-3.7.0-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/pp6rki1vdvbafli7ghx44dghj6aw9za4-cowsay-3.7.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1gm1jhr61dl5bfr9mff7pk3dl44352zl-cowsay-3.7.0",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/rd4l8kpfc3w1km2z5qv8z3qxg06csy70-cowsay-3.7.0-man",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1gm1jhr61dl5bfr9mff7pk3dl44352zl-cowsay-3.7.0"
+        }
+      }
+    },
     "hello@latest": {
       "last_modified": "2024-02-24T23:06:34Z",
       "resolved": "github:NixOS/nixpkgs/9a9dae8f6319600fa9aebde37f340975cab4b8c0#hello",
@@ -14,7 +82,8 @@
               "path": "/nix/store/0dqk50ap0jsh0wz4y6n6kqfl8ynhz84f-hello-2.12.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/0dqk50ap0jsh0wz4y6n6kqfl8ynhz84f-hello-2.12.1"
         },
         "aarch64-linux": {
           "outputs": [
@@ -23,7 +92,8 @@
               "path": "/nix/store/218n5svnni1y5nm0iq0nir3jpz8yxbsb-hello-2.12.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/218n5svnni1y5nm0iq0nir3jpz8yxbsb-hello-2.12.1"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -32,7 +102,8 @@
               "path": "/nix/store/v1mbicfpyp9mnps4i8iccfzas53if4p6-hello-2.12.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/v1mbicfpyp9mnps4i8iccfzas53if4p6-hello-2.12.1"
         },
         "x86_64-linux": {
           "outputs": [
@@ -41,7 +112,8 @@
               "path": "/nix/store/ki1s92r0524hj416rh20v0msxmi4pjvn-hello-2.12.1",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/ki1s92r0524hj416rh20v0msxmi4pjvn-hello-2.12.1"
         }
       }
     }
