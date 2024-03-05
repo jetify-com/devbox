@@ -54,12 +54,12 @@ func DefaultConfig() *Config {
 	return cfg
 }
 
-func IsNotDefault(path string) bool {
+func IsDefault(path string) bool {
 	cfg, err := readFromFile(path)
 	if err != nil {
 		return false
 	}
-	return !cfg.Root.Equals(&DefaultConfig().Root)
+	return cfg.Root.Equals(&DefaultConfig().Root)
 }
 
 func LoadForTest(path string) (*Config, error) {
@@ -171,9 +171,7 @@ func (c *Config) Packages() []configfile.Package {
 	for _, i := range c.included {
 		packages = append(packages, i.Packages()...)
 		if i.pluginData.RemoveTriggerPackage {
-			if pkg, ok := i.pluginData.Source.(interface{ LockfileKey() string }); ok {
-				packagesToRemove[pkg.LockfileKey()] = true
-			}
+			packagesToRemove[i.pluginData.Source.LockfileKey()] = true
 		}
 	}
 

@@ -9,17 +9,18 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 type localPlugin struct {
-	ref        RefLike
+	ref        flake.Ref
 	name       string
 	projectDir string
 }
 
 var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
 
-func newLocalPlugin(ref RefLike, projectDir string) (*localPlugin, error) {
+func newLocalPlugin(ref flake.Ref, projectDir string) (*localPlugin, error) {
 	plugin := &localPlugin{ref: ref, projectDir: projectDir}
 	content, err := plugin.Fetch()
 	if err != nil {
@@ -45,7 +46,7 @@ func newLocalPlugin(ref RefLike, projectDir string) (*localPlugin, error) {
 }
 
 func (l *localPlugin) Fetch() ([]byte, error) {
-	return os.ReadFile(l.ref.withFilename(l.Path()))
+	return os.ReadFile(addFilenameIfMissing(l.Path()))
 }
 
 func (l *localPlugin) CanonicalName() string {
@@ -66,16 +67,23 @@ func (l *localPlugin) FileContent(subpath string) ([]byte, error) {
 }
 
 func (l *localPlugin) LockfileKey() string {
-	return l.ref.raw
+	return l.ref.String()
 }
 
 func (l *localPlugin) Path() string {
-	path := l.ref.Ref.Path
-	if !strings.HasSuffix(path, l.ref.filename) {
-		path = filepath.Join(path, l.ref.filename)
+	path := l.ref.Path
+	if !strings.HasSuffix(path, pluginConfigName) {
+		path = filepath.Join(path, pluginConfigName)
 	}
 	if filepath.IsAbs(path) {
 		return path
 	}
 	return filepath.Join(l.projectDir, path)
+}
+
+func addFilenameIfMissing(s string) string {
+	if strings.HasSuffix(s, pluginConfigName) {
+		return s
+	}
+	return filepath.Join(s, pluginConfigName)
 }

@@ -16,7 +16,7 @@ func LoadConfigFromInclude(include string, lockfile *lock.File) (*Config, error)
 			lockfile,
 		)
 	} else {
-		includable, err = parseReflike(include, lockfile.ProjectDir())
+		includable, err = parseIncludable(include, lockfile.ProjectDir())
 		if err != nil {
 			return nil, err
 		}

@@ -8,10 +8,11 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 type githubPlugin struct {
-	ref RefLike
+	ref flake.Ref
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
@@ -40,9 +41,9 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, usererr.New(
-			"failed to get plugin github:%s @ %s (Status code %d). \nPlease make "+
+			"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
 				"sure a plugin.json file exists in plugin directory.",
-			p.ref.String(),
+			p.LockfileKey(),
 			contentURL,
 			res.StatusCode,
 		)
@@ -57,12 +58,12 @@ func (p *githubPlugin) url(subpath string) (string, error) {
 		"https://raw.githubusercontent.com/",
 		p.ref.Owner,
 		p.ref.Repo,
-		cmp.Or(p.ref.Rev, p.ref.Ref.Ref, "master"),
+		cmp.Or(p.ref.Rev, p.ref.Ref, "master"),
 		p.ref.Dir,
 		subpath,
 	)
 }
 
 func (p *githubPlugin) LockfileKey() string {
-	return p.ref.raw
+	return p.ref.String()
 }

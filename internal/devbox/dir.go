@@ -109,10 +109,5 @@ func missingConfigError(path string, didCheckParents bool) error {
 }
 
 func configExistsIn(path string) bool {
-	for _, name := range configfile.ValidConfigNames() {
-		if fileutil.Exists(filepath.Join(path, name)) {
-			return true
-		}
-	}
-	return false
+	return fileutil.Exists(filepath.Join(path, configfile.DefaultName))
 }
