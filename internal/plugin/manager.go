@@ -4,12 +4,6 @@
 package plugin
 
 import (
-	"path/filepath"
-	"strings"
-
-	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 )
 
@@ -48,38 +42,4 @@ func (m *Manager) ApplyOptions(opts ...managerOption) {
 	for _, opt := range opts {
 		opt(m)
 	}
-}
-
-// ProcessPluginPackages adds and removes packages as indicated by plugins
-func (m *Manager) ProcessPluginPackages(
-	userPackages []*devpkg.Package,
-) ([]*devpkg.Package, error) {
-	pluginPackages := []*devpkg.Package{}
-	packagesToRemove := []*devpkg.Package{}
-	for _, pkg := range userPackages {
-		config, err := getConfigIfAny(pkg, m.ProjectDir())
-		if err != nil {
-			return nil, err
-		} else if config == nil {
-			continue
-		}
-		pluginPackages = append(
-			pluginPackages,
-			devpkg.PackagesFromConfig(
-				&devconfig.Config{Root: config.ConfigFile}, m.lockfile)...,
-		)
-		if config.RemoveTriggerPackage {
-			packagesToRemove = append(packagesToRemove, pkg)
-		}
-	}
-
-	netUserPackages, _ := lo.Difference(userPackages, packagesToRemove)
-	// We prioritize plugin packages so that the php plugin works. Not sure
-	// if this is behavior we want for user plugins. We may need to add an optional
-	// priority field to the config.
-	return append(pluginPackages, netUserPackages...), nil
-}
-
-func (m *Manager) PathIsInVirtenv(absPath string) bool {
-	return strings.HasPrefix(absPath, filepath.Join(m.ProjectDir(), VirtenvPath))
 }

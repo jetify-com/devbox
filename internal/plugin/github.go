@@ -62,3 +62,7 @@ func (p *githubPlugin) url(subpath string) (string, error) {
 		subpath,
 	)
 }
+
+func (p *githubPlugin) LockfileKey() string {
+	return p.ref.raw
+}

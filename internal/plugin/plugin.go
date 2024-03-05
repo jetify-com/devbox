@@ -14,10 +14,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 
-	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -35,19 +34,25 @@ var (
 	VirtenvBinPath = filepath.Join(VirtenvPath, "bin")
 )
 
-type config struct {
-	devconfig.ConfigFile
+type Config struct {
+	configfile.ConfigFile
+	PluginOnlyData
+}
 
-	CreateFiles map[string]string `json:"create_files"`
-
-	DeprecatedDescription string `json:"readme"`
+type PluginOnlyData struct {
+	CreateFiles           map[string]string `json:"create_files"`
+	DeprecatedDescription string            `json:"readme"`
 	// If true, we remove the package that triggered this plugin from the environment
 	// Useful when we want to replace with flake
 	RemoveTriggerPackage bool   `json:"__remove_trigger_package,omitempty"`
 	Version              string `json:"version"`
+	// Source is the includable that triggered this plugin. There are two ways to include a plugin:
+	// 1. Built-in plugins are triggered by packages (See plugins.builtInMap)
+	// 2. Plugins can be added via the "include" field in devbox.json or plugin.json
+	Source Includable
 }
 
-func (c *config) ProcessComposeYaml() (string, string) {
+func (c *Config) ProcessComposeYaml() (string, string) {
 	for file, contentPath := range c.CreateFiles {
 		if strings.HasSuffix(file, "process-compose.yaml") || strings.HasSuffix(file, "process-compose.yml") {
 			return file, contentPath
@@ -56,40 +61,22 @@ func (c *config) ProcessComposeYaml() (string, string) {
 	return "", ""
 }
 
-func (c *config) Services() (services.Services, error) {
+func (c *Config) Services() (services.Services, error) {
 	if file, _ := c.ProcessComposeYaml(); file != "" {
 		return services.FromProcessCompose(file)
 	}
 	return nil, nil
 }
 
-func (m *Manager) Include(included string) error {
-	name, err := m.ParseInclude(included)
-	if err != nil {
-		return err
-	}
-	err = m.create(name, m.lockfile.Packages[included])
-	return err
-}
-
-func (m *Manager) Create(pkg *devpkg.Package) error {
-	return m.create(pkg, m.lockfile.Packages[pkg.Raw])
-}
-
-func (m *Manager) create(pkg Includable, locked *lock.Package) error {
+func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 	virtenvPath := filepath.Join(m.ProjectDir(), VirtenvPath)
-	cfg, err := getConfigIfAny(pkg, m.ProjectDir())
-	if err != nil {
-		return err
-	}
-	if cfg == nil {
-		return nil
-	}
+	pkg := cfg.Source
+	locked := m.lockfile.Packages[pkg.LockfileKey()]
 
 	name := pkg.CanonicalName()
 
 	// Always create this dir because some plugins depend on it.
-	if err = createDir(filepath.Join(virtenvPath, name)); err != nil {
+	if err := createDir(filepath.Join(virtenvPath, name)); err != nil {
 		return err
 	}
 
@@ -103,7 +90,7 @@ func (m *Manager) create(pkg Includable, locked *lock.Package) error {
 		if contentPath == "" {
 			dirPath = filePath
 		}
-		if err = createDir(dirPath); err != nil {
+		if err := createDir(dirPath); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -111,7 +98,7 @@ func (m *Manager) create(pkg Includable, locked *lock.Package) error {
 			continue
 		}
 
-		if err = m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
+		if err := m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
 			return err
 		}
 
@@ -178,44 +165,8 @@ func (m *Manager) createFile(
 	return nil
 }
 
-// Env returns the environment variables for the given plugins.
-// TODO: this should have PluginManager as receiver so we can build once with
-// pkgs, includes, etc
-func (m *Manager) Env(
-	pkgs []*devpkg.Package,
-	includes []string,
-	computedEnv map[string]string,
-) (map[string]string, error) {
-	allPkgs := []Includable{}
-	for _, pkg := range pkgs {
-		allPkgs = append(allPkgs, pkg)
-	}
-	for _, included := range includes {
-		input, err := m.ParseInclude(included)
-		if err != nil {
-			return nil, err
-		}
-		allPkgs = append(allPkgs, input)
-	}
-
-	env := map[string]string{}
-	for _, pkg := range allPkgs {
-		cfg, err := getConfigIfAny(pkg, m.ProjectDir())
-		if err != nil {
-			return nil, err
-		}
-		if cfg == nil {
-			continue
-		}
-		for k, v := range cfg.Env {
-			env[k] = v
-		}
-	}
-	return conf.OSExpandEnvMap(env, computedEnv, m.ProjectDir()), nil
-}
-
-func buildConfig(pkg Includable, projectDir, content string) (*config, error) {
-	cfg := &config{}
+func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
+	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
 	t, err := template.New(name + "-template").Parse(content)
 	if err != nil {
@@ -279,7 +230,7 @@ func (m *Manager) shouldCreateFile(
 	return errors.Is(err, fs.ErrNotExist)
 }
 
-func (c *config) Description() string {
+func (c *Config) Description() string {
 	if c == nil {
 		return ""
 	}

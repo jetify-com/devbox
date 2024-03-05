@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
+  "packages": [],
+  "env": {
+    "PLUGIN1_ENV2": "override"
+  },
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "run_test": [
+        "test -n \"$PLUGIN1_INIT_HOOK\" || exit 1",
+        "test -n \"$PLUGIN1_ENV\" || exit 1",
+        "if [ \"$PLUGIN1_ENV2\" != \"override\" ]; then exit 1; fi;",
+        "devbox run plugin_1_script",
+        "hello"
+      ]
+    }
+  },
+  "include": [
+    "./plugin1",
+    "path:plugin2",
+    "./plugin3/plugin.json",
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "plugin1",
+  "packages": ["hello@latest"],
+  "env": {
+    "PLUGIN1_ENV": "success",
+    "PLUGIN1_ENV2": "success"
+  },
+  "shell": {
+    "init_hook": [
+      "export PLUGIN1_INIT_HOOK=success"
+    ],
+    "scripts": {
+      "plugin_1_script": [
+        "echo success"
+      ]
+    }
+  },
+  "create_files": {
+    "{{ .DevboxDir }}/foo.txt": "foo.txt",
+    "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
+  }
+}

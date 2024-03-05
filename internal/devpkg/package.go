@@ -17,7 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -78,16 +78,18 @@ type Package struct {
 	// Outputs is a list of outputs to build from the package's derivation.
 	outputs outputs
 
-	// PatchGlibc applies a function to the package's derivation that
+	// patchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
-	PatchGlibc bool
+	// It's a function to allow deferring nix System call until it's needed.
+	patchGlibc func() bool
 
 	// AllowInsecure are a list of nix packages that are whitelisted to be
 	// installed even if they are marked as insecure.
 	AllowInsecure []string
 
 	// isInstallable is true if the package may be enabled on the current platform.
-	isInstallable bool
+	// It's a function to allow deferring nix System call until it's needed.
+	isInstallable func() bool
 
 	normalizedPackageAttributePathCache string // memoized value from normalizedPackageAttributePath()
 }
@@ -100,12 +102,14 @@ func PackagesFromStringsWithOptions(rawNames []string, l lock.Locker, opts devop
 	return packages
 }
 
-func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
+func PackagesFromConfig(packages []configfile.Package, l lock.Locker) []*Package {
 	result := []*Package{}
-	for _, cfgPkg := range config.Packages() {
-		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform(), l)
+	for _, cfgPkg := range packages {
+		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform, l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
-		pkg.PatchGlibc = cfgPkg.PatchGlibc && nix.SystemIsLinux()
+		pkg.patchGlibc = sync.OnceValue(func() bool {
+			return cfgPkg.PatchGlibc && nix.SystemIsLinux()
+		})
 		pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, cfgPkg.Outputs...))
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
@@ -114,23 +118,23 @@ func PackagesFromConfig(config *devconfig.Config, l lock.Locker) []*Package {
 }
 
 func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
-	return newPackage(raw, true /*isInstallable*/, locker)
+	return newPackage(raw, func() bool { return true } /*isInstallable*/, locker)
 }
 
 func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
-	pkg.PatchGlibc = opts.PatchGlibc
+	pkg.patchGlibc = sync.OnceValue(func() bool { return opts.PatchGlibc })
 	pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, opts.Outputs...))
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
 }
 
-func newPackage(raw string, isInstallable bool, locker lock.Locker) *Package {
+func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Package {
 	pkg := &Package{
 		Raw:           raw,
 		lockfile:      locker,
-		isInstallable: isInstallable,
+		isInstallable: sync.OnceValue(isInstallable),
 	}
 
 	// The raw string is either a Devbox package ("name" or "name@version")
@@ -258,7 +262,11 @@ func (p *Package) URLForFlakeInput() string {
 // IsInstallable returns whether this package is installable. Not to be confused
 // with the Installable() method which returns the corresponding nix concept.
 func (p *Package) IsInstallable() bool {
-	return p.isInstallable
+	return p.isInstallable()
+}
+
+func (p *Package) PatchGlibc() bool {
+	return p.patchGlibc != nil && p.patchGlibc()
 }
 
 // Installables for this package. Installables is a nix concept defined here:
@@ -669,6 +677,10 @@ func (p *Package) String() string {
 	if p.installable.AttrPath != "" {
 		return p.installable.AttrPath
 	}
+	return p.Raw
+}
+
+func (p *Package) LockfileKey() string {
 	return p.Raw
 }
 

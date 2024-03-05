@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
@@ -109,7 +109,7 @@ func missingConfigError(path string, didCheckParents bool) error {
 }
 
 func configExistsIn(path string) bool {
-	for _, name := range devconfig.ValidConfigNames() {
+	for _, name := range configfile.ValidConfigNames() {
 		if fileutil.Exists(filepath.Join(path, name)) {
 			return true
 		}

@@ -19,6 +19,7 @@ import (
 )
 
 // Bytes returns a hex-encoded hash of b.
+// TODO: This doesn't need to return an error.
 func Bytes(b []byte) (string, error) {
 	h := newHash()
 	h.Write(b)

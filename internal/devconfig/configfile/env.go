@@ -1,4 +1,4 @@
-package devconfig
+package configfile
 
 func (c *ConfigFile) IsEnvsecEnabled() bool {
 	// envsec for legacy.

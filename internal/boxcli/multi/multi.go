@@ -7,7 +7,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 )
 
 func Open(opts *devopt.Opts) ([]*devbox.Devbox, error) {
@@ -21,7 +21,7 @@ func Open(opts *devopt.Opts) ([]*devbox.Devbox, error) {
 				return err
 			}
 
-			if !dirEntry.IsDir() && devconfig.IsConfigName(filepath.Base(path)) {
+			if !dirEntry.IsDir() && configfile.IsConfigName(filepath.Base(path)) {
 				optsCopy := *opts
 				optsCopy.Dir = path
 				box, err := devbox.Open(&optsCopy)

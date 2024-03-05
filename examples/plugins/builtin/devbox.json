@@ -5,12 +5,13 @@
       "echo 'Welcome to devbox!' > /dev/null"
     ],
     "scripts": {
-      "test": [
+      "run_test": [
         "test -n \"$PHPRC\" || exit 1"
       ]
     }
   },
   "include": [
-    "plugin:php8"
+    // Installs the php plugin using php82 as trigger package
+    "plugin:php82"
   ]
 }

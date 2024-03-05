@@ -1,0 +1,6 @@
+{
+  "name": "plugin2",
+  "create_files": {
+    "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
+  }
+}

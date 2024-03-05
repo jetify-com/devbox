@@ -80,7 +80,7 @@ func (p *pullbox) Pull(ctx context.Context) error {
 	}
 
 	if p.IsTextDevboxConfig() {
-		return p.pullTextDevboxConfig()
+		return p.pullTextDevboxConfig(ctx)
 	}
 
 	if isArchive, err := urlIsArchive(p.URL); err != nil {

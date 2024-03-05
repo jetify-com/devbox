@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
@@ -62,7 +63,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 		return false, errors.WithStack(err)
 	}
 	for _, entry := range entries {
-		if !devconfig.IsConfigName(entry.Name()) ||
+		if !configfile.IsConfigName(entry.Name()) ||
 			isModifiedConfig(filepath.Join(path, entry.Name())) {
 			return true, nil
 		}
@@ -71,12 +72,8 @@ func profileIsNotEmpty(path string) (bool, error) {
 }
 
 func isModifiedConfig(path string) bool {
-	if devconfig.IsConfigName(filepath.Base(path)) {
-		cfg, err := devconfig.Load(path)
-		if err != nil {
-			return false
-		}
-		return !cfg.Root.Equals(devconfig.DefaultConfig())
+	if configfile.IsConfigName(filepath.Base(path)) {
+		return devconfig.IsNotDefault(path)
 	}
 	return false
 }

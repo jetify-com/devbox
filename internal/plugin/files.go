@@ -8,11 +8,13 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/plugins"
 )
 
-func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
+func getConfigIfAny(pkg Includable, projectDir string) (*Config, error) {
 	switch pkg := pkg.(type) {
 	case *devpkg.Package:
 		return getBuiltinPluginConfigIfExists(pkg, projectDir)
@@ -23,7 +25,7 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 		}
 		return buildConfig(pkg, projectDir, string(content))
 	case *localPlugin:
-		content, err := os.ReadFile(pkg.ref.Path)
+		content, err := os.ReadFile(pkg.Path())
 		if err != nil && !os.IsNotExist(err) {
 			return nil, errors.WithStack(err)
 		}
@@ -35,7 +37,7 @@ func getConfigIfAny(pkg Includable, projectDir string) (*config, error) {
 func getBuiltinPluginConfigIfExists(
 	pkg *devpkg.Package,
 	projectDir string,
-) (*config, error) {
+) (*Config, error) {
 	if pkg.DisablePlugin {
 		return nil, nil
 	}
@@ -47,4 +49,21 @@ func getBuiltinPluginConfigIfExists(
 		return nil, errors.WithStack(err)
 	}
 	return buildConfig(pkg, projectDir, string(content))
+}
+
+func GetBuiltinsForPackages(
+	packages []configfile.Package,
+	lockfile *lock.File,
+) ([]*Config, error) {
+	builtIns := []*Config{}
+	for _, pkg := range devpkg.PackagesFromConfig(packages, lockfile) {
+		config, err := getBuiltinPluginConfigIfExists(pkg, lockfile.ProjectDir())
+		if err != nil {
+			return nil, err
+		}
+		if config != nil {
+			builtIns = append(builtIns, config)
+		}
+	}
+	return builtIns, nil
 }

@@ -1,5 +1,5 @@
 //nolint:dupl // add/exclude platforms needs refactoring
-package devconfig
+package configfile
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-type packagesMutator struct {
+type PackagesMutator struct {
 	// collection contains the set of package definitions
 	collection []Package
 
@@ -23,7 +23,7 @@ type packagesMutator struct {
 }
 
 // Add adds a package to the list of packages
-func (pkgs *packagesMutator) Add(versionedName string) {
+func (pkgs *PackagesMutator) Add(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	if pkgs.index(name, version) != -1 {
 		return
@@ -33,7 +33,7 @@ func (pkgs *packagesMutator) Add(versionedName string) {
 }
 
 // Remove removes a package from the list of packages
-func (pkgs *packagesMutator) Remove(versionedName string) {
+func (pkgs *PackagesMutator) Remove(versionedName string) {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -44,7 +44,7 @@ func (pkgs *packagesMutator) Remove(versionedName string) {
 }
 
 // AddPlatforms adds a platform to the list of platforms for a given package
-func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
+func (pkgs *PackagesMutator) AddPlatforms(writer io.Writer, versionedname string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -77,7 +77,7 @@ func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string
 		}
 	}
 	if len(pkg.Platforms) > oldLen {
-		pkgs.ast.appendPlatforms(pkg.name, "platforms", pkg.Platforms[oldLen:])
+		pkgs.ast.appendPlatforms(pkg.Name, "platforms", pkg.Platforms[oldLen:])
 		ux.Finfo(writer,
 			"Added platform %s to package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName(),
@@ -87,7 +87,7 @@ func (pkgs *packagesMutator) AddPlatforms(writer io.Writer, versionedname string
 }
 
 // ExcludePlatforms adds a platform to the list of excluded platforms for a given package
-func (pkgs *packagesMutator) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
+func (pkgs *PackagesMutator) ExcludePlatforms(writer io.Writer, versionedName string, platforms []string) error {
 	if len(platforms) == 0 {
 		return nil
 	}
@@ -117,14 +117,14 @@ func (pkgs *packagesMutator) ExcludePlatforms(writer io.Writer, versionedName st
 		}
 	}
 	if len(pkg.ExcludedPlatforms) > oldLen {
-		pkgs.ast.appendPlatforms(pkg.name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
+		pkgs.ast.appendPlatforms(pkg.Name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
 		ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName())
 	}
 	return nil
 }
 
-func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
+func (pkgs *PackagesMutator) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a list of strings (legacy format)
 	var packages []string
 	if err := json.Unmarshal(data, &packages); err == nil {
@@ -147,14 +147,14 @@ func (pkgs *packagesMutator) UnmarshalJSON(data []byte) error {
 	packagesList := []Package{}
 	for pair := orderedMap.Oldest(); pair != nil; pair = pair.Next() {
 		pkg := pair.Value
-		pkg.name = pair.Key
+		pkg.Name = pair.Key
 		packagesList = append(packagesList, pkg)
 	}
 	pkgs.collection = packagesList
 	return nil
 }
 
-func (pkgs *packagesMutator) SetPatchGLibc(versionedName string, v bool) error {
+func (pkgs *PackagesMutator) SetPatchGLibc(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -167,7 +167,7 @@ func (pkgs *packagesMutator) SetPatchGLibc(versionedName string, v bool) error {
 	return nil
 }
 
-func (pkgs *packagesMutator) SetDisablePlugin(versionedName string, v bool) error {
+func (pkgs *PackagesMutator) SetDisablePlugin(versionedName string, v bool) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -180,7 +180,7 @@ func (pkgs *packagesMutator) SetDisablePlugin(versionedName string, v bool) erro
 	return nil
 }
 
-func (pkgs *packagesMutator) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
+func (pkgs *PackagesMutator) SetOutputs(writer io.Writer, versionedName string, outputs []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -196,13 +196,13 @@ func (pkgs *packagesMutator) SetOutputs(writer io.Writer, versionedName string, 
 
 	if len(toAdd) > 0 {
 		pkg := &pkgs.collection[i]
-		pkgs.ast.appendOutputs(pkg.name, "outputs", toAdd)
+		pkgs.ast.appendOutputs(pkg.Name, "outputs", toAdd)
 		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
 
-func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
+func (pkgs *PackagesMutator) SetAllowInsecure(writer io.Writer, versionedName string, whitelist []string) error {
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
@@ -218,21 +218,21 @@ func (pkgs *packagesMutator) SetAllowInsecure(writer io.Writer, versionedName st
 
 	if len(toAdd) > 0 {
 		pkg := &pkgs.collection[i]
-		pkgs.ast.appendAllowInsecure(pkg.name, "allow_insecure", toAdd)
+		pkgs.ast.appendAllowInsecure(pkg.Name, "allow_insecure", toAdd)
 		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
 		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
 
-func (pkgs *packagesMutator) index(name, version string) int {
+func (pkgs *PackagesMutator) index(name, version string) int {
 	return slices.IndexFunc(pkgs.collection, func(p Package) bool {
-		return p.name == name && p.Version == version
+		return p.Name == name && p.Version == version
 	})
 }
 
 type Package struct {
-	name    string
+	Name    string
 	Version string `json:"version,omitempty"`
 
 	DisablePlugin     bool     `json:"disable_plugin,omitempty"`
@@ -254,7 +254,7 @@ type Package struct {
 
 func NewVersionOnlyPackage(name, version string) Package {
 	return Package{
-		name:    name,
+		Name:    name,
 		Version: version,
 	}
 }
@@ -286,7 +286,7 @@ func NewPackage(name string, values map[string]any) Package {
 	}
 
 	return Package{
-		name:              name,
+		Name:              name,
 		Version:           version.(string),
 		Platforms:         platforms,
 		ExcludedPlatforms: excludedPlatforms,
@@ -318,7 +318,7 @@ func (p *Package) IsEnabledOnPlatform() bool {
 }
 
 func (p *Package) VersionedName() string {
-	name := p.name
+	name := p.Name
 	if p.Version != "" {
 		name += "@" + p.Version
 	}

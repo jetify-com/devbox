@@ -131,7 +131,10 @@ func System() string {
 		// While this should have been initialized, we do a best-effort to avoid
 		// a panic.
 		if err := ComputeSystem(); err != nil {
-			panic("System called before being initialized by ComputeSystem")
+			panic(fmt.Sprintf(
+				"System called before being initialized by ComputeSystem: %v",
+				err,
+			))
 		}
 	}
 	return cachedSystem

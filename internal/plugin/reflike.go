@@ -13,23 +13,25 @@ import (
 type RefLike struct {
 	flake.Ref
 	filename string
+	raw      string
 }
 
 type Includable interface {
 	CanonicalName() string
 	Hash() string
 	FileContent(subpath string) ([]byte, error)
+	LockfileKey() string
 }
 
-func parseReflike(s string) (Includable, error) {
+func parseReflike(s, projectDir string) (Includable, error) {
 	ref, err := flake.ParseRef(s)
 	if err != nil {
 		return nil, err
 	}
-	reflike := RefLike{ref, pluginConfigName}
+	reflike := RefLike{ref, pluginConfigName, s}
 	switch ref.Type {
 	case flake.TypePath:
-		return newLocalPlugin(reflike)
+		return newLocalPlugin(reflike, projectDir)
 	case flake.TypeGitHub:
 		return &githubPlugin{ref: reflike}, nil
 	default:
