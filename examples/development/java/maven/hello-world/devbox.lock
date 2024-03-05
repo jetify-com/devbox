@@ -23,7 +23,8 @@
               "name": "info",
               "path": "/nix/store/cfsi6sp6b92w8y7m0mqp45pyhyy1r6vf-binutils-wrapper-2.40-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/72v83qn1k6pr4kxcjlryynskq3bj3h9d-binutils-wrapper-2.40"
         },
         "aarch64-linux": {
           "outputs": [
@@ -41,7 +42,8 @@
               "name": "info",
               "path": "/nix/store/h72hdlcah3qb7xyn8i46bjppjynfg4j0-binutils-wrapper-2.40-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/i9sn0vb5q396nd4pza5j8jlvx4481cl1-binutils-wrapper-2.40"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -59,7 +61,8 @@
               "name": "info",
               "path": "/nix/store/p8psm83qbdbvpgsbgglmdghbl7wm7awh-binutils-wrapper-2.40-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/2fa09bf11m22ya0q2kv8kh1ngfw2d7fp-binutils-wrapper-2.40"
         },
         "x86_64-linux": {
           "outputs": [
@@ -77,7 +80,8 @@
               "name": "info",
               "path": "/nix/store/p939zzxcwdsqh6z50dw5wz5y6d2ibl0x-binutils-wrapper-2.40-info"
             }
-          ]
+          ],
+          "store_path": "/nix/store/c53f8hagyblvx52zylsnqcc0b3nxbrcl-binutils-wrapper-2.40"
         }
       }
     },
@@ -98,7 +102,8 @@
               "name": "debug",
               "path": "/nix/store/c3vdy8163ga3za7dk0gcz4887l56537d-openjdk-19.0.2+7-debug"
             }
-          ]
+          ],
+          "store_path": "/nix/store/4k80c38mzlndgwmhlh7w38ymnw0dbd8p-openjdk-19.0.2+7"
         },
         "x86_64-linux": {
           "outputs": [
@@ -111,7 +116,8 @@
               "name": "debug",
               "path": "/nix/store/bdwn277irnz2dyx5yypxzz55qff2if11-openjdk-19.0.2+7-debug"
             }
-          ]
+          ],
+          "store_path": "/nix/store/jz5ppnr1133z7a4vj53jd3a0gkv0iw6v-openjdk-19.0.2+7"
         }
       }
     },
@@ -128,7 +134,8 @@
               "path": "/nix/store/d2rk3mcj5rk8qs8wrk65b9bifaf618sa-apache-maven-3.9.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/d2rk3mcj5rk8qs8wrk65b9bifaf618sa-apache-maven-3.9.6"
         },
         "aarch64-linux": {
           "outputs": [
@@ -137,7 +144,8 @@
               "path": "/nix/store/nvhsiva2qzviddp2vgdyzmvqp0bzjm5s-apache-maven-3.9.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/nvhsiva2qzviddp2vgdyzmvqp0bzjm5s-apache-maven-3.9.6"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -146,7 +154,8 @@
               "path": "/nix/store/vxq3navpi6x6hcmz3rp2nsb7gn6b11zn-apache-maven-3.9.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/vxq3navpi6x6hcmz3rp2nsb7gn6b11zn-apache-maven-3.9.6"
         },
         "x86_64-linux": {
           "outputs": [
@@ -155,7 +164,8 @@
               "path": "/nix/store/554ah9py5vk0bqf0l0k87l11im95clnf-apache-maven-3.9.6",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/554ah9py5vk0bqf0l0k87l11im95clnf-apache-maven-3.9.6"
         }
       }
     }

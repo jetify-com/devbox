@@ -17,6 +17,7 @@ import (
 	"github.com/samber/lo"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
 )
 
 func InitFromName(w io.Writer, template, target string) error {
@@ -40,7 +41,12 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command("git", "clone", parsedRepoURL, tmp)
+	cmd := exec.Command(
+		"git", "clone", parsedRepoURL,
+		// Clone and checkout a specific ref
+		"-b", lo.Ternary(build.IsDev, "main", build.Version),
+		tmp,
+	)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

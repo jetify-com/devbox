@@ -27,7 +27,8 @@
               "path": "/nix/store/060fknqjv1r0xgn4jdqwcvwnvbhqd0q6-vim-9.1.0004-xxd",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/y3vw3apw0m6imbcx1gznx7sk3mq70rmb-vim-9.1.0004"
         },
         "aarch64-linux": {
           "outputs": [
@@ -41,7 +42,8 @@
               "path": "/nix/store/9jfb25qxxfw3f3xqdn78zk9qfl8v5gpq-vim-9.1.0004-xxd",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/cfi77h8sy9sz9x3ry419b58yxv887csw-vim-9.1.0004"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -55,7 +57,8 @@
               "path": "/nix/store/dk9zj3v5hi0hwbl4gkc4aa2538zhf1j1-vim-9.1.0004-xxd",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/ids4w90k9g87r942yrbqrfvqni2916fq-vim-9.1.0004"
         },
         "x86_64-linux": {
           "outputs": [
@@ -69,7 +72,8 @@
               "path": "/nix/store/bw5bx2lkwpkvxy5bxzzrzjb607v6ja8p-vim-9.1.0004-xxd",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/4229601k0hwih452nf5qvzn9cgj50vab-vim-9.1.0004"
         }
       }
     }

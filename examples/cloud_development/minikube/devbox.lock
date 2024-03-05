@@ -26,7 +26,8 @@
               "path": "/nix/store/q44p9dih0mpv1djc3ibmfjp456kxwjhj-minikube-1.32.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/q44p9dih0mpv1djc3ibmfjp456kxwjhj-minikube-1.32.0"
         },
         "aarch64-linux": {
           "outputs": [
@@ -35,7 +36,8 @@
               "path": "/nix/store/rd4sjsb4q02vlaw5l6ilzhkqgsr2vsvj-minikube-1.32.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/rd4sjsb4q02vlaw5l6ilzhkqgsr2vsvj-minikube-1.32.0"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -44,7 +46,8 @@
               "path": "/nix/store/xalb2k5x86gc2q0zg26jja6m3193pgs1-minikube-1.32.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/xalb2k5x86gc2q0zg26jja6m3193pgs1-minikube-1.32.0"
         },
         "x86_64-linux": {
           "outputs": [
@@ -53,7 +56,8 @@
               "path": "/nix/store/9dwg6dw2rdh4m6ikbk5pzns191dl9skh-minikube-1.32.0",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/9dwg6dw2rdh4m6ikbk5pzns191dl9skh-minikube-1.32.0"
         }
       }
     }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
@@ -30,20 +31,23 @@ const defaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
 func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
-  "packages": [],
-  "shell": {
-    "init_hook": [
-      "%s"
-    ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
-  }
-}
-`, defaultInitHook)))
+		"$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/%s/.schema/devbox.schema.json",
+		"packages": [],
+		"shell": {
+			"init_hook": [
+				"%s"
+			],
+			"scripts": {
+				"test": [
+					"echo \"Error: no test specified\" && exit 1"
+				]
+			}
+		}
+	}
+	`,
+		lo.Ternary(build.IsDev, "main", build.Version),
+		defaultInitHook,
+	)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}

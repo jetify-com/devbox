@@ -18,7 +18,8 @@
               "name": "libv8",
               "path": "/nix/store/rv1afi7lr4cc2408k4pq0h9vfvcijpm4-nodejs-16.20.2-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/h5jbaplxw31idlxxbylhsrb9gj78sf19-nodejs-16.20.2"
         },
         "aarch64-linux": {
           "outputs": [
@@ -31,7 +32,8 @@
               "name": "libv8",
               "path": "/nix/store/spgywd3zcw2fmivjr4bgk2iw7ivjisqb-nodejs-16.20.2-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/y45jykjwjia6mn18fn6rzcv584wbfhbb-nodejs-16.20.2"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -44,7 +46,8 @@
               "name": "libv8",
               "path": "/nix/store/7vb82mbm500ilkq285w04c4bvg78zyn6-nodejs-16.20.2-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/0dg1ysgnbh1hrh5cw0wqd6l4hn0mksk3-nodejs-16.20.2"
         },
         "x86_64-linux": {
           "outputs": [
@@ -57,7 +60,8 @@
               "name": "libv8",
               "path": "/nix/store/m3453yc9sw7699jvrr29lm8nsqqlbryp-nodejs-16.20.2-libv8"
             }
-          ]
+          ],
+          "store_path": "/nix/store/fmgj6cxiryan0b7ggmi52zdrzbfv3d25-nodejs-16.20.2"
         }
       }
     }

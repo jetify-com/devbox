@@ -110,8 +110,25 @@ func resolveV2(ctx context.Context, name, version string) (*Package, error) {
 					Default: out.Default,
 				}
 			}
+			storePath := ""
+			if len(outputs) > 0 {
+				// We pick the first output as the store path. Note, this is sub-optimal because
+				// it may not include all the default outputs of the nix package, but is what older
+				// Devbox used to do. And this code is for backwards-compatibility.
+				//
+				// Unlike /v2/resolve, the /v1/resolve endpoint does not return the store path. It
+				// returns the commit hash and we run `nix store path-from-hash-part` to get the store path.
+				// For some packages, this would return the store path of the first default output.
+				//
+				// For example, curl has default outputs `bin` and `man`. Previously, we would only install
+				// the `bin` output as `v1/resolve`'s commit hash would match that. With /v2/resolve, we
+				// install both outputs. So, team members on older Devbox will see just `bin` installed while
+				// team members on newer Devbox will see both `bin` and `man` installed.
+				storePath = outputs[0].Path
+			}
 			pkg.Systems[sys] = &SystemInfo{
-				Outputs: outputs,
+				Outputs:   outputs,
+				StorePath: storePath,
 			}
 		}
 	}
@@ -173,16 +190,11 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 
 	sysInfos := map[string]*SystemInfo{}
 	for sysName, storePath := range sysStorePaths {
-		sysInfos[sysName] = &SystemInfo{
-			Outputs: []Output{
-				{
-					Default: true,
-					Name:    "out",
-					Path:    storePath,
-				},
-			},
+		sysInfo := &SystemInfo{
 			StorePath: storePath,
 		}
+		sysInfo.addOutputFromLegacyStorePath()
+		sysInfos[sysName] = sysInfo
 	}
 	return sysInfos, nil
 }

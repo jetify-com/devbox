@@ -14,7 +14,8 @@
               "path": "/nix/store/8x5vsn4mp6p9mph75zjn5c0npamch5ra-glibc-locales-2.38-44",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/8x5vsn4mp6p9mph75zjn5c0npamch5ra-glibc-locales-2.38-44"
         },
         "x86_64-linux": {
           "outputs": [
@@ -23,7 +24,8 @@
               "path": "/nix/store/42v5aw89hq9rm16vnj4wpwif57ii7c0b-glibc-locales-2.38-44",
               "default": true
             }
-          ]
+          ],
+          "store_path": "/nix/store/42v5aw89hq9rm16vnj4wpwif57ii7c0b-glibc-locales-2.38-44"
         }
       }
     },
@@ -54,7 +56,8 @@
               "name": "lib",
               "path": "/nix/store/dbc9hjh5ll5pjgxwl3r9nymdxw7sw8cl-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/6cn0kmav77wba54xibfg9clqzbpan74b-postgresql-15.5"
         },
         "aarch64-linux": {
           "outputs": [
@@ -80,7 +83,8 @@
               "name": "lib",
               "path": "/nix/store/addi70hgggl75jm74p0s435bfaay6m1w-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/kvpjir3cjbijs2w8b20yzqjq0nsd63mp-postgresql-15.5"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -102,7 +106,8 @@
               "name": "lib",
               "path": "/nix/store/q8lijs7rmlkx4qssmh0sjyy77f41y2jh-postgresql-15.5-lib"
             }
-          ]
+          ],
+          "store_path": "/nix/store/v5ym92k3kss1af7n1788653vis1d6qsc-postgresql-15.5"
         },
         "x86_64-linux": {
           "outputs": [
@@ -128,7 +133,8 @@
               "name": "doc",
               "path": "/nix/store/7vfnvfb6scmf23y6yj5zx8p5r3wsgnq5-postgresql-15.5-doc"
             }
-          ]
+          ],
+          "store_path": "/nix/store/vvd65gjggb2n8wxbsk1cyxx0wpfidagf-postgresql-15.5"
         }
       }
     }
