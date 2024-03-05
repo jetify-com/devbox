@@ -73,7 +73,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 
 func isModifiedConfig(path string) bool {
 	if filepath.Base(path) == configfile.DefaultName {
-		return devconfig.IsNotDefault(path)
+		return !devconfig.IsDefault(path)
 	}
 	return false
 }

@@ -54,12 +54,12 @@ func DefaultConfig() *Config {
 	return cfg
 }
 
-func IsNotDefault(path string) bool {
+func IsDefault(path string) bool {
 	cfg, err := readFromFile(path)
 	if err != nil {
 		return false
 	}
-	return !cfg.Root.Equals(&DefaultConfig().Root)
+	return cfg.Root.Equals(&DefaultConfig().Root)
 }
 
 func LoadForTest(path string) (*Config, error) {

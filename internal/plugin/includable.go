@@ -13,8 +13,8 @@ type Includable interface {
 	LockfileKey() string
 }
 
-func parseIncludable(s, projectDir string) (Includable, error) {
-	ref, err := flake.ParseRef(s)
+func parseIncludable(includableRef, projectDir string) (Includable, error) {
+	ref, err := flake.ParseRef(includableRef)
 	if err != nil {
 		return nil, err
 	}
