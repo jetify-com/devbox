@@ -46,7 +46,10 @@ type PluginOnlyData struct {
 	// Useful when we want to replace with flake
 	RemoveTriggerPackage bool   `json:"__remove_trigger_package,omitempty"`
 	Version              string `json:"version"`
-	Source               Includable
+	// Source is the includable that triggered this plugin. There are two ways to include a plugin:
+	// 1. Built-in plugins are triggered by packages (See plugins.builtInMap)
+	// 2. Plugins can be added via the "include" field in devbox.json or plugin.json
+	Source Includable
 }
 
 func (c *Config) ProcessComposeYaml() (string, string) {

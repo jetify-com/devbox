@@ -10,7 +10,7 @@ import (
 	"go.jetpack.io/devbox/internal/services"
 )
 
-func (m *Manager) GetServices(configs []*Config) (services.Services, error) {
+func GetServices(configs []*Config) (services.Services, error) {
 	allSvcs := services.Services{}
 	for _, conf := range configs {
 		svcs, err := conf.Services()

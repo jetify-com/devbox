@@ -130,7 +130,13 @@ func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	if i == -1 {
 		return nil, false
 	}
-	return &c.PackagesMutator.Collection[i], true
+	return &c.PackagesMutator.collection[i], true
+}
+
+// SingleFilePackages returns the packages in the config file, but not the included ones.
+// Semi-awkwardly named to avoid confusion with the Packages method on Config.
+func (c *ConfigFile) SingleFilePackages() []Package {
+	return c.PackagesMutator.collection
 }
 
 func LoadBytes(b []byte) (*ConfigFile, error) {

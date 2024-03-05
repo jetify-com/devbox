@@ -179,7 +179,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 	for _, pkg := range d.ConfigPackages() {
 		buf.WriteString(pkg.Hash())
 	}
-	for _, pluginConfig := range d.cfg.PluginConfigs() {
+	for _, pluginConfig := range d.cfg.IncludedPluginConfigs() {
 		h, err := pluginConfig.Hash()
 		if err != nil {
 			return "", err
@@ -537,7 +537,7 @@ func (d *Devbox) saveCfg() error {
 }
 
 func (d *Devbox) Services() (services.Services, error) {
-	pluginSvcs, err := d.pluginManager.GetServices(d.cfg.PluginConfigs())
+	pluginSvcs, err := plugin.GetServices(d.cfg.IncludedPluginConfigs())
 	if err != nil {
 		return nil, err
 	}

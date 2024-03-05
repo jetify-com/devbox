@@ -4,6 +4,7 @@
 package pullbox
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,12 +24,12 @@ func (p *pullbox) IsTextDevboxConfig() bool {
 	return cuecfg.IsSupportedExtension(ext)
 }
 
-func (p *pullbox) pullTextDevboxConfig() error {
+func (p *pullbox) pullTextDevboxConfig(ctx context.Context) error {
 	if p.isLocalConfig() {
 		return p.copyToProfile(p.URL)
 	}
 
-	cfg, err := devconfig.LoadConfigFromURL(p.URL)
+	cfg, err := devconfig.LoadConfigFromURL(ctx, p.URL)
 	if err != nil {
 		return err
 	}

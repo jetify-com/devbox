@@ -386,7 +386,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 
 func (d *Devbox) installPackages(ctx context.Context) error {
 	// Create plugin directories first because packages might need them
-	for _, pluginConfig := range d.Config().PluginConfigs() {
+	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
 			return err
 		}

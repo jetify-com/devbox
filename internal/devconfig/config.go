@@ -1,6 +1,7 @@
 package devconfig
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"maps"
@@ -58,11 +59,7 @@ func IsNotDefault(path string) bool {
 }
 
 func LoadForTest(path string) (*Config, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return loadBytes(b)
+	return readFromFile(path)
 }
 
 func readFromFile(path string) (*Config, error) {
@@ -73,10 +70,14 @@ func readFromFile(path string) (*Config, error) {
 	return loadBytes(b)
 }
 
-func LoadConfigFromURL(url string) (*Config, error) {
-	res, err := http.Get(url)
+func LoadConfigFromURL(ctx context.Context, url string) (*Config, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
 	}
 	defer res.Body.Close()
 
@@ -101,8 +102,8 @@ func loadBytes(b []byte) (*Config, error) {
 func (c *Config) LoadRecursive(lockfile *lock.File) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
-	for _, importRef := range c.Root.Include {
-		pluginConfig, err := plugin.LoadConfigFromInclude(importRef, lockfile)
+	for _, includeRef := range c.Root.Include {
+		pluginConfig, err := plugin.LoadConfigFromInclude(includeRef, lockfile)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -119,7 +120,7 @@ func (c *Config) LoadRecursive(lockfile *lock.File) error {
 	}
 
 	builtIns, err := plugin.GetBuiltinsForPackages(
-		c.Root.PackagesMutator.Collection,
+		c.Root.SingleFilePackages(),
 		lockfile,
 	)
 	if err != nil {
@@ -134,8 +135,6 @@ func (c *Config) LoadRecursive(lockfile *lock.File) error {
 		if err := includable.LoadRecursive(lockfile); err != nil {
 			return errors.WithStack(err)
 		}
-		pluginData := builtIn.PluginOnlyData
-		includable.pluginData = &pluginData
 		included = append(included, includable)
 	}
 
@@ -147,10 +146,10 @@ func (c *Config) PackageMutator() *configfile.PackagesMutator {
 	return &c.Root.PackagesMutator
 }
 
-func (c *Config) PluginConfigs() []*plugin.Config {
+func (c *Config) IncludedPluginConfigs() []*plugin.Config {
 	configs := []*plugin.Config{}
 	for _, i := range c.included {
-		configs = append(configs, i.PluginConfigs()...)
+		configs = append(configs, i.IncludedPluginConfigs()...)
 	}
 	if c.pluginData != nil {
 		configs = append(configs, &plugin.Config{
@@ -176,7 +175,7 @@ func (c *Config) Packages() []configfile.Package {
 
 	// Packages to remove in built ins only affect the devbox.json where they are defined.
 	// They should not remove packages that are part of other imports.
-	for _, pkg := range c.Root.PackagesMutator.Collection {
+	for _, pkg := range c.Root.SingleFilePackages() {
 		if !packagesToRemove[pkg.VersionedName()] {
 			packages = append(packages, pkg)
 		}
@@ -195,8 +194,8 @@ func (c *Config) Packages() []configfile.Package {
 // example:
 // ["package1", "package2@latest", "package3@1.20"]
 func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.PackagesMutator.Collection))
-	for _, p := range c.Root.PackagesMutator.Collection {
+	result := make([]string, 0, len(c.Root.SingleFilePackages()))
+	for _, p := range c.Root.SingleFilePackages() {
 		result = append(result, p.VersionedName())
 	}
 	return result

@@ -25,7 +25,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	ctx, task := trace.NewTask(ctx, "devboxFlakePlan")
 	defer task.End()
 
-	for _, pluginConfig := range devbox.Config().PluginConfigs() {
+	for _, pluginConfig := range devbox.Config().IncludedPluginConfigs() {
 		if err := devbox.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
 			return nil, err
 		}
