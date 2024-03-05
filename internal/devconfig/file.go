@@ -16,9 +16,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
 )
@@ -84,7 +86,7 @@ const DefaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
 func DefaultConfig() *ConfigFile {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/%s/.schema/devbox.schema.json",
   "packages": [],
   "shell": {
     "init_hook": [
@@ -97,7 +99,10 @@ func DefaultConfig() *ConfigFile {
     }
   }
 }
-`, DefaultInitHook)))
+`,
+		lo.Ternary(build.IsDev, "main", build.Version),
+		DefaultInitHook,
+	)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}
