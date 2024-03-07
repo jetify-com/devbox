@@ -259,42 +259,6 @@ func NewVersionOnlyPackage(name, version string) Package {
 	}
 }
 
-func NewPackage(name string, values map[string]any) Package {
-	version, ok := values["version"]
-	if !ok {
-		// For legacy packages, the version may not be specified. We leave it blank
-		// here, and code that consumes the Config is expected to handle this case
-		// (e.g. by defaulting to @latest).
-		version = ""
-	}
-
-	var platforms []string
-	if p, ok := values["platforms"]; ok {
-		platforms = p.([]string)
-	}
-	var excludedPlatforms []string
-	if e, ok := values["excluded_platforms"]; ok {
-		excludedPlatforms = e.([]string)
-	}
-	var outputs []string
-	if o, ok := values["outputs"]; ok {
-		outputs = o.([]string)
-	}
-	var allowInsecure []string
-	if a, ok := values["allow_insecure"]; ok {
-		allowInsecure = a.([]string)
-	}
-
-	return Package{
-		Name:              name,
-		Version:           version.(string),
-		Platforms:         platforms,
-		ExcludedPlatforms: excludedPlatforms,
-		Outputs:           outputs,
-		AllowInsecure:     allowInsecure,
-	}
-}
-
 // enabledOnPlatform returns whether the package is enabled on the given platform.
 // If the package has a list of platforms, it is enabled only on those platforms.
 // If the package has a list of excluded platforms, it is enabled on all platforms

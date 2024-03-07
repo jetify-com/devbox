@@ -52,7 +52,10 @@ func TestJsonifyConfigPackages(t *testing.T) {
 			jsonConfig: `{"packages":{"python":{"version":"latest"}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("python", map[string]any{"version": "latest"}),
+					{
+						Name:    "python",
+						Version: "latest",
+					},
 				},
 			},
 		},
@@ -63,7 +66,10 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				collection: []Package{
 					NewVersionOnlyPackage("go", "1.20"),
 					NewVersionOnlyPackage("emacs", "latest"),
-					NewPackage("python", map[string]any{"version": "latest"}),
+					{
+						Name:    "python",
+						Version: "latest",
+					},
 				},
 			},
 		},
@@ -73,10 +79,11 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"platforms":["x86_64-darwin","aarch64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("python", map[string]any{
-						"version":   "latest",
-						"platforms": []string{"x86_64-darwin", "aarch64-linux"},
-					}),
+					{
+						Name:      "python",
+						Version:   "latest",
+						Platforms: []string{"x86_64-darwin", "aarch64-linux"},
+					},
 				},
 			},
 		},
@@ -86,10 +93,11 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("python", map[string]any{
-						"version":            "latest",
-						"excluded_platforms": []string{"x86_64-linux"},
-					}),
+					{
+						Name:              "python",
+						Version:           "latest",
+						ExcludedPlatforms: []string{"x86_64-linux"},
+					},
 				},
 			},
 		},
@@ -100,11 +108,12 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("python", map[string]any{
-						"version":            "latest",
-						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
-						"excluded_platforms": []string{"x86_64-linux"},
-					}),
+					{
+						Name:              "python",
+						Version:           "latest",
+						Platforms:         []string{"x86_64-darwin", "aarch64-linux"},
+						ExcludedPlatforms: []string{"x86_64-linux"},
+					},
 				},
 			},
 		},
@@ -115,11 +124,12 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("path:my-php-flake#hello", map[string]any{
-						"version":            "latest",
-						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
-						"excluded_platforms": []string{"x86_64-linux"},
-					}),
+					{
+						Name:              "path:my-php-flake#hello",
+						Version:           "latest",
+						Platforms:         []string{"x86_64-darwin", "aarch64-linux"},
+						ExcludedPlatforms: []string{"x86_64-linux"},
+					},
 				},
 			},
 		},
@@ -131,11 +141,12 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("github:F1bonacc1/process-compose/v0.43.1", map[string]any{
-						"version":            "latest",
-						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
-						"excluded_platforms": []string{"x86_64-linux"},
-					}),
+					{
+						Name:              "github:F1bonacc1/process-compose/v0.43.1",
+						Version:           "latest",
+						Platforms:         []string{"x86_64-darwin", "aarch64-linux"},
+						ExcludedPlatforms: []string{"x86_64-linux"},
+					},
 				},
 			},
 		},
@@ -147,11 +158,12 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`"excluded_platforms":["x86_64-linux"]}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
-						"version":            "latest",
-						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
-						"excluded_platforms": []string{"x86_64-linux"},
-					}),
+					{
+						Name:              "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
+						Version:           "latest",
+						Platforms:         []string{"x86_64-darwin", "aarch64-linux"},
+						ExcludedPlatforms: []string{"x86_64-linux"},
+					},
 				},
 			},
 		},
@@ -165,12 +177,13 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				`}}}`,
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello", map[string]any{
-						"version":            "latest",
-						"platforms":          []string{"x86_64-darwin", "aarch64-linux"},
-						"excluded_platforms": []string{"x86_64-linux"},
-						"outputs":            []string{"cli"},
-					}),
+					{
+						Name:              "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
+						Version:           "latest",
+						Platforms:         []string{"x86_64-darwin", "aarch64-linux"},
+						ExcludedPlatforms: []string{"x86_64-linux"},
+						Outputs:           []string{"cli"},
+					},
 				},
 			},
 		},
@@ -183,10 +196,11 @@ func TestJsonifyConfigPackages(t *testing.T) {
 
 			expected: PackagesMutator{
 				collection: []Package{
-					NewPackage("github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#python", map[string]any{
-						"version":        "2.7",
-						"allow_insecure": []string{"python-2.7.18.1"},
-					}),
+					{
+						Name:          "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#python",
+						Version:       "2.7",
+						AllowInsecure: []string{"python-2.7.18.1"},
+					},
 				},
 			},
 		},
