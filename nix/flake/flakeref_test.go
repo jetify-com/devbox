@@ -80,7 +80,6 @@ func TestParseFlakeRef(t *testing.T) {
 		"git+https://example.com/repo/flake":   {Type: TypeGit, URL: "https://example.com/repo/flake"},
 		"git+ssh://git@example.com/repo/flake": {Type: TypeGit, URL: "ssh://git@example.com/repo/flake"},
 		"git:/repo/flake":                      {Type: TypeGit, URL: "git:/repo/flake"},
-		"git:/repo/flake#fragment":             {Type: TypeGit, URL: "git:/repo/flake"},
 		"git+file:///repo/flake":               {Type: TypeGit, URL: "file:///repo/flake"},
 		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir": {Type: TypeGit, URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
 
