@@ -11,8 +11,12 @@ import (
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 )
 
-func Init(path string) (created bool, err error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o644)
+func Init(dir string) (created bool, err error) {
+	file, err := os.OpenFile(
+		filepath.Join(dir, configfile.DefaultName),
+		os.O_RDWR|os.O_CREATE|os.O_EXCL,
+		0o644,
+	)
 	if errors.Is(err, os.ErrExist) {
 		return false, nil
 	}
