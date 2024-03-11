@@ -28,6 +28,10 @@ import (
 // a newer hash than the lock file but same version. In that case we don't want
 // to update because it would be slow and wasteful.
 func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
+	if pkgtype.IsFlake(pkg) {
+		return nil, nil
+	}
+
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
 	if version == "" {
 		return nil, usererr.New("No version specified for %q.", name)

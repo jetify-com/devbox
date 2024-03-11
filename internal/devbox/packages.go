@@ -260,7 +260,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	}
 
 	if mode == install || mode == update || mode == ensure {
-		if err := d.installPackages(ctx); err != nil {
+		if err := d.installPackages(ctx, mode); err != nil {
 			return err
 		}
 	}
@@ -384,7 +384,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 	return errors.WithStack(os.Remove(profileDir))
 }
 
-func (d *Devbox) installPackages(ctx context.Context) error {
+func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 	// Create plugin directories first because packages might need them
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
@@ -392,7 +392,7 @@ func (d *Devbox) installPackages(ctx context.Context) error {
 		}
 	}
 
-	if err := d.installNixPackagesToStore(ctx); err != nil {
+	if err := d.installNixPackagesToStore(ctx, mode); err != nil {
 		return err
 	}
 
@@ -420,8 +420,8 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 // This is done by running `nix build` on the flake. We do this so that the
 // packages will be available in the nix store when computing the devbox environment
 // and installing in the nix profile (even if offline).
-func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
-	packages, err := d.packagesToInstallInStore(ctx)
+func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode) error {
+	packages, err := d.packagesToInstallInStore(ctx, mode)
 	if err != nil {
 		return err
 	}
@@ -439,12 +439,17 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 			return err
 		}
 
+		// --no-link to avoid generating the result objects
+		flags := []string{"--no-link"}
+		if mode == update {
+			flags = append(flags, "--refresh")
+		}
+
 		for _, installable := range installables {
 			args := &nix.BuildArgs{
 				AllowInsecure: pkg.HasAllowInsecure(),
-				// --no-link to avoid generating the result objects
-				Flags:  []string{"--no-link"},
-				Writer: d.stderr,
+				Flags:         flags,
+				Writer:        d.stderr,
 			}
 			err = nix.Build(ctx, args, installable)
 			if err != nil {
@@ -460,7 +465,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context) error {
 	return err
 }
 
-func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Package, error) {
+func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode) ([]*devpkg.Package, error) {
 	// First, get and prepare all the packages that must be installed in this project
 	// and remove non-nix packages from the list
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsNix)
@@ -476,6 +481,10 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context) ([]*devpkg.Packag
 			return nil, err
 		}
 		for _, installable := range installables {
+			if mode == update {
+				packagesToInstall = append(packagesToInstall, pkg)
+				continue
+			}
 			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
 			if err != nil {
 				return nil, packageInstallErrorHandler(err, pkg, installable)
