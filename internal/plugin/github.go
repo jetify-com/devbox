@@ -24,7 +24,7 @@ func (p *githubPlugin) CanonicalName() string {
 }
 
 func (p *githubPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(p.CanonicalName()))
+	h, _ := cachehash.Bytes([]byte(p.ref.String()))
 	return h
 }
 

@@ -23,10 +23,6 @@ import (
 type Config struct {
 	Root configfile.ConfigFile
 
-	// absRootPath is the absolute path to the devbox.json or plugin.json file
-	// it will not be set for github plugins.
-	absRootPath string
-
 	pluginData *plugin.PluginOnlyData // pointer by design, to allow for nil
 
 	included []*Config
@@ -80,7 +76,7 @@ func readFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.absRootPath = filepath.Dir(path)
+	config.Root.AbsRootPath = filepath.Dir(path)
 	return config, nil
 }
 
@@ -114,36 +110,40 @@ func loadBytes(b []byte) (*Config, error) {
 }
 
 func (c *Config) LoadRecursive(lockfile *lock.File) error {
-	return c.loadRecursive(lockfile, map[string]bool{})
+	return c.loadRecursive(lockfile, map[string]bool{}, "" /*cyclePath*/)
 }
 
+// loadRecursive loads all the included plugins and their included plugins, etc.
+// seen should be a cloned map because loading plugins twice is allowed if they
+// are in different paths.
 func (c *Config) loadRecursive(
 	lockfile *lock.File,
 	seen map[string]bool,
+	cyclePath string,
 ) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
 	for _, includeRef := range c.Root.Include {
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, c.absRootPath)
+			includeRef, lockfile, c.Root.AbsRootPath)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, includeRef)
 		if seen[pluginConfig.Source.Hash()] {
-			return errors.Errorf("circular include detected: %s", includeRef)
+			// Note that duplicate includes are allowed if they are in different paths
+			// e.g. 2 different plugins can include the same plugin.
+			// We do not allow a single plugin to include duplicates.
+			return errors.Errorf(
+				"circular or duplicate include detected: %s", newCyclePath)
 		}
 		seen[pluginConfig.Source.Hash()] = true
 
-		includable := &Config{
-			Root:       pluginConfig.ConfigFile,
-			pluginData: &pluginConfig.PluginOnlyData,
-		}
-		if hasDir, ok := pluginConfig.Source.(*plugin.LocalPlugin); ok {
-			includable.absRootPath = filepath.Dir(hasDir.Path())
-		}
+		includable := createIncludableFromPluginConfig(pluginConfig)
 
-		if err := includable.loadRecursive(lockfile, maps.Clone(seen)); err != nil {
+		if err := includable.loadRecursive(
+			lockfile, maps.Clone(seen), newCyclePath); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -163,7 +163,9 @@ func (c *Config) loadRecursive(
 			Root:       builtIn.ConfigFile,
 			pluginData: &builtIn.PluginOnlyData,
 		}
-		if err := includable.loadRecursive(lockfile, maps.Clone(seen)); err != nil {
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, builtIn.Source.LockfileKey())
+		if err := includable.loadRecursive(
+			lockfile, maps.Clone(seen), newCyclePath); err != nil {
 			return errors.WithStack(err)
 		}
 		included = append(included, includable)
@@ -285,4 +287,15 @@ func (c *Config) IsEnvsecEnabled() bool {
 		}
 	}
 	return c.Root.IsEnvsecEnabled()
+}
+
+func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
+	includable := &Config{
+		Root:       pluginConfig.ConfigFile,
+		pluginData: &pluginConfig.PluginOnlyData,
+	}
+	if localPlugin, ok := pluginConfig.Source.(*plugin.LocalPlugin); ok {
+		includable.Root.AbsRootPath = filepath.Dir(localPlugin.Path())
+	}
+	return includable
 }
