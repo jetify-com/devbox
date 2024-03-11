@@ -1243,12 +1243,12 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		// Finding nix executables in path and passing it through
 		// As well as adding devbox itself to PATH
 		// Both are needed for devbox commands inside pure shell to work
-		includedInPath, err := findNixInPATH(env)
+		nixPath, err := exec.LookPath("nix")
 		if err != nil {
-			return nil, err
+			return nil, errors.New("could not find any nix executable in PATH. Make sure Nix is installed and in PATH, then try again")
 		}
-		includedInPath = append(includedInPath, dotdevboxBinPath(d))
-		env["PATH"] = envpath.JoinPathLists(includedInPath...)
+		nixPath = filepath.Dir(nixPath)
+		env["PATH"] = envpath.JoinPathLists(nixPath, dotdevboxBinPath(d))
 	}
 	return env, nil
 }
