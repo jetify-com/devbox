@@ -2,28 +2,28 @@
   "lockfile_version": "1",
   "packages": {
     "go@latest": {
-      "last_modified": "2024-02-08T11:55:47Z",
-      "resolved": "github:NixOS/nixpkgs/c0b7a892fb042ede583bdaecbbdc804acb85eabe#go_1_22",
+      "last_modified": "2024-03-06T17:57:40Z",
+      "resolved": "github:NixOS/nixpkgs/58ae79ea707579c40102ddf62d84b902a987c58b#go_1_22",
       "source": "devbox-search",
-      "version": "1.22.0",
+      "version": "1.22.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/2022s0jnrn2iyxjaikfy51w5fvifp38b-go-1.22.0"
+          "store_path": "/nix/store/q955gd41jh08l5pgbmx7y5jlqwwk4rqk-go-1.22.1"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/7wxzkvjv8qc2awhagpz0r8q9ay38q3wj-go-1.22.0"
+          "store_path": "/nix/store/ca92iff1jpd9a3l3i8222rzbkq949mlh-go-1.22.1"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0"
+          "store_path": "/nix/store/f64hpgi6lnn8vrf22cff2y8307c7zns3-go-1.22.1"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/88y9r33p3j8f7bc8sqiy9jdlk7yqfrlg-go-1.22.0"
+          "store_path": "/nix/store/jw9qrkqlkm699ncbrbs1d4czfg4wg8da-go-1.22.1"
         }
       }
     },
     "runx:golangci/golangci-lint@latest": {
-      "resolved": "golangci/golangci-lint@v1.56.1",
-      "version": "v1.56.1"
+      "resolved": "golangci/golangci-lint@v1.56.2",
+      "version": "v1.56.2"
     },
     "runx:mvdan/gofumpt@latest": {
       "resolved": "mvdan/gofumpt@v0.6.0",
