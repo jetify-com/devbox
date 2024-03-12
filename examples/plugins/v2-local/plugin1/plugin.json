@@ -18,5 +18,8 @@
   "create_files": {
     "{{ .DevboxDir }}/foo.txt": "foo.txt",
     "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
-  }
+  },
+  "include": [
+    "./plugin1a"
+  ]
 }

@@ -13,14 +13,14 @@ type Includable interface {
 	LockfileKey() string
 }
 
-func parseIncludable(includableRef, projectDir string) (Includable, error) {
+func parseIncludable(includableRef, workingDir string) (Includable, error) {
 	ref, err := flake.ParseRef(includableRef)
 	if err != nil {
 		return nil, err
 	}
 	switch ref.Type {
 	case flake.TypePath:
-		return newLocalPlugin(ref, projectDir)
+		return newLocalPlugin(ref, workingDir)
 	case flake.TypeGitHub:
 		return &githubPlugin{ref: ref}, nil
 	default:

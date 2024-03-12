@@ -10,11 +10,20 @@
     ],
     "scripts": {
       "run_test": [
+        // This tests init hook and env included from plugin1
         "test -n \"$PLUGIN1_INIT_HOOK\" || exit 1",
         "test -n \"$PLUGIN1_ENV\" || exit 1",
+        // This tests init hook and env included from plugin1a (via plugin1, with relative path)
+        "test -n \"$PLUGIN1A_INIT_HOOK\" || exit 1",
+        "test -n \"$PLUGIN1A_ENV\" || exit 1",
+        // Test env override
         "if [ \"$PLUGIN1_ENV2\" != \"override\" ]; then exit 1; fi;",
+        // test included scripts
         "devbox run plugin_1_script",
-        "hello"
+        "devbox run plugin_1A_script",
+        // Test packages included recursively
+        "hello",
+        "cowsay 'Hello, world!'"
       ]
     }
   },

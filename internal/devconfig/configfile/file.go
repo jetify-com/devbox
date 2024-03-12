@@ -25,6 +25,10 @@ const (
 
 // ConfigFile defines a devbox environment as JSON.
 type ConfigFile struct {
+	// AbsRootPath is the absolute path to the devbox.json or plugin.json file
+	// it will not be set for github plugins.
+	AbsRootPath string `json:"-"`
+
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 

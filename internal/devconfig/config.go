@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -71,7 +72,12 @@ func readFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loadBytes(b)
+	config, err := loadBytes(b)
+	if err != nil {
+		return nil, err
+	}
+	config.Root.AbsRootPath = path
+	return config, nil
 }
 
 func LoadConfigFromURL(ctx context.Context, url string) (*Config, error) {
@@ -104,19 +110,40 @@ func loadBytes(b []byte) (*Config, error) {
 }
 
 func (c *Config) LoadRecursive(lockfile *lock.File) error {
+	return c.loadRecursive(lockfile, map[string]bool{}, "" /*cyclePath*/)
+}
+
+// loadRecursive loads all the included plugins and their included plugins, etc.
+// seen should be a cloned map because loading plugins twice is allowed if they
+// are in different paths.
+func (c *Config) loadRecursive(
+	lockfile *lock.File,
+	seen map[string]bool,
+	cyclePath string,
+) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
 	for _, includeRef := range c.Root.Include {
-		pluginConfig, err := plugin.LoadConfigFromInclude(includeRef, lockfile)
+		pluginConfig, err := plugin.LoadConfigFromInclude(
+			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		includable := &Config{
-			Root:       pluginConfig.ConfigFile,
-			pluginData: &pluginConfig.PluginOnlyData,
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, includeRef)
+		if seen[pluginConfig.Source.Hash()] {
+			// Note that duplicate includes are allowed if they are in different paths
+			// e.g. 2 different plugins can include the same plugin.
+			// We do not allow a single plugin to include duplicates.
+			return errors.Errorf(
+				"circular or duplicate include detected:\n%s", newCyclePath)
 		}
-		if err := includable.LoadRecursive(lockfile); err != nil {
+		seen[pluginConfig.Source.Hash()] = true
+
+		includable := createIncludableFromPluginConfig(pluginConfig)
+
+		if err := includable.loadRecursive(
+			lockfile, maps.Clone(seen), newCyclePath); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -136,7 +163,9 @@ func (c *Config) LoadRecursive(lockfile *lock.File) error {
 			Root:       builtIn.ConfigFile,
 			pluginData: &builtIn.PluginOnlyData,
 		}
-		if err := includable.LoadRecursive(lockfile); err != nil {
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, builtIn.Source.LockfileKey())
+		if err := includable.loadRecursive(
+			lockfile, maps.Clone(seen), newCyclePath); err != nil {
 			return errors.WithStack(err)
 		}
 		included = append(included, includable)
@@ -258,4 +287,15 @@ func (c *Config) IsEnvsecEnabled() bool {
 		}
 	}
 	return c.Root.IsEnvsecEnabled()
+}
+
+func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
+	includable := &Config{
+		Root:       pluginConfig.ConfigFile,
+		pluginData: &pluginConfig.PluginOnlyData,
+	}
+	if localPlugin, ok := pluginConfig.Source.(*plugin.LocalPlugin); ok {
+		includable.Root.AbsRootPath = localPlugin.Path()
+	}
+	return includable
 }

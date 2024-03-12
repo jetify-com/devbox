@@ -25,7 +25,12 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}
-	if diff := cmp.Diff(cfg, out, cmpopts.IgnoreUnexported(configfile.ConfigFile{}, configfile.PackagesMutator{}, Config{})); diff != "" {
+	if diff := cmp.Diff(
+		cfg,
+		out,
+		cmpopts.IgnoreUnexported(configfile.ConfigFile{}, configfile.PackagesMutator{}, Config{}),
+		cmpopts.IgnoreFields(configfile.ConfigFile{}, "AbsRootPath"),
+	); diff != "" {
 		t.Errorf("configs not equal (-in +out):\n%s", diff)
 	}
 

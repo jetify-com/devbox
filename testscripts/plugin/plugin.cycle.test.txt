@@ -1,0 +1,51 @@
+! exec devbox install
+stderr 'circular or duplicate include detected:'
+
+! exec devbox install -c ./duplicate
+stderr 'circular or duplicate include detected:'
+
+exec devbox install -c ./no-cycle
+stderr 'Finished installing packages.'
+
+-- devbox.json --
+{
+  "name": "test-with-cycle",
+  "include": ["./plugin1"]
+}
+
+-- plugin1/plugin.json --
+{
+  "name": "plugin1",
+  "include": ["../plugin2"]
+}
+
+-- plugin2/plugin.json --
+{
+  "name": "plugin2",
+  "include": ["../plugin1"]
+}
+
+-- no-cycle/devbox.json --
+{
+  "name": "test-without-cycle",
+  "include": ["./plugin3"]
+}
+
+-- no-cycle/plugin3/plugin.json --
+{
+  "name": "plugin3"
+}
+
+-- duplicate/devbox.json --
+{
+  "name": "test-with-duplicate",
+  "include": [
+    "./plugin4",
+    "./plugin4"
+  ]
+}
+
+-- duplicate/plugin4/plugin.json --
+{
+  "name": "plugin4"
+}
