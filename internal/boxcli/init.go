@@ -19,16 +19,16 @@ func initCmd() *cobra.Command {
 			"You can then add packages using `devbox add`",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInitCmd(cmd, args)
+			return runInitCmd(args)
 		},
 	}
 
 	return command
 }
 
-func runInitCmd(cmd *cobra.Command, args []string) error {
+func runInitCmd(args []string) error {
 	path := pathArg(args)
 
-	_, err := devbox.InitConfig(path, cmd.ErrOrStderr())
+	_, err := devbox.InitConfig(path)
 	return errors.WithStack(err)
 }

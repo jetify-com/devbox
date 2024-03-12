@@ -5,42 +5,18 @@ package devconfig
 
 import (
 	"errors"
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/fatih/color"
 
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/initrec"
 )
 
-func Init(dir string, writer io.Writer) (created bool, err error) {
-	created, err = initConfigFile(filepath.Join(dir, configfile.DefaultName))
-	if err != nil || !created {
-		return created, err
-	}
-
-	// package suggestion
-	pkgsToSuggest, err := initrec.Get(dir)
-	if err != nil {
-		return created, err
-	}
-	if len(pkgsToSuggest) > 0 {
-		s := fmt.Sprintf("devbox add %s", strings.Join(pkgsToSuggest, " "))
-		fmt.Fprintf(
-			writer,
-			"We detected extra packages you may need. To install them, run `%s`\n",
-			color.HiYellowString(s),
-		)
-	}
-	return created, err
-}
-
-func initConfigFile(path string) (created bool, err error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o644)
+func Init(dir string) (created bool, err error) {
+	file, err := os.OpenFile(
+		filepath.Join(dir, configfile.DefaultName),
+		os.O_RDWR|os.O_CREATE|os.O_EXCL,
+		0o644,
+	)
 	if errors.Is(err, os.ErrExist) {
 		return false, nil
 	}

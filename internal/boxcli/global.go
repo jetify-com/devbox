@@ -72,7 +72,7 @@ func globalListCmd() *cobra.Command {
 }
 
 func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
-	path, err := ensureGlobalConfig(cmd)
+	path, err := ensureGlobalConfig()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -92,7 +92,7 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 
 var globalConfigPath string
 
-func ensureGlobalConfig(cmd *cobra.Command) (string, error) {
+func ensureGlobalConfig() (string, error) {
 	if globalConfigPath != "" {
 		return globalConfigPath, nil
 	}
@@ -101,7 +101,7 @@ func ensureGlobalConfig(cmd *cobra.Command) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = devbox.InitConfig(globalConfigPath, cmd.ErrOrStderr())
+	_, err = devbox.InitConfig(globalConfigPath)
 	if err != nil {
 		return "", err
 	}
@@ -112,7 +112,7 @@ func setGlobalConfigForDelegatedCommands(
 	globalCmd *cobra.Command,
 ) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		globalPath, err := ensureGlobalConfig(cmd)
+		globalPath, err := ensureGlobalConfig()
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 	if cmd.Name() == "shellenv" {
 		return nil
 	}
-	path, err := ensureGlobalConfig(cmd)
+	path, err := ensureGlobalConfig()
 	if err != nil {
 		return errors.WithStack(err)
 	}
