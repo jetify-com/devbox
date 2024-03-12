@@ -1,7 +1,7 @@
 ! exec devbox install
 stderr 'circular or duplicate include detected:'
 
-! exec devbox install
+! exec devbox install -c ./duplicate
 stderr 'circular or duplicate include detected:'
 
 exec devbox install -c ./no-cycle

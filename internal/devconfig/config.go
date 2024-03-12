@@ -76,7 +76,7 @@ func readFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.Root.AbsRootPath = filepath.Dir(path)
+	config.Root.AbsRootPath = path
 	return config, nil
 }
 
@@ -125,7 +125,7 @@ func (c *Config) loadRecursive(
 
 	for _, includeRef := range c.Root.Include {
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, c.Root.AbsRootPath)
+			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -136,7 +136,7 @@ func (c *Config) loadRecursive(
 			// e.g. 2 different plugins can include the same plugin.
 			// We do not allow a single plugin to include duplicates.
 			return errors.Errorf(
-				"circular or duplicate include detected: %s", newCyclePath)
+				"circular or duplicate include detected:\n%s", newCyclePath)
 		}
 		seen[pluginConfig.Source.Hash()] = true
 
@@ -295,7 +295,7 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 		pluginData: &pluginConfig.PluginOnlyData,
 	}
 	if localPlugin, ok := pluginConfig.Source.(*plugin.LocalPlugin); ok {
-		includable.Root.AbsRootPath = filepath.Dir(localPlugin.Path())
+		includable.Root.AbsRootPath = localPlugin.Path()
 	}
 	return includable
 }
