@@ -9,28 +9,37 @@ import (
 
 // to be composed into xyzCmdFlags structs
 type configFlags struct {
-	path        string
+	pathFlag
 	environment string
 }
 
 func (flags *configFlags) register(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(
-		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
-	)
+	flags.pathFlag.register(cmd)
 	cmd.Flags().StringVar(
 		&flags.environment, "environment", "dev", "environment to use, when supported (e.g.secrets support dev, prod, preview.)",
 	)
 }
 
 func (flags *configFlags) registerPersistent(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(
-		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
-	)
+	flags.pathFlag.registerPersistent(cmd)
 	cmd.PersistentFlags().StringVar(
 		&flags.environment, "environment", "dev", "environment to use, when supported (e.g. secrets support dev, prod, preview.)",
 	)
 }
 
-func (flags *configFlags) Environment() string {
-	return flags.environment
+// pathFlag is a flag for specifying the path to a devbox.json file
+type pathFlag struct {
+	path string
+}
+
+func (flags *pathFlag) register(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(
+		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+	)
+}
+
+func (flags *pathFlag) registerPersistent(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(
+		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+	)
 }
