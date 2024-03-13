@@ -12,9 +12,10 @@ import (
 )
 
 type BuildArgs struct {
-	AllowInsecure bool
-	Flags         []string
-	Writer        io.Writer
+	AllowInsecure    bool
+	ExtraSubstituter string
+	Flags            []string
+	Writer           io.Writer
 }
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
@@ -22,6 +23,11 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd := commandContext(ctx, "build", "--impure")
 	cmd.Args = append(cmd.Args, args.Flags...)
 	cmd.Args = append(cmd.Args, installables...)
+	// Adding extra substituters only here to be conservative, but this could also
+	// be added to ExperimentalFlags() in the future.
+	if args.ExtraSubstituter != "" {
+		cmd.Args = append(cmd.Args, "--extra-substituters", args.ExtraSubstituter)
+	}
 	cmd.Env = allowUnfreeEnv(os.Environ())
 	if args.AllowInsecure {
 		debug.Log("Setting Allow-insecure env-var\n")
