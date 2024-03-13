@@ -23,9 +23,8 @@ func cacheCmd() *cobra.Command {
 	}
 
 	copyCommand := &cobra.Command{
-		Use:   "copy <url>",
-		Short: "Copy nix store paths to the cache",
-		Long:  "Copies all nix packages in current project to url.",
+		Use:   "copy <uri>",
+		Short: "Copies all nix packages in current project to the cache at <uri>",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			box, err := devbox.Open(&devopt.Opts{
