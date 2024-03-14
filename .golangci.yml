@@ -86,3 +86,6 @@ linters-settings:
   wrapcheck:
     ignorePackageGlobs:
       - go.jetpack.io/devbox/*
+  misspell:
+    ignore-words:
+      - substituters
