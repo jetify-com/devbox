@@ -2,8 +2,8 @@ package bincache
 
 import "os"
 
-// ExtraSubstituter returns the URL of the extra substituter to use.
-// a substituter is a bin cache url that nix can use to fetch pre-built
+// ExtraSubstituter returns the URI of the extra substituter to use.
+// a substituter is a bin cache URI that nix can use to fetch pre-built
 // binaries from.
 func ExtraSubstituter() (string, error) {
 	if err := ensureTrustedUser(); err != nil {
@@ -11,10 +11,10 @@ func ExtraSubstituter() (string, error) {
 	}
 
 	// TODO: if user is logged in (or if we have token we can refresh)
-	// then we try to fetch the bincache URL from the API.
+	// then we try to fetch the bincache URI from the API.
 
-	// DEVBOX_NIX_BINCACHE_URL seems like a friendlier name than "substituter"
-	return os.Getenv("DEVBOX_NIX_BINCACHE_URL"), nil
+	// DEVBOX_NIX_BINCACHE_URI seems like a friendlier name than "substituter"
+	return os.Getenv("DEVBOX_NIX_BINCACHE_URI"), nil
 }
 
 func ensureTrustedUser() error {
