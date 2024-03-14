@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -12,7 +14,27 @@ import (
 )
 
 type githubPlugin struct {
-	ref flake.Ref
+	ref  flake.Ref
+	name string
+}
+
+// Github only allows alphanumeric, hyphen, underscore, and period in repo names.
+// but we clean up just in case.
+var githubNameRegexp = regexp.MustCompile("[^a-zA-Z0-9-_.]+")
+
+func newGithubPlugin(ref flake.Ref) *githubPlugin {
+	plugin := &githubPlugin{ref: ref}
+	// For backward compatibility, we don't strictly require name to be present
+	// in github plugins. If it's missing, we just use the directory as the name.
+	name, _ := getPluginNameFromContent(plugin)
+	if name == "" {
+		name = strings.ReplaceAll(ref.Dir, "/", "-")
+	}
+	plugin.name = githubNameRegexp.ReplaceAllString(
+		strings.Join([]string{ref.Owner, ref.Repo, name}, "."),
+		" ",
+	)
+	return plugin
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
@@ -20,7 +42,7 @@ func (p *githubPlugin) Fetch() ([]byte, error) {
 }
 
 func (p *githubPlugin) CanonicalName() string {
-	return p.ref.Owner + "-" + p.ref.Repo
+	return p.name
 }
 
 func (p *githubPlugin) Hash() string {
