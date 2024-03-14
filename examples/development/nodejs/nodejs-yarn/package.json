@@ -6,5 +6,6 @@
     "build": "echo building...",
     "start": "node index.js"
   },
-  "dependencies": {}
+  "version": "0.0.0",
+  "packageManager": "yarn@4.1.1"
 }

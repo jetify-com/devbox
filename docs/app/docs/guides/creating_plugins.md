@@ -16,7 +16,7 @@ Before contributing, please consult our [Contributing Guide](https://github.com/
 
 We recommend organizing your plugin with the following directory structure, where the top-level folder matches the name of your plugin:
 
-```
+```bash
 my-plugin/
 ├── README.md
 ├── plugin.json
@@ -64,6 +64,7 @@ Plugins are defined as Go JSON Template files, using the following schema:
   "name": "",
   "version": "",
   "description": "",
+  "packages":[] | {},
   "env": {
     "<key>": "<value>"
   },
@@ -73,8 +74,11 @@ Plugins are defined as Go JSON Template files, using the following schema:
   "shell": {
     "init_hook": [
       "<bash commands>"
-    ]
-  }
+    ],
+     "scripts": {
+      "<key>": "<value>"
+    } 
+  },
 }
 ```
 
@@ -98,9 +102,15 @@ The name of your plugin. This is used to identify your plugin when a user runs `
 
 The version of your plugin. You should start your version at 0.0.1 and bump it whenever you merge an update to the plugin.
 
-#### `readme` *string*
+#### `description` *string*
 
 Special usage instructions or notes to display when your plugin activates or when a user runs `devbox info`. You do not need to document variables, helper files, or services, since these are automatically printed when a user runs `devbox info`.
+
+#### `packages` *string[] | object*
+
+A list of packages that the plugin will install when activated or included in a package. This section follows the same format as [`packages`](../configuration.md#packages) section in a project's `devbox.json`. 
+
+Packages installed by a plugin can be overridden if a user installs a different version of the same package in their `devbox.json` config. For example, if a plugin installs `python@3.10`, and a user's devbox.json installs `python@3.11`, the project will use `python@3.11`. 
 
 #### `env` *object*
 
@@ -126,6 +136,39 @@ A single `bash` command or list of `bash` commands that should run before the us
 
 This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
 
+#### `shell.scripts` *object*
+
+[Scripts](../guides/scripts.md) are commands that are executed in your Devbox shell using `devbox run <script_name>`. They can be used to start up background process (like databases or servers), or to run one off commands (like setting up a dev DB, or running your tests).
+
+Scripts can be defined by giving a name, and one or more commands. Single command scripts can be added by providing a name, and a string:
+
+```json
+{
+    "shell": {
+        "scripts": {
+            "print_once": "echo \"Hello Once!\""
+        }
+    }
+}
+```
+
+To run multiple commands in a single script, you can pass them as an array:
+
+```json
+{
+    "shell": {
+        "scripts": {
+            "print_twice": [
+                "echo \"Hello Once!\"",
+                "echo \"Hello Twice!\""
+            ]
+        }
+    }
+}
+``` 
+Scripts defined in a plugin will be overridden if a user's `devbox.json` defines a script with the same name. For example, if both the plugin and the devbox.json that includes it defined a `print_once` script, the version in the user's `devbox.json` will take precedence in the shell. 
+
+
 ### Adding Services
 
 Devbox uses [Process Compose](https://github.com/F1bonacc1/process-compose) to run services and background processes.
@@ -139,10 +182,10 @@ See the process compose [docs](https://github.com/F1bonacc1/process-compose) for
 Testing plugins can be done using an example Devbox project. Follow the steps below to create a new test project
 
 1. Create a new `devbox.json` in an empty directory using `devbox init`.
-2. Add your plugin to the `include` section of the `devbox.json` file.
-2. Add any expected packages using `devbox add <pkg>`.
-3. Check that your plugin creates the correct files and environment variables when running `devbox shell`
-4. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
+1. Add your plugin to the `include` section of the `devbox.json` file.
+1. Add any expected packages using `devbox add <pkg>`.
+1. Check that your plugin creates the correct files and environment variables when running `devbox shell`
+1. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
 
 
 ## Example: MongoDB

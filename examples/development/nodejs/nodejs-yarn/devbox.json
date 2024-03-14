@@ -1,8 +1,5 @@
 {
-  "packages": [
-    "nodejs@18",
-    "yarn@1.22"
-  ],
+  "packages": ["nodejs@latest"],
   "shell": {
     "init_hook": [
       "yarn install"
