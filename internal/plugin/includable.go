@@ -31,7 +31,7 @@ func parseIncludable(includableRef, workingDir string) (Includable, error) {
 	}
 }
 
-type fetchable interface {
+type fetcher interface {
 	Includable
 	Fetch() ([]byte, error)
 }
@@ -41,7 +41,7 @@ var (
 	errNameMissing = usererr.New("'name' is missing")
 )
 
-func getPluginNameFromContent(plugin fetchable) (string, error) {
+func getPluginNameFromContent(plugin fetcher) (string, error) {
 	content, err := plugin.Fetch()
 	if err != nil {
 		return "", err
