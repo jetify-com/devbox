@@ -71,7 +71,7 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 		creds = devopt.Credentials{
 			IDToken: t.IDToken,
 			Email:   t.IDClaims().Email,
-			Sub:     t.IDClaims().ID,
+			Sub:     t.IDClaims().Subject,
 		}
 	}
 

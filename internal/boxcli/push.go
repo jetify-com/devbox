@@ -51,7 +51,7 @@ func pushCmdFunc(cmd *cobra.Command, url string, flags pushCmdFlags) error {
 		creds = devopt.Credentials{
 			IDToken: t.IDToken,
 			Email:   t.IDClaims().Email,
-			Sub:     t.IDClaims().ID,
+			Sub:     t.IDClaims().Subject,
 		}
 	}
 	return box.Push(cmd.Context(), devopt.PullboxOpts{
