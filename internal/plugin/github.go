@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/nix/flake"
@@ -31,7 +32,7 @@ func newGithubPlugin(ref flake.Ref) *githubPlugin {
 		name = strings.ReplaceAll(ref.Dir, "/", "-")
 	}
 	plugin.name = githubNameRegexp.ReplaceAllString(
-		strings.Join([]string{ref.Owner, ref.Repo, name}, "."),
+		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
 		" ",
 	)
 	return plugin
