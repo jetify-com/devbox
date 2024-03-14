@@ -1,13 +1,10 @@
 package plugin
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/nix/flake"
 )
@@ -18,28 +15,11 @@ type LocalPlugin struct {
 	pluginDir string
 }
 
-var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
-
 func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 	plugin := &LocalPlugin{ref: ref, pluginDir: pluginDir}
-	content, err := plugin.Fetch()
+	name, err := getPluginNameFromContent(plugin)
 	if err != nil {
 		return nil, err
-	}
-	m := map[string]any{}
-	if err := json.Unmarshal(content, &m); err != nil {
-		return nil, err
-	}
-	name, ok := m["name"].(string)
-	if !ok || name == "" {
-		return nil,
-			usererr.New("plugin %s is missing a required field 'name'", plugin.Path())
-	}
-	if !nameRegex.MatchString(name) {
-		return nil, usererr.New(
-			"plugin %s has an invalid name %q. Name must match %s",
-			plugin.Path(), name, nameRegex,
-		)
 	}
 	plugin.name = name
 	return plugin, nil
