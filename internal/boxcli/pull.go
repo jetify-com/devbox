@@ -105,7 +105,7 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 
 	return installCmdFunc(
 		cmd,
-		runCmdFlags{config: configFlags{path: flags.config.path}},
+		runCmdFlags{config: configFlags{pathFlag: pathFlag{path: flags.config.path}}},
 	)
 }
 
