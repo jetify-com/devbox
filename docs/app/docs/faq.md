@@ -39,6 +39,15 @@ You can learn more about non-default outputs [here](./guides/using_flakes.md#ins
 
 This message means that your project requires an implementation of the C++ Standard Library installed and linked within your shell. You can add the libstdc++ libraries and object files using `devbox add stdenv.cc.cc.lib`. 
 
+## I'm seeing a ``GLIBC_X.XX' not found` error when I try to install my packages, or when I install packages from PyPi/RubyGems/NPM/Cargo/other package manager in my shell
+
+This message usually occurs when using older packages, or when mixing different versions of packages within a single shell. The error tends to occur because each Nix package comes bundled with all of it's dependencies, including a version of the C Standard Library, to ensure reproducibility. If your interpreter (Python/Ruby/Node) or runtime is using an older version of `glibc` than what your other packages expect, they will throw this error. 
+
+There are two ways to work around this issue: 
+1. You can update your packages to use a newer version (using `devbox add`). This newer version will likely come bundled with a newer version of `glibc`. 
+2. You can use `devbox update` to get the latest Nix derivation for your package. Newer derivations may come bundled with newer dependencies, including `glibc`
+3. If you need to use an exact package version, but you still see this error, you can patch it to use a newer version of glibc using `devbox add <package>@<version> --patch-glibc`. This will patch your package to use a newer version of glibc, which should resolve any incompatibility issues you might be seeing. This patch will only affect packages on Linux. 
+
 ## How can I use custom Nix packages or overrides with Devbox?
 
 You can add customized packages to your Devbox environment using our [Flake support](./guides/using_flakes.md). You can use these flakes to modify or override packages from nixpkgs, or to create your own custom packages.

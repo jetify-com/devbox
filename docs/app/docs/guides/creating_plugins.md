@@ -79,6 +79,9 @@ Plugins are defined as Go JSON Template files, using the following schema:
       "<key>": "<value>"
     } 
   },
+  "include": [
+   "<path_to_plugin>" 
+  ]
 }
 ```
 
@@ -168,6 +171,23 @@ To run multiple commands in a single script, you can pass them as an array:
 ``` 
 Scripts defined in a plugin will be overridden if a user's `devbox.json` defines a script with the same name. For example, if both the plugin and the devbox.json that includes it defined a `print_once` script, the version in the user's `devbox.json` will take precedence in the shell. 
 
+#### `include` *string[]*
+
+Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
+
+Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your plugin.json conflicts with an included plugin, your setting will take precedence.
+```json
+{
+    "include": [
+        // Include a plugin from a Github Repo. The repo must have a plugin.json in it's root,
+        // or in the directory specified by ?dir
+        "github:org/repo/ref?dir=<path-to-plugin>"
+        // Include a local plugin. The path must point to a plugin.json
+        "path:path/to/plugin.json"
+    ]
+}
+```
+
 
 ### Adding Services
 
@@ -190,13 +210,17 @@ Testing plugins can be done using an example Devbox project. Follow the steps be
 
 ## Example: MongoDB
 
-The plugin.json below sets the environment variables and config needed to run MongoDB in Devbox. You can view the full example at
+The plugin.json below installs MongoDB + the Mongo shell, and sets the environment variables and config needed to run MongoDB in Devbox.
 
 ```json
 {
   "name": "mongodb",
   "version": "0.0.1",
   "description": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
+  "packages": [
+    "mongodb@latest"
+    "mongosh@latest"
+  ],
   "env": {
     "MONGODB_DATA": "{{.Virtenv}}/data",
     "MONGODB_CONFIG": "{{.DevboxDir}}/mongod.conf"
