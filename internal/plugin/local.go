@@ -3,7 +3,6 @@ package plugin
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -15,8 +14,6 @@ type LocalPlugin struct {
 	name      string
 	pluginDir string
 }
-
-var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
 
 func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 	plugin := &LocalPlugin{ref: ref, pluginDir: pluginDir}

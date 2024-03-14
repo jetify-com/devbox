@@ -3,6 +3,7 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/nix/flake"
@@ -24,7 +25,7 @@ func parseIncludable(includableRef, workingDir string) (Includable, error) {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
 	case flake.TypeGitHub:
-		return newGithubPlugin(ref), nil
+		return newGithubPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
 	}
@@ -34,6 +35,11 @@ type fetchable interface {
 	Includable
 	Fetch() ([]byte, error)
 }
+
+var (
+	nameRegex      = regexp.MustCompile(`^[a-zA-Z0-9_\- ]+$`)
+	errNameMissing = usererr.New("'name' is missing")
+)
 
 func getPluginNameFromContent(plugin fetchable) (string, error) {
 	content, err := plugin.Fetch()
@@ -47,8 +53,7 @@ func getPluginNameFromContent(plugin fetchable) (string, error) {
 	name, ok := m["name"].(string)
 	if !ok || name == "" {
 		return "",
-			usererr.New(
-				"plugin %s is missing a required field 'name'", plugin.LockfileKey())
+			fmt.Errorf("%w in plugin %s", errNameMissing, plugin.LockfileKey())
 	}
 	if !nameRegex.MatchString(name) {
 		return "", usererr.New(

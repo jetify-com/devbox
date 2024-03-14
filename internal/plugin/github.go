@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -23,11 +24,14 @@ type githubPlugin struct {
 // but we clean up just in case.
 var githubNameRegexp = regexp.MustCompile("[^a-zA-Z0-9-_.]+")
 
-func newGithubPlugin(ref flake.Ref) *githubPlugin {
+func newGithubPlugin(ref flake.Ref) (*githubPlugin, error) {
 	plugin := &githubPlugin{ref: ref}
 	// For backward compatibility, we don't strictly require name to be present
 	// in github plugins. If it's missing, we just use the directory as the name.
-	name, _ := getPluginNameFromContent(plugin)
+	name, err := getPluginNameFromContent(plugin)
+	if err != nil && !errors.Is(err, errNameMissing) {
+		return nil, err
+	}
 	if name == "" {
 		name = strings.ReplaceAll(ref.Dir, "/", "-")
 	}
@@ -35,7 +39,7 @@ func newGithubPlugin(ref flake.Ref) *githubPlugin {
 		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
 		" ",
 	)
-	return plugin
+	return plugin, nil
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
