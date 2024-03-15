@@ -5,7 +5,6 @@ package devbox
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
 
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -47,7 +45,9 @@ func (d *Devbox) addDevboxUtilityPackage(ctx context.Context, pkgName string) er
 	return nil
 }
 
-func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
+func (d *Devbox) removeDevboxUtilityPackage(
+	ctx context.Context, pkgName string,
+) error {
 	pkg := devpkg.PackageFromStringWithDefaults(pkgName, d.lockfile)
 	installables, err := pkg.Installables()
 	if err != nil {
@@ -59,20 +59,15 @@ func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 		return err
 	}
 
-	profile, err := nixprofile.ProfileListItems(d.stderr, utilityProfilePath)
-	if err != nil {
-		return err
-	}
-
 	for _, installable := range installables {
-		for i, profileItem := range profile {
-			if profileItem.MatchesUnlockedReference(installable) {
-				err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
-				if err != nil {
-					return err
-				}
-				// We are done with this installable. Now, remove the next installable:
-				break
+		storePaths, err := nix.StorePathsFromInstallable(ctx, installable, false)
+		if err != nil {
+			return err
+		}
+
+		for _, storePath := range storePaths {
+			if err = nix.ProfileRemove(utilityProfilePath, storePath); err != nil {
+				return err
 			}
 		}
 	}
