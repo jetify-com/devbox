@@ -5,7 +5,6 @@ package devbox
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -65,9 +64,9 @@ func (d *Devbox) removeDevboxUtilityPackage(pkgName string) error {
 	}
 
 	for _, installable := range installables {
-		for i, profileItem := range profile {
+		for _, profileItem := range profile {
 			if profileItem.MatchesUnlockedReference(installable) {
-				err = nix.ProfileRemove(utilityProfilePath, fmt.Sprint(i))
+				err = nix.ProfileRemove(utilityProfilePath, profileItem.NameOrIndex())
 				if err != nil {
 					return err
 				}
