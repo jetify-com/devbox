@@ -227,13 +227,18 @@ To run multiple commands in a single script, you can pass them as an array:
 
 ### Include
 
-Includes can be used to explicitly add extra configuration or plugins to your Devbox project. Currently this only supports adding our [built-in plugins](guides/plugins.md) to your project.
+Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
 
-You should use this section to activate plugins when you install a package from a [Flake](guides/using_flakes.md) that uses a plugin. To ensure that a plugin is activated for your project, add it to the `include` section of your `devbox.json`. For example, to explicitly activate the PHP plugin, you can add the following to your `devbox.json`:
-
+Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your project config conflicts with a plugin (e.g., your `devbox.json` has a script with the same name as a plugin script), your project config will take precedence. 
 ```json
 {
     "include": [
+        // Include a plugin from a Github Repo. The repo must have a plugin.json in it's root,
+        // or in the directory specified by ?dir
+        "github:org/repo/ref?dir=<path-to-plugin>"
+        // Include a local plugin. The path must point to a plugin.json
+        "path:path/to/plugin.json"
+        // Force activate a builtin plugin
         "plugin:php-config"
     ]
 }
