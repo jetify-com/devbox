@@ -17,6 +17,9 @@ devbox add glibcLocales --platform x86_64-linux,aarch64-linux
 
 # Exclude busybox from installation on macOS
 devbox add busybox --exclude-platform aarch64-darwin,x86_64-darwin
+
+# Install non-default outputs for a package, such as the promtool CLI
+devbox add prometheus --outputs=out,cli
 ```
 
 ## Options
@@ -28,8 +31,10 @@ devbox add busybox --exclude-platform aarch64-darwin,x86_64-darwin
 | `-c, --config string` | path to directory containing a devbox.json config file |
 | `-e, --exclude-platform strings` | exclude packages from a specific platform. |
 | `-h, --help` | help for add |
-| `-q, --quiet` | quiet mode: Suppresses logs. |
+| `-o, --outputs strings` | specify the outputs to install for the nix package | 
 | `-p`, `--platform strings` | install packages only on specific platforms. |
+|  `--patch-glibc` | Patches ELF binaries to use a newer version of `glibc` |
+| `-q, --quiet` | quiet mode: Suppresses logs. |
 
 Valid Platforms include:
 

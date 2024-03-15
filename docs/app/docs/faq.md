@@ -31,9 +31,19 @@ Yes! Devbox can be installed on any Linux distribution, including NixOS. You can
 
 ## A package I installed is missing header files or libraries I need for development. Where do I find them?
 
-In order to save space, Devbox and Nix only install the required components of packages by default. Development header files and libraries are often installed in a separate output of the package (usually `dev`), which can be installed using [Flake References](./guides/using_flakes.md).
+In order to save space, Devbox and Nix only install the required components of packages by default. Development header files and libraries are often installed in a separate output of the package (usually `dev`), which can be installed using the `--output` flag on the `devbox add` command. 
 
-You can learn more about non-default outputs [here](./guides/using_flakes.md#installing-additional-outputs-from-a-flake).
+For example, the command below will install both the default output `out`, and the `cli` output for the prometheus package: 
+
+```bash
+devbox add prometheus --outputs=out,cli
+```
+
+You can also specify non-default outputs in [flake references](./guides/using_flakes.md): 
+
+```bash
+devbox add github:NixOS/nixpkgs#prometheus^out,cli
+```
 
 ## I'm trying to build a project, but it says that I'm missing `libstdc++`. How do I install this library in my project?
 
