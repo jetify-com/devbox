@@ -2,14 +2,22 @@
     "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox-plugin.schema.json",
     "version": "0.0.2",
     "name": "nodejs",
-    "readme": "Devbox automatically configures Corepack for Nodejs. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory",
+    "readme": "\nIf you are using Node.js 14 or newer, you can enable Corepack by running `devbox run corepack-enable`. Corepack lets you install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory\n",
     "env" : {
         "PATH": "{{ .Virtenv }}/corepack-bin/:$PATH"
     },
     "shell": {
         "init_hook": [
-            "mkdir -p {{ .Virtenv }}/corepack-bin",
-            "if command -v corepack &> /dev/null; then corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\"; fi"
-        ]
+        ],
+        "scripts": {
+            "corepack-enable": [
+                "mkdir -p {{ .Virtenv }}/corepack-bin",
+                "command -v corepack &> /dev/null && corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\"" 
+            ],
+            "corepack-disable": [
+                "command -v corepack &> /dev/null && corepack disable --install-directory \"{{ .Virtenv }}/corepack-bin/\"" ,
+                "rm -rf {{ .Virtenv }}/corepack-bin"
+            ]
+        }
     }
 }
