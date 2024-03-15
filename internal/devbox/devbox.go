@@ -782,7 +782,7 @@ func (d *Devbox) StartProcessManager(
 		oldProcessComposePkg := "github:F1bonacc1/process-compose/" + pcVersion + "#defaultPackage." + nix.System()
 		newProcessComposePkg := "github:F1bonacc1/process-compose/" + processComposeTargetVersion
 		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(oldProcessComposePkg); err != nil {
+		if err := d.removeDevboxUtilityPackage(ctx, oldProcessComposePkg); err != nil {
 			return err
 		}
 

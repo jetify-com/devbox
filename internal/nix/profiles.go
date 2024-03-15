@@ -75,13 +75,15 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	return cmd.Run()
 }
 
-func ProfileRemove(profilePath string, indexes ...string) error {
+// ProfileRemove removes packages from a profile.
+// WARNING, don't use indexes, they are not supported by nix 2.20+
+func ProfileRemove(profilePath string, packageNames ...string) error {
 	cmd := command(
 		append([]string{
 			"profile", "remove",
 			"--profile", profilePath,
 			"--impure", // for NIXPKGS_ALLOW_UNFREE
-		}, indexes...)...,
+		}, packageNames...)...,
 	)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 
