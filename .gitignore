@@ -37,4 +37,4 @@ __pycache__/
 
 # deployment
 .vercel
-examples/development/nodejs/nodejs-yarn/.yarn/install-state.gz
+.yarn
