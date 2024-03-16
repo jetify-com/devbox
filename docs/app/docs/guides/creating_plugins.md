@@ -173,7 +173,7 @@ Scripts defined in a plugin will be overridden if a user's `devbox.json` defines
 
 #### `include` *string[]*
 
-Includes can be used to explicitly add extra configuration from [plugins](../guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
+Include can be used to explicitly add extra configuration from [plugins](../guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
 
 Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your plugin.json conflicts with an included plugin, your setting will take precedence.
 ```json
