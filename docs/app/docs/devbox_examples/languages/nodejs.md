@@ -8,10 +8,10 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-npm)
 
-
 ## Adding NodeJS to your Shell
 
 `devbox add nodejs`, or in your `devbox.json`:
+
 ```json
   "packages": [
     "nodejs@18"
@@ -20,19 +20,34 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 This will install NodeJS 18, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/nodejs)
 
-## Adding Yarn as your Package Manager
+## Adding Yarn, NPM, or pnpm as your Node Package Manager
+
+We recommend using [Corepack](https://github.com/nodejs/corepack/) to install and manage your Node Package Manager in Devbox. Corepack comes bundled with all recent Nodejs versions, and you can tell Devbox to automatically configure Corepack using a built-in plugin. When enabled, corepack binaries will be installed in your project's `.devbox` directory, and automatically added to your path.
+
+To enable Corepack, set `DEVBOX_COREPACK_ENABLED` to `true` in your `devbox.json`:
+
+```json
+{
+  "packages": ["nodejs@18"],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  }
+}
+```
+
+To disable Corepack, remove the `DEVBOX_COREPACK_ENABLED` variable from your devbox.json
+
+### Yarn
 
 [**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-yarn)
 
 [![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-yarn)
 
-`devbox add yarn`, or in your `devbox.json` add:
-```json
-  "packages": [
-    "nodejs@18",
-    "yarn@latest"
-  ],
-```
+### pnpm
+
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-pnpm)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-pnpm)
 
 ## Installing Global Packages
 
@@ -42,10 +57,10 @@ You can instead install these global packages by adding them to the list of pack
 
 ```json
 {
-    "packages": [
-        "nodejs@18",
-        "nodePackages.yalc@latest",
-        "nodePackages.pm2@latest"
-    ]
+  "packages": [
+    "nodejs@18",
+    "nodePackages.yalc@latest",
+    "nodePackages.pm2@latest"
+  ]
 }
 ```

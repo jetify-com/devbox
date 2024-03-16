@@ -25,6 +25,7 @@ Built-in plugins are available for the following packages. You can activate the 
 * [Apache](../devbox_examples/servers/apache.md) (apacheHttpd)
 * [Caddy](../devbox_examples/servers/caddy.md) (caddy)
 * [Nginx](../devbox_examples/servers/nginx.md) (nginx)
+* [Node.js](../devbox_examples/languages/nodejs.md) (nodejs, nodejs-slim)
 * [MariaDB](../devbox_examples/databases/mariadb.md) (mariadb, mariadb_10_6...)
 * [MySQL](../devbox_examples/databases/mysql.md) (mysql80, mysql57)
 * [PostgreSQL](../devbox_examples/databases/postgres.md) (postgresql)
@@ -142,7 +143,6 @@ Service "nginx" started
 When Devbox detects a plugin for an installed package, it automatically applies its configuration and prints a short explanation. Developers can review this explanation anytime using `devbox info <package_name>`.
 
 ### Services
-
 If your package can run as a daemon or background service, Devbox can configure and manage that service for you with `devbox services`.
 
 To learn more, visit our page on [Devbox Services](services.md).

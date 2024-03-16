@@ -1,14 +1,14 @@
 {
-    "packages": [
-        "nodejs@18",
-        "nodePackages.pnpm@8.6.0"
+  "packages": ["nodejs@latest"],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  },
+  "shell": {
+    "init_hook": [
+      "pnpm install"
     ],
-    "shell": {
-        "init_hook": [
-            "pnpm install"
-        ],
-        "scripts": {
-            "run_test": "pnpm run start"
-        }
+    "scripts": {
+      "run_test": "pnpm run start"
     }
+  }
 }

@@ -1,8 +1,8 @@
 {
-  "packages": [
-    "nodejs@18",
-    "yarn@1.22"
-  ],
+  "packages": ["nodejs@latest"],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  },
   "shell": {
     "init_hook": [
       "yarn install"
