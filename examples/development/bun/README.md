@@ -18,6 +18,12 @@ You can see which versions of `bun` are available using:
 devbox search bun
 ```
 
+To update bun to the latest version: 
+
+```bash
+devbox update bun
+```
+
 ## Scripts
 
 To install dependencies:
