@@ -1,15 +1,35 @@
-# bun
+# Bun
+
+Bun projects can be run in Devbox by adding the Bun runtime + package manager to your project.
+
+[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/bun)
+
+[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/bun)
+
+## Add Bun to your Project
+
+```bash
+devbox add bun@latest
+```
+
+You can see which versions of `bun` are available using: 
+
+```bash
+devbox search bun
+```
+
+## Scripts
 
 To install dependencies:
 
 ```bash
-bun install
+devbox run bun install
 ```
 
-To run:
+To start + watch your project:
 
 ```bash
-bun run index.tx
+devbox run dev
 ```
 
 This project was created using `bun init` in bun v1.0.33. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
