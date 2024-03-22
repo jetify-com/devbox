@@ -117,7 +117,14 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 			return errors.WithStack(err)
 		}
 
-		cmd = exec.Command("cp", "-r", projectDir+"/.", envs.WorkDir)
+		workdir := envs.WorkDir + "/path with spaces/foo"
+		if err := os.MkdirAll(workdir, 0o777); err != nil {
+			return errors.WithStack(err)
+		}
+		envs.WorkDir = workdir
+		debug.Log("testrunner setting envs.WorkDir to %s\n", envs.WorkDir)
+
+		cmd = exec.Command("cp", "-r", projectDir+"/.")
 		debug.Log("Running cmd: %s\n", cmd)
 		err = cmd.Run()
 		return errors.WithStack(err)

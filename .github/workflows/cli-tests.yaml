@@ -173,10 +173,14 @@ jobs:
           echo "::group::Resolved Nix config"
           nix show-config --extra-experimental-features nix-command
           echo "::endgroup::"
-          devbox run go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          mkdir -p "path with spaces/foo"
+          devbox run -c "./path with spaces/foo" go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
-        run: devbox run test-projects-only
+        run: |
+          mkdir -p "path with spaces/bar"
+          devbox run -c "./path with spaces/bar" test-projects-only
+        
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     needs: build-devbox
