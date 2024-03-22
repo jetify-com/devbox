@@ -10,10 +10,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -167,6 +169,7 @@ func (m *Manager) createFile(
 	return nil
 }
 
+// buildConfig returns a plugin.Config
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
@@ -185,7 +188,16 @@ func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	return cfg, errors.WithStack(json.Unmarshal(buf.Bytes(), cfg))
+	jsonb, err := jsonPurifyPluginContent(buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, errors.WithStack(json.Unmarshal(jsonb, cfg))
+}
+
+func jsonPurifyPluginContent(content []byte) ([]byte, error) {
+	return hujson.Standardize(slices.Clone(content))
 }
 
 func createDir(path string) error {

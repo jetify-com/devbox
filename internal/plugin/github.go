@@ -43,7 +43,11 @@ func newGithubPlugin(ref flake.Ref) (*githubPlugin, error) {
 }
 
 func (p *githubPlugin) Fetch() ([]byte, error) {
-	return p.FileContent(pluginConfigName)
+	content, err := p.FileContent(pluginConfigName)
+	if err != nil {
+		return nil, err
+	}
+	return jsonPurifyPluginContent(content)
 }
 
 func (p *githubPlugin) CanonicalName() string {
