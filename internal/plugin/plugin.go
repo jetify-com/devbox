@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"cmp"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -227,7 +226,6 @@ func (m *Manager) shouldCreateFile(
 	// We do not overwrite an existing file in devbox.d. That is user-config that is user-controlled
 	// after the initial file creation via the Devbox plugin.
 	if strings.Contains(filePath, "/"+devboxDirName+"/") && fileutil.Exists(filePath) {
-		fmt.Printf("false for shouldCreateFile b/c it exists: %s\n", filePath)
 		return false
 	}
 
