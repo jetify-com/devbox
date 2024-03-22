@@ -19,6 +19,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/nix/flake"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -69,15 +70,19 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		return nil, errors.WithStack(err)
 	}
 
+	flakeRef, err := flake.ParseRef("path:" + flakeDirResolved)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(data) == 0 {
 		cmd := exec.CommandContext(
 			ctx,
-			"nix", "print-dev-env",
-			"path:"+flakeDirResolved,
+			"nix", "print-dev-env", flakeRef.String(),
 		)
 		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 		cmd.Args = append(cmd.Args, "--json")
-		debug.Log("Running print-dev-env cmd: %s\n", cmd)
+		debug.Log("Running print-dev-env cmd: %s\n\n\n", cmd)
 		data, err = cmd.Output()
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr

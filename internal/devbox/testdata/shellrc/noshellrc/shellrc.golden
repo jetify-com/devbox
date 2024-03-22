@@ -15,7 +15,7 @@ working_dir="$(pwd)"
 cd "/path/to/projectDir" || exit
 
 # Source the hooks file, which contains the project's init hooks and plugin hooks.
-. /path/to/projectDir/.devbox/gen/scripts/.hooks.sh
+. "/path/to/projectDir/.devbox/gen/scripts/.hooks.sh"
 
 cd "$working_dir" || exit
 
