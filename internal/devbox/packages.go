@@ -294,7 +294,7 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 	d.lockfile.Tidy()
 
 	// Update lockfile with new packages that are not to be installed
-	for _, pkg := range d.ConfigPackages() {
+	for _, pkg := range d.AllPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
 			return err
 		}

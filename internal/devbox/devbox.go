@@ -176,7 +176,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 
 	buf := bytes.Buffer{}
 	buf.WriteString(h)
-	for _, pkg := range d.ConfigPackages() {
+	for _, pkg := range d.AllPackages() {
 		buf.WriteString(pkg.Hash())
 	}
 	for _, pluginConfig := range d.cfg.IncludedPluginConfigs() {
@@ -1033,21 +1033,28 @@ func (d *Devbox) PackageNames() []string {
 	return d.cfg.PackagesVersionedNames()
 }
 
-// ConfigPackages returns the packages that are defined in devbox.json
-// NOTE: the return type is different from devconfig.Packages
-func (d *Devbox) ConfigPackages() []*devpkg.Package {
+// AllPackages returns the packages that are defined in devbox.json and
+// recursively added by plugins.
+// * NOTE1: This will not return packages removed by their plugin with the
+// __remove_trigger_package field.
+// * NOTE2: the return type is different from devconfig.Packages
+func (d *Devbox) AllPackages() []*devpkg.Package {
 	return devpkg.PackagesFromConfig(d.cfg.Packages(), d.lockfile)
+}
+
+func (d *Devbox) TopLevelPackages() []*devpkg.Package {
+	return devpkg.PackagesFromConfig(d.cfg.Root.TopLevelPackages(), d.lockfile)
 }
 
 // InstallablePackages returns the packages that are to be installed
 func (d *Devbox) InstallablePackages() []*devpkg.Package {
-	return lo.Filter(d.ConfigPackages(), func(pkg *devpkg.Package, _ int) bool {
+	return lo.Filter(d.AllPackages(), func(pkg *devpkg.Package, _ int) bool {
 		return pkg.IsInstallable()
 	})
 }
 
 func (d *Devbox) HasDeprecatedPackages() bool {
-	for _, pkg := range d.ConfigPackages() {
+	for _, pkg := range d.AllPackages() {
 		if pkg.IsLegacy() {
 			return true
 		}
@@ -1060,7 +1067,7 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 		return nil, errors.New("package name cannot be empty")
 	}
 	results := map[*devpkg.Package]bool{}
-	for _, pkg := range d.ConfigPackages() {
+	for _, pkg := range d.TopLevelPackages() {
 		if pkg.Raw == name || pkg.CanonicalName() == name {
 			results[pkg] = true
 		}
