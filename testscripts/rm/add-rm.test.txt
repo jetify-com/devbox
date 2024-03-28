@@ -1,20 +1,20 @@
 exec devbox init
 
-exec devbox add hello vim cowsay
+exec devbox add hello vim cowsay php
 json.superset devbox.json all.json
 
-exec devbox rm vim hello
+exec devbox rm vim hello php
 json.superset devbox.json cowsay.json
 
-exec devbox add vim hello vim hello vim hello vim hello cowsay
+exec devbox add vim hello vim hello vim hello vim hello cowsay php php
 json.superset devbox.json all.json
 
-exec devbox rm vim hello cowsay cowsay
+exec devbox rm vim hello cowsay cowsay php
 json.superset devbox.json empty.json
 
 -- all.json --
 {
-  "packages": ["hello@latest", "vim@latest", "cowsay@latest"]
+  "packages": ["hello@latest", "vim@latest", "cowsay@latest", "php@latest"]
 }
 
 -- cowsay.json --

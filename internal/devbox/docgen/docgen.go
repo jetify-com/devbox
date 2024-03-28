@@ -56,7 +56,8 @@ func GenerateReadme(
 		"Scripts":     devbox.Config().Scripts(),
 		"EnvVars":     devbox.Config().Env(),
 		"InitHook":    devbox.Config().InitHook(),
-		"Packages":    devbox.ConfigPackages(),
+		"Packages":    devbox.TopLevelPackages(),
+		// TODO add includes
 	})
 }
 
