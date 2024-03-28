@@ -9,7 +9,7 @@
 
 if [ -z "${{ .InitHookHash }}" ]; then
     {{/* init hooks will export InitHookHash ensuring no recursive sourcing*/ -}}
-    . "{{ .InitHookPath }}"
+    . {{ .InitHookPath }}
 fi
 
 {{ .Body }}

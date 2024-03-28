@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 )
 
-func RunScript(projectDir string, cmdWithArgs []string, env map[string]string) error {
-	if len(cmdWithArgs) == 0 {
+func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
+	if cmdWithArgs == "" {
 		return errors.New("attempted to run an empty command or script")
 	}
 
@@ -25,13 +24,9 @@ func RunScript(projectDir string, cmdWithArgs []string, env map[string]string) e
 		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	// Wrap in quotations since the command's path may contain spaces.
-	cmdWithArgs[0] = "\"" + cmdWithArgs[0] + "\""
-	cmdWithArgsStr := strings.Join(cmdWithArgs, " ")
-
 	// Try to find sh in the PATH, if not, default to a well known absolute path.
 	shPath := cmdutil.GetPathOrDefault("sh", "/bin/sh")
-	cmd := exec.Command(shPath, "-c", cmdWithArgsStr)
+	cmd := exec.Command(shPath, "-c", cmdWithArgs)
 	cmd.Env = envPairs
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin

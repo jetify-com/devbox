@@ -5,5 +5,5 @@ Code here should be fish and POSIX compatible. That's why we use export to
 remove the value
 */ -}}
 export {{ .InitHookHash }}=true
-. "{{ .RawHooksFile }}"
+. {{ .RawHooksFile }}
 export {{ .InitHookHash }}=""
