@@ -15,7 +15,7 @@ Devbox and Nix install your packages in the read-only Nix store, usually located
 
 ## How do I clean up unused packages from the Nix Store?
 
-You can use `devbox run -- nix store gc` to automatically clean up packages that are no longer needed for your projects.
+You can use `devbox run -- nix store gc --extra-experimental-features nix-command` to automatically clean up packages that are no longer needed for your projects.
 
 ## Does Devbox require Docker or Containers to work?
 
