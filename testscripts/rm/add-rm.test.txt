@@ -9,7 +9,7 @@ json.superset devbox.json cowsay.json
 exec devbox add vim hello vim hello vim hello vim hello cowsay php php
 json.superset devbox.json all.json
 
-exec devbox rm vim hello cowsay cowsay
+exec devbox rm vim hello cowsay cowsay php
 json.superset devbox.json empty.json
 
 -- all.json --
