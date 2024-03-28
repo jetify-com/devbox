@@ -9,17 +9,16 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
+
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
-	"os"
-	"os/exec"
-	"os/signal"
-	"syscall"
 )
 
-func RunScript(projectDir string, cmdWithArgs []string, env map[string]string) error {
+func RunScript(ctx context.Context, projectDir string, cmdWithArgs []string, env map[string]string) error {
 	if len(cmdWithArgs) == 0 {
 		return errors.New("attempted to run an empty command or script")
 	}
