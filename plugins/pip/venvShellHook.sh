@@ -5,4 +5,4 @@ if ! [ -d "$VENV_DIR" ]; then
     python3 -m venv "$VENV_DIR"
 fi
 
-echo "You can activate the virtual environment by running 'source \$VENV_DIR/bin/activate'" >&2
+echo "You can activate the virtual environment by running '. \$VENV_DIR/bin/activate' (for fish shell, replace '.' with 'source')" >&2
