@@ -1035,9 +1035,8 @@ func (d *Devbox) PackageNames() []string {
 
 // AllPackages returns the packages that are defined in devbox.json and
 // recursively added by plugins.
-// * NOTE1: This will not return packages removed by their plugin with the
+// NOTE: This will not return packages removed by their plugin with the
 // __remove_trigger_package field.
-// * NOTE2: the return type is different from devconfig.Packages
 func (d *Devbox) AllPackages() []*devpkg.Package {
 	return devpkg.PackagesFromConfig(d.cfg.Packages(), d.lockfile)
 }
