@@ -16,11 +16,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/fileutil"
-
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/services"
@@ -229,20 +227,16 @@ func (m *Manager) shouldCreateFile(
 	pkg *lock.Package,
 	filePath string,
 ) bool {
+	sep := string(filepath.Separator)
+
 	// Only create files in devbox.d directory if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
-	if strings.Contains(filePath, "/"+devboxDirName+"/") && pluginInstalled {
-		return false
-	}
-
-	// We do not overwrite an existing file in devbox.d. That is user-config that is user-controlled
-	// after the initial file creation via the Devbox plugin.
-	if strings.Contains(filePath, "/"+devboxDirName+"/") && fileutil.Exists(filePath) {
+	if strings.Contains(filePath, sep+devboxDirName+sep) && pluginInstalled {
 		return false
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, "/"+devboxHiddenDirName+"/") {
+	if strings.Contains(filePath, sep+devboxHiddenDirName+sep) {
 		return true
 	}
 	_, err := os.Stat(filePath)
