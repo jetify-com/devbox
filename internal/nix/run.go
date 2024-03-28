@@ -7,13 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"syscall"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 )
 
 func RunScript(ctx context.Context, projectDir, cmdWithArgs string, env map[string]string) error {
@@ -34,9 +34,28 @@ func RunScript(ctx context.Context, projectDir, cmdWithArgs string, env map[stri
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Cancel = func() error {
-		return syscall.Kill(cmd.Process.Pid, syscall.SIGTERM)
-	}
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	c := make(chan os.Signal, 1)
+
+	// Propagate all signals to the process group.
+	signal.Notify(c)
+
+	defer func() {
+		signal.Stop(c)
+	}()
+	go func() {
+		select {
+		case s := <-c:
+			// Propagate the signal to the process group.
+			signum := s.(syscall.Signal)
+			err := syscall.Kill(-cmd.Process.Pid, signum)
+			if err != nil {
+				debug.Log("Failed to signal process group with %v: %v", signum, err)
+			}
+		case <-ctx.Done():
+		}
+	}()
 
 	debug.Log("Executing: %v", cmd.Args)
 	// Report error as exec error when executing scripts.
