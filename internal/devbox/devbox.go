@@ -282,7 +282,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
-	return nix.RunScript(ctx, d.projectDir, strings.Join(cmdWithArgs, " "), env)
+	return nix.RunScript(d.projectDir, cmdWithArgs, env)
 }
 
 // Install ensures that all the packages in the config are installed
@@ -782,7 +782,7 @@ func (d *Devbox) StartProcessManager(
 		oldProcessComposePkg := "github:F1bonacc1/process-compose/" + pcVersion + "#defaultPackage." + nix.System()
 		newProcessComposePkg := "github:F1bonacc1/process-compose/" + processComposeTargetVersion
 		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(oldProcessComposePkg); err != nil {
+		if err := d.removeDevboxUtilityPackage(ctx, oldProcessComposePkg); err != nil {
 			return err
 		}
 

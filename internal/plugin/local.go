@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/nix/flake"
 )
@@ -26,7 +27,11 @@ func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 }
 
 func (l *LocalPlugin) Fetch() ([]byte, error) {
-	return os.ReadFile(addFilenameIfMissing(l.Path()))
+	content, err := os.ReadFile(addFilenameIfMissing(l.Path()))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return jsonPurifyPluginContent(content)
 }
 
 func (l *LocalPlugin) CanonicalName() string {

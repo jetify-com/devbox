@@ -257,7 +257,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		if upToDate {
 			return nil
 		}
-		ux.Finfo(d.stderr, "Ensuring packages are installed.")
+		ux.Finfo(d.stderr, "Ensuring packages are installed.\n")
 	}
 
 	if mode == install || mode == update || mode == ensure {

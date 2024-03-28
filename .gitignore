@@ -37,3 +37,4 @@ __pycache__/
 
 # deployment
 .vercel
+.yarn

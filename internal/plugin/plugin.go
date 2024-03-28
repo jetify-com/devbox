@@ -10,12 +10,15 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"github.com/tailscale/hujson"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/fileutil"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
@@ -24,6 +27,7 @@ import (
 )
 
 const (
+	// TODO rename to devboxPluginUserConfigDirName
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
 	pluginConfigName    = "plugin.json"
@@ -165,6 +169,7 @@ func (m *Manager) createFile(
 	return nil
 }
 
+// buildConfig returns a plugin.Config
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
@@ -183,7 +188,16 @@ func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	return cfg, errors.WithStack(json.Unmarshal(buf.Bytes(), cfg))
+	jsonb, err := jsonPurifyPluginContent(buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, errors.WithStack(json.Unmarshal(jsonb, cfg))
+}
+
+func jsonPurifyPluginContent(content []byte) ([]byte, error) {
+	return hujson.Standardize(slices.Clone(content))
 }
 
 func createDir(path string) error {
@@ -215,14 +229,20 @@ func (m *Manager) shouldCreateFile(
 	pkg *lock.Package,
 	filePath string,
 ) bool {
-	// Only create files in devboxDir if they are not in the lockfile
+	// Only create files in devbox.d directory if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
-	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
+	if strings.Contains(filePath, "/"+devboxDirName+"/") && pluginInstalled {
+		return false
+	}
+
+	// We do not overwrite an existing file in devbox.d. That is user-config that is user-controlled
+	// after the initial file creation via the Devbox plugin.
+	if strings.Contains(filePath, "/"+devboxDirName+"/") && fileutil.Exists(filePath) {
 		return false
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) {
+	if strings.Contains(filePath, "/"+devboxHiddenDirName+"/") {
 		return true
 	}
 	_, err := os.Stat(filePath)

@@ -30,7 +30,7 @@ devbox create [dir] --template <template> [flags]
 | Option | Description |
 | --- | --- |
 | `-h, --help` | help for init |
-| `-t, --template string` | Template to use for the project.
+| `-t, --template string` | Template to use for the project.|
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
