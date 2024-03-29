@@ -87,3 +87,7 @@ func SuccessRedirect() string {
 	}
 	return "https://auth.jetpack.io/account/login/success"
 }
+
+func Audience() []string {
+	return []string{"https://api.jetpack.io"}
+}
