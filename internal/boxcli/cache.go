@@ -29,7 +29,7 @@ func cacheCmd() *cobra.Command {
 		Aliases: []string{"copy"}, // This mimics the nix command
 		Short:   "upload specified or nix packages in current project to cache",
 		Long: heredoc.Doc(`
-			Upload specified nix installable or packages in current project to cache.
+			Upload specified nix installable or nix packages in current project to cache.
 			If [installable] is provided, only that installable will be uploaded. 
 			Otherwise, all packages in the project will be uploaded.
 			To upload to specific cache, use --to flag. Otherwise, a cache from 
