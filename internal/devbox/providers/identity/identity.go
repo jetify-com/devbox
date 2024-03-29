@@ -32,5 +32,6 @@ func (p *Provider) AuthClient() (*auth.Client, error) {
 		build.ClientID(),
 		scopes,
 		build.SuccessRedirect(),
+		build.Audience(),
 	)
 }
