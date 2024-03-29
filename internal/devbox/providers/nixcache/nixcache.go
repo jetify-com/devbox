@@ -64,7 +64,7 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 		return NixCacheConfig{}, err
 	}
 
-	ensureTrustedUser(ctx)
+	checkIfUserCanAddSubstituter(ctx)
 
 	return NixCacheConfig{
 		URI: binCacheResponse.NixBinCacheUri,
@@ -76,7 +76,7 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 	}, nil
 }
 
-func ensureTrustedUser(ctx context.Context) {
+func checkIfUserCanAddSubstituter(ctx context.Context) {
 	// we need to ensure that the user can actually use the extra
 	// substituter. If the user did a root install, then we need to add
 	// the trusted user/substituter to the nix.conf file and restart the daemon.
