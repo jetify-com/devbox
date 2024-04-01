@@ -64,7 +64,7 @@ func Issuer() string {
 	if IsDev {
 		return "https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com"
 	}
-	return "https://accounts.jetpack.io"
+	return "https://accounts.jetify.com"
 }
 
 func ClientID() string {
