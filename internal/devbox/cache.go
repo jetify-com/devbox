@@ -25,7 +25,9 @@ func (d *Devbox) UploadProjectToCache(
 		return err
 	}
 
-	return nix.CopyInstallableToCache(ctx, d.stderr, cacheConfig.URI, profilePath)
+	return nix.CopyInstallableToCache(
+		ctx,
+		d.stderr, cacheConfig.URI, profilePath, cacheConfig.CredentialsEnvVars())
 }
 
 func UploadInstallableToCache(
@@ -41,5 +43,7 @@ func UploadInstallableToCache(
 			return err
 		}
 	}
-	return nix.CopyInstallableToCache(ctx, stderr, cacheConfig.URI, installable)
+	return nix.CopyInstallableToCache(
+		ctx,
+		stderr, cacheConfig.URI, installable, cacheConfig.CredentialsEnvVars())
 }
