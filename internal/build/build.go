@@ -85,7 +85,7 @@ func SuccessRedirect() string {
 	if IsDev {
 		return "https://auth.jetpack.dev/account/login/success"
 	}
-	return "https://auth.jetpack.io/account/login/success"
+	return "https://auth.jetify.com/account/login/success"
 }
 
 func Audience() []string {
