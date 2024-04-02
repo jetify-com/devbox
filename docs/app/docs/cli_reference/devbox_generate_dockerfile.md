@@ -24,5 +24,4 @@ devbox generate dockerfile [flags]
 
 ## SEE ALSO
 
-* [devbox generate](devbox_generate.md)	 - 
-
+* [devbox generate](devbox_generate.md)	 - Generate supporting files for your project
