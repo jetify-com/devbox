@@ -15,6 +15,7 @@ func CopyInstallableToCache(
 	// paths into "path" flakes which is not what we want for /nix/store paths.
 	// TODO: Add support for store paths in flake.Installable
 	to, installable string,
+	env []string,
 ) error {
 	fmt.Fprintf(out, "Copying %s to %s\n", installable, to)
 	cmd := commandContext(
@@ -30,6 +31,7 @@ func CopyInstallableToCache(
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = out
 	cmd.Stderr = out
+	cmd.Env = append(os.Environ(), env...)
 
 	return cmd.Run()
 }
