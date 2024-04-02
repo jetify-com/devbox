@@ -19,4 +19,4 @@ devbox generate direnv [flags]
 
 ## SEE ALSO
 
-* [devbox](devbox.md)	 - Instant, easy, predictable development environments
+* [devbox generate](devbox_generate.md)	 - Generate supporting files for your project

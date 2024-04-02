@@ -53,10 +53,11 @@ func GenerateReadme(
 	return tmpl.Execute(f, map[string]any{
 		"Name":        devbox.Config().Root.Name,
 		"Description": devbox.Config().Root.Description,
-		"Scripts":     devbox.Config().Scripts(),
-		"EnvVars":     devbox.Config().Env(),
-		"InitHook":    devbox.Config().InitHook(),
-		"Packages":    devbox.TopLevelPackages(),
+		"Scripts": devbox.Config().Scripts().
+			WithRelativePaths(devbox.ProjectDir()),
+		"EnvVars":  devbox.Config().Env(),
+		"InitHook": devbox.Config().InitHook(),
+		"Packages": devbox.TopLevelPackages(),
 		// TODO add includes
 	})
 }

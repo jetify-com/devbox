@@ -5,6 +5,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetpack.io/envsec/pkg/stores/jetstore"
 	"go.jetpack.io/pkg/envvar"
 )
 
@@ -17,6 +18,7 @@ func (d *Devbox) UninitializedSecrets(ctx context.Context) *envsec.Envsec {
 		},
 		IsDev:      build.IsDev,
 		Stderr:     d.stderr,
+		Store:      &jetstore.JetpackAPIStore{},
 		WorkingDir: d.ProjectDir(),
 	}
 }
