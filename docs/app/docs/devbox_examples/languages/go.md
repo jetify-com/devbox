@@ -29,3 +29,30 @@ If you need additional C libraries, you can add them along with `gcc` to your pa
     "libcap"
 ]
 ```
+
+## Installing go packages that have CLIs
+
+Installing go packages in your devbox shell is as simple as `go get <package_name>` but some packages come with a CLI of their own (e.g., `godotenv`). That means after installing the package you should be able to use the CLI binary and also control where that binary is installed. This is done by setting `$GOPATH` or `$GOBIN` env variable. 
+
+With Devbox you can set these variables in the `"env"` section of your `devbox.json` file. 
+In the example below we are setting `$GOPATH` to be the same directory of our project and therefore `godotenv` binary will be located in the `bin/` subdirectory of `$GOPATH`:
+
+```json
+{
+  "packages": [
+    "go@latest"
+  ],
+  "env": {
+    "GOPATH": "$PWD",
+    "PATH": "$PATH:$PWD/bin"
+  },
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {}
+  }
+}
+```
+
+Running `go install github.com/joho/godotenv/cmd/godotenv@latest` will create a `bin/` subdirectory in my project and puts `godotenv` there. Since I also added that subdirectory to my `$PATH`, my devbox shell can now recognize the `godotenv` binary and I can run commands like `godotenv -h` to use `godotenv` in CLI mode.
