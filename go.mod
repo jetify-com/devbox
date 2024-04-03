@@ -41,8 +41,10 @@ require (
 	github.com/zealic/go2node v0.1.0
 	go.jetpack.io/envsec v0.0.16-0.20240329013200-4174c0acdb00
 	go.jetpack.io/pkg v0.0.0-20240329230128-09e8a66df983
+	go.jetpack.io/typeid v1.0.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/mod v0.16.0
+	golang.org/x/oauth2 v0.18.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/tools v0.19.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -123,13 +125,13 @@ require (
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	go.jetpack.io/typeid v1.0.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
+
+replace go.jetpack.io/pkg => ../opensource/pkg
