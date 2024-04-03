@@ -67,7 +67,7 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 		"aws-nix-bin-cache",
 		func() (*nixv1alpha1.GetBinCacheResponse, time.Time, error) {
 			r, err := apiClient.GetBinCache(ctx)
-			if err != nil {
+			if err != nil || r.GetNixBinCacheUri() == "" {
 				return nil, time.Time{}, err
 			}
 			return r, r.GetNixBinCacheCredentials().Expiration.AsTime(), nil
