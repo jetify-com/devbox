@@ -90,3 +90,55 @@ func parseStorePathFromInstallableOutput(installable string, output []byte) ([]s
 
 	return nil, fmt.Errorf("failed to parse store path from installable (%s) output: %s", installable, output)
 }
+
+// DaemonError reports an unsuccessful attempt to connect to the Nix daemon.
+type DaemonError struct {
+	cmd    string
+	stderr []byte
+	err    error
+}
+
+func (e *DaemonError) Error() string {
+	if len(e.stderr) != 0 {
+		return e.Redact() + ": " + string(e.stderr)
+	}
+	return e.Redact()
+}
+
+func (e *DaemonError) Unwrap() error {
+	return e.err
+}
+
+func (e *DaemonError) Redact() string {
+	// Don't include e.stderr in redacted messages because it can contain
+	// things like paths and usernames.
+	return fmt.Sprintf("command %s: %s", e.cmd, e.err)
+}
+
+// DaemonVersion returns the version of the currently running Nix daemon.
+func DaemonVersion(ctx context.Context) (string, error) {
+	cmd := commandContext(ctx, "store", "info", "--json", "--store", "daemon")
+	out, err := cmd.Output()
+
+	// ExitError means the command ran, but couldn't connect.
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return "", &DaemonError{
+			cmd:    cmd.String(),
+			stderr: exitErr.Stderr,
+			err:    err,
+		}
+	}
+
+	// All other errors mean we couldn't launch the Nix CLI (either it is
+	// missing or not executable).
+	if err != nil {
+		return "", redact.Errorf("command %s: %s", redact.Safe(cmd), err)
+	}
+
+	info := struct{ Version string }{}
+	if err := json.Unmarshal(out, &info); err != nil {
+		return "", redact.Errorf("%s: unmarshal JSON output: %s", redact.Safe(cmd.String()), err)
+	}
+	return info.Version, nil
+}
