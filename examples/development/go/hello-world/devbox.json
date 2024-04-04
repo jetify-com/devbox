@@ -2,6 +2,10 @@
     "packages": [
         "go@1.19.8"
     ],
+    "env": {
+        "GOPATH": "$HOME/go/",
+        "PATH": "$PATH:$HOME/go/bin"
+    },
     "shell": {
         "init_hook": [
             "export \"GOROOT=$(go env GOROOT)\""
