@@ -3,8 +3,8 @@
         "go@1.19.8"
     ],
     "env": {
-        "GOPATH": "$PWD",
-        "PATH": "$PATH:$PWD/bin"
+        "GOPATH": "$HOME/go/",
+        "PATH": "$PATH:$HOME/go/bin"
     },
     "shell": {
         "init_hook": [
