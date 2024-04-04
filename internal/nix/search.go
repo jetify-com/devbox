@@ -136,14 +136,14 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 	key := cacheKey(query)
 
 	// Check if the query was already cached, and return the result if so
-	cache := filecache.New("devbox/nix", filecache.WithCacheDir(xdg.CacheSubpath("")))
-	if cachedResults, err := cache.Get(key); err == nil {
-		var results map[string]*Info
-		if err := json.Unmarshal(cachedResults, &results); err != nil {
-			return nil, err
-		}
+	cache := filecache.New(
+		"devbox/nix",
+		filecache.WithCacheDir[map[string]*Info](xdg.CacheSubpath("")),
+	)
+
+	if results, err := cache.Get(key); err == nil {
 		return results, nil
-	} else if !filecacheIsCacheMiss(err) {
+	} else if !filecache.IsCacheMiss(err) {
 		return nil, err // genuine error
 	}
 
@@ -154,25 +154,15 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 	}
 
 	// Save the results to the cache
-	marshalled, err := json.Marshal(infos)
-	if err != nil {
-		return nil, err
-	}
 	// TODO savil: add a SetForever API that does not expire. Time based expiration is not needed here
 	// because we're caching results that are guaranteed to be stable.
 	// TODO savil: Make filecache.cache a public struct so it can be passed into other functions
 	const oneYear = 12 * 30 * 24 * time.Hour
-	if err := cache.Set(key, marshalled, oneYear); err != nil {
+	if err := cache.Set(key, infos, oneYear); err != nil {
 		return nil, err
 	}
 
 	return infos, nil
-}
-
-// read as: filecache.IsCacheMiss(err)
-// TODO savil: this should be implemented in the filecache package
-func filecacheIsCacheMiss(err error) bool {
-	return errors.Is(err, filecache.NotFound) || errors.Is(err, filecache.Expired)
 }
 
 // cacheKey sanitizes the search query to be a valid unix filename.

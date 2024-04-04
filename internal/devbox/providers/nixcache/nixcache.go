@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
@@ -12,7 +13,9 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/pkg/api"
+	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
 	"go.jetpack.io/pkg/auth"
+	"go.jetpack.io/pkg/filecache"
 )
 
 type Provider struct{}
@@ -59,7 +62,17 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 	}
 
 	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), token)
-	binCacheResponse, err := apiClient.GetBinCache(ctx)
+	cache := filecache.New[*nixv1alpha1.GetBinCacheResponse]("devbox/credentials")
+	binCacheResponse, err := cache.GetOrSetWithTime(
+		"aws-nix-bin-cache",
+		func() (*nixv1alpha1.GetBinCacheResponse, time.Time, error) {
+			r, err := apiClient.GetBinCache(ctx)
+			if err != nil || r.GetNixBinCacheUri() == "" {
+				return nil, time.Time{}, err
+			}
+			return r, r.GetNixBinCacheCredentials().Expiration.AsTime(), nil
+		},
+	)
 	if err != nil {
 		return NixCacheConfig{}, err
 	}
