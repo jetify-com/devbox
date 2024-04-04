@@ -63,7 +63,7 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 
 	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), token)
 	cache := filecache.New[*nixv1alpha1.GetBinCacheResponse]("devbox/credentials")
-	binCacheResponse, err := cache.GetOrSetT(
+	binCacheResponse, err := cache.GetOrSetWithTime(
 		"aws-nix-bin-cache",
 		func() (*nixv1alpha1.GetBinCacheResponse, time.Time, error) {
 			r, err := apiClient.GetBinCache(ctx)
