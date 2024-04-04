@@ -165,12 +165,6 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 	return infos, nil
 }
 
-// read as: filecache.IsCacheMiss(err)
-// TODO savil: this should be implemented in the filecache package
-func filecacheIsCacheMiss(err error) bool {
-	return errors.Is(err, filecache.NotFound) || errors.Is(err, filecache.Expired)
-}
-
 // cacheKey sanitizes the search query to be a valid unix filename.
 // This cache key is used as the filename to store the cache value, and having a
 // representation of the query is important for debuggability.

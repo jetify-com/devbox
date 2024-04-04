@@ -73,7 +73,6 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 			return r, r.GetNixBinCacheCredentials().Expiration.AsTime(), nil
 		},
 	)
-
 	if err != nil {
 		return NixCacheConfig{}, err
 	}
