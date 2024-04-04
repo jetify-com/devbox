@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"encoding/json"
+	"os/user"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/pkg/errors"
@@ -33,9 +34,9 @@ func cacheCmd() *cobra.Command {
 		Short:   "upload specified or nix packages in current project to cache",
 		Long: heredoc.Doc(`
 			Upload specified nix installable or nix packages in current project to cache.
-			If [installable] is provided, only that installable will be uploaded. 
+			If [installable] is provided, only that installable will be uploaded.
 			Otherwise, all packages in the project will be uploaded.
-			To upload to specific cache, use --to flag. Otherwise, a cache from 
+			To upload to specific cache, use --to flag. Otherwise, a cache from
 			the cache provider will be used, if available.
 		`),
 		Args: cobra.MaximumNArgs(1),
@@ -61,10 +62,30 @@ func cacheCmd() *cobra.Command {
 		&flags.to, "to", "", "URI of the cache to copy to")
 
 	cacheCommand.AddCommand(uploadCommand)
+	cacheCommand.AddCommand(cacheConfigureCmd())
 	cacheCommand.AddCommand(cacheCredentialsCmd())
 	cacheCommand.Hidden = true
 
 	return cacheCommand
+}
+
+func cacheConfigureCmd() *cobra.Command {
+	username := ""
+	cmd := &cobra.Command{
+		Use:    "configure",
+		Short:  "Configure Nix to use the Devbox cache as a substituter",
+		Hidden: true,
+		Args:   cobra.MaximumNArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if username == "" {
+				u, _ := user.Current()
+				username = u.Username
+			}
+			return nixcache.Get().ConfigureAWS(cmd.Context(), username)
+		},
+	}
+	cmd.Flags().StringVar(&username, "user", "", "")
+	return cmd
 }
 
 func cacheCredentialsCmd() *cobra.Command {
@@ -74,28 +95,16 @@ func cacheCredentialsCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := nixcache.Get().Config(cmd.Context())
+			creds, err := nixcache.Get().Credentials(cmd.Context())
 			if err != nil {
 				return err
-			}
-
-			creds := struct {
-				Version         int    `json:"Version"`
-				AccessKeyID     string `json:"AccessKeyId"`
-				SecretAccessKey string `json:"SecretAccessKey"`
-				SessionToken    string `json:"SessionToken"`
-			}{
-				Version:         1,
-				AccessKeyID:     *cfg.Credentials.AccessKeyId,
-				SecretAccessKey: *cfg.Credentials.SecretKey,
-				SessionToken:    *cfg.Credentials.SessionToken,
 			}
 			out, err := json.Marshal(creds)
 			if err != nil {
 				return err
 			}
-			_, _ = cmd.OutOrStdout().Write(out)
-			return nil
+			_, err = cmd.OutOrStdout().Write(out)
+			return err
 		},
 	}
 }
