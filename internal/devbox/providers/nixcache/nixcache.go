@@ -70,7 +70,7 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 			if err != nil || r.GetNixBinCacheUri() == "" {
 				return nil, time.Time{}, err
 			}
-			return r, r.GetNixBinCacheCredentials().Expiration.AsTime(), nil
+			return r, time.Now().Add(1 * time.Hour), nil
 		},
 	)
 	if err != nil {
@@ -78,13 +78,16 @@ func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
 	}
 
 	checkIfUserCanAddSubstituter(ctx)
-
+	credentials, err := apiClient.GetAWSCredentials(ctx)
+	if err != nil {
+		return NixCacheConfig{}, err
+	}
 	return NixCacheConfig{
 		URI: binCacheResponse.NixBinCacheUri,
 		Credentials: types.Credentials{
-			AccessKeyId:  aws.String(binCacheResponse.GetNixBinCacheCredentials().GetAccessKeyId()),
-			SecretKey:    aws.String(binCacheResponse.GetNixBinCacheCredentials().GetSecretKey()),
-			SessionToken: aws.String(binCacheResponse.GetNixBinCacheCredentials().GetSessionToken()),
+			AccessKeyId:  aws.String(credentials.GetAccessKeyId()),
+			SecretKey:    aws.String(credentials.GetSecretKey()),
+			SessionToken: aws.String(credentials.GetSessionToken()),
 		},
 	}, nil
 }
