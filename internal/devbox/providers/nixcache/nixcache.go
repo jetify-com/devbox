@@ -13,6 +13,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
@@ -72,9 +73,9 @@ func (p *Provider) rootAWSConfigPath() (string, error) {
 }
 
 func (p *Provider) configureRoot(username string) error {
-	exe, err := os.Executable()
-	if err != nil {
-		return redact.Errorf("get path to current devbox executable: %s", err)
+	exe := p.executable()
+	if exe == "" {
+		return redact.Errorf("get path to current devbox executable")
 	}
 	sudo, err := exec.LookPath("sudo")
 	if err != nil {
@@ -129,9 +130,9 @@ func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error
 		return nil
 	}
 
-	exe, err := os.Executable()
-	if err != nil {
-		return redact.Errorf("cannot determine path to current devbox executable: %s", err)
+	exe := p.executable()
+	if exe == "" {
+		return redact.Errorf("get path to current devbox executable")
 	}
 
 	cmd := exec.CommandContext(ctx, "sudo", exe, "cache", "configure", "--user", username)
@@ -143,6 +144,16 @@ func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error
 		return fmt.Errorf("failed to relaunch with sudo: %w", err)
 	}
 	return nil
+}
+
+func (*Provider) executable() string {
+	if exe := os.Getenv(envir.LauncherPath); exe != "" {
+		return exe
+	}
+	if exe, err := os.Executable(); err == nil {
+		return exe
+	}
+	return ""
 }
 
 // Credentials fetches short-lived credentials that grant access to the user's
