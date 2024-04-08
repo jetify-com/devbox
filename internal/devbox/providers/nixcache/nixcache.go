@@ -2,7 +2,6 @@ package nixcache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -148,26 +147,26 @@ func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error
 
 // Credentials fetches short-lived credentials that grant access to the user's
 // private cache.
-func (p *Provider) Credentials(ctx context.Context) (Credentials, error) {
-	cache := filecache.New[Credentials]("devbox/providers/nixcache")
-	creds, err := cache.GetOrSetWithTime("credentials", func() (Credentials, time.Time, error) {
+func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
+	cache := filecache.New[AWSCredentials]("devbox/providers/nixcache")
+	creds, err := cache.GetOrSetWithTime("credentials", func() (AWSCredentials, time.Time, error) {
 		token, err := identity.Get().GenSession(ctx)
 		if err != nil {
-			return Credentials{}, time.Time{}, err
+			return AWSCredentials{}, time.Time{}, err
 		}
 		client := api.NewClient(ctx, build.JetpackAPIHost(), token)
 		creds, err := client.GetAWSCredentials(ctx)
 		if err != nil {
-			return Credentials{}, time.Time{}, err
+			return AWSCredentials{}, time.Time{}, err
 		}
 		exp := time.Time{}
 		if t := creds.GetExpiration(); t != nil {
 			exp = t.AsTime()
 		}
-		return Credentials{aws: newAWSCredentials(creds)}, exp, nil
+		return newAWSCredentials(creds), exp, nil
 	})
 	if err != nil {
-		return Credentials{}, redact.Errorf("nixcache: get credentials: %w", redact.Safe(err))
+		return AWSCredentials{}, redact.Errorf("nixcache: get credentials: %w", redact.Safe(err))
 	}
 	return creds, nil
 }
@@ -221,35 +220,11 @@ func checkIfUserCanAddSubstituter(ctx context.Context) {
 	}
 }
 
-// Credentials are short-lived credentials that grant access to a private Nix
-// cache.
-type Credentials struct {
-	aws awsCredentials
-}
-
-// Env returns the credentials as a slice of environment variables.
-func (c Credentials) Env() []string {
-	return []string{
-		"AWS_ACCESS_KEY_ID=" + c.aws.AccessKeyID,
-		"AWS_SECRET_ACCESS_KEY=" + c.aws.SecretAccessKey,
-		"AWS_SESSION_TOKEN=" + c.aws.SessionToken,
-	}
-}
-
-func (c Credentials) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.aws)
-}
-
-func (c *Credentials) UnmarshalJSON(data []byte) error {
-	if c == nil {
-		c = &Credentials{}
-	}
-	return json.Unmarshal(data, &c.aws)
-}
-
-// awsCredentials marshals AWS credentials to JSON per the schema described in
+// AWSCredentials are short-lived credentials that grant access to a private Nix
+// cache in S3. It marshals to JSON per the schema described in
 // `aws help config-vars` under "Sourcing Credentials From External Processes".
-type awsCredentials struct {
+type AWSCredentials struct {
+	// Version must always be 1.
 	Version         int       `json:"Version"`
 	AccessKeyID     string    `json:"AccessKeyId"`
 	SecretAccessKey string    `json:"SecretAccessKey"`
@@ -257,15 +232,24 @@ type awsCredentials struct {
 	Expiration      time.Time `json:"Expiration"`
 }
 
-func newAWSCredentials(aws *nixv1alpha1.AWSCredentials) awsCredentials {
-	creds := awsCredentials{
+func newAWSCredentials(proto *nixv1alpha1.AWSCredentials) AWSCredentials {
+	creds := AWSCredentials{
 		Version:         1,
-		AccessKeyID:     aws.AccessKeyId,
-		SecretAccessKey: aws.SecretKey,
-		SessionToken:    aws.SessionToken,
+		AccessKeyID:     proto.AccessKeyId,
+		SecretAccessKey: proto.SecretKey,
+		SessionToken:    proto.SessionToken,
 	}
-	if aws.Expiration != nil {
-		creds.Expiration = aws.Expiration.AsTime()
+	if proto.Expiration != nil {
+		creds.Expiration = proto.Expiration.AsTime()
 	}
 	return creds
+}
+
+// Env returns the credentials as a slice of environment variables.
+func (a AWSCredentials) Env() []string {
+	return []string{
+		"AWS_ACCESS_KEY_ID=" + a.AccessKeyID,
+		"AWS_SECRET_ACCESS_KEY=" + a.SecretAccessKey,
+		"AWS_SESSION_TOKEN=" + a.SessionToken,
+	}
 }
