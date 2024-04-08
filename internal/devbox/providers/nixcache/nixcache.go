@@ -71,15 +71,19 @@ func (p *Provider) Credentials(ctx context.Context) (types.Credentials, error) {
 	}
 
 	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), token)
-	cache := filecache.New[*nixv1alpha1.AWSCredentials]("devbox/providers/nixcache")
+	cache := filecache.New[types.Credentials]("devbox/providers/nixcache")
 	credentials, err := cache.GetOrSetWithTime(
 		"aws-credentials",
-		func() (*nixv1alpha1.AWSCredentials, time.Time, error) {
+		func() (types.Credentials, time.Time, error) {
 			r, err := apiClient.GetAWSCredentials(ctx)
 			if err != nil || r.GetAccessKeyId() == "" {
-				return nil, time.Time{}, err
+				return types.Credentials{}, time.Time{}, err
 			}
-			return r, r.GetExpiration().AsTime(), nil
+			return types.Credentials{
+				AccessKeyId:  aws.String(r.GetAccessKeyId()),
+				SecretKey:    aws.String(r.GetSecretKey()),
+				SessionToken: aws.String(r.GetSessionToken()),
+			}, r.GetExpiration().AsTime(), nil
 		},
 	)
 	if err != nil {
@@ -88,11 +92,7 @@ func (p *Provider) Credentials(ctx context.Context) (types.Credentials, error) {
 
 	checkIfUserCanAddSubstituter(ctx)
 
-	return types.Credentials{
-		AccessKeyId:  aws.String(credentials.GetAccessKeyId()),
-		SecretKey:    aws.String(credentials.GetSecretKey()),
-		SessionToken: aws.String(credentials.GetSessionToken()),
-	}, nil
+	return credentials, nil
 }
 
 func checkIfUserCanAddSubstituter(ctx context.Context) {
