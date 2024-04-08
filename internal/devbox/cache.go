@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -12,22 +13,26 @@ func (d *Devbox) UploadProjectToCache(
 	ctx context.Context,
 	cacheURI string,
 ) error {
-	var err error
-	cacheConfig := nixcache.NixCacheConfig{URI: cacheURI}
-	if cacheConfig.URI == "" {
-		cacheConfig, err = d.providers.NixCache.Config(ctx)
+	if cacheURI == "" {
+		var err error
+		cacheURI, err = d.providers.NixCache.URI(ctx)
 		if err != nil {
 			return err
 		}
+		if cacheURI == "" {
+			return usererr.New("Your account's organization doesn't have a Nix cache.")
+		}
+	}
+
+	creds, err := d.providers.NixCache.Credentials(ctx)
+	if err != nil {
+		return err
 	}
 	profilePath, err := d.profilePath()
 	if err != nil {
 		return err
 	}
-
-	return nix.CopyInstallableToCache(
-		ctx,
-		d.stderr, cacheConfig.URI, profilePath, cacheConfig.CredentialsEnvVars())
+	return nix.CopyInstallableToCache(ctx, d.stderr, cacheURI, profilePath, creds.Env())
 }
 
 func UploadInstallableToCache(
@@ -35,15 +40,20 @@ func UploadInstallableToCache(
 	stderr io.Writer,
 	cacheURI, installable string,
 ) error {
-	var err error
-	cacheConfig := nixcache.NixCacheConfig{URI: cacheURI}
-	if cacheConfig.URI == "" {
-		cacheConfig, err = nixcache.Get().Config(ctx)
+	if cacheURI == "" {
+		var err error
+		cacheURI, err = nixcache.Get().URI(ctx)
 		if err != nil {
 			return err
 		}
+		if cacheURI == "" {
+			return usererr.New("Your account's organization doesn't have a Nix cache.")
+		}
 	}
-	return nix.CopyInstallableToCache(
-		ctx,
-		stderr, cacheConfig.URI, installable, cacheConfig.CredentialsEnvVars())
+
+	creds, err := nixcache.Get().Credentials(ctx)
+	if err != nil {
+		return err
+	}
+	return nix.CopyInstallableToCache(ctx, stderr, cacheURI, installable, creds.Env())
 }
