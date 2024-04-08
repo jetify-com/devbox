@@ -12,13 +12,13 @@ Bun projects can be run in Devbox by adding the Bun runtime + package manager to
 devbox add bun@latest
 ```
 
-You can see which versions of `bun` are available using: 
+You can see which versions of `bun` are available using:
 
 ```bash
 devbox search bun
 ```
 
-To update bun to the latest version: 
+To update bun to the latest version:
 
 ```bash
 devbox update bun

@@ -1,4 +1,3 @@
-
 # Python
 
 Python by default will attempt to install your packages globally, or in the Nix Store (which it does not have permissions to modify). To use Python with Devbox, we recommend setting up a Virtual Environment using pipenv or Poetry (see below).
@@ -29,10 +28,7 @@ You can install `pipenv` by adding it to the packages in your `devbox.json`. You
 
 ```json
 {
-    "packages": [
-        "python310",
-        "pipenv"
-    ],
+    "packages": ["python310", "pipenv"],
     "shell": {
         "init_hook": "pipenv shell"
     }

@@ -13,8 +13,9 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 1. Create a new Laravel App by running `devbox create --template laravel`. This will create a new Laravel project in your current directory.
 
 1. Start your MariaDB and Redis services by running `devbox services up`.
-   1. This step will also create an empty MariaDB Data Directory and initialize your database with the default settings
-   2. This will also start the php-fpm service for serving your PHP project over fcgi. Learn more about [PHP-FPM](https://www.php.net/manual/en/install.fpm.php)
+
+    1. This step will also create an empty MariaDB Data Directory and initialize your database with the default settings
+    2. This will also start the php-fpm service for serving your PHP project over fcgi. Learn more about [PHP-FPM](https://www.php.net/manual/en/install.fpm.php)
 
 1. Create the laravel database by running `devbox run db:create`, and then run Laravel's initial migrations using `devbox run db:migrate`
 
@@ -23,7 +24,6 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 1. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
 
 1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
-
 
 ## How to Recreate this Example
 

@@ -45,7 +45,7 @@ The PHP Plugin will provide the following configuration when you install a PHP r
 
 ### Services
 
-* php-fpm
+-   php-fpm
 
 Use `devbox services start|stop php-fpm` to start PHP-FPM in the background.
 
@@ -60,7 +60,7 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 
 ### Helper Files
 
-* {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
-* {PROJECT_DIR}/devbox.d/php81/php.ini
+-   {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
+-   {PROJECT_DIR}/devbox.d/php81/php.ini
 
 You can modify these files to configure PHP or your PHP-FPM server

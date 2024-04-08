@@ -43,13 +43,9 @@ An example `devbox.json` would look like the following:
 
 ```json
 {
-  "packages": [
-    "maven",
-    "jdk",
-    "binutils"
-  ],
-  "shell": {
-    "init_hook": null
-  }
+    "packages": ["maven", "jdk", "binutils"],
+    "shell": {
+        "init_hook": null
+    }
 }
 ```

@@ -23,18 +23,16 @@ Plugins are defined as Go JSON Template files, using the following schema:
 
 ```json
 {
-  "name": "",
-  "version": "",
-  "description": "",
-  "env": {
-    "<key>": "<value>"
-  },
-  "create_files": {
-    "<destination>": "<source>"
-  },
-  "init_hook": [
-    "<bash commands>"
-  ]
+    "name": "",
+    "version": "",
+    "description": "",
+    "env": {
+        "<key>": "<value>"
+    },
+    "create_files": {
+        "<destination>": "<source>"
+    },
+    "init_hook": ["<bash commands>"]
 }
 ```
 
@@ -63,35 +61,35 @@ flowchart TD
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
-* `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
-* `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
-* `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
+-   `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+-   `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
+-   `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 
 ### Fields
 
-#### `name` *string*
+#### `name` _string_
 
 The name of your plugin. This is used to identify your plugin when a user runs `devbox info`. If `match` is not set, the plugin will automatically activate when a package is added to a devbox.json project that matches `name`.
 
-#### `version` *string*
+#### `version` _string_
 
 The version of your plugin. You should start your version at 0.0.1 and bump it whenever you merge an update to the plugin.
 
-#### `match` *string*
+#### `match` _string_
 
 A regex expression that is used to identify when the plugin will be activated. Devbox will activate your plugin when a package installed with `devbox add` matches this regular expression.
 
 The regex you provide should match a package name. You can look up packages at `nixhub.io`
 
-#### `readme` *string*
+#### `readme` _string_
 
 Special usage instructions or notes to display when your plugin activates or when a user runs `devbox info`. You do not need to document variables, helper files, or services, since these are automatically printed when a user runs `devbox info`.
 
-#### `env` *object*
+#### `env` _object_
 
 A map of `"key" : "value"` pairs used to set environment variables in `devbox shell` when the plugin is activated. These variables will be printed when a user runs `devbox info`, and can be overridden by a user's `devbox.json`.
 
-#### `create_files` *object*
+#### `create_files` _object_
 
 A map of `"destination":"source"` pairs that can be used to create or copy files into the user's devbox directory when the plugin is activated. For example:
 
@@ -105,7 +103,7 @@ Will copy the Caddyfile in the `plugins/caddy` folder to `devbox.d/caddy/Caddyfi
 
 You should use this to copy starter config files or templates needed to run the plugin's package.
 
-#### `init_hook` *string | string[]*
+#### `init_hook` _string | string[]_
 
 A single `bash` command or list of `bash` commands that should run before the user's shell is initialized. This will run every time a shell is started, so you should avoid any resource heavy or long running processes in this step.
 
@@ -119,8 +117,8 @@ See the process compose [docs](https://github.com/F1bonacc1/process-compose) for
 
 ## Tips for Writing Plugins
 
-* Only add plugins for packages that require configuration to work with Devbox.
-* Plugins should try to use the same configuration conventions (environment variables, configuration files) as their packages. This lets developers configure their packages in a way that they are familiar with, using existing documentation.
-* If you think a user may want to override or change a parameter, define it as an environment variable in `env`. This makes it possible for a developer to override the parameter in their `devbox.json` file
-* If you're adding a helper file that you think a developer would want check into source control, create it in `{{ .DevboxDir }}`. If you're creating a file that would not be checked into source control, create it in `{{ .Virtenv }}`.
-* Unless there is a very good reason, we do not recommend creating files outside of `{{ .DevboxDir }}` or `{{ .Virtenv }}`. This helps keep user projects clean and well organized.
+-   Only add plugins for packages that require configuration to work with Devbox.
+-   Plugins should try to use the same configuration conventions (environment variables, configuration files) as their packages. This lets developers configure their packages in a way that they are familiar with, using existing documentation.
+-   If you think a user may want to override or change a parameter, define it as an environment variable in `env`. This makes it possible for a developer to override the parameter in their `devbox.json` file
+-   If you're adding a helper file that you think a developer would want check into source control, create it in `{{ .DevboxDir }}`. If you're creating a file that would not be checked into source control, create it in `{{ .Virtenv }}`.
+-   Unless there is a very good reason, we do not recommend creating files outside of `{{ .DevboxDir }}` or `{{ .Virtenv }}`. This helps keep user projects clean and well organized.

@@ -22,25 +22,30 @@ If the opened workspace in VSCode has a devbox.json file, from command palette, 
 4. Close current VSCode window and reopen it in a devbox shell environment as if VSCode was opened from a devbox shell terminal.
 
 NOTE: Requires devbox CLI v0.5.5 and above
-  installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+<<<<<<< HEAD
+installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+=======
+installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+
+> > > > > > > 895c1b35 (update github links)
 
 ### Run devbox commands from command palette
 
 `cmd/ctrl + shift + p` opens vscode's command palette. Typing devbox filters all available commands devbox extension can run. Those commands are:
 
-- **Init:** Creates a devbox.json file
-- **Add:** adds a package to devbox.json
-- **Remove:** Removes a package from devbox.json
-- **Shell:** Opens a terminal and runs devbox shell
-- **Run:** Runs a script from devbox.json if specified
-- **Install** Install packages specified in devbox.json
-- **Update** Update packages specified in devbox.json
-- **Search** Search for packages to add to your devbox project
-- **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or GitHub Codespaces.
-- **Generate a Dockerfile from devbox.json:** Generates a Dockerfile a project's root directory. This allows for running the devbox project in a container.
-- **Reopen in Devbox shell environment:** Allows projects with devbox.json
-  reopen VSCode in devbox environment. Note: It requires devbox CLI v0.5.5 and above
-  installed and in PATH.
+-   **Init:** Creates a devbox.json file
+-   **Add:** adds a package to devbox.json
+-   **Remove:** Removes a package from devbox.json
+-   **Shell:** Opens a terminal and runs devbox shell
+-   **Run:** Runs a script from devbox.json if specified
+-   **Install** Install packages specified in devbox.json
+-   **Update** Update packages specified in devbox.json
+-   **Search** Search for packages to add to your devbox project
+-   **Generate DevContainer files:** Generates devcontainer.json & Dockerfile inside .devcontainers directory. This allows for running vscode in a container or GitHub Codespaces.
+-   **Generate a Dockerfile from devbox.json:** Generates a Dockerfile a project's root directory. This allows for running the devbox project in a container.
+-   **Reopen in Devbox shell environment:** Allows projects with devbox.json
+    reopen VSCode in devbox environment. Note: It requires devbox CLI v0.5.5 and above
+    installed and in PATH.
 
 ### JSON validation when writing a devbox.json file
 
@@ -56,7 +61,7 @@ Enabling debug mode in extension settings will create a seqience of logs in the 
 
 Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
 
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+-   [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
 
 ## Publishing
 

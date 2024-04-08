@@ -34,6 +34,7 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
     - Replace `jdk` with the version of JDK you want. Get the exact nix-pkg name from `search.nixos.org`.
 2. Then do `devbox shell` to get a shell with that `jdk` nix pkg.
 3. Then do: `gradle init`
+
     - In the generated `build.gradle` file, put the following text block:
 
         ```gradle
@@ -55,10 +56,10 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
     - While in devbox shell, run `echo $JAVA_HOME` and take note of its value.
     - Create a `gradle.properties` file like below and put value of `$JAVA_HOME` instead of <JAVA_HOME_VALUE> in the file.
 
-      ```gradle
-      /* gradle.properties */
-      org.gradle.java.home=<JAVA_HOME_VALUE>
-      ```
+        ```gradle
+        /* gradle.properties */
+        org.gradle.java.home=<JAVA_HOME_VALUE>
+        ```
 
 4. `gradle build` should compile the package and create a `build/` directory that contains an executable jar file.
 5. `gradle run` should print "Hello World!".
@@ -68,13 +69,9 @@ An example `devbox.json` would look like the following:
 
 ```json
 {
-  "packages": [
-    "gradle",
-    "jdk",
-    "binutils"
-  ],
-  "shell": {
-    "init_hook": null
-  }
+    "packages": ["gradle", "jdk", "binutils"],
+    "shell": {
+        "init_hook": null
+    }
 }
 ```

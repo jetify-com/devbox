@@ -22,7 +22,7 @@ This will install the latest version of NGINX. You can find other installable ve
 
 ### Services
 
-* nginx
+-   nginx
 
 Use `devbox services start|stop nginx` to start and stop the NGINX service in the background
 
@@ -30,9 +30,9 @@ Use `devbox services start|stop nginx` to start and stop the NGINX service in th
 
 The following helper files will be created in your project directory:
 
-* devbox.d/nginx/nginx.conf
-* devbox.d/nginx/fastcgi.conf
-* devbox.d/web/index.html
+-   devbox.d/nginx/nginx.conf
+-   devbox.d/nginx/fastcgi.conf
+-   devbox.d/web/index.html
 
 Note that by default, NGINX is configured with `./devbox.d/web` as the root directory. To change this, you should modify `./devbox.d/nginx/nginx.conf`
 
@@ -50,12 +50,12 @@ You can easily configure NGINX by modifying these env variables in your shell's 
 
 To customize:
 
-* Use $NGINX_CONFDIR to change the configuration directory
-* Use $NGINX_LOGDIR to change the log directory
-* Use $NGINX_PIDDIR to change the pid directory
-* Use $NGINX_RUNDIR to change the run directory
-* Use $NGINX_SITESDIR to change the sites directory
-* Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user
-* Use $NGINX_GROUP to customize.
+-   Use $NGINX_CONFDIR to change the configuration directory
+-   Use $NGINX_LOGDIR to change the log directory
+-   Use $NGINX_PIDDIR to change the pid directory
+-   Use $NGINX_RUNDIR to change the run directory
+-   Use $NGINX_SITESDIR to change the sites directory
+-   Use $NGINX_TMPDIR to change the tmp directory. Use $NGINX_USER to change the user
+-   Use $NGINX_GROUP to customize.
 
 You can also customize the `nginx.conf` and `fastcgi.conf` stored in `devbox.d/nginx`

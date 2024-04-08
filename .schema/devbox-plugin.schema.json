@@ -114,7 +114,10 @@
       "description": "Shell specific options and hooks for the plugin.",
       "items": {
         "init_hook": {
-          "type": ["array", "string"],
+          "type": [
+            "array",
+            "string"
+          ],
           "description": "Shell command to run right before initializing the user's shell, running a script, or starting a service"
         },
         "scripts": {
@@ -123,7 +126,10 @@
           "patternProperties": {
             ".*": {
               "description": "Alias name for the script.",
-              "type": ["array", "string"],
+              "type": [
+                "array",
+                "string"
+              ],
               "items": {
                 "type": "string",
                 "description": "The script's shell commands."
@@ -142,5 +148,9 @@
       }
     }
   },
-  "required": ["name", "version", "readme"]
+  "required": [
+    "name",
+    "version",
+    "readme"
+  ]
 }

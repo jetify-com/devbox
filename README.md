@@ -16,7 +16,7 @@
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`). With Devbox, you can install over [400,000 package versions](https://www.nixhub.io) from the Nix Package Registry
 
-Devbox was originally developed by [Jetify](https://www.jetify.com) and is internally powered by `nix`. 
+Devbox was originally developed by [Jetify](https://www.jetify.com) and is internally powered by `nix`.
 
 ## Demo
 
@@ -61,11 +61,11 @@ Are you working on multiple projects, all of which need different versions of th
 Devbox's dev environments are _portable_. We make it possible to declare your
 environment exactly once, and use that single definition in several different ways, including:
 
-+ A local shell created through `devbox shell`
-+ A devcontainer you can use with VSCode
-+ A Dockerfile so you can build a production image with the exact same tools you
-  used for development.
-+ A remote development environment in the cloud that mirrors your local environment.
+-   A local shell created through `devbox shell`
+-   A devcontainer you can use with VSCode
+-   A Dockerfile so you can build a production image with the exact same tools you
+    used for development.
+-   A remote development environment in the cloud that mirrors your local environment.
 
 ## Quickstart: Fast, Deterministic Shell
 
@@ -75,57 +75,55 @@ In this quickstart we’ll create a development shell with specific tools instal
 
 2. Initialize Devbox:
 
-   ```bash
-   devbox init
-   ```
+    ```bash
+    devbox init
+    ```
 
-   This creates a `devbox.json` file in the current directory. You should commit it to source control.
+    This creates a `devbox.json` file in the current directory. You should commit it to source control.
 
 3. Add command-line tools from Nix. For example, to add Python 3.10:
 
-   ```bash
-   devbox add python@3.10
-   ```
+    ```bash
+    devbox add python@3.10
+    ```
 
-   Search for more packages on [Nixhub.io](https://www.nixhub.io)
+    Search for more packages on [Nixhub.io](https://www.nixhub.io)
 
 4. Your `devbox.json` file keeps track of the packages you've added, it should now look like this:
 
-   ```json
-   {
-      "packages": [
-         "python@3.10"
-       ]
-   }
-   ```
+    ```json
+    {
+        "packages": ["python@3.10"]
+    }
+    ```
 
 5. Start a new shell that has these tools installed:
 
-   ```bash
-   devbox shell
-   ```
+    ```bash
+    devbox shell
+    ```
 
-   You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt changed.
+    You can tell you’re in a Devbox shell (and not your regular terminal) because the shell prompt changed.
 
 6. Use your favorite tools.
 
-   In this example we installed Python 3.10, so let’s use it.
+    In this example we installed Python 3.10, so let’s use it.
 
-   ```bash
-   python --version
-   ```
+    ```bash
+    python --version
+    ```
 
 7. Your regular tools are also available including environment variables and config settings.
 
-   ```bash
-   git config --get user.name
-   ```
+    ```bash
+    git config --get user.name
+    ```
 
 8. To exit the Devbox shell and return to your regular shell:
 
-   ```bash
-   exit
-   ```
+    ```bash
+    exit
+    ```
 
 Read more on the [Devbox docs Quickstart](https://www.jetify.com/devbox/docs/quickstart/).
 
@@ -137,9 +135,16 @@ See the [CLI Reference](https://www.jetify.com/devbox/docs/cli_reference/devbox/
 
 ## Join our Developer Community
 
-+ Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify) – we have a #devbox channel dedicated to this project.
-+ File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
-+ Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product updates
+<<<<<<< HEAD
+
+-   Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify) – we have a #devbox channel dedicated to this project.
+-   File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
+-   # Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product updates
+
+*   Chat with us by joining the [jetify.com Discord Server](https://discord.gg/jetify-com) – we have a #devbox channel dedicated to this project.
+*   File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
+*   Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
+    > > > > > > > 895c1b35 (update github links)
 
 ## Contributing
 
@@ -153,7 +158,7 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## Translation
 
-+ [Chinese](./docs/translation/README-zh-CN.md)
+-   [Chinese](./docs/translation/README-zh-CN.md)
 
 ## License
 

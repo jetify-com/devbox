@@ -25,7 +25,7 @@ func InitFromName(w io.Writer, template, target string) error {
 	if !ok {
 		return usererr.New("unknown template name or format %q", template)
 	}
-	return InitFromRepo(w, "https://github.com/jetpack-io/devbox", templatePath, target)
+	return InitFromRepo(w, "https://github.com/jetify-com/devbox", templatePath, target)
 }
 
 func InitFromRepo(w io.Writer, repo, subdir, target string) error {
@@ -100,6 +100,6 @@ func ParseRepoURL(repo string) (string, error) {
 		return "", usererr.New("Invalid URL format for --repo %s", repo)
 	}
 	// this is to handle cases where user puts repo url with .git at the end
-	// like: https://github.com/jetpack-io/devbox.git
+	// like: https://github.com/jetify-com/devbox.git
 	return strings.TrimSuffix(repo, ".git"), nil
 }

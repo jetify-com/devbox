@@ -4,13 +4,13 @@ Simple Llama (generative AI) build and run with Devbox.
 
 ## Setup
 
-- Make sure to have [devbox installed](https://www.jetify.com/devbox/docs/quickstart/#install-devbox)
-- Clone this repo: `git clone https://github.com/jetify-com/devbox.git`
-- `cd devbox/examples/data_science/llama/`
-- `devbox shell`
-- Once in devbox shell, there will be an available binary `llama` that you can use to run the built llama.cpp.
-- `devbox run get_model`
-- `devbox run llama`
+-   Make sure to have [devbox installed](https://www.jetify.com/devbox/docs/quickstart/#install-devbox)
+-   Clone this repo: `git clone https://github.com/jetify-com/devbox.git`
+-   `cd devbox/examples/data_science/llama/`
+-   `devbox shell`
+-   Once in devbox shell, there will be an available binary `llama` that you can use to run the built llama.cpp.
+-   `devbox run get_model`
+-   `devbox run llama`
 
 ## Updating the model
 
