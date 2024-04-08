@@ -149,8 +149,8 @@ func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error
 // Credentials fetches short-lived credentials that grant access to the user's
 // private cache.
 func (p *Provider) Credentials(ctx context.Context) (Credentials, error) {
-	cache := filecache.New[Credentials]("devbox/credentials")
-	creds, err := cache.GetOrSetWithTime("aws-nix-bin-cache", func() (Credentials, time.Time, error) {
+	cache := filecache.New[Credentials]("devbox/providers/nixcache")
+	creds, err := cache.GetOrSetWithTime("credentials", func() (Credentials, time.Time, error) {
 		token, err := identity.Get().GenSession(ctx)
 		if err != nil {
 			return Credentials{}, time.Time{}, err
@@ -176,7 +176,7 @@ func (p *Provider) Credentials(ctx context.Context) (Credentials, error) {
 // If their account doesn't have access to a cache, it returns an empty string
 // and a nil error.
 func (p *Provider) URI(ctx context.Context) (string, error) {
-	cache := filecache.New[string]("devbox/nixcache")
+	cache := filecache.New[string]("devbox/providers/nixcache")
 	uri, err := cache.GetOrSet("uri", func() (string, time.Duration, error) {
 		token, err := identity.Get().GenSession(ctx)
 		if err != nil {
