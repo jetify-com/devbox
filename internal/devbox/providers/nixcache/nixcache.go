@@ -205,7 +205,9 @@ func (p *Provider) URI(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
 	}
-	checkIfUserCanAddSubstituter(ctx)
+	if uri != "" {
+		checkIfUserCanAddSubstituter(ctx)
+	}
 	return uri, nil
 }
 
