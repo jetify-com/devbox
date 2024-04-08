@@ -4,11 +4,14 @@
 package boxcli
 
 import (
+	"encoding/json"
+
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 )
 
 type cacheFlags struct {
@@ -58,7 +61,41 @@ func cacheCmd() *cobra.Command {
 		&flags.to, "to", "", "URI of the cache to copy to")
 
 	cacheCommand.AddCommand(uploadCommand)
+	cacheCommand.AddCommand(cacheCredentialsCmd())
 	cacheCommand.Hidden = true
 
 	return cacheCommand
+}
+
+func cacheCredentialsCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:    "credentials",
+		Short:  "Output S3 cache credentials",
+		Hidden: true,
+		Args:   cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := nixcache.Get().Config(cmd.Context())
+			if err != nil {
+				return err
+			}
+
+			creds := struct {
+				Version         int    `json:"Version"`
+				AccessKeyID     string `json:"AccessKeyId"`
+				SecretAccessKey string `json:"SecretAccessKey"`
+				SessionToken    string `json:"SessionToken"`
+			}{
+				Version:         1,
+				AccessKeyID:     *cfg.Credentials.AccessKeyId,
+				SecretAccessKey: *cfg.Credentials.SecretKey,
+				SessionToken:    *cfg.Credentials.SessionToken,
+			}
+			out, err := json.Marshal(creds)
+			if err != nil {
+				return err
+			}
+			_, _ = cmd.OutOrStdout().Write(out)
+			return nil
+		},
+	}
 }
