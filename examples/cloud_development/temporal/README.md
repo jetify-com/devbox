@@ -1,6 +1,6 @@
 # Temporal
 
-[![Built with Devbox](https://jetpack.io/devbox/img/shield_galaxy.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://jetify.com/devbox/img/shield_galaxy.svg)](https://jetify.com/devbox/docs/contributor-quickstart/)
 
 Example devbox for testing and developing Temporal workflows using Temporalite and the Python Temporal SDK.
 

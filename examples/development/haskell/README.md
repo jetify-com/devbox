@@ -2,7 +2,7 @@
 
 Haskell projects that use the Stack Framework can be run in Devbox by adding the Stack and the Cabal packages to your project. You may also want to include libraries that Stack requires for compilation (described below)
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/haskell/)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/haskell/)
 
 ## Adding Haskell and Stack to your Project
 

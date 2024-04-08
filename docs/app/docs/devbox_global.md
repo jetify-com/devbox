@@ -121,15 +121,15 @@ Your global `devbox.json` and any other files in the Git remote will be stored i
 * **[Getting Started](quickstart.mdx):** Learn how to install Devbox and create your first Devbox Shell.
 * **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
 * **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
-* **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
+* **[Browse Examples](https://github.com/jetify-com/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
 * **[Using Flakes with Devbox](guides/using_flakes.md):** Learn how to install packages from Nix Flakes.
 
 ### Use Devbox with your IDE
 
 * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetify-com.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
 
-* **[Join our Discord Community](https://discord.gg/jetpack-io):** Chat with the development team and our growing community of Devbox users.
-* **[Visit us on Github](https://github.com/jetpack-io/devbox):** File issues and provide feedback, or even open a PR to contribute to Devbox or our Docs.
+* **[Join our Discord Community](https://discord.gg/jetify):** Chat with the development team and our growing community of Devbox users.
+* **[Visit us on Github](https://github.com/jetify-com/devbox):** File issues and provide feedback, or even open a PR to contribute to Devbox or our Docs.

@@ -4,7 +4,7 @@ title: Nim
 
 Nim projects can be run in Devbox by adding Nim and Nimble to your project. For some platforms, Nimble may return an error if OpenSSL is not available, so we recommend including `openssl_1_1` in your packages as well
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nim/spinnytest)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/nim/spinnytest)
 
 ## Adding Nim to your Project
 

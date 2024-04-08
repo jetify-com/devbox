@@ -4,9 +4,9 @@ title: Rust
 
 The easiest way to manage Rust with Devbox is to install `rustup`, and then configure the channel you wish to install via Devbox's `init_hook`. You can also use the `init_hook` to configure `rustup` to install the Rust toolchain locally.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/rust)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/rust)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/rust)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/rust)
 
 ```json
 {

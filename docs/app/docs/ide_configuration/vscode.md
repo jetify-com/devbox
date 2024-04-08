@@ -5,12 +5,12 @@ title: Visual Studio Code
 ## Devbox Extension
 ___
 
-Devbox has an accompanying [VSCode extension](vscode:extension/jetpack-io.devbox) that makes the experience of integrating your devbox environment in VSCode much simpler. 
+Devbox has an accompanying [VSCode extension](vscode:extension/jetify-com.devbox) that makes the experience of integrating your devbox environment in VSCode much simpler. 
 
 ### Syncing VSCode with Devbox shell
 Follow the steps below to have VSCode's environment be in sync with Devbox shell:
 
-1. [Install](vscode:extension/jetpack-io.devbox) Devbox's VSCode extension
+1. [Install](vscode:extension/jetify-com.devbox) Devbox's VSCode extension
 2. Open a project that has a devbox.json file in VSCode
 3. Open command palette in VSCode (cmd+shift+p) and type: `Devbox: Reopen in Devbox shell environment`
 4. Press Enter and wait for VSCode to reload.
@@ -18,7 +18,7 @@ Follow the steps below to have VSCode's environment be in sync with Devbox shell
 
 Keep in mind that if you make changes to your devbox.json, you need to re-run Step 3 to make VSCode pick up the new changes.
 
-**NOTE:** This integration feature requires Devbox CLI v0.5.5 and above installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetpack-io/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+**NOTE:** This integration feature requires Devbox CLI v0.5.5 and above installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
 
 **NOTE2:** This feature is not yet available for Windows and WSL.
 
@@ -48,7 +48,7 @@ Once Direnv is installed and setup with Devbox, its [VSCode extension](vscode:ex
 ___
 Devbox CLI is not supported on Windows, but you can still use it with VSCode by using Windows Subsystem for Linux ([WSL](https://learn.microsoft.com/en-us/windows/wsl/install)). If you've set up WSL, follow these steps to integrate your Devbox shell environment with VSCode:
 
-1. [Install](https://www.jetpack.io/devbox/docs/installing_devbox/) Devbox in WSL.
+1. [Install](https://www.jetify.com/devbox/docs/installing_devbox/) Devbox in WSL.
 2. Navigate to your project directory. (`C:\Users` is `/mnt/c/Users/` in WSL).
 3. Run `devbox init` if you don't have a devbox.json file.
 4. Run `devbox shell`
@@ -111,4 +111,4 @@ The following steps show how to run a Java application in a devbox shell using t
     java main/hello
     ```
 
-If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetpack-io/devbox/pulls) in Github.
+If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetify-com/devbox/pulls) in Github.

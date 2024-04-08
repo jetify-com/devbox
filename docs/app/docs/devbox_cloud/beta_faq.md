@@ -27,7 +27,7 @@ Devbox.sh is free to use during the Beta period, subject to the restrictions des
 * **RAM**: 8 GB
 * **SSD**: 8 GB
 
-If you are interested in using Devbox playgrounds or CDE in an enterprise setting, please reach out to us at [info@jetpack.io](mailto://info@jetpack.io)
+If you are interested in using Devbox playgrounds or CDE in an enterprise setting, please reach out to us at [info@jetify.com](mailto://info@jetify.com)
 
 ### Is there a time limit on Devbox playgrounds?
 
@@ -37,7 +37,7 @@ playgrounds are also deleted every 12 hours, regardless of activity
 
 ### I want to request more resources, persistence, or a different OS for my VM
 
-Please contact us at info@jetpack.io if you are interested in a custom solution for your enterprise.
+Please contact us at info@jetify.com if you are interested in a custom solution for your enterprise.
 
 ### What OS does the Devbox.sh use?
 

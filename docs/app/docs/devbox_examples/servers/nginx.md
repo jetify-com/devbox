@@ -4,9 +4,9 @@ title: Nginx
 
 NGINX can be automatically configured by Devbox via the built-in NGINX Plugin. This plugin will activate automatically when you install NGINX using `devbox add nginx`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/servers/nginx)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/nginx)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/nginx)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/nginx)
 
 ## Adding NGINX to your Shell
 

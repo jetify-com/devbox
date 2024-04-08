@@ -3,9 +3,9 @@ title: PostgreSQL
 ---
 PostgreSQL can be automatically configured by Devbox via the built-in Postgres Plugin. This plugin will activate automatically when you install Postgres using `devbox add postgresql`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/postgres)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/postgres)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/postgres)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/postgres)
 
 ## Adding Postgres to your Shell
 

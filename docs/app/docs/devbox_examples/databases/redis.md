@@ -4,9 +4,9 @@ title: Redis
 
 Redis can be configured automatically using Devbox's built in Redis plugin. This plugin will activate automatically when you install Redis using `devbox add redis`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/redis)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/redis)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/redis)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/redis)
 
 ## Adding Redis to your shell
 

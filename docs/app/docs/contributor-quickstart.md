@@ -16,7 +16,7 @@ This quickstart shows you how to install Devbox, and use it to start a developme
 Use the following install script to get the latest version of Devbox:
 
 ```bash
-curl -fsSL https://get.jetpack.io/devbox | bash
+curl -fsSL https://get.jetify.com/devbox | bash
 ```
 
 Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If Nix is not detected on your machine when running a command, Devbox will automatically install it for you with the default settings for your OS. Don't worry: You can use Devbox without needing to learn the Nix Language.
@@ -72,12 +72,12 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 * **[Devbox Global](devbox_global.md):** Learn how to use the devbox as a global package manager
 * **[Devbox Scripts](guides/scripts.md):** Automate setup steps and configuration for your shell using Devbox Scripts.
 * **[Configuration Guide](configuration.md):** Learn how to configure your shell and dev environment with `devbox.json`.
-* **[Browse Examples](https://github.com/jetpack-io/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
+* **[Browse Examples](https://github.com/jetify-com/devbox-examples):** You can see how to create a development environment for your favorite tools or languages by browsing the Devbox Examples repo.
 
 ### Use Devbox with your IDE
 * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetify-com.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
-* **[Join our Discord Community](https://discord.gg/jetpack-io):** Chat with the development team and our growing community of Devbox users.
-* **[Visit us on Github](https://github.com/jetpack-io/devbox):** File issues and provide feedback, or even open a PR to contribute to Devbox or our Docs.
+* **[Join our Discord Community](https://discord.gg/jetify):** Chat with the development team and our growing community of Devbox users.
+* **[Visit us on Github](https://github.com/jetify-com/devbox):** File issues and provide feedback, or even open a PR to contribute to Devbox or our Docs.

@@ -11,4 +11,4 @@ stack build
 stack exec my-project-exe
 ```
 
-For more details, check out the [Haskell + Devbox Docs](https://www.jetpack.io/devbox/docs/devbox_examples/languages/haskell/)
+For more details, check out the [Haskell + Devbox Docs](https://www.jetify.com/devbox/docs/devbox_examples/languages/haskell/)

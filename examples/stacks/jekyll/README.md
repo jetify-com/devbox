@@ -1,14 +1,14 @@
 # Jekyll Example
 
-[![Built with Devbox](https://jetpack.io/img/devbox/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://jetify.com/img/devbox/shield_moon.svg)](https://jetify.com/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
 
 Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html)
 
 ## How to Use
 
-1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
 1. Create a new project with:
 
     ```bash
@@ -22,4 +22,4 @@ Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyl
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/ruby/)
+* [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)

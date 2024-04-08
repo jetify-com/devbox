@@ -3,7 +3,7 @@ title: Frequently Asked Questions
 description: Frequently Asked Questions about Devbox
 ---
 
-This doc contains answers to frequently asked questions about Devbox that are not covered elsewhere in our documentation. If you have a question that isn't covered here, feel free to ask us on our [Discord](https://discord.gg/jetpack-io), or [open an issue](https://github.com/jetpack-io/devbox/issues) on our GitHub repository.
+This doc contains answers to frequently asked questions about Devbox that are not covered elsewhere in our documentation. If you have a question that isn't covered here, feel free to ask us on our [Discord](https://discord.gg/jetify), or [open an issue](https://github.com/jetify-com/devbox/issues) on our GitHub repository.
 
 ## How does Devbox work?
 

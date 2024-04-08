@@ -5,9 +5,9 @@ description: An example of a Nix powered Ruby on Rails application with Devbox
 
 This example demonstrates how to setup a simple Rails application. It makes use of the Ruby Plugin, and installs SQLite to use as a database.
 
-[Example Repo](https://github.com/jetpack-io/devbox/tree/main/examples/stacks/rails)
+[Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/rails)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/rails)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/rails)
 
 ## How To Run
 

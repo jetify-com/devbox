@@ -2,7 +2,7 @@
 
 ### 即时、简单、可预测地创建Shell与Container
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases) [![tests](https://github.com/jetpack-io/devbox/actions/workflows/tests.yaml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/tests.yaml)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox) [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases) [![tests](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml)
 
 ---
 
@@ -12,7 +12,7 @@ Devbox是一个可以让你轻松地创建隔离环境的shell与container的命
 
 在实践中，Devbox的工作方式类似于像`yarn`这样的软件包管理器--只不过它所管理的软件包是操作系统级别的。（这些包你通常会通过`brew`和`apt-get`来进行安装）。
 
-Devbox最初由[jetpack.io](https://www.jetpack.io)进行开发，其内部由`nix`驱动。
+Devbox最初由[Jetify](https://www.jetify.com)进行开发，其内部由`nix`驱动。
 
 ## 示例
 下面的例子创建了一个带有`python 2.7`和`go 1.18`的开发环境，尽管这些包并没有在底层机器中被安装。
@@ -57,7 +57,7 @@ Devbox分析你的源代码并立即将其转化为可以部署到任何云中�
 3. 安装Devbox:
 
    ```sh
-   curl -fsSL https://get.jetpack.io/devbox | bash
+   curl -fsSL https://get.jetify.com/devbox | bash
    ```
 
 ## 快速入门：快速又确定的shell
@@ -142,7 +142,7 @@ Devbox目前支持检测以下两种语言：
 - Go
 - Python (Poetry)
 
-想要支持更多的语言？[Ask for a new Language](https://github.com/jetpack-io/devbox/issues) 或通过Pull Request贡献一个。
+想要支持更多的语言？[Ask for a new Language](https://github.com/jetify-com/devbox/issues) 或通过Pull Request贡献一个。
 
 ## 额外命令
 
@@ -152,9 +152,9 @@ Devbox目前支持检测以下两种语言：
 
 ## 加入我们的开发者社区
 
-+ 通过加入[Jetpack.io Discord Server](https://discord.gg/agbskCJXk2)来与我们聊天 - 我们有一个#devbox频道专门用于这个项目。
-+ 使用[Github Issues](https://github.com/jetpack-io/devbox/issues)提交错误报告和功能请求。
-+ 在[Jetpack’s Twitter](https://twitter.com/jetpack_io)上关注我们的产品更新。
++ 通过加入[Jetify Discord Server](https://discord.gg/agbskCJXk2)来与我们聊天 - 我们有一个#devbox频道专门用于这个项目。
++ 使用[Github Issues](https://github.com/jetify-com/devbox/issues)提交错误报告和功能请求。
++ 在[Jetify’s Twitter](https://twitter.com/jetify_com)上关注我们的产品更新。
 
 ## 相关工作
 
@@ -162,4 +162,4 @@ Devbox目前支持检测以下两种语言：
 
 ## License
 
-本项目在[Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE)下自豪地开放源代码。
+本项目在[Apache 2.0 License](https://github.com/jetify-com/devbox/blob/main/LICENSE)下自豪地开放源代码。

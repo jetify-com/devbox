@@ -4,7 +4,7 @@ This website is built using [Docusaurus 2](https://docusaurus.io/), a modern sta
 
 You can also test and contribute to our docs online using Devbox Cloud!
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox?folder=docs/app)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox?folder=docs/app)
 
 ## Installation
 
@@ -34,4 +34,4 @@ This command generates static content into the `build` directory and can be serv
 
 When a pull request is opened, it will automatically deploy via CICD to a preview.
 When a pull request is merged, it will automatically deploy to production.
-Check https://www.jetpack.io/devbox/ after merge to see the latest changes.
+Check https://www.jetify.com/devbox/ after merge to see the latest changes.

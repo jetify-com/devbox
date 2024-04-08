@@ -1,6 +1,6 @@
 # Maelstrom
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox-examples?folder=cloud_development/maelstrom)
+[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox-examples?folder=cloud_development/maelstrom)
 
 A Devbox for running [Maelstrom](https://github.com/jepsen-io/maelstrom) Tests. Maelstrom is a testing library for toy distributed systems built by @aphyr, useful for learning the basics and principals of building distributed systems
 
@@ -8,10 +8,10 @@ You should also check out the [Fly.io Distributed Systems Challenge](https://fly
 
 ## Prerequisites
 
-If you don't already have [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/), you can install it by running the following command:
+If you don't already have [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/), you can install it by running the following command:
 
 ```bash
-curl -s https://www.jetpack.io/install.sh | bash
+curl -s https://get.jetify.com/install.sh | bash
 ```
 
 You can skip this step if you're running on Devbox.sh
