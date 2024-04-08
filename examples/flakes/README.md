@@ -10,16 +10,13 @@ In devbox.json use "path:/path/to/flake#output" as the package name.
 
 ```json
 {
-  "packages": [
-    "path:my-php-flake#php",
-    "path:my-php-flake#hello"
-  ],
-  "shell": {
-    "init_hook": null
-  },
-  "nixpkgs": {
-    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
-  }
+    "packages": ["path:my-php-flake#php", "path:my-php-flake#hello"],
+    "shell": {
+        "init_hook": null
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
 }
 ```
 
@@ -31,16 +28,16 @@ Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a G
 
 ```json
 {
-  "packages": [
-    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
-    "github:F1bonacc1/process-compose"
-  ],
-  "shell": {
-    "init_hook": null
-  },
-  "nixpkgs": {
-    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
-  }
+    "packages": [
+        "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
+        "github:F1bonacc1/process-compose"
+    ],
+    "shell": {
+        "init_hook": null
+    },
+    "nixpkgs": {
+        "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    }
 }
 ```
 

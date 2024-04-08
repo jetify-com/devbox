@@ -30,13 +30,6 @@ devbox run readme
 
 ## Next Steps
 
-<<<<<<< HEAD
-
 -   Checkout our Docs at [https://www.jetify.com/devbox/docs](https://www.jetify.com/devbox/docs)
 -   Try out an Example Project at [https://www.jetify.com/devbox/docs/devbox-examples](https://www.jetify.com/devbox/docs/devbox-examples)
--   # Report Issues at [https://github.com/jetify-com/devbox/issues/new/choose](https://github.com/jetify-com/devbox/issues/new/choose)
-
-*   Checkout our Docs at [https://www.jetify.com/devbox/docs](https://jetpack.io/devbox/docs)
-*   Try out an Example Project at [https://www.jetify.com/devbox/docs/devbox-examples](https://jetpack.io/devbox/docs/devbox-examples)
-*   Report Issues at [https://github.com/jetify-com/devbox/issues/new/choose](https://github.com/jetify-com/devbox/issues/new/choose)
-    > > > > > > > 895c1b35 (update github links)
+-   Report Issues at [https://github.com/jetify-com/devbox/issues/new/choose](https://github.com/jetify-com/devbox/issues/new/choose)

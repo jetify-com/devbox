@@ -20,6 +20,6 @@ This example combines Java, Spring Boot, and MySQL to expose a simple REST API. 
 
 ## Notes
 
-- This example uses the [Spring Boot initializer](https://start.spring.io/) to create the project. You can use any method you like to create your Spring Boot project, but you will need to make sure that the `devbox.json` and `devbox.lock` files are in the same directory as your `build.gradle` file.
-- This example hardcodes a username and password for development purposes. For production or more secure usecases, you should change them and exclude them from source control.
-- This distribution uses the OpenJDK. You can find other JDK distributions using `devbox search`
+-   This example uses the [Spring Boot initializer](https://start.spring.io/) to create the project. You can use any method you like to create your Spring Boot project, but you will need to make sure that the `devbox.json` and `devbox.lock` files are in the same directory as your `build.gradle` file.
+-   This example hardcodes a username and password for development purposes. For production or more secure usecases, you should change them and exclude them from source control.
+-   This distribution uses the OpenJDK. You can find other JDK distributions using `devbox search`

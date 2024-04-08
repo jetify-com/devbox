@@ -14,21 +14,12 @@ The easiest way to develop Devbox is with Devbox!
 
 1. Install Devbox:
 
-<<<<<<< HEAD
-       curl -fsSL https://get.jetify.com/devbox | bash
-
-2. Clone this repository:
-
-       git clone https://github.com/jetify-com/devbox.git go.jetify.com/devbox
-       cd go.jetify.com/devbox
-=======
     curl -fsSL https://get.jetify.com/devbox | bash
 
 2. Clone this repository:
 
     git clone https://github.com/jetify-com/devbox.git go.jetpack.io/devbox
     cd go.jetpack.io/devbox
->>>>>>> 895c1b35 (update github links)
 
 3. Build the Devbox CLI. If you don't have Nix installed, Devbox will automatically install it for you before building:
 
@@ -56,17 +47,10 @@ If you are unable to install or use Devbox, you can manually replicate the envir
 
 3.  Clone this repository and build Devbox:
 
-<<<<<<< HEAD
-       git clone https://github.com/jetify-com/devbox.git go.jetify.com/devbox
-       cd go.jetify.com/devbox
-       go build ./cmd/devbox
-       ./devbox run -- echo hello, world
-=======
-    git clone https://github.com/jetify-com/devbox.git go.jetpack.io/devbox
-    cd go.jetpack.io/devbox
-    go build ./cmd/devbox
-    ./devbox run -- echo hello, world
->>>>>>> 895c1b35 (update github links)
+git clone https://github.com/jetify-com/devbox.git go.jetify.com/devbox
+cd go.jetify.com/devbox
+go build ./cmd/devbox
+./devbox run -- echo hello, world
 
 ## Pull Request Process
 

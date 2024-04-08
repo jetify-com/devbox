@@ -24,10 +24,10 @@ To enable Corepack, set DEVBOX_COREPACK_ENABLED to true in your devbox.json:
 
 ```json
 {
-  "packages": ["nodejs@18"],
-  "env": {
-    "DEVBOX_COREPACK_ENABLED": "true"
-  }
+    "packages": ["nodejs@18"],
+    "env": {
+        "DEVBOX_COREPACK_ENABLED": "true"
+    }
 }
 ```
 

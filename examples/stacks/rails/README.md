@@ -20,17 +20,17 @@ bin/rails server
 1. Create a new Devbox project with `devbox create --template rails`
 2. Add the packages using
 
-   ```bash
-   devbox install
-   ```
+    ```bash
+    devbox install
+    ```
 
 3. Run `devbox shell`, which will install the rails CLI with `gem install rails`
 4. Create your Rails app by running the following in your Devbox Shell
 
-   ```bash
-   rails new blog
-   ```
+    ```bash
+    rails new blog
+    ```
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)
+-   [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)

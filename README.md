@@ -135,16 +135,9 @@ See the [CLI Reference](https://www.jetify.com/devbox/docs/cli_reference/devbox/
 
 ## Join our Developer Community
 
-<<<<<<< HEAD
-
 -   Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify) – we have a #devbox channel dedicated to this project.
 -   File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
--   # Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product updates
-
-*   Chat with us by joining the [jetify.com Discord Server](https://discord.gg/jetify-com) – we have a #devbox channel dedicated to this project.
-*   File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
-*   Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
-    > > > > > > > 895c1b35 (update github links)
+-   Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product updates
 
 ## Contributing
 

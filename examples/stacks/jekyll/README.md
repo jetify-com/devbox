@@ -22,4 +22,4 @@ Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyl
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)
+-   [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)
