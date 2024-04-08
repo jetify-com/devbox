@@ -1,6 +1,6 @@
 # devbox VSCode Extension
 
-This is the official VSCode extension for [devbox](https://github.com/jetify-com/devbox) open source project by [jetify.com](https://jetify.com)
+This is the official VSCode extension for [devbox](https://github.com/jetify-com/devbox) open source project by [jetify.com](https://www.jetify.com)
 
 ## Features
 

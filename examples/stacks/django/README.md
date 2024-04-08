@@ -1,8 +1,8 @@
 # Django Example
 
-[![Built with Devbox](https://jetify.com/img/devbox/shield_moon.svg)](https://jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/django)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/django)
 
 ## How to Use
 

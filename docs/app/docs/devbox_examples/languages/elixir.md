@@ -6,7 +6,7 @@ Elixir can be configured to install Hex and Rebar dependencies in a local direct
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/elixir/elixir_hello)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/elixir)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/elixir)
 
 
 ## Adding Elixir to your project

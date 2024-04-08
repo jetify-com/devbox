@@ -26,7 +26,7 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java/maven/hello-world)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/java-maven)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/java-maven)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 

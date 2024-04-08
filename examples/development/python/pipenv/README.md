@@ -21,7 +21,7 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pipenv)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pipenv)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 

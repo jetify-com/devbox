@@ -1,8 +1,8 @@
 # Jekyll Example
 
-[![Built with Devbox](https://jetify.com/img/devbox/shield_moon.svg)](https://jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
 
 Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html)
 

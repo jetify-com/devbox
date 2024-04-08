@@ -6,7 +6,7 @@ This example demonstrates how to create and run a Jekyll blog in Devbox. It make
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/jekyll)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/jekyll)
 
 Inspired by https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html 
 

@@ -2,7 +2,7 @@
 
 This shell includes a basic `devbox.json` with a few useful packages installed, and an example init_hook and script
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox-examples?folder=tutorial)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox-examples?folder=tutorial)
 
 ## Adding New Packages
 
@@ -30,6 +30,6 @@ devbox run readme
 
 ## Next Steps
 
-* Checkout our Docs at [https://jetify.com/devbox/docs](https://jetify.com/devbox/docs)
-* Try out an Example Project at [https://jetify.com/devbox/docs/devbox-examples](https://jetify.com/devbox/docs/devbox-examples)
+* Checkout our Docs at [https://www.jetify.com/devbox/docs](https://www.jetify.com/devbox/docs)
+* Try out an Example Project at [https://www.jetify.com/devbox/docs/devbox-examples](https://www.jetify.com/devbox/docs/devbox-examples)
 * Report Issues at [https://github.com/jetify-com/devbox/issues/new/choose](https://github.com/jetify-com/devbox/issues/new/choose)

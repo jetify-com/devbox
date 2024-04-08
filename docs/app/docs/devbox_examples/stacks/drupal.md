@@ -6,7 +6,7 @@ This example shows how to run a Drupal application in Devbox. It makes use of th
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/drupal)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/drupal)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/drupal)
 
 ## How to Run 
 

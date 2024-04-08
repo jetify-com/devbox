@@ -94,11 +94,11 @@ const config = {
                     title: "Jetify",
                     items: [{
                             label: "Jetify",
-                            href: "http://jetify.com"
+                            href: "http://www.jetify.com"
                         },
                         {
                             label: "Blog",
-                            href: "http://jetify.com/blog"
+                            href: "http://www.jetify.com/blog"
                         },
                     ]
                 },

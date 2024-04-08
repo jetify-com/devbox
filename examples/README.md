@@ -1,6 +1,6 @@
 # Devbox Examples
 
-[![Built with Devbox](https://jetify.com/img/devbox/shield_moon.svg)](https://jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
 
 Example dev environments built with Devbox:
 

@@ -4,7 +4,7 @@ Bun projects can be run in Devbox by adding the Bun runtime + package manager to
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/bun)
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/bun)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/bun)
 
 ## Add Bun to your Project
 

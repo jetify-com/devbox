@@ -4,7 +4,7 @@ Laravel is a powerful web application framework built with PHP. It's a great cho
 
 This example shows how to build a simple Laravel application backed by MariaDB and Redis. It uses Devbox Plugins for all 3 Nix packages to simplify configuration
 
-[![Open In Devbox.sh](https://jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/stacks/laravel)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/stacks/laravel)
 
 ## How to Run
 
