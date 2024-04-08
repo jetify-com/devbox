@@ -13,7 +13,6 @@ import (
 
 type BuildArgs struct {
 	AllowInsecure    bool
-	Env              []string
 	ExtraSubstituter string
 	Flags            []string
 	Writer           io.Writer
@@ -29,7 +28,7 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	if args.ExtraSubstituter != "" {
 		cmd.Args = append(cmd.Args, "--extra-substituters", args.ExtraSubstituter)
 	}
-	cmd.Env = append(allowUnfreeEnv(os.Environ()), args.Env...)
+	cmd.Env = allowUnfreeEnv(os.Environ())
 	if args.AllowInsecure {
 		debug.Log("Setting Allow-insecure env-var\n")
 		cmd.Env = allowInsecureEnv(cmd.Env)

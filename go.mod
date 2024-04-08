@@ -40,7 +40,7 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
 	go.jetpack.io/envsec v0.0.16-0.20240329013200-4174c0acdb00
-	go.jetpack.io/pkg v0.0.0-20240404001923-7b42192bf9a5
+	go.jetpack.io/pkg v0.0.0-20240408172312-2327a8be065c
 	go.jetpack.io/typeid v1.0.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/mod v0.16.0
@@ -86,7 +86,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/gofrs/uuid/v5 v5.0.0 // indirect
+	github.com/gofrs/uuid/v5 v5.0.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect

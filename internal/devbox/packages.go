@@ -445,7 +445,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			flags = append(flags, "--refresh")
 		}
 
-		nixCacheConfig, err := d.providers.NixCache.Config(ctx)
+		nixCacheURI, err := d.providers.NixCache.URI(ctx)
 		if err != nil {
 			return err
 		}
@@ -453,8 +453,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		for _, installable := range installables {
 			args := &nix.BuildArgs{
 				AllowInsecure:    pkg.HasAllowInsecure(),
-				Env:              nixCacheConfig.CredentialsEnvVars(),
-				ExtraSubstituter: nixCacheConfig.URI,
+				ExtraSubstituter: nixCacheURI,
 				Flags:            flags,
 				Writer:           d.stderr,
 			}

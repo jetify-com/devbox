@@ -22,70 +22,76 @@ type Provider struct{}
 
 var singleton *Provider = &Provider{}
 
-type NixCacheConfig struct {
-	URI         string
-	Credentials types.Credentials
-}
-
-func (n NixCacheConfig) CredentialsEnvVars() []string {
-	env := []string{}
-	if n.Credentials.AccessKeyId != nil {
-		env = append(env, "AWS_ACCESS_KEY_ID="+*n.Credentials.AccessKeyId)
-	}
-	if n.Credentials.SecretKey != nil {
-		env = append(env, "AWS_SECRET_ACCESS_KEY="+*n.Credentials.SecretKey)
-	}
-	if n.Credentials.SessionToken != nil {
-		env = append(env, "AWS_SESSION_TOKEN="+*n.Credentials.SessionToken)
-	}
-	return env
-}
-
 func Get() *Provider {
 	return singleton
 }
 
-// Config returns the URI or the nix bin cache and AWS credentials if available.
+// URI returns the URI of the nix bin cache if available.
 // Nix calls the URI a substituter.
 // A substituter is a bin cache URI that nix can use to fetch pre-built
 // binaries from.
-func (p *Provider) Config(ctx context.Context) (NixCacheConfig, error) {
+func (p *Provider) URI(ctx context.Context) (string, error) {
 	token, err := identity.Get().GenSession(ctx)
 
 	if errors.Is(err, auth.ErrNotLoggedIn) {
 		// DEVBOX_NIX_BINCACHE_URI seems like a friendlier name than "substituter"
-		return NixCacheConfig{
-			URI: os.Getenv("DEVBOX_NIX_BINCACHE_URI"),
-		}, nil
+		return os.Getenv("DEVBOX_NIX_BINCACHE_URI"), nil
 	} else if err != nil {
-		return NixCacheConfig{}, err
+		return "", err
 	}
 
 	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), token)
-	cache := filecache.New[*nixv1alpha1.GetBinCacheResponse]("devbox/credentials")
-	binCacheResponse, err := cache.GetOrSetWithTime(
-		"aws-nix-bin-cache",
-		func() (*nixv1alpha1.GetBinCacheResponse, time.Time, error) {
+	cache := filecache.New[*nixv1alpha1.GetBinCacheResponse]("devbox/providers/nixcache")
+	binCacheResponse, err := cache.GetOrSet(
+		"uri",
+		func() (*nixv1alpha1.GetBinCacheResponse, time.Duration, error) {
 			r, err := apiClient.GetBinCache(ctx)
 			if err != nil || r.GetNixBinCacheUri() == "" {
-				return nil, time.Time{}, err
+				return nil, 0, err
 			}
-			return r, r.GetNixBinCacheCredentials().Expiration.AsTime(), nil
+			return r, time.Hour, nil
 		},
 	)
 	if err != nil {
-		return NixCacheConfig{}, err
+		return "", err
 	}
 
 	checkIfUserCanAddSubstituter(ctx)
 
-	return NixCacheConfig{
-		URI: binCacheResponse.NixBinCacheUri,
-		Credentials: types.Credentials{
-			AccessKeyId:  aws.String(binCacheResponse.GetNixBinCacheCredentials().GetAccessKeyId()),
-			SecretKey:    aws.String(binCacheResponse.GetNixBinCacheCredentials().GetSecretKey()),
-			SessionToken: aws.String(binCacheResponse.GetNixBinCacheCredentials().GetSessionToken()),
+	return binCacheResponse.NixBinCacheUri, nil
+}
+
+func (p *Provider) Credentials(ctx context.Context) (types.Credentials, error) {
+	token, err := identity.Get().GenSession(ctx)
+
+	if errors.Is(err, auth.ErrNotLoggedIn) {
+		return types.Credentials{}, nil
+	} else if err != nil {
+		return types.Credentials{}, err
+	}
+
+	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), token)
+	cache := filecache.New[*nixv1alpha1.AWSCredentials]("devbox/providers/nixcache")
+	credentials, err := cache.GetOrSetWithTime(
+		"aws-credentials",
+		func() (*nixv1alpha1.AWSCredentials, time.Time, error) {
+			r, err := apiClient.GetAWSCredentials(ctx)
+			if err != nil || r.GetAccessKeyId() == "" {
+				return nil, time.Time{}, err
+			}
+			return r, r.GetExpiration().AsTime(), nil
 		},
+	)
+	if err != nil {
+		return types.Credentials{}, err
+	}
+
+	checkIfUserCanAddSubstituter(ctx)
+
+	return types.Credentials{
+		AccessKeyId:  aws.String(credentials.GetAccessKeyId()),
+		SecretKey:    aws.String(credentials.GetSecretKey()),
+		SessionToken: aws.String(credentials.GetSessionToken()),
 	}, nil
 }
 

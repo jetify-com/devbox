@@ -74,21 +74,22 @@ func cacheCredentialsCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := nixcache.Get().Config(cmd.Context())
+			awsCreds, err := nixcache.Get().Credentials(cmd.Context())
 			if err != nil {
 				return err
 			}
 
 			creds := struct {
-				Version         int    `json:"Version"`
+				Version int `json:"Version"`
+
 				AccessKeyID     string `json:"AccessKeyId"`
 				SecretAccessKey string `json:"SecretAccessKey"`
 				SessionToken    string `json:"SessionToken"`
 			}{
 				Version:         1,
-				AccessKeyID:     *cfg.Credentials.AccessKeyId,
-				SecretAccessKey: *cfg.Credentials.SecretKey,
-				SessionToken:    *cfg.Credentials.SessionToken,
+				AccessKeyID:     *awsCreds.AccessKeyId,
+				SecretAccessKey: *awsCreds.SecretKey,
+				SessionToken:    *awsCreds.SessionToken,
 			}
 			out, err := json.Marshal(creds)
 			if err != nil {
