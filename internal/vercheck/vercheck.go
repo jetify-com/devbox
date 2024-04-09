@@ -257,7 +257,7 @@ func isNewDevboxAvailable() bool {
 	return SemverCompare(currentDevboxVersion, latest) < 0
 }
 
-// currentLauncherAvailable returns launcher's version if it is
+// currentLauncherVersion returns launcher's version if it is
 // available, or empty string if it is not.
 func currentLauncherVersion() string {
 	launcherVersion := os.Getenv(envir.LauncherVersion)
