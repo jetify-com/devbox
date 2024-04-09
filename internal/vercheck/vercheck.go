@@ -28,7 +28,7 @@ import (
 
 // Keep this in-sync with latest version in launch.sh.
 // If this version is newer than the version in launch.sh, we'll print a notice.
-const expectedLauncherVersion = "v0.2.1"
+const expectedLauncherVersion = "v0.2.2"
 
 // envName determines whether the version check has already occurred.
 // We set this env-var so that this devbox command invoking other devbox commands
