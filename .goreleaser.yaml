@@ -41,7 +41,7 @@ release:
   prerelease: auto
   draft: true
   github:
-    owner: jetpack-io
+    owner: jetify-com
     name: devbox
 announce:
   discord:

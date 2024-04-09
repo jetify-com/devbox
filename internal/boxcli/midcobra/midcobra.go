@@ -80,7 +80,7 @@ func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 			if !debug.IsEnabled() {
 				ux.Ferror(ex.cmd.ErrOrStderr(), "There was an internal error. "+
 					"Run with DEVBOX_DEBUG=1 for a detailed error message, and consider reporting it at "+
-					"https://github.com/jetpack-io/devbox/issues\n")
+					"https://github.com/jetify-com/devbox/issues\n")
 			}
 			return exitErr.ExitCode()
 		}

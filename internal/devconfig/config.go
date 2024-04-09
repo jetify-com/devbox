@@ -32,7 +32,7 @@ const defaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
 func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-		"$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/%s/.schema/devbox.schema.json",
+		"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
 		"packages": [],
 		"shell": {
 			"init_hook": [

@@ -40,7 +40,7 @@ func TestParseRepoURL(t *testing.T) {
 	assert.Error(t, err)
 	_, err = ParseRepoURL("http://")
 	assert.Error(t, err)
-	_, err = ParseRepoURL("git@github.com:jetpack-io/devbox.git")
+	_, err = ParseRepoURL("git@github.com:jetify-com/devbox.git")
 	assert.Error(t, err)
 	u, err := ParseRepoURL("http://github.com")
 	assert.NoError(t, err)

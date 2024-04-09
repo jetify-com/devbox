@@ -209,7 +209,7 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 
 	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
 	// refs that have slashes in them. For example,
-	// "github:jetpack-io/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
+	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
 	split, err := splitPathOrOpaque(refURL, 3)
 	if err != nil {
 		return err
