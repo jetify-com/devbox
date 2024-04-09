@@ -1,6 +1,6 @@
 # Adding Overlays with Flakes
 
-For a more in depth walkthrough of this example, check out our [blog post](https://www.jetpack.io/blog/using-nix-flakes-with-devbox/)
+For a more in depth walkthrough of this example, check out our [blog post](https://www.jetify.com/blog/using-nix-flakes-with-devbox/)
 
 This flake shows how to use an overlay Nix flake to override a Nixpkgs package and use it in your devbox configuration.
 

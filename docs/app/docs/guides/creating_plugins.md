@@ -6,11 +6,11 @@ Plugins make it easier to get started with packages that require additional setu
 
 ## Getting Started
 
-Before writing a plugin, we recommend reading the [User Documentation](https://www.jetpack.io/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetpack-io/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
+Before writing a plugin, we recommend reading the [User Documentation](https://www.jetify.com/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetify-com/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
 
-If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetpack-io/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
+If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetify-com/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
-Before contributing, please consult our [Contributing Guide](https://github.com/jetpack-io/devbox/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetpack-io/devbox/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
+Before contributing, please consult our [Contributing Guide](https://github.com/jetify-com/devbox/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetify-com/devbox/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
 
 ## Creating a Plugin
 
@@ -205,7 +205,7 @@ Testing plugins can be done using an example Devbox project. Follow the steps be
 1. Add your plugin to the `include` section of the `devbox.json` file.
 1. Add any expected packages using `devbox add <pkg>`.
 1. Check that your plugin creates the correct files and environment variables when running `devbox shell`
-1. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetpack-io/devbox/tree/main/examples).
+1. If you are looking for sample projects to test your plugin with, check out our [examples](https://github.com/jetify-com/devbox/tree/main/examples).
 
 
 ## Example: MongoDB

@@ -4,9 +4,9 @@ title: Go
 
 Go projects can be run in Devbox by adding the Go SDK to your project. If your project uses cgo or compiles against C libraries, you should also include them in your packages to ensure Go can compile successfully
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/go/hello-world)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/go/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/go)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/go)
 
 ## Adding Go to your Project
 

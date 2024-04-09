@@ -3,9 +3,9 @@ title: MySQL
 ---
 MySQL can be automatically configured for your dev environment by Devbox via the built-in MySQL Plugin. This plugin will activate automatically when you install MySQL using `devbox add mysql80` or `devbox add mysql57`.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/mysql)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/mysql)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox/?folder=examples/databases/mysql)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/databases/mysql)
 
 ## Adding MySQL to your Shell
 

@@ -12,16 +12,16 @@ devbox create [dir] --template <template> [flags]
 
 ## List of templates
 
-* [**go**](https://github.com/jetpack-io/devbox/tree/main/examples/development/go)
-* [**node-npm**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-npm/)
-* [**node-typescript**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-typescript/)
-* [**node-yarn**](https://github.com/jetpack-io/devbox/tree/main/examples/development/nodejs/nodejs-yarn/)
-* [**php**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/)
-* [**python-pip**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pip/)
-* [**python-pipenv**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pipenv/)
-* [**python-poetry**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/poetry/)
-* [**ruby**](https://github.com/jetpack-io/devbox/tree/main/examples/development/ruby/)
-* [**rust**](https://github.com/jetpack-io/devbox/tree/main/examples/development/rust/)
+* [**go**](https://github.com/jetify-com/devbox/tree/main/examples/development/go)
+* [**node-npm**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs/nodejs-npm/)
+* [**node-typescript**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs/nodejs-typescript/)
+* [**node-yarn**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs/nodejs-yarn/)
+* [**php**](https://github.com/jetify-com/devbox/tree/main/examples/development/php/)
+* [**python-pip**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pip/)
+* [**python-pipenv**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pipenv/)
+* [**python-poetry**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/poetry/)
+* [**ruby**](https://github.com/jetify-com/devbox/tree/main/examples/development/ruby/)
+* [**rust**](https://github.com/jetify-com/devbox/tree/main/examples/development/rust/)
 
 
 ## Options

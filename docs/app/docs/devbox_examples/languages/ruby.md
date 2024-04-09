@@ -2,9 +2,9 @@
 title: Ruby
 ---
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/ruby)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/ruby)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/ruby)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/ruby)
 
 Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. This plugin will activate automatically when you install Ruby 2.7 using `devbox add ruby`.
 

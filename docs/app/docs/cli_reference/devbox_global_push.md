@@ -1,6 +1,6 @@
 # devbox global push
 
-Push a [global] config. Leave empty to use jetpack cloud. Can be a git repo for self storage.
+Push a [global] config. Leave empty to use Jetify sync. Can be a git repo for self storage.
 
 ```bash
 devbox global push <git-repo> [flags]

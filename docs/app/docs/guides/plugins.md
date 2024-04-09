@@ -161,5 +161,5 @@ Developers should directly edit helper files and check them into source control 
 
 ## Plugins Source Code
 
-Devbox Plugins are written in JSON and stored in the main Devbox Repo. You can view the source code of the current plugins [here](https://github.com/jetpack-io/devbox/tree/main/plugins)
+Devbox Plugins are written in JSON and stored in the main Devbox Repo. You can view the source code of the current plugins [here](https://github.com/jetify-com/devbox/tree/main/plugins)
 

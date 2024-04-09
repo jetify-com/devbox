@@ -67,7 +67,7 @@ The resulting .envrc will have the following:
 
 eval "$(devbox generate direnv --print-envrc --env MY_CUSTOM_ENV_VAR=my-value)"
 
-# check out https://www.jetpack.io/devbox/docs/ide_configuration/direnv/
+# check out https://www.jetify.com/devbox/docs/ide_configuration/direnv/
 # for more details
 ```
 
@@ -85,7 +85,7 @@ The resulting .envrc will have the following:
 
 eval "$(devbox generate direnv --print-envrc --env-file .env.devbox)"
 
-# check out https://www.jetpack.io/devbox/docs/ide_configuration/direnv/
+# check out https://www.jetify.com/devbox/docs/ide_configuration/direnv/
 # for more details
 ```
 
@@ -121,4 +121,4 @@ To seamlessly integrate VSCode with a direnv environment, follow these steps:
 
 Alternatively, you can use the [direnv VSCode extension](https://marketplace.visualstudio.com/items?itemName=mkhl.direnv) if your VSCode workspace has a .envrc file.
 
-If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetpack-io/devbox/pulls) in Github.
+If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetify-com/devbox/pulls) in Github.

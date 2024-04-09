@@ -8,21 +8,21 @@
 
 ### Instant, easy, and predictable development environments
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetpack-io/devbox) [![version](https://img.shields.io/github/v/release/jetpack-io/devbox?color=green&label=version&sort=semver)](https://github.com/jetpack-io/devbox/releases) [![tests](https://github.com/jetpack-io/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetpack-io/devbox/actions/workflows/cli-release.yml?branch=main) [![Built with Devbox](https://jetpack.io/img/devbox/shield_galaxy.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox) [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases) [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main) [![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
 
 ## What is it?
 
-[Devbox](https://www.jetpack.io/devbox/) is a command-line tool that lets you easily create isolated shells for development. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
+[Devbox](https://www.jetify.com/devbox/) is a command-line tool that lets you easily create isolated shells for development. You start by defining the list of packages required by your development environment, and devbox uses that definition to create an isolated environment just for your application.
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`). With Devbox, you can install over [400,000 package versions](https://www.nixhub.io) from the Nix Package Registry
 
-Devbox was originally developed by [jetpack.io](https://www.jetpack.io) and is internally powered by `nix`. 
+Devbox was originally developed by [Jetify](https://www.jetify.com) and is internally powered by `nix`. 
 
 ## Demo
 
 You can try out Devbox in your browser using the button below:
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
 
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
@@ -33,10 +33,10 @@ The example below creates a development environment with `python 2.7` and `go 1.
 Use the following install script to get the latest version of Devbox:
 
 ```sh
-curl -fsSL https://get.jetpack.io/devbox | bash
+curl -fsSL https://get.jetify.com/devbox | bash
 ```
 
-Read more on the [Devbox docs](https://www.jetpack.io/devbox/docs/installing_devbox/).
+Read more on the [Devbox docs](https://www.jetify.com/devbox/docs/installing_devbox/).
 
 ## Benefits
 
@@ -127,19 +127,19 @@ In this quickstart we’ll create a development shell with specific tools instal
    exit
    ```
 
-Read more on the [Devbox docs Quickstart](https://www.jetpack.io/devbox/docs/quickstart/).
+Read more on the [Devbox docs Quickstart](https://www.jetify.com/devbox/docs/quickstart/).
 
 ## Additional commands
 
 `devbox help` - see all commands
 
-See the [CLI Reference](https://www.jetpack.io/devbox/docs/cli_reference/devbox/) for the full list of commands.
+See the [CLI Reference](https://www.jetify.com/devbox/docs/cli_reference/devbox/) for the full list of commands.
 
 ## Join our Developer Community
 
-+ Chat with us by joining the [Jetpack.io Discord Server](https://discord.gg/jetpack-io) – we have a #devbox channel dedicated to this project.
-+ File bug reports and feature requests using [Github Issues](https://github.com/jetpack-io/devbox/issues)
-+ Follow us on [Jetpack's Twitter](https://twitter.com/jetpack_io) for product updates
++ Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify) – we have a #devbox channel dedicated to this project.
++ File bug reports and feature requests using [Github Issues](https://github.com/jetify-com/devbox/issues)
++ Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product updates
 
 ## Contributing
 
@@ -157,4 +157,4 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## License
 
-This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetpack-io/devbox/blob/main/LICENSE)
+This project is proudly open-source under the [Apache 2.0 License](https://github.com/jetify-com/devbox/blob/main/LICENSE)

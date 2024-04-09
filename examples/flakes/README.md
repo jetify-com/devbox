@@ -1,8 +1,8 @@
 # Flakes
 
-Examples that show how to add custom flakes to your Devbox project. These examples require [Devbox 0.4.7](https://www.jetpack.io/blog/devbox-0-4-7/) or later.
+Examples that show how to add custom flakes to your Devbox project. These examples require [Devbox 0.4.7](https://www.jetify.com/blog/devbox-0-4-7/) or later.
 
-For more details, you can also consult our Docs page on [using flakes](https://www.jetpack.io/devbox/docs/guides/using_flakes/)
+For more details, you can also consult our Docs page on [using flakes](https://www.jetify.com/devbox/docs/guides/using_flakes/)
 
 ## Local flakes (usually committed to your project)
 

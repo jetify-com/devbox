@@ -9,7 +9,7 @@ const codeTheme = { light: themes.github, dark: themes.dracula };
 const config = {
     title: 'Devbox',
     tagline: 'Instant, easy, and predictable shells and containers',
-    url: 'https://www.jetpack.io',
+    url: 'https://www.jetify.com',
     baseUrl: '/devbox/docs/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
@@ -18,7 +18,7 @@ const config = {
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
-    organizationName: 'jetpack-io', // Usually your GitHub org/user name.
+    organizationName: 'jetify-com', // Usually your GitHub org/user name.
     projectName: 'devbox', // Usually your repo name.
 
     // Even if you don't use internalization, you can use this field to set useful
@@ -44,7 +44,7 @@ const config = {
                     sidebarPath: require.resolve('./sidebars.js'),
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
-                    editUrl: "https://github.com/jetpack-io/devbox/tree/main/docs/app/"
+                    editUrl: "https://github.com/jetify-com/devbox/tree/main/docs/app/"
                 },
                 blog: false,
                 theme: {
@@ -82,7 +82,7 @@ const config = {
                     position: 'right',
                 },
                 {
-                    href: 'https://github.com/jetpack-io/devbox',
+                    href: 'https://github.com/jetify-com/devbox',
                     // label: 'GitHub',
                     className: 'header-github-link',
                     position: 'right',
@@ -91,14 +91,14 @@ const config = {
         },
         footer: {
             links: [{
-                    title: "Jetpack.io",
+                    title: "Jetify",
                     items: [{
-                            label: "Jetpack",
-                            href: "http://jetpack.io"
+                            label: "Jetify",
+                            href: "http://www.jetify.com"
                         },
                         {
                             label: "Blog",
-                            href: "http://jetpack.io/blog"
+                            href: "http://www.jetify.com/blog"
                         },
                     ]
                 },
@@ -106,11 +106,11 @@ const config = {
                     title: "Devbox",
                     items: [{
                             label: "Home",
-                            to: "https://www.jetpack.io/devbox"
+                            to: "https://www.jetify.com/devbox"
                         },
                         {
                             label: "Docs",
-                            to: "https://www.jetpack.io/devbox/docs/"
+                            to: "https://www.jetify.com/devbox/docs/"
                         }
                     ]
                 },
@@ -121,11 +121,11 @@ const config = {
 
                         {
                             label: "Github",
-                            href: "https://github.com/jetpack-io"
+                            href: "https://github.com/jetify-com"
                         },
                         {
                             label: "Twitter",
-                            href: "https://twitter.com/jetpack_io"
+                            href: "https://twitter.com/jetify_com"
                         },
                         {
                             href: 'https://discord.gg/agbskCJXk2',
@@ -139,7 +139,7 @@ const config = {
                 }
             ],
             style: 'dark',
-            copyright: `Copyright © ${new Date().getFullYear()} Jetpack Technologies, Inc.`,
+            copyright: `Copyright © ${new Date().getFullYear()} Jetify, Inc.`,
         },
         colorMode: {
             respectPrefersColorScheme: true

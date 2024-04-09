@@ -4,7 +4,7 @@ In addition to installing the JDK, you'll need to install either the Maven or Gr
 
 In both cases, you'll want to first activate `devbox shell` before generating your Maven or Gradle projects, so that the tools use the right version of the JDK for creating your project.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java)
 
 ## Adding the JDK to your project
 
@@ -24,9 +24,9 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 ## Maven
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/java/maven/hello-world)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java/maven/hello-world)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/java-maven)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/java-maven)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 

@@ -4,9 +4,9 @@ title: PHP
 
 PHP projects can manage most of their dependencies locally with `composer`. Some PHP extensions, however, need to be bundled with PHP at compile time.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/latest)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/php/latest)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
 
 ## Adding PHP to your Project
 

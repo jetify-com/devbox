@@ -50,4 +50,4 @@ The following steps show how to run a Java application in a devbox shell using t
     java main/hello
     ```
 
-If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetpack-io/devbox/pulls) in Github.
+If this guide is missing something, feel free to contribute by opening a [pull request](https://github.com/jetify-com/devbox/pulls) in Github.

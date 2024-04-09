@@ -11,7 +11,7 @@ Devbox currently provides two ways to use Flakes to install packages in your pro
 
 ## What are Flakes?
 
-[Flakes](https://www.jetpack.io/blog/powered-by-flakes/) are a new feature in the Nix language that lets you package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments.
+[Flakes](https://www.jetify.com/blog/powered-by-flakes/) are a new feature in the Nix language that lets you package software and create development shells in a declarative, fully reproducible way. You can use Nix Flakes to define packages, apps, templates, and dev environments.
 
 Flakes are defined as a directory with a `flake.nix` and a `flake.lock` file. You import flakes to your project using a flake reference, which describes where to find the Flake, and what version or revision to use
 
@@ -95,6 +95,6 @@ path:./my-flake#my-package
 
 For more examples of using Nix Flakes with Devbox, check out the examples in our Devbox Repo:
 
-- [Using Nix Flakes from Github](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/remote)
-- [Using a Local Flake](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/php)
-- [Applying an Overlay with Nix Flakes](https://github.com/jetpack-io/devbox/tree/main/examples/flakes/overlay)
+- [Using Nix Flakes from Github](https://github.com/jetify-com/devbox/tree/main/examples/flakes/remote)
+- [Using a Local Flake](https://github.com/jetify-com/devbox/tree/main/examples/flakes/php)
+- [Applying an Overlay with Nix Flakes](https://github.com/jetify-com/devbox/tree/main/examples/flakes/overlay)

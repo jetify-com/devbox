@@ -3,9 +3,9 @@ title: MariaDB
 ---
 MariaDB can be automatically configured for your dev environment by Devbox via the built-in MariaDB Plugin. This plugin will activate automatically when you install MariaDB using `devbox add mariadb`, or when you use a versioned Nix package like `devbox add mariadb_1010`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/databases/mariadb)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/mariadb)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/mariadb)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/mariadb)
 
 ## Adding MariaDB to your Shell
 

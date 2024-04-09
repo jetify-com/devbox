@@ -2,7 +2,7 @@
 
 An example Devbox shell for NGINX, Postgres, and PHP. This example uses Devbox Plugins for all 3 packages to simplify configuration
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/lepp-stack)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/lepp-stack)
 
 ## How to Run
 
@@ -41,6 +41,6 @@ Note that the `.sock` filepath can only be maximum 100 characters long. You can 
 
 ### Related Docs
 
-* [Using PHP with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/php/)
-* [Using Nginx with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/servers/nginx/)
-* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/databases/postgres/)
+* [Using PHP with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/php/)
+* [Using Nginx with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/servers/nginx/)
+* [Using PostgreSQL with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/databases/postgres/)

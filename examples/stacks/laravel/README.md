@@ -4,11 +4,11 @@ Laravel is a powerful web application framework built with PHP. It's a great cho
 
 This example shows how to build a simple Laravel application backed by MariaDB and Redis. It uses Devbox Plugins for all 3 Nix packages to simplify configuration
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetpack-io/devbox/?folder=examples/stacks/laravel)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/stacks/laravel)
 
 ## How to Run
 
-1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
 
 1. Create a new Laravel App by running `devbox create --template laravel`. This will create a new Laravel project in your current directory.
 

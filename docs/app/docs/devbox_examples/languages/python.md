@@ -4,7 +4,7 @@ title: Python
 
 Python by default will attempt to install your packages globally, or in the Nix Store (which it does not have permissions to modify). To use Python with Devbox, we recommend setting up a Virtual Environment using pipenv or Poetry (see below).
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python)
 
 ## Adding Python to your Project
 
@@ -21,9 +21,9 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 ## Installing Packages with Pip
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pip)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pip)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pip)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pip)
 
 [pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
 
@@ -81,9 +81,9 @@ If you need to install a specific version of Pip, you can run `devbox add python
 
 ## Pipenv
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pipenv)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pipenv)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pipenv)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 
@@ -104,9 +104,9 @@ This init_hook will automatically start your virtualenv when you run `devbox she
 
 ## Poetry
 
-[**Example Link**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/poetry/poetry-demo)
+[**Example Link**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/poetry/poetry-demo)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-poetry)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-poetry)
 
 [Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project.
 
