@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$id": "https://github.com/jetpack-io/devbox",
+    "$id": "https://github.com/jetify-com/devbox",
     "title": "Devbox json definition",
     "description": "Defines fields and acceptable values of devbox.json",
     "type": "object",

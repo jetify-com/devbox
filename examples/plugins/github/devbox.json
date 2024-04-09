@@ -11,8 +11,8 @@
     }
   },
   "include": [
-    "github:jetpack-io/devbox-plugin-example",
-    "github:jetpack-io/devbox-plugin-example?dir=custom-dir",
-    "github:jetpack-io/devbox-plugin-example/test/branch",
+    "github:jetify-com/devbox-plugin-example",
+    "github:jetify-com/devbox-plugin-example?dir=custom-dir",
+    "github:jetify-com/devbox-plugin-example/test/branch",
   ]
 }
