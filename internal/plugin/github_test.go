@@ -18,60 +18,60 @@ func TestNewGithubPlugin(t *testing.T) {
 	}{
 		{
 			name:    "parse basic github plugin",
-			Include: "github:jetpack-io/devbox-plugins",
+			Include: "github:jetify-com/devbox-plugins",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 				},
-				name: "jetpack-io.devbox-plugins",
+				name: "jetify-com.devbox-plugins",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/master",
 		},
 		{
 			name:    "parse github plugin with dir param",
-			Include: "github:jetpack-io/devbox-plugins?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/master/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
-			Include: "github:jetpack-io/devbox-plugins/my-branch?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins/my-branch?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Ref:   "my-branch",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/my-branch/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/my-branch/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
-			Include: "github:jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins/initials/my-branch?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Ref:   "initials/my-branch",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/initials/my-branch/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/initials/my-branch/mongodb",
 		},
 	}
 

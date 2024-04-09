@@ -6,7 +6,7 @@
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jetpack-io/devbox.git",
+    "url": "https://github.com/jetify-com/devbox.git",
     "directory": "vscode-extension"
   },
   "author": "jetpack-io",
@@ -118,7 +118,7 @@
     "jsonValidation": [
       {
         "fileMatch": "devbox.json",
-        "url": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json"
+        "url": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json"
       }
     ],
     "configuration": {

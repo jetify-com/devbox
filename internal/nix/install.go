@@ -148,7 +148,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 				"were not able to find it in the usual locations. Your nix installation " +
 				"might be broken. If restarting your terminal or reinstalling nix " +
 				"doesn't work, please create an issue at " +
-				"https://github.com/jetpack-io/devbox/issues",
+				"https://github.com/jetify-com/devbox/issues",
 		)
 	}
 

@@ -57,7 +57,7 @@ func createCmd() *cobra.Command {
 	)
 	command.Flags().StringVarP(
 		&flags.repo, "repo", "r", "",
-		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
+		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetify-com/devbox",
 	)
 	command.Flags().StringVarP(
 		&flags.subdir, "subdir", "s", "",
