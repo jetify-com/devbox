@@ -50,7 +50,7 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 	return parseStorePathFromInstallableOutput(installable, resultBytes)
 }
 
-// StorePathAreInStore returns true if the store path is in the store
+// StorePathsAreInStore returns true if the store path is in the store
 // It relies on `nix store ls` to check if the store path is in the store
 func StorePathsAreInStore(ctx context.Context, storePaths []string) (bool, error) {
 	for _, storePath := range storePaths {
