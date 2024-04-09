@@ -12,7 +12,7 @@
   },
   "include": [
     // TODO, make these more interesting by adding v2 capabilities
-    "github:jetpack-io/devbox-plugin-example",
-    "github:jetpack-io/devbox-plugin-example?dir=custom-dir"
+    "github:jetify-com/devbox-plugin-example",
+    "github:jetify-com/devbox-plugin-example?dir=custom-dir"
   ]
 }

@@ -2,7 +2,7 @@
 name = "devbox-cuda-dev"
 version = "0.1.0"
 description = ""
-authors = ["Jetpack"]
+authors = ["jetify.com"]
 readme = "README.md"
 packages = [{include = "devbox_cuda_dev"}]
 
