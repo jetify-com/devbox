@@ -6,11 +6,16 @@ package boxcli
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
+	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/pkg/api"
 )
 
 func authCmd() *cobra.Command {
@@ -22,6 +27,7 @@ func authCmd() *cobra.Command {
 	cmd.AddCommand(loginCmd())
 	cmd.AddCommand(logoutCmd())
 	cmd.AddCommand(whoAmICmd())
+	cmd.AddCommand(authNewTokenCommand())
 
 	return cmd
 }
@@ -101,4 +107,52 @@ func whoAmICmd() *cobra.Command {
 	)
 
 	return cmd
+}
+
+func authNewTokenCommand() *cobra.Command {
+	tokensCmd := &cobra.Command{
+		Use:   "tokens",
+		Short: "Manage devbox auth tokens",
+	}
+
+	newCmd := &cobra.Command{
+		Use:   "new",
+		Short: "Create a new token",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			token, err := identity.Get().GenSession(ctx)
+			if err != nil {
+				return err
+			}
+			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+			pat, err := client.CreatePAT(ctx)
+			if err != nil {
+				// This is a hack because errors are not returning with correct code.
+				// Once that is fixed, we can switch to use *connect.Error Code() instead.
+				if strings.Contains(err.Error(), "permission_denied") {
+					ux.Ferror(
+						cmd.ErrOrStderr(),
+						"You do not have permission to create a token. Please contact your"+
+							" administrator.",
+					)
+					return nil
+				}
+				return err
+			}
+			ux.Fsuccess(cmd.OutOrStdout(), "Token created.\n\n")
+			table := tablewriter.NewWriter(cmd.OutOrStdout())
+			table.SetRowLine(true)
+			table.AppendBulk([][]string{
+				{"Token ID", pat.GetToken().GetId()},
+				{"Secret", pat.GetToken().GetSecret()},
+			})
+			table.Render()
+			return nil
+		},
+	}
+
+	tokensCmd.AddCommand(newCmd)
+
+	return tokensCmd
 }
