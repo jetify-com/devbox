@@ -223,7 +223,12 @@ func checkIfUserCanAddSubstituter(ctx context.Context) {
 	// * Also check if cache is enabled in nix.conf
 	// * Test on single user install
 	// * Automate making user trusted if needed
-	if !nix.IsUserTrusted(ctx) {
+	cfg, err := nix.CurrentConfig(ctx)
+	if err != nil {
+		return
+	}
+	trusted, _ := cfg.IsUserTrusted(ctx)
+	if !trusted {
 		ux.Fwarning(
 			os.Stderr,
 			"In order to use a custom nix cache you must be a trusted user. Please "+
