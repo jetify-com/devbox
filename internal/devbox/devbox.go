@@ -1008,11 +1008,19 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// When ensureStateIsUpToDate is called with ensure=true, it always
 	// returns early if the lockfile is up to date. So we don't need to check here
 	if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {
+		if !fileutil.Exists(d.nixPrintDevEnvCachePath()) {
+			ux.Ferror(
+				d.stderr,
+				"Error connecting to the internet and no cached environment found. Aborting.\n",
+			)
+			return nil, err
+		}
 		ux.Fwarning(
 			d.stderr,
 			"Error connecting to the internet. Will attempt to use cached environment.\n",
 		)
 	} else if err != nil {
+		// Some other non connection error, just return it.
 		return nil, err
 	}
 
