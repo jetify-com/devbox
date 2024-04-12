@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
@@ -22,6 +23,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/shellgen"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -455,6 +457,18 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			creds, err := d.providers.NixCache.Credentials(ctx)
 			if err == nil {
 				args.Env = creds.Env()
+			}
+
+			// We don't want to return an error here if configuring
+			// the cache fails. Just proceed without it.
+			u, err := user.Current()
+			if err != nil {
+				err = redact.Errorf("lookup current user: %v", err)
+				debug.Log("error configuring cache: %v", err)
+			}
+			err = d.providers.NixCache.Configure(ctx, u.Username)
+			if err != nil {
+				debug.Log("error configuring cache: %v", err)
 			}
 		}
 		for _, installable := range installables {

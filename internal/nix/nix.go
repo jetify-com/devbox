@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"runtime/trace"
 	"strings"
 	"sync"
@@ -411,4 +412,22 @@ func parseInsecurePackagesFromExitError(errorMsg string) []string {
 	}
 
 	return insecurePackages
+}
+
+func RestartDaemon(ctx context.Context) error {
+	if runtime.GOOS != "darwin" {
+		return nil
+	}
+	err := exec.CommandContext(ctx, "launchctl", "bootout", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist").Run()
+	if err != nil {
+		return err
+	}
+	err = exec.CommandContext(ctx, "launchctl", "bootstrap", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist").Run()
+	if err != nil {
+		return err
+	}
+
+	// TODO(gcurtis): poll for daemon to come back instead.
+	time.Sleep(2 * time.Second)
+	return nil
 }

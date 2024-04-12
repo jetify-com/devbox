@@ -8,12 +8,13 @@ import (
 
 //nolint:revive
 func TestConfigIsUserTrusted(t *testing.T) {
+	curUser, err := user.Current()
+	if err != nil {
+		t.Fatal("lookup current user:", err)
+	}
+
 	t.Run("UsernameInList", func(t *testing.T) {
-		u, err := user.Current()
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Setenv("NIX_CONFIG", "trusted-users = "+u.Username)
+		t.Setenv("NIX_CONFIG", "trusted-users = "+curUser.Username)
 
 		ctx := context.Background()
 		cfg, err := CurrentConfig(ctx)
@@ -21,7 +22,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		trusted, err := cfg.IsUserTrusted(ctx)
+		trusted, err := cfg.IsUserTrusted(ctx, curUser.Username)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -30,11 +31,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 		}
 	})
 	t.Run("UserGroupInList", func(t *testing.T) {
-		u, err := user.Current()
-		if err != nil {
-			t.Fatal(err)
-		}
-		g, err := user.LookupGroupId(u.Gid)
+		g, err := user.LookupGroupId(curUser.Gid)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -46,7 +43,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		trusted, err := cfg.IsUserTrusted(ctx)
+		trusted, err := cfg.IsUserTrusted(ctx, curUser.Username)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -63,7 +60,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		trusted, err := cfg.IsUserTrusted(ctx)
+		trusted, err := cfg.IsUserTrusted(ctx, curUser.Username)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -80,7 +77,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		trusted, err := cfg.IsUserTrusted(ctx)
+		trusted, err := cfg.IsUserTrusted(ctx, curUser.Username)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -97,7 +94,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		trusted, err := cfg.IsUserTrusted(ctx)
+		trusted, err := cfg.IsUserTrusted(ctx, curUser.Username)
 		if err != nil {
 			t.Fatal(err)
 		}
