@@ -2,7 +2,7 @@
 
 ### 即时、简单、可预测地创建Shell与Container
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/agbskCJXk2) ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox) [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases) [![tests](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/jetify) ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox) [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases) [![tests](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/tests.yaml)
 
 ---
 
@@ -152,7 +152,7 @@ Devbox目前支持检测以下两种语言：
 
 ## 加入我们的开发者社区
 
-+ 通过加入[Jetify Discord Server](https://discord.gg/agbskCJXk2)来与我们聊天 - 我们有一个#devbox频道专门用于这个项目。
++ 通过加入[Jetify Discord Server](https://discord.gg/jetify)来与我们聊天 - 我们有一个#devbox频道专门用于这个项目。
 + 使用[Github Issues](https://github.com/jetify-com/devbox/issues)提交错误报告和功能请求。
 + 在[Jetify’s Twitter](https://twitter.com/jetify_com)上关注我们的产品更新。
 
