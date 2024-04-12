@@ -126,7 +126,7 @@ func authNewTokenCommand() *cobra.Command {
 				return err
 			}
 			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-			pat, err := client.CreatePAT(ctx)
+			pat, err := client.CreateToken(ctx)
 			if err != nil {
 				// This is a hack because errors are not returning with correct code.
 				// Once that is fixed, we can switch to use *connect.Error Code() instead.
