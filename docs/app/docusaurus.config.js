@@ -76,7 +76,7 @@ const config = {
                     label: "Docs"
                 },
                 {
-                    href: 'https://discord.gg/agbskCJXk2',
+                    href: 'https://discord.gg/jetify',
                     // label: 'Discord',
                     className: 'header-discord-link',
                     position: 'right',
@@ -128,7 +128,7 @@ const config = {
                             href: "https://twitter.com/jetify_com"
                         },
                         {
-                            href: 'https://discord.gg/agbskCJXk2',
+                            href: 'https://discord.gg/jetify',
                             label: 'Discord',
                         },
                         {
