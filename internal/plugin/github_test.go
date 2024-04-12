@@ -116,7 +116,9 @@ func TestGithubPluginAuth(t *testing.T) {
 	expectedURL := "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/test"
 
 	t.Run("generate request for public Github repository", func(t *testing.T) {
-		actual, err := githubPlugin.request("test")
+		url, err := githubPlugin.url("test")
+		assert.NoError(t, err)
+		actual, err := githubPlugin.request(url)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedURL, actual.URL.String())
 		assert.Equal(t, "", actual.Header.Get("Authorization"))
@@ -124,8 +126,9 @@ func TestGithubPluginAuth(t *testing.T) {
 
 	t.Run("generate request for private Github repository", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "gh_abcd")
-
-		actual, err := githubPlugin.request("test")
+		url, err := githubPlugin.url("test")
+		assert.NoError(t, err)
+		actual, err := githubPlugin.request(url)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedURL, actual.URL.String())
 		assert.Equal(t, "token gh_abcd", actual.Header.Get("Authorization"))
