@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/nix/nixprofile"
+	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/ux"
@@ -74,7 +75,7 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	// It will return an error if .devbox/gen/flake is missing
 	// TODO: Remove this if it's not needed.
 	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
-	return nil
+	return plugin.Update()
 }
 
 func (d *Devbox) inputsToUpdate(

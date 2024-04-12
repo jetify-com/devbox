@@ -14,16 +14,23 @@ import (
 	"hash"
 	"io"
 	"os"
+	"strings"
 
+	"github.com/gosimple/slug"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
 // Bytes returns a hex-encoded hash of b.
-// TODO: This doesn't need to return an error.
-func Bytes(b []byte) (string, error) {
+func Bytes(b []byte) string {
 	h := newHash()
 	h.Write(b)
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// Bytes6 returns the first 6 characters of the hash of b.
+func Bytes6(b []byte) string {
+	hash := Bytes(b)
+	return hash[:min(len(hash), 6)]
 }
 
 // File returns a hex-encoded hash of a file's contents.
@@ -50,7 +57,7 @@ func JSON(a any) (string, error) {
 	if err != nil {
 		return "", redact.Errorf("marshal to json for hashing: %v", err)
 	}
-	return Bytes(b)
+	return Bytes(b), nil
 }
 
 // JSONFile compacts the JSON in a file and returns its hex-encoded hash.
@@ -66,7 +73,18 @@ func JSONFile(path string) (string, error) {
 	if err := json.Compact(buf, b); err != nil {
 		return "", redact.Errorf("compact json for hashing: %v", err)
 	}
-	return Bytes(buf.Bytes())
+	return Bytes(buf.Bytes()), nil
 }
 
 func newHash() hash.Hash { return sha256.New() }
+
+// Slug returns a deterministic URL slug version of the string. With the
+// following characteristics:
+//
+// * A 6 character hash is appended to avoid collisions
+// * Trims the slug to last 50 characters
+// * Removes any prefixed hashes to ensure first character is alphanumeric
+func Slug(s string) string {
+	s = slug.Make(s) + "-" + Bytes6([]byte(s))
+	return strings.TrimPrefix(s[max(0, len(s)-50):], "-")
+}

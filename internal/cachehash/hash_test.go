@@ -4,6 +4,7 @@ package cachehash
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -111,5 +112,53 @@ func TestJSONFileNotExist(t *testing.T) {
 	}
 	if hash != "" {
 		t.Errorf("got non-empty hash %q", hash)
+	}
+}
+
+func TestSlug(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"basic", "HelloWorld", "helloworld-872e4e"},
+		{"special chars", "Hello, World!", "hello-world-dffd60"},
+		{"empty string", "", "e3b0c4"},
+		{"leading special char", "@hello", "athello-8f8a2f"},
+		{
+			"url",
+			"https://example.com/path?query=foo.bar",
+			"https-example-com-path-query-foo-bar-3e60ff",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := Slug(c.input)
+			if got != c.expected {
+				t.Errorf("Slug(%q) == %q, want %q", c.input, got, c.expected)
+			}
+		})
+	}
+
+	// test that 2 similar strings have different slugs
+	s1 := "Hello, World!"
+	s2 := "Hello, World"
+	if Slug(s1) == Slug(s2) {
+		t.Errorf("Slug(%q) == Slug(%q), want different slugs", s1, s2)
+	}
+
+	// Test that 2 super long truncated strings have the same slug
+	s3 := "	" + strings.Repeat("a", 1000)
+	s4 := "	" + strings.Repeat("a", 1000)
+	if Slug(s3) != Slug(s4) {
+		t.Errorf("Slug(%q) != Slug(%q), want same slug", s3, s4)
+	}
+
+	// Test that 2 super long strings have different slugs
+	s5 := strings.Repeat("a", 1000)
+	s6 := strings.Repeat("a", 1000) + "b"
+	if Slug(s5) == Slug(s6) {
+		t.Errorf("Slug(%q) == Slug(%q), want different slugs", s5, s6)
 	}
 }
