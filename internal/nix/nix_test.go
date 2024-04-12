@@ -1,6 +1,9 @@
 package nix
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestParseInsecurePackagesFromExitError(t *testing.T) {
 	errorText := `
@@ -65,4 +68,90 @@ func TestParseInsecurePackagesFromExitError(t *testing.T) {
 	if packages[0] != "python-2.7.18.7" {
 		t.Errorf("Expected package 'python-2.7.18.7', got %s", packages[0])
 	}
+}
+
+func TestParseVersionInfo(t *testing.T) {
+	raw := `nix (Nix) 2.21.2
+System type: aarch64-darwin
+Additional system types: x86_64-darwin
+Features: gc, signed-caches
+System configuration file: /etc/nix/nix.conf
+User configuration files: /Users/nobody/.config/nix/nix.conf:/etc/xdg/nix/nix.conf
+Store directory: /nix/store
+State directory: /nix/var/nix
+Data directory: /nix/store/m0ns07v8by0458yp6k30rfq1rs3kaz6g-nix-2.21.2/share
+`
+
+	info := parseVersionInfo([]byte(raw))
+	if got, want := info.Name, "nix"; got != want {
+		t.Errorf("got Name = %q, want %q", got, want)
+	}
+	if got, want := info.Version, "2.21.2"; got != want {
+		t.Errorf("got Version = %q, want %q", got, want)
+	}
+	if got, want := info.System, "aarch64-darwin"; got != want {
+		t.Errorf("got System = %q, want %q", got, want)
+	}
+	if got, want := info.ExtraSystems, []string{"x86_64-darwin"}; !slices.Equal(got, want) {
+		t.Errorf("got ExtraSystems = %q, want %q", got, want)
+	}
+	if got, want := info.Features, []string{"gc", "signed-caches"}; !slices.Equal(got, want) {
+		t.Errorf("got Features = %q, want %q", got, want)
+	}
+	if got, want := info.SystemConfig, "/etc/nix/nix.conf"; got != want {
+		t.Errorf("got SystemConfig = %q, want %q", got, want)
+	}
+	if got, want := info.UserConfigs, []string{"/Users/nobody/.config/nix/nix.conf", "/etc/xdg/nix/nix.conf"}; !slices.Equal(got, want) {
+		t.Errorf("got UserConfigs = %q, want %q", got, want)
+	}
+	if got, want := info.StoreDir, "/nix/store"; got != want {
+		t.Errorf("got StoreDir = %q, want %q", got, want)
+	}
+	if got, want := info.StateDir, "/nix/var/nix"; got != want {
+		t.Errorf("got StateDir = %q, want %q", got, want)
+	}
+	if got, want := info.DataDir, "/nix/store/m0ns07v8by0458yp6k30rfq1rs3kaz6g-nix-2.21.2/share"; got != want {
+		t.Errorf("got DataDir = %q, want %q", got, want)
+	}
+}
+
+func TestParseVersionInfoShort(t *testing.T) {
+	info := parseVersionInfo([]byte("nix (Nix) 2.21.2"))
+	if got, want := info.Name, "nix"; got != want {
+		t.Errorf("got Name = %q, want %q", got, want)
+	}
+	if got, want := info.Version, "2.21.2"; got != want {
+		t.Errorf("got Version = %q, want %q", got, want)
+	}
+}
+
+func TestParseVersionInfoEmpty(t *testing.T) {
+	// Don't panic.
+	parseVersionInfo(nil)
+	parseVersionInfo([]byte{})
+}
+
+func TestVersionInfoVersion(t *testing.T) {
+	t.Run("Valid", func(t *testing.T) {
+		info := VersionInfo{Version: "2.21.0"}
+		got, err := info.version()
+		if err != nil {
+			t.Error("got error:", err)
+		}
+		if got != info.Version {
+			t.Fatalf("got version %q, want %q", got, info.Version)
+		}
+	})
+
+	t.Run("Empty", func(t *testing.T) {
+		info := VersionInfo{}
+		if _, err := info.version(); err == nil {
+			t.Error("want non-nil error")
+		}
+
+		info.raw = "nix output without a version"
+		if _, err := info.version(); err == nil {
+			t.Error("want non-nil error")
+		}
+	})
 }
