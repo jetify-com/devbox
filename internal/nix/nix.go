@@ -16,6 +16,8 @@ import (
 	"runtime/trace"
 	"slices"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -173,29 +175,146 @@ func SystemIsLinux() bool {
 	return strings.Contains(System(), "linux")
 }
 
-// version is the cached output of `nix --version`.
-var version = ""
+// VersionInfo contains information about a Nix installation.
+type VersionInfo struct {
+	// Name is the executed program name (the first element of argv).
+	Name string
 
-// Version returns the version of nix from `nix --version`. Usually in a semver
-// like format, but not strictly.
-func Version() (string, error) {
-	if version != "" {
-		return version, nil
+	// Version is the semantic Nix version string.
+	Version string
+
+	// System is the current Nix system. It follows the pattern <arch>-<os>
+	// and does not use the same values as GOOS or GOARCH.
+	System string
+
+	// ExtraSystems are other systems that the current machine supports.
+	// Usually set by the extra-platforms setting in nix.conf.
+	ExtraSystems []string
+
+	// Features are the capabilities that the Nix binary was compiled with.
+	Features []string
+
+	// SystemConfig is the path to the Nix system configuration file,
+	// usually /etc/nix/nix.conf.
+	SystemConfig string
+
+	// UserConfigs is a list of paths to the user's Nix configuration files.
+	UserConfigs []string
+
+	// StoreDir is the path to the Nix store directory, usually /nix/store.
+	StoreDir string
+
+	// StateDir is the path to the Nix state directory, usually
+	// /nix/var/nix.
+	StateDir string
+
+	// DataDir is the path to the Nix data directory, usually somewhere
+	// within the Nix store. This field is empty for Nix versions <= 2.12.
+	DataDir string
+
+	// raw is the raw nix --version --debug output.
+	raw string
+}
+
+func parseVersionInfo(data []byte) VersionInfo {
+	// Example nix --version --debug output from Nix versions 2.12 to 2.21.
+	// Version 2.12 omits the data directory, but they're otherwise
+	// identical.
+	//
+	// See https://github.com/NixOS/nix/blob/5b9cb8b3722b85191ee8cce8f0993170e0fc234c/src/libmain/shared.cc#L284-L305
+	//
+	// nix (Nix) 2.21.2
+	// System type: aarch64-darwin
+	// Additional system types: x86_64-darwin
+	// Features: gc, signed-caches
+	// System configuration file: /etc/nix/nix.conf
+	// User configuration files: /Users/nobody/.config/nix/nix.conf:/etc/xdg/nix/nix.conf
+	// Store directory: /nix/store
+	// State directory: /nix/var/nix
+	// Data directory: /nix/store/m0ns07v8by0458yp6k30rfq1rs3kaz6g-nix-2.21.2/share
+
+	info := VersionInfo{raw: string(data)}
+	if len(info.raw) == 0 {
+		return info
 	}
 
-	cmd := command("--version")
-	outBytes, err := cmd.Output()
+	lines := strings.Split(info.raw, "\n")
+	info.Name, info.Version, _ = strings.Cut(lines[0], " (Nix) ")
+	for _, line := range lines {
+		name, value, found := strings.Cut(line, ": ")
+		if !found {
+			continue
+		}
+
+		switch name {
+		case "System type":
+			info.System = value
+		case "Additional system types":
+			info.ExtraSystems = strings.Split(value, ", ")
+		case "Features":
+			info.Features = strings.Split(value, ", ")
+		case "System configuration file":
+			info.SystemConfig = value
+		case "User configuration files":
+			info.UserConfigs = strings.Split(value, ":")
+		case "Store directory":
+			info.StoreDir = value
+		case "State directory":
+			info.StateDir = value
+		case "Data directory":
+			info.DataDir = value
+		}
+	}
+	return info
+}
+
+func (v VersionInfo) version() (string, error) {
+	if v.Version == "" {
+		firstLine, _, _ := strings.Cut(v.raw, "\n")
+		if strings.TrimSpace(firstLine) == "" {
+			firstLine = "empty nix --version output"
+		}
+		return "", redact.Errorf("parse nix version: %s", redact.Safe(firstLine))
+	}
+	return v.Version, nil
+}
+
+// version is the cached output of `nix --version --debug`.
+var versionInfo = sync.OnceValues(runNixVersion)
+
+func runNixVersion() (VersionInfo, error) {
+	// Arbitrary timeout to make sure we don't take too long or hang.
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Intentionally don't use the nix.command function here. We use this to
+	// perform Nix version checks and don't want to pass any extra-features
+	// or flags that might be missing from old versions.
+	cmd := exec.CommandContext(ctx, "nix", "--version", "--debug")
+	out, err := cmd.Output()
 	if err != nil {
-		return "", redact.Errorf("nix command: %s", redact.Safe(cmd))
+		if errors.Is(err, context.DeadlineExceeded) {
+			return VersionInfo{}, redact.Errorf("nix command: %s: timed out while reading output", redact.Safe(cmd))
+		}
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && len(exitErr.Stderr) != 0 {
+			return VersionInfo{}, redact.Errorf("nix command: %s: %q: %v", redact.Safe(cmd), exitErr.Stderr, err)
+		}
+		return VersionInfo{}, redact.Errorf("nix command: %s: %v", redact.Safe(cmd), err)
 	}
-	out := string(outBytes)
-	const prefix = "nix (Nix) "
-	if !strings.HasPrefix(out, prefix) {
-		return "", redact.Errorf(`nix command %s: expected %q prefix, but output was: %s`,
-			redact.Safe(cmd), redact.Safe(prefix), redact.Safe(out))
+
+	debug.Log("nix --version --debug output:\n%s", out)
+	return parseVersionInfo(out), nil
+}
+
+// Version returns the currently installed version of Nix.
+func Version() (string, error) {
+	info, err := versionInfo()
+	if err != nil {
+		return "", err
 	}
-	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
-	return version, nil
+	return info.version()
 }
 
 var nixPlatforms = []string{
