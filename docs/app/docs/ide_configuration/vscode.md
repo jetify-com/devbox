@@ -18,7 +18,7 @@ Follow the steps below to have VSCode's environment be in sync with Devbox shell
 
 Keep in mind that if you make changes to your devbox.json, you need to re-run Step 3 to make VSCode pick up the new changes.
 
-**NOTE:** This integration feature requires Devbox CLI v0.5.5 and above installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+**NOTE:** This integration feature requires Devbox CLI v0.5.5 and above installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/jetify).
 
 **NOTE2:** This feature is not yet available for Windows and WSL.
 
