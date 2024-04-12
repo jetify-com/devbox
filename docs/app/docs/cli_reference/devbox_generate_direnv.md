@@ -14,7 +14,7 @@ devbox generate direnv [flags]
 | `-c, --config string` | path to directory containing a devbox.json config file |
 |  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
 |  `--env-file string` | path to a file containing environment variables to set in the devbox environment. If the file does not exist, then this parameter is ignored |
-| `-h, --help` | help for generate |
+| `-h, --help` | help for direnv |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO

@@ -12,7 +12,7 @@ devbox generate readme [filename] [flags]
 | Option | Description |
 | --- | --- |
 | `-c, --config string` | path to directory containing a devbox.json config file |
-| `-h, --help` | help for dockerfile |
+| `-h, --help` | help for readme |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 
