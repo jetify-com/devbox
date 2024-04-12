@@ -67,7 +67,7 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
 
 async function setupDevboxLauncher(): Promise<any> {
   // download devbox launcher script
-  const gatewayHost = 'https://releases.jetpack.io/devbox';
+  const gatewayHost = 'https://releases.jetify.com/devbox';
   const response = await fetch(gatewayHost, {
     method: 'get',
   });

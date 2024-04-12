@@ -4,6 +4,10 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.5]
+
+- Rebranding changes from jetpack.io to jetify.com.
+
 ## [0.1.4]
 
 - Added debug mode in extension settings (only supports logs for "Reopen in Devbox Shell environment" feature).
