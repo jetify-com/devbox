@@ -10,11 +10,9 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime/trace"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -413,28 +411,4 @@ func parseInsecurePackagesFromExitError(errorMsg string) []string {
 	}
 
 	return insecurePackages
-}
-
-func IsUserTrusted(ctx context.Context) bool {
-	cmd := commandContext(ctx, "show-config", "--json")
-	out, err := cmd.Output()
-	if err != nil {
-		return false
-	}
-
-	var config struct {
-		TrustedUsers struct {
-			Value []string `json:"value"`
-		} `json:"trusted-users"`
-	}
-	if err := json.Unmarshal(out, &config); err != nil {
-		return false
-	}
-
-	u, err := user.Current()
-	if err != nil {
-		return false
-	}
-
-	return slices.Contains(config.TrustedUsers.Value, u.Username)
 }
