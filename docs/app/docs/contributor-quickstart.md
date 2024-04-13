@@ -76,7 +76,7 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 
 ### Use Devbox with your IDE
 * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetify-com.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
 * **[Join our Discord Community](https://discord.gg/jetify):** Chat with the development team and our growing community of Devbox users.

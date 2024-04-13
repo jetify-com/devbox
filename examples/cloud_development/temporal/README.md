@@ -9,7 +9,7 @@ For more details, check out:
 * [Temporal.io](https://temporal.io/)
 * [Temporalite](https://github.com/temporalio/temporalite)
 * [Temporal Python SDK](https://github.com/temporalio/sdk-python)
-* [Temporal Python Samples](https://github.com/temporalio/sample-python)
+* [Temporal Python Samples](https://github.com/temporalio/samples-python)
 
 ## Starting Temporal
 
