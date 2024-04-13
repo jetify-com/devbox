@@ -10,7 +10,7 @@ Before writing a plugin, we recommend reading the [User Documentation](https://w
 
 If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetify-com/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
-Before contributing, please consult our [Contributing Guide](https://github.com/jetify-com/devbox/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetify-com/devbox/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
+Before contributing, please consult our [Contributing Guide](https://github.com/jetify-com/devbox/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/jetify-com/devbox/blob/main/CODE_OF_CONDUCT.md) for details on how to contribute to Devbox.
 
 ## Creating a Plugin
 
