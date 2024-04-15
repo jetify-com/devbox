@@ -452,8 +452,10 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			Flags:         flags,
 			Writer:        d.stderr,
 		}
-		args.ExtraSubstituter, err = d.providers.NixCache.URI(ctx)
-		if err == nil {
+		args.ExtraSubstituter, _ = d.providers.NixCache.URI(ctx)
+		// TODO (Landau): handle errors that are not auth.ErrNotLoggedIn
+		// Only lookup credentials if we have a cache to use
+		if args.ExtraSubstituter != "" {
 			creds, err := d.providers.NixCache.Credentials(ctx)
 			if err == nil {
 				args.Env = creds.Env()
