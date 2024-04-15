@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/user"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -64,7 +65,7 @@ func cacheCmd() *cobra.Command {
 	cacheCommand.AddCommand(uploadCommand)
 	cacheCommand.AddCommand(cacheConfigureCmd())
 	cacheCommand.AddCommand(cacheCredentialsCmd())
-	cacheCommand.Hidden = true
+	cacheCommand.AddCommand(cacheInfoCmd())
 
 	return cacheCommand
 }
@@ -104,6 +105,28 @@ func cacheCredentialsCmd() *cobra.Command {
 				return err
 			}
 			_, err = cmd.OutOrStdout().Write(out)
+			return err
+		},
+	}
+}
+
+func cacheInfoCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "info",
+		Short: "Output information about the nix cache",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO(gcurtis): We can also output info about the daemon config status
+			// here
+			uri, err := nixcache.Get().URI(cmd.Context())
+			if err != nil {
+				return err
+			}
+			if uri == "" {
+				fmt.Fprintln(cmd.OutOrStdout(), "No cache configured")
+				return nil
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), "Cache URI:", uri)
 			return err
 		},
 	}

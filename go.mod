@@ -40,7 +40,7 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
 	go.jetpack.io/envsec v0.0.16-0.20240329013200-4174c0acdb00
-	go.jetpack.io/pkg v0.0.0-20240411004921-791796648f19
+	go.jetpack.io/pkg v0.0.0-20240415190428-d17de207b432
 	go.jetpack.io/typeid v1.0.1-0.20240410183543-96a4fd53d1e2
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/mod v0.16.0

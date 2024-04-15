@@ -185,22 +185,29 @@ func (*Provider) executable() string {
 // private cache.
 func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	cache := filecache.New[AWSCredentials]("devbox/providers/nixcache")
-	creds, err := cache.GetOrSetWithTime("credentials", func() (AWSCredentials, time.Time, error) {
-		token, err := identity.Get().GenSession(ctx)
-		if err != nil {
-			return AWSCredentials{}, time.Time{}, err
-		}
-		client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-		creds, err := client.GetAWSCredentials(ctx)
-		if err != nil {
-			return AWSCredentials{}, time.Time{}, err
-		}
-		exp := time.Time{}
-		if t := creds.GetExpiration(); t != nil {
-			exp = t.AsTime()
-		}
-		return newAWSCredentials(creds), exp, nil
-	})
+	token, err := identity.Get().GenSession(ctx)
+	if err != nil {
+		return AWSCredentials{}, err
+	}
+	creds, err := cache.GetOrSetWithTime(
+		"credentials-"+token.IDClaims().Subject,
+		func() (AWSCredentials, time.Time, error) {
+			token, err := identity.Get().GenSession(ctx)
+			if err != nil {
+				return AWSCredentials{}, time.Time{}, err
+			}
+			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+			creds, err := client.GetAWSCredentials(ctx)
+			if err != nil {
+				return AWSCredentials{}, time.Time{}, err
+			}
+			exp := time.Time{}
+			if t := creds.GetExpiration(); t != nil {
+				exp = t.AsTime()
+			}
+			return newAWSCredentials(creds), exp, nil
+		},
+	)
 	if err != nil {
 		return AWSCredentials{}, redact.Errorf("nixcache: get credentials: %w", redact.Safe(err))
 	}
@@ -212,21 +219,31 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 // and a nil error.
 func (p *Provider) URI(ctx context.Context) (string, error) {
 	cache := filecache.New[string]("devbox/providers/nixcache")
-	uri, err := cache.GetOrSet("uri", func() (string, time.Duration, error) {
-		token, err := identity.Get().GenSession(ctx)
-		if err != nil {
-			return "", 0, err
-		}
-		client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-		resp, err := client.GetBinCache(ctx)
-		if err != nil {
-			return "", 0, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
-		}
+	token, err := identity.Get().GenSession(ctx)
+	if err != nil {
+		return "", err
+	}
+	// Landau: I think we can probably remove this cache? This endpoint is very
+	// fast and we only use this for build/upload which are slow.
+	uri, err := cache.GetOrSet(
+		"uri-"+token.IDClaims().Subject,
+		func() (string, time.Duration, error) {
+			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+			resp, err := client.GetBinCache(ctx)
+			if err != nil {
+				return "", 0, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
+			}
 
-		// TODO(gcurtis): do a better job of invalidating the URI after
-		// logout or after a Nix command fails to query the cache.
-		return resp.GetNixBinCacheUri(), 24 * time.Hour, nil
-	})
+			// Don't cache negative responses.
+			if resp.GetNixBinCacheUri() == "" {
+				return "", 0, nil
+			}
+
+			// TODO(gcurtis): do a better job of invalidating the URI after
+			// a Nix command fails to query the cache.
+			return resp.GetNixBinCacheUri(), 24 * time.Hour, nil
+		},
+	)
 	if err != nil {
 		return "", redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
 	}
