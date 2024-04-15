@@ -14,9 +14,7 @@ import (
 	"hash"
 	"io"
 	"os"
-	"strings"
 
-	"github.com/gosimple/slug"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -77,14 +75,3 @@ func JSONFile(path string) (string, error) {
 }
 
 func newHash() hash.Hash { return sha256.New() }
-
-// Slug returns a deterministic URL slug version of the string. With the
-// following characteristics:
-//
-// * A 6 character hash is appended to avoid collisions
-// * Trims the slug to last 50 characters
-// * Removes any prefixed hashes to ensure first character is alphanumeric
-func Slug(s string) string {
-	s = slug.Make(s) + "-" + Bytes6([]byte(s))
-	return strings.TrimPrefix(s[max(0, len(s)-50):], "-")
-}
