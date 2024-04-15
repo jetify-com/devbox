@@ -112,10 +112,9 @@ func cacheCredentialsCmd() *cobra.Command {
 
 func cacheInfoCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:    "info",
-		Short:  "Output information about the nix cache",
-		Hidden: true,
-		Args:   cobra.ExactArgs(0),
+		Use:   "info",
+		Short: "Output information about the nix cache",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(gcurtis): We can also output info about the daemon config status
 			// here
