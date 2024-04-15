@@ -362,6 +362,8 @@ go.jetpack.io/envsec v0.0.16-0.20240329013200-4174c0acdb00 h1:Kb+OlWOntAq+1nF+01
 go.jetpack.io/envsec v0.0.16-0.20240329013200-4174c0acdb00/go.mod h1:dVG2n8fBAGpQczW8yk/6wuXb9uEhzaJF7wGXkGLRRCU=
 go.jetpack.io/pkg v0.0.0-20240411004921-791796648f19 h1:ZloUPW4zNknwS2mYSmMVAtMfl3H2zZUCz+MxU5s79fY=
 go.jetpack.io/pkg v0.0.0-20240411004921-791796648f19/go.mod h1:JfVScypw14E4GR2TA2Nv29JqalRtgv2C9QjeQcNS4UM=
+go.jetpack.io/pkg v0.0.0-20240415190428-d17de207b432 h1:5B9uUxqzwDLUi+m/SVawTMszOmCK6KnUWb4yiCZJumg=
+go.jetpack.io/pkg v0.0.0-20240415190428-d17de207b432/go.mod h1:JfVScypw14E4GR2TA2Nv29JqalRtgv2C9QjeQcNS4UM=
 go.jetpack.io/typeid v1.0.1-0.20240410183543-96a4fd53d1e2 h1:w9uWg8BAim374iWzxEuDhf6MJ/cMQVR/0xi/L3DgfT0=
 go.jetpack.io/typeid v1.0.1-0.20240410183543-96a4fd53d1e2/go.mod h1:zqBUNjE3NxAL8wRYW2LcOpH5LxCvTqthm9YSuuu1ic4=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
