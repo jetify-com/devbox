@@ -70,8 +70,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		return nil, err
 	}
 	return githubCache.GetOrSet(
-		// TODO: filecache should do this by default
-		cachehash.Slug(contentURL),
+		contentURL,
 		func() ([]byte, time.Duration, error) {
 			req, err := p.request(contentURL)
 			if err != nil {
