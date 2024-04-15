@@ -127,7 +127,7 @@ Your global `devbox.json` and any other files in the Git remote will be stored i
 ### Use Devbox with your IDE
 
 * **[Direnv Integration](ide_configuration/direnv.md):** Devbox can integrate with [direnv](https://direnv.net/) to automatically activate your shell and packages when you navigate to your project.
-* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetify-com.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
+* **[Devbox for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=jetpack-io.devbox):** Install our VS Code extension to speed up common Devbox workflows or to use Devbox in a devcontainer.
 
 ### Get Involved
 

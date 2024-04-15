@@ -12,6 +12,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
@@ -31,18 +32,30 @@ func Get() *Provider {
 	return singleton
 }
 
-func (p *Provider) ConfigureAWS(ctx context.Context, username string) error {
+func (p *Provider) Configure(ctx context.Context, username string) error {
+	debug.Log("checking if nix cache is configured for %s", username)
+
 	rootConfig, err := p.rootAWSConfigPath()
 	if err != nil {
 		return err
 	}
-	if fileutil.Exists(rootConfig) {
-		// Already configured.
+	debug.Log("root aws config path is: %s", rootConfig)
+	awsConfigExists := fileutil.Exists(rootConfig)
+
+	cfg, err := nix.CurrentConfig(ctx)
+	if err != nil {
+		return err
+	}
+	trusted, _ := cfg.IsUserTrusted(ctx, username)
+
+	configured := awsConfigExists && trusted
+	debug.Log("nix cache configured = %v (awsConfigExists == %v && trusted == %v)", configured, awsConfigExists, trusted)
+	if configured {
 		return nil
 	}
 
 	if os.Getuid() == 0 {
-		err := p.configureRoot(username)
+		err := p.configureRoot(ctx, username)
 		if err != nil {
 			return redact.Errorf("update ~root/.aws/config with devbox credentials: %s", err)
 		}
@@ -72,7 +85,7 @@ func (p *Provider) rootAWSConfigPath() (string, error) {
 	return filepath.Join(u.HomeDir, ".aws", "config"), nil
 }
 
-func (p *Provider) configureRoot(username string) error {
+func (p *Provider) configureRoot(ctx context.Context, username string) error {
 	exe := p.executable()
 	if exe == "" {
 		return redact.Errorf("get path to current devbox executable")
@@ -113,7 +126,14 @@ credential_process = %s -u %s -i %s cache credentials
 	if err != nil {
 		return err
 	}
-	return config.Close()
+	if err := config.Close(); err != nil {
+		return err
+	}
+
+	if err := nix.IncludeDevboxConfig(ctx, username); err != nil {
+		return redact.Errorf("modify nix config: %v", err)
+	}
+	return nil
 }
 
 func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error {
@@ -140,9 +160,14 @@ func (p *Provider) sudoConfigureRoot(ctx context.Context, username string) error
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	debug.Log("running sudo: %s", cmd)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to relaunch with sudo: %w", err)
 	}
+
+	// Print a warning if we were unable to automatically make the user
+	// trusted.
+	checkIfUserCanAddSubstituter(ctx)
 	return nil
 }
 
@@ -160,22 +185,29 @@ func (*Provider) executable() string {
 // private cache.
 func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	cache := filecache.New[AWSCredentials]("devbox/providers/nixcache")
-	creds, err := cache.GetOrSetWithTime("credentials", func() (AWSCredentials, time.Time, error) {
-		token, err := identity.Get().GenSession(ctx)
-		if err != nil {
-			return AWSCredentials{}, time.Time{}, err
-		}
-		client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-		creds, err := client.GetAWSCredentials(ctx)
-		if err != nil {
-			return AWSCredentials{}, time.Time{}, err
-		}
-		exp := time.Time{}
-		if t := creds.GetExpiration(); t != nil {
-			exp = t.AsTime()
-		}
-		return newAWSCredentials(creds), exp, nil
-	})
+	token, err := identity.Get().GenSession(ctx)
+	if err != nil {
+		return AWSCredentials{}, err
+	}
+	creds, err := cache.GetOrSetWithTime(
+		"credentials-"+token.IDClaims().Subject,
+		func() (AWSCredentials, time.Time, error) {
+			token, err := identity.Get().GenSession(ctx)
+			if err != nil {
+				return AWSCredentials{}, time.Time{}, err
+			}
+			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+			creds, err := client.GetAWSCredentials(ctx)
+			if err != nil {
+				return AWSCredentials{}, time.Time{}, err
+			}
+			exp := time.Time{}
+			if t := creds.GetExpiration(); t != nil {
+				exp = t.AsTime()
+			}
+			return newAWSCredentials(creds), exp, nil
+		},
+	)
 	if err != nil {
 		return AWSCredentials{}, redact.Errorf("nixcache: get credentials: %w", redact.Safe(err))
 	}
@@ -187,26 +219,33 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 // and a nil error.
 func (p *Provider) URI(ctx context.Context) (string, error) {
 	cache := filecache.New[string]("devbox/providers/nixcache")
-	uri, err := cache.GetOrSet("uri", func() (string, time.Duration, error) {
-		token, err := identity.Get().GenSession(ctx)
-		if err != nil {
-			return "", 0, err
-		}
-		client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-		resp, err := client.GetBinCache(ctx)
-		if err != nil {
-			return "", 0, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
-		}
+	token, err := identity.Get().GenSession(ctx)
+	if err != nil {
+		return "", err
+	}
+	// Landau: I think we can probably remove this cache? This endpoint is very
+	// fast and we only use this for build/upload which are slow.
+	uri, err := cache.GetOrSet(
+		"uri-"+token.IDClaims().Subject,
+		func() (string, time.Duration, error) {
+			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+			resp, err := client.GetBinCache(ctx)
+			if err != nil {
+				return "", 0, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
+			}
 
-		// TODO(gcurtis): do a better job of invalidating the URI after
-		// logout or after a Nix command fails to query the cache.
-		return resp.GetNixBinCacheUri(), 24 * time.Hour, nil
-	})
+			// Don't cache negative responses.
+			if resp.GetNixBinCacheUri() == "" {
+				return "", 0, nil
+			}
+
+			// TODO(gcurtis): do a better job of invalidating the URI after
+			// a Nix command fails to query the cache.
+			return resp.GetNixBinCacheUri(), 24 * time.Hour, nil
+		},
+	)
 	if err != nil {
 		return "", redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
-	}
-	if uri != "" {
-		checkIfUserCanAddSubstituter(ctx)
 	}
 	return uri, nil
 }
@@ -227,7 +266,12 @@ func checkIfUserCanAddSubstituter(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	trusted, _ := cfg.IsUserTrusted(ctx)
+
+	u, err := user.Current()
+	if err != nil {
+		return
+	}
+	trusted, _ := cfg.IsUserTrusted(ctx, u.Username)
 	if !trusted {
 		ux.Fwarning(
 			os.Stderr,

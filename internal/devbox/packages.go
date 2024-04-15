@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
@@ -22,6 +23,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/shellgen"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -450,11 +452,32 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			Flags:         flags,
 			Writer:        d.stderr,
 		}
-		args.ExtraSubstituter, err = d.providers.NixCache.URI(ctx)
-		if err == nil {
+		args.ExtraSubstituter, _ = d.providers.NixCache.URI(ctx)
+		// TODO (Landau): handle errors that are not auth.ErrNotLoggedIn
+		// Only lookup credentials if we have a cache to use
+		if args.ExtraSubstituter != "" {
 			creds, err := d.providers.NixCache.Credentials(ctx)
 			if err == nil {
 				args.Env = creds.Env()
+			}
+
+			u, err := user.Current()
+			if err != nil {
+				err = redact.Errorf("lookup current user: %v", err)
+				debug.Log("error configuring cache: %v", err)
+			}
+			err = d.providers.NixCache.Configure(ctx, u.Username)
+			if err != nil {
+				debug.Log("error configuring cache: %v", err)
+
+				var daemonErr *nix.DaemonError
+				if errors.As(err, &daemonErr) {
+					// Error here to give the user a chance to restart the daemon.
+					return usererr.New("Devbox configured Nix to use %q as a cache. Please restart the Nix daemon and re-run Devbox.", args.ExtraSubstituter)
+				}
+				// Other errors indicate we couldn't update nix.conf, so just warn and continue
+				// by building from source if necessary.
+				ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use your organization's private cache. Some packages might be built from source.")
 			}
 		}
 		for _, installable := range installables {
