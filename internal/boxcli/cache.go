@@ -81,7 +81,7 @@ func cacheConfigureCmd() *cobra.Command {
 				u, _ := user.Current()
 				username = u.Username
 			}
-			return nixcache.Get().ConfigureAWS(cmd.Context(), username)
+			return nixcache.Get().Configure(cmd.Context(), username)
 		},
 	}
 	cmd.Flags().StringVar(&username, "user", "", "")
