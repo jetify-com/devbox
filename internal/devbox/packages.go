@@ -459,8 +459,6 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 				args.Env = creds.Env()
 			}
 
-			// We don't want to return an error here if configuring
-			// the cache fails. Just proceed without it.
 			u, err := user.Current()
 			if err != nil {
 				err = redact.Errorf("lookup current user: %v", err)
@@ -469,6 +467,15 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			err = d.providers.NixCache.Configure(ctx, u.Username)
 			if err != nil {
 				debug.Log("error configuring cache: %v", err)
+
+				var daemonErr *nix.DaemonError
+				if errors.As(err, &daemonErr) {
+					// Error here to give the user a chance to restart the daemon.
+					return usererr.New("Devbox configured Nix to use %q as a cache. Please restart the Nix daemon and re-run Devbox.", args.ExtraSubstituter)
+				}
+				// Other errors indicate we couldn't update nix.conf, so just warn and continue
+				// by building from source if necessary.
+				ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use your organization's private cache. Some packages might be built from source.")
 			}
 		}
 		for _, installable := range installables {

@@ -414,17 +414,31 @@ func parseInsecurePackagesFromExitError(errorMsg string) []string {
 	return insecurePackages
 }
 
-func RestartDaemon(ctx context.Context) error {
+var ErrUnknownServiceManager = errors.New("unknown service manager")
+
+func restartDaemon(ctx context.Context) error {
 	if runtime.GOOS != "darwin" {
-		return nil
+		err := fmt.Errorf("don't know how to restart nix daemon: %w", ErrUnknownServiceManager)
+		return &DaemonError{err: err}
 	}
-	err := exec.CommandContext(ctx, "launchctl", "bootout", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist").Run()
+
+	cmd := exec.CommandContext(ctx, "launchctl", "bootout", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist")
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return &DaemonError{
+			cmd:    cmd.String(),
+			stderr: out,
+			err:    fmt.Errorf("stop nix daemon: %w", err),
+		}
 	}
-	err = exec.CommandContext(ctx, "launchctl", "bootstrap", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist").Run()
+	cmd = exec.CommandContext(ctx, "launchctl", "bootstrap", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist")
+	out, err = cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return &DaemonError{
+			cmd:    cmd.String(),
+			stderr: out,
+			err:    fmt.Errorf("start nix daemon: %w", err),
+		}
 	}
 
 	// TODO(gcurtis): poll for daemon to come back instead.

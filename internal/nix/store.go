@@ -112,7 +112,10 @@ func (e *DaemonError) Unwrap() error {
 func (e *DaemonError) Redact() string {
 	// Don't include e.stderr in redacted messages because it can contain
 	// things like paths and usernames.
-	return fmt.Sprintf("command %s: %s", e.cmd, e.err)
+	if e.cmd != "" {
+		return fmt.Sprintf("command %s: %s", e.cmd, e.err)
+	}
+	return e.err.Error()
 }
 
 // DaemonVersion returns the version of the currently running Nix daemon.

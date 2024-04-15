@@ -119,7 +119,7 @@ func IncludeDevboxConfig(ctx context.Context, username string) error {
 		return err
 	}
 	if appended {
-		return RestartDaemon(ctx)
+		return restartDaemon(ctx)
 	}
 	return nil
 }
