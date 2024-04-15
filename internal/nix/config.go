@@ -138,7 +138,7 @@ func appendConfigInclude(srcPath, includePath string) (appended bool, err error)
 	for _, line := range strings.Split(string(confb), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
-			// <whitspace>
+			// <whitespace>
 			continue
 		}
 		if strings.HasPrefix(line, "#") {
