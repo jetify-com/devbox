@@ -277,7 +277,7 @@ func (c *Config) Hash() (string, error) {
 		return "", err
 	}
 	data = append(data, hash...)
-	return cachehash.Bytes(data)
+	return cachehash.Bytes(data), nil
 }
 
 func (c *Config) IsEnvsecEnabled() bool {

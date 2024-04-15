@@ -188,7 +188,7 @@ func (d *Devbox) ConfigHash() (string, error) {
 		}
 		buf.WriteString(h)
 	}
-	return cachehash.Bytes(buf.Bytes())
+	return cachehash.Bytes(buf.Bytes()), nil
 }
 
 func (d *Devbox) NixPkgsCommitHash() string {
@@ -1224,8 +1224,7 @@ var ignoreDevEnvVar = map[string]bool{
 }
 
 func (d *Devbox) ProjectDirHash() string {
-	h, _ := cachehash.Bytes([]byte(d.projectDir))
-	return h
+	return cachehash.Bytes([]byte(d.projectDir))
 }
 
 func (d *Devbox) addHashToEnv(env map[string]string) error {

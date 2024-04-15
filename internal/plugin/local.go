@@ -43,8 +43,7 @@ func (l *LocalPlugin) IsLocal() bool {
 }
 
 func (l *LocalPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(filepath.Clean(l.Path())))
-	return h
+	return cachehash.Bytes([]byte(filepath.Clean(l.Path())))
 }
 
 func (l *LocalPlugin) FileContent(subpath string) ([]byte, error) {

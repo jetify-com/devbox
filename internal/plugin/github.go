@@ -9,13 +9,17 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/nix/flake"
+	"go.jetpack.io/pkg/filecache"
 )
+
+var githubCache = filecache.New[[]byte]("devbox/plugin/github")
 
 type githubPlugin struct {
 	ref  flake.Ref
@@ -57,32 +61,47 @@ func (p *githubPlugin) CanonicalName() string {
 }
 
 func (p *githubPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(p.ref.String()))
-	return h
+	return cachehash.Bytes([]byte(p.ref.String()))
 }
 
 func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
-	req, err := p.request(subpath)
+	contentURL, err := p.url(subpath)
 	if err != nil {
 		return nil, err
 	}
+	return githubCache.GetOrSet(
+		contentURL,
+		func() ([]byte, time.Duration, error) {
+			req, err := p.request(contentURL)
+			if err != nil {
+				return nil, 0, err
+			}
 
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return nil, usererr.New(
-			"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
-				"sure a plugin.json file exists in plugin directory.",
-			p.LockfileKey(),
-			req.URL.String(),
-			res.StatusCode,
-		)
-	}
-	return io.ReadAll(res.Body)
+			client := &http.Client{}
+			res, err := client.Do(req)
+			if err != nil {
+				return nil, 0, err
+			}
+			defer res.Body.Close()
+			if res.StatusCode != http.StatusOK {
+				return nil, 0, usererr.New(
+					"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
+						"sure a plugin.json file exists in plugin directory.",
+					p.LockfileKey(),
+					req.URL.String(),
+					res.StatusCode,
+				)
+			}
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				return nil, 0, err
+			}
+			// Cache for 24 hours. Once we store the plugin in the lockfile, we
+			// should cache this indefinitely and only invalidate if the plugin
+			// is updated.
+			return body, 24 * time.Hour, nil
+		},
+	)
 }
 
 func (p *githubPlugin) url(subpath string) (string, error) {
@@ -98,12 +117,7 @@ func (p *githubPlugin) url(subpath string) (string, error) {
 	)
 }
 
-func (p *githubPlugin) request(subpath string) (*http.Request, error) {
-	contentURL, err := p.url(subpath)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *githubPlugin) request(contentURL string) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodGet, contentURL, nil)
 	if err != nil {
 		return nil, err

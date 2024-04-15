@@ -84,7 +84,7 @@ func (c *ConfigFile) Hash() (string, error) {
 	}
 	ast := c.ast.root.Clone()
 	ast.Minimize()
-	return cachehash.Bytes(ast.Pack())
+	return cachehash.Bytes(ast.Pack()), nil
 }
 
 func (c *ConfigFile) Equals(other *ConfigFile) bool {
