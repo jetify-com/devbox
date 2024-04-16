@@ -581,14 +581,14 @@ func ensureProjectDirIsNotSensitive(dir string) error {
 
 	if isSensitiveDir(dir) {
 		// check for a git repository in this folder before using this project config
-		// (and potentially syncing all the code to devbox-cloud)
+		// (and potentially syncing all the code to jetify-cloud)
 		_, err := os.Stat(filepath.Join(dir, ".git"))
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				return usererr.New(
 					"Found a config (devbox.json) file at %s, "+
 						"but since it is a sensitive directory we require it to be part of a git repository "+
-						"before we sync it to devbox cloud",
+						"before we sync it to jetify cloud",
 					dir,
 				)
 			}
