@@ -446,7 +446,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 		Path:           devContainerPath,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: true,
-		Pkgs:           d.PackageNames(),
+		Pkgs:           d.AllPackageNames(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -485,7 +485,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 		Path:           d.projectDir,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: false,
-		Pkgs:           d.PackageNames(),
+		Pkgs:           d.AllPackageNames(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -1039,11 +1039,14 @@ func (d *Devbox) flakeDir() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake")
 }
 
-// ConfigPackageNames returns the package names as defined in devbox.json
-func (d *Devbox) PackageNames() []string {
-	// TODO savil: centralize implementation by calling d.configPackages and getting pkg.Raw
-	// Skipping for now to avoid propagating the error value.
-	return d.cfg.PackagesVersionedNames()
+// AllPackageNames returns the all package names, including those added
+// by plugins
+func (d *Devbox) AllPackageNames() []string {
+	result := make([]string, 0, len(d.cfg.Packages()))
+	for _, p := range d.cfg.Packages() {
+		result = append(result, p.VersionedName())
+	}
+	return result
 }
 
 // AllPackages returns the packages that are defined in devbox.json and

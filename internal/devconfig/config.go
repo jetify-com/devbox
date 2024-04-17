@@ -219,19 +219,6 @@ func (c *Config) Packages() []configfile.Package {
 	))
 }
 
-// PackagesVersionedNames returns a list of package names with versions.
-// NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
-//
-// example:
-// ["package1", "package2@latest", "package3@1.20"]
-func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.TopLevelPackages()))
-	for _, p := range c.Root.TopLevelPackages() {
-		result = append(result, p.VersionedName())
-	}
-	return result
-}
-
 func (c *Config) NixPkgsCommitHash() string {
 	return c.Root.NixPkgsCommitHash()
 }

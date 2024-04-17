@@ -84,7 +84,7 @@ func listGlobalCmdFunc(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	for _, p := range box.PackageNames() {
+	for _, p := range box.AllPackageNames() {
 		fmt.Fprintf(cmd.OutOrStdout(), "* %s\n", p)
 	}
 	return nil
