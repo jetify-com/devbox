@@ -46,17 +46,17 @@ func assertDevboxJSONPackagesContains(script *testscript.TestScript, neg bool, a
 	script.Check(err)
 
 	expected := args[1]
-	for _, actual := range list.PackagesVersionedNames() {
+	for _, actual := range packagesVersionedNames(list) {
 		if actual == expected {
 			if neg {
-				script.Fatalf("value '%s' found in '%s'", expected, list.PackagesVersionedNames())
+				script.Fatalf("value '%s' found in '%s'", expected, packagesVersionedNames(list))
 			}
 			return
 		}
 	}
 
 	if !neg {
-		script.Fatalf("value '%s' not found in '%s'", expected, list.PackagesVersionedNames())
+		script.Fatalf("value '%s' not found in '%s'", expected, packagesVersionedNames(list))
 	}
 }
 
@@ -193,4 +193,12 @@ func compare(one, two any) int {
 	}
 
 	return 0
+}
+
+func packagesVersionedNames(c devconfig.Config) []string {
+	result := make([]string, 0, len(c.Root.TopLevelPackages()))
+	for _, p := range c.Root.TopLevelPackages() {
+		result = append(result, p.VersionedName())
+	}
+	return result
 }

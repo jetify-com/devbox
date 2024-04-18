@@ -193,13 +193,20 @@ func (c *Config) IncludedPluginConfigs() []*plugin.Config {
 	return configs
 }
 
-func (c *Config) Packages() []configfile.Package {
+// Returns all packages including those from included plugins.
+// If includeRemovedTriggerPackages is true, then trigger packages that have
+// been removed will also be returned. These are only used for built-ins
+// (e.g. php) when the plugin creates a flake that is meant to replace the
+// original package.
+func (c *Config) Packages(
+	includeRemovedTriggerPackages bool,
+) []configfile.Package {
 	packages := []configfile.Package{}
 	packagesToRemove := map[string]bool{}
 
 	for _, i := range c.included {
-		packages = append(packages, i.Packages()...)
-		if i.pluginData.RemoveTriggerPackage {
+		packages = append(packages, i.Packages(includeRemovedTriggerPackages)...)
+		if i.pluginData.RemoveTriggerPackage && !includeRemovedTriggerPackages {
 			packagesToRemove[i.pluginData.Source.LockfileKey()] = true
 		}
 	}
@@ -217,19 +224,6 @@ func (c *Config) Packages() []configfile.Package {
 		lo.Reverse(packages),
 		func(p configfile.Package) string { return p.Name },
 	))
-}
-
-// PackagesVersionedNames returns a list of package names with versions.
-// NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
-//
-// example:
-// ["package1", "package2@latest", "package3@1.20"]
-func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.TopLevelPackages()))
-	for _, p := range c.Root.TopLevelPackages() {
-		result = append(result, p.VersionedName())
-	}
-	return result
 }
 
 func (c *Config) NixPkgsCommitHash() string {

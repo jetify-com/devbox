@@ -144,7 +144,7 @@ func (m *Manager) createFile(
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
-		"Packages":             m.PackageNames(),
+		"Packages":             m.AllPackageNamesIncludingRemovedTriggerPackages(),
 		"System":               nix.System(),
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),

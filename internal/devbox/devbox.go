@@ -446,7 +446,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 		Path:           devContainerPath,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: true,
-		Pkgs:           d.PackageNames(),
+		Pkgs:           d.AllPackageNamesIncludingRemovedTriggerPackages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -485,7 +485,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 		Path:           d.projectDir,
 		RootUser:       generateOpts.RootUser,
 		IsDevcontainer: false,
-		Pkgs:           d.PackageNames(),
+		Pkgs:           d.AllPackageNamesIncludingRemovedTriggerPackages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
@@ -1039,11 +1039,20 @@ func (d *Devbox) flakeDir() string {
 	return filepath.Join(d.projectDir, ".devbox/gen/flake")
 }
 
-// ConfigPackageNames returns the package names as defined in devbox.json
-func (d *Devbox) PackageNames() []string {
-	// TODO savil: centralize implementation by calling d.configPackages and getting pkg.Raw
-	// Skipping for now to avoid propagating the error value.
-	return d.cfg.PackagesVersionedNames()
+// AllPackageNamesIncludingRemovedTriggerPackages returns the all package names,
+// including those added by plugins and also those removed by builtins.
+// This has a gross name to differentiate it from AllPackages.
+// Some uses cases for this are the lockfile and devbox list command.
+//
+// TODO: We may want to get rid of this function and have callers
+// build their own list. e.g. Some callers need different representations of
+// flakes  (lockfile vs devbox list)
+func (d *Devbox) AllPackageNamesIncludingRemovedTriggerPackages() []string {
+	result := []string{}
+	for _, p := range d.cfg.Packages(true /*includeRemovedTriggerPackages*/) {
+		result = append(result, p.VersionedName())
+	}
+	return result
 }
 
 // AllPackages returns the packages that are defined in devbox.json and
@@ -1051,7 +1060,8 @@ func (d *Devbox) PackageNames() []string {
 // NOTE: This will not return packages removed by their plugin with the
 // __remove_trigger_package field.
 func (d *Devbox) AllPackages() []*devpkg.Package {
-	return devpkg.PackagesFromConfig(d.cfg.Packages(), d.lockfile)
+	packages := d.cfg.Packages(false /*includeRemovedTriggerPackages*/)
+	return devpkg.PackagesFromConfig(packages, d.lockfile)
 }
 
 func (d *Devbox) TopLevelPackages() []*devpkg.Package {

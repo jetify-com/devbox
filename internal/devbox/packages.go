@@ -20,6 +20,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
@@ -53,7 +54,10 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
-	existingPackageNames := d.PackageNames()
+	existingPackageNames := lo.Map(
+		d.cfg.Root.TopLevelPackages(), func(p configfile.Package, _ int) string {
+			return p.VersionedName()
+		})
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.

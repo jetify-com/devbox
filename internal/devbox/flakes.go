@@ -14,7 +14,7 @@ func (d *Devbox) getLocalFlakesDirs() []string {
 	localFlakeDirs := []string{}
 
 	// searching through installed packages to get location of local flakes
-	for _, pkg := range d.PackageNames() {
+	for _, pkg := range d.AllPackageNamesIncludingRemovedTriggerPackages() {
 		// filtering local flakes packages
 		if strings.HasPrefix(pkg, "path:") {
 			pkgDirAndName, _ := strings.CutPrefix(pkg, "path:")
