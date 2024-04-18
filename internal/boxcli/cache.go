@@ -82,7 +82,7 @@ func cacheConfigureCmd() *cobra.Command {
 				u, _ := user.Current()
 				username = u.Username
 			}
-			return nixcache.Get().Configure(cmd.Context(), username)
+			return nixcache.Get().ConfigureReprompt(cmd.Context(), username)
 		},
 	}
 	cmd.Flags().StringVar(&username, "user", "", "")
