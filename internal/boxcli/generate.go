@@ -219,7 +219,7 @@ func genAliasCmd() *cobra.Command {
 			for _, script := range box.ListScripts() {
 				fmt.Fprintf(
 					cmd.OutOrStdout(),
-					"alias %s-%s='devbox -c %s run %s'\n",
+					"alias %s-%s='devbox -c \"%s\" run %s'\n",
 					prefix,
 					script,
 					box.ProjectDir(),
