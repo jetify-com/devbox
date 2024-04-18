@@ -12,6 +12,6 @@ RUN . ~/.nix-profile/etc/profile.d/nix.sh
 ENV PATH="/root/.nix-profile/bin:$PATH"
 
 # Step 3: Installing devbox
-RUN wget --quiet --output-document=/dev/stdout https://get.jetpack.io/devbox   | bash -s -- -f
+RUN wget --quiet --output-document=/dev/stdout https://get.jetify.com/devbox   | bash -s -- -f
 
 CMD ["devbox", "version"]
