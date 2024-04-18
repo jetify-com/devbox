@@ -173,7 +173,10 @@ func IsLegacyPackage(pkg string) bool {
 // Tidy ensures that the lockfile has the set of packages corresponding to the devbox.json config.
 // It gets rid of older packages that are no longer needed.
 func (f *File) Tidy() {
-	f.Packages = lo.PickByKeys(f.Packages, f.devboxProject.AllPackageNames())
+	f.Packages = lo.PickByKeys(
+		f.Packages,
+		f.devboxProject.AllPackageNamesIncludingRemovedTriggerPackages(),
+	)
 }
 
 // IsUpToDateAndInstalled returns true if the lockfile is up to date and the

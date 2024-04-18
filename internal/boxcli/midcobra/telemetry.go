@@ -108,5 +108,6 @@ func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
 		return []string{}, ""
 	}
 
-	return box.AllPackageNames(), box.Config().NixPkgsCommitHash()
+	return box.AllPackageNamesIncludingRemovedTriggerPackages(),
+		box.Config().NixPkgsCommitHash()
 }

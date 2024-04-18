@@ -14,7 +14,7 @@ type Manager struct {
 }
 
 type devboxProject interface {
-	AllPackageNames() []string
+	AllPackageNamesIncludingRemovedTriggerPackages() []string
 	ProjectDir() string
 }
 

@@ -193,13 +193,20 @@ func (c *Config) IncludedPluginConfigs() []*plugin.Config {
 	return configs
 }
 
-func (c *Config) Packages() []configfile.Package {
+// Returns all packages including those from included plugins.
+// If includeRemovedTriggerPackages is true, then trigger packages that have
+// been removed will also be returned. These are only used for built-ins
+// (e.g. php) when the plugin creates a flake that is meant to replace the
+// original package.
+func (c *Config) Packages(
+	includeRemovedTriggerPackages bool,
+) []configfile.Package {
 	packages := []configfile.Package{}
 	packagesToRemove := map[string]bool{}
 
 	for _, i := range c.included {
-		packages = append(packages, i.Packages()...)
-		if i.pluginData.RemoveTriggerPackage {
+		packages = append(packages, i.Packages(includeRemovedTriggerPackages)...)
+		if i.pluginData.RemoveTriggerPackage && !includeRemovedTriggerPackages {
 			packagesToRemove[i.pluginData.Source.LockfileKey()] = true
 		}
 	}
