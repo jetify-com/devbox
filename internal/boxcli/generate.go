@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cloud"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
@@ -210,7 +211,9 @@ func genAliasCmd() *cobra.Command {
 			re := regexp.MustCompile("[^a-zA-Z0-9_-]+")
 			prefix := cmp.Or(flags.prefix, box.Config().Root.Name)
 			if prefix == "" {
-				return errors.New("project name not set in devbox.json")
+				return usererr.New(
+					"To generate aliases, you must specify a prefix or set a name " +
+						"in devbox.json")
 			}
 			prefix = re.ReplaceAllString(prefix, "-")
 			for _, script := range box.ListScripts() {
