@@ -4,6 +4,10 @@
 package boxcli
 
 import (
+	"cmp"
+	"fmt"
+	"regexp"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -28,6 +32,11 @@ type GenerateReadmeCmdFlags struct {
 	template     string
 }
 
+type GenerateAliasCmdFlags struct {
+	config configFlags
+	prefix string
+}
+
 func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
@@ -38,6 +47,7 @@ func generateCmd() *cobra.Command {
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: ensureNixInstalled,
 	}
+	command.AddCommand(genAliasCmd())
 	command.AddCommand(devcontainerCmd())
 	command.AddCommand(dockerfileCmd())
 	command.AddCommand(debugCmd())
@@ -176,6 +186,49 @@ func genReadmeCmd() *cobra.Command {
 		&flags.saveTemplate, "save-template", false, "Save default template for the README file")
 	command.Flags().StringVarP(
 		&flags.template, "template", "t", "", "Path to a custom template for the README file")
+
+	return command
+}
+
+func genAliasCmd() *cobra.Command {
+	flags := &GenerateAliasCmdFlags{}
+
+	command := &cobra.Command{
+		Use:   "alias",
+		Short: "Generate shell script aliases for this project",
+		Long: "Generate shell script aliases for this project. " +
+			"Usage is typically `eval \"$(devbox gen alias)\"`.",
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			box, err := devbox.Open(&devopt.Opts{
+				Dir:    flags.config.path,
+				Stderr: cmd.ErrOrStderr(),
+			})
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			re := regexp.MustCompile("[^a-zA-Z0-9_-]+")
+			prefix := cmp.Or(flags.prefix, box.Config().Root.Name)
+			if prefix == "" {
+				return errors.New("project name not set in devbox.json")
+			}
+			prefix = re.ReplaceAllString(prefix, "-")
+			for _, script := range box.ListScripts() {
+				fmt.Fprintf(
+					cmd.OutOrStdout(),
+					"alias %s-%s='devbox -c %s run %s'\n",
+					prefix,
+					script,
+					box.ProjectDir(),
+					script,
+				)
+			}
+			return nil
+		},
+	}
+	flags.config.register(command)
+	command.Flags().StringVarP(
+		&flags.prefix, "prefix", "p", "", "Prefix for the generated aliases")
 
 	return command
 }
