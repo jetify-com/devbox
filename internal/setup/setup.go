@@ -20,8 +20,14 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-// ErrUserRefused indicates that the user responded no to a confirmation prompt.
+// ErrUserRefused indicates that the user responded no to an interactive
+// confirmation prompt.
 var ErrUserRefused = errors.New("user refused run")
+
+// ErrAlreadyRefused indicates that no confirmation prompt was shown because the
+// user previously refused to run the task. Call [Reset] to re-prompt the user
+// for confirmation.
+var ErrAlreadyRefused = errors.New("already refused by user")
 
 // Task is a setup action that can conditionally run based on the state of a
 // previous run.
@@ -91,7 +97,7 @@ func run(ctx context.Context, key string, task Task, prompt string) error {
 		state.ConfirmPrompt.Message = prompt
 		if state.ConfirmPrompt.Asked && !state.ConfirmPrompt.Allowed {
 			// We've asked before and the user said no.
-			return taskError(key, ErrUserRefused)
+			return taskError(key, ErrAlreadyRefused)
 		}
 
 		resp, err := defaultPrompt(prompt)
@@ -167,12 +173,9 @@ func saveState(key string, s state) {
 		return
 	}
 
-	err = os.WriteFile(path, data, 0o644)
-	if errors.Is(err, os.ErrNotExist) {
-		err = os.MkdirAll(filepath.Dir(path), 0o755)
-		if err == nil {
-			err = os.WriteFile(path, data, 0o644)
-		}
+	err = os.MkdirAll(filepath.Dir(path), 0o755)
+	if err == nil {
+		err = os.WriteFile(path, data, 0o644)
 	}
 	if err != nil {
 		err = taskError(key, fmt.Errorf("save state file: %v", err))

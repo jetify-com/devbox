@@ -63,7 +63,17 @@ type awsSetupTask struct {
 }
 
 func (a *awsSetupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
-	return lastRun.Time.IsZero()
+	// This task only needs to run once.
+	if !lastRun.Time.IsZero() {
+		return false
+	}
+
+	// No need to configure the daemon if this looks like a single-user
+	// install.
+	if _, err := nix.DaemonVersion(ctx); err != nil {
+		return false
+	}
+	return true
 }
 
 func (a *awsSetupTask) Run(ctx context.Context) error {
@@ -96,6 +106,8 @@ func (a *awsSetupTask) Run(ctx context.Context) error {
 	perm := fs.FileMode(0o644)
 	config, err := os.OpenFile(configPath, flag, perm)
 	if errors.Is(err, os.ErrNotExist) {
+		// Avoid os.MkdirAll because we shouldn't be creating anything
+		// above the user's home directory.
 		if err = os.Mkdir(filepath.Dir(configPath), 0o755); err != nil {
 			return redact.Errorf("create ~root/.aws directory: %v", err)
 		}
