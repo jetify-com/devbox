@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -34,8 +35,9 @@ type GenerateReadmeCmdFlags struct {
 }
 
 type GenerateAliasCmdFlags struct {
-	config configFlags
-	prefix string
+	config   configFlags
+	prefix   string
+	noPrefix bool
 }
 
 func generateCmd() *cobra.Command {
@@ -201,6 +203,10 @@ func genAliasCmd() *cobra.Command {
 			"Usage is typically `eval \"$(devbox gen alias)\"`.",
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if flags.prefix != "" && flags.noPrefix {
+				return usererr.New(
+					"Cannot use both --prefix and --no-prefix flags together")
+			}
 			box, err := devbox.Open(&devopt.Opts{
 				Dir:    flags.config.path,
 				Stderr: cmd.ErrOrStderr(),
@@ -210,17 +216,17 @@ func genAliasCmd() *cobra.Command {
 			}
 			re := regexp.MustCompile("[^a-zA-Z0-9_-]+")
 			prefix := cmp.Or(flags.prefix, box.Config().Root.Name)
-			if prefix == "" {
+			if prefix == "" && !flags.noPrefix {
 				return usererr.New(
-					"To generate aliases, you must specify a prefix or set a name " +
-						"in devbox.json")
+					"To generate aliases, you must specify a prefix, set a name " +
+						"in devbox.json, or use the --no-prefix flag.")
 			}
 			prefix = re.ReplaceAllString(prefix, "-")
 			for _, script := range box.ListScripts() {
 				fmt.Fprintf(
 					cmd.OutOrStdout(),
-					"alias %s-%s='devbox -c \"%s\" run %s'\n",
-					prefix,
+					"alias %s%s='devbox -c \"%s\" run %s'\n",
+					lo.Ternary(flags.noPrefix, "", prefix+"-"),
 					script,
 					box.ProjectDir(),
 					script,
@@ -232,6 +238,9 @@ func genAliasCmd() *cobra.Command {
 	flags.config.register(command)
 	command.Flags().StringVarP(
 		&flags.prefix, "prefix", "p", "", "Prefix for the generated aliases")
+	command.Flags().BoolVar(
+		&flags.noPrefix, "no-prefix", false,
+		"Do not use a prefix for the generated aliases")
 
 	return command
 }
