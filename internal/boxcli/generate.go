@@ -218,8 +218,8 @@ func genAliasCmd() *cobra.Command {
 			prefix := cmp.Or(flags.prefix, box.Config().Root.Name)
 			if prefix == "" && !flags.noPrefix {
 				return usererr.New(
-					"To generate aliases, you must specify a prefix or set a name " +
-						"in devbox.json")
+					"To generate aliases, you must specify a prefix, set a name " +
+						"in devbox.json, or use the --no-prefix flag.")
 			}
 			prefix = re.ReplaceAllString(prefix, "-")
 			for _, script := range box.ListScripts() {
