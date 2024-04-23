@@ -12,7 +12,7 @@ devbox.json may include local dependencies (flakes and plugins). We could try
 to copy those in (the way the dev Dockerfile does) but that's brittle because
 those dependencies may also pull in other local dependencies and so on. Another
 sulution would be to add a new flag `devbox install --skip-errors` that would 
-just try to isntall what it can, and ignore the rest.
+just try to install what it can, and ignore the rest.
 
 A hack to make this simpler is to install from the lockfile instead of the json.
 */}}
