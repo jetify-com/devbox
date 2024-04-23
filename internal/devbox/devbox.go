@@ -451,7 +451,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 	}
 
 	// generate dockerfile
-	err = gen.CreateDockerfile(ctx)
+	err = gen.CreateDockerfile(ctx, generate.CreateDockerfileOptions{})
 	if err != nil {
 		return redact.Errorf("error generating dev container Dockerfile in <project>/%s: %w",
 			redact.Safe(filepath.Base(devContainerPath)), err)
@@ -489,8 +489,20 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
 	}
 
+	scripts := d.cfg.Scripts()
+	services, err := d.Services()
+	if err != nil {
+		return err
+	}
+
 	// generate dockerfile
-	return errors.WithStack(gen.CreateDockerfile(ctx))
+	return errors.WithStack(gen.CreateDockerfile(ctx, generate.CreateDockerfileOptions{
+		ForType:     generateOpts.ForType,
+		HasBuild:    scripts["build"] != nil,
+		HasInstall:  scripts["install"] != nil,
+		HasStart:    scripts["start"] != nil,
+		HasServices: len(services) > 0,
+	}))
 }
 
 func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
