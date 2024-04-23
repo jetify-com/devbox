@@ -285,8 +285,6 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return box.Generate(cmd.Context())
 	case "devcontainer":
 		return box.GenerateDevcontainer(cmd.Context(), generateOpts)
-	case "dockerfile":
-		return box.GenerateDockerfile(cmd.Context(), generateOpts)
 	}
 	return nil
 }
