@@ -490,18 +490,13 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 	}
 
 	scripts := d.cfg.Scripts()
-	services, err := d.Services()
-	if err != nil {
-		return err
-	}
 
 	// generate dockerfile
 	return errors.WithStack(gen.CreateDockerfile(ctx, generate.CreateDockerfileOptions{
-		ForType:     generateOpts.ForType,
-		HasBuild:    scripts["build"] != nil,
-		HasInstall:  scripts["install"] != nil,
-		HasStart:    scripts["start"] != nil,
-		HasServices: len(services) > 0,
+		ForType:    generateOpts.ForType,
+		HasBuild:   scripts["build"] != nil,
+		HasInstall: scripts["install"] != nil,
+		HasStart:   scripts["start"] != nil,
 	}))
 }
 

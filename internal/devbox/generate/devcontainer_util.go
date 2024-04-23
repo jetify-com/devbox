@@ -58,11 +58,13 @@ type vscode struct {
 }
 
 type CreateDockerfileOptions struct {
-	ForType     string
-	HasInstall  bool
-	HasBuild    bool
-	HasStart    bool
-	HasServices bool
+	ForType    string
+	HasInstall bool
+	HasBuild   bool
+	HasStart   bool
+	// Ideally we also support process-compose services as the dockerfile
+	// CMD, but I'm currently having trouble getting that to work. Will revisit.
+	// HasServices bool
 }
 
 func (opts CreateDockerfileOptions) Type() string {
@@ -73,12 +75,12 @@ func (opts CreateDockerfileOptions) validate() error {
 	if opts.Type() == "dev" {
 		return nil
 	} else if opts.Type() == "prod" {
-		if opts.HasStart || opts.HasServices {
+		if opts.HasStart {
 			return nil
 		}
 		return usererr.New(
 			"To generate a prod Dockerfile you must have either 'start' script in " +
-				"devbox.json or define services using process-compose.yaml",
+				"devbox.json",
 		)
 	}
 	return usererr.New(
@@ -113,11 +115,7 @@ func (g *Options) CreateDockerfile(
 		// The following are only used for prod Dockerfile
 		"DevboxRunInstall": lo.Ternary(opts.HasInstall, "devbox run install", "echo 'No install script found, skipping'"),
 		"DevboxRunBuild":   lo.Ternary(opts.HasBuild, "devbox run build", "echo 'No build script found, skipping'"),
-		"Cmd": lo.Ternary(
-			opts.HasStart,
-			fmt.Sprintf("%q, %q, %q", "devbox", "run", "start"),
-			fmt.Sprintf("%q, %q, %q", "devbox", "services", "up"),
-		),
+		"Cmd":              fmt.Sprintf("%q, %q, %q", "devbox", "run", "start"),
 	})
 }
 
