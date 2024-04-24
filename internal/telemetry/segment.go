@@ -33,8 +33,7 @@ func initSegmentClient() bool {
 	return err == nil
 }
 
-func newTrackMessage(name string, meta Metadata,
-) *segment.Track {
+func newTrackMessage(name string, meta Metadata) *segment.Track {
 	nixVersion, err := nix.Version()
 	if err != nil {
 		nixVersion = "unknown"
