@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/trace"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/redact"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -282,8 +284,10 @@ func (v VersionInfo) version() (string, error) {
 var versionInfo = sync.OnceValues(runNixVersion)
 
 func runNixVersion() (VersionInfo, error) {
+	wait, _ := strconv.Atoi(envir.GetValueOrDefault("WAIT_FOR_NIX_VERSION", "10"))
 	// Arbitrary timeout to make sure we don't take too long or hang.
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(
+		context.Background(), time.Duration(wait)*time.Second)
 	defer cancel()
 
 	// Intentionally don't use the nix.command function here. We use this to
