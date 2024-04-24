@@ -4,7 +4,6 @@
 package telemetry
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -102,7 +101,7 @@ func Stop() {
 	started = false
 }
 
-func Event(ctx context.Context, e EventName, meta Metadata) {
+func Event(e EventName, meta Metadata) {
 	if !started {
 		return
 	}

@@ -494,7 +494,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 				color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
 				return packageInstallErrorHandler(err, pkg, installable)
 			}
-			telemetry.Event(ctx, telemetry.EventNixBuildSuccess, telemetry.Metadata{
+			telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
 				EventStart: eventStart,
 				Packages:   []string{pkg.Raw},
 			})

@@ -70,7 +70,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		telemetry.Error(runErr, meta)
 		return
 	}
-	telemetry.Event(cmd.Context(), telemetry.EventCommandSuccess, meta)
+	telemetry.Event(telemetry.EventCommandSuccess, meta)
 }
 
 func getSubcommand(cmd *cobra.Command, args []string) (subcmd *cobra.Command, flags []string, err error) {
