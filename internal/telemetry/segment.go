@@ -4,12 +4,14 @@
 package telemetry
 
 import (
+	"context"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
 	"go.jetpack.io/devbox/internal/nix"
 
@@ -32,21 +34,26 @@ func initSegmentClient() bool {
 	return err == nil
 }
 
-func newTrackMessage(name string, meta Metadata) *segment.Track {
+func newTrackMessage(
+	ctx context.Context, name string, meta Metadata,
+) *segment.Track {
 	nixVersion, err := nix.Version()
 	if err != nil {
 		nixVersion = "unknown"
 	}
 
 	dur := time.Since(procStartTime)
-	if !meta.CommandStart.IsZero() {
-		dur = time.Since(meta.CommandStart)
+	if !meta.EventStart.IsZero() {
+		dur = time.Since(meta.EventStart)
 	}
+	uid := userID(ctx)
 	return &segment.Track{
-		MessageId:   newEventID(),
-		Type:        "track",
-		AnonymousId: deviceID,
-		UserId:      userID,
+		MessageId: newEventID(),
+		Type:      "track",
+		// Only set anonymous ID if user ID is not set. Otherwise segment will
+		// drop the UserId.
+		AnonymousId: lo.Ternary(uid == "", deviceID, ""),
+		UserId:      uid,
 		Timestamp:   time.Now(),
 		Event:       name,
 		Context: &segment.Context{
@@ -66,6 +73,7 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			"command":      meta.Command,
 			"command_args": meta.CommandFlags,
 			"duration":     dur.Milliseconds(),
+			"org_id":       orgID(ctx),
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),

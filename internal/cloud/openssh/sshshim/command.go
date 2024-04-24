@@ -18,7 +18,7 @@ func Execute(ctx context.Context, args []string) int {
 	defer telemetry.Stop()
 
 	if err := execute(ctx, args); err != nil {
-		telemetry.Error(err, telemetry.Metadata{})
+		telemetry.Error(ctx, err, telemetry.Metadata{})
 		return 1
 	}
 	return 0

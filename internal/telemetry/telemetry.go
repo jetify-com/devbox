@@ -4,6 +4,7 @@
 package telemetry
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -24,6 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
+	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/build"
@@ -40,11 +42,11 @@ const (
 	EventCommandSuccess EventName = iota
 	EventShellInteractive
 	EventShellReady
+	EventNixBuildSuccess
 )
 
 var (
 	deviceID string
-	userID   string
 
 	// procStartTime records the start time of the current process.
 	procStartTime = time.Now()
@@ -61,16 +63,30 @@ func Start() {
 	const deviceSalt = "64ee464f-9450-4b14-8d9c-014c0012ac1a"
 	deviceID, _ = machineid.ProtectedID(deviceSalt)
 
-	username := os.Getenv(envir.GitHubUsername)
-	if username != "" {
+	started = true
+}
+
+func userID(ctx context.Context) string {
+	tok, err := identity.Get().GenSession(ctx)
+	if err == nil {
+		return tok.IDClaims().Subject
+	}
+	if username := os.Getenv(envir.GitHubUsername); username != "" {
 		const uidSalt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
 		const githubPrefix = "github:"
 
 		// userID is a v5 UUID which is basically a SHA hash of the username.
 		// See https://www.uuidtools.com/uuid-versions-explained for a comparison of UUIDs.
-		userID = uuid.NewSHA1(uuid.MustParse(uidSalt), []byte(githubPrefix+username)).String()
+		return uuid.NewSHA1(uuid.MustParse(uidSalt), []byte(githubPrefix+username)).String()
 	}
-	started = true
+	return ""
+}
+
+func orgID(ctx context.Context) string {
+	if tok, err := identity.Get().GenSession(ctx); err == nil {
+		return tok.IDClaims().OrgID
+	}
+	return ""
 }
 
 // Stop stops gathering telemetry and flushes buffered events to disk.
@@ -87,33 +103,40 @@ func Stop() {
 	started = false
 }
 
-func Event(e EventName, meta Metadata) {
+func Event(ctx context.Context, e EventName, meta Metadata) {
 	if !started {
 		return
 	}
 
 	switch e {
 	case EventCommandSuccess:
-		bufferSegmentMessage(commandEvent(meta))
+		bufferSegmentMessage(commandEvent(ctx, meta))
 	case EventShellInteractive:
 		name := fmt.Sprintf("[%s] Shell Event: interactive", appName)
-		msg := newTrackMessage(name, meta)
+		msg := newTrackMessage(ctx, name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	case EventShellReady:
 		name := fmt.Sprintf("[%s] Shell Event: ready", appName)
-		msg := newTrackMessage(name, meta)
+		msg := newTrackMessage(ctx, name, meta)
+		bufferSegmentMessage(msg.MessageId, msg)
+	case EventNixBuildSuccess:
+		name := fmt.Sprintf("[%s] Nix Build Event: success", appName)
+		msg := newTrackMessage(ctx, name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	}
 }
 
-func commandEvent(meta Metadata) (id string, msg *segment.Track) {
+func commandEvent(
+	ctx context.Context,
+	meta Metadata,
+) (id string, msg *segment.Track) {
 	name := fmt.Sprintf("[%s] Command: %s", appName, meta.Command)
-	msg = newTrackMessage(name, meta)
+	msg = newTrackMessage(ctx, name, meta)
 	return msg.MessageId, msg
 }
 
 // Error reports an error to the telemetry server.
-func Error(err error, meta Metadata) {
+func Error(ctx context.Context, err error, meta Metadata) {
 	errToLog := err // use errToLog to avoid shadowing err later. Use err to keep API clean.
 	if !started || errToLog == nil {
 		return
@@ -163,12 +186,12 @@ func Error(err error, meta Metadata) {
 
 	// Prefer using the user ID instead of the device ID when it's
 	// available.
-	if userID != "" {
-		event.User.ID = userID
+	if uid := userID(ctx); uid != "" {
+		event.User.ID = uid
 	}
 	bufferSentryEvent(event)
 
-	msgID, msg := commandEvent(meta)
+	msgID, msg := commandEvent(ctx, meta)
 	msg.Properties["failed"] = true
 	msg.Properties["sentry_event_id"] = event.EventID
 	bufferSegmentMessage(msgID, msg)
@@ -177,7 +200,7 @@ func Error(err error, meta Metadata) {
 type Metadata struct {
 	Command      string
 	CommandFlags []string
-	CommandStart time.Time
+	EventStart   time.Time
 	FeatureFlags map[string]bool
 
 	InShell   bool
