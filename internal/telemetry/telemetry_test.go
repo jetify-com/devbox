@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"context"
 	"errors"
 	"testing"
 )
@@ -16,5 +15,5 @@ func TestErrorBasic(t *testing.T) {
 	fakeErr := errors.New("fake error")
 	meta := Metadata{}
 
-	Error(context.Background(), fakeErr, meta)
+	Error(fakeErr, meta)
 }

@@ -67,7 +67,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.InCloud = envir.IsDevboxCloud()
 
 	if runErr != nil {
-		telemetry.Error(cmd.Context(), runErr, meta)
+		telemetry.Error(runErr, meta)
 		return
 	}
 	telemetry.Event(cmd.Context(), telemetry.EventCommandSuccess, meta)

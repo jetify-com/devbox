@@ -66,9 +66,8 @@ func Start() {
 	started = true
 }
 
-func userID(ctx context.Context) string {
-	tok, err := identity.Get().GenSession(ctx)
-	if err == nil {
+func userID() string {
+	if tok, err := identity.Get().Peek(); err == nil && tok.IDClaims() != nil {
 		return tok.IDClaims().Subject
 	}
 	if username := os.Getenv(envir.GitHubUsername); username != "" {
@@ -82,8 +81,8 @@ func userID(ctx context.Context) string {
 	return ""
 }
 
-func orgID(ctx context.Context) string {
-	if tok, err := identity.Get().GenSession(ctx); err == nil {
+func orgID() string {
+	if tok, err := identity.Get().Peek(); err == nil && tok.IDClaims() != nil {
 		return tok.IDClaims().OrgID
 	}
 	return ""
@@ -110,33 +109,30 @@ func Event(ctx context.Context, e EventName, meta Metadata) {
 
 	switch e {
 	case EventCommandSuccess:
-		bufferSegmentMessage(commandEvent(ctx, meta))
+		bufferSegmentMessage(commandEvent(meta))
 	case EventShellInteractive:
 		name := fmt.Sprintf("[%s] Shell Event: interactive", appName)
-		msg := newTrackMessage(ctx, name, meta)
+		msg := newTrackMessage(name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	case EventShellReady:
 		name := fmt.Sprintf("[%s] Shell Event: ready", appName)
-		msg := newTrackMessage(ctx, name, meta)
+		msg := newTrackMessage(name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	case EventNixBuildSuccess:
 		name := fmt.Sprintf("[%s] Nix Build Event: success", appName)
-		msg := newTrackMessage(ctx, name, meta)
+		msg := newTrackMessage(name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	}
 }
 
-func commandEvent(
-	ctx context.Context,
-	meta Metadata,
-) (id string, msg *segment.Track) {
+func commandEvent(meta Metadata) (id string, msg *segment.Track) {
 	name := fmt.Sprintf("[%s] Command: %s", appName, meta.Command)
-	msg = newTrackMessage(ctx, name, meta)
+	msg = newTrackMessage(name, meta)
 	return msg.MessageId, msg
 }
 
 // Error reports an error to the telemetry server.
-func Error(ctx context.Context, err error, meta Metadata) {
+func Error(err error, meta Metadata) {
 	errToLog := err // use errToLog to avoid shadowing err later. Use err to keep API clean.
 	if !started || errToLog == nil {
 		return
@@ -186,12 +182,12 @@ func Error(ctx context.Context, err error, meta Metadata) {
 
 	// Prefer using the user ID instead of the device ID when it's
 	// available.
-	if uid := userID(ctx); uid != "" {
+	if uid := userID(); uid != "" {
 		event.User.ID = uid
 	}
 	bufferSentryEvent(event)
 
-	msgID, msg := commandEvent(ctx, meta)
+	msgID, msg := commandEvent(meta)
 	msg.Properties["failed"] = true
 	msg.Properties["sentry_event_id"] = event.EventID
 	bufferSegmentMessage(msgID, msg)

@@ -4,7 +4,6 @@
 package telemetry
 
 import (
-	"context"
 	"io"
 	"log"
 	"os"
@@ -34,8 +33,7 @@ func initSegmentClient() bool {
 	return err == nil
 }
 
-func newTrackMessage(
-	ctx context.Context, name string, meta Metadata,
+func newTrackMessage(name string, meta Metadata,
 ) *segment.Track {
 	nixVersion, err := nix.Version()
 	if err != nil {
@@ -46,7 +44,7 @@ func newTrackMessage(
 	if !meta.EventStart.IsZero() {
 		dur = time.Since(meta.EventStart)
 	}
-	uid := userID(ctx)
+	uid := userID()
 	return &segment.Track{
 		MessageId: newEventID(),
 		Type:      "track",
@@ -73,7 +71,7 @@ func newTrackMessage(
 			"command":      meta.Command,
 			"command_args": meta.CommandFlags,
 			"duration":     dur.Milliseconds(),
-			"org_id":       orgID(ctx),
+			"org_id":       orgID(),
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),
