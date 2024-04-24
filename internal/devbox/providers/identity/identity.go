@@ -46,12 +46,12 @@ func (p *Provider) AuthClient() (*auth.Client, error) {
 }
 
 func (p *Provider) getTokenFromPAT(ctx context.Context) (*session.Token, error) {
-	pat := os.Getenv("DEVBOX_ACCESS_TOKEN")
-	if pat == "" {
+	apiKey := os.Getenv("DEVBOX_API_KEY")
+	if apiKey == "" {
 		return nil, nil
 	}
 
-	patID, err := typeid.Parse[ids.PersonalAccessToken](pat)
+	patID, err := typeid.Parse[ids.APIKey](apiKey)
 	if err != nil {
 		return nil, err
 	}
