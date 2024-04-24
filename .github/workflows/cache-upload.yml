@@ -1,0 +1,46 @@
+name: cache-upload
+# Uploads devbox nix dependencies to cache
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '30 8 * * *' # Run nightly at 8:30 UTC
+
+permissions:
+  contents: read
+  pull-requests: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DEVBOX_ACCESS_TOKEN: ${{ secrets.DEVBOX_ACCESS_TOKEN }}
+  DEVBOX_DEBUG: 1
+
+jobs:
+  golangci-lint:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14-arm64, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.9.0
+        with:
+          enable-cache: true
+
+      - run: |
+          devbox cache upload
+          devbox update
+          devbox cache upload
