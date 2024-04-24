@@ -283,7 +283,7 @@ var versionInfo = sync.OnceValues(runNixVersion)
 
 func runNixVersion() (VersionInfo, error) {
 	// Arbitrary timeout to make sure we don't take too long or hang.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Intentionally don't use the nix.command function here. We use this to
