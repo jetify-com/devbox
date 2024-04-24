@@ -26,10 +26,10 @@ env:
   DEVBOX_DEBUG: 1
 
 jobs:
-  golangci-lint:
+  upload-cache:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-14-arm64, macos-14]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
