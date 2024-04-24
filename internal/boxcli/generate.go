@@ -28,6 +28,11 @@ type generateCmdFlags struct {
 	rootUser          bool
 }
 
+type generateDockerfileCmdFlags struct {
+	generateCmdFlags
+	forType string
+}
+
 type GenerateReadmeCmdFlags struct {
 	generateCmdFlags
 	saveTemplate bool
@@ -94,7 +99,7 @@ func devcontainerCmd() *cobra.Command {
 }
 
 func dockerfileCmd() *cobra.Command {
-	flags := &generateCmdFlags{}
+	flags := &generateDockerfileCmdFlags{}
 	command := &cobra.Command{
 		Use:   "dockerfile",
 		Short: "Generate a Dockerfile that replicates devbox shell",
@@ -102,9 +107,25 @@ func dockerfileCmd() *cobra.Command {
 			"Can be used to run devbox shell environment in an OCI container.",
 		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runGenerateCmd(cmd, flags)
+			box, err := devbox.Open(&devopt.Opts{
+				Dir:         flags.config.path,
+				Environment: flags.config.environment,
+				Stderr:      cmd.ErrOrStderr(),
+			})
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			return box.GenerateDockerfile(cmd.Context(), devopt.GenerateOpts{
+				ForType:  flags.forType,
+				Force:    flags.force,
+				RootUser: flags.rootUser,
+			})
 		},
 	}
+	command.Flags().StringVar(
+		&flags.forType, "for", "dev",
+		"Generate Dockerfile for a specific type of container (dev, prod)")
+	command.Flag("for").Hidden = true
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
 	command.Flags().BoolVar(
@@ -264,8 +285,6 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return box.Generate(cmd.Context())
 	case "devcontainer":
 		return box.GenerateDevcontainer(cmd.Context(), generateOpts)
-	case "dockerfile":
-		return box.GenerateDockerfile(cmd.Context(), generateOpts)
 	}
 	return nil
 }
