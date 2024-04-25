@@ -59,7 +59,8 @@ jobs:
       - name: Upload cache
         run: |
           devbox cache configure 
-          ps aux | grep nix-daemon | grep -v grep | awk '{print $2}' | xargs sudo kill -9
+          pids=$(ps aux | grep nix-daemon | grep -v grep | awk '{print $2}')
+          [ -n "$pids" ] && echo "$pids" | xargs kill -9
           devbox cache upload
           devbox update
           devbox cache upload
