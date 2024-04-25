@@ -1275,6 +1275,8 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 
 	// handling special case for PATH
 	if d.pure {
+		// Setting a custom env variable to differentiate pure and regular shell
+		env["DEVBOX_PURE_SHELL"] = "1"
 		// Finding nix executables in path and passing it through
 		// As well as adding devbox itself to PATH
 		// Both are needed for devbox commands inside pure shell to work
