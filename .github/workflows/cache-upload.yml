@@ -60,7 +60,9 @@ jobs:
         run: |
           devbox cache configure
           pids=$(ps aux | grep nix-daemon | grep -v grep | awk '{print $2}')
-          [ -n "$pids" ] && echo "$pids" | xargs kill -9 || true
+          if [ -n "$pids" ]; then
+            echo "$pids" | xargs kill -9
+          fi
           devbox cache upload
           devbox update
           devbox cache upload
