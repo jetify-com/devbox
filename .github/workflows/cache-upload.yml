@@ -37,6 +37,7 @@ jobs:
 
       # Build devbox from scratch because released devbox has a bug that prevents 
       # DEVBOX_API_TOKEN use
+      # we can remove this after 0.10.6 is out.
       - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
@@ -50,6 +51,8 @@ jobs:
       #   with:
       #     enable-cache: true
 
+      # We upload twice, once before updating and once after. This shows a simple
+      # method to cache the latest current and latest dependencies.
       - run: |
           devbox cache upload
           devbox update
