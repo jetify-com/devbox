@@ -31,8 +31,12 @@ func globalCmd() *cobra.Command {
 	shellEnv := shellEnvCmd()
 	// For `devbox shellenv` the default value of recompute is true.
 	// Change the default value to false for `devbox global shellenv` only.
-	shellEnv.Flag("recompute").DefValue = "false"
+	shellEnv.Flag("recompute").DefValue = "false" // Needed for help text
 	if err := shellEnv.Flag("recompute").Value.Set("false"); err != nil {
+		// This will never panic because internally it just does
+		// `strconv.ParseBool("false")` which is always valid.
+		// If this were to change, we'll immediately detect this during development
+		// since this code always runs on any devbox command (and will fix it).
 		panic(errors.WithStack(err))
 	}
 
