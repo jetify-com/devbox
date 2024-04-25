@@ -4,12 +4,12 @@ import (
 	"context"
 	"os"
 
+	"go.jetify.com/typeid"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/pkg/api"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/ids"
-	"go.jetpack.io/typeid"
 	"golang.org/x/oauth2"
 )
 
@@ -71,18 +71,18 @@ func (p *Provider) AuthClient() (*auth.Client, error) {
 func (p *Provider) getAccessTokenFromAPIToken(
 	ctx context.Context,
 ) (*session.Token, error) {
-	pat := os.Getenv("DEVBOX_ACCESS_TOKEN")
-	if pat == "" {
+	apiTokenRaw := os.Getenv("DEVBOX_API_TOKEN")
+	if apiTokenRaw == "" {
 		return nil, nil
 	}
 
-	patID, err := typeid.Parse[ids.PersonalAccessToken](pat)
+	apiToken, err := typeid.Parse[ids.APIToken](apiTokenRaw)
 	if err != nil {
 		return nil, err
 	}
 
 	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), &session.Token{})
-	response, err := apiClient.GetAccessToken(ctx, patID)
+	response, err := apiClient.GetAccessToken(ctx, apiToken)
 	if err != nil {
 		return nil, err
 	}
