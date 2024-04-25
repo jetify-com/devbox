@@ -32,6 +32,14 @@ func (d *Devbox) UploadProjectToCache(
 	if err != nil {
 		return err
 	}
+
+	// Ensure state is up to date before uploading to cache.
+	// TODO: we may be able to do this more efficiently, not sure everything needs
+	// to be installed.
+	if err = d.ensureStateIsUpToDate(ctx, ensure); err != nil {
+		return err
+	}
+
 	return nix.CopyInstallableToCache(ctx, d.stderr, cacheURI, profilePath, creds.Env())
 }
 
