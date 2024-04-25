@@ -54,6 +54,7 @@ jobs:
       # We upload twice, once before updating and once after. This shows a simple
       # method to cache the latest current and latest dependencies.
       - run: |
+          devbox cache configure # only required on multi-user nix installs (e.g. macos)
           devbox cache upload
           devbox update
           devbox cache upload
