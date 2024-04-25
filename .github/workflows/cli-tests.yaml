@@ -79,7 +79,7 @@ jobs:
   golangci-lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-13]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
