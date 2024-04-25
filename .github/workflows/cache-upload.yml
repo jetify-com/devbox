@@ -2,11 +2,7 @@ name: cache-upload
 # Uploads devbox nix dependencies to cache
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
-  merge_group:
     branches:
       - main
   workflow_dispatch:
