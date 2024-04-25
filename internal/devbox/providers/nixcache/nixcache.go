@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/setup"
 	"go.jetpack.io/pkg/api"
 	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
+	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/filecache"
 )
 
@@ -80,7 +82,7 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 		return AWSCredentials{}, err
 	}
 	creds, err := cache.GetOrSetWithTime(
-		"credentials-"+token.IDClaims().Subject,
+		"credentials-"+getSubOrAccessTokenHash(token),
 		func() (AWSCredentials, time.Time, error) {
 			token, err := identity.Get().GenSession(ctx)
 			if err != nil {
@@ -116,7 +118,7 @@ func (p *Provider) URI(ctx context.Context) (string, error) {
 	// Landau: I think we can probably remove this cache? This endpoint is very
 	// fast and we only use this for build/upload which are slow.
 	uri, err := cache.GetOrSet(
-		"uri-"+token.IDClaims().Subject,
+		"uri-"+getSubOrAccessTokenHash(token),
 		func() (string, time.Duration, error) {
 			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
 			resp, err := client.GetBinCache(ctx)
@@ -172,4 +174,13 @@ func (a AWSCredentials) Env() []string {
 		"AWS_SECRET_ACCESS_KEY=" + a.SecretAccessKey,
 		"AWS_SESSION_TOKEN=" + a.SessionToken,
 	}
+}
+
+func getSubOrAccessTokenHash(token *session.Token) string {
+	// We need this because the token is missing IDToken when used in CICD.
+	// TODO: Implement AccessToken Parsing so we can extract sub form that.
+	if token.IDClaims() != nil && token.IDClaims().Subject != "" {
+		return token.IDClaims().Subject
+	}
+	return cachehash.Bytes([]byte(token.AccessToken))
 }
