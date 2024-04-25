@@ -14,6 +14,7 @@ import (
 	"runtime/trace"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -26,6 +27,7 @@ import (
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/devbox/internal/telemetry"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
@@ -485,12 +487,17 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			}
 		}
 		for _, installable := range installables {
+			eventStart := time.Now()
 			err = nix.Build(ctx, args, installable)
 			if err != nil {
 				fmt.Fprintf(d.stderr, "%s: ", stepMsg)
 				color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
 				return packageInstallErrorHandler(err, pkg, installable)
 			}
+			telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
+				EventStart: eventStart,
+				Packages:   []string{pkg.Raw},
+			})
 		}
 
 		fmt.Fprintf(d.stderr, "%s: ", stepMsg)

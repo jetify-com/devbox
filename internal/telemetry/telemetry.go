@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
+	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/nix"
 
 	"go.jetpack.io/devbox/internal/build"
@@ -40,11 +41,11 @@ const (
 	EventCommandSuccess EventName = iota
 	EventShellInteractive
 	EventShellReady
+	EventNixBuildSuccess
 )
 
 var (
 	deviceID string
-	userID   string
 
 	// procStartTime records the start time of the current process.
 	procStartTime = time.Now()
@@ -61,16 +62,33 @@ func Start() {
 	const deviceSalt = "64ee464f-9450-4b14-8d9c-014c0012ac1a"
 	deviceID, _ = machineid.ProtectedID(deviceSalt)
 
-	username := os.Getenv(envir.GitHubUsername)
-	if username != "" {
+	started = true
+}
+
+func userID() string {
+	// TODO, once we add access token parsing, use that instead of id token.
+	// that will work with API_TOKEN as well.
+	if tok, err := identity.Get().Peek(); err == nil && tok.IDClaims() != nil {
+		return tok.IDClaims().Subject
+	}
+	if username := os.Getenv(envir.GitHubUsername); username != "" {
 		const uidSalt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
 		const githubPrefix = "github:"
 
 		// userID is a v5 UUID which is basically a SHA hash of the username.
 		// See https://www.uuidtools.com/uuid-versions-explained for a comparison of UUIDs.
-		userID = uuid.NewSHA1(uuid.MustParse(uidSalt), []byte(githubPrefix+username)).String()
+		return uuid.NewSHA1(uuid.MustParse(uidSalt), []byte(githubPrefix+username)).String()
 	}
-	started = true
+	return ""
+}
+
+func orgID() string {
+	// TODO, once we add access token parsing, use that instead of id token.
+	// that will work with API_TOKEN as well.
+	if tok, err := identity.Get().Peek(); err == nil && tok.IDClaims() != nil {
+		return tok.IDClaims().OrgID
+	}
+	return ""
 }
 
 // Stop stops gathering telemetry and flushes buffered events to disk.
@@ -101,6 +119,10 @@ func Event(e EventName, meta Metadata) {
 		bufferSegmentMessage(msg.MessageId, msg)
 	case EventShellReady:
 		name := fmt.Sprintf("[%s] Shell Event: ready", appName)
+		msg := newTrackMessage(name, meta)
+		bufferSegmentMessage(msg.MessageId, msg)
+	case EventNixBuildSuccess:
+		name := fmt.Sprintf("[%s] Nix Build Event: success", appName)
 		msg := newTrackMessage(name, meta)
 		bufferSegmentMessage(msg.MessageId, msg)
 	}
@@ -163,8 +185,8 @@ func Error(err error, meta Metadata) {
 
 	// Prefer using the user ID instead of the device ID when it's
 	// available.
-	if userID != "" {
-		event.User.ID = userID
+	if uid := userID(); uid != "" {
+		event.User.ID = uid
 	}
 	bufferSentryEvent(event)
 
@@ -177,7 +199,7 @@ func Error(err error, meta Metadata) {
 type Metadata struct {
 	Command      string
 	CommandFlags []string
-	CommandStart time.Time
+	EventStart   time.Time
 	FeatureFlags map[string]bool
 
 	InShell   bool
