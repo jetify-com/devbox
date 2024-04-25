@@ -53,16 +53,11 @@ jobs:
 
       # We upload twice, once before updating and once after. This shows a simple
       # method to cache the latest current and latest dependencies.
-      # devbox cache configure is only required on multi-user nix installs 
-      # (e.g. macos). It is not strictly needed for uploading, only for reading 
-      # from the custom cache.
+      # If we want read access to cache on multi-user nix installs (e.g. macos), 
+      # we need to call devbox cache configure. This is currently not working
+      # as expected on CICD.
       - name: Upload cache
         run: |
-          devbox cache configure
-          pids=$(ps aux | grep nix-daemon | grep -v grep | awk '{print $2}')
-          if [ -n "$pids" ]; then
-            echo "$pids" | xargs kill -9
-          fi
           devbox cache upload
           devbox update
           devbox cache upload
