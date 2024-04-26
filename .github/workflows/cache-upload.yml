@@ -2,11 +2,7 @@ name: cache-upload
 # Uploads devbox nix dependencies to cache
 
 on:
-  pull_request:
   push:
-    branches:
-      - main
-  merge_group:
     branches:
       - main
   workflow_dispatch:
@@ -23,6 +19,7 @@ defaults:
 
 env:
   DEVBOX_API_TOKEN: ${{ secrets.DEVBOX_API_TOKEN }}
+  DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DEVBOX_DEBUG: 1
 
 jobs:
