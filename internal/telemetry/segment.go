@@ -34,9 +34,9 @@ func initSegmentClient() bool {
 }
 
 func newTrackMessage(name string, meta Metadata) *segment.Track {
-	nixVersion, err := nix.Version()
-	if err != nil {
-		nixVersion = "unknown"
+	nixVersion := "unknown"
+	if v, err := nix.Version(); err == nil {
+		nixVersion = v.Version
 	}
 
 	dur := time.Since(procStartTime)

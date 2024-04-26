@@ -141,9 +141,9 @@ func Error(err error, meta Metadata) {
 		return
 	}
 
-	nixVersion, err := nix.Version()
-	if err != nil {
-		nixVersion = "unknown"
+	nixVersion := "unknown"
+	if v, err := nix.Version(); err == nil {
+		nixVersion = v.Version
 	}
 
 	event := &sentry.Event{

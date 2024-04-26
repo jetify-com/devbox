@@ -12,7 +12,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/vercheck"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -206,8 +205,8 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 		return nil, err
 	}
 
-	// enable for nix >= 2.17
-	if vercheck.SemverCompare(version, "2.17.0") < 0 {
+	// disable for nix < 2.17
+	if !version.AtLeast(nix.Version2_17) {
 		return nil, err
 	}
 
