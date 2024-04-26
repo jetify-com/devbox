@@ -19,6 +19,7 @@ defaults:
 
 env:
   DEVBOX_API_TOKEN: ${{ secrets.DEVBOX_API_TOKEN }}
+  DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DEVBOX_DEBUG: 1
 
 jobs:
