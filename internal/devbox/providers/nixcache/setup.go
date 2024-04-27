@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
@@ -32,12 +33,14 @@ func (n *nixSetupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool
 	}
 	trusted, _ := cfg.IsUserTrusted(ctx, n.username)
 	if trusted {
+		debug.Log("nixcache: skipping setup task nixcache-setup-nix: user %s is already trusted", n.username)
 		return false
 	}
 
 	if _, err := nix.DaemonVersion(ctx); err != nil {
 		// This looks like a single-user install, so no need to
 		// configure the daemon.
+		debug.Log("nixcache: skipping setup task nixcache-setup-nix: error connecting to nix daemon, assuming single-user install: %v", err)
 		return false
 	}
 	return true
@@ -65,12 +68,14 @@ type awsSetupTask struct {
 func (a *awsSetupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
 	// This task only needs to run once.
 	if !lastRun.Time.IsZero() {
+		debug.Log("nixcache: skipping setup task nixcache-setup-aws: setup was already run at %s", lastRun.Time)
 		return false
 	}
 
 	// No need to configure the daemon if this looks like a single-user
 	// install.
 	if _, err := nix.DaemonVersion(ctx); err != nil {
+		debug.Log("nixcache: skipping setup task nixcache-setup-aws: error connecting to nix daemon, assuming single-user install: %v", err)
 		return false
 	}
 	return true
