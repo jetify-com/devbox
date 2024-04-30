@@ -512,7 +512,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		})
 	}
 
-	return err
+	return nil
 }
 
 func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode) ([]*devpkg.Package, error) {
