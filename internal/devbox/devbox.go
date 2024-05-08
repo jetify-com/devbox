@@ -55,7 +55,7 @@ const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
 	shellHistoryFile            = ".devbox/shell_history"
-	processComposeTargetVersion = "v0.85.0"
+	processComposeTargetVersion = "v1.5.0"
 	arbitraryCmdFilename        = ".cmd"
 )
 
