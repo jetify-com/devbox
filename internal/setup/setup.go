@@ -8,14 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/mattn/go-isatty"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/xdg"
 )
@@ -28,6 +31,12 @@ var ErrUserRefused = errors.New("user refused run")
 // user previously refused to run the task. Call [Reset] to re-prompt the user
 // for confirmation.
 var ErrAlreadyRefused = errors.New("already refused by user")
+
+type ctxKey string
+
+// ctxKeyTask tracks the current task key across processes when relaunching
+// with sudo.
+var ctxKeyTask ctxKey = "task"
 
 // Task is a setup action that can conditionally run based on the state of a
 // previous run.
@@ -64,6 +73,97 @@ func Run(ctx context.Context, key string, task Task) error {
 	return run(ctx, key, task, "")
 }
 
+// SudoDevbox relaunches Devbox as root using sudo, taking care to preserve
+// Devbox environment variables that can affect the new process. If the current
+// user is already root, then it returns (false, nil) to indicate that no sudo
+// process ran. The caller can use this as a hint to know if it's running as the
+// sudoed process. Typical usage is:
+//
+//	func (*ConfigTask) Run(context.Context) error {
+//		ran, err := SudoDevbox(ctx, "cache", "configure")
+//		if ran || err != nil {
+//			// return early if we kicked off a sudo process or there
+//			// was an error
+//			return err
+//		}
+//		// do things as root
+//	}
+//
+//	ConfirmRun(ctx, key, &ConfigTask{}, "Allow sudo to run Devbox as root?")
+//
+// A task that calls SudoDevbox should pass command arguments that cause the new
+// Devbox process to rerun the task. The task executes unconditionally within
+// the sudo process without re-prompting the user or a second call to its
+// NeedsRun method.
+func SudoDevbox(ctx context.Context, arg ...string) (ran bool, err error) {
+	if os.Getuid() == 0 {
+		return false, nil
+	}
+
+	taskKey := ""
+	if v := ctx.Value(ctxKeyTask); v != nil {
+		taskKey = v.(string)
+	}
+
+	// Ensure the state file and its directory exist before sudoing,
+	// otherwise they will be owned by root. This is easier than recursively
+	// chowning new directories/files after root creates them.
+	if taskKey != "" {
+		saveState(taskKey, state{})
+	}
+
+	// Use the absolute path to Devbox instead of relying on PATH for two
+	// reasons:
+	//
+	//  1. sudo isn't guaranteed to preserve the current PATH and the root
+	//     user might not have devbox in its PATH.
+	//  2. If we're running an alternative version of Devbox
+	//     (such as a dev build) we want to use the same binary.
+	exe, err := devboxExecutable()
+	if err != nil {
+		return false, err
+	}
+
+	sudoArgs := make([]string, 0, len(arg)+4)
+	sudoArgs = append(sudoArgs, "--preserve-env="+strings.Join([]string{
+		// Keep writing debug logs from the sudo process.
+		"DEVBOX_DEBUG",
+
+		// Use the same Devbox API and auth token.
+		"DEVBOX_API_TOKEN",
+		"DEVBOX_PROD",
+
+		// In case the Devbox version is overridden.
+		"DEVBOX_USE_VERSION",
+
+		// Use the same XDG directories for state, caching, etc.
+		"XDG_CACHE_HOME",
+		"XDG_CONFIG_DIRS",
+		"XDG_CONFIG_HOME",
+		"XDG_DATA_DIRS",
+		"XDG_DATA_HOME",
+		"XDG_RUNTIME_DIR",
+		"XDG_STATE_HOME",
+	}, ","))
+	if taskKey != "" {
+		sudoArgs = append(sudoArgs, "DEVBOX_SUDO_TASK="+taskKey)
+	}
+	sudoArgs = append(sudoArgs, "--", exe)
+	sudoArgs = append(sudoArgs, arg...)
+
+	cmd := exec.CommandContext(ctx, "sudo", sudoArgs...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		if taskKey == "" {
+			return false, redact.Errorf("setup: relaunch with sudo: %w", err)
+		}
+		return false, taskError(taskKey, redact.Errorf("relaunch with sudo: %w", err))
+	}
+	return true, nil
+}
+
 // Run interactively prompts the user to confirm that it's ok to run a setup
 // task. It only prompts the user if the task's NeedsRun method returns true. If
 // the user refuses to run the task, then ConfirmPrompt will not ask them again.
@@ -76,13 +176,27 @@ func ConfirmRun(ctx context.Context, key string, task Task, prompt string) error
 }
 
 var defaultPrompt = func(msg string) (response any, err error) {
-	err = survey.AskOne(&survey.Confirm{Message: msg}, &response)
-	return response, err
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		err = survey.AskOne(&survey.Confirm{Message: msg}, &response)
+		return response, err
+	}
+	debug.Log("setup: no tty detected, assuming yes to confirmation prompt: %q", msg)
+	return true, nil
 }
 
 func run(ctx context.Context, key string, task Task, prompt string) error {
+	ctx = context.WithValue(ctx, ctxKeyTask, key)
+
+	// DEVBOX_SUDO_TASK is set when a task relaunched Devbox by calling
+	// SudoDevbox. If it matches the current task key, then the pre-sudo
+	// process is already running this task and we can skip checking
+	// task.NeedsRun and prompting the user.
+	isSudo := false
+	if envTask := os.Getenv("DEVBOX_SUDO_TASK"); envTask != "" {
+		isSudo = envTask == key
+	}
 	state := loadState(key)
-	if !task.NeedsRun(ctx, state.LastRun) {
+	if !isSudo && !task.NeedsRun(ctx, state.LastRun) {
 		return nil
 	}
 
@@ -93,7 +207,7 @@ func run(ctx context.Context, key string, task Task, prompt string) error {
 		}
 	}()
 
-	if prompt != "" {
+	if !isSudo && prompt != "" {
 		state.ConfirmPrompt.Message = prompt
 		if state.ConfirmPrompt.Asked && !state.ConfirmPrompt.Allowed {
 			// We've asked before and the user said no.
@@ -212,4 +326,20 @@ func taskError(key string, err error) error {
 		return nil
 	}
 	return redact.Errorf("setup: task %s: %w", key, err)
+}
+
+// devboxExecutable returns the path to the Devbox launcher script or the
+// current binary if the launcher is unavailable.
+func devboxExecutable() (string, error) {
+	if exe := os.Getenv(envir.LauncherPath); exe != "" {
+		if abs, err := filepath.Abs(exe); err == nil {
+			return abs, nil
+		}
+	}
+
+	exe, err := os.Executable()
+	if err != nil {
+		return "", redact.Errorf("get path to devbox executable: %v", err)
+	}
+	return exe, nil
 }

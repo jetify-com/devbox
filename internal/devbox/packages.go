@@ -469,7 +469,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			}
 			// Other errors indicate we couldn't update nix.conf, so just warn and continue
 			// by building from source if necessary.
-			ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use your organization's private cache. Some packages might be built from source.")
+			ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use your organization's private cache. Some packages might be built from source.\n")
 		}
 	}
 
