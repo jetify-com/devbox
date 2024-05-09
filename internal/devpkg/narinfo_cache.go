@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
@@ -51,6 +53,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 // package in the list, and caches the result.
 // Callers of IsInBinaryCache may call this function first as a perf-optimization.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+	defer debug.FunctionTimer().End()
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return nil
 	}
@@ -145,6 +148,11 @@ func (p *Package) fetchNarInfoStatus(outputName string) (bool, error) {
 
 	outputInCache := map[string]bool{} // key = output name, value = in cache
 	for _, output := range outputs {
+		// if store path exists locally, then it is equivalent to being in the cache.
+		if _, err := os.Stat(output.Path); err == nil {
+			outputInCache[output.Name] = true
+			continue
+		}
 		pathParts := nix.NewStorePathParts(output.Path)
 		reqURL := BinaryCache + "/" + pathParts.Hash + ".narinfo"
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
