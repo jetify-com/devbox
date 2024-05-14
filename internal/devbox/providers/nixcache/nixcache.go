@@ -2,15 +2,12 @@ package nixcache
 
 import (
 	"context"
-	"errors"
-	"os"
 	"time"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/setup"
 	"go.jetpack.io/pkg/api"
 	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
 	"go.jetpack.io/pkg/auth/session"
@@ -23,54 +20,6 @@ var singleton *Provider = &Provider{}
 
 func Get() *Provider {
 	return singleton
-}
-
-func (p *Provider) Configure(ctx context.Context, username string) error {
-	return p.configure(ctx, username, false)
-}
-
-func (p *Provider) ConfigureReprompt(ctx context.Context, username string) error {
-	return p.configure(ctx, username, true)
-}
-
-func (p *Provider) configure(ctx context.Context, username string, reprompt bool) error {
-	setupTasks := []struct {
-		key  string
-		task setup.Task
-	}{
-		{"nixcache-setup-aws", &awsSetupTask{username}},
-		{"nixcache-setup-nix", &nixSetupTask{username}},
-	}
-	if reprompt {
-		for _, t := range setupTasks {
-			setup.Reset(t.key)
-		}
-	}
-
-	// If we're already root, then do the setup without prompting the user
-	// for confirmation.
-	if os.Getuid() == 0 {
-		for _, t := range setupTasks {
-			err := setup.Run(ctx, t.key, t.task)
-			if err != nil {
-				return redact.Errorf("nixcache: run setup: %v", err)
-			}
-		}
-		return nil
-	}
-
-	// Otherwise, ask the user to confirm if it's okay to sudo.
-	const sudoPrompt = "Devbox requires root to configure the Nix daemon to use your organization's Devbox cache. Allow sudo?"
-	for _, t := range setupTasks {
-		err := setup.ConfirmRun(ctx, t.key, t.task, sudoPrompt)
-		if errors.Is(err, setup.ErrUserRefused) {
-			return nil
-		}
-		if err != nil {
-			return redact.Errorf("nixcache: run setup: %v", err)
-		}
-	}
-	return nil
 }
 
 // Credentials fetches short-lived credentials that grant access to the user's

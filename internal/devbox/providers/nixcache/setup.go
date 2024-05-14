@@ -9,83 +9,96 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
+	"unicode"
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/setup"
-	"go.jetpack.io/devbox/internal/xdg"
 )
 
-// nixSetupTask adds the user to Nix's trusted-users list so that they can use
-// their private Devbox cache with the Nix daemon.
-type nixSetupTask struct {
-	// username is the OS username to trust.
-	username string
+func (p *Provider) Configure(ctx context.Context, username string) error {
+	return p.configure(ctx, username, false)
 }
 
-func (n *nixSetupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
-	cfg, err := nix.CurrentConfig(ctx)
-	if err != nil {
-		return true
-	}
-	trusted, _ := cfg.IsUserTrusted(ctx, n.username)
-	if trusted {
-		debug.Log("nixcache: skipping setup task nixcache-setup-nix: user %s is already trusted", n.username)
-		return false
-	}
-
-	if _, err := nix.DaemonVersion(ctx); err != nil {
-		// This looks like a single-user install, so no need to
-		// configure the daemon.
-		debug.Log("nixcache: skipping setup task nixcache-setup-nix: error connecting to nix daemon, assuming single-user install: %v", err)
-		return false
-	}
-	return true
+func (p *Provider) ConfigureReprompt(ctx context.Context, username string) error {
+	return p.configure(ctx, username, true)
 }
 
-func (n *nixSetupTask) Run(ctx context.Context) error {
-	if os.Getuid() != 0 {
-		return sudo(ctx, n.username)
+func (p *Provider) configure(ctx context.Context, username string, reprompt bool) error {
+	const key = "nixcache-setup"
+	if reprompt {
+		setup.Reset(key)
 	}
-	err := nix.IncludeDevboxConfig(ctx, n.username)
-	if err != nil {
-		return redact.Errorf("modify nix config: %v", err)
+
+	task := &setupTask{username}
+	const sudoPrompt = "You're logged into a Devbox account that now has access to a Nix cache. " +
+		"Allow Devbox to configure Nix to use the new cache (requires sudo)?"
+	err := setup.ConfirmRun(ctx, key, task, sudoPrompt)
+	if err != nil && !errors.Is(err, setup.ErrUserRefused) {
+		return redact.Errorf("nixcache: run setup: %v", err)
 	}
 	return nil
 }
 
-// awsSetupTask configures the OS's root account to authenticate with AWS by
-// obtaining a token from `devbox cache credentials`.
-type awsSetupTask struct {
-	// username is the OS username that the Nix daemon should sudo as when
-	// running `devbox cache credentials`.
+// setupTask adds the user to Nix's trusted-users list and updates
+// ~root/.aws/config so that they can use their Devbox cache with the
+// Nix daemon.
+type setupTask struct {
+	// username is the OS username to trust.
 	username string
 }
 
-func (a *awsSetupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
-	// This task only needs to run once.
-	if !lastRun.Time.IsZero() {
-		debug.Log("nixcache: skipping setup task nixcache-setup-aws: setup was already run at %s", lastRun.Time)
+func (s *setupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
+	if _, err := nix.DaemonVersion(ctx); err != nil {
+		// This looks like a single-user install, so no need to
+		// configure the daemon or root's AWS credentials.
+		debug.Log("nixcache: skipping setup: error connecting to nix daemon, assuming single-user install: %v", err)
 		return false
 	}
 
-	// No need to configure the daemon if this looks like a single-user
-	// install.
-	if _, err := nix.DaemonVersion(ctx); err != nil {
-		debug.Log("nixcache: skipping setup task nixcache-setup-aws: error connecting to nix daemon, assuming single-user install: %v", err)
-		return false
+	if lastRun.Time.IsZero() {
+		debug.Log("nixcache: running setup: first time setup")
+		return true
 	}
-	return true
+	cfg, err := nix.CurrentConfig(ctx)
+	if err != nil {
+		debug.Log("nixcache: running setup: error getting current nix config, assuming user %s isn't trusted", s.username)
+		return true
+	}
+	trusted, err := cfg.IsUserTrusted(ctx, s.username)
+	if err != nil {
+		debug.Log("nixcache: running setup: error checking if user %s is trusted, assuming they aren't", s.username)
+		return true
+	}
+	if !trusted {
+		debug.Log("nixcache: running setup: user %s isn't trusted", s.username)
+		return true
+	}
+	return false
 }
 
-func (a *awsSetupTask) Run(ctx context.Context) error {
-	if os.Getuid() != 0 {
-		return sudo(ctx, a.username)
+func (s *setupTask) Run(ctx context.Context) error {
+	ran, err := setup.SudoDevbox(ctx, "cache", "configure", "--user", s.username)
+	if ran || err != nil {
+		return err
 	}
 
+	err = nix.IncludeDevboxConfig(ctx, s.username)
+	if err != nil {
+		return redact.Errorf("update nix config: %v", err)
+	}
+	err = s.updateAWSConfig()
+	if err != nil {
+		return redact.Errorf("update root aws config: %v", err)
+	}
+	return nil
+}
+
+func (s *setupTask) updateAWSConfig() error {
 	exe, err := devboxExecutable()
 	if err != nil {
 		return err
@@ -133,8 +146,8 @@ func (a *awsSetupTask) Run(ctx context.Context) error {
 [default]
 # sudo as the configured user so that their cached credential files have the
 # correct ownership.
-credential_process = %s -u %s -i -- %s cache credentials
-`, header, sudo, a.username, exe)
+credential_process = %s -u %s -i %s-- %s cache credentials
+`, header, sudo, s.username, propagatedEnv(), exe)
 	if err != nil {
 		return redact.Errorf("write to ~root/.aws/config: %v", err)
 	}
@@ -144,35 +157,51 @@ credential_process = %s -u %s -i -- %s cache credentials
 	return nil
 }
 
-func sudo(ctx context.Context, username string) error {
-	// Use the absolute path to Devbox instead of relying on PATH for two
-	// reasons:
-	//
-	//  1. sudo isn't guaranteed to preserve the current PATH and the root
-	//     user might not have devbox in its PATH.
-	//  2. If we're running an alternative version of Devbox
-	//     (such as a dev build) we want to use the same binary.
-	exe, err := devboxExecutable()
-	if err != nil {
-		return err
+// propagatedEnv returns a string of space-separated VAR=value pairs of
+// environment variables that should be propagated to the credential_process
+// command in ~root/.aws/config. This is especially important for CI because the
+// Nix daemon won't otherwise see any environment variables set by the job.
+func propagatedEnv() string {
+	envs := []string{
+		"DEVBOX_API_TOKEN",
+		"DEVBOX_PROD",
+		"DEVBOX_USE_VERSION",
+		"XDG_CACHE_HOME",
+		"XDG_CONFIG_DIRS",
+		"XDG_CONFIG_HOME",
+		"XDG_DATA_DIRS",
+		"XDG_DATA_HOME",
+		"XDG_RUNTIME_DIR",
+		"XDG_STATE_HOME",
 	}
+	strb := strings.Builder{}
+	for _, name := range envs {
+		val := os.Getenv(name)
+		if val == "" {
+			continue
+		}
+		notPrintable := strings.ContainsFunc(val, func(r rune) bool {
+			return !unicode.IsPrint(r)
+		})
+		if notPrintable {
+			debug.Log("nixcache: not including environment variable in ~root/.aws/config because it contains nonprintable runes: %q=%q", name, val)
+			continue
+		}
 
-	// Ensure the XDG state directory exists before sudoing, otherwise it
-	// will be owned by root. It's used by the setup package to remember
-	// user responses to the confirmation prompt.
-	err = os.MkdirAll(xdg.StateSubpath("devbox"), 0o700)
-	if err != nil {
-		return err
+		strb.WriteString(name)
+		strb.WriteString(`="`)
+		for _, r := range val {
+			switch r {
+			// Special characters inside double quotes:
+			// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
+			case '$', '`', '"', '\\':
+				strb.WriteByte('\\')
+			}
+			strb.WriteRune(r)
+		}
+		strb.WriteString(`" `)
 	}
-
-	cmd := exec.CommandContext(ctx, "sudo", "--preserve-env=XDG_STATE_HOME", "--", exe, "cache", "configure", "--user", username)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("relaunch with sudo: %w", err)
-	}
-	return nil
+	return strb.String()
 }
 
 // rootAWSConfigPath returns the default AWS config path for the root user. In a
