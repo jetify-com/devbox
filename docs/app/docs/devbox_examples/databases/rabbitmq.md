@@ -46,7 +46,7 @@ processes:
 
 The `rabbitmq` process starts the server as a daemon in the background, and shuts it down whenever you terminate process compose. The `rabbitmq-logs` service will tail the logs of process-compose, and display them in the process-compose UI. You can configure the services by modifying the environment variables as described below.
 
-If you want to create your own version of the mongodb service, you can create a process-compose.yaml in your project's root, and define a new process named `rabbitmq`. For more details, see the [process-compose documentation](https://f1bonacc1.github.io/process-compose/)
+If you want to create your own version of the RabbitMQ service, you can create a process-compose.yaml in your project's root, and define a new process named `rabbitmq`. For more details, see the [process-compose documentation](https://f1bonacc1.github.io/process-compose/)
 
 ## Environment Variables
 
