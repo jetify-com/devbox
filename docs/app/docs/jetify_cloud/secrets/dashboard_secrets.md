@@ -3,7 +3,7 @@ title: Managing Secrets from the Dashboard
 sidebar_position: 2
 ---
 
-You can add or manage secrets for a Jetify Cloud project using the Secrets tab of the Jetify Dashboard. Secrets that you set in the Dashboard will be automatically available when an authenticated member of your team uses Devbox to start a shell, script, or service in the application
+You can add or manage secrets for a Jetify Cloud project using the Secrets tab of the Jetify Dashboard. Secrets that you set in the Dashboard will be automatically available when an authenticated member of your team uses Devbox to start a shell, script, or service in the application.
 
 ## Prerequisites
 

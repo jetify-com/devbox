@@ -24,7 +24,7 @@ Team members can be added in one of two Roles:
 
 ![Inviting a Member](../../../static/img/inviting_member.png)
 
-1. Once invited, users will receive an email with instructions on how to join your team. They will show up in the **Members** tab as invited until the accept the invitation:
+1. Once invited, users will receive an email with instructions on how to join your team. They will show up in the **Members** tab as invited until they accept the invitation:
 
    ![Invited Member](../../../static/img/invited_member.png)
 

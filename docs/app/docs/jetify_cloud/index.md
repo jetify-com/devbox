@@ -18,7 +18,7 @@ Jetify Cloud is currently available in Early Access. We're actively working on a
 
 Jetify Cloud currently includes:
 
-**[Jetify Cache](./cache/index.md)**: Provides a secure, private cache to share packages across all your projects and environments, whether sourced from Nixpkgs or Flakes. Avoid rebuilding custom packages locally or in CI. 
+**[Jetify Cache](./cache/index.md)**: Provides a secure, private cache to share packages across all your Devbox projects and environments, whether sourced from Nixpkgs or Flakes. Avoid rebuilding custom packages locally or in CI. 
 
 **[Jetify Secrets](./secrets/index.md)**: Securely store secrets and variables for all of your environments, and automatically synchronize them with your Devbox Shells and Scripts
 

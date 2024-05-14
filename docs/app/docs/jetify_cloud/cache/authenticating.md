@@ -3,7 +3,7 @@ title: Authenticating with the Cache
 sidebar_position: 2
 ---
 
-Your Jetify Cloud organization is automatically provisioned with a shared cache. Any developer that is invited to your Jetify Cloud org will be automatically authenticated with the cache when they sign in. 
+Your Jetify Cloud organization is automatically provisioned with a shared cache. Any developers invited to your Jetify Cloud org will be automatically authenticated with the cache when they sign in. 
 
 ## Managing Access to the Cache
 

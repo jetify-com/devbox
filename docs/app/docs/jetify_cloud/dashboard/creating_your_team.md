@@ -3,11 +3,11 @@ title: Creating Your Team
 sidebar_position: 2
 ---
 
-Developers who want to use Jetify for their personal projects can sign up for a free account. The free account comes with basic Jetify Cloud features (like Secrets), with additional features like Deployments available for purchase.
+Developers who want to use Jetify for their personal projects can sign up for a free account. The free account comes with basic Jetify Cloud features (like Secrets), with additional features like Deployments and Cache available for purchase.
 
 If you want to collaborate and share your projects with other members on your team, you will need to upgrade to a **Team Account**. Team accounts let you invite other developers to share resources and collaborate on projects in Jetify Cloud.
 
-Users with a free account can try out a paid Team account free for 14 days.
+Users with a free account can upgrade to a paid team on the dashboard anytime.
 
 ## Creating a New Team Account
 
@@ -25,6 +25,6 @@ Users with a free account can try out a paid Team account free for 14 days.
 
 ## Billing
 
-New teams are automatically enrolled in a 14 day free trial. After the trial period ends, you will need to add a payment method to continue using your team.
+Free accounts are free forever. You will need to add a payment method to unlock paid tier features.
 
 Team accounts are billed monthly based on the number of active members in your team. You can view your current billing status and update your billing information from the **Billing** tab in the Jetify Dashboard.

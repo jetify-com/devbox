@@ -1,6 +1,6 @@
 # devbox secrets init
 
-initialize directory and devbox secrets project
+Initialize devbox secrets in the project directory. This setup step creates/connects to an existing jetify cloud project
 
 ```bash
 devbox secrets init [flags]

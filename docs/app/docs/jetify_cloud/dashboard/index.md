@@ -3,7 +3,7 @@ title: Introduction
 sidebar_position: 1
 ---
 
-The [Jetify Dashboard](https://cloud.jetify.com) lets you manage your team, projects, and secrets from a single interface. You can use the Dashboard to manage your own hobby projects, or to collaborate with other team members on your Jetify Projects
+The [Jetify Dashboard](https://cloud.jetify.com) lets you manage your team, projects, and secrets from a single interface. You can use the Dashboard to manage your own hobby projects, or to collaborate with other team members.
 
 ![Jetify Dashboard](../../../static/img/jetify_cloud_dashboard.jpeg)
 
