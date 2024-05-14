@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/setup"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 func (p *Provider) Configure(ctx context.Context, username string) error {
@@ -87,10 +88,20 @@ func (s *setupTask) Run(ctx context.Context) error {
 		return err
 	}
 
-	err = nix.IncludeDevboxConfig(ctx, s.username)
-	if err != nil {
-		return redact.Errorf("update nix config: %v", err)
+	trusted := false
+	cfg, err := nix.CurrentConfig(ctx)
+	if err == nil {
+		trusted, _ = cfg.IsUserTrusted(ctx, s.username)
 	}
+	if !trusted {
+		err = nix.IncludeDevboxConfig(ctx, s.username)
+		if errors.Is(err, nix.ErrUnknownServiceManager) {
+			ux.Fwarning(os.Stderr, "Devbox configured Nix to use a new cache. Please restart the Nix daemon and re-run Devbox.\n")
+		} else if err != nil {
+			return redact.Errorf("update nix config: %v", err)
+		}
+	}
+
 	err = s.updateAWSConfig()
 	if err != nil {
 		return redact.Errorf("update root aws config: %v", err)
