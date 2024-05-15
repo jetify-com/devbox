@@ -5,7 +5,10 @@
     "shell": {
         "init_hook": null,
         "scripts": {
-            "run_test": "dotnet run"
+            "install": "dotnet restore",
+            "build": "dotnet build",
+            "run_test": "dotnet run",
+            "start": "dotnet run"
         }
     }
 }

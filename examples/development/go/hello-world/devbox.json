@@ -11,6 +11,9 @@
             "export \"GOROOT=$(go env GOROOT)\""
         ],
         "scripts": {
+            "install": "go get ./...",
+            "build": "go build -o main.go",
+            "start": "go run",
             "run_test": "go run main.go"
         }
     }

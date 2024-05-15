@@ -5,6 +5,9 @@
     "shell": {
         "init_hook": null,
         "scripts": {
+            "install": "dotnet restore",
+            "build": "dotnet build",
+            "start": "dotnet run",
             "run_test": "dotnet run"
         }
     }

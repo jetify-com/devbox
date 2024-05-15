@@ -1,14 +1,18 @@
 {
   "packages": [
-    "python@latest",
+    "python@latest"
   ],
   "shell": {
     "init_hook": [
-      ". $VENV_DIR/bin/activate",
-      "pip install -r requirements.txt"
+      ". $VENV_DIR/bin/activate"
     ],
     "scripts": {
-      "run_test": "python main.py"
+      "install": "pip install -r requirements.txt",
+      "start": "python main.py",
+      "run_test": [
+        "devbox run install",
+        "devbox run start"
+      ]
     }
   }
 }

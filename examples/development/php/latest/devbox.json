@@ -9,10 +9,14 @@
   },
   "shell": {
     "init_hook": [
-      "composer install"
     ],
     "scripts": {
-      "run_test": "php public/index.php"
+      "install": "composer install",
+      "start": "php public/index.php",
+      "run_test": [
+        "devbox run install",
+        "devbox run start"
+      ]
     }
   }
 }

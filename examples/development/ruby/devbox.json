@@ -6,6 +6,8 @@
   "shell": {
     "init_hook": [],
     "scripts": {
+      "install": "bundle install",
+      "start": "ruby -e 'puts \"Hello from Ruby #{RUBY_VERSION}\"'",
       "run_test": "ruby -e 'puts \"Hello from Ruby #{RUBY_VERSION}\"'"
     }
   }

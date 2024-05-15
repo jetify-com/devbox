@@ -9,11 +9,12 @@
     "shell": {
         "init_hook": [
             ". conf/set-env.sh",
-            "rustup default stable",
-            "cargo fetch"
+            "rustup default stable"
         ],
         "scripts": {
             "build-docs": "cargo doc",
+            "install": "cargo fetch .",
+            "build": "cargo build",
             "start": "cargo run",
             "run_test": [
                 "cargo test -- --show-output"

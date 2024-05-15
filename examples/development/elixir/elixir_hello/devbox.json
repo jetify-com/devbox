@@ -12,10 +12,12 @@
       "mkdir -p .nix-mix",
       "mkdir -p .nix-hex",
       "mix local.hex --force",
-      "mix local.rebar --force",
-      "mix deps.get"
+      "mix local.rebar --force"
     ],
     "scripts": {
+      "install": "mix deps.get",
+      "build": "mix compile",
+      "start": "mix run",
       "run_test": "mix run"
     }
   }

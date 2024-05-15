@@ -6,7 +6,8 @@
     "scripts": {
       "build": "bun build ./index.ts",
       "test": "bun test",
-      "dev": "bun --watch run index.ts"
+      "dev": "bun --watch run index.ts",
+      "start": "bun run index.ts"
     }
   }
 }

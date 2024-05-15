@@ -5,9 +5,10 @@
   },
   "shell": {
     "init_hook": [
-      "pnpm install"
     ],
     "scripts": {
+      "install": "pnpm install",
+      "start": "pnpm run start",
       "run_test": "pnpm run start"
     }
   }

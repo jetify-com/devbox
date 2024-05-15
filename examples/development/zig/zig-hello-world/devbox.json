@@ -4,6 +4,8 @@
   },
   "shell": {
     "scripts": {
+      "build": "zig build",
+      "start": "./zig-out/bin/zig-hello-world",
       "run_test": "zig build run test --summary all"
     }
   }

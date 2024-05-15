@@ -10,10 +10,17 @@
   "shell": {
     "init_hook": null,
     "scripts": {
-      "run_test": [
+      "build": [
         "cd my-project",
-        "stack build",
+        "stack build"
+      ],
+      "start": [
+        "cd my-project",
         "stack exec my-project-exe"
+      ],
+      "run_test": [
+        "devbox run build",
+        "devbox run start"
       ]
     }
   }

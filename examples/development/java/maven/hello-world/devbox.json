@@ -7,9 +7,15 @@
     "shell": {
         "init_hook": null,
         "scripts": {
-            "run_test": [
-                "mvn package",
+            "build": [
+                "mvn package"
+            ],
+            "start": [
                 "java -jar target/devbox-maven-app-1.0-SNAPSHOT.jar"
+            ],
+            "run_test": [
+                "devbox run build",
+                "devbox run start"
             ]
         }
     }

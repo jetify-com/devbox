@@ -5,11 +5,13 @@
         "binutils@latest"
     ],
     "shell": {
-        "init_hook": null,
+        "init_hook": [],
         "scripts": {
+            "build": "gradle build",
+            "start": "gradle run",
             "run_test": [
-                "gradle build",
-                "gradle run"
+                "devbox run build",
+                "devbox run start"
             ]
         }
     }
