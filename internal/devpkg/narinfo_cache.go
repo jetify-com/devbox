@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -107,11 +108,28 @@ func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
 	type inCacheFunc func() (bool, error)
 	f, ok := narInfoStatusFnCache.Load(p.Raw)
 	if !ok {
-		key := fmt.Sprintf("%s^%s", p.Raw, output)
 		f = inCacheFunc(sync.OnceValues(func() (bool, error) { return p.fetchNarInfoStatus(output) }))
-		f, _ = narInfoStatusFnCache.LoadOrStore(key, f)
+		f, _ = narInfoStatusFnCache.LoadOrStore(p.keyForOutput(output), f)
 	}
 	return f.(inCacheFunc)()
+}
+
+func (p *Package) keyForOutput(output string) string {
+	if output == useDefaultOutput {
+		sysInfo, err := p.sysInfoIfExists()
+		// let's be super safe to always avoid empty key.
+		if err == nil && sysInfo != nil && len(sysInfo.DefaultOutputs()) > 0 {
+			output = lo.Reduce(
+				sysInfo.DefaultOutputs(),
+				func(acc string, o lock.Output, _ int) string {
+					return acc + o.Name
+				},
+				"",
+			)
+		}
+	}
+
+	return fmt.Sprintf("%s^%s", p.Raw, output)
 }
 
 // fetchNarInfoStatus fetches the cache status for the package. It returns
