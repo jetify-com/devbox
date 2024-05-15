@@ -19,7 +19,7 @@ To share secrets and access to deployments with other team members, you will nee
 
 Jetify Deployments have the following resources by default:
 
-1. **CPU**: 1 Core
+1. **CPU**: 1 Shared CPUI
 2. **Memory**: 512 MB
 
 Deployments may also scale down to zero after several seconds of not receiving a request. More configurations and limits are currently available for Enterprise Plans. [Contact Us](https://calendly.com/d/3rd-bhp-qym/meet-with-the-jetify-team) for more details. 

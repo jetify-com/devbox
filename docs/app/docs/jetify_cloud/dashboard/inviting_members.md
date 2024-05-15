@@ -28,6 +28,8 @@ Team members can be added in one of two Roles:
 
    ![Invited Member](../../../static/img/invited_member.png)
 
+   Note that invitations will expire if they are not accepted within 7 days, after which you will need to re-send the invitation.
+
    Once they accept the invitation, they will switch to **active**
 
    ![Active Member](../../../static/img/active_member.png)
