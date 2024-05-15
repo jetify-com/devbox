@@ -17,7 +17,18 @@
       "db:create": "mysql -u root -e 'CREATE DATABASE laravel;'",
       "db:migrate": "php artisan migrate",
       "db:mysql": "mysql -u root -D laravel_test",
-      "serve:dev": "php artisan serve"
+      "serve:dev": "php artisan serve",
+      "install":[
+        "devbox run create-project",
+        "devbox services up -b",
+        "devbox run db:create",
+        "devbox run db:migrate",
+        "devbox services stop"
+      ],
+      "start": [
+        "devbox services up -b",
+        "devbox run serve:dev"
+      ]
     }
   }
 }

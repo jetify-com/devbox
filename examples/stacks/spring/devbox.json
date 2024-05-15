@@ -8,21 +8,23 @@
     "init_hook": [
       "echo 'Welcome to devbox!'\n",
       "echo 'Setup MySQL by running `devbox run setup_db`",
-      "echo 'Run the example using `devbox run bootRun"
+      "echo 'Run the example using `devbox run start"
     ],
     "scripts": {
-      "bootRun": [
-        "devbox services up -b",
-        "./gradlew bootRun",
-        "devbox services stop"
-      ],
-      "build": [
-        "./gradlew build"
-      ],
       "setup_db": [
         "devbox services up mysql -b",
         "mysql -u root < setup_db.sql",
         "devbox services stop"
+      ],
+      "install": [
+        "devbox run setup_db"
+      ],
+      "build": [
+        "./gradlew build"
+      ],
+      "start":[
+        "devbox services up -b",
+        "./gradlew bootRun"
       ],
       "test": [
         "./gradlew test"

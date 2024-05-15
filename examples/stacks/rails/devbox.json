@@ -1,11 +1,11 @@
 {
   "packages": {
-    "ruby":    "3.3",
+    "ruby": "3.3",
     "bundler": "2.5",
-    "nodejs":  "21",
-    "yarn":    "1.22",
-    "curl":    "latest",
-    "sqlite":  "latest"
+    "nodejs": "21",
+    "yarn": "1.22",
+    "curl": "latest",
+    "sqlite": "latest"
   },
   "shell": {
     "init_hook": [
@@ -14,8 +14,13 @@
       "./blog/bin/rails -f ./blog/Rakefile db:prepare"
     ],
     "scripts": {
-      "run_test":     ["./blog/bin/rails test"],
-      "start_server": ["./blog/bin/rails server"]
+      "install": [
+        "gem install rails",
+        "./blog/bin/bundle install",
+        "./blog/bin/rails -f ./blog/Rakefile db:prepare"
+      ],
+      "start": ["./blog/bin/rails server"],
+      "run_test": ["./blog/bin/rails test"]
     }
   }
 }

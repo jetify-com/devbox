@@ -20,15 +20,19 @@
         "psql devbox_lepp < setup_postgres_db.sql"
       ],
       "init_db": "initdb",
-      "run_test": [
+      "install": [
         "mkdir -p /tmp/devbox/lepp",
         "rm -rf .devbox/virtenv/postgresql/data",
-        "initdb",
+        "initdb", 
         "devbox services up -b",
         "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
-        "dropdb --if-exists devbox_lepp",
-        "createdb devbox_lepp",
-        "psql devbox_lepp < setup_postgres_db.sql",
+        "devbox run create_db",
+        "devbox services stop"
+      ],
+      "start": "devbox services up -b",
+      "run_test": [
+        "devbox run install",
+        "devbox run start",
         "curl localhost:$NGINX_WEB_PORT",
         "devbox services stop"
       ]

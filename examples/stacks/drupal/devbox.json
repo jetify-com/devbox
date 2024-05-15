@@ -16,7 +16,7 @@
   "shell": {
     "init_hook": [],
     "scripts": {
-      "run_test": [
+      "install": [
         "mkdir -p -m 0755 \"$(dirname \"$MYSQL_UNIX_PORT\")\"",
         "ls -la .devbox .devbox/virtenv .devbox/virtenv/mariadb .devbox/virtenv/mariadb/data || true",
         "devbox services up -b",
@@ -24,6 +24,12 @@
         "./install-drupal.sh",
         "curl localhost:8081",
         "devbox services stop"
+      ],
+      "start":[
+        "devbox services up -b"
+      ],
+      "run_test": [
+        "devbox run install"
       ]
     }
   }

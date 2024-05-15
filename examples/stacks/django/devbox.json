@@ -28,9 +28,20 @@
       "server": [
         "python todo_project/manage.py runserver"
       ],
+      "install": [
+        "pip install -r requirements.txt --use-pep517",
+        "initdb",
+        "devbox services start -b",
+        "devbox run create_db",
+        "devbox services stop"
+      ],
+      "start": [
+        "devbox services start -b",
+        "devbox run server"
+      ],
       "test": [
         "initdb",
-        "devbox services start",
+        "devbox services start -b",
         "devbox run create_db",
         "python todo_project/manage.py test",
         "devbox services stop"

@@ -12,13 +12,13 @@
   },
   "shell": {
     "scripts": {
+      "init_db": "initdb",
       "create_db": [
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql"
       ],
-      "init_db": "initdb",
-      "run_test": [
+      "install": [
         "mkdir -p /tmp/devbox/lapp", 
         "initdb",
         "devbox services up -b",
@@ -27,6 +27,15 @@
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql",
+        "devbox service stop" 
+      ],
+      "start": [
+        "devbox services up -b"
+      ],
+      "run_test": [
+        "devbox run install",
+        "devbox run start",
+        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5", 
         "curl localhost:$HTTPD_PORT",
         "devbox services stop"
       ]

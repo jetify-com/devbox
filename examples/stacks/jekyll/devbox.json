@@ -7,7 +7,7 @@
     "shell": {
         "init_hook": [],
         "scripts": {
-            "generate": [
+            "install": [
                 "gem install jekyll --version \"~> 3.9.2\" --no-document",
                 "cd myblog",
                 "bundle update",
@@ -15,14 +15,14 @@
                 "bundle package",
                 "rm -rf vendor"
             ],
-            "run_test": [
-                "cd myblog",
-                "devbox run generate",
-                "bundler exec $GEM_HOME/bin/jekyll build --trace"
-            ],
-            "serve": [
+            "start": [
                 "cd myblog",
                 "bundler exec $GEM_HOME/bin/jekyll serve --trace"
+            ],
+            "run_test": [
+                "cd myblog",
+                "devbox run install",
+                "bundler exec $GEM_HOME/bin/jekyll build --trace"
             ]
         }
     }
