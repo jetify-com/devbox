@@ -77,7 +77,7 @@ func getWriteCacheURI(
 			usererr.New("You don't have permission to write to any Nix caches.")
 	}
 	if len(caches) > 1 {
-		ux.Fwarning(w, "Multiple caches available, using the first one.\n")
+		ux.Fwarning(w, "Multiple caches available, using %s.\n", caches[0].GetUri())
 	}
 	return caches[0].GetUri(), nil
 }

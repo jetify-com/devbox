@@ -74,7 +74,7 @@ func (p *Provider) Caches(
 	client := api.NewClient(ctx, build.JetpackAPIHost(), token)
 	resp, err := client.GetBinCache(ctx)
 	if err != nil {
-		return nil, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
+		return nil, redact.Errorf("nixcache: get caches: %w", redact.Safe(err))
 	}
 	return resp.GetCaches(), nil
 }

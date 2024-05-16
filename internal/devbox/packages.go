@@ -475,7 +475,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			var daemonErr *nix.DaemonError
 			if errors.As(err, &daemonErr) {
 				// Error here to give the user a chance to restart the daemon.
-				return usererr.New("Devbox configured Nix to use %q as a cache. Please restart the Nix daemon and re-run Devbox.", args.ExtraSubstituters)
+				return usererr.New("Devbox configured Nix to use a new cache. Please restart the Nix daemon and re-run Devbox.")
 			}
 			// Other errors indicate we couldn't update nix.conf, so just warn and continue
 			// by building from source if necessary.
