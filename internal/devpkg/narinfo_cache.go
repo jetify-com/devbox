@@ -128,7 +128,6 @@ func (p *Package) keyForOutput(output string) string {
 			output = strings.Join(names, ",")
 		}
 	}
-	fmt.Println("output: ", output)
 
 	return fmt.Sprintf("%s^%s", p.Raw, output)
 }
