@@ -11,6 +11,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
@@ -128,13 +129,15 @@ func cacheInfoCmd() *cobra.Command {
 				fmt.Fprintln(cmd.OutOrStdout(), "No cache configured")
 			}
 			for _, cache := range caches {
-				permissions := cache.GetPermissions()
+				isReadOnly := !slices.Contains(
+					cache.GetPermissions(),
+					nixv1alpha1.Permission_PERMISSION_WRITE,
+				)
 				fmt.Fprintf(
 					cmd.OutOrStdout(),
-					"* %s (read: %t, write %t)\n",
+					"* %s %s\n",
 					cache.GetUri(),
-					slices.Contains(permissions, nixv1alpha1.Permission_PERMISSION_READ),
-					slices.Contains(permissions, nixv1alpha1.Permission_PERMISSION_WRITE),
+					lo.Ternary(isReadOnly, "(read-only)", ""),
 				)
 			}
 			return nil

@@ -114,6 +114,26 @@ func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
 	return f.(inCacheFunc)()
 }
 
+<<<<<<< Updated upstream
+=======
+func (p *Package) keyForOutput(output string) string {
+	if output == useDefaultOutput {
+		sysInfo, err := p.sysInfoIfExists()
+		// let's be super safe to always avoid empty key.
+		if err == nil && sysInfo != nil && len(sysInfo.DefaultOutputs()) > 0 {
+			names := make([]string, len(sysInfo.DefaultOutputs()))
+			for i, o := range sysInfo.DefaultOutputs() {
+				names[i] = o.Name
+			}
+			slices.Sort(names)
+			output = strings.Join(names, ",")
+		}
+	}
+
+	return fmt.Sprintf("%s^%s", p.Raw, output)
+}
+
+>>>>>>> Stashed changes
 // fetchNarInfoStatus fetches the cache status for the package. It returns
 // true if cache exists, false otherwise.
 // NOTE: This function always performs an HTTP request and should not be called

@@ -47,13 +47,6 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 			exp := time.Time{}
 			if t := creds.GetExpiration(); t != nil {
 				exp = t.AsTime()
-				// Token expiration should always be 60 minutes, but we want to expire
-				// the cache a bit earlier to avoid having a stale token.
-				// Adding a 40 minute check to ensure we don't accidentally create a
-				// very short-lived token.
-				if time.Until(exp) > 40*time.Minute {
-					exp = exp.Add(-10 * time.Minute)
-				}
 			}
 			return newAWSCredentials(creds), exp, nil
 		},
