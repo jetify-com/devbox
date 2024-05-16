@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/user"
+	"slices"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/pkg/errors"
@@ -14,6 +15,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
+	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
 )
 
 type cacheFlags struct {
@@ -118,16 +120,24 @@ func cacheInfoCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(gcurtis): We can also output info about the daemon config status
 			// here
-			uri, err := nixcache.Get().URI(cmd.Context())
+			caches, err := nixcache.Get().Caches(cmd.Context())
 			if err != nil {
 				return err
 			}
-			if uri == "" {
+			if len(caches) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "No cache configured")
-				return nil
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "Cache URI:", uri)
-			return err
+			for _, cache := range caches {
+				permissions := cache.GetPermissions()
+				fmt.Fprintf(
+					cmd.OutOrStdout(),
+					"* %s (read: %t, write %t)\n",
+					cache.GetUri(),
+					slices.Contains(permissions, nixv1alpha1.Permission_PERMISSION_READ),
+					slices.Contains(permissions, nixv1alpha1.Permission_PERMISSION_WRITE),
+				)
+			}
+			return nil
 		},
 	}
 }

@@ -2,8 +2,10 @@ package nixcache
 
 import (
 	"context"
+	"slices"
 	"time"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
@@ -45,6 +47,13 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 			exp := time.Time{}
 			if t := creds.GetExpiration(); t != nil {
 				exp = t.AsTime()
+				// Token expiration should always be 60 minutes, but we want to expire
+				// the cache a bit earlier to avoid having a stale token.
+				// Adding a 40 minute check to ensure we don't accidentally create a
+				// very short-lived token.
+				if time.Until(exp) > 40*time.Minute {
+					exp = exp.Add(-10 * time.Minute)
+				}
 			}
 			return newAWSCredentials(creds), exp, nil
 		},
@@ -55,40 +64,49 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	return creds, nil
 }
 
-// URI queries the Jetify API for the URI that points to user's private cache.
-// If their account doesn't have access to a cache, it returns an empty string
-// and a nil error.
-func (p *Provider) URI(ctx context.Context) (string, error) {
-	cache := filecache.New[string]("devbox/providers/nixcache")
+func (p *Provider) Caches(
+	ctx context.Context,
+) ([]*nixv1alpha1.NixBinCache, error) {
 	token, err := identity.Get().GenSession(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	// Landau: I think we can probably remove this cache? This endpoint is very
-	// fast and we only use this for build/upload which are slow.
-	uri, err := cache.GetOrSet(
-		"uri-"+getSubOrAccessTokenHash(token),
-		func() (string, time.Duration, error) {
-			client := api.NewClient(ctx, build.JetpackAPIHost(), token)
-			resp, err := client.GetBinCache(ctx)
-			if err != nil {
-				return "", 0, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
-			}
-
-			// Don't cache negative responses.
-			if resp.GetNixBinCacheUri() == "" {
-				return "", 0, nil
-			}
-
-			// TODO(gcurtis): do a better job of invalidating the URI after
-			// a Nix command fails to query the cache.
-			return resp.GetNixBinCacheUri(), 24 * time.Hour, nil
-		},
-	)
+	client := api.NewClient(ctx, build.JetpackAPIHost(), token)
+	resp, err := client.GetBinCache(ctx)
 	if err != nil {
-		return "", redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
+		return nil, redact.Errorf("nixcache: get uri: %w", redact.Safe(err))
 	}
-	return uri, nil
+	return resp.GetCaches(), nil
+}
+
+func (p *Provider) ReadCaches(
+	ctx context.Context,
+) ([]*nixv1alpha1.NixBinCache, error) {
+	caches, err := p.Caches(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lo.Filter(caches, func(c *nixv1alpha1.NixBinCache, _ int) bool {
+		return slices.Contains(
+			c.GetPermissions(),
+			nixv1alpha1.Permission_PERMISSION_READ,
+		)
+	}), nil
+}
+
+func (p *Provider) WriteCaches(
+	ctx context.Context,
+) ([]*nixv1alpha1.NixBinCache, error) {
+	caches, err := p.Caches(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lo.Filter(caches, func(c *nixv1alpha1.NixBinCache, _ int) bool {
+		return slices.Contains(
+			c.GetPermissions(),
+			nixv1alpha1.Permission_PERMISSION_WRITE,
+		)
+	}), nil
 }
 
 // AWSCredentials are short-lived credentials that grant access to a private Nix
