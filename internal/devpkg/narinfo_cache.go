@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -107,15 +109,12 @@ func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
 	type inCacheFunc func() (bool, error)
 	f, ok := narInfoStatusFnCache.Load(p.Raw)
 	if !ok {
-		key := fmt.Sprintf("%s^%s", p.Raw, output)
 		f = inCacheFunc(sync.OnceValues(func() (bool, error) { return p.fetchNarInfoStatus(output) }))
-		f, _ = narInfoStatusFnCache.LoadOrStore(key, f)
+		f, _ = narInfoStatusFnCache.LoadOrStore(p.keyForOutput(output), f)
 	}
 	return f.(inCacheFunc)()
 }
 
-<<<<<<< Updated upstream
-=======
 func (p *Package) keyForOutput(output string) string {
 	if output == useDefaultOutput {
 		sysInfo, err := p.sysInfoIfExists()
@@ -133,7 +132,6 @@ func (p *Package) keyForOutput(output string) string {
 	return fmt.Sprintf("%s^%s", p.Raw, output)
 }
 
->>>>>>> Stashed changes
 // fetchNarInfoStatus fetches the cache status for the package. It returns
 // true if cache exists, false otherwise.
 // NOTE: This function always performs an HTTP request and should not be called
