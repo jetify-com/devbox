@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -107,11 +109,28 @@ func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
 	type inCacheFunc func() (bool, error)
 	f, ok := narInfoStatusFnCache.Load(p.Raw)
 	if !ok {
-		key := fmt.Sprintf("%s^%s", p.Raw, output)
 		f = inCacheFunc(sync.OnceValues(func() (bool, error) { return p.fetchNarInfoStatus(output) }))
-		f, _ = narInfoStatusFnCache.LoadOrStore(key, f)
+		f, _ = narInfoStatusFnCache.LoadOrStore(p.keyForOutput(output), f)
 	}
 	return f.(inCacheFunc)()
+}
+
+func (p *Package) keyForOutput(output string) string {
+	if output == useDefaultOutput {
+		sysInfo, err := p.sysInfoIfExists()
+		// let's be super safe to always avoid empty key.
+		if err == nil && sysInfo != nil && len(sysInfo.DefaultOutputs()) > 0 {
+			names := make([]string, len(sysInfo.DefaultOutputs()))
+			for i, o := range sysInfo.DefaultOutputs() {
+				names[i] = o.Name
+			}
+			slices.Sort(names)
+			output = strings.Join(names, ",")
+		}
+	}
+	fmt.Println("output: ", output)
+
+	return fmt.Sprintf("%s^%s", p.Raw, output)
 }
 
 // fetchNarInfoStatus fetches the cache status for the package. It returns
