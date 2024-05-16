@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -119,15 +120,15 @@ func (p *Package) keyForOutput(output string) string {
 		sysInfo, err := p.sysInfoIfExists()
 		// let's be super safe to always avoid empty key.
 		if err == nil && sysInfo != nil && len(sysInfo.DefaultOutputs()) > 0 {
-			output = lo.Reduce(
-				sysInfo.DefaultOutputs(),
-				func(acc string, o lock.Output, _ int) string {
-					return acc + o.Name
-				},
-				"",
-			)
+			names := make([]string, len(sysInfo.DefaultOutputs()))
+			for i, o := range sysInfo.DefaultOutputs() {
+				names[i] = o.Name
+			}
+			slices.Sort(names)
+			output = strings.Join(names, ",")
 		}
 	}
+	fmt.Println("output: ", output)
 
 	return fmt.Sprintf("%s^%s", p.Raw, output)
 }
