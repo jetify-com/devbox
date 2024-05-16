@@ -44,7 +44,7 @@ jobs:
           sudo mv ./dist/devbox /usr/local/bin/
 
       # - name: Install devbox
-      #   uses: jetify-com/devbox-install-action@v0.9.0
+      #   uses: jetify-com/devbox-install-action@v0.11.0
       #   with:
       #     enable-cache: true
 
