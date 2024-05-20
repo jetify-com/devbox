@@ -109,7 +109,7 @@ func cacheCredentialsCmd() *cobra.Command {
 				return err
 			}
 
-			if flags.format == "env" {
+			if flags.format == "sh" {
 				fmt.Printf("export AWS_ACCESS_KEY_ID=%q\n", creds.AccessKeyID)
 				fmt.Printf("export AWS_SECRET_ACCESS_KEY=%q\n", creds.SecretAccessKey)
 				fmt.Printf("export AWS_SESSION_TOKEN=%q\n", creds.SessionToken)
@@ -124,7 +124,7 @@ func cacheCredentialsCmd() *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().StringVar(&flags.format, "format", "json", "Output format, either json or env")
+	cmd.Flags().StringVar(&flags.format, "format", "json", "Output format, either json or sh")
 	return cmd
 }
 
