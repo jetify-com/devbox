@@ -24,6 +24,7 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 }
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
+	defer debug.FunctionTimer().End()
 	// --impure for NIXPKGS_ALLOW_UNFREE
 	cmd := commandContext(ctx, "path-info", installable, "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
@@ -53,6 +54,7 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 // StorePathsAreInStore returns true if the store path is in the store
 // It relies on `nix store ls` to check if the store path is in the store
 func StorePathsAreInStore(ctx context.Context, storePaths []string) (bool, error) {
+	defer debug.FunctionTimer().End()
 	for _, storePath := range storePaths {
 		cmd := commandContext(ctx, "store", "ls", storePath)
 		debug.Log("Running cmd %s", cmd)

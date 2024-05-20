@@ -24,6 +24,10 @@ type cacheFlags struct {
 	to string
 }
 
+type credentialsFlags struct {
+	format string
+}
+
 func cacheCmd() *cobra.Command {
 	flags := cacheFlags{}
 	cacheCommand := &cobra.Command{
@@ -93,7 +97,8 @@ func cacheConfigureCmd() *cobra.Command {
 }
 
 func cacheCredentialsCmd() *cobra.Command {
-	return &cobra.Command{
+	flags := credentialsFlags{}
+	cmd := &cobra.Command{
 		Use:    "credentials",
 		Short:  "Output S3 cache credentials",
 		Hidden: true,
@@ -103,6 +108,14 @@ func cacheCredentialsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			if flags.format == "sh" {
+				fmt.Printf("export AWS_ACCESS_KEY_ID=%q\n", creds.AccessKeyID)
+				fmt.Printf("export AWS_SECRET_ACCESS_KEY=%q\n", creds.SecretAccessKey)
+				fmt.Printf("export AWS_SESSION_TOKEN=%q\n", creds.SessionToken)
+				return nil
+			}
+
 			out, err := json.Marshal(creds)
 			if err != nil {
 				return err
@@ -111,6 +124,8 @@ func cacheCredentialsCmd() *cobra.Command {
 			return err
 		},
 	}
+	cmd.Flags().StringVar(&flags.format, "format", "json", "Output format, either json or sh")
+	return cmd
 }
 
 func cacheInfoCmd() *cobra.Command {

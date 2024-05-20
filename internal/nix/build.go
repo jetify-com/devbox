@@ -21,6 +21,7 @@ type BuildArgs struct {
 }
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
+	defer debug.FunctionTimer().End()
 	// --impure is required for allowUnfreeEnv/allowInsecureEnv to work.
 	cmd := commandContext(ctx, "build", "--impure")
 	cmd.Args = append(cmd.Args, args.Flags...)
