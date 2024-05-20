@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
@@ -53,6 +54,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 // package in the list, and caches the result.
 // Callers of IsInBinaryCache may call this function first as a perf-optimization.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
+	defer debug.FunctionTimer().End()
 	if !featureflag.RemoveNixpkgs.Enabled() {
 		return nil
 	}

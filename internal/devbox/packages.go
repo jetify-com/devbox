@@ -394,6 +394,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 }
 
 func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
+	defer debug.FunctionTimer().End()
 	// Create plugin directories first because packages might need them
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
@@ -430,6 +431,7 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 // packages will be available in the nix store when computing the devbox environment
 // and installing in the nix profile (even if offline).
 func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode) error {
+	defer debug.FunctionTimer().End()
 	packages, err := d.packagesToInstallInStore(ctx, mode)
 	if err != nil || len(packages) == 0 {
 		return err
@@ -526,6 +528,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 }
 
 func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode) ([]*devpkg.Package, error) {
+	defer debug.FunctionTimer().End()
 	// First, get and prepare all the packages that must be installed in this project
 	// and remove non-nix packages from the list
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsNix)
