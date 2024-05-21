@@ -2,6 +2,7 @@ package nixcache
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"time"
 
@@ -27,7 +28,12 @@ func Get() *Provider {
 // Credentials fetches short-lived credentials that grant access to the user's
 // private cache.
 func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
-	cache := filecache.New[AWSCredentials]("devbox/providers/nixcache")
+	// Adding version to caches to avoid conflicts if we want to update the schema
+	// or while working on dev.
+	cache := filecache.New[AWSCredentials](fmt.Sprintf(
+		"devbox/%s/providers/nixcache",
+		build.Version,
+	))
 	token, err := identity.Get().GenSession(ctx)
 	if err != nil {
 		return AWSCredentials{}, err
