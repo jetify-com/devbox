@@ -16,6 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/pkg/api"
 	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
+	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
 	"go.jetpack.io/pkg/filecache"
 )
@@ -61,11 +62,15 @@ func (p *provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	return creds, nil
 }
 
+// Caches return the list of caches the user has access to. If user is not
+// logged in, it returns nil, nil. (no error).
 func (p *provider) Caches(
 	ctx context.Context,
 ) ([]*nixv1alpha1.NixBinCache, error) {
 	token, err := identity.GetProvider().GenSession(ctx)
-	if err != nil {
+	if errors.Is(err, auth.ErrNotLoggedIn) {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 	client := api.NewClient(ctx, build.JetpackAPIHost(), token)

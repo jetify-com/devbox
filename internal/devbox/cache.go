@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
@@ -67,6 +68,11 @@ func getWriteCacheURI(
 	ctx context.Context,
 	w io.Writer,
 ) (string, error) {
+	_, err := identity.GetProvider().GenSession(ctx)
+	if errors.Is(err, auth.ErrNotLoggedIn) {
+		return "",
+			usererr.New("You must be logged in to upload to a Nix cache.")
+	}
 	caches, err := nixcache.GetProvider().WriteCaches(ctx)
 	if err != nil {
 		return "", err
