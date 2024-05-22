@@ -63,7 +63,7 @@ func AuthClient() (*auth.Client, error) {
 func getAccessTokenFromAPIToken(
 	ctx context.Context,
 ) (*session.Token, error) {
-	if cachedAccessTokenFromAPIToken != nil {
+	if cachedAccessTokenFromAPIToken == nil {
 		apiTokenRaw := os.Getenv("DEVBOX_API_TOKEN")
 		if apiTokenRaw == "" {
 			return nil, nil
