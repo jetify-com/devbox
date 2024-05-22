@@ -25,7 +25,7 @@ func (d *Devbox) UploadProjectToCache(
 		}
 	}
 
-	creds, err := nixcache.GetProvider().Credentials(ctx)
+	creds, err := nixcache.CachedCredentials(ctx)
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return err
 	}
@@ -57,7 +57,7 @@ func UploadInstallableToCache(
 		}
 	}
 
-	creds, err := nixcache.GetProvider().Credentials(ctx)
+	creds, err := nixcache.CachedCredentials(ctx)
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return err
 	}
@@ -68,12 +68,12 @@ func getWriteCacheURI(
 	ctx context.Context,
 	w io.Writer,
 ) (string, error) {
-	_, err := identity.GetProvider().GenSession(ctx)
+	_, err := identity.GenSession(ctx)
 	if errors.Is(err, auth.ErrNotLoggedIn) {
 		return "",
 			usererr.New("You must be logged in to upload to a Nix cache.")
 	}
-	caches, err := nixcache.GetProvider().WriteCaches(ctx)
+	caches, err := nixcache.WriteCaches(ctx)
 	if err != nil {
 		return "", err
 	}

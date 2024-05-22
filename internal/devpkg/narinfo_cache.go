@@ -104,9 +104,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 // areExpectedOutputsInCacheOnce wraps fetchNarInfoStatusOnce and returns true
 // if the expected outputs are in the cache.
-func (p *Package) areExpectedOutputsInCacheOnce(
-	outputName string,
-) (bool, error) {
+func (p *Package) areExpectedOutputsInCacheOnce(outputName string) (bool, error) {
 	outputToCache, err := p.fetchNarInfoStatusOnce(outputName)
 	if err != nil {
 		return false, err
@@ -288,7 +286,7 @@ func fetchNarInfoStatusFromS3(
 	key := fmt.Sprintf("%s/%s", uri, hash)
 	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
 		func() (bool, error) {
-			s3Client, err := nixcache.GetProvider().CachedS3Client(ctx)
+			s3Client, err := nixcache.S3Client(ctx)
 			if err != nil {
 				return false, err
 			}
@@ -317,7 +315,7 @@ func fetchNarInfoStatusFromS3(
 
 func readCaches(ctx context.Context) ([]string, error) {
 	cacheURIs := []string{binaryCache}
-	otherCaches, err := nixcache.GetProvider().CachedReadCaches(ctx)
+	otherCaches, err := nixcache.CachedReadCaches(ctx)
 	if err != nil {
 		return nil, err
 	}

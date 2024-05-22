@@ -68,7 +68,7 @@ func Start() {
 func userID() string {
 	// TODO, once we add access token parsing, use that instead of id token.
 	// that will work with API_TOKEN as well.
-	if tok, err := identity.GetProvider().Peek(); err == nil && tok.IDClaims() != nil {
+	if tok, err := identity.Peek(); err == nil && tok.IDClaims() != nil {
 		return tok.IDClaims().Subject
 	}
 	if username := os.Getenv(envir.GitHubUsername); username != "" {
@@ -85,7 +85,7 @@ func userID() string {
 func orgID() string {
 	// TODO, once we add access token parsing, use that instead of id token.
 	// that will work with API_TOKEN as well.
-	if tok, err := identity.GetProvider().Peek(); err == nil && tok.IDClaims() != nil {
+	if tok, err := identity.Peek(); err == nil && tok.IDClaims() != nil {
 		return tok.IDClaims().OrgID
 	}
 	return ""

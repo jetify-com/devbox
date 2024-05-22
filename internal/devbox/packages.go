@@ -448,7 +448,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		Flags:  flags,
 		Writer: d.stderr,
 	}
-	caches, err := nixcache.GetProvider().CachedReadCaches(ctx)
+	caches, err := nixcache.CachedReadCaches(ctx)
 	if err != nil {
 		debug.Log("error getting nix cache URI, assuming user doesn't have access: %v", err)
 	}
@@ -461,7 +461,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 	// TODO (Landau): handle errors that are not auth.ErrNotLoggedIn
 	// Only lookup credentials if we have a cache to use
 	if len(args.ExtraSubstituters) > 0 {
-		creds, err := nixcache.GetProvider().Credentials(ctx)
+		creds, err := nixcache.CachedCredentials(ctx)
 		if err == nil {
 			args.Env = creds.Env()
 		}
@@ -471,7 +471,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			err = redact.Errorf("lookup current user: %v", err)
 			debug.Log("error configuring cache: %v", err)
 		}
-		err = nixcache.GetProvider().Configure(ctx, u.Username)
+		err = nixcache.Configure(ctx, u.Username)
 		if err != nil {
 			debug.Log("error configuring cache: %v", err)
 
