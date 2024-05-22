@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
@@ -447,7 +448,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		Flags:  flags,
 		Writer: d.stderr,
 	}
-	caches, err := d.providers.NixCache.ReadCaches(ctx)
+	caches, err := nixcache.GetProvider().CachedReadCaches(ctx)
 	if err != nil {
 		debug.Log("error getting nix cache URI, assuming user doesn't have access: %v", err)
 	}
@@ -460,7 +461,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 	// TODO (Landau): handle errors that are not auth.ErrNotLoggedIn
 	// Only lookup credentials if we have a cache to use
 	if len(args.ExtraSubstituters) > 0 {
-		creds, err := d.providers.NixCache.Credentials(ctx)
+		creds, err := nixcache.GetProvider().Credentials(ctx)
 		if err == nil {
 			args.Env = creds.Env()
 		}
@@ -470,7 +471,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 			err = redact.Errorf("lookup current user: %v", err)
 			debug.Log("error configuring cache: %v", err)
 		}
-		err = d.providers.NixCache.Configure(ctx, u.Username)
+		err = nixcache.GetProvider().Configure(ctx, u.Username)
 		if err != nil {
 			debug.Log("error configuring cache: %v", err)
 

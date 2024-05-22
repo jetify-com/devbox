@@ -5,6 +5,10 @@ import (
 	"slices"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cachehash"
@@ -16,26 +20,26 @@ import (
 	"go.jetpack.io/pkg/filecache"
 )
 
-type Provider struct{}
+type provider struct{}
 
-var singleton *Provider = &Provider{}
+var singleton *provider = &provider{}
 
-func Get() *Provider {
+func GetProvider() *provider {
 	return singleton
 }
 
 // Credentials fetches short-lived credentials that grant access to the user's
 // private cache.
-func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
+func (p *provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	cache := filecache.New[AWSCredentials]("devbox/providers/nixcache")
-	token, err := identity.Get().GenSession(ctx)
+	token, err := identity.GetProvider().GenSession(ctx)
 	if err != nil {
 		return AWSCredentials{}, err
 	}
 	creds, err := cache.GetOrSetWithTime(
 		"credentials-"+getSubOrAccessTokenHash(token),
 		func() (AWSCredentials, time.Time, error) {
-			token, err := identity.Get().GenSession(ctx)
+			token, err := identity.GetProvider().GenSession(ctx)
 			if err != nil {
 				return AWSCredentials{}, time.Time{}, err
 			}
@@ -57,10 +61,10 @@ func (p *Provider) Credentials(ctx context.Context) (AWSCredentials, error) {
 	return creds, nil
 }
 
-func (p *Provider) Caches(
+func (p *provider) Caches(
 	ctx context.Context,
 ) ([]*nixv1alpha1.NixBinCache, error) {
-	token, err := identity.Get().GenSession(ctx)
+	token, err := identity.GetProvider().GenSession(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -72,22 +76,27 @@ func (p *Provider) Caches(
 	return resp.GetCaches(), nil
 }
 
-func (p *Provider) ReadCaches(
+var readCaches []*nixv1alpha1.NixBinCache = nil
+
+func (p *provider) CachedReadCaches(
 	ctx context.Context,
 ) ([]*nixv1alpha1.NixBinCache, error) {
-	caches, err := p.Caches(ctx)
-	if err != nil {
-		return nil, err
+	if readCaches == nil {
+		caches, err := p.Caches(ctx)
+		if err != nil {
+			return nil, err
+		}
+		readCaches = lo.Filter(caches, func(c *nixv1alpha1.NixBinCache, _ int) bool {
+			return slices.Contains(
+				c.GetPermissions(),
+				nixv1alpha1.Permission_PERMISSION_READ,
+			)
+		})
 	}
-	return lo.Filter(caches, func(c *nixv1alpha1.NixBinCache, _ int) bool {
-		return slices.Contains(
-			c.GetPermissions(),
-			nixv1alpha1.Permission_PERMISSION_READ,
-		)
-	}), nil
+	return readCaches, nil
 }
 
-func (p *Provider) WriteCaches(
+func (p *provider) WriteCaches(
 	ctx context.Context,
 ) ([]*nixv1alpha1.NixBinCache, error) {
 	caches, err := p.Caches(ctx)
@@ -100,6 +109,30 @@ func (p *Provider) WriteCaches(
 			nixv1alpha1.Permission_PERMISSION_WRITE,
 		)
 	}), nil
+}
+
+func (p *provider) CachedS3Client(
+	ctx context.Context,
+) (*s3.Client, error) {
+	creds, err := p.Credentials(ctx)
+	if err != nil {
+		return nil, err
+	}
+	config, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				creds.AccessKeyID,
+				creds.SecretAccessKey,
+				creds.SessionToken,
+			),
+		),
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return s3.NewFromConfig(config), nil
 }
 
 // AWSCredentials are short-lived credentials that grant access to a private Nix

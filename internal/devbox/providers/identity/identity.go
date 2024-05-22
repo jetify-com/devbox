@@ -15,17 +15,17 @@ import (
 
 var scopes = []string{"openid", "offline_access", "email", "profile"}
 
-type Provider struct {
+type provider struct {
 	cachedAccessTokenFromAPIToken *session.Token
 }
 
-var singleton *Provider = &Provider{}
+var singleton *provider = &provider{}
 
-func Get() *Provider {
+func GetProvider() *provider {
 	return singleton
 }
 
-func (p *Provider) GenSession(ctx context.Context) (*session.Token, error) {
+func (p *provider) GenSession(ctx context.Context) (*session.Token, error) {
 	if t, err := p.getAccessTokenFromAPIToken(ctx); err != nil || t != nil {
 		return t, err
 	}
@@ -37,7 +37,7 @@ func (p *Provider) GenSession(ctx context.Context) (*session.Token, error) {
 	return c.GetSession(ctx)
 }
 
-func (p *Provider) Peek() (*session.Token, error) {
+func (p *provider) Peek() (*session.Token, error) {
 	if p.cachedAccessTokenFromAPIToken != nil {
 		return p.cachedAccessTokenFromAPIToken, nil
 	}
@@ -58,7 +58,7 @@ func (p *Provider) Peek() (*session.Token, error) {
 	return tokens[0].Peek(), nil
 }
 
-func (p *Provider) AuthClient() (*auth.Client, error) {
+func (p *provider) AuthClient() (*auth.Client, error) {
 	return auth.NewClient(
 		build.Issuer(),
 		build.ClientID(),
@@ -68,7 +68,7 @@ func (p *Provider) AuthClient() (*auth.Client, error) {
 	)
 }
 
-func (p *Provider) getAccessTokenFromAPIToken(
+func (p *provider) getAccessTokenFromAPIToken(
 	ctx context.Context,
 ) (*session.Token, error) {
 	apiTokenRaw := os.Getenv("DEVBOX_API_TOKEN")

@@ -18,13 +18,13 @@ func (d *Devbox) UploadProjectToCache(
 ) error {
 	if cacheURI == "" {
 		var err error
-		cacheURI, err = getWriteCacheURI(ctx, d.stderr, d.providers.NixCache)
+		cacheURI, err = getWriteCacheURI(ctx, d.stderr)
 		if err != nil {
 			return err
 		}
 	}
 
-	creds, err := d.providers.NixCache.Credentials(ctx)
+	creds, err := nixcache.GetProvider().Credentials(ctx)
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return err
 	}
@@ -50,13 +50,13 @@ func UploadInstallableToCache(
 ) error {
 	if cacheURI == "" {
 		var err error
-		cacheURI, err = getWriteCacheURI(ctx, stderr, *nixcache.Get())
+		cacheURI, err = getWriteCacheURI(ctx, stderr)
 		if err != nil {
 			return err
 		}
 	}
 
-	creds, err := nixcache.Get().Credentials(ctx)
+	creds, err := nixcache.GetProvider().Credentials(ctx)
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return err
 	}
@@ -66,9 +66,8 @@ func UploadInstallableToCache(
 func getWriteCacheURI(
 	ctx context.Context,
 	w io.Writer,
-	provider nixcache.Provider,
 ) (string, error) {
-	caches, err := provider.WriteCaches(ctx)
+	caches, err := nixcache.GetProvider().WriteCaches(ctx)
 	if err != nil {
 		return "", err
 	}
