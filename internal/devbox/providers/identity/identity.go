@@ -15,34 +15,26 @@ import (
 
 var scopes = []string{"openid", "offline_access", "email", "profile"}
 
-type Provider struct {
-	cachedAccessTokenFromAPIToken *session.Token
-}
+var cachedAccessTokenFromAPIToken *session.Token
 
-var singleton *Provider = &Provider{}
-
-func Get() *Provider {
-	return singleton
-}
-
-func (p *Provider) GenSession(ctx context.Context) (*session.Token, error) {
-	if t, err := p.getAccessTokenFromAPIToken(ctx); err != nil || t != nil {
+func GenSession(ctx context.Context) (*session.Token, error) {
+	if t, err := getAccessTokenFromAPIToken(ctx); err != nil || t != nil {
 		return t, err
 	}
 
-	c, err := p.AuthClient()
+	c, err := AuthClient()
 	if err != nil {
 		return nil, err
 	}
 	return c.GetSession(ctx)
 }
 
-func (p *Provider) Peek() (*session.Token, error) {
-	if p.cachedAccessTokenFromAPIToken != nil {
-		return p.cachedAccessTokenFromAPIToken, nil
+func Peek() (*session.Token, error) {
+	if cachedAccessTokenFromAPIToken != nil {
+		return cachedAccessTokenFromAPIToken, nil
 	}
 
-	c, err := p.AuthClient()
+	c, err := AuthClient()
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +50,7 @@ func (p *Provider) Peek() (*session.Token, error) {
 	return tokens[0].Peek(), nil
 }
 
-func (p *Provider) AuthClient() (*auth.Client, error) {
+func AuthClient() (*auth.Client, error) {
 	return auth.NewClient(
 		build.Issuer(),
 		build.ClientID(),
@@ -68,32 +60,34 @@ func (p *Provider) AuthClient() (*auth.Client, error) {
 	)
 }
 
-func (p *Provider) getAccessTokenFromAPIToken(
+func getAccessTokenFromAPIToken(
 	ctx context.Context,
 ) (*session.Token, error) {
-	apiTokenRaw := os.Getenv("DEVBOX_API_TOKEN")
-	if apiTokenRaw == "" {
-		return nil, nil
+	if cachedAccessTokenFromAPIToken == nil {
+		apiTokenRaw := os.Getenv("DEVBOX_API_TOKEN")
+		if apiTokenRaw == "" {
+			return nil, nil
+		}
+
+		apiToken, err := typeid.Parse[ids.APIToken](apiTokenRaw)
+		if err != nil {
+			return nil, err
+		}
+
+		apiClient := api.NewClient(ctx, build.JetpackAPIHost(), &session.Token{})
+		response, err := apiClient.GetAccessToken(ctx, apiToken)
+		if err != nil {
+			return nil, err
+		}
+
+		// This is not the greatest. This token is missing id, refresh, etc.
+		// It may be better to change api.NewClient() to take a token string instead.
+		cachedAccessTokenFromAPIToken = &session.Token{
+			Token: oauth2.Token{
+				AccessToken: response.AccessToken,
+			},
+		}
 	}
 
-	apiToken, err := typeid.Parse[ids.APIToken](apiTokenRaw)
-	if err != nil {
-		return nil, err
-	}
-
-	apiClient := api.NewClient(ctx, build.JetpackAPIHost(), &session.Token{})
-	response, err := apiClient.GetAccessToken(ctx, apiToken)
-	if err != nil {
-		return nil, err
-	}
-
-	// This is not the greatest. This token is missing id, refresh, etc.
-	// It may be better to change api.NewClient() to take a token string instead.
-	p.cachedAccessTokenFromAPIToken = &session.Token{
-		Token: oauth2.Token{
-			AccessToken: response.AccessToken,
-		},
-	}
-
-	return p.cachedAccessTokenFromAPIToken, nil
+	return cachedAccessTokenFromAPIToken, nil
 }

@@ -3,29 +3,31 @@ package devpkg
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"slices"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
+	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
 )
 
-// BinaryCache is the store from which to fetch this package's binaries.
+// binaryCache is the store from which to fetch this package's binaries.
 // It is used as FromStore in builtins.fetchClosure.
-const BinaryCache = "https://cache.nixos.org"
+const binaryCache = "https://cache.nixos.org"
 
-// useDefaultOutput is a special value for the outputName parameter of
+// useDefaultOutputs is a special value for the outputName parameter of
 // fetchNarInfoStatusOnce, which indicates that the default outputs should be
 // used.
-const useDefaultOutput = "__default_output__"
+const useDefaultOutputs = "__default_outputs__"
 
 func (p *Package) IsOutputInBinaryCache(outputName string) (bool, error) {
 	if eligible, err := p.isEligibleForBinaryCache(); err != nil {
@@ -34,7 +36,7 @@ func (p *Package) IsOutputInBinaryCache(outputName string) (bool, error) {
 		return false, nil
 	}
 
-	return p.fetchNarInfoStatusOnce(outputName)
+	return p.areExpectedOutputsInCacheOnce(outputName)
 }
 
 // IsInBinaryCache returns true if the package is in the binary cache.
@@ -47,7 +49,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 		return false, nil
 	}
 
-	return p.fetchNarInfoStatusOnce(useDefaultOutput)
+	return p.areExpectedOutputsInCacheOnce(useDefaultOutputs)
 }
 
 // FillNarInfoCache checks the remote binary cache for the narinfo of each
@@ -84,15 +86,15 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
-		names, err := pkg.GetOutputNames()
+		outputs, err := pkg.GetOutputs()
 		if err != nil {
 			return err
 		}
 
-		for _, o := range names {
-			output := o
+		for _, output := range outputs {
+			name := output.Name
 			group.Go(func() error {
-				_, err := pkg.fetchNarInfoStatusOnce(output)
+				_, err := pkg.fetchNarInfoStatusOnce(name)
 				return err
 			})
 		}
@@ -100,101 +102,100 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	return group.Wait()
 }
 
-// narInfoStatusFnCache contains cached OnceValues functions that return cache
-// status for a package. In the future we can remove this cache by caching
-// package objects and ensuring packages are shared globally.
-var narInfoStatusFnCache = sync.Map{}
-
-// fetchNarInfoStatusOnce is like fetchNarInfoStatus, but will only ever run
-// once and cache the result.
-func (p *Package) fetchNarInfoStatusOnce(output string) (bool, error) {
-	type inCacheFunc func() (bool, error)
-	f, ok := narInfoStatusFnCache.Load(p.Raw)
-	if !ok {
-		f = inCacheFunc(sync.OnceValues(func() (bool, error) { return p.fetchNarInfoStatus(output) }))
-		f, _ = narInfoStatusFnCache.LoadOrStore(p.keyForOutput(output), f)
+// areExpectedOutputsInCacheOnce wraps fetchNarInfoStatusOnce and returns true
+// if the expected outputs are in the cache.
+func (p *Package) areExpectedOutputsInCacheOnce(outputName string) (bool, error) {
+	outputToCache, err := p.fetchNarInfoStatusOnce(outputName)
+	if err != nil {
+		return false, err
 	}
-	return f.(inCacheFunc)()
+	if outputName == useDefaultOutputs {
+		outputs, err := p.outputsForOutputName(outputName)
+		// If we don't have default outputs, then we can't check if they are in the cache.
+		if err != nil || len(outputs) == 0 {
+			return false, err
+		}
+		return len(outputToCache) == len(outputs), nil
+	}
+	return len(outputToCache) == 1, nil
 }
 
-func (p *Package) keyForOutput(output string) string {
-	if output == useDefaultOutput {
-		sysInfo, err := p.sysInfoIfExists()
-		// let's be super safe to always avoid empty key.
-		if err == nil && sysInfo != nil && len(sysInfo.DefaultOutputs()) > 0 {
-			names := make([]string, len(sysInfo.DefaultOutputs()))
-			for i, o := range sysInfo.DefaultOutputs() {
-				names[i] = o.Name
+// fetchNarInfoStatusOnce fetches the cache status for the package and output.
+// It returns a map of outputs to cache URIs for each cache hit. Missing
+// outputs are not returned, and if no outputs are found, an nil map is returned.
+//
+// This function caches the result of the first call to avoid multiple calls
+// even if there are multiple package structs for the same package.
+//
+// The outputName parameter is the name of the output to check for in the cache.
+// If outputName is UseDefaultOutput, all default outputs will be checked.
+func (p *Package) fetchNarInfoStatusOnce(
+	outputName string,
+) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
+	ctx := context.TODO()
+
+	outputToCache := map[string]string{}
+	caches, err := readCaches(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	outputs, err := p.outputsForOutputName(outputName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, output := range outputs {
+		pathParts := nix.NewStorePathParts(output.Path)
+		hash := pathParts.Hash
+		for _, cache := range caches {
+			inCache := false
+			if strings.HasPrefix(cache, "s3") {
+				inCache, err = fetchNarInfoStatusFromS3(ctx, cache, hash)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				inCache, err = fetchNarInfoStatusFromHTTP(ctx, cache, hash)
+				if err != nil {
+					return nil, err
+				}
 			}
-			slices.Sort(names)
-			output = strings.Join(names, ",")
+			if inCache {
+				// Found it, no need to check more caches.
+				outputToCache[output.Name] = cache
+				break
+			}
 		}
 	}
 
-	return fmt.Sprintf("%s^%s", p.Raw, output)
+	return outputToCache, nil
 }
 
-// fetchNarInfoStatus fetches the cache status for the package. It returns
-// true if cache exists, false otherwise.
-// NOTE: This function always performs an HTTP request and should not be called
-// more than once per package.
-//
-// The outputName parameter is the name of the output to check for in the cache.
-// If outputName is UseDefaultOutput, the default outputs will be checked.
-func (p *Package) fetchNarInfoStatus(outputName string) (bool, error) {
+func (p *Package) outputsForOutputName(output string) ([]lock.Output, error) {
 	sysInfo, err := p.sysInfoIfExists()
-	if err != nil {
-		return false, err
-	} else if sysInfo == nil {
-		return false, errors.New(
-			"sysInfo is nil, but should not be because" +
-				" the package is eligible for binary cache",
-		)
+	if err != nil || sysInfo == nil {
+		return nil, err
 	}
 
 	var outputs []lock.Output
-	if outputName == useDefaultOutput {
+	if output == useDefaultOutputs {
 		outputs = sysInfo.DefaultOutputs()
 	} else {
-		out, err := sysInfo.Output(outputName)
+		out, err := sysInfo.Output(output)
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 		outputs = []lock.Output{out}
 	}
-
-	outputInCache := map[string]bool{} // key = output name, value = in cache
-	for _, output := range outputs {
-		pathParts := nix.NewStorePathParts(output.Path)
-		reqURL := BinaryCache + "/" + pathParts.Hash + ".narinfo"
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		req, err := http.NewRequestWithContext(ctx, http.MethodHead, reqURL, nil)
-		if err != nil {
-			return false, err
-		}
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return false, err
-		}
-		// read the body fully, and close it to ensure the connection is reused.
-		_, _ = io.Copy(io.Discard, res.Body)
-		outputInCache[output.Name] = res.StatusCode == 200
-		res.Body.Close()
-	}
-
-	// If any output is not in the cache, then the package is deemed to be not in the cache.
-	for _, inCache := range outputInCache {
-		if !inCache {
-			return false, nil
-		}
-	}
-	return true, nil
+	return outputs, nil
 }
 
 // isEligibleForBinaryCache returns true if we have additional metadata about
 // the package to query it from the binary cache.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
+	defer debug.FunctionTimer().End()
 	// Patched glibc packages are not in the binary cache.
 	if p.PatchGlibc() {
 		return false, nil
@@ -247,4 +248,79 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 		return nil, nil
 	}
 	return sysInfo, nil
+}
+
+var narInfoStatusFnCache = sync.Map{}
+
+func fetchNarInfoStatusFromHTTP(
+	ctx context.Context,
+	uri string,
+	hash string,
+) (bool, error) {
+	key := fmt.Sprintf("%s/%s", uri, hash)
+	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
+		func() (bool, error) {
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
+			req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+			if err != nil {
+				return false, err
+			}
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return false, err
+			}
+			defer res.Body.Close()
+			return res.StatusCode == http.StatusOK, nil
+		},
+	))
+	return fetch.(func() (bool, error))()
+}
+
+func fetchNarInfoStatusFromS3(
+	ctx context.Context,
+	uri string,
+	hash string,
+) (bool, error) {
+	key := fmt.Sprintf("%s/%s", uri, hash)
+	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
+		func() (bool, error) {
+			s3Client, err := nixcache.S3Client(ctx)
+			if err != nil {
+				return false, err
+			}
+
+			bucketURI, err := url.Parse(uri)
+			if err != nil {
+				return false, errors.WithStack(err)
+			}
+
+			_, err = s3Client.GetObject(ctx,
+				&s3.GetObjectInput{
+					Bucket: aws.String(bucketURI.Hostname()),
+					Key:    aws.String(hash + ".narinfo"),
+				},
+				func(o *s3.Options) {
+					if bucketURI.Query().Get("region") != "" {
+						o.Region = bucketURI.Query().Get("region")
+					}
+				},
+			)
+			return err == nil, nil
+		},
+	))
+	return fetch.(func() (bool, error))()
+}
+
+func readCaches(ctx context.Context) ([]string, error) {
+	cacheURIs := []string{binaryCache}
+	otherCaches, err := nixcache.CachedReadCaches(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range otherCaches {
+		cacheURIs = append(cacheURIs, c.GetUri())
+	}
+	return cacheURIs, nil
 }
