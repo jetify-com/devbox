@@ -1162,7 +1162,7 @@ func (d *Devbox) configEnvs(
 		} else if err != nil {
 			ux.Fwarning(
 				d.stderr,
-				"Ignoring env_from directive. jetpack cloud secrets is not "+
+				"Ignoring env_from directive. jetify cloud secrets is not "+
 					"initialized. Run `devbox secrets init` to initialize it.\n",
 			)
 		} else {
@@ -1170,7 +1170,7 @@ func (d *Devbox) configEnvs(
 			if err != nil {
 				ux.Fwarning(
 					os.Stderr,
-					"Error reading secrets from jetpack cloud: %s\n\n",
+					"Error reading secrets from jetify cloud: %s\n\n",
 					err,
 				)
 			} else {
