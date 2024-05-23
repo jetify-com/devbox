@@ -27,7 +27,7 @@
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
         "psql devbox_lapp < setup_postgres_db.sql",
-        "devbox service stop" 
+        "devbox services stop" 
       ],
       "start": [
         "devbox services up -b"

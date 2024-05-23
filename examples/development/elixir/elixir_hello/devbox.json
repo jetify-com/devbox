@@ -18,7 +18,7 @@
       "install": "mix deps.get",
       "build": "mix compile",
       "start": "mix run",
-      "run_test": "mix run"
+      "run_test": ["mix deps.get", "mix run"]
     }
   }
 }

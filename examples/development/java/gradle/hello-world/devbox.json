@@ -10,8 +10,8 @@
             "build": "gradle build",
             "start": "gradle run",
             "run_test": [
-                "devbox run build",
-                "devbox run start"
+                "gradle build",
+                "gradle run"
             ]
         }
     }

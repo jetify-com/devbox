@@ -32,7 +32,8 @@
       "start": "devbox services up -b",
       "run_test": [
         "devbox run install",
-        "devbox run start",
+        "devbox services up -b",
+        "echo 'sleep 2 second for the postgres server to initialize.' && sleep 2",
         "curl localhost:$NGINX_WEB_PORT",
         "devbox services stop"
       ]
