@@ -60,6 +60,9 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 // StorePathsAreInStore a map of store paths to whether they are in the store.
 func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]bool, error) {
 	defer debug.FunctionTimer().End()
+	if len(storePaths) == 0 {
+		return map[string]bool{}, nil
+	}
 	args := append([]string{"path-info", "--offline", "--json"}, storePaths...)
 	cmd := commandContext(ctx, args...)
 	debug.Log("Running cmd %s", cmd)
