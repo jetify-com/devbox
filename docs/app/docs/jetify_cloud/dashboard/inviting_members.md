@@ -6,7 +6,7 @@ sidebar_position: 3
 If you have a paid Team project, you can invite team members to join your project. Team members can configure and use your project’s secrets when developing using the Devbox or Envsec CLI.
 
 :::info
-If you want to invite team members to your projects, you will need to add a payment option and upgrade your account to a Team Account. 
+If you want to invite team members to your projects, you will need to add a payment option and upgrade your account to a Starter Plan. For more details, see our [Plans and Pricing](https://www.jetify.com/cloud/pricing).
 :::
 
 Team members can be added in one of two Roles:

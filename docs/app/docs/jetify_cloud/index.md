@@ -15,7 +15,6 @@ reproducible, isolated development environments on any machine.
 Jetify Cloud is currently available in Early Access. We're actively working on adding new features and improving the platform. To learn more, share your feedback, or follow our progress, join our [Discord Channel](https://discord.gg/jetify).
 :::
 
-
 Jetify Cloud currently includes:
 
 **[Jetify Cache](./cache/index.md)**: Provides a secure, private cache to share packages across all your Devbox projects and environments, whether sourced from Nixpkgs or Flakes. Avoid rebuilding custom packages locally or in CI. 

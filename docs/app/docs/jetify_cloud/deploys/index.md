@@ -5,6 +5,10 @@ sidebar_position: 1
 
 Jetify Deployments is an easy, Devbox friendly way to deploy a stateless application to the cloud in a few minutes. Jetify can build and run any Docker container, and provides easy tools for configuring your project's secrets, custom domains, and more. Jetify connects to your projects Github repo to ensure that you always have the latest version of your application deployed. 
 
+:::info
+If you want to invite team members to your projects, you will need to add a payment option and upgrade your account to a Solo Plan or higher. For more details, see our [Plans and Pricing](https://www.jetify.com/cloud/pricing).
+:::
+
 ## Quickstart
 
 This quickstart will walk through how to configure and deploy a project with Jetify Cloud. We'll start by forking an example repo that is configured for Jetify Deployments, and then demonstrate how to connect your Github repo and activate deploys for your account.

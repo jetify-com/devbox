@@ -109,8 +109,11 @@ aside>div {
         mask-image: url("/img/discord.svg");
         mask-repeat: no-repeat;
         mask-size: cover;
-        margin-left: 12px;
-        margin-right: 12px;
+        margin-left: 8px;
+        margin-right: 8;
+    }
+    .header-text-link{
+        height: 32px;
     }
     [data-theme='dark'] .header-github-link::before {
         background-color: var(--moon);
