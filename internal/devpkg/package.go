@@ -715,3 +715,22 @@ func (p *Package) GetOutputsWithCache() ([]Output, error) {
 	}
 	return outputs, nil
 }
+
+// GetResolvedStorePaths returns the store paths that are resolved (in lockfile)
+func (p *Package) GetResolvedStorePaths() ([]string, error) {
+	names, err := p.outputs.GetNames(p)
+	if err != nil {
+		return nil, err
+	}
+	storePaths := []string{}
+	for _, name := range names {
+		outputs, err := p.outputsForOutputName(name)
+		if err != nil {
+			return nil, err
+		}
+		for _, output := range outputs {
+			storePaths = append(storePaths, output.Path)
+		}
+	}
+	return storePaths, nil
+}

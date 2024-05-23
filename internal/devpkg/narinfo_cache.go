@@ -132,7 +132,6 @@ func (p *Package) areExpectedOutputsInCacheOnce(outputName string) (bool, error)
 func (p *Package) fetchNarInfoStatusOnce(
 	outputName string,
 ) (map[string]string, error) {
-	defer debug.FunctionTimer().End()
 	ctx := context.TODO()
 
 	outputToCache := map[string]string{}
