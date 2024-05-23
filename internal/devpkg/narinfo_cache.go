@@ -86,7 +86,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
-		outputNames, err := p.outputs.GetNames(p)
+		outputNames, err := pkg.GetOutputNames()
 		if err != nil {
 			return err
 		}

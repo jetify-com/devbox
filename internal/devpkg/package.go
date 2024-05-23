@@ -16,6 +16,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
@@ -240,13 +241,13 @@ func (p *Package) PatchGlibc() bool {
 // Installables for this package. Installables is a nix concept defined here:
 // https://nixos.org/manual/nix/stable/command-ref/new-cli/nix.html#installables
 func (p *Package) Installables() ([]string, error) {
-	outputs, err := p.GetOutputs()
+	outputNames, err := p.GetOutputNames()
 	if err != nil {
 		return nil, err
 	}
 	installables := []string{}
-	for _, output := range outputs {
-		i, err := p.InstallableForOutput(output.Name)
+	for _, outputName := range outputNames {
+		i, err := p.InstallableForOutput(outputName)
 		if err != nil {
 			return nil, err
 		}
@@ -674,16 +675,24 @@ func (p *Package) DocsURL() string {
 	return ""
 }
 
-// GetOutputs returns the nix package outputs. Outputs can be
+// GetOutputNames returns the names of the nix package outputs. Outputs can be
 // specified in devbox.json package fields or as part of the flake reference.
-// If they exist in a cache, the cache URI is non-empty.
-func (p *Package) GetOutputs() ([]Output, error) {
+func (p *Package) GetOutputNames() ([]string, error) {
 	if p.IsRunX() {
-		return nil, nil
+		return []string{}, nil
 	}
 
-	names, err := p.outputs.GetNames(p)
-	if err != nil {
+	return p.outputs.GetNames(p)
+}
+
+// GetOutputsWithCache return outputs and their cache URIs if the package is in the binary cache.
+// n+1 WARNING: This will make an http request if FillNarInfoCache is not called before.
+// Grep note: this is used in flake template
+func (p *Package) GetOutputsWithCache() ([]Output, error) {
+	defer debug.FunctionTimer().End()
+
+	names, err := p.GetOutputNames()
+	if err != nil || len(names) == 0 {
 		return nil, err
 	}
 
