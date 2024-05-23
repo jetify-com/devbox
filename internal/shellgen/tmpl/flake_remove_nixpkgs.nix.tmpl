@@ -38,7 +38,7 @@
         devShells.{{ .System }}.default = pkgs.mkShell {
           buildInputs = [
             {{- range $_, $pkg := .Packages }}
-            {{- range $_, $output := $pkg.GetOutputs }}
+            {{- range $_, $output := $pkg.GetOutputsWithCache }}
             {{ if $output.CacheURI -}}
             (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
               {{/*  
