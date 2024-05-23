@@ -16,7 +16,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
@@ -679,7 +678,6 @@ func (p *Package) DocsURL() string {
 // specified in devbox.json package fields or as part of the flake reference.
 // If they exist in a cache, the cache URI is non-empty.
 func (p *Package) GetOutputs() ([]Output, error) {
-	defer debug.FunctionTimer().End()
 	if p.IsRunX() {
 		return nil, nil
 	}
@@ -707,4 +705,23 @@ func (p *Package) GetOutputs() ([]Output, error) {
 		outputs = append(outputs, output)
 	}
 	return outputs, nil
+}
+
+// GetResolvedStorePaths returns the store paths that are resolved (in lockfile)
+func (p *Package) GetResolvedStorePaths() ([]string, error) {
+	names, err := p.outputs.GetNames(p)
+	if err != nil {
+		return nil, err
+	}
+	storePaths := []string{}
+	for _, name := range names {
+		outputs, err := p.outputsForOutputName(name)
+		if err != nil {
+			return nil, err
+		}
+		for _, output := range outputs {
+			storePaths = append(storePaths, output.Path)
+		}
+	}
+	return storePaths, nil
 }

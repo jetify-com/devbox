@@ -539,6 +539,7 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 
 	// Second, check which packages are not in the nix store
 	packagesToInstall := []*devpkg.Package{}
+	storePathsForPackage := map[*devpkg.Package][]string{}
 	for _, pkg := range packages {
 		installables, err := pkg.Installables()
 		if err != nil {
@@ -549,16 +550,35 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 				packagesToInstall = append(packagesToInstall, pkg)
 				continue
 			}
-			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
-			if err != nil {
-				return nil, packageInstallErrorHandler(err, pkg, installable)
-			}
-			isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
+
+			resolvedStorePaths, err := pkg.GetResolvedStorePaths()
 			if err != nil {
 				return nil, err
 			}
-			if !isInStore {
+			if resolvedStorePaths != nil {
+				storePathsForPackage[pkg] = append(storePathsForPackage[pkg], resolvedStorePaths...)
+				continue
+			}
+
+			storePathsForPackage[pkg], err = nix.StorePathsFromInstallable(
+				ctx, installable, pkg.HasAllowInsecure())
+			if err != nil {
+				return nil, packageInstallErrorHandler(err, pkg, installable)
+			}
+		}
+	}
+
+	// Batch this for perf
+	storePathMap, err := nix.StorePathsAreInStore(ctx, lo.Flatten(lo.Values(storePathsForPackage)))
+	if err != nil {
+		return nil, err
+	}
+
+	for pkg, storePaths := range storePathsForPackage {
+		for _, storePath := range storePaths {
+			if !storePathMap[storePath] {
 				packagesToInstall = append(packagesToInstall, pkg)
+				break
 			}
 		}
 	}

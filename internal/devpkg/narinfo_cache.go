@@ -86,13 +86,13 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
-		outputs, err := pkg.GetOutputs()
+		outputNames, err := p.outputs.GetNames(p)
 		if err != nil {
 			return err
 		}
 
-		for _, output := range outputs {
-			name := output.Name
+		for _, outputName := range outputNames {
+			name := outputName
 			group.Go(func() error {
 				_, err := pkg.fetchNarInfoStatusOnce(name)
 				return err
@@ -132,7 +132,6 @@ func (p *Package) areExpectedOutputsInCacheOnce(outputName string) (bool, error)
 func (p *Package) fetchNarInfoStatusOnce(
 	outputName string,
 ) (map[string]string, error) {
-	defer debug.FunctionTimer().End()
 	ctx := context.TODO()
 
 	outputToCache := map[string]string{}

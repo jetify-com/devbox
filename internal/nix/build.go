@@ -2,6 +2,7 @@ package nix
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -22,6 +23,8 @@ type BuildArgs struct {
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	defer debug.FunctionTimer().End()
+	fmt.Println("Building installables: ", installables)
+	fmt.Println("substituters: ", args.ExtraSubstituters)
 	// --impure is required for allowUnfreeEnv/allowInsecureEnv to work.
 	cmd := commandContext(ctx, "build", "--impure")
 	cmd.Args = append(cmd.Args, args.Flags...)
