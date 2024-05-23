@@ -89,19 +89,19 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 			return nil, errors.New("patch_glibc is not yet supported for packages with non-default outputs")
 		}
 
-		outputs, err := pkg.GetOutputs()
+		outputNames, err := pkg.GetOutputNames()
 		if err != nil {
 			return nil, err
 		}
 
 		joins = append(joins, &SymlinkJoin{
 			Name: pkg.String() + "-combined",
-			Paths: lo.Map(outputs, func(output devpkg.Output, _ int) string {
+			Paths: lo.Map(outputNames, func(outputName string, _ int) string {
 				if !f.IsNixpkgs() {
-					return f.Name + "." + attributePath + "." + output.Name
+					return f.Name + "." + attributePath + "." + outputName
 				}
 				parts := strings.Split(attributePath, ".")
-				return f.PkgImportName() + "." + strings.Join(parts[2:], ".") + "." + output.Name
+				return f.PkgImportName() + "." + strings.Join(parts[2:], ".") + "." + outputName
 			}),
 		})
 	}
@@ -229,7 +229,7 @@ func (k *keyedSlice) getOrAppend(key string) *flakeInput {
 // Multiple outputs -> SymlinkJoin.
 // Single or no output -> directly use in buildInputs
 func needsSymlinkJoin(pkg *devpkg.Package) (bool, error) {
-	outputNames, err := pkg.GetOutputs()
+	outputNames, err := pkg.GetOutputNames()
 	if err != nil {
 		return false, err
 	}
