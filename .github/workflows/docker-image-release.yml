@@ -1,6 +1,10 @@
 name: docker-image-release
 
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - "!*-dev"
+      - "!*-dev*"
 
 jobs:
   docker-image-build-push:
