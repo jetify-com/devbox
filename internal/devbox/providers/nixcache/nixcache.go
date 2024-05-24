@@ -101,6 +101,14 @@ func CachedReadCaches(ctx context.Context) ([]*nixv1alpha1.NixBinCache, error) {
 	return cachedReadCaches.Do(ctx)
 }
 
+func DisableReadCaches() {
+	cachedReadCaches = goutil.OnceWithContext(
+		func(ctx context.Context) ([]*nixv1alpha1.NixBinCache, error) {
+			return nil, nil
+		},
+	)
+}
+
 func WriteCaches(
 	ctx context.Context,
 ) ([]*nixv1alpha1.NixBinCache, error) {

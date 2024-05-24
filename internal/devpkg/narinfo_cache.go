@@ -323,3 +323,7 @@ func readCaches(ctx context.Context) ([]string, error) {
 	}
 	return cacheURIs, nil
 }
+
+func ClearNarInfoCache() {
+	narInfoStatusFnCache = sync.Map{}
+}
