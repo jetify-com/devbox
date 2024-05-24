@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
@@ -404,10 +403,24 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 	}
 
 	if err := d.installNixPackagesToStore(ctx, mode); err != nil {
+		if caches, _ := nixcache.CachedReadCaches(ctx); len(caches) > 0 {
+			err = d.handleInstallFailure(ctx, mode)
+		}
 		return err
 	}
 
 	return d.InstallRunXPackages(ctx)
+}
+
+func (d *Devbox) handleInstallFailure(ctx context.Context, mode installMode) error {
+	ux.Fwarning(d.stderr, "Failed to build from cache, building from source.\n")
+	telemetry.Event(telemetry.EventNixBuildWithSubstitutersFailed, telemetry.Metadata{
+		Packages: lo.Map(
+			d.InstallablePackages(), func(p *devpkg.Package, _ int) string { return p.Raw }),
+	})
+	nixcache.DisableReadCaches()
+	devpkg.ClearNarInfoCache()
+	return d.installNixPackagesToStore(ctx, mode)
 }
 
 func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
@@ -516,7 +529,6 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		args.AllowInsecure = allowInsecure
 		err = nix.Build(ctx, args, installables...)
 		if err != nil {
-			color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
 			return err
 		}
 		telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
