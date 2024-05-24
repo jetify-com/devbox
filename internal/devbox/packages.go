@@ -555,16 +555,17 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 			if err != nil {
 				return nil, err
 			}
-			if resolvedStorePaths != nil {
+			if len(resolvedStorePaths) > 0 {
 				storePathsForPackage[pkg] = append(storePathsForPackage[pkg], resolvedStorePaths...)
 				continue
 			}
 
-			storePathsForPackage[pkg], err = nix.StorePathsFromInstallable(
+			storePathsForInstallable, err := nix.StorePathsFromInstallable(
 				ctx, installable, pkg.HasAllowInsecure())
 			if err != nil {
 				return nil, packageInstallErrorHandler(err, pkg, installable)
 			}
+			storePathsForPackage[pkg] = append(storePathsForPackage[pkg], storePathsForInstallable...)
 		}
 	}
 
