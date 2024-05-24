@@ -42,6 +42,7 @@ const (
 	EventShellInteractive
 	EventShellReady
 	EventNixBuildSuccess
+	EventNixBuildWithSubstitutersFailed
 )
 
 var (
