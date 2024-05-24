@@ -5,9 +5,12 @@ import (
 	"errors"
 	"io"
 
+	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
+	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/pkg/auth"
@@ -17,6 +20,7 @@ func (d *Devbox) UploadProjectToCache(
 	ctx context.Context,
 	cacheURI string,
 ) error {
+	defer debug.FunctionTimer().End()
 	if cacheURI == "" {
 		var err error
 		cacheURI, err = getWriteCacheURI(ctx, d.stderr)
@@ -29,19 +33,35 @@ func (d *Devbox) UploadProjectToCache(
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return err
 	}
-	profilePath, err := d.profilePath()
-	if err != nil {
+
+	packages := lo.Filter(d.InstallablePackages(), devpkg.IsNix)
+	if err != nil || len(packages) == 0 {
 		return err
 	}
 
-	// Ensure state is up to date before uploading to cache.
-	// TODO: we may be able to do this more efficiently, not sure everything needs
-	// to be installed.
-	if err = d.ensureStateIsUpToDate(ctx, ensure); err != nil {
-		return err
+	for _, pkg := range packages {
+		inCache, err := pkg.AreAllOutputsInCache(ctx, d.stderr, cacheURI)
+		if err != nil {
+			return err
+		}
+		if inCache {
+			ux.Finfo(d.stderr, "Package %s is already in cache, skipping\n", pkg.Raw)
+			continue
+		}
+		ux.Finfo(d.stderr, "Uploading package %s to cache\n", pkg.Raw)
+		installables, err := pkg.Installables()
+		if err != nil {
+			return err
+		}
+		for _, installable := range installables {
+			err := nix.CopyInstallableToCache(ctx, d.stderr, cacheURI, installable, creds.Env())
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	return nix.CopyInstallableToCache(ctx, d.stderr, cacheURI, profilePath, creds.Env())
+	return nil
 }
 
 func UploadInstallableToCache(
