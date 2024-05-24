@@ -738,11 +738,8 @@ func (p *Package) GetResolvedStorePaths() ([]string, error) {
 
 func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, error) {
 	storePathsForPackage, err := p.GetResolvedStorePaths()
-	if err != nil {
-		return nil, err
-	}
-	if len(storePathsForPackage) > 0 {
-		return storePathsForPackage, nil
+	if err != nil || len(storePathsForPackage) > 0 {
+		return storePathsForPackage, err
 	}
 
 	// No fast path, we need to query nix.
