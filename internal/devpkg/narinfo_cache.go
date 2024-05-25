@@ -3,6 +3,7 @@ package devpkg
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -170,6 +171,32 @@ func (p *Package) fetchNarInfoStatusOnce(
 	}
 
 	return outputToCache, nil
+}
+
+func (p *Package) AreAllOutputsInCache(
+	ctx context.Context, w io.Writer, cacheURI string,
+) (bool, error) {
+	storePaths, err := p.GetStorePaths(ctx, w)
+	if err != nil {
+		return false, err
+	}
+
+	for _, storePath := range storePaths {
+		pathParts := nix.NewStorePathParts(storePath)
+		hash := pathParts.Hash
+		if strings.HasPrefix(cacheURI, "s3") {
+			inCache, err := fetchNarInfoStatusFromS3(ctx, cacheURI, hash)
+			if err != nil || !inCache {
+				return false, err
+			}
+		} else {
+			inCache, err := fetchNarInfoStatusFromHTTP(ctx, cacheURI, hash)
+			if err != nil || !inCache {
+				return false, err
+			}
+		}
+	}
+	return true, nil
 }
 
 func (p *Package) outputsForOutputName(output string) ([]lock.Output, error) {

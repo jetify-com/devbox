@@ -22,6 +22,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/nix/flake"
 	"go.jetpack.io/devbox/plugins"
 )
@@ -733,4 +734,85 @@ func (p *Package) GetResolvedStorePaths() ([]string, error) {
 		}
 	}
 	return storePaths, nil
+}
+
+func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, error) {
+	storePathsForPackage, err := p.GetResolvedStorePaths()
+	if err != nil || len(storePathsForPackage) > 0 {
+		return storePathsForPackage, err
+	}
+
+	// No fast path, we need to query nix.
+	// TODO we should give people the option to add paths to lockfile.
+	ux.Fwarning(
+		w,
+		"Outputs for %s are not in lockfile. Fetching store paths from nix, this may take a while\n",
+		p.Raw,
+	)
+
+	installables, err := p.Installables()
+	if err != nil {
+		return nil, err
+	}
+	for _, installable := range installables {
+		storePathsForInstallable, err := nix.StorePathsFromInstallable(
+			ctx, installable, p.HasAllowInsecure())
+		if err != nil {
+			return nil, packageInstallErrorHandler(err, p, installable)
+		}
+		storePathsForPackage = append(storePathsForPackage, storePathsForInstallable...)
+	}
+	return storePathsForPackage, nil
+}
+
+// packageInstallErrorHandler checks for two kinds of errors to print custom messages for so that Devbox users
+// can work around them:
+// 1. Packages that cannot be installed on the current system, but may be installable on other systems.packageInstallErrorHandler
+// 2. Packages marked insecure by nix
+func packageInstallErrorHandler(err error, pkg *Package, installableOrEmpty string) error {
+	if err == nil {
+		return nil
+	}
+
+	// Check if the user is installing a package that cannot be installed on their platform.
+	// For example, glibcLocales on MacOS will give the following error:
+	// flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
+	// This is because glibcLocales is only available on Linux.
+	// The user should try `devbox add` again with `--exclude-platform`
+	errMessage := strings.TrimSpace(err.Error())
+
+	// Sample error from `devbox add glibcLocales` on a mac:
+	// error: flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
+	maybePackageSystemCompatibilityErrorType1 := strings.Contains(errMessage, "error: flake output attribute") &&
+		strings.Contains(errMessage, "is not a derivation or path")
+	// Sample error from `devbox add sublime4` on a mac:
+	// error: Package ‘sublimetext4-4169’ in /nix/store/nlbjx0mp83p2qzf1rkmzbgvq1wxfir81-source/pkgs/applications/editors/sublime/4/common.nix:168 is not available on the requested hostPlatform:
+	//     hostPlatform.config = "x86_64-apple-darwin"
+	//     package.meta.platforms = [
+	//       "aarch64-linux"
+	//       "x86_64-linux"
+	//    ]
+	maybePackageSystemCompatibilityErrorType2 := strings.Contains(errMessage, "is not available on the requested hostPlatform")
+
+	if maybePackageSystemCompatibilityErrorType1 || maybePackageSystemCompatibilityErrorType2 {
+		platform := nix.System()
+		return usererr.WithUserMessage(
+			err,
+			"package %s cannot be installed on your platform %s.\n"+
+				"If you know this package is incompatible with %[2]s, then "+
+				"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
+				"If you think this package should be compatible with %[2]s, then "+
+				"it's possible this particular version is not available yet from the nix registry. "+
+				"You could try `devbox add` with a different version for this package.\n\n"+
+				"Underlying Error from nix is:",
+			pkg.Versioned(),
+			platform,
+		)
+	}
+
+	if isInsecureErr, userErr := nix.IsExitErrorInsecurePackage(err, pkg.Versioned(), installableOrEmpty); isInsecureErr {
+		return userErr
+	}
+
+	return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
 }
