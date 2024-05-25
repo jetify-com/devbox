@@ -2,8 +2,11 @@ package identity
 
 import (
 	"context"
+	"errors"
 	"os"
 
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"go.jetify.com/typeid"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/pkg/api"
@@ -90,4 +93,27 @@ func getAccessTokenFromAPIToken(
 	}
 
 	return cachedAccessTokenFromAPIToken, nil
+}
+
+func GetOrgSlug(ctx context.Context) (string, error) {
+	tok, err := GenSession(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if tok.IDToken == "" {
+		return "", errors.New("ID token is not present")
+	}
+
+	jwt, err := jwt.ParseSigned(tok.IDToken, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		return "", err
+	}
+
+	claims := map[string]any{}
+	if err = jwt.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return "", err
+	}
+
+	return claims["org_trusted_metadata"].(map[string]any)["slug"].(string), nil
 }
