@@ -197,9 +197,14 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		if err := parseGitHubRef(refURL, &parsed); err != nil {
 			return Ref{}, "", err
 		}
+	case "gitlab":
+		if err := parseGitLabRef(refURL, &parsed); err != nil {
+			return Ref{}, "", err
+		}
 	default:
 		return Ref{}, "", redact.Errorf("unsupported flake reference URL scheme: %s", redact.Safe(refURL.Scheme))
 	}
+
 	return parsed, fragment, nil
 }
 
@@ -245,6 +250,58 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 		}
 		parsed.Rev = qRev
 	}
+	parsed.Dir = refURL.Query().Get("dir")
+	return nil
+}
+
+func parseGitLabRef(refURL *url.URL, parsed *Ref) error {
+	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
+
+	parsed.Type = TypeGitLab
+
+	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
+	// refs that have slashes in them. For example,
+	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
+	split, err := splitPathOrOpaque(refURL, 3)
+
+	if err != nil {
+		return err
+	}
+
+	parsed.Owner = split[0]
+	parsed.Repo = split[1]
+
+	if len(split) > 2 {
+		if revOrRef := split[2]; isGitHash(revOrRef) {
+			parsed.Rev = revOrRef
+		} else {
+			parsed.Ref = revOrRef
+		}
+	}
+
+	parsed.Host = refURL.Query().Get("host")
+	parsed.Dir = refURL.Query().Get("dir")
+
+	if qRef := refURL.Query().Get("ref"); qRef != "" {
+		if parsed.Rev != "" {
+			return redact.Errorf("gitlab flake reference has a ref and a rev")
+		}
+		if parsed.Ref != "" && qRef != parsed.Ref {
+			return redact.Errorf("gitlab flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Ref, qRef)
+		}
+		parsed.Ref = qRef
+	}
+
+	if qRev := refURL.Query().Get("rev"); qRev != "" {
+		if parsed.Ref != "" {
+			return redact.Errorf("gitlab flake reference has a ref and a rev")
+		}
+		if parsed.Rev != "" && qRev != parsed.Rev {
+			return redact.Errorf("gitlab flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Rev, qRev)
+		}
+		parsed.Rev = qRev
+	}
+
 	parsed.Dir = refURL.Query().Get("dir")
 	return nil
 }
