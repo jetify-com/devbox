@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
@@ -97,9 +98,19 @@ func getWriteCacheURI(
 	if err != nil {
 		return "", err
 	}
+
 	if len(caches) == 0 {
+		slug, err := identity.GetOrgSlug(ctx)
+		if err != nil {
+			return "", err
+		}
 		return "",
-			usererr.New("You don't have permission to write to any Nix caches.")
+			usererr.New(
+				"You don't have permission to write to any Nix caches. To configure cache, go to "+
+					"%s/teams/%s/devbox",
+				build.DashboardHostname(),
+				slug,
+			)
 	}
 	if len(caches) > 1 {
 		ux.Fwarning(w, "Multiple caches available, using %s.\n", caches[0].GetUri())
