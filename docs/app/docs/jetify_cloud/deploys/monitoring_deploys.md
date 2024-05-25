@@ -1,5 +1,5 @@
 ---
-title: Monitoring Deployments
+title: Monitoring Your Deployments
 sidebar_position: 3
 ---
 

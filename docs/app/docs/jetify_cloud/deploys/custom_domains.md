@@ -1,5 +1,5 @@
 ---
-title: Custom Domains
+title: Setting a Custom Domain for your Project
 sidebar_position: 5
 ---
 

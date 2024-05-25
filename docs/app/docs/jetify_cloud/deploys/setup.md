@@ -1,5 +1,5 @@
 ---
-title: Setting up Your Project
+title: Setting Up Your Deployment
 sidebar_position: 2
 ---
 
@@ -62,6 +62,16 @@ Jetify requires you to connect a Github repo in order to deploy your service. To
 
 ![Select the Repo for your Jetify Project](../../../static/img/newproject-tworepos.png)
 
+## Choosing an Instance Size
+
+Jetify will default your deployment to the smallest instance size (0.1 CPU + 512MB RAM). To choose a differente size: 
+
+1. Navigate to the **Settings** tab of your project
+2. Scroll down to **Deployments**
+3. Choose the Machine configuration that best matches your project's needs.
+
+Changes to your instance size will take effect on the next deployment.
+
 ## Deleting your Project
 
-If you no longer want to deploy your project with Jetify Deploys, you can delete it in the Settings tab of your project. 
+If you no longer want to deploy your project with Jetify Deploys, you can disable deployments in the Settings tab of your project.
