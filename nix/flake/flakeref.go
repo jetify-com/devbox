@@ -12,13 +12,14 @@ import (
 
 // Flake reference types supported by this package.
 const (
-	TypeIndirect = "indirect"
-	TypePath     = "path"
-	TypeFile     = "file"
-	TypeGit      = "git"
-	TypeGitHub   = "github"
-	TypeGitLab   = "gitlab"
-	TypeTarball  = "tarball"
+	TypeIndirect  = "indirect"
+	TypePath      = "path"
+	TypeFile      = "file"
+	TypeGit       = "git"
+	TypeGitHub    = "github"
+	TypeGitLab    = "gitlab"
+	TypeBitBucket = "bitbucket"
+	TypeTarball   = "tarball"
 )
 
 // Ref is a parsed Nix flake reference. A flake reference is a subset of the
@@ -193,12 +194,19 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 			refURL.Scheme = refURL.Scheme[4:] // remove git+
 		}
 		parsed.URL = refURL.String()
-	case "github":
-		if err := parseGitHubRef(refURL, &parsed); err != nil {
+	case "bitbucket":
+		parsed.Type = TypeBitBucket
+		if err := parseGitRef(refURL, &parsed); err != nil {
 			return Ref{}, "", err
 		}
 	case "gitlab":
-		if err := parseGitLabRef(refURL, &parsed); err != nil {
+		parsed.Type = TypeGitLab
+		if err := parseGitRef(refURL, &parsed); err != nil {
+			return Ref{}, "", err
+		}
+	case "github":
+		parsed.Type = TypeGitHub
+		if err := parseGitRef(refURL, &parsed); err != nil {
 			return Ref{}, "", err
 		}
 	default:
@@ -208,10 +216,8 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 	return parsed, fragment, nil
 }
 
-func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
+func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
-
-	parsed.Type = TypeGitHub
 
 	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
 	// refs that have slashes in them. For example,
@@ -234,19 +240,19 @@ func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 	parsed.Dir = refURL.Query().Get("dir")
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
-			return redact.Errorf("github flake reference has a ref and a rev")
+			return redact.Errorf("%s flake reference has a ref and a rev", parsed.Type)
 		}
 		if parsed.Ref != "" && qRef != parsed.Ref {
-			return redact.Errorf("github flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Ref, qRef)
+			return redact.Errorf("%s flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Type, parsed.Ref, qRef)
 		}
 		parsed.Ref = qRef
 	}
 	if qRev := refURL.Query().Get("rev"); qRev != "" {
 		if parsed.Ref != "" {
-			return redact.Errorf("github flake reference has a ref and a rev")
+			return redact.Errorf("%s flake reference has a ref and a rev", parsed.Type)
 		}
 		if parsed.Rev != "" && qRev != parsed.Rev {
-			return redact.Errorf("github flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Rev, qRev)
+			return redact.Errorf("%s flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Type, parsed.Rev, qRev)
 		}
 		parsed.Rev = qRev
 	}

@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/nix/flake"
 )
 
@@ -21,13 +22,18 @@ func parseIncludable(includableRef, workingDir string) (Includable, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	debug.Log(">>>> REF TYPE: " + ref.Type)
+
 	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
-	case flake.TypeGitHub:
-		return newGithubPlugin(ref)
+	case flake.TypeBitBucket:
+		fallthrough
 	case flake.TypeGitLab:
-		return newGitlabPlugin(ref)
+		return newGitPlugin(ref)
+	case flake.TypeGitHub:
+		return newGitPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
 	}

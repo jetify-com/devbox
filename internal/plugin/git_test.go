@@ -9,17 +9,17 @@ import (
 	"go.jetpack.io/devbox/nix/flake"
 )
 
-func TestNewGithubPlugin(t *testing.T) {
+func TestNewGitPlugin(t *testing.T) {
 	testCases := []struct {
 		name        string
 		Include     string
-		expected    githubPlugin
+		expected    gitPlugin
 		expectedURL string
 	}{
 		{
 			name:    "parse basic github plugin",
 			Include: "github:jetify-com/devbox-plugins",
-			expected: githubPlugin{
+			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
 					Owner: "jetify-com",
@@ -32,7 +32,7 @@ func TestNewGithubPlugin(t *testing.T) {
 		{
 			name:    "parse github plugin with dir param",
 			Include: "github:jetify-com/devbox-plugins?dir=mongodb",
-			expected: githubPlugin{
+			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
 					Owner: "jetify-com",
@@ -46,7 +46,7 @@ func TestNewGithubPlugin(t *testing.T) {
 		{
 			name:    "parse github plugin with dir param and rev",
 			Include: "github:jetify-com/devbox-plugins/my-branch?dir=mongodb",
-			expected: githubPlugin{
+			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
 					Owner: "jetify-com",
@@ -61,7 +61,7 @@ func TestNewGithubPlugin(t *testing.T) {
 		{
 			name:    "parse github plugin with dir param and rev",
 			Include: "github:jetify-com/devbox-plugins/initials/my-branch?dir=mongodb",
-			expected: githubPlugin{
+			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
 					Owner: "jetify-com",
@@ -77,7 +77,7 @@ func TestNewGithubPlugin(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, err := newGithubPluginForTest(testCase.Include)
+			actual, err := newGitPluginForTest(testCase.Include)
 			assert.NoError(t, err)
 			assert.Equal(t, &testCase.expected, actual)
 			u, err := testCase.expected.url("")
@@ -88,13 +88,13 @@ func TestNewGithubPlugin(t *testing.T) {
 }
 
 // keep in sync with newGithubPlugin
-func newGithubPluginForTest(include string) (*githubPlugin, error) {
+func newGitPluginForTest(include string) (*gitPlugin, error) {
 	ref, err := flake.ParseRef(include)
 	if err != nil {
 		return nil, err
 	}
 
-	plugin := &githubPlugin{ref: ref}
+	plugin := &gitPlugin{ref: ref}
 	name := strings.ReplaceAll(ref.Dir, "/", "-")
 	plugin.name = githubNameRegexp.ReplaceAllString(
 		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
@@ -103,8 +103,8 @@ func newGithubPluginForTest(include string) (*githubPlugin, error) {
 	return plugin, nil
 }
 
-func TestGithubPluginAuth(t *testing.T) {
-	githubPlugin := githubPlugin{
+func TestGitPluginAuth(t *testing.T) {
+	gitPlugin := gitPlugin{
 		ref: flake.Ref{
 			Type:  "github",
 			Owner: "jetpack-io",
@@ -116,9 +116,9 @@ func TestGithubPluginAuth(t *testing.T) {
 	expectedURL := "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/test"
 
 	t.Run("generate request for public Github repository", func(t *testing.T) {
-		url, err := githubPlugin.url("test")
+		url, err := gitPlugin.url("test")
 		assert.NoError(t, err)
-		actual, err := githubPlugin.request(url)
+		actual, err := gitPlugin.request(url)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedURL, actual.URL.String())
 		assert.Equal(t, "", actual.Header.Get("Authorization"))
@@ -126,9 +126,9 @@ func TestGithubPluginAuth(t *testing.T) {
 
 	t.Run("generate request for private Github repository", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "gh_abcd")
-		url, err := githubPlugin.url("test")
+		url, err := gitPlugin.url("test")
 		assert.NoError(t, err)
-		actual, err := githubPlugin.request(url)
+		actual, err := gitPlugin.request(url)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedURL, actual.URL.String())
 		assert.Equal(t, "token gh_abcd", actual.Header.Get("Authorization"))

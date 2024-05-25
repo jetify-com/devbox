@@ -18,13 +18,7 @@ func getConfigIfAny(inc Includable, projectDir string) (*Config, error) {
 	switch includable := inc.(type) {
 	case *devpkg.Package:
 		return getBuiltinPluginConfigIfExists(includable, projectDir)
-	case *githubPlugin:
-		content, err := includable.Fetch()
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		return buildConfig(includable, projectDir, string(content))
-	case *gitlabPlugin:
+	case *gitPlugin:
 		content, err := includable.Fetch()
 		if err != nil {
 			return nil, errors.WithStack(err)
