@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 
@@ -24,6 +25,8 @@ func getConfigIfAny(inc Includable, projectDir string) (*Config, error) {
 			return nil, errors.WithStack(err)
 		}
 		return buildConfig(includable, projectDir, string(content))
+	case *gitlabPlugin:
+		fmt.Print("Here")
 	case *LocalPlugin:
 		content, err := os.ReadFile(includable.Path())
 		if err != nil && !os.IsNotExist(err) {

@@ -26,6 +26,8 @@ func parseIncludable(includableRef, workingDir string) (Includable, error) {
 		return newLocalPlugin(ref, workingDir)
 	case flake.TypeGitHub:
 		return newGithubPlugin(ref)
+	case flake.TypeGitLab:
+		return newGitlabPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
 	}

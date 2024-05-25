@@ -17,6 +17,7 @@ const (
 	TypeFile     = "file"
 	TypeGit      = "git"
 	TypeGitHub   = "github"
+	TypeGitLab   = "gitlab"
 	TypeTarball  = "tarball"
 )
 
