@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -15,13 +16,14 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/nix/flake"
 	"go.jetpack.io/pkg/filecache"
 )
 
+var gitCache = filecache.New[[]byte]("devbox/plugin/git")
 var githubCache = filecache.New[[]byte]("devbox/plugin/github")
 var gitlabCache = filecache.New[[]byte]("devbox/plugin/gitlab")
+var bitbucketCache = filecache.New[[]byte]("devbox/plugin/bitbucket")
 
 type gitPlugin struct {
 	ref  flake.Ref
@@ -68,24 +70,27 @@ func (p *gitPlugin) Hash() string {
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	contentURL, err := p.url(subpath)
-	debug.Log(contentURL)
 
 	if err != nil {
 		return nil, err
 	}
 
-	callable := func() ([]byte, time.Duration, error) {
-		req, err := p.request(contentURL)
+	retrieve := func() ([]byte, time.Duration, error) {
+		req, err := p.request(contentURL) // TODO: adjust this function to handle private repos
+
 		if err != nil {
 			return nil, 0, err
 		}
 
 		client := &http.Client{}
 		res, err := client.Do(req)
+
 		if err != nil {
 			return nil, 0, err
 		}
+
 		defer res.Body.Close()
+
 		if res.StatusCode != http.StatusOK {
 			return nil, 0, usererr.New(
 				"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
@@ -95,10 +100,13 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 				res.StatusCode,
 			)
 		}
+
 		body, err := io.ReadAll(res.Body)
+
 		if err != nil {
 			return nil, 0, err
 		}
+
 		// Cache for 24 hours. Once we store the plugin in the lockfile, we
 		// should cache this indefinitely and only invalidate if the plugin
 		// is updated.
@@ -106,31 +114,52 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	switch p.ref.Type {
-
+	case flake.TypeGit:
+		return gitCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeGitHub:
-		return githubCache.GetOrSet(contentURL, callable)
+		return githubCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeGitLab:
-		return gitlabCache.GetOrSet(contentURL, callable)
+		return gitlabCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeBitBucket:
-		fallthrough // TODO
+		return bitbucketCache.GetOrSet(contentURL, retrieve)
 	default:
 		return nil, err
 	}
-
 }
 
 func (p *gitPlugin) url(subpath string) (string, error) {
-	debug.Log(p.ref.Type)
 	switch p.ref.Type {
+	case flake.TypeGit:
+		return p.sshGitUrl()
 	case flake.TypeGitLab:
 		return p.gitlabUrl(subpath)
 	case flake.TypeGitHub:
 		return p.githubUrl(subpath)
 	case flake.TypeBitBucket:
-		fallthrough // TODO
+		return p.bitbucketUrl(subpath)
 	default:
 		return "", nil
 	}
+}
+
+func (p *gitPlugin) sshGitUrl() (string, error) {
+	address, err := url.Parse(p.ref.URL)
+
+	if err != nil {
+		return "", err
+	}
+
+	defaultBranch := "main"
+
+	if address.Host == flake.TypeGitHub {
+		// using master for GitHub repos for the same reasoning established in `githubUrl`
+		defaultBranch = "master"
+	}
+
+	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
+	baseCommand := "git archive --format=tar --remote=git@"
+
+	return fmt.Sprintf("%s%s:%s %s %s -o %s.tar ", baseCommand, address.Host, address.Path[1:], branch, p.ref.Dir, p.ref.Dir), nil
 }
 
 func (p *gitPlugin) githubUrl(subpath string) (string, error) {
@@ -141,6 +170,18 @@ func (p *gitPlugin) githubUrl(subpath string) (string, error) {
 		p.ref.Owner,
 		p.ref.Repo,
 		cmp.Or(p.ref.Rev, p.ref.Ref, "master"),
+		p.ref.Dir,
+		subpath,
+	)
+}
+
+func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
+	return url.JoinPath(
+		"https://api.bitbucket.org/2.0/repositories",
+		p.ref.Owner,
+		p.ref.Repo,
+		"src",
+		cmp.Or(p.ref.Rev, p.ref.Ref, "main"),
 		p.ref.Dir,
 		subpath,
 	)
@@ -186,7 +227,16 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 }
 
 func (p *gitPlugin) request(contentURL string) (*http.Request, error) {
+	// TODO: Determine if private repo. Maybe use `git archive`?
+	// git archive --format=tar --remote=git@gitlab.com:astro-tec/devbox-plugin-test HEAD plugin -o plugin.tar
+
+	if p.ref.Type == flake.TypeGit {
+		command := exec.Command(contentURL)
+		command.Wait()
+	}
+
 	req, err := http.NewRequest(http.MethodGet, contentURL, nil)
+
 	if err != nil {
 		return nil, err
 	}

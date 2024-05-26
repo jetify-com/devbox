@@ -190,10 +190,16 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		q.Del("ref")
 		q.Del("rev")
 		refURL.RawQuery = q.Encode()
+
 		if len(refURL.Scheme) > 3 {
 			refURL.Scheme = refURL.Scheme[4:] // remove git+
 		}
+
 		parsed.URL = refURL.String()
+
+		if err := parseGitRef(refURL, &parsed); err != nil {
+			return Ref{}, "", err
+		}
 	case "bitbucket":
 		parsed.Type = TypeBitBucket
 		if err := parseGitRef(refURL, &parsed); err != nil {
