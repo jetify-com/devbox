@@ -513,7 +513,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 	}
 	if err != nil {
 		ux.Fwarning(d.stderr, "Devbox was unable to authenticate with the Jetify Nix cache. Some packages might be built from source.\n")
-		return nil
+		return nil //nolint:nilerr
 	}
 
 	caches, err := nixcache.CachedReadCaches(ctx)
