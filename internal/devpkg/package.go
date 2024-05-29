@@ -746,7 +746,8 @@ func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, err
 	// TODO we should give people the option to add paths to lockfile.
 	ux.Fwarning(
 		w,
-		"Outputs for %s are not in lockfile. Fetching store paths from nix, this may take a while\n",
+		"Outputs for %s are not in lockfile. Fetching store paths from nix, this may take a while.\n"+
+			"To fix this issue, please run `devbox install --fix-missing-store-paths`\n",
 		p.Raw,
 	)
 

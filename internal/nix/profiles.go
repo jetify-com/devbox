@@ -38,6 +38,7 @@ type ProfileInstallArgs struct {
 }
 
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
+	defer debug.FunctionTimer().End()
 	if !IsInsecureAllowed() && PackageIsInsecure(args.Installable) {
 		knownVulnerabilities := PackageKnownVulnerabilities(args.Installable)
 		errString := fmt.Sprintf("Package %s is insecure. \n\n", args.Installable)
@@ -78,6 +79,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 // ProfileRemove removes packages from a profile.
 // WARNING, don't use indexes, they are not supported by nix 2.20+
 func ProfileRemove(profilePath string, packageNames ...string) error {
+	defer debug.FunctionTimer().End()
 	cmd := command(
 		append([]string{
 			"profile", "remove",
