@@ -21,6 +21,18 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
+const setupKey = "nixcache-setup"
+
+func IsConfigured(ctx context.Context) bool {
+	u, err := user.Current()
+	if err != nil {
+		return false
+	}
+	task := &setupTask{u.Username}
+	status := setup.Status(ctx, setupKey, task)
+	return status == setup.TaskDone
+}
+
 func Configure(ctx context.Context) error {
 	u, err := user.Current()
 	if err != nil {
@@ -34,15 +46,14 @@ func ConfigureReprompt(ctx context.Context, username string) error {
 }
 
 func configure(ctx context.Context, username string, reprompt bool) error {
-	const key = "nixcache-setup"
 	if reprompt {
-		setup.Reset(key)
+		setup.Reset(setupKey)
 	}
 
 	task := &setupTask{username}
 	const sudoPrompt = "You're logged into a Devbox account that now has access to a Nix cache. " +
 		"Allow Devbox to configure Nix to use the new cache (requires sudo)?"
-	err := setup.ConfirmRun(ctx, key, task, sudoPrompt)
+	err := setup.ConfirmRun(ctx, setupKey, task, sudoPrompt)
 	if err != nil {
 		return redact.Errorf("nixcache: run setup: %w", err)
 	}

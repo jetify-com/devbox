@@ -341,6 +341,10 @@ func fetchNarInfoStatusFromS3(
 
 func readCaches(ctx context.Context) ([]string, error) {
 	cacheURIs := []string{binaryCache}
+	if !nixcache.IsConfigured(ctx) {
+		return cacheURIs, nil
+	}
+
 	otherCaches, err := nixcache.CachedReadCaches(ctx)
 	if err != nil {
 		return nil, err
