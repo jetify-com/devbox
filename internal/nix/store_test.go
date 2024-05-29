@@ -21,7 +21,7 @@ func TestParseStorePathFromInstallableOutput(t *testing.T) {
 		},
 		{
 			name:     "go-basic-nix-2-17-0",
-			input:    `[{"path":"/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0","valid":true}]`,
+			input:    `[{"path":"/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0"}]`,
 			expected: []string{"/nix/store/fgkl3qk8p5hnd07b0dhzfky3ys5gxjmq-go-1.22.0"},
 		},
 	}
