@@ -94,6 +94,7 @@ const (
 
 // Status returns the status of a setup task.
 func Status(ctx context.Context, key string, task Task) TaskStatus {
+	defer debug.FunctionTimer().End()
 	state := loadState(key)
 	switch {
 	case isSudo(key):
