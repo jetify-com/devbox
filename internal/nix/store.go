@@ -87,8 +87,7 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 
 // Older nix versions (like 2.17) are an array of objects that contain path and valid fields
 type pathInfoLegacy struct {
-	Path  string `json:"path"`
-	Valid bool   `json:"valid"`
+	Path string `json:"path"`
 }
 
 // parseStorePathFromInstallableOutput parses the output of `nix store path-from-installable --json`
@@ -96,13 +95,9 @@ type pathInfoLegacy struct {
 func parseStorePathFromInstallableOutput(output []byte) (map[string]any, error) {
 	// Newer nix versions (like 2.20) have output of the form
 	// {"<store-path>": {}}
-	// if a store path is used as an installable, the keys will be present even if invalid but
-	// the values will be null.
+	// Note that values will be null if paths are not in store.
 	var out1 map[string]any
 	if err := json.Unmarshal(output, &out1); err == nil {
-		maps.DeleteFunc(out1, func(k string, v any) bool {
-			return v == nil
-		})
 		return out1, nil
 	}
 
@@ -111,9 +106,7 @@ func parseStorePathFromInstallableOutput(output []byte) (map[string]any, error) 
 	if err := json.Unmarshal(output, &out2); err == nil {
 		res := map[string]any{}
 		for _, outValue := range out2 {
-			if outValue.Valid {
-				res[outValue.Path] = true
-			}
+			res[outValue.Path] = true
 		}
 		return res, nil
 	}
