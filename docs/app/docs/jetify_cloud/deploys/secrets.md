@@ -1,5 +1,5 @@
 ---
-title: Secrets 
+title: Using Jetify Secrets with your Deployment
 sidebar_position: 4
 ---
 
