@@ -80,8 +80,21 @@ func cacheCmd() *cobra.Command {
 func cacheConfigureCmd() *cobra.Command {
 	username := ""
 	cmd := &cobra.Command{
-		Use:    "configure",
-		Short:  "Configure Nix to use the Devbox cache as a substituter",
+		Use:   "configure",
+		Short: "Configure Nix to use the Devbox cache as a substituter",
+		Long: "Configure Nix to use the Devbox cache as a substituter.\n" +
+			"\n" +
+			"If the current Nix installation is multi-user, this command grants the Nix\n" +
+			"daemon access to Devbox caches by making the following changes:\n" +
+			"\n" +
+			"- Adds the current user to Nix's list of trusted users in the system nix.conf.\n" +
+			"- Adds the cache credentials to ~root/.aws/config.\n" +
+			"\n" +
+			"Configuration requires sudo, but only needs to happen once. The changes persist\n" +
+			"across Devbox accounts and organizations.\n" +
+			"\n" +
+			"This command is a no-op for single-user Nix installs that aren't running the\n" +
+			"Nix daemon.",
 		Hidden: true,
 		Args:   cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
