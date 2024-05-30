@@ -22,7 +22,7 @@ func listCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List the packages in your current devbox project",
+		Short:   "List installed packages",
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			box, err := devbox.Open(&devopt.Opts{
