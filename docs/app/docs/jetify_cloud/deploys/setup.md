@@ -64,7 +64,7 @@ Jetify requires you to connect a Github repo in order to deploy your service. To
 
 ## Choosing an Instance Size
 
-Jetify will default your deployment to the smallest instance size (0.1 CPU + 512MB RAM). To choose a differente size: 
+Jetify will default your deployment to the smallest instance size (0.1 CPU + 512MB RAM). To choose a different size: 
 
 1. Navigate to the **Settings** tab of your project
 2. Scroll down to **Deployments**
