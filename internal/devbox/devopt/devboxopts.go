@@ -9,14 +9,20 @@ import (
 // - omit suffix Opts for other structs that are composed into an Opts struct
 
 type Opts struct {
-	Dir                      string
-	Env                      map[string]string
-	Environment              string
-	PreservePathStack        bool
-	Pure                     bool
-	IgnoreWarnings           bool
-	CustomProcessComposeFile string
-	Stderr                   io.Writer
+	Dir                string
+	Env                map[string]string
+	Environment        string
+	PreservePathStack  bool
+	Pure               bool
+	IgnoreWarnings     bool
+	ProcessComposeOpts *ProcessComposeOpts
+	Stderr             io.Writer
+}
+
+type ProcessComposeOpts struct {
+	CustomFile string
+	Flags      []string
+	Background bool
 }
 
 type GenerateOpts struct {

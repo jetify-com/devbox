@@ -59,16 +59,16 @@ const (
 )
 
 type Devbox struct {
-	cfg                      *devconfig.Config
-	env                      map[string]string
-	environment              string
-	lockfile                 *lock.File
-	nix                      nix.Nixer
-	projectDir               string
-	pluginManager            *plugin.Manager
-	preservePathStack        bool
-	pure                     bool
-	customProcessComposeFile string
+	cfg                *devconfig.Config
+	env                map[string]string
+	environment        string
+	lockfile           *lock.File
+	nix                nix.Nixer
+	projectDir         string
+	pluginManager      *plugin.Manager
+	preservePathStack  bool
+	pure               bool
+	processComposeOpts *devopt.ProcessComposeOpts
 
 	// This is needed because of the --quiet flag.
 	stderr io.Writer
@@ -97,16 +97,16 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 
 	box := &Devbox{
-		cfg:                      cfg,
-		env:                      opts.Env,
-		environment:              environment,
-		nix:                      &nix.Nix{},
-		projectDir:               projectDir,
-		pluginManager:            plugin.NewManager(),
-		stderr:                   opts.Stderr,
-		preservePathStack:        opts.PreservePathStack,
-		pure:                     opts.Pure,
-		customProcessComposeFile: opts.CustomProcessComposeFile,
+		cfg:                cfg,
+		env:                opts.Env,
+		environment:        environment,
+		nix:                &nix.Nix{},
+		projectDir:         projectDir,
+		pluginManager:      plugin.NewManager(),
+		stderr:             opts.Stderr,
+		preservePathStack:  opts.PreservePathStack,
+		pure:               opts.Pure,
+		processComposeOpts: opts.ProcessComposeOpts,
 	}
 
 	lock, err := lock.GetFile(box)
@@ -549,7 +549,11 @@ func (d *Devbox) Services() (services.Services, error) {
 		return nil, err
 	}
 
-	userSvcs := services.FromUserProcessCompose(d.projectDir, d.customProcessComposeFile)
+	customFile := ""
+	if d.processComposeOpts != nil {
+		customFile = d.processComposeOpts.CustomFile
+	}
+	userSvcs := services.FromUserProcessCompose(d.projectDir, customFile)
 
 	svcSet := lo.Assign(pluginSvcs, userSvcs)
 	keys := make([]string, 0, len(svcSet))
@@ -581,7 +585,7 @@ func (d *Devbox) StartServices(
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames)
 	}
 
 	svcSet, err := d.Services()
@@ -703,7 +707,7 @@ func (d *Devbox) RestartServices(
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames)
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -731,17 +735,17 @@ func (d *Devbox) StartProcessManager(
 	ctx context.Context,
 	runInCurrentShell bool,
 	requestedServices []string,
-	background bool,
-	processComposeFileOrDir string,
 ) error {
 	if !runInCurrentShell {
 		args := []string{"services", "up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
-		if processComposeFileOrDir != "" {
-			args = append(args, "--process-compose-file", processComposeFileOrDir)
-		}
-		if background {
-			args = append(args, "--background")
+		if d.processComposeOpts != nil {
+			if d.processComposeOpts.CustomFile != "" {
+				args = append(args, "--process-compose-file", d.processComposeOpts.CustomFile)
+			}
+			if d.processComposeOpts.Background {
+				args = append(args, "--background")
+			}
 		}
 		return d.RunScript(ctx, "devbox", args)
 	}
@@ -761,25 +765,42 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 
+	servicesProcessComposeConfig, err := d.configureProcessCompose(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Start the process manager
+
+	return services.StartProcessManager(
+		d.stderr,
+		requestedServices,
+		svcs,
+		d.projectDir,
+		*servicesProcessComposeConfig,
+	)
+}
+
+func (d *Devbox) configureProcessCompose(ctx context.Context) (*services.ProcessComposeOpts, error) {
 	processComposePath, err := utilityLookPath("process-compose")
 	if err != nil {
 		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
 		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+processComposeTargetVersion); err != nil {
-			return err
+			return nil, err
 		}
 
 		// re-lookup the path to process-compose
 		processComposePath, err = utilityLookPath("process-compose")
 		if err != nil {
 			fmt.Fprintln(d.stderr, "failed to find process-compose after installing it.")
-			return err
+			return nil, err
 		}
 	}
 	re := regexp.MustCompile(`(?m)Version:\s*(v\d*\.\d*\.\d*)`)
 	pcVersionString, err := exec.Command(processComposePath, "version").Output()
 	if err != nil {
 		fmt.Fprintln(d.stderr, "failed to get process-compose version")
-		return err
+		return nil, err
 	}
 
 	pcVersion := re.FindStringSubmatch(strings.TrimSpace(string(pcVersionString)))[1]
@@ -790,25 +811,23 @@ func (d *Devbox) StartProcessManager(
 		newProcessComposePkg := "github:F1bonacc1/process-compose/" + processComposeTargetVersion
 		// Find the old process Compose package
 		if err := d.removeDevboxUtilityPackage(ctx, oldProcessComposePkg); err != nil {
-			return err
+			return nil, err
 		}
 
 		if err = d.addDevboxUtilityPackage(ctx, newProcessComposePkg); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	// Start the process manager
+	opts := services.ProcessComposeOpts{
+		BinPath: processComposePath,
+	}
+	if d.processComposeOpts != nil {
+		opts.Background = d.processComposeOpts.Background
+		opts.Flags = d.processComposeOpts.Flags
+	}
 
-	return services.StartProcessManager(
-		ctx,
-		d.stderr,
-		requestedServices,
-		svcs,
-		d.projectDir,
-		processComposePath,
-		background,
-	)
+	return &opts, nil
 }
 
 // computeEnv computes the set of environment variables that define a Devbox

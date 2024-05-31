@@ -17,8 +17,9 @@ type servicesCmdFlags struct {
 }
 
 type serviceUpFlags struct {
-	background         bool
-	processComposeFile string
+	background          bool
+	processComposeFile  string
+	processComposeFlags []string
 }
 
 type serviceStopFlags struct {
@@ -35,6 +36,8 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	)
 	cmd.Flags().BoolVarP(
 		&flags.background, "background", "b", false, "run service in background")
+	cmd.Flags().StringArrayVar(
+		&flags.processComposeFlags, "pcflags", []string{}, "pass flags directly to process compose")
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
@@ -151,6 +154,8 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 		Environment: flags.config.environment,
 		Env:         env,
 		Stderr:      cmd.ErrOrStderr(),
+		// TODO: Should we allow these options to be passed here like we do for service up?
+		ProcessComposeOpts: &devopt.ProcessComposeOpts{Background: true},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -178,6 +183,7 @@ func stopServices(
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	if len(services) > 0 && flags.allProjects {
 		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
@@ -199,6 +205,8 @@ func restartServices(
 		Environment: flags.config.environment,
 		Env:         env,
 		Stderr:      cmd.ErrOrStderr(),
+		// TODO: Should we allow these options to be passed here like we do for service up?
+		ProcessComposeOpts: &devopt.ProcessComposeOpts{Background: true},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -218,11 +226,15 @@ func startProcessManager(
 		return err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:                      servicesFlags.config.path,
-		Env:                      env,
-		Environment:              servicesFlags.config.environment,
-		CustomProcessComposeFile: flags.processComposeFile,
-		Stderr:                   cmd.ErrOrStderr(),
+		Dir:         servicesFlags.config.path,
+		Env:         env,
+		Environment: servicesFlags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+		ProcessComposeOpts: &devopt.ProcessComposeOpts{
+			CustomFile: flags.processComposeFile,
+			Flags:      flags.processComposeFlags,
+			Background: flags.background,
+		},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -232,7 +244,5 @@ func startProcessManager(
 		cmd.Context(),
 		servicesFlags.runInCurrentShell,
 		args,
-		flags.background,
-		flags.processComposeFile,
 	)
 }
