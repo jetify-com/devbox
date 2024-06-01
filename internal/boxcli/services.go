@@ -154,8 +154,6 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 		Environment: flags.config.environment,
 		Env:         env,
 		Stderr:      cmd.ErrOrStderr(),
-		// TODO: Should we allow these options to be passed here like we do for service up?
-		ProcessComposeOpts: &devopt.ProcessComposeOpts{Background: true},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -205,8 +203,6 @@ func restartServices(
 		Environment: flags.config.environment,
 		Env:         env,
 		Stderr:      cmd.ErrOrStderr(),
-		// TODO: Should we allow these options to be passed here like we do for service up?
-		ProcessComposeOpts: &devopt.ProcessComposeOpts{Background: true},
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -225,16 +221,13 @@ func startProcessManager(
 	if err != nil {
 		return err
 	}
+
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:         servicesFlags.config.path,
-		Env:         env,
-		Environment: servicesFlags.config.environment,
-		Stderr:      cmd.ErrOrStderr(),
-		ProcessComposeOpts: &devopt.ProcessComposeOpts{
-			CustomFile: flags.processComposeFile,
-			Flags:      flags.processComposeFlags,
-			Background: flags.background,
-		},
+		Dir:                      servicesFlags.config.path,
+		Env:                      env,
+		Environment:              servicesFlags.config.environment,
+		Stderr:                   cmd.ErrOrStderr(),
+		CustomProcessComposeFile: flags.processComposeFile,
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -244,5 +237,9 @@ func startProcessManager(
 		cmd.Context(),
 		servicesFlags.runInCurrentShell,
 		args,
+		devopt.ProcessComposeOpts{
+			Background: flags.background,
+			Flags:      flags.processComposeFlags,
+		},
 	)
 }

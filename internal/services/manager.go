@@ -154,11 +154,10 @@ func StartProcessManager(
 		flags = append(flags, "-f", s.ProcessComposePath)
 	}
 
-	if len(processComposeConfig.Flags) > 0 {
-		flags = append(flags, processComposeConfig.Flags...)
-	}
+	flags = append(flags, processComposeConfig.Flags...)
 
 	if processComposeConfig.Background {
+		flags = append(flags, "-t=false")
 		cmd := exec.Command(processComposeConfig.BinPath, flags...)
 		return runProcessManagerInBackground(cmd, config, port, projectDir)
 	}
