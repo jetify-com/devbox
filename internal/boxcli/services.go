@@ -239,7 +239,7 @@ func startProcessManager(
 		args,
 		devopt.ProcessComposeOpts{
 			Background: flags.background,
-			Flags:      flags.processComposeFlags,
+			ExtraFlags: flags.processComposeFlags,
 		},
 	)
 }

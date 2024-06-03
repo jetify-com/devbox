@@ -746,7 +746,7 @@ func (d *Devbox) StartProcessManager(
 		if processComposeOpts.Background {
 			args = append(args, "--background")
 		}
-		for _, flag := range processComposeOpts.Flags {
+		for _, flag := range processComposeOpts.ExtraFlags {
 			args = append(args, "--pcflags", flag)
 		}
 
@@ -825,7 +825,7 @@ func (d *Devbox) configureProcessCompose(ctx context.Context, processComposeOpts
 	return &services.ProcessComposeOpts{
 		BinPath:    processComposePath,
 		Background: processComposeOpts.Background,
-		Flags:      processComposeOpts.Flags,
+		ExtraFlags: processComposeOpts.ExtraFlags,
 	}, nil
 }
 

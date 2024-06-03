@@ -20,7 +20,7 @@ type Opts struct {
 }
 
 type ProcessComposeOpts struct {
-	Flags      []string
+	ExtraFlags []string
 	Background bool
 }
 

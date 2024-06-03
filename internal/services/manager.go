@@ -42,7 +42,7 @@ type globalProcessComposeConfig struct {
 
 type ProcessComposeOpts struct {
 	BinPath    string
-	Flags      []string
+	ExtraFlags []string
 	Background bool
 }
 
@@ -154,7 +154,7 @@ func StartProcessManager(
 		flags = append(flags, "-f", s.ProcessComposePath)
 	}
 
-	flags = append(flags, processComposeConfig.Flags...)
+	flags = append(flags, processComposeConfig.ExtraFlags...)
 
 	if processComposeConfig.Background {
 		flags = append(flags, "-t=false")
