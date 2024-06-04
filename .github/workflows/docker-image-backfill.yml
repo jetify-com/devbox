@@ -3,7 +3,7 @@ name: docker-image-release
 on:
   workflow_dispatch:
     inputs:
-      myCommit:
+      tag:
         description: 'tag name'
         required: true
         default: 'undefined'
@@ -16,7 +16,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.myCommit }}
+          ref: ${{ inputs.tag }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Docker meta
@@ -51,6 +51,8 @@ jobs:
         with:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
+          build-args: 
+            DEVBOX_VERSION: ${{ inputs.tag }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -59,6 +61,8 @@ jobs:
         with:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
+          build-args: 
+            DEVBOX_VERSION: ${{ inputs.tag }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metaroot.outputs.tags }}
