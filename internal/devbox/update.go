@@ -75,6 +75,12 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	// It will return an error if .devbox/gen/flake is missing
 	// TODO: Remove this if it's not needed.
 	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
+
+	// fix any missing store paths.
+	if err = d.FixMissingStorePaths(ctx); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return plugin.Update()
 }
 
