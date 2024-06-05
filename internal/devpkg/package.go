@@ -746,9 +746,8 @@ func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, err
 		// No fast path, we need to query nix.
 		ux.Fwarning(
 			w,
-			"Outputs for %s are not in lockfile. Fetching store paths from nix\n"+
-				"To fix this issue and improve performance, please run "+
-				"`devbox install --fix-missing-store-paths`\n",
+			"Outputs for %s are not in lockfile. To fix this issue and improve performance, please run "+
+				"`devbox install --tidy-lockfile`\n",
 			p.Raw,
 		)
 	}

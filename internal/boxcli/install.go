@@ -15,7 +15,7 @@ import (
 
 type installCmdFlags struct {
 	runCmdFlags
-	fixMissingStorePaths bool
+	tidyLockfile bool
 }
 
 func installCmd() *cobra.Command {
@@ -32,8 +32,9 @@ func installCmd() *cobra.Command {
 
 	flags.config.register(command)
 	command.Flags().BoolVar(
-		&flags.fixMissingStorePaths, "fix-missing-store-paths", false,
+		&flags.tidyLockfile, "tidy-lockfile", false,
 		"Fix missing store paths in the devbox.lock file.",
+		// Could potentially do more in the future.
 	)
 
 	return command
@@ -53,7 +54,7 @@ func installCmdFunc(cmd *cobra.Command, flags installCmdFlags) error {
 	if err = box.Install(ctx); err != nil {
 		return errors.WithStack(err)
 	}
-	if flags.fixMissingStorePaths {
+	if flags.tidyLockfile {
 		if err = box.FixMissingStorePaths(ctx); err != nil {
 			return errors.WithStack(err)
 		}
