@@ -765,7 +765,12 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 
-	processComposePath, err := InitializeProcessCompose(ctx, d.stderr)
+	err = initDevboxUtilityProject(ctx, d.stderr)
+	if err != nil {
+		return err
+	}
+
+	processComposeBinPath, err := utilityLookPath("process-compose")
 	if err != nil {
 		return err
 	}
@@ -778,7 +783,7 @@ func (d *Devbox) StartProcessManager(
 		svcs,
 		d.projectDir,
 		services.ProcessComposeOpts{
-			BinPath:    processComposePath,
+			BinPath:    processComposeBinPath,
 			Background: processComposeOpts.Background,
 			ExtraFlags: processComposeOpts.ExtraFlags,
 		},
