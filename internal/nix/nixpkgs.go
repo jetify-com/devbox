@@ -4,12 +4,12 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -38,17 +38,16 @@ func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
 	}
 
 	fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded.\n")
-	cmd := exec.Command(
-		"nix", "flake", "prefetch",
+	cmd := command(
+		"flake", "prefetch",
 		FlakeNixpkgs(commit),
 	)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
 	cmd.Stdout = w
 	cmd.Stderr = cmd.Stdout
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Run(context.TODO()); err != nil {
 		fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded: ")
 		color.New(color.FgRed).Fprintf(w, "Fail\n")
-		return errors.Wrapf(err, "Command: %s", cmd)
+		return err
 	}
 	fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(w, "Success\n")
@@ -73,11 +72,10 @@ func nixpkgsCommitFileContents() (map[string]string, error) {
 
 func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) error {
 	// Make a query to get the /nix/store path for this commit hash.
-	cmd := exec.Command("nix", "flake", "prefetch", "--json",
+	cmd := command("flake", "prefetch", "--json",
 		FlakeNixpkgs(commit),
 	)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		return errors.WithStack(err)
 	}

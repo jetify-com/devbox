@@ -37,8 +37,8 @@ type ConfigField[T any] struct {
 func CurrentConfig(ctx context.Context) (Config, error) {
 	// `nix show-config` is deprecated in favor of `nix config show`, but we
 	// want to remain compatible with older Nix versions.
-	cmd := commandContext(ctx, "show-config", "--json")
-	out, err := cmd.Output()
+	cmd := command("show-config", "--json")
+	out, err := cmd.Output(ctx)
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) && len(exitErr.Stderr) != 0 {
 		return Config{}, redact.Errorf("command %s: %v: %s", redact.Safe(cmd), err, exitErr.Stderr)
