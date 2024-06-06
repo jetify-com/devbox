@@ -11,6 +11,8 @@ import (
 
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type installCmdFlags struct {
@@ -51,6 +53,9 @@ func installCmdFunc(cmd *cobra.Command, flags installCmdFlags) error {
 		return errors.WithStack(err)
 	}
 	ctx := cmd.Context()
+	if flags.tidyLockfile {
+		ctx = ux.HideMessage(ctx, devpkg.MissingStorePathsWarning)
+	}
 	if err = box.Install(ctx); err != nil {
 		return errors.WithStack(err)
 	}
