@@ -42,12 +42,7 @@ func initDevboxUtilityProject(ctx context.Context, stderr io.Writer) error {
 		return err
 	}
 
-	err = box.Install(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return box.Install(ctx)
 }
 
 func ensureDevboxUtilityConfig() (string, error) {
