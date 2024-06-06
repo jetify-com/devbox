@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -23,6 +24,7 @@ func ProfileListItems(
 	writer io.Writer,
 	profileDir string,
 ) ([]*NixProfileListItem, error) {
+	defer debug.FunctionTimer().End()
 	output, err := nix.ProfileList(writer, profileDir, true /*useJSON*/)
 	if err != nil {
 		// fallback to legacy profile list

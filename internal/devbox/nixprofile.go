@@ -16,6 +16,7 @@ import (
 //
 // It also removes any packages from the nix profile that are no longer in the buildInputs.
 func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
+	defer debug.FunctionTimer().End()
 	// Get the computed Devbox environment from the generated flake
 	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
 	if err != nil {

@@ -736,19 +736,19 @@ func (p *Package) GetResolvedStorePaths() ([]string, error) {
 	return storePaths, nil
 }
 
+const MissingStorePathsWarning = "Outputs for %s are not in lockfile. To fix this issue and improve performance, please run " +
+	"`devbox install --tidy-lockfile`\n"
+
 func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, error) {
 	storePathsForPackage, err := p.GetResolvedStorePaths()
 	if err != nil || len(storePathsForPackage) > 0 {
 		return storePathsForPackage, err
 	}
 
-	// No fast path, we need to query nix.
-	// TODO we should give people the option to add paths to lockfile.
-	ux.Fwarning(
-		w,
-		"Outputs for %s are not in lockfile. Fetching store paths from nix, this may take a while\n",
-		p.Raw,
-	)
+	if p.IsDevboxPackage {
+		// No fast path, we need to query nix.
+		ux.FHidableWarning(ctx, w, MissingStorePathsWarning, p.Raw)
+	}
 
 	installables, err := p.Installables()
 	if err != nil {

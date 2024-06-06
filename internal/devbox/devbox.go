@@ -856,6 +856,7 @@ func (d *Devbox) configureProcessCompose(ctx context.Context, processComposeOpts
 // some additional processing. The computeEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
 func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
 
 	// Append variables from current env if --pure is not passed

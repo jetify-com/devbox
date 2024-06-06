@@ -335,6 +335,7 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 // - the generated flake
 // - the nix-profile
 func (d *Devbox) recomputeState(ctx context.Context) error {
+	defer debug.FunctionTimer().End()
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
@@ -642,4 +643,50 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 	)
 
 	return nil
+}
+
+func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
+	packages := d.InstallablePackages()
+	for _, pkg := range packages {
+		if pkg.IsRunX() {
+			continue
+		}
+		existingStorePaths, err := pkg.GetResolvedStorePaths()
+		if err != nil {
+			return err
+		}
+
+		if len(existingStorePaths) > 0 {
+			continue
+		}
+
+		installables, err := pkg.Installables()
+		if err != nil {
+			return err
+		}
+
+		outputs := []lock.Output{}
+		for _, installable := range installables {
+			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
+			if err != nil {
+				return err
+			}
+			if len(storePaths) == 0 {
+				return fmt.Errorf("no store paths found for package %s", pkg.Raw)
+			}
+			for _, storePath := range storePaths {
+				parts := nix.NewStorePathParts(storePath)
+				outputs = append(outputs, lock.Output{
+					Path: storePath,
+					Name: parts.Output,
+					// Ugh, not sure this is true, but it's more true than not.
+					Default: true,
+				})
+			}
+		}
+		if err = d.lockfile.SetOutputsForPackage(pkg.Raw, outputs); err != nil {
+			return err
+		}
+	}
+	return d.lockfile.Save()
 }
