@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime/trace"
 	"slices"
 	"strconv"
@@ -24,29 +23,27 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/envpath"
-	"go.jetpack.io/devbox/internal/devbox/generate"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/shellgen"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/vercheck"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/envpath"
+	"go.jetpack.io/devbox/internal/devbox/generate"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
+	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
@@ -768,7 +765,12 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 
-	servicesProcessComposeOpts, err := d.configureProcessCompose(ctx, processComposeOpts)
+	err = initDevboxUtilityProject(ctx, d.stderr)
+	if err != nil {
+		return err
+	}
+
+	processComposeBinPath, err := utilityLookPath("process-compose")
 	if err != nil {
 		return err
 	}
@@ -780,53 +782,12 @@ func (d *Devbox) StartProcessManager(
 		requestedServices,
 		svcs,
 		d.projectDir,
-		*servicesProcessComposeOpts,
+		services.ProcessComposeOpts{
+			BinPath:    processComposeBinPath,
+			Background: processComposeOpts.Background,
+			ExtraFlags: processComposeOpts.ExtraFlags,
+		},
 	)
-}
-
-func (d *Devbox) configureProcessCompose(ctx context.Context, processComposeOpts devopt.ProcessComposeOpts) (*services.ProcessComposeOpts, error) {
-	processComposePath, err := utilityLookPath("process-compose")
-	if err != nil {
-		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+processComposeTargetVersion); err != nil {
-			return nil, err
-		}
-
-		// re-lookup the path to process-compose
-		processComposePath, err = utilityLookPath("process-compose")
-		if err != nil {
-			fmt.Fprintln(d.stderr, "failed to find process-compose after installing it.")
-			return nil, err
-		}
-	}
-	re := regexp.MustCompile(`(?m)Version:\s*(v\d*\.\d*\.\d*)`)
-	pcVersionString, err := exec.Command(processComposePath, "version").Output()
-	if err != nil {
-		fmt.Fprintln(d.stderr, "failed to get process-compose version")
-		return nil, err
-	}
-
-	pcVersion := re.FindStringSubmatch(strings.TrimSpace(string(pcVersionString)))[1]
-
-	if vercheck.SemverCompare(pcVersion, processComposeTargetVersion) < 0 {
-		fmt.Fprintln(d.stderr, "Upgrading process-compose to "+processComposeTargetVersion+"...")
-		oldProcessComposePkg := "github:F1bonacc1/process-compose/" + pcVersion + "#defaultPackage." + nix.System()
-		newProcessComposePkg := "github:F1bonacc1/process-compose/" + processComposeTargetVersion
-		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(ctx, oldProcessComposePkg); err != nil {
-			return nil, err
-		}
-
-		if err = d.addDevboxUtilityPackage(ctx, newProcessComposePkg); err != nil {
-			return nil, err
-		}
-	}
-
-	return &services.ProcessComposeOpts{
-		BinPath:    processComposePath,
-		Background: processComposeOpts.Background,
-		ExtraFlags: processComposeOpts.ExtraFlags,
-	}, nil
 }
 
 // computeEnv computes the set of environment variables that define a Devbox
