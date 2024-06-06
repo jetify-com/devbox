@@ -74,19 +74,15 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := exec.CommandContext(
-			ctx,
-			"nix", "print-dev-env",
+		cmd := command("print-dev-env", "--json",
 			"path:"+flakeDirResolved,
 		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		cmd.Args = append(cmd.Args, "--json")
 		debug.Log("Running print-dev-env cmd: %s\n", cmd)
-		data, err = cmd.Output()
+		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
+			return nil, err
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
@@ -158,11 +154,8 @@ func ComputeSystem() error {
 	if override != "" {
 		cachedSystem = override
 	} else {
-		cmd := exec.Command(
-			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
-		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		out, err := cmd.Output()
+		cmd := command("eval", "--impure", "--raw", "--expr", "builtins.currentSystem")
+		out, err := cmd.Output(context.TODO())
 		if err != nil {
 			return err
 		}

@@ -23,7 +23,7 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		return "", redact.Errorf("error running \"nix profile list\": %w", err)
 	}
@@ -49,8 +49,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		return usererr.New(errString)
 	}
 
-	cmd := commandContext(
-		ctx,
+	cmd := command(
 		"profile", "install",
 		"--profile", args.ProfilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
@@ -73,7 +72,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	cmd.Stderr = args.Writer
 
 	debug.Log("running command: %s\n", cmd)
-	return cmd.Run()
+	return cmd.Run(ctx)
 }
 
 // ProfileRemove removes packages from a profile.
@@ -81,19 +80,13 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 func ProfileRemove(profilePath string, packageNames ...string) error {
 	defer debug.FunctionTimer().End()
 	cmd := command(
-		append([]string{
-			"profile", "remove",
-			"--profile", profilePath,
-			"--impure", // for NIXPKGS_ALLOW_UNFREE
-		}, packageNames...)...,
+		"profile", "remove",
+		"--profile", profilePath,
+		"--impure", // for NIXPKGS_ALLOW_UNFREE
 	)
+	cmd.Args = appendArgs(cmd.Args, packageNames)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
-	}
-	return nil
+	return cmd.Run(context.TODO())
 }
 
 type manifest struct {
