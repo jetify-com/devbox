@@ -187,13 +187,21 @@ const (
 	Version2_19 = "2.19.0"
 	Version2_20 = "2.20.0"
 	Version2_21 = "2.21.0"
+	Version2_22 = "2.22.0"
 
 	MinVersion = Version2_12
 )
 
 // versionRegexp matches the first line of "nix --version" output.
-// Semantic component sourced from https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+//
+// The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
+// It's been modified to tolerate Nix prerelease versions, which don't have a
+// hyphen before the prerelease component and contain underscores.
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+
+// preReleaseRegexp matches Nix prerelease version strings, which are not valid
+// semvers.
+var preReleaseRegexp = regexp.MustCompile(`pre(?P<date>[0-9]+)_(?P<commit>[a-f0-9]{4,40})$`)
 
 // VersionInfo contains information about a Nix installation.
 type VersionInfo struct {
@@ -301,7 +309,15 @@ func (v VersionInfo) AtLeast(version string) bool {
 	if !semver.IsValid(version) {
 		panic(fmt.Sprintf("nix.atLeast: invalid version %q", version[1:]))
 	}
-	return semver.Compare("v"+v.Version, version) >= 0
+	if semver.IsValid("v" + v.Version) {
+		return semver.Compare("v"+v.Version, version) >= 0
+	}
+
+	// If the version isn't a valid semver, check to see if it's a
+	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
+	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
+	prerelease := preReleaseRegexp.ReplaceAllString(v.Version, "-pre.$date+$commit")
+	return semver.Compare("v"+prerelease, version) >= 0
 }
 
 // version is the cached output of `nix --version --debug`.
