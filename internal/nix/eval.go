@@ -54,10 +54,6 @@ func Eval(path string) ([]byte, error) {
 	return cmd.CombinedOutput()
 }
 
-func AllowInsecurePackages() {
-	os.Setenv("NIXPKGS_ALLOW_INSECURE", "1")
-}
-
 func IsInsecureAllowed() bool {
 	allowed, _ := strconv.ParseBool(os.Getenv("NIXPKGS_ALLOW_INSECURE"))
 	return allowed
