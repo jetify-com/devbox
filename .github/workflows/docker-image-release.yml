@@ -29,9 +29,9 @@ jobs:
           images: |
             jetpackio/devbox
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
           flavor: |
-            latest=${{ inputs.tag && true || false }}
+            latest=${{ !inputs.tag && true || false }}
       - name: Docker meta root
         id: metaroot
         uses: docker/metadata-action@v5
@@ -39,9 +39,9 @@ jobs:
           images: |
             jetpackio/devbox-root-user
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
           flavor: |
-            latest=${{ inputs.tag && true || false }}
+            latest=${{ !inputs.tag && true || false }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to Docker Hub
