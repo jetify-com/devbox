@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"os"
 	"os/exec"
@@ -835,7 +836,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		}
 	}
 
-	debug.Log("current environment PATH is: %s", env["PATH"])
+	slog.Debug("current environment PATH", "path", env["PATH"])
 
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
@@ -895,7 +896,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	// for both shell and run in order to be as identical as possible.
 	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
 
-	debug.Log("nix environment PATH is: %s", env)
+	slog.Debug("nix environment PATH", "path", env)
 
 	env["PATH"] = envpath.JoinPathLists(
 		nix.ProfileBinPath(d.projectDir),
@@ -923,7 +924,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	//  from print-dev-env". Consider moving devboxEnvPath higher up in this function
 	//  where env["PATH"] is written to.
 	devboxEnvPath := env["PATH"]
-	debug.Log("PATH after plugins and config is: %s", devboxEnvPath)
+	slog.Debug("PATH after plugins and config", "path", devboxEnvPath)
 
 	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
 	// Motivation: if a user removes a package from their devbox it should no longer
@@ -941,20 +942,20 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 			// input is of the form: /nix/store/<hash>-<package-name>-<version>
 			// path is of the form: /nix/store/<hash>-<package-name>-<version>/bin
 			if strings.TrimSpace(input) != "" && strings.HasPrefix(path, input) {
-				debug.Log("returning false for path %s and input %s\n", path, input)
+				slog.Debug("filtering out buildInput from PATH", "path", path, "input", input)
 				return false
 			}
 		}
 		return true
 	})
-	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, devboxEnvPath)
+	slog.Debug("PATH after filtering buildInputs", "inputs", buildInputs, "path", devboxEnvPath)
 
 	// TODO(gcurtis): this is a massive hack. Please get rid
 	// of this and install the package to the profile.
 	if len(glibcPatchPath) != 0 {
 		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
 		devboxEnvPath = envpath.JoinPathLists(patchedPath, devboxEnvPath)
-		debug.Log("PATH after glibc-patch hack is: %s", devboxEnvPath)
+		slog.Debug("PATH after glibc-patch hack", "path", devboxEnvPath)
 	}
 
 	runXPaths, err := d.RunXPaths(ctx)
@@ -966,9 +967,9 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
-	debug.Log("New path stack is: %s", pathStack)
+	slog.Debug("new path stack is", "path_stack", pathStack)
 
-	debug.Log("computed environment PATH is: %s", env["PATH"])
+	slog.Debug("computed environment PATH", "path", env["PATH"])
 
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it

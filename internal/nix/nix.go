@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,7 +78,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 		cmd := command("print-dev-env", "--json",
 			"path:"+flakeDirResolved,
 		)
-		debug.Log("Running print-dev-env cmd: %s\n", cmd)
+		slog.Debug("running print-dev-env cmd", "cmd", cmd)
 		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr
@@ -337,7 +338,7 @@ func runNixVersion() (VersionInfo, error) {
 		return VersionInfo{}, redact.Errorf("nix command: %s: %v", redact.Safe(cmd), err)
 	}
 
-	debug.Log("nix --version --debug output:\n%s", out)
+	slog.Debug("nix --version --debug output", "out", out)
 	return parseVersionInfo(out)
 }
 

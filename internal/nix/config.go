@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
@@ -14,7 +15,6 @@ import (
 	"slices"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
 )
 
@@ -83,7 +83,7 @@ func (c Config) IsUserTrusted(ctx context.Context, username string) (bool, error
 		group, err := user.LookupGroup(groupName)
 		var unknownErr user.UnknownGroupError
 		if errors.As(err, &unknownErr) {
-			debug.Log("skipping unknown trusted-user group %q found in nix.conf", groupName)
+			slog.Debug("skipping unknown trusted-user group found in nix.conf", "group", groupName)
 			continue
 		}
 		if err != nil {

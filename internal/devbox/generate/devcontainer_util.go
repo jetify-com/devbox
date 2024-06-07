@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,7 +22,6 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 )
 
@@ -199,7 +199,7 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 	// match only python3 or python3xx as package names
 	py3pattern, err := regexp.Compile(`(python3)$|(python3[0-9]{1,2})$`)
 	if err != nil {
-		debug.Log("Failed to compile regex")
+		slog.Debug("Failed to compile regex")
 		return nil
 	}
 	for _, pkg := range g.Pkgs {

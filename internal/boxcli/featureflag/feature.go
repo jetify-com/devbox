@@ -4,12 +4,12 @@
 package featureflag
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 	"testing"
 
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 )
 
@@ -54,7 +54,7 @@ func (f *feature) Enabled() bool {
 			status = "disabled"
 		}
 		if !logMap[f.name] {
-			debug.Log("Feature %q %s via environment variable.", f.name, status)
+			slog.Debug("Feature %q %s via environment variable.", f.name, status)
 			logMap[f.name] = true
 		}
 		return on

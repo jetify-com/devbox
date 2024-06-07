@@ -5,13 +5,13 @@ package mutagen
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 
 	"github.com/cavaliergopher/grab/v3"
 
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
 
@@ -31,7 +31,7 @@ func InstallMutagenOnce(binPath string) error {
 }
 
 func Install(url, installDir string) error {
-	debug.Log("installing mutagen from %s to %s", url, installDir)
+	slog.Debug("installing mutagen from %s to %s", url, installDir)
 	err := os.MkdirAll(installDir, 0o755)
 	if err != nil {
 		return err
