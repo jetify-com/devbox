@@ -174,6 +174,7 @@ func TestParseVersionInfoShort(t *testing.T) {
 		version string
 	}{
 		{"nix (Nix) 2.21.2", "nix", "2.21.2"},
+		{"nix (Nix) 2.23.0pre20240526_7de033d6", "nix", "2.23.0pre20240526_7de033d6"},
 		{"command (Nix) name (Nix) 2.21.2", "command (Nix) name", "2.21.2"},
 		{"nix (Lix, like Nix) 2.90.0-beta.1", "nix", "2.90.0-beta.1"},
 	}
@@ -230,6 +231,24 @@ func TestVersionInfoAtLeast(t *testing.T) {
 	}
 	if info.AtLeast(Version2_14) {
 		t.Errorf("got %s >= %s", info.Version, Version2_14)
+	}
+
+	// https://github.com/jetify-com/devbox/issues/2128
+	info.Version = "2.23.0pre20240526_7de033d6"
+	if !info.AtLeast(Version2_12) {
+		t.Errorf("got %s < %s", info.Version, Version2_12)
+	}
+	if info.AtLeast("2.23.0") {
+		t.Errorf("got %s > %s", info.Version, "2.23.0")
+	}
+	if info.AtLeast("2.24.0") {
+		t.Errorf("got %s > %s", info.Version, "2.24.0")
+	}
+	if info.AtLeast("2.23.0-pre.99999999") {
+		t.Errorf("got %s > %s", info.Version, "2.23.0-pre.99999999")
+	}
+	if !info.AtLeast("2.23.0-pre.1") {
+		t.Errorf("got %s < %s", info.Version, "2.23.0-pre.1")
 	}
 
 	t.Run("ArgEmptyPanic", func(t *testing.T) {
