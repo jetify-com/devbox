@@ -15,8 +15,8 @@ import (
 )
 
 func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string, error) {
-	cmd := commandContext(ctx, "store", "path-from-hash-part", "--store", storeAddr, hash)
-	resultBytes, err := cmd.Output()
+	cmd := command("store", "path-from-hash-part", "--store", storeAddr, hash)
+	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -26,7 +26,7 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
 	// --impure for NIXPKGS_ALLOW_UNFREE
-	cmd := commandContext(ctx, "path-info", installable, "--json", "--impure")
+	cmd := command("path-info", installable, "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {
@@ -35,17 +35,8 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 	}
 
 	debug.Log("Running cmd %s", cmd)
-	resultBytes, err := cmd.Output()
+	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
-		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-			return nil, redact.Errorf(
-				"nix path-info exit code: %d, output: %s, err: %w",
-				redact.Safe(exitErr.ExitCode()),
-				exitErr.Stderr,
-				err,
-			)
-		}
-
 		return nil, err
 	}
 
@@ -63,10 +54,10 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 	if len(storePaths) == 0 {
 		return map[string]bool{}, nil
 	}
-	args := append([]string{"path-info", "--offline", "--json"}, storePaths...)
-	cmd := commandContext(ctx, args...)
+	cmd := command("path-info", "--offline", "--json")
+	cmd.Args = appendArgs(cmd.Args, storePaths)
 	debug.Log("Running cmd %s", cmd)
-	output, err := cmd.Output()
+	output, err := cmd.Output(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -150,11 +141,11 @@ func DaemonVersion(ctx context.Context) (string, error) {
 	}
 	canJSON := cliVersion.AtLeast(Version2_14)
 
-	cmd := commandContext(ctx, "store", storeCmd, "--store", "daemon")
+	cmd := command("store", storeCmd, "--store", "daemon")
 	if canJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
-	out, err := cmd.Output()
+	out, err := cmd.Output(ctx)
 
 	// ExitError means the command ran, but couldn't connect.
 	var exitErr *exec.ExitError

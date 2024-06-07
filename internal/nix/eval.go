@@ -1,6 +1,7 @@
 package nix
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"strconv"
@@ -8,7 +9,7 @@ import (
 
 func EvalPackageName(path string) (string, error) {
 	cmd := command("eval", "--raw", path+".name")
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		return "", err
 	}
@@ -18,7 +19,7 @@ func EvalPackageName(path string) (string, error) {
 // PackageIsInsecure is a fun little nix eval that maybe works.
 func PackageIsInsecure(path string) bool {
 	cmd := command("eval", path+".meta.insecure")
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		// We can't know for sure, but probably not.
 		return false
@@ -33,7 +34,7 @@ func PackageIsInsecure(path string) bool {
 
 func PackageKnownVulnerabilities(path string) []string {
 	cmd := command("eval", path+".meta.knownVulnerabilities")
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		// We can't know for sure, but probably not.
 		return nil
@@ -51,7 +52,7 @@ func PackageKnownVulnerabilities(path string) []string {
 // to determine if a package if a package can be installed in system.
 func Eval(path string) ([]byte, error) {
 	cmd := command("eval", "--raw", path)
-	return cmd.CombinedOutput()
+	return cmd.CombinedOutput(context.TODO())
 }
 
 func IsInsecureAllowed() bool {

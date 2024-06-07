@@ -23,7 +23,7 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		return "", redact.Errorf("error running \"nix profile list\": %w", err)
 	}
@@ -41,8 +41,7 @@ var ErrPriorityConflict = errors.New("priority conflict")
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	defer debug.FunctionTimer().End()
 
-	cmd := commandContext(
-		ctx,
+	cmd := command(
 		"profile", "install",
 		"--profile", args.ProfilePath,
 		"--offline", // makes it faster. Package is already in store
@@ -53,7 +52,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		"--priority", nextPriority(args.ProfilePath),
 	)
 
-	cmd.Args = append(cmd.Args, args.Installables...)
+	cmd.Args = appendArgs(cmd.Args, args.Installables)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	// We used to attach this function to stdout and in in order to get the more interactive output.
@@ -62,7 +61,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	// happened.
 
 	debug.Log("running command: %s\n", cmd)
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput(ctx)
 
 	if bytes.Contains(out, []byte("error: An existing package already provides the following file")) {
 		return ErrPriorityConflict
@@ -76,19 +75,13 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 func ProfileRemove(profilePath string, packageNames ...string) error {
 	defer debug.FunctionTimer().End()
 	cmd := command(
-		append([]string{
-			"profile", "remove",
-			"--profile", profilePath,
-			"--impure", // for NIXPKGS_ALLOW_UNFREE
-		}, packageNames...)...,
+		"profile", "remove",
+		"--profile", profilePath,
+		"--impure", // for NIXPKGS_ALLOW_UNFREE
 	)
+	cmd.Args = appendArgs(cmd.Args, packageNames)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
-	}
-	return nil
+	return cmd.Run(context.TODO())
 }
 
 type manifest struct {
