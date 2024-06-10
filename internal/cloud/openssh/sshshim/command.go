@@ -6,6 +6,7 @@ package sshshim
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -26,11 +27,11 @@ func Execute(ctx context.Context, args []string) int {
 
 func execute(ctx context.Context, args []string) error {
 	EnableDebug() // Always enable for now.
-	debug.Log("os.Args: %v", args)
+	slog.Debug("sshshim.execute", "args", args)
 
 	alive, err := EnsureLiveVMOrTerminateMutagenSessions(ctx, args[1:])
 	if err != nil {
-		debug.Log("ensureLiveVMOrTerminateMutagenSessions error: %v", err)
+		slog.Error("ensureLiveVMOrTerminateMutagenSessions error", "err", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return err
 	}
@@ -39,7 +40,7 @@ func execute(ctx context.Context, args []string) error {
 	}
 
 	if err := InvokeSSHOrSCPCommand(args); err != nil {
-		debug.Log("InvokeSSHorSCPCommand error: %v", err)
+		slog.Debug("InvokeSSHorSCPCommand error", "err", err)
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return err
 	}

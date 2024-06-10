@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -60,7 +61,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	// should already be in the store. We need to capture the output so we can decide if a conflict
 	// happened.
 
-	debug.Log("running command: %s\n", cmd)
+	slog.Debug("running command", "cmd", cmd)
 	out, err := cmd.CombinedOutput(ctx)
 
 	if bytes.Contains(out, []byte("error: An existing package already provides the following file")) {

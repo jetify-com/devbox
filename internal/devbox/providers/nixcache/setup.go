@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
@@ -13,7 +14,6 @@ import (
 	"time"
 	"unicode"
 
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
@@ -78,26 +78,26 @@ func (s *setupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
 	if _, err := nix.DaemonVersion(ctx); err != nil {
 		// This looks like a single-user install, so no need to
 		// configure the daemon or root's AWS credentials.
-		debug.Log("nixcache: skipping setup: error connecting to nix daemon, assuming single-user install: %v", err)
+		slog.Error("nixcache: skipping setup: error connecting to nix daemon, assuming single-user install", "err", err)
 		return false
 	}
 
 	if lastRun.Time.IsZero() {
-		debug.Log("nixcache: running setup: first time setup")
+		slog.Debug("nixcache: running setup: first time setup")
 		return true
 	}
 	cfg, err := nix.CurrentConfig(ctx)
 	if err != nil {
-		debug.Log("nixcache: running setup: error getting current nix config, assuming user %s isn't trusted", s.username)
+		slog.Error("nixcache: running setup: error getting current nix config, assuming user isn't trusted", "user", s.username)
 		return true
 	}
 	trusted, err := cfg.IsUserTrusted(ctx, s.username)
 	if err != nil {
-		debug.Log("nixcache: running setup: error checking if user %s is trusted, assuming they aren't", s.username)
+		slog.Error("nixcache: running setup: error checking if user is trusted, assuming they aren't", "user", s.username)
 		return true
 	}
 	if !trusted {
-		debug.Log("nixcache: running setup: user %s isn't trusted", s.username)
+		slog.Debug("nixcache: running setup: user isn't trusted", "user", s.username)
 		return true
 	}
 	return false
@@ -218,7 +218,7 @@ func propagatedEnv() string {
 			return !unicode.IsPrint(r)
 		})
 		if notPrintable {
-			debug.Log("nixcache: not including environment variable in ~root/.aws/config because it contains nonprintable runes: %q=%q", name, val)
+			slog.Debug("nixcache: not including environment variable in ~root/.aws/config because it contains nonprintable runes: %q=%q", name, val)
 			continue
 		}
 

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -228,7 +229,7 @@ var defaultPrompt = func(msg string) (response any, err error) {
 		}, &response)
 		return response, err
 	}
-	debug.Log("setup: no tty detected, assuming yes to confirmation prompt: %q", msg)
+	slog.Debug("setup: no tty detected, assuming yes to confirmation prompt", "prompt", msg)
 	return true, nil
 }
 
@@ -285,7 +286,7 @@ func Reset(key string) {
 	}
 	if err != nil {
 		err = taskError(key, fmt.Errorf("remove state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("ignoring setup task reset error", "err", err, "task", key)
 	}
 }
 
@@ -306,14 +307,14 @@ func loadState(key string) state {
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			err = taskError(key, fmt.Errorf("load state file: %v", err))
-			debug.Log(err.Error())
+			slog.Error("using empty setup task state due to an error", "err", err, "task", key)
 		}
 		return state{}
 	}
 	loaded := state{}
 	if err := json.Unmarshal(b, &loaded); err != nil {
 		err = taskError(key, fmt.Errorf("load state file %s: %v", path, err))
-		debug.Log(err.Error())
+		slog.Error("using empty setup task state due to an error", "err", err, "task", key)
 		return state{}
 	}
 	return loaded
@@ -324,7 +325,7 @@ func saveState(key string, s state) {
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		err = taskError(key, fmt.Errorf("save state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("not saving setup task state", "err", err, "task", key)
 		return
 	}
 
@@ -334,7 +335,7 @@ func saveState(key string, s state) {
 	}
 	if err != nil {
 		err = taskError(key, fmt.Errorf("save state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("not saving setup task state", "err", err, "task", key)
 		return
 	}
 
@@ -351,7 +352,7 @@ func saveState(key string, s state) {
 		err = os.Chown(path, uid, gid)
 		if err != nil {
 			err = taskError(key, fmt.Errorf("chown state file to non-sudo user: %v", err))
-			debug.Log(err.Error())
+			slog.Error("cannot ensure task state is owned by sudoing user", "err", err, "task", key, "uid", sudoUID, "gid", sudoGID)
 		}
 	}
 }

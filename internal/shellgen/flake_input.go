@@ -3,13 +3,13 @@ package shellgen
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"runtime/trace"
 	"slices"
 	"strings"
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -172,7 +172,7 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 			// TODO(savil): return error?
 			cached, err := pkg.IsInBinaryCache()
 			if err != nil {
-				debug.Log("error checking if package is in binary cache: %v", err)
+				slog.Error("error checking if package is in binary cache", "err", err)
 			}
 			if err == nil && cached {
 				continue

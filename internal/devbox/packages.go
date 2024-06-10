@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime/trace"
@@ -353,7 +354,7 @@ func (d *Devbox) profilePath() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 
 	if err := resetProfileDirForFlakes(absPath); err != nil {
-		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
+		slog.Error("resetProfileDirForFlakes error", "err", err)
 	}
 
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
@@ -519,7 +520,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 
 	caches, err := nixcache.CachedReadCaches(ctx)
 	if err != nil {
-		debug.Log("error getting list of caches from the Jetify API, assuming the user doesn't have access to any: %v", err)
+		slog.Error("error getting list of caches from the Jetify API, assuming the user doesn't have access to any", "err", err)
 		return nil
 	}
 	if len(caches) == 0 {
@@ -528,7 +529,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 
 	err = nixcache.Configure(ctx)
 	if errors.Is(err, setup.ErrAlreadyRefused) {
-		debug.Log("user previously refused to configure nix cache, not re-prompting")
+		slog.Debug("user previously refused to configure nix cache, not re-prompting")
 		return nil
 	}
 	if errors.Is(err, setup.ErrUserRefused) {
@@ -543,7 +544,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 	// Other errors indicate we couldn't update nix.conf, so just warn and
 	// continue by building from source if necessary.
 	if err != nil {
-		debug.Log("error configuring nix cache: %v", err)
+		slog.Error("error configuring nix cache", "err", err)
 		ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use the Jetify Nix cache. Some packages might be built from source.\n")
 		return nil
 	}

@@ -3,6 +3,7 @@ package shellgen
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -94,7 +95,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		if _, ok := written[scriptName]; !ok && !entry.IsDir() {
 			err := os.Remove(ScriptPath(devbox.ProjectDir(), scriptName))
 			if err != nil {
-				debug.Log("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
+				slog.Debug("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
 			}
 		}
 	}

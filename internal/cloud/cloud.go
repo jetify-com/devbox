@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +26,6 @@ import (
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
 	"go.jetpack.io/devbox/internal/cloud/openssh"
 	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/services"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -61,7 +61,7 @@ func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *op
 		// Inspect the ssh ControlPath to check for existing connections
 		vmHostname = vmHostnameFromSSHControlPath()
 		if vmHostname != "" {
-			debug.Log("Using vmHostname from ssh socket: %v", vmHostname)
+			slog.Debug("Using vmHostname from ssh socket", "host", vmHostname)
 			color.New(color.FgGreen).Fprintln(w, "Detected existing virtual machine")
 		} else {
 			var region, vmUser string
@@ -80,7 +80,7 @@ func ensureVMForUser(vmHostname string, w io.Writer, username string, sshCmd *op
 			// match their claimed username from GitHub.
 			err = openssh.SaveGithubUsernameToLocalFile(username)
 			if err != nil {
-				debug.Log("Failed to save username: %v", err)
+				slog.Error("failed to save username", "err", err)
 			}
 		}
 	}
@@ -142,7 +142,7 @@ func InitVM(
 			return "", "", nilTime, err
 		}
 	}
-	debug.Log("username: %s", username)
+	slog.Debug("initializing vm", "user", username)
 
 	// Record the start time for telemetry, now that we are done with prompting
 	// for GitHub username.
@@ -158,7 +158,7 @@ func InitVM(
 	if err != nil {
 		return "", "", nilTime, err
 	}
-	debug.Log("vm_hostname: %s", vmHostname)
+	slog.Debug("initializing vm", "host", vmHostname)
 
 	return username, vmHostname, telemetryShellStartTime, nil
 }
@@ -222,23 +222,23 @@ func AutoPortForward(ctx context.Context, w io.Writer, projectDir, hostID string
 func getGithubUsername() (string, error) {
 	username, err := openssh.GithubUsernameFromLocalFile()
 	if err == nil && username != "" {
-		debug.Log("Username from locally-cached file: %s", username)
+		slog.Debug("got username from locally-cached file", "user", username)
 		return username, nil
 	}
 
 	if err != nil {
-		debug.Log("failed to get auth.Username. Error: %v", err)
+		slog.Debug("failed to get auth.Username", "err", err)
 	}
 	username, err = queryGithubUsername()
 	if err == nil && username != "" {
-		debug.Log("Username from ssh -T git@github.com: %s", username)
+		slog.Debug("got username from ssh -T git@github.com", "user", username)
 		return username, nil
 	}
 
 	// The query for GitHub username is best effort, and if it fails to resolve
 	// we fallback to prompting the user, and suggesting the local computer username.
 	if err != nil {
-		debug.Log("failed to query auth.Username. Error: %v", err)
+		slog.Debug("failed to query auth.Username", "err", err)
 	}
 	return promptUsername()
 }
@@ -253,7 +253,7 @@ func promptUsername() (string, error) {
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	debug.Log("Username from prompting user: %s", username)
+	slog.Debug("got username from prompt", "user", username)
 	return username, nil
 }
 
@@ -283,7 +283,7 @@ func getVirtualMachine(sshCmd *openssh.Cmd) (vmUser, vmHost, region string, err 
 		return "", "", "", errors.Wrapf(err, "error unmarshalling gateway response %q", sshOut)
 	}
 	if redacted, err := json.MarshalIndent(resp.redact(), "\t", "  "); err == nil {
-		debug.Log("got gateway response:\n\t%s", redacted)
+		slog.Debug("got gateway response", "resp", redacted)
 	}
 	if resp.VMPrivateKey != "" {
 		err = openssh.AddVMKey(resp.VMHost, resp.VMPrivateKey)
@@ -300,7 +300,7 @@ func syncFiles(username, hostname, projectDir string) error {
 		return err
 	}
 	absPathInVM := absoluteProjectPathInVM(username, relProjectPathInVM)
-	debug.Log("absPathInVM: %s", absPathInVM)
+	slog.Debug("syncFiles absoluteProjectPathInVM", "path", absPathInVM)
 
 	err = copyConfigFileToVM(hostname, username, projectDir, absPathInVM)
 	if err != nil {
@@ -364,7 +364,7 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 	mkdirCmd := openssh.Command(username, hostname)
 	_, err := mkdirCmd.ExecRemote(fmt.Sprintf(`mkdir -p "%s"`, destDir))
 	if err != nil {
-		debug.Log("error setting initial starship mutagen status: %v", err)
+		slog.Error("error setting initial starship mutagen status", "err", err)
 	}
 
 	// Set an initial status
@@ -372,18 +372,18 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 	statusCmd := openssh.Command(username, hostname)
 	_, err = statusCmd.ExecRemote(fmt.Sprintf(`echo "%s" > "%s/mutagen_status.txt"`, displayableStatus, destDir))
 	if err != nil {
-		debug.Log("error setting initial starship mutagen status: %v", err)
+		slog.Error("error setting initial starship mutagen status", "err", err)
 	}
 	time.Sleep(5 * time.Second)
 
-	debug.Log("Starting check for file sync status")
+	slog.Debug("Starting check for file sync status")
 	for status != "watching" {
 		status, err = getSyncStatus(mutagenSessionName)
 		if err != nil {
-			debug.Log("ERROR: getSyncStatus error is %s", err)
+			slog.Error("getSyncStatus error", "err", err)
 			return
 		}
-		debug.Log("checking file sync status: %s", status)
+		slog.Debug("checking file sync status", "status", status)
 
 		if status == "watching" {
 			displayableStatus = "\"watching for changes\""
@@ -392,7 +392,7 @@ func updateSyncStatus(mutagenSessionName, username, hostname, relProjectPathInVM
 		statusCmd := openssh.Command(username, hostname)
 		_, err = statusCmd.ExecRemote(fmt.Sprintf(`echo "%s" > "%s/mutagen_status.txt"`, displayableStatus, destDir))
 		if err != nil {
-			debug.Log("error setting initial starship mutagen status: %v", err)
+			slog.Error("error setting initial starship mutagen status", "err", err)
 		}
 		time.Sleep(5 * time.Second)
 	}
@@ -422,7 +422,7 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 	// We retry a few times to avoid failing the command.
 	_, err := mkdirCmd.ExecRemoteWithRetry(fmt.Sprintf(`mkdir -p "%s"`, pathInVM), 5, 4)
 	if err != nil {
-		debug.Log("error copying config file to VM: %v", err)
+		slog.Error("error copying config file to VM", "err", err)
 		return errors.WithStack(err)
 	}
 
@@ -432,7 +432,7 @@ func copyConfigFileToVM(hostname, username, projectDir, pathInVM string) error {
 	destPath := fmt.Sprintf("%s:%s", destServer, pathInVM)
 	cmd := exec.Command("scp", configFilePath, destPath)
 	err = cmd.Run()
-	debug.Log("scp devbox.json command: %s with error: %s", cmd, err)
+	slog.Error("scp devbox.json error", "cmd", cmd, "err", err)
 	return errors.WithStack(err)
 }
 

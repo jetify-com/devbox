@@ -3,6 +3,7 @@ package nix
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -33,7 +34,7 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	}
 	cmd.Env = append(allowUnfreeEnv(os.Environ()), args.Env...)
 	if args.AllowInsecure {
-		debug.Log("Setting Allow-insecure env-var\n")
+		slog.Debug("Setting Allow-insecure env-var\n")
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
@@ -44,6 +45,6 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd.Stdout = args.Writer
 	cmd.Stderr = args.Writer
 
-	debug.Log("Running cmd: %s\n", cmd)
+	slog.Debug("running cmd", "cmd", cmd)
 	return cmd.Run(ctx)
 }

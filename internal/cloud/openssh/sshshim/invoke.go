@@ -4,14 +4,13 @@
 package sshshim
 
 import (
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 
 	"github.com/pkg/errors"
-
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 func InvokeSSHOrSCPCommand(args []string) error {
@@ -39,7 +38,7 @@ func InvokeSSHOrSCPCommand(args []string) error {
 	//       strings (i.e., argv[0]) should contain the filename associated
 	//       with the file being executed.
 	args[0] = executablePath
-	debug.Log("invoking %s with args: %v", args[0], args)
+	slog.Debug("invoking %s with args: %v", args[0], args)
 
 	// Choose syscall.Exec instead of exec.Cmd so that we preserve the exit code
 	// and environment, and the current process is replaced by ssh.

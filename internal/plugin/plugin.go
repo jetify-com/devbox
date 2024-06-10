@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -82,7 +82,7 @@ func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 		return err
 	}
 
-	debug.Log("Creating files for package %q create files", pkg)
+	slog.Debug("creating files for package", "pkg", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
 		if !m.shouldCreateFile(locked, filePath) {
 			continue
@@ -118,7 +118,7 @@ func (m *Manager) createFile(
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
-	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
+	slog.Debug("Creating file %q from contentPath: %q", filePath, contentPath)
 	content, err := pkg.FileContent(contentPath)
 	if err != nil {
 		return errors.WithStack(err)

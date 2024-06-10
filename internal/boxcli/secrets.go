@@ -180,9 +180,6 @@ func secretsDownloadCmd(commonFlags *secretsFlags) *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			if err != nil {
-				return errors.WithStack(err)
-			}
 			absPaths, err := fileutil.EnsureAbsolutePaths(args)
 			if err != nil {
 				return errors.WithStack(err)
@@ -208,9 +205,6 @@ func secretsUploadCmd(commonFlags *secretsFlags) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, paths []string) error {
 			secrets, err := commonFlags.envsec(cmd)
-			if err != nil {
-				return errors.WithStack(err)
-			}
 			if err != nil {
 				return errors.WithStack(err)
 			}
