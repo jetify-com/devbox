@@ -18,8 +18,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
-        # with:
-        #   ref: ${{ inputs.tag || github.ref }}
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Docker meta
