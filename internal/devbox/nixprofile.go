@@ -3,6 +3,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/samber/lo"
@@ -54,7 +55,7 @@ func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 			storePath := nix.NewStorePathParts(p)
 			packagesToRemove = append(packagesToRemove, fmt.Sprintf("%s@%s", storePath.Name, storePath.Version))
 		}
-		debug.Log("Removing packages from nix profile: %s\n", strings.Join(packagesToRemove, ", "))
+		slog.Debug("removing packages from nix profile", "pkgs", strings.Join(packagesToRemove, ", "))
 
 		if err := nix.ProfileRemove(profilePath, remove...); err != nil {
 			return err

@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/redact"
@@ -65,7 +65,7 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 		IgnoreWarnings: true,
 	})
 	if err != nil {
-		debug.Log("failed to open devbox: %v", err)
+		slog.Error("failed to open devbox", "err", err)
 		return nil
 	}
 
@@ -90,8 +90,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	if err != nil {
 		return redact.Errorf("error parsing script arguments: %w", err)
 	}
-	debug.Log("script: %s", script)
-	debug.Log("script args: %v", scriptArgs)
+	slog.Debug("run script", "script", script, "args", scriptArgs)
 
 	env, err := flags.Env(path)
 	if err != nil {

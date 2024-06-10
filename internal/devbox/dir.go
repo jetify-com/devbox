@@ -4,12 +4,12 @@
 package devbox
 
 import (
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/fileutil"
 )
@@ -19,7 +19,7 @@ import (
 //
 // If it doesn't find any devbox.json, then an error is returned.
 func findProjectDir(path string) (string, error) {
-	debug.Log("findProjectDir: path is %s\n", path)
+	slog.Debug("finding devbox config", "path", path)
 
 	// Sanitize the directory and use the absolute path as canonical form
 	absPath, err := filepath.Abs(path)
@@ -63,7 +63,7 @@ func findProjectDirFromParentDirSearch(
 	cur := absPath
 	// Search parent directories for a devbox.json
 	for cur != root {
-		debug.Log("finding devbox config in dir: %s\n", cur)
+		slog.Debug("finding devbox config", "dir", cur)
 		if configExistsIn(cur) {
 			return cur, nil
 		}

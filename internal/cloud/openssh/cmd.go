@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"math"
 	"net"
 	"os"
@@ -15,8 +16,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
-
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 type Cmd struct {
@@ -79,7 +78,7 @@ func (c *Cmd) ExecRemoteWithRetry(cmd string, retries, maxWait int) ([]byte, err
 			break
 		}
 		wait := int(math.Min(float64(maxWait), math.Pow(2, float64(i))))
-		debug.Log("Error: %v Retrying ExecRemote in %d seconds", err, wait)
+		slog.Debug("retrying ExecRemote", "err", err, "wait", wait)
 		time.Sleep(time.Duration(wait) * time.Second)
 	}
 	return stdout, err
@@ -116,21 +115,20 @@ func logCmdRun(cmd *exec.Cmd) error {
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("openssh: start command %q: %w", cmd, err)
 	}
-	debug.Log("openssh: started process %d with command %q", cmd.Process.Pid, cmd)
+	slog.Debug("openssh: started process", "pid", cmd.Process.Pid, "cmd", cmd)
 
 	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("openssh: process %d with command %q: %w",
 			cmd.Process.Pid, cmd, err)
 	}
-	debug.Log("openssh: process %d with command %q: exit status 0", cmd.Process.Pid, cmd)
+	slog.Debug("openssh: process exited", "pid", cmd.Process.Pid, "cmd", cmd, "code", 0)
 	return nil
 }
 
 func logCmdOutput(cmd *exec.Cmd, stdstream string, out []byte) {
 	out = bytes.TrimSpace(out)
 	if len(out) == 0 {
-		debug.Log("openssh: process %d with command %q: exit status %d: %s is empty",
-			cmd.Process.Pid, cmd, cmd.ProcessState.ExitCode(), stdstream)
+		slog.Debug("openssh: process exited", "pid", cmd.Process.Pid, "cmd", cmd, "code", cmd.ProcessState.ExitCode(), stdstream, out)
 		return
 	}
 
@@ -144,8 +142,7 @@ func logCmdOutput(cmd *exec.Cmd, stdstream string, out []byte) {
 			out = fmt.Appendf(out, "...truncated %d bytes.", overflow)
 		}
 	}
-	debug.Log("openssh: process %d with command %q: exit status %d: %s text:\n\t%s",
-		cmd.Process.Pid, cmd, cmd.ProcessState.ExitCode(), stdstream, out)
+	slog.Debug("openssh: process exited", "pid", cmd.Process.Pid, "cmd", cmd, "code", cmd.ProcessState.ExitCode(), stdstream, out)
 }
 
 type ControlSocket struct {

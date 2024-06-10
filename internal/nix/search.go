@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/xdg"
 	"go.jetpack.io/pkg/filecache"
 )
@@ -103,7 +103,7 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
-	debug.Log("running command: %s\n", cmd)
+	slog.Debug("running command", "cmd", cmd)
 	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		// for now, assume all errors are invalid packages.

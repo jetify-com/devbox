@@ -5,6 +5,7 @@ package midcobra
 
 import (
 	"errors"
+	"log/slog"
 	"os/exec"
 	"strconv"
 
@@ -64,7 +65,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	st := debug.EarliestStackTrace(runErr)
 	var exitErr *exec.ExitError
 	if errors.As(runErr, &exitErr) {
-		debug.Log("Command stderr: %s\n", exitErr.Stderr)
+		slog.Error("command error", "stderr", exitErr.Stderr, "execid", telemetry.ExecutionID, "stack", st)
 	}
-	debug.Log("\nExecutionID:%s\n%+v\n", telemetry.ExecutionID, st)
+	slog.Error("command error", "execid", telemetry.ExecutionID, "stack", st)
 }

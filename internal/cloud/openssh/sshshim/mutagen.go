@@ -6,6 +6,7 @@ package sshshim
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"os/exec"
 	"strings"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 
 	"go.jetpack.io/devbox/internal/cloud/mutagenbox"
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 // EnsureLiveVMOrTerminateMutagenSessions returns true if a liveVM is found, OR sshArgs were connecting to a server that is not a devbox-VM.
@@ -21,7 +21,7 @@ import (
 func EnsureLiveVMOrTerminateMutagenSessions(ctx context.Context, sshArgs []string) (bool, error) {
 	vmAddr := vmAddressIfAny(sshArgs)
 
-	debug.Log("Found vmAddr: %s", vmAddr)
+	slog.Debug("found vm address", "addr", vmAddr)
 	if vmAddr == "" {
 		// We support the no Vm scenario, in case mutagen ssh-es into another server
 		// TODO savil. Revisit the no VM scenario if we can control the mutagen daemon for devbox-only
@@ -34,7 +34,7 @@ func EnsureLiveVMOrTerminateMutagenSessions(ctx context.Context, sshArgs []strin
 		return false, errors.WithStack(err)
 	}
 	if !isActive {
-		debug.Log("terminating mutagen session for vm: %s", vmAddr)
+		slog.Debug("terminating vm mutagen session", "addr", vmAddr)
 		// If no vm is active, then we should terminate the running mutagen sessions
 		return false, terminateMutagenSessions(vmAddr)
 	}
@@ -72,7 +72,7 @@ func checkActiveVMWithRetries(ctx context.Context, vmAddr string) (bool, error) 
 		}
 		finalErr = err
 		time.Sleep(10 * time.Second)
-		debug.Log("Try %d failed to find activeVM for %s", num, vmAddr)
+		slog.Debug("failed to find active vm", "attempt", num, "addr", vmAddr)
 	}
 	return false, finalErr
 }
@@ -89,12 +89,12 @@ func checkActiveVM(ctx context.Context, vmAddr string) (bool, error) {
 	err := cmd.Run()
 	if err != nil {
 		if e := (&exec.ExitError{}); errors.As(err, &e) && e.ExitCode() == 255 {
-			debug.Log("checkActiveVM: No active VM. returning false for exit status 255")
+			slog.Debug("checkActiveVM: No active VM. returning false for exit status 255")
 			return false, nil
 		}
 		// For now, any error is deemed to indicate a VM that is no longer running.
 		// We can tighten this by listening for the specific exit error code (255)
-		debug.Log("Error checking for Active VM: %s. Stdout: %s, Stderr: %s, cmd.Run err: %s\n",
+		slog.Debug("Error checking for Active VM: %s. Stdout: %s, Stderr: %s, cmd.Run err: %s\n",
 			vmAddr,
 			bufOut.String(),
 			bufErr.String(),
@@ -114,6 +114,6 @@ func vmAddressIfAny(sshArgs []string) string {
 			return sshArg
 		}
 	}
-	debug.Log("Did not find vm address in ssh args: %v", sshArgs)
+	slog.Debug("did not find vm address in ssh args", "args", sshArgs)
 	return ""
 }

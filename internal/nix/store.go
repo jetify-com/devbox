@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
@@ -30,11 +31,11 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {
-		debug.Log("Setting Allow-insecure env-var\n")
+		slog.Debug("Setting Allow-insecure env-var\n")
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
-	debug.Log("Running cmd %s", cmd)
+	slog.Debug("running cmd", "cmd", cmd)
 	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
 		return nil, err
@@ -56,7 +57,7 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 	}
 	cmd := command("path-info", "--offline", "--json")
 	cmd.Args = appendArgs(cmd.Args, storePaths)
-	debug.Log("Running cmd %s", cmd)
+	slog.Debug("running cmd", "cmd", cmd)
 	output, err := cmd.Output(ctx)
 	if err != nil {
 		return nil, err
