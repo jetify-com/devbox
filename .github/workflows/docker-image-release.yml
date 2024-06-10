@@ -55,7 +55,7 @@ jobs:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
           build-args: |
-            DEVBOX_USE_VERSION=${{ inputs.tag }}
+            DEVBOX_VERSION=${{ inputs.tag }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -65,7 +65,7 @@ jobs:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
           build-args: |
-            DEVBOX_USE_VERSION=${{ inputs.tag }}
+            DEVBOX_VERSION=${{ inputs.tag }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metaroot.outputs.tags }}
