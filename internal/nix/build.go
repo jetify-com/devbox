@@ -44,7 +44,5 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = args.Writer
 	cmd.Stderr = args.Writer
-
-	slog.Debug("running cmd", "cmd", cmd)
 	return cmd.Run(ctx)
 }

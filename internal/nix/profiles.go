@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -71,8 +70,6 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = args.Writer
 	cmd.Stderr = args.Writer
-
-	slog.Debug("running command", "cmd", cmd)
 	return cmd.Run(ctx)
 }
 
