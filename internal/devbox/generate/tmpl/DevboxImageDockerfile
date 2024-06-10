@@ -32,6 +32,7 @@ RUN devbox version
 
 # replace binary with launcher
 USER root
+RUN ls /home/devbox/.cache/devbox/bin/
 RUN mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_arm64/devbox /usr/local/bin
 USER $DEVBOX_USER
 
