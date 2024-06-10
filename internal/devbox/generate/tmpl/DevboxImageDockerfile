@@ -33,11 +33,10 @@ RUN devbox version
 # replace binary with launcher
 USER root
 RUN ls /home/devbox/.cache/devbox/bin/
-RUN if [ $(uname -m) = "aarch64" ]; then
-    mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_arm64/devbox /usr/local/bin
-else
-    mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_amd64/devbox /usr/local/bin
-fi
+RUN if [ $(uname -m) = "aarch64" ]; \
+    then mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_arm64/devbox /usr/local/bin \
+    else mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_amd64/devbox /usr/local/bin \
+    fi
 
 USER $DEVBOX_USER
 
