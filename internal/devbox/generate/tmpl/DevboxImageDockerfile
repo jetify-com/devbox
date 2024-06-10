@@ -26,7 +26,13 @@ RUN wget --quiet --output-document=/dev/stdout https://get.jetify.com/devbox   |
 RUN chown -R "${DEVBOX_USER}:${DEVBOX_USER}" /usr/local/bin/devbox
 # stop launcher from auto updating
 RUN mkdir -p $HOME/.config/devbox/ && echo "false" > $HOME/.config/devbox/auto_update
+
 # run a devbox command to make launcher download devbox binary
 RUN devbox version
+
+# replace binary with launcher
+USER root
+RUN mv -f /home/devbox/.cache/devbox/bin/${DEVBOX_VERSION}_linux_arm64/devbox /usr/local/bin
+USER $DEVBOX_USER
 
 CMD ["devbox", "version", "-v"]
