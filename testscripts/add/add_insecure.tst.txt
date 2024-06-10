@@ -1,0 +1,7 @@
+# Tests installing an insecure package.
+# This test is pretty slow, maybe there's a different package we can
+# use for testing.
+
+exec devbox init
+devbox add nixVersions.nix_2_17 --allow-insecure nix-2.17.1
+devbox install
