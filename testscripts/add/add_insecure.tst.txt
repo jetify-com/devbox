@@ -3,5 +3,5 @@
 # use for testing.
 
 exec devbox init
-devbox add nixVersions.nix_2_17 --allow-insecure nix-2.17.1
-devbox install
+exec devbox add nixVersions.nix_2_17 --allow-insecure nix-2.17.1
+exec devbox install
