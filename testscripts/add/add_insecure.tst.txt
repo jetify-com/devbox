@@ -1,0 +1,9 @@
+# Tests installing an insecure package.
+# This test is pretty slow, maybe there's a different package we can
+# use for testing.
+
+# we could also isolate this test and run on its own.
+
+exec devbox init
+exec devbox add python@2.7.18.6 --allow-insecure python-2.7.18.6
+exec devbox install
