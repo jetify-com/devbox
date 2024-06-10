@@ -20,3 +20,4 @@ Jetify Cache provides the following features:
 
 - [Setting Up Jetify Cache](./authenticating.md)
 - [Pushing and Pulling Packages from the Cache](./usage.md)
+- [Using the Jetify Prebuilt Cache](./prebuilt_cache.md)

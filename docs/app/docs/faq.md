@@ -45,6 +45,12 @@ You can also specify non-default outputs in [flake references](./guides/using_fl
 devbox add github:NixOS/nixpkgs#prometheus^out,cli
 ```
 
+## One of my project's packages is taking a long time to install. How can I speed up the installation process?
+
+Packages may take a long time to install if they do not have a binary available in the public Nix Cache. If a prebuilt binary is not available, Nix will built the package from source. 
+
+If prebuilt binaries are not available in the public cache, you may want to use the [Jetify Cache](./cloud/cache/index.md) or the [Jetify Prebuilt Cache](./cloud/cache/prebuilt_cache.md) to cache the binaries you build for future use. Using a package cache can reduce package install by up to 90% compared to building from source.
+
 ## I'm trying to build a project, but it says that I'm missing `libstdc++`. How do I install this library in my project?
 
 This message means that your project requires an implementation of the C++ Standard Library installed and linked within your shell. You can add the libstdc++ libraries and object files using `devbox add stdenv.cc.cc.lib`. 
