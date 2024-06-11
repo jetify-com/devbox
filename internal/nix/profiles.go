@@ -4,6 +4,7 @@
 package nix
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
 )
@@ -31,46 +31,39 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 }
 
 type ProfileInstallArgs struct {
-	Installable string
-	Offline     bool
-	ProfilePath string
-	Writer      io.Writer
+	Installables []string
+	ProfilePath  string
+	Writer       io.Writer
 }
+
+var ErrPriorityConflict = errors.New("priority conflict")
 
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	defer debug.FunctionTimer().End()
-	if !IsInsecureAllowed() && PackageIsInsecure(args.Installable) {
-		knownVulnerabilities := PackageKnownVulnerabilities(args.Installable)
-		errString := fmt.Sprintf("Package %s is insecure. \n\n", args.Installable)
-		if len(knownVulnerabilities) > 0 {
-			errString += fmt.Sprintf("Known vulnerabilities: %s \n\n", knownVulnerabilities)
-		}
-		errString += "To override use `devbox add <pkg> --allow-insecure`"
-		return usererr.New(errString)
-	}
 
 	cmd := command(
 		"profile", "install",
 		"--profile", args.ProfilePath,
-		"--impure", // for NIXPKGS_ALLOW_UNFREE
+		"--offline", // makes it faster. Package is already in store
+		"--impure",  // for NIXPKGS_ALLOW_UNFREE
 		// Using an arbitrary priority to avoid conflicts with other packages.
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
 	)
-	if args.Offline {
-		cmd.Args = append(cmd.Args, "--offline")
-	}
-	cmd.Args = append(cmd.Args, args.Installable)
+
+	cmd.Args = appendArgs(cmd.Args, args.Installables)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
-	// If nix profile install runs as tty, the output is much nicer. If we ever
-	// need to change this to our own writers, consider that you may need
-	// to implement your own nicer output. --print-build-logs flag may be useful.
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = args.Writer
-	cmd.Stderr = args.Writer
-	return cmd.Run(ctx)
+	// We used to attach this function to stdout and in in order to get the more interactive output.
+	// However, now we do the building in nix.Build, by the time we install in profile everything
+	// should already be in the store. We need to capture the output so we can decide if a conflict
+	// happened.
+	out, err := cmd.CombinedOutput(ctx)
+	if bytes.Contains(out, []byte("error: An existing package already provides the following file")) {
+		return ErrPriorityConflict
+	}
+	return err
 }
 
 // ProfileRemove removes packages from a profile.
