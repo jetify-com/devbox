@@ -5,6 +5,8 @@ sidebar_position: 5
 
 [Supabase](https://supabase.com) is an open source Firebase alternative that provides a managed, highly scalable PostgreSQL database and other infrastructure APIs that can support stateless and serverless applications. Supabase is easy to connect to using either the Supabase API, or standard PostgreSQL connection parameters.
 
+You can view an example of this integration on [Github](https://github.com/jetify-com/jetify-deploy-integration/tree/main/devbox-json/supabase)
+
 ## Setting up Supabase
 
 If you don't have one already, you will first need to create an organization and project in Supabase to use with Jetify Cloud. If you are just testing Supabase with Jetify, you can create a free personal organization to start. For more details, see the [Supabase Docs](https://supabase.com/docs)

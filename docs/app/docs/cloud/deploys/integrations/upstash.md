@@ -5,6 +5,8 @@ sidebar_position: 6
 
 [Upstash](https://upstash.com) provides a managed Key-value store that is compatible with the Redis API. You can use Upstash Redis as a cache or key-value store for serverless or stateless deployments like Jetify Cloud. For more information, consult the [Upstash Docs](https://upstash.com/docs/introduction)
 
+You can view an example of this integration on [Github](https://github.com/jetify-com/jetify-deploy-integration/tree/main/devbox-json/upstash)
+
 ## Using Upstash Redis with Jetify Cloud
 
 * [Create a Redis Database](https://upstash.com/docs/redis/overall/getstarted) in Upstash. Select the Database's name and region, and then click the Create button

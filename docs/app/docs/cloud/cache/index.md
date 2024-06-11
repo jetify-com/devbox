@@ -1,5 +1,5 @@
 ---
-title:  Packages with Jetify Cache
+title: Caching and Sharing Packages with Jetify
 sidebar_position: 1
 ---
 
