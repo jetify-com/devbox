@@ -15,7 +15,7 @@ RUN . ~/.nix-profile/etc/profile.d/nix.sh
 ENV PATH="/root/.nix-profile/bin:$PATH"
 
 # Step 3: Installing devbox
-ENV DEVBOX_USE_VERSION ${DEVBOX_USE_VERSION}
+ENV DEVBOX_USE_VERSION=$DEVBOX_USE_VERSION
 RUN wget --quiet --output-document=/dev/stdout https://get.jetify.com/devbox   | bash -s -- -f
 # stop launcher from auto updating
 # RUN mkdir -p $HOME/.config/devbox/ && echo "false" > $HOME/.config/devbox/auto_update
