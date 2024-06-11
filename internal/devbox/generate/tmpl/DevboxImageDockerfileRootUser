@@ -1,7 +1,7 @@
 FROM debian:stable-slim
 
 # Optional arg to install custom devbox version
-ARG DEVBOX_VERSION
+ARG DEVBOX_USE_VERSION
 
 # Step 1: Installing dependencies
 RUN apt-get update
@@ -15,17 +15,17 @@ RUN . ~/.nix-profile/etc/profile.d/nix.sh
 ENV PATH="/root/.nix-profile/bin:$PATH"
 
 # Step 3: Installing devbox
-ENV DEVBOX_USE_VERSION ${DEVBOX_VERSION}
+ENV DEVBOX_USE_VERSION ${DEVBOX_USE_VERSION}
 RUN wget --quiet --output-document=/dev/stdout https://get.jetify.com/devbox   | bash -s -- -f
 # stop launcher from auto updating
-RUN mkdir -p $HOME/.config/devbox/ && echo "false" > $HOME/.config/devbox/auto_update
+# RUN mkdir -p $HOME/.config/devbox/ && echo "false" > $HOME/.config/devbox/auto_update
 # run a devbox command to make launcher download devbox binary
 RUN devbox version
 
 # replace binary with launcher
-RUN if [ $(uname -m) = "aarch64" ]; \
-    then mv -f $HOME/.cache/devbox/bin/${DEVBOX_VERSION}_linux_arm64/devbox /usr/local/bin; \
-    else mv -f $HOME/.cache/devbox/bin/${DEVBOX_VERSION}_linux_amd64/devbox /usr/local/bin; \
-    fi
+# RUN if [ $(uname -m) = "aarch64" ]; \
+#     then mv -f $HOME/.cache/devbox/bin/${DEVBOX_USE_VERSION}_linux_arm64/devbox /usr/local/bin; \
+#     else mv -f $HOME/.cache/devbox/bin/${DEVBOX_USE_VERSION}_linux_amd64/devbox /usr/local/bin; \
+#     fi
 
 CMD ["devbox", "version", "-v"]
