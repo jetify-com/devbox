@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/mod/semver"
@@ -117,10 +116,7 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
-	options := []string{"nix-command", "flakes"}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		options = append(options, "fetch-closure")
-	}
+	options := []string{"nix-command", "flakes", "fetch-closure"}
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", strings.Join(options, " "),

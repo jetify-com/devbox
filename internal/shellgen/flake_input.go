@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 )
@@ -168,15 +167,13 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 
 		// Don't include cached packages (like local or remote flakes)
 		// that can be fetched from a Binary Cache Store.
-		if featureflag.RemoveNixpkgs.Enabled() {
-			// TODO(savil): return error?
-			cached, err := pkg.IsInBinaryCache()
-			if err != nil {
-				slog.Error("error checking if package is in binary cache", "err", err)
-			}
-			if err == nil && cached {
-				continue
-			}
+		// TODO(savil): return error?
+		cached, err := pkg.IsInBinaryCache()
+		if err != nil {
+			slog.Error("error checking if package is in binary cache", "err", err)
+		}
+		if err == nil && cached {
+			continue
 		}
 
 		// Packages that need a glibc patch are assigned to the special

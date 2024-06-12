@@ -56,12 +56,9 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
 	}
 
-	sysInfos := map[string]*SystemInfo{}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos, err = buildLockSystemInfos(packageVersion)
-		if err != nil {
-			return nil, err
-		}
+	sysInfos, err := buildLockSystemInfos(packageVersion)
+	if err != nil {
+		return nil, err
 	}
 	packageInfo, err := selectForSystem(packageVersion.Systems)
 	if err != nil {
