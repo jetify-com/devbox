@@ -4,6 +4,10 @@ title: MongoDB
 
 MongoDB is a popular NoSQL database that is available on Nixpkgs. You can configure MongoDB for your Devbox project by using our official [MongoDB Plugin](https://github.com/jetify-com/devbox-plugins/tree/main/mongodb).
 
+:::info
+MongoDB is not available in the public Nix cache, and will build from source. This may take some time, depending on your system's resources. You can speed up the build process with pre-built binaries using the [Jetify Public Cache](../../cloud/cache/prebuilt_cache.md).
+:::
+
 ## Adding MongoDB to your Shell
 
 You can start by adding the mongodb server to your project by running `devbox add mongodb`. We also recommend adding the MongoDB shell for interacting with your database using `devbox add mongosh`: 
@@ -39,7 +43,7 @@ processes:
 ```
 
 You can configure this service by modifying the environment variable shown below. 
-
+`
 If you want to create your own version of the mongodb service, you can create a process-compose.yaml in your project's root, and define a new process named `mongodb`. For more details, see the [process-compose documentation](https://f1bonacc1.github.io/process-compose/)
 
 ### Environment Variables
