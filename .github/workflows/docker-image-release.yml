@@ -28,6 +28,8 @@ jobs:
             jetpackio/devbox
           tags: |
             type=raw,value=${{ inputs.tag || github.ref_name }}
+          flavor: |
+            latest=false
       - name: Docker meta root
         id: metaroot
         uses: docker/metadata-action@v5
@@ -36,6 +38,8 @@ jobs:
             jetpackio/devbox-root-user
           tags: |
             type=raw,value=${{ inputs.tag || github.ref_name }}
+          flavor: |
+            latest=false
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to Docker Hub
