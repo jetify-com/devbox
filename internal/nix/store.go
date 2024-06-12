@@ -35,7 +35,6 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
-	slog.Debug("running cmd", "cmd", cmd)
 	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,6 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 	}
 	cmd := command("path-info", "--offline", "--json")
 	cmd.Args = appendArgs(cmd.Args, storePaths)
-	slog.Debug("running cmd", "cmd", cmd)
 	output, err := cmd.Output(ctx)
 	if err != nil {
 		return nil, err

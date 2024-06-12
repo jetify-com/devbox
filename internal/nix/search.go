@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 	"regexp"
 	"strings"
@@ -103,7 +102,6 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
-	slog.Debug("running command", "cmd", cmd)
 	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		// for now, assume all errors are invalid packages.

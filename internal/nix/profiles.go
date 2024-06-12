@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -60,14 +59,10 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	// However, now we do the building in nix.Build, by the time we install in profile everything
 	// should already be in the store. We need to capture the output so we can decide if a conflict
 	// happened.
-
-	slog.Debug("running command", "cmd", cmd)
 	out, err := cmd.CombinedOutput(ctx)
-
 	if bytes.Contains(out, []byte("error: An existing package already provides the following file")) {
 		return ErrPriorityConflict
 	}
-
 	return err
 }
 

@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -24,8 +24,10 @@ type cmd struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	execCmd     *exec.Cmd
-	execCmdOnce sync.Once
+	execCmd *exec.Cmd
+	err     error
+	dur     time.Duration
+	logger  *slog.Logger
 }
 
 func command(args ...any) *cmd {
@@ -35,22 +37,83 @@ func command(args ...any) *cmd {
 			"--extra-experimental-features", "ca-derivations",
 			"--option", "experimental-features", "nix-command flakes fetch-closure",
 		}, args...),
+		logger: slog.Default(),
 	}
 	return cmd
 }
 
 func (c *cmd) CombinedOutput(ctx context.Context) ([]byte, error) {
-	out, err := c.initExecCommand(ctx).CombinedOutput()
-	return out, c.error(ctx, err)
+	cmd := c.initExecCommand(ctx)
+	c.logger.DebugContext(ctx, "nix command starting", "cmd", c)
+
+	start := time.Now()
+	out, err := cmd.CombinedOutput()
+	c.dur = time.Since(start)
+
+	c.err = c.error(ctx, err)
+	c.logger.DebugContext(ctx, "nix command exited", "cmd", c)
+	return out, c.err
 }
 
 func (c *cmd) Output(ctx context.Context) ([]byte, error) {
-	out, err := c.initExecCommand(ctx).Output()
-	return out, c.error(ctx, err)
+	cmd := c.initExecCommand(ctx)
+	c.logger.DebugContext(ctx, "nix command starting", "cmd", c)
+
+	start := time.Now()
+	out, err := cmd.Output()
+	c.dur = time.Since(start)
+
+	c.err = c.error(ctx, err)
+	c.logger.DebugContext(ctx, "nix command exited", "cmd", c)
+	return out, c.err
 }
 
 func (c *cmd) Run(ctx context.Context) error {
-	return c.error(ctx, c.initExecCommand(ctx).Run())
+	cmd := c.initExecCommand(ctx)
+	c.logger.DebugContext(ctx, "nix command starting", "cmd", c)
+
+	start := time.Now()
+	err := cmd.Run()
+	c.dur = time.Since(start)
+
+	c.err = c.error(ctx, err)
+	c.logger.DebugContext(ctx, "nix command exited", "cmd", c)
+	return c.err
+}
+
+func (c *cmd) LogValue() slog.Value {
+	attrs := []slog.Attr{
+		slog.Any("args", c.Args),
+	}
+	if c.execCmd == nil {
+		return slog.GroupValue(attrs...)
+	}
+	attrs = append(attrs, slog.String("path", c.execCmd.Path))
+
+	var exitErr *exec.ExitError
+	if errors.As(c.err, &exitErr) {
+		stderr := c.stderrExcerpt(exitErr.Stderr)
+		if len(stderr) != 0 {
+			attrs = append(attrs, slog.String("stderr", stderr))
+		}
+	}
+	if proc := c.execCmd.Process; proc != nil {
+		attrs = append(attrs, slog.Int("pid", proc.Pid))
+	}
+	if procState := c.execCmd.ProcessState; procState != nil {
+		if procState.Exited() {
+			attrs = append(attrs, slog.Int("code", procState.ExitCode()))
+		}
+		if status, ok := procState.Sys().(syscall.WaitStatus); ok && status.Signaled() {
+			if status.Signaled() {
+				attrs = append(attrs, slog.String("signal", status.Signal().String()))
+			}
+		}
+	}
+	if c.dur != 0 {
+		attrs = append(attrs, slog.Duration("dur", c.dur))
+	}
+	return slog.GroupValue(attrs...)
 }
 
 func (c *cmd) String() string {
@@ -58,46 +121,57 @@ func (c *cmd) String() string {
 }
 
 func (c *cmd) initExecCommand(ctx context.Context) *exec.Cmd {
-	c.execCmdOnce.Do(func() {
-		args := c.Args.StringSlice()
-		c.execCmd = exec.CommandContext(ctx, args[0], args[1:]...)
-		c.execCmd.Env = c.Env
-		c.execCmd.Stdin = c.Stdin
-		c.execCmd.Stdout = c.Stdout
-		c.execCmd.Stderr = c.Stderr
+	if c.execCmd != nil {
+		return c.execCmd
+	}
 
-		c.execCmd.Cancel = func() error {
-			// Try to let Nix exit gracefully by sending an
-			// interrupt instead of the default behavior of killing
-			// it.
-			err := c.execCmd.Process.Signal(os.Interrupt)
-			if errors.Is(err, os.ErrProcessDone) {
-				// Nix already exited; execCmd.Wait will use the
-				// exit code.
-				return err
-			}
-			if err != nil {
-				// We failed to send SIGINT, so kill the process
-				// instead.
-				//
-				// - If Nix already exited, Kill will return
-				//   os.ErrProcessDone and execCmd.Wait will use
-				//   the exit code.
-				// - Otherwise, execCmd.Wait will always return
-				//   an error.
-				return c.execCmd.Process.Kill()
-			}
+	args := c.Args.StringSlice()
+	c.execCmd = exec.CommandContext(ctx, args[0], args[1:]...)
+	c.execCmd.Env = c.Env
+	c.execCmd.Stdin = c.Stdin
+	c.execCmd.Stdout = c.Stdout
+	c.execCmd.Stderr = c.Stderr
 
-			// We sent the SIGINT successfully. It's still possible
-			// for Nix to exit successfully, so return
-			// os.ErrProcessDone so that execCmd.Wait uses the exit
-			// code instead of ctx.Err.
-			return os.ErrProcessDone
+	c.execCmd.Cancel = func() error {
+		// Try to let Nix exit gracefully by sending an interrupt
+		// instead of the default behavior of killing it.
+		c.logger.DebugContext(ctx, "sending interrupt to nix process", slog.Group("cmd",
+			"args", c.Args,
+			"path", c.execCmd.Path,
+			"pid", c.execCmd.Process.Pid,
+		))
+		err := c.execCmd.Process.Signal(os.Interrupt)
+		if errors.Is(err, os.ErrProcessDone) {
+			// Nix already exited; execCmd.Wait will use the exit
+			// code.
+			return err
 		}
-		// Kill Nix if it doesn't exit within 15 seconds of Devbox
-		// sending an interrupt.
-		c.execCmd.WaitDelay = 15 * time.Second
-	})
+		if err != nil {
+			// We failed to send SIGINT, so kill the process
+			// instead.
+			//
+			// - If Nix already exited, Kill will return
+			//   os.ErrProcessDone and execCmd.Wait will use
+			//   the exit code.
+			// - Otherwise, execCmd.Wait will always return an
+			//   error.
+			c.logger.ErrorContext(ctx, "error interrupting nix process, attempting to kill",
+				"err", err, slog.Group("cmd",
+					"args", c.Args,
+					"path", c.execCmd.Path,
+					"pid", c.execCmd.Process.Pid,
+				))
+			return c.execCmd.Process.Kill()
+		}
+
+		// We sent the SIGINT successfully. It's still possible for Nix
+		// to exit successfully, so return os.ErrProcessDone so that
+		// execCmd.Wait uses the exit code instead of ctx.Err.
+		return os.ErrProcessDone
+	}
+	// Kill Nix if it doesn't exit within 15 seconds of Devbox sending an
+	// interrupt.
+	c.execCmd.WaitDelay = 15 * time.Second
 	return c.execCmd
 }
 
