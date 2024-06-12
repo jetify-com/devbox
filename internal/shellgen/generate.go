@@ -16,7 +16,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
@@ -184,9 +183,5 @@ var templateFuncs = template.FuncMap{
 
 func makeFlakeFile(d devboxer, plan *flakePlan) error {
 	flakeDir := FlakePath(d)
-	templateName := "flake.nix"
-	if featureflag.RemoveNixpkgs.Enabled() {
-		templateName = "flake_remove_nixpkgs.nix"
-	}
-	return writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
+	return writeFromTemplate(flakeDir, plan, "flake.nix", "flake.nix")
 }
