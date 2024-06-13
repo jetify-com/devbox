@@ -73,6 +73,8 @@ jobs:
         with:
           images: |
             jetpackio/devbox
+          tags: |
+            type=raw,value=latest
           flavor: |
             latest=true
       - name: Build and push latest
@@ -89,6 +91,8 @@ jobs:
         with:
           images: |
             jetpackio/devbox-root-user
+          tags: |
+            type=raw,value=latest
           flavor: |
             latest=true
       - name: Build and push root user latest
