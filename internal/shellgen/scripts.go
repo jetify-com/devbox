@@ -2,14 +2,13 @@ package shellgen
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
-
-	_ "embed"
 
 	"github.com/pkg/errors"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
@@ -30,9 +29,9 @@ var initHookWrapperTmpl = template.Must(template.New("init-hook-wrapper").Parse(
 
 const scriptsDir = ".devbox/gen/scripts"
 
-// HooksFilename is the name of the file that contains a wrapper of the
-// project's init-hooks and plugin hooks
 const (
+	// HooksFilename is the name of the file that contains a wrapper of the
+	// project's init-hooks and plugin hooks
 	HooksFilename    = ".hooks"
 	rawHooksFilename = ".raw-hooks"
 )
