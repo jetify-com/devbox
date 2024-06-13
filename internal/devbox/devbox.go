@@ -243,9 +243,17 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	}
 
 	lock.SetIgnoreShellMismatch(true)
-	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
-	if err != nil {
-		return err
+
+	var env map[string]string
+	if d.IsEnvEnabled() {
+		// Skip ensureStateIsUpToDate if we are already in a shell of this devbox-project
+		env = envir.PairsToMap(os.Environ())
+	} else {
+		var err error
+		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
