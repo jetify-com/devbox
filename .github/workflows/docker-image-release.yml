@@ -67,3 +67,35 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metaroot.outputs.tags }}
+      - name: Docker meta latest
+        id: metalatest
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox
+          flavor: |
+            latest=true
+      - name: Build and push latest
+        uses: docker/build-push-action@v5
+        with:
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.metalatest.outputs.tags }}
+      - name: Docker meta root latest
+        id: metarootlatest
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox-root-user
+          flavor: |
+            latest=true
+      - name: Build and push root user latest
+        uses: docker/build-push-action@v5
+        with:
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.metarootlatest.outputs.tags }}
