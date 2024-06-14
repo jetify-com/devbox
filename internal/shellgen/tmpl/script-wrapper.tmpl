@@ -7,8 +7,7 @@
     scripts. (though users can run a fish script within their script)
 */ -}}
 
-if [ -z "${{ .InitHookHash }}" ]; then
-    {{/* init hooks will export InitHookHash ensuring no recursive sourcing*/ -}}
+if [ -z "${{ .SkipInitHookHash }}" ]; then
     . {{ .InitHookPath }}
 fi
 
