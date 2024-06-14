@@ -892,12 +892,12 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		env[key] = val.Value.(string)
 	}
 
-	slog.Debug("nix environment PATH", "path", env)
+	// devboxEnvPath starts with the initial PATH from print-dev-env, and is
+	// transformed to be the "PATH of the Devbox environment"
+	devboxEnvPath := env["PATH"]
+	slog.Debug("nix environment PATH", "path", devboxEnvPath)
 
-	env["PATH"] = envpath.JoinPathLists(
-		nix.ProfileBinPath(d.projectDir),
-		env["PATH"],
-	)
+	devboxEnvPath = envpath.JoinPathLists(nix.ProfileBinPath(d.projectDir), devboxEnvPath)
 
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
@@ -912,14 +912,6 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	addEnvIfNotPreviouslySetByDevbox(env, configEnv)
 
 	markEnvsAsSetByDevbox(configEnv)
-
-	// devboxEnvPath starts with the initial PATH from print-dev-env, and is
-	// transformed to be the "PATH of the Devbox environment"
-	// TODO: The prior statement is not fully true,
-	//  since env["PATH"] is written to above and so it is already no longer "PATH
-	//  from print-dev-env". Consider moving devboxEnvPath higher up in this function
-	//  where env["PATH"] is written to.
-	devboxEnvPath := env["PATH"]
 	slog.Debug("PATH after plugins and config", "path", devboxEnvPath)
 
 	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
