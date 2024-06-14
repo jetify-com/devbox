@@ -1,58 +1,51 @@
 {
-  description = "A devbox shell";
+   description = "A devbox shell";
 
-  inputs = {
-    nixpkgs.url = "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz";
-    flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be";
-  };
+   inputs = {
+     nixpkgs.url = "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz";
+     nixpkgs.url = "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be";
+   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    nixpkgs,
-    flake-utils
-  }:
-    flake-utils.lib.eachDefaultSystem (system:
+   outputs = {
+     self,
+     nixpkgs,
+     nixpkgs,
+   }:
       let
-        pkgs = (import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        });
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
         nixpkgs-pkgs = (import nixpkgs {
-          inherit system;
+          system = "x86_64-linux";
           config.allowUnfree = true;
           config.permittedInsecurePackages = [
           ];
         });
       in
       {
-        devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            nixpkgs-pkgs.php
-            nixpkgs-pkgs.php81Packages.composer
-            nixpkgs-pkgs.php81Extensions.blackfire
-            nixpkgs-pkgs.flyctl
-            nixpkgs-pkgs.postgresql
-            nixpkgs-pkgs.tree
-            nixpkgs-pkgs.git
-            nixpkgs-pkgs.zsh
-            nixpkgs-pkgs.openssh
-            nixpkgs-pkgs.vim
-            nixpkgs-pkgs.sqlite
-            nixpkgs-pkgs.jq
-            nixpkgs-pkgs.delve
-            nixpkgs-pkgs.ripgrep
-            nixpkgs-pkgs.shellcheck
-            nixpkgs-pkgs.terraform
-            nixpkgs-pkgs.xz
-            nixpkgs-pkgs.zstd
-            nixpkgs-pkgs.gnupg
-            nixpkgs-pkgs.go_1_20
-            nixpkgs-pkgs.python3
-            nixpkgs-pkgs.graphviz
+        devShells.x86_64-linux.default = pkgs.mkShell {
+          buildInputs = [
+            (builtins.trace "evaluating nixpkgs-pkgs.php" nixpkgs-pkgs.php)
+            (builtins.trace "evaluating nixpkgs-pkgs.php81Packages.composer" nixpkgs-pkgs.php81Packages.composer)
+            (builtins.trace "evaluating nixpkgs-pkgs.php81Extensions.blackfire" nixpkgs-pkgs.php81Extensions.blackfire)
+            (builtins.trace "evaluating nixpkgs-pkgs.flyctl" nixpkgs-pkgs.flyctl)
+            (builtins.trace "evaluating nixpkgs-pkgs.postgresql" nixpkgs-pkgs.postgresql)
+            (builtins.trace "evaluating nixpkgs-pkgs.tree" nixpkgs-pkgs.tree)
+            (builtins.trace "evaluating nixpkgs-pkgs.git" nixpkgs-pkgs.git)
+            (builtins.trace "evaluating nixpkgs-pkgs.zsh" nixpkgs-pkgs.zsh)
+            (builtins.trace "evaluating nixpkgs-pkgs.openssh" nixpkgs-pkgs.openssh)
+            (builtins.trace "evaluating nixpkgs-pkgs.vim" nixpkgs-pkgs.vim)
+            (builtins.trace "evaluating nixpkgs-pkgs.sqlite" nixpkgs-pkgs.sqlite)
+            (builtins.trace "evaluating nixpkgs-pkgs.jq" nixpkgs-pkgs.jq)
+            (builtins.trace "evaluating nixpkgs-pkgs.delve" nixpkgs-pkgs.delve)
+            (builtins.trace "evaluating nixpkgs-pkgs.ripgrep" nixpkgs-pkgs.ripgrep)
+            (builtins.trace "evaluating nixpkgs-pkgs.shellcheck" nixpkgs-pkgs.shellcheck)
+            (builtins.trace "evaluating nixpkgs-pkgs.terraform" nixpkgs-pkgs.terraform)
+            (builtins.trace "evaluating nixpkgs-pkgs.xz" nixpkgs-pkgs.xz)
+            (builtins.trace "evaluating nixpkgs-pkgs.zstd" nixpkgs-pkgs.zstd)
+            (builtins.trace "evaluating nixpkgs-pkgs.gnupg" nixpkgs-pkgs.gnupg)
+            (builtins.trace "evaluating nixpkgs-pkgs.go_1_20" nixpkgs-pkgs.go_1_20)
+            (builtins.trace "evaluating nixpkgs-pkgs.python3" nixpkgs-pkgs.python3)
+            (builtins.trace "evaluating nixpkgs-pkgs.graphviz" nixpkgs-pkgs.graphviz)
           ];
         };
-      }
-    );
-}
+      };
+ }

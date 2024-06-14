@@ -19,6 +19,9 @@ import (
 // update overwrites golden files with the new test results.
 var update = flag.Bool("update", false, "update the golden files with the test results")
 
+// TestWriteFromTemplate will verify that the flake.nix code generation works as expected.
+// Note: this test was derived from an older flake.nix, prior to having the builtins.FetchClosures
+// and so may be a bit out of date. It could be updated to be better and more exhaustive.
 func TestWriteFromTemplate(t *testing.T) {
 	t.Setenv("__DEVBOX_NIX_SYSTEM", "x86_64-linux")
 	dir := filepath.Join(t.TempDir(), "makeme")
@@ -37,12 +40,15 @@ func TestWriteFromTemplate(t *testing.T) {
 		cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 	})
 	t.Run("WriteModifiedSmaller", func(t *testing.T) {
-		emptyPlan := struct {
-			NixpkgsInfo struct {
-				URL string
-			}
-			FlakeInputs []flakeInput
-		}{}
+		emptyPlan := &flakePlan{
+			NixpkgsInfo: &NixpkgsInfo{
+				URL:    "",
+				TarURL: "",
+			},
+			Packages:    []*devpkg.Package{},
+			FlakeInputs: []flakeInput{},
+			System:      "x86_64-linux",
+		}
 		err = writeFromTemplate(dir, emptyPlan, "flake.nix", "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
@@ -82,17 +88,12 @@ If the new file is correct, you can update the golden file with:
 
 var (
 	locker            = &lockmock{}
-	testFlakeTmplPlan = &struct {
-		NixpkgsInfo struct {
-			URL string
-		}
-		FlakeInputs []flakeInput
-	}{
-		NixpkgsInfo: struct {
-			URL string
-		}{
-			URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
+	testFlakeTmplPlan = &flakePlan{
+		NixpkgsInfo: &NixpkgsInfo{
+			URL:    "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
+			TarURL: "", // TODO savil
 		},
+		Packages: []*devpkg.Package{}, // TODO savil
 		FlakeInputs: []flakeInput{
 			{
 				Name: "nixpkgs",
@@ -123,6 +124,7 @@ var (
 				},
 			},
 		},
+		System: "x86_64-linux",
 	}
 )
 
