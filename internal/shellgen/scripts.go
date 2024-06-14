@@ -23,18 +23,9 @@ import (
 var scriptWrapperTmplString string
 var scriptWrapperTmpl = template.Must(template.New("script-wrapper").Parse(scriptWrapperTmplString))
 
-//go:embed tmpl/init-hook-wrapper.tmpl
-var initHookWrapperString string
-var initHookWrapperTmpl = template.Must(template.New("init-hook-wrapper").Parse(initHookWrapperString))
-
 const scriptsDir = ".devbox/gen/scripts"
 
-const (
-	// HooksFilename is the name of the file that contains a wrapper of the
-	// project's init-hooks and plugin hooks
-	HooksFilename    = ".hooks"
-	rawHooksFilename = ".raw-hooks"
-)
+const HooksFilename = ".hooks"
 
 type devboxer interface {
 	Config() *devconfig.Config
@@ -42,7 +33,7 @@ type devboxer interface {
 	InstallablePackages() []*devpkg.Package
 	PluginManager() *plugin.Manager
 	ProjectDir() string
-	ProjectDirHash() string
+	SkipInitHookEnvName() string
 }
 
 // WriteScriptsToFiles writes scripts defined in devbox.json into files inside .devbox/gen/scripts.
@@ -64,12 +55,6 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	written := map[string]struct{}{} // set semantics; value is irrelevant
 	// always write it, even if there are no hooks, because scripts will source it.
 	err = writeRawInitHookFile(devbox, devbox.Config().InitHook().String())
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	written[rawHooksFilename] = struct{}{}
-
-	err = writeInitHookWrapperFile(devbox)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -103,7 +88,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 }
 
 func writeRawInitHookFile(devbox devboxer, body string) (err error) {
-	script, err := createScriptFile(devbox, rawHooksFilename)
+	script, err := createScriptFile(devbox, HooksFilename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -111,19 +96,6 @@ func writeRawInitHookFile(devbox devboxer, body string) (err error) {
 
 	_, err = script.WriteString(body)
 	return errors.WithStack(err)
-}
-
-func writeInitHookWrapperFile(devbox devboxer) (err error) {
-	script, err := createScriptFile(devbox, HooksFilename)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer script.Close() // best effort: close file
-
-	return initHookWrapperTmpl.Execute(script, map[string]string{
-		"InitHookHash": "__DEVBOX_INIT_HOOK_" + devbox.ProjectDirHash(),
-		"RawHooksFile": ScriptPath(devbox.ProjectDir(), rawHooksFilename),
-	})
 }
 
 func WriteScriptFile(devbox devboxer, name, body string) (err error) {
@@ -167,9 +139,9 @@ func ScriptPath(projectDir, scriptName string) string {
 func ScriptBody(d devboxer, body string) (string, error) {
 	var buf bytes.Buffer
 	err := scriptWrapperTmpl.Execute(&buf, map[string]string{
-		"Body":         body,
-		"InitHookHash": "__DEVBOX_INIT_HOOK_" + d.ProjectDirHash(),
-		"InitHookPath": ScriptPath(d.ProjectDir(), HooksFilename),
+		"Body":             body,
+		"SkipInitHookHash": d.SkipInitHookEnvName(),
+		"InitHookPath":     ScriptPath(d.ProjectDir(), HooksFilename),
 	})
 	if err != nil {
 		return "", errors.WithStack(err)

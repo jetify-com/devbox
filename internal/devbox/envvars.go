@@ -78,3 +78,7 @@ func (d *Devbox) IsEnvEnabled() bool {
 	pathStack := envpath.Stack(fakeEnv, envir.PairsToMap(os.Environ()))
 	return pathStack.Has(d.ProjectDirHash())
 }
+
+func (d *Devbox) SkipInitHookEnvName() string {
+	return "__DEVBOX_SKIP_INIT_HOOK_" + d.ProjectDirHash()
+}

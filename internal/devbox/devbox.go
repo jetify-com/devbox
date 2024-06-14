@@ -249,9 +249,9 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		// Skip ensureStateIsUpToDate if we are already in a shell of this devbox-project
 		env = envir.PairsToMap(os.Environ())
 
-		// This env-var signifies that init-hooks have already run in this shell.
-		// We set this to ensure that init-hooks do NOT re-run.
-		env["__DEVBOX_INIT_HOOK_"+d.ProjectDirHash()] = "true"
+		// We set this to ensure that init-hooks do NOT re-run. They would have
+		// run when initializing the Devbox Environment in the current shell.
+		env[d.SkipInitHookEnvName()] = "true"
 	} else {
 		var err error
 		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
