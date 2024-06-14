@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	"go.jetpack.io/devbox/internal/goutil"
@@ -59,9 +58,6 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 // Callers of IsInBinaryCache may call this function first as a perf-optimization.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	defer debug.FunctionTimer().End()
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return nil
-	}
 
 	eligiblePackages := []*Package{}
 	for _, p := range packages {
@@ -240,10 +236,6 @@ func (p *Package) isEligibleForBinaryCache() (bool, error) {
 // Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
 // function from within a goroutine.
 func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return nil, nil
-	}
-
 	if !p.isVersioned() {
 		return nil, nil
 	}

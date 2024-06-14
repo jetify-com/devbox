@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
@@ -29,7 +28,6 @@ func TestUpdateNewPackageIsAdded(t *testing.T) {
 }
 
 func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
-	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
@@ -67,7 +65,6 @@ func TestUpdateNewCurrentSysInfoIsAdded(t *testing.T) {
 }
 
 func TestUpdateNewSysInfoIsAdded(t *testing.T) {
-	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
@@ -127,7 +124,6 @@ func TestUpdateNewSysInfoIsAdded(t *testing.T) {
 }
 
 func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
-	featureflag.RemoveNixpkgs.EnableForTest(t)
 	devbox := devboxForTesting(t)
 
 	raw := "hello@1.2.3"
