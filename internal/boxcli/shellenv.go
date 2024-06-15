@@ -15,7 +15,9 @@ import (
 
 type shellEnvCmdFlags struct {
 	envFlag
-	config            configFlags
+	config configFlags
+	// TODO: is this flag needed in other commands?
+	envForPackageBins bool
 	install           bool
 	noRefreshAlias    bool
 	preservePathStack bool
@@ -24,11 +26,37 @@ type shellEnvCmdFlags struct {
 	runInitHook       bool
 }
 
-func shellEnvCmd() *cobra.Command {
+type shellenvFlagDefaults struct {
+	envForPackageBins bool
+	recomputeEnv      bool
+}
+
+type shellenvFlagDefault func(*shellenvFlagDefaults)
+
+func withEnvForPackageBins(envForPackageBins bool) shellenvFlagDefault {
+	return func(o *shellenvFlagDefaults) {
+		o.envForPackageBins = envForPackageBins
+	}
+}
+
+func withRecompute(recompute bool) shellenvFlagDefault {
+	return func(o *shellenvFlagDefaults) {
+		o.recomputeEnv = recompute
+	}
+}
+
+func shellEnvCmd(opts ...shellenvFlagDefault) *cobra.Command {
+	defaults := shellenvFlagDefaults{
+		recomputeEnv: true,
+	}
+	for _, opt := range opts {
+		opt(&defaults)
+	}
+
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
 		Use:     "shellenv",
-		Short:   "Print shell commands that add Devbox packages to your PATH",
+		Short:   "Print shell commands that create a Devbox Environment in the shell",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,10 +89,13 @@ func shellEnvCmd() *cobra.Command {
 		"by default, devbox will add refresh alias to the environment"+
 			"Use this flag to disable this behavior.")
 	_ = command.Flags().MarkHidden("no-refresh-alias")
+	command.Flags().BoolVar(
+		&flags.envForPackageBins, "env-for-package-binaries", defaults.envForPackageBins,
+		"include package bin directories in the PATH")
+	_ = command.Flags().MarkHidden("env-for-package-binaries")
 
-	// Note, `devbox global shellenv` will override the default value to be false
 	command.Flags().BoolVarP(
-		&flags.recomputeEnv, "recompute", "r", true,
+		&flags.recomputeEnv, "recompute", "r", defaults.recomputeEnv,
 		"Recompute environment if needed",
 	)
 
@@ -85,6 +116,7 @@ func shellEnvFunc(
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:               flags.config.path,
 		Environment:       flags.config.environment,
+		EnvForPackageBins: flags.envForPackageBins,
 		Stderr:            cmd.ErrOrStderr(),
 		PreservePathStack: flags.preservePathStack,
 		Pure:              flags.pure,
