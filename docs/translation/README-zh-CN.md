@@ -137,9 +137,9 @@ Devbox 的开发环境是*可移植的*。我们使您能够只声明一次环�
 
 ## 贡献
 
-Devbox 是一个开源项目，所以欢迎贡献。在提交拉取请求之前，请阅读[我们的贡献指南](../../../CONTRIBUTING.md)。
+Devbox 是一个开源项目，所以欢迎贡献。在提交拉取请求之前，请阅读[我们的贡献指南](../../CONTRIBUTING.md)。
 
-[Devbox 开发 README](../../../devbox.md)
+[Devbox 开发 README](../../devbox.md)
 
 ## 相关工作
 
