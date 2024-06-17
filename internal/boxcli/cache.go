@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
 	nixv1alpha1 "go.jetpack.io/pkg/api/gen/priv/nix/v1alpha1"
 )
@@ -72,6 +73,7 @@ func cacheCmd() *cobra.Command {
 	cacheCommand.AddCommand(uploadCommand)
 	cacheCommand.AddCommand(cacheConfigureCmd())
 	cacheCommand.AddCommand(cacheCredentialsCmd())
+	cacheCommand.AddCommand(cacheEnableCmd())
 	cacheCommand.AddCommand(cacheInfoCmd())
 
 	return cacheCommand
@@ -140,6 +142,49 @@ func cacheCredentialsCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&flags.format, "format", "json", "Output format, either json or sh")
+	return cmd
+}
+
+func cacheEnableCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "enable",
+		Short: "Enable the Devbox Nix cache for your account",
+		Long: heredoc.Doc(`
+			Sign up or log in to a Jetify Cloud account and configure Nix to use the
+			account's Nix cache.
+
+			For more about how Devbox configures Nix, see "devbox cache configure -h".
+		`),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			auth, err := identity.AuthClient(identity.AuthRedirectCache)
+			if err != nil {
+				return err
+			}
+			sess, _ := auth.GetSessions()
+			needLogin := len(sess) == 0
+			if needLogin {
+				_, err = auth.LoginFlow()
+				if err != nil {
+					return err
+				}
+			}
+
+			needConfigure := !nixcache.IsConfigured(cmd.Context())
+			if needConfigure {
+				u, _ := user.Current()
+				err = nixcache.ConfigureReprompt(cmd.Context(), u.Username)
+				if err != nil {
+					return err
+				}
+			}
+
+			if !needConfigure && !needLogin {
+				fmt.Fprintln(cmd.OutOrStdout(), "The Devbox cache is already enabled for your account.")
+			}
+			return nil
+		},
+	}
 	return cmd
 }
 

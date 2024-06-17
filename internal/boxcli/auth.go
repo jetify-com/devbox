@@ -38,7 +38,7 @@ func loginCmd() *cobra.Command {
 		Short: "Login to devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := identity.AuthClient()
+			c, err := identity.AuthClient(identity.AuthRedirectDefault)
 			if err != nil {
 				return err
 			}
@@ -62,7 +62,7 @@ func logoutCmd() *cobra.Command {
 		Short: "Logout from devbox",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := identity.AuthClient()
+			c, err := identity.AuthClient(identity.AuthRedirectDefault)
 			if err != nil {
 				return err
 			}
