@@ -15,7 +15,7 @@ const (
 	TypeIndirect  = "indirect"
 	TypePath      = "path"
 	TypeFile      = "file"
-	TypeGit       = "git"
+	TypeSSH       = "ssh"
 	TypeGitHub    = "github"
 	TypeGitLab    = "gitlab"
 	TypeBitBucket = "bitbucket"
@@ -179,7 +179,6 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		refURL.Scheme = refURL.Scheme[5:] // remove file+
 		parsed.URL = refURL.String()
 	case "git", "git+http", "git+https", "git+ssh", "git+git", "git+file":
-		parsed.Type = TypeGit
 		q := refURL.Query()
 		parsed.Dir = q.Get("dir")
 		parsed.Ref = q.Get("ref")
@@ -193,6 +192,12 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 
 		if len(refURL.Scheme) > 3 {
 			refURL.Scheme = refURL.Scheme[4:] // remove git+
+		}
+
+		if strings.HasPrefix(refURL.Scheme, TypeSSH) {
+			parsed.Type = TypeSSH
+		} else if strings.HasPrefix(refURL.Scheme, TypeFile) {
+			parsed.Type = TypeFile
 		}
 
 		parsed.URL = refURL.String()
@@ -266,58 +271,6 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	return nil
 }
 
-func parseGitLabRef(refURL *url.URL, parsed *Ref) error {
-	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
-
-	parsed.Type = TypeGitLab
-
-	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
-	// refs that have slashes in them. For example,
-	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
-	split, err := splitPathOrOpaque(refURL, 3)
-
-	if err != nil {
-		return err
-	}
-
-	parsed.Owner = split[0]
-	parsed.Repo = split[1]
-
-	if len(split) > 2 {
-		if revOrRef := split[2]; isGitHash(revOrRef) {
-			parsed.Rev = revOrRef
-		} else {
-			parsed.Ref = revOrRef
-		}
-	}
-
-	parsed.Host = refURL.Query().Get("host")
-	parsed.Dir = refURL.Query().Get("dir")
-
-	if qRef := refURL.Query().Get("ref"); qRef != "" {
-		if parsed.Rev != "" {
-			return redact.Errorf("gitlab flake reference has a ref and a rev")
-		}
-		if parsed.Ref != "" && qRef != parsed.Ref {
-			return redact.Errorf("gitlab flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Ref, qRef)
-		}
-		parsed.Ref = qRef
-	}
-
-	if qRev := refURL.Query().Get("rev"); qRev != "" {
-		if parsed.Ref != "" {
-			return redact.Errorf("gitlab flake reference has a ref and a rev")
-		}
-		if parsed.Rev != "" && qRev != parsed.Rev {
-			return redact.Errorf("gitlab flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Rev, qRev)
-		}
-		parsed.Rev = qRev
-	}
-
-	parsed.Dir = refURL.Query().Get("dir")
-	return nil
-}
-
 // String encodes the flake reference as a URL-like string. It normalizes the
 // result such that if two Ref values are equal, then their strings will also be
 // equal.
@@ -341,7 +294,7 @@ func (r Ref) String() string {
 			return ""
 		}
 		return "file+" + r.URL
-	case TypeGit:
+	case TypeSSH:
 		if r.URL == "" {
 			return ""
 		}

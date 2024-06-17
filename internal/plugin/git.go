@@ -20,7 +20,7 @@ import (
 	"go.jetpack.io/pkg/filecache"
 )
 
-var gitCache = filecache.New[[]byte]("devbox/plugin/git")
+var sshCache = filecache.New[[]byte]("devbox/plugin/ssh")
 var githubCache = filecache.New[[]byte]("devbox/plugin/github")
 var gitlabCache = filecache.New[[]byte]("devbox/plugin/gitlab")
 var bitbucketCache = filecache.New[[]byte]("devbox/plugin/bitbucket")
@@ -114,8 +114,8 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	switch p.ref.Type {
-	case flake.TypeGit:
-		return gitCache.GetOrSet(contentURL, retrieve)
+	case flake.TypeSSH:
+		return sshCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeGitHub:
 		return githubCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeGitLab:
@@ -129,7 +129,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 
 func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
-	case flake.TypeGit:
+	case flake.TypeSSH:
 		return p.sshGitUrl()
 	case flake.TypeGitLab:
 		return p.gitlabUrl(subpath)
@@ -158,8 +158,17 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
 	baseCommand := "git archive --format=tar --remote=git@"
+	path, err := url.JoinPath(p.ref.Owner, p.ref.Repo)
 
-	return fmt.Sprintf("%s%s:%s %s %s -o %s.tar ", baseCommand, address.Host, address.Path[1:], branch, p.ref.Dir, p.ref.Dir), nil
+	formattedCommand := fmt.Sprintf("%s%s:%s %s %s -o %s.tar ", baseCommand, address.Query().Get("host"), path, branch, p.ref.Dir, p.ref.Dir)
+
+	if err == nil {
+		return "", err
+	}
+
+	// TODO: need to store the git archive in a temporary file...or something. Basically need to figure out how to handle this lol
+
+	return formattedCommand, nil
 }
 
 func (p *gitPlugin) githubUrl(subpath string) (string, error) {
@@ -176,6 +185,8 @@ func (p *gitPlugin) githubUrl(subpath string) (string, error) {
 }
 
 func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
+	// bitbucket doesn't redirect master -> main or main -> master, so using "main"
+	// as the default in this case
 	return url.JoinPath(
 		"https://api.bitbucket.org/2.0/repositories",
 		p.ref.Owner,
@@ -219,6 +230,8 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 		return "", err
 	}
 
+	// gitlab doesn't redirect master -> main or main -> master, so using "main"
+	// as the default in this case
 	query := parsed.Query()
 	query.Add("ref", cmp.Or(p.ref.Rev, p.ref.Ref, "main"))
 	parsed.RawQuery = query.Encode()
@@ -230,7 +243,7 @@ func (p *gitPlugin) request(contentURL string) (*http.Request, error) {
 	// TODO: Determine if private repo. Maybe use `git archive`?
 	// git archive --format=tar --remote=git@gitlab.com:astro-tec/devbox-plugin-test HEAD plugin -o plugin.tar
 
-	if p.ref.Type == flake.TypeGit {
+	if p.ref.Type == flake.TypeSSH {
 		command := exec.Command(contentURL)
 		command.Wait()
 	}

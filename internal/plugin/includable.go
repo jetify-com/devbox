@@ -25,7 +25,7 @@ func parseIncludable(includableRef, workingDir string) (Includable, error) {
 	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
-	case flake.TypeGit:
+	case flake.TypeSSH:
 		fallthrough
 	case flake.TypeBitBucket:
 		fallthrough
