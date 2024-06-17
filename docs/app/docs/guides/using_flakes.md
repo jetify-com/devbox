@@ -91,6 +91,22 @@ For example, if you have a local Flake in the `./my-flake` directory, you can us
 path:./my-flake#my-package
 ```
 
+## Caching Flakes with the Jetify Cache
+
+Because flakes are not automatically built and cached by Nix, you may experience slower build times when using flakes in your Devbox project. To speed up your builds, you can use the [Jetify Cache](../cloud/cache/index.md) to cache the binaries built by your flakes for future use.
+
+After setting up your cache directly, you can upload the flake by running: 
+
+```bash
+devbox cache upload <flake-reference>
+```
+
+Alternatively, you can cache your entire project closure by running the following command from your project root:
+
+```bash
+devbox cache upload
+```
+
 ### Examples
 
 For more examples of using Nix Flakes with Devbox, check out the examples in our Devbox Repo:

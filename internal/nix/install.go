@@ -154,7 +154,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 
 	if isatty.IsTerminal(os.Stdout.Fd()) {
 		color.Yellow("Press enter to continue or ctrl-c to exit.\n")
-		fmt.Scanln()
+		fmt.Scanln() //nolint:errcheck
 	}
 
 	if err = Install(writer, withDaemonFunc()); err != nil {

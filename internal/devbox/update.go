@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
@@ -75,6 +74,12 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	// It will return an error if .devbox/gen/flake is missing
 	// TODO: Remove this if it's not needed.
 	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
+
+	// fix any missing store paths.
+	if err = d.FixMissingStorePaths(ctx); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return plugin.Update()
 }
 
@@ -137,39 +142,36 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 	}
 
 	// Add any missing system infos for packages whose versions did not change.
-	if featureflag.RemoveNixpkgs.Enabled() {
+	if lockfile.Packages[pkg.Raw].Systems == nil {
+		lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
+	}
 
-		if lockfile.Packages[pkg.Raw].Systems == nil {
-			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
-		}
-
-		userSystem := nix.System()
-		updated := false
-		for sysName, newSysInfo := range resolved.Systems {
-			// Check whether we are actually updating any system info.
-			if sysName == userSystem {
-				// The resolved pkg has a system info for the user's system, so add/overwrite it.
-				if !newSysInfo.Equals(existing.Systems[userSystem]) {
-					// We only guard this so that the ux messaging is accurate. We could overwrite every time.
-					updated = true
-				}
-			} else {
-				// Add other system infos if they don't exist, or if we have a different StorePath. This may
-				// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
-				// come from the same package version.
-				existingSysInfo, exists := existing.Systems[sysName]
-				if !exists || !existingSysInfo.Equals(newSysInfo) {
-					updated = true
-				}
+	userSystem := nix.System()
+	updated := false
+	for sysName, newSysInfo := range resolved.Systems {
+		// Check whether we are actually updating any system info.
+		if sysName == userSystem {
+			// The resolved pkg has a system info for the user's system, so add/overwrite it.
+			if !newSysInfo.Equals(existing.Systems[userSystem]) {
+				// We only guard this so that the ux messaging is accurate. We could overwrite every time.
+				updated = true
+			}
+		} else {
+			// Add other system infos if they don't exist, or if we have a different StorePath. This may
+			// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
+			// come from the same package version.
+			existingSysInfo, exists := existing.Systems[sysName]
+			if !exists || !existingSysInfo.Equals(newSysInfo) {
+				updated = true
 			}
 		}
-		if updated {
-			// if we are updating the system info, then we should also update the other fields
-			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+	}
+	if updated {
+		// if we are updating the system info, then we should also update the other fields
+		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 
-			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
-			return nil
-		}
+		ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
+		return nil
 	}
 
 	ux.Finfo(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)

@@ -203,7 +203,7 @@ func (e *safeError) StackTrace() []runtime.Frame {
 func (e *safeError) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v', 's':
-		f.Write([]byte(e.Error()))
+		f.Write([]byte(e.Error())) //nolint:errcheck
 		if f.Flag('+') {
 			for _, fr := range e.StackTrace() {
 				fmt.Fprintf(f, "\n%s\n\t%s:%d", fr.Function, fr.File, fr.Line)
@@ -231,7 +231,7 @@ func (e *redactedError) Unwrap() error { return e.wrapped }
 type formatter string
 
 func (f formatter) Format(s fmt.State, verb rune) {
-	s.Write([]byte(f))
+	s.Write([]byte(f)) //nolint:errcheck
 }
 
 // placeholder generates a placeholder string for values that don't satisfy

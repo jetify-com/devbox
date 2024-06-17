@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -64,6 +65,51 @@ type RunInfo struct {
 	// Error is the error message returned by the last run. It's empty if
 	// the last run succeeded.
 	Error string `json:"error,omitempty"`
+}
+
+// TaskStatus describes the status of a task.
+type TaskStatus int
+
+const (
+	// TaskDone indicates that a task doesn't need to run and that its most
+	// recent run (if any) didn't report an error. Note that a task can be
+	// done without ever running if its NeedsRun method returns false before
+	// the first run.
+	TaskDone TaskStatus = iota
+
+	// TaskNeedsRun is the status of a task that needs to be run.
+	TaskNeedsRun
+
+	// TaskUserRefused indicates that the user answered no to a confirmation
+	// prompt to run the task.
+	TaskUserRefused
+
+	// TaskError indicates that a task's most recent run failed and it
+	// cannot be re-run without a call to [Reset].
+	TaskError
+
+	// TaskSudoing occurs when the caller of [Status] is running in a sudoed
+	// process due to the task calling [SudoDevbox] from the parent process.
+	TaskSudoing
+)
+
+// Status returns the status of a setup task.
+func Status(ctx context.Context, key string, task Task) TaskStatus {
+	defer debug.FunctionTimer().End()
+	state := loadState(key)
+	switch {
+	case isSudo(key):
+		return TaskSudoing
+	case state.ConfirmPrompt.Asked && !state.ConfirmPrompt.Allowed:
+		return TaskUserRefused
+	case task.NeedsRun(ctx, state.LastRun):
+		return TaskNeedsRun
+	case state.LastRun.Error == "":
+		return TaskDone
+	case state.LastRun.Error != "":
+		return TaskError
+	}
+	panic("setup.Status switch isn't exhaustive")
 }
 
 // Run runs a setup task and stores its state under a given key. Keys are
@@ -177,24 +223,20 @@ func ConfirmRun(ctx context.Context, key string, task Task, prompt string) error
 
 var defaultPrompt = func(msg string) (response any, err error) {
 	if isatty.IsTerminal(os.Stdin.Fd()) {
-		err = survey.AskOne(&survey.Confirm{Message: msg}, &response)
+		err = survey.AskOne(&survey.Confirm{
+			Message: msg,
+			Default: true,
+		}, &response)
 		return response, err
 	}
-	debug.Log("setup: no tty detected, assuming yes to confirmation prompt: %q", msg)
+	slog.Debug("setup: no tty detected, assuming yes to confirmation prompt", "prompt", msg)
 	return true, nil
 }
 
 func run(ctx context.Context, key string, task Task, prompt string) error {
 	ctx = context.WithValue(ctx, ctxKeyTask, key)
 
-	// DEVBOX_SUDO_TASK is set when a task relaunched Devbox by calling
-	// SudoDevbox. If it matches the current task key, then the pre-sudo
-	// process is already running this task and we can skip checking
-	// task.NeedsRun and prompting the user.
-	isSudo := false
-	if envTask := os.Getenv("DEVBOX_SUDO_TASK"); envTask != "" {
-		isSudo = envTask == key
-	}
+	isSudo := isSudo(key)
 	state := loadState(key)
 	if !isSudo && !task.NeedsRun(ctx, state.LastRun) {
 		return nil
@@ -244,7 +286,7 @@ func Reset(key string) {
 	}
 	if err != nil {
 		err = taskError(key, fmt.Errorf("remove state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("ignoring setup task reset error", "err", err, "task", key)
 	}
 }
 
@@ -265,14 +307,14 @@ func loadState(key string) state {
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			err = taskError(key, fmt.Errorf("load state file: %v", err))
-			debug.Log(err.Error())
+			slog.Error("using empty setup task state due to an error", "err", err, "task", key)
 		}
 		return state{}
 	}
 	loaded := state{}
 	if err := json.Unmarshal(b, &loaded); err != nil {
 		err = taskError(key, fmt.Errorf("load state file %s: %v", path, err))
-		debug.Log(err.Error())
+		slog.Error("using empty setup task state due to an error", "err", err, "task", key)
 		return state{}
 	}
 	return loaded
@@ -283,7 +325,7 @@ func saveState(key string, s state) {
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		err = taskError(key, fmt.Errorf("save state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("not saving setup task state", "err", err, "task", key)
 		return
 	}
 
@@ -293,7 +335,7 @@ func saveState(key string, s state) {
 	}
 	if err != nil {
 		err = taskError(key, fmt.Errorf("save state file: %v", err))
-		debug.Log(err.Error())
+		slog.Error("not saving setup task state", "err", err, "task", key)
 		return
 	}
 
@@ -310,7 +352,7 @@ func saveState(key string, s state) {
 		err = os.Chown(path, uid, gid)
 		if err != nil {
 			err = taskError(key, fmt.Errorf("chown state file to non-sudo user: %v", err))
-			debug.Log(err.Error())
+			slog.Error("cannot ensure task state is owned by sudoing user", "err", err, "task", key, "uid", sudoUID, "gid", sudoGID)
 		}
 	}
 }
@@ -342,4 +384,13 @@ func devboxExecutable() (string, error) {
 		return "", redact.Errorf("get path to devbox executable: %v", err)
 	}
 	return exe, nil
+}
+
+func isSudo(key string) bool {
+	// DEVBOX_SUDO_TASK is set when a task relaunched Devbox by calling
+	// SudoDevbox. If it matches the current task key, then the pre-sudo
+	// process is already running this task and we can skip checking
+	// task.NeedsRun and prompting the user.
+	envTask := os.Getenv("DEVBOX_SUDO_TASK")
+	return envTask != "" && envTask == key
 }

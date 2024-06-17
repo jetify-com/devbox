@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
@@ -13,7 +14,6 @@ import (
 	"time"
 	"unicode"
 
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
@@ -21,26 +21,47 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-func Configure(ctx context.Context, username string) error {
-	return configure(ctx, username, false)
+const setupKey = "nixcache-setup"
+
+func IsConfigured(ctx context.Context) bool {
+	u, err := user.Current()
+	if err != nil {
+		return false
+	}
+	task := &setupTask{u.Username}
+	status := setup.Status(ctx, setupKey, task)
+	return status == setup.TaskDone
+}
+
+func Configure(ctx context.Context) error {
+	u, err := user.Current()
+	if err != nil {
+		return redact.Errorf("nixcache: lookup current user: %v", err)
+	}
+
+	task := &setupTask{u.Username}
+
+	// This function might be called from other Devbox commands
+	// (such as devbox add), so we need to provide some context in the sudo
+	// prompt.
+	const sudoPrompt = "You're logged into a Devbox account, but Nix isn't setup to use your account's caches. " +
+		"Allow sudo to configure Nix?"
+	err = setup.ConfirmRun(ctx, setupKey, task, sudoPrompt)
+	if err != nil {
+		return redact.Errorf("nixcache: run setup: %w", err)
+	}
+	return nil
 }
 
 func ConfigureReprompt(ctx context.Context, username string) error {
-	return configure(ctx, username, true)
-}
-
-func configure(ctx context.Context, username string, reprompt bool) error {
-	const key = "nixcache-setup"
-	if reprompt {
-		setup.Reset(key)
-	}
-
+	setup.Reset(setupKey)
 	task := &setupTask{username}
-	const sudoPrompt = "You're logged into a Devbox account that now has access to a Nix cache. " +
-		"Allow Devbox to configure Nix to use the new cache (requires sudo)?"
-	err := setup.ConfirmRun(ctx, key, task, sudoPrompt)
-	if err != nil && !errors.Is(err, setup.ErrUserRefused) {
-		return redact.Errorf("nixcache: run setup: %v", err)
+
+	// We're reprompting, so the user explicitly asked to configure the
+	// cache. We can keep the sudo prompt short.
+	err := setup.ConfirmRun(ctx, setupKey, task, "Allow sudo to configure Nix?")
+	if err != nil {
+		return redact.Errorf("nixcache: run setup: %w", err)
 	}
 	return nil
 }
@@ -57,26 +78,26 @@ func (s *setupTask) NeedsRun(ctx context.Context, lastRun setup.RunInfo) bool {
 	if _, err := nix.DaemonVersion(ctx); err != nil {
 		// This looks like a single-user install, so no need to
 		// configure the daemon or root's AWS credentials.
-		debug.Log("nixcache: skipping setup: error connecting to nix daemon, assuming single-user install: %v", err)
+		slog.Error("nixcache: skipping setup: error connecting to nix daemon, assuming single-user install", "err", err)
 		return false
 	}
 
 	if lastRun.Time.IsZero() {
-		debug.Log("nixcache: running setup: first time setup")
+		slog.Debug("nixcache: running setup: first time setup")
 		return true
 	}
 	cfg, err := nix.CurrentConfig(ctx)
 	if err != nil {
-		debug.Log("nixcache: running setup: error getting current nix config, assuming user %s isn't trusted", s.username)
+		slog.Error("nixcache: running setup: error getting current nix config, assuming user isn't trusted", "user", s.username)
 		return true
 	}
 	trusted, err := cfg.IsUserTrusted(ctx, s.username)
 	if err != nil {
-		debug.Log("nixcache: running setup: error checking if user %s is trusted, assuming they aren't", s.username)
+		slog.Error("nixcache: running setup: error checking if user is trusted, assuming they aren't", "user", s.username)
 		return true
 	}
 	if !trusted {
-		debug.Log("nixcache: running setup: user %s isn't trusted", s.username)
+		slog.Debug("nixcache: running setup: user isn't trusted", "user", s.username)
 		return true
 	}
 	return false
@@ -86,6 +107,13 @@ func (s *setupTask) Run(ctx context.Context) error {
 	ran, err := setup.SudoDevbox(ctx, "cache", "configure", "--user", s.username)
 	if ran || err != nil {
 		return err
+	}
+
+	// Update the AWS config before configuring and restarting the Nix
+	// daemon.
+	err = s.updateAWSConfig()
+	if err != nil {
+		return redact.Errorf("update root aws config: %v", err)
 	}
 
 	trusted := false
@@ -100,11 +128,6 @@ func (s *setupTask) Run(ctx context.Context) error {
 		} else if err != nil {
 			return redact.Errorf("update nix config: %v", err)
 		}
-	}
-
-	err = s.updateAWSConfig()
-	if err != nil {
-		return redact.Errorf("update root aws config: %v", err)
 	}
 	return nil
 }
@@ -195,7 +218,7 @@ func propagatedEnv() string {
 			return !unicode.IsPrint(r)
 		})
 		if notPrintable {
-			debug.Log("nixcache: not including environment variable in ~root/.aws/config because it contains nonprintable runes: %q=%q", name, val)
+			slog.Debug("nixcache: not including environment variable in ~root/.aws/config because it contains nonprintable runes: %q=%q", name, val)
 			continue
 		}
 

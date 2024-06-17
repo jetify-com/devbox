@@ -2,7 +2,9 @@ package devbox
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/samber/lo"
@@ -16,6 +18,7 @@ import (
 //
 // It also removes any packages from the nix profile that are no longer in the buildInputs.
 func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
+	defer debug.FunctionTimer().End()
 	// Get the computed Devbox environment from the generated flake
 	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
 	if err != nil {
@@ -53,29 +56,31 @@ func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 			storePath := nix.NewStorePathParts(p)
 			packagesToRemove = append(packagesToRemove, fmt.Sprintf("%s@%s", storePath.Name, storePath.Version))
 		}
-		debug.Log("Removing packages from nix profile: %s\n", strings.Join(packagesToRemove, ", "))
+		slog.Debug("removing packages from nix profile", "pkgs", strings.Join(packagesToRemove, ", "))
 
 		if err := nix.ProfileRemove(profilePath, remove...); err != nil {
 			return err
 		}
 	}
 	if len(add) > 0 {
-		// We need to install the packages in the nix profile one-by-one because
-		// we do checks for insecure packages.
-		// TODO: move the insecure package check here, and do `nix profile install installables...`
-		// in one command for speed.
-		for _, addPath := range add {
-			if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
-				Installable: addPath,
-				// Install in offline mode for speed. We know we should have all the files
-				// locally in /nix/store since we have run `nix print-dev-env` prior to this.
-				// Also avoids some "substituter not found for store-path" errors.
-				Offline:     true,
-				ProfilePath: profilePath,
-				Writer:      d.stderr,
-			}); err != nil {
-				return fmt.Errorf("error installing package in nix profile %s: %w", addPath, err)
+		if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+			Installables: add,
+			ProfilePath:  profilePath,
+			Writer:       d.stderr,
+		}); errors.Is(err, nix.ErrPriorityConflict) {
+			// We need to install the packages one by one because there was possibly a priority conflict
+			// This is slower, but uncommon.
+			for _, addPath := range add {
+				if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+					Installables: []string{addPath},
+					ProfilePath:  profilePath,
+					Writer:       d.stderr,
+				}); err != nil {
+					return fmt.Errorf("error installing package in nix profile %s: %w", addPath, err)
+				}
 			}
+		} else if err != nil {
+			return fmt.Errorf("error installing packages in nix profile %s: %w", add, err)
 		}
 	}
 	return nil

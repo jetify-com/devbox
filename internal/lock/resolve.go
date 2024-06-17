@@ -6,6 +6,7 @@ package lock
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
@@ -56,12 +56,9 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
 	}
 
-	sysInfos := map[string]*SystemInfo{}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos, err = buildLockSystemInfos(packageVersion)
-		if err != nil {
-			return nil, err
-		}
+	sysInfos, err := buildLockSystemInfos(packageVersion)
+	if err != nil {
+		return nil, err
 	}
 	packageInfo, err := selectForSystem(packageVersion.Systems)
 	if err != nil {
@@ -172,12 +169,7 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 			path, err := nix.StorePathFromHashPart(ctx, sysInfo.StoreHash, "https://cache.nixos.org")
 			if err != nil {
 				// Should we report this to sentry to collect data?
-				debug.Log(
-					"Failed to resolve store path for %s with storeHash %s. Error is %s.\n",
-					sysName,
-					sysInfo.StoreHash,
-					err,
-				)
+				slog.Error("failed to resolve store path", "system", sysName, "store_hash", sysInfo.StoreHash, "err", err)
 				// Instead of erroring, we can just skip this package. It can install via the slow path.
 				return nil
 			}

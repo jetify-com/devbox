@@ -14,6 +14,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/pkg/runx/impl/types"
 
@@ -197,6 +198,21 @@ func (f *File) IsUpToDateAndInstalled(isFish bool) (bool, error) {
 		ConfigHash: configHash,
 		IsFish:     isFish,
 	})
+}
+
+func (f *File) SetOutputsForPackage(pkg string, outputs []Output) error {
+	p, err := f.Resolve(pkg)
+	if err != nil {
+		return err
+	}
+	if p.Systems == nil {
+		p.Systems = map[string]*SystemInfo{}
+	}
+	if p.Systems[nix.System()] == nil {
+		p.Systems[nix.System()] = &SystemInfo{}
+	}
+	p.Systems[nix.System()].Outputs = outputs
+	return f.Save()
 }
 
 func (f *File) isDirty() (bool, error) {

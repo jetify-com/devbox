@@ -6,12 +6,12 @@ package nix
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
@@ -33,7 +33,7 @@ func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	debug.Log("Executing: %v", cmd.Args)
+	slog.Debug("executing script", "cmd", cmd.Args)
 	// Report error as exec error when executing scripts.
 	return usererr.NewExecError(cmd.Run())
 }

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,7 +20,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/mod/semver"
@@ -74,19 +74,15 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := exec.CommandContext(
-			ctx,
-			"nix", "print-dev-env",
+		cmd := command("print-dev-env", "--json",
 			"path:"+flakeDirResolved,
 		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		cmd.Args = append(cmd.Args, "--json")
-		debug.Log("Running print-dev-env cmd: %s\n", cmd)
-		data, err = cmd.Output()
+		slog.Debug("running print-dev-env cmd", "cmd", cmd)
+		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
+			return nil, err
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
@@ -120,10 +116,7 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
-	options := []string{"nix-command", "flakes"}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		options = append(options, "fetch-closure")
-	}
+	options := []string{"nix-command", "flakes", "fetch-closure"}
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", strings.Join(options, " "),
@@ -158,11 +151,8 @@ func ComputeSystem() error {
 	if override != "" {
 		cachedSystem = override
 	} else {
-		cmd := exec.Command(
-			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
-		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		out, err := cmd.Output()
+		cmd := command("eval", "--impure", "--raw", "--expr", "builtins.currentSystem")
+		out, err := cmd.Output(context.TODO())
 		if err != nil {
 			return err
 		}
@@ -187,9 +177,21 @@ const (
 	Version2_19 = "2.19.0"
 	Version2_20 = "2.20.0"
 	Version2_21 = "2.21.0"
+	Version2_22 = "2.22.0"
 
 	MinVersion = Version2_12
 )
+
+// versionRegexp matches the first line of "nix --version" output.
+//
+// The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
+// It's been modified to tolerate Nix prerelease versions, which don't have a
+// hyphen before the prerelease component and contain underscores.
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+
+// preReleaseRegexp matches Nix prerelease version strings, which are not valid
+// semvers.
+var preReleaseRegexp = regexp.MustCompile(`pre(?P<date>[0-9]+)_(?P<commit>[a-f0-9]{4,40})$`)
 
 // VersionInfo contains information about a Nix installation.
 type VersionInfo struct {
@@ -252,11 +254,12 @@ func parseVersionInfo(data []byte) (VersionInfo, error) {
 	}
 
 	lines := strings.Split(string(data), "\n")
-	found := false
-	info.Name, info.Version, found = strings.Cut(lines[0], " (Nix) ")
-	if !found {
+	matches := versionRegexp.FindStringSubmatch(lines[0])
+	if len(matches) < 3 {
 		return info, redact.Errorf("parse nix version: %s", redact.Safe(lines[0]))
 	}
+	info.Name = matches[1]
+	info.Version = matches[2]
 	for _, line := range lines {
 		name, value, found := strings.Cut(line, ": ")
 		if !found {
@@ -296,7 +299,15 @@ func (v VersionInfo) AtLeast(version string) bool {
 	if !semver.IsValid(version) {
 		panic(fmt.Sprintf("nix.atLeast: invalid version %q", version[1:]))
 	}
-	return semver.Compare("v"+v.Version, version) >= 0
+	if semver.IsValid("v" + v.Version) {
+		return semver.Compare("v"+v.Version, version) >= 0
+	}
+
+	// If the version isn't a valid semver, check to see if it's a
+	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
+	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
+	prerelease := preReleaseRegexp.ReplaceAllString(v.Version, "-pre.$date+$commit")
+	return semver.Compare("v"+prerelease, version) >= 0
 }
 
 // version is the cached output of `nix --version --debug`.
@@ -323,7 +334,7 @@ func runNixVersion() (VersionInfo, error) {
 		return VersionInfo{}, redact.Errorf("nix command: %s: %v", redact.Safe(cmd), err)
 	}
 
-	debug.Log("nix --version --debug output:\n%s", out)
+	slog.Debug("nix --version --debug output", "out", out)
 	return parseVersionInfo(out)
 }
 

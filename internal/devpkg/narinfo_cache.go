@@ -3,6 +3,7 @@ package devpkg
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
+	"go.jetpack.io/devbox/internal/goutil"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
@@ -57,9 +58,6 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 // Callers of IsInBinaryCache may call this function first as a perf-optimization.
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	defer debug.FunctionTimer().End()
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return nil
-	}
 
 	eligiblePackages := []*Package{}
 	for _, p := range packages {
@@ -172,6 +170,32 @@ func (p *Package) fetchNarInfoStatusOnce(
 	return outputToCache, nil
 }
 
+func (p *Package) AreAllOutputsInCache(
+	ctx context.Context, w io.Writer, cacheURI string,
+) (bool, error) {
+	storePaths, err := p.GetStorePaths(ctx, w)
+	if err != nil {
+		return false, err
+	}
+
+	for _, storePath := range storePaths {
+		pathParts := nix.NewStorePathParts(storePath)
+		hash := pathParts.Hash
+		if strings.HasPrefix(cacheURI, "s3") {
+			inCache, err := fetchNarInfoStatusFromS3(ctx, cacheURI, hash)
+			if err != nil || !inCache {
+				return false, err
+			}
+		} else {
+			inCache, err := fetchNarInfoStatusFromHTTP(ctx, cacheURI, hash)
+			if err != nil || !inCache {
+				return false, err
+			}
+		}
+	}
+	return true, nil
+}
+
 func (p *Package) outputsForOutputName(output string) ([]lock.Output, error) {
 	sysInfo, err := p.sysInfoIfExists()
 	if err != nil || sysInfo == nil {
@@ -212,10 +236,6 @@ func (p *Package) isEligibleForBinaryCache() (bool, error) {
 // Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
 // function from within a goroutine.
 func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
-	if !featureflag.RemoveNixpkgs.Enabled() {
-		return nil, nil
-	}
-
 	if !p.isVersioned() {
 		return nil, nil
 	}
@@ -312,8 +332,14 @@ func fetchNarInfoStatusFromS3(
 	return fetch.(func() (bool, error))()
 }
 
+var nixCacheIsConfigured = goutil.OnceValueWithContext(nixcache.IsConfigured)
+
 func readCaches(ctx context.Context) ([]string, error) {
 	cacheURIs := []string{binaryCache}
+	if !nixCacheIsConfigured.Do(ctx) {
+		return cacheURIs, nil
+	}
+
 	otherCaches, err := nixcache.CachedReadCaches(ctx)
 	if err != nil {
 		return nil, err

@@ -1,5 +1,8 @@
 FROM debian:stable-slim
 
+# Optional arg to install custom devbox version
+ARG DEVBOX_USE_VERSION
+
 # Step 1: Installing dependencies
 RUN apt-get update
 RUN apt-get -y install bash binutils git xz-utils wget sudo
@@ -12,6 +15,9 @@ RUN . ~/.nix-profile/etc/profile.d/nix.sh
 ENV PATH="/root/.nix-profile/bin:$PATH"
 
 # Step 3: Installing devbox
+ENV DEVBOX_USE_VERSION=$DEVBOX_USE_VERSION
 RUN wget --quiet --output-document=/dev/stdout https://get.jetify.com/devbox   | bash -s -- -f
+# run a devbox command to make launcher download devbox binary
+RUN devbox version
 
-CMD ["devbox", "version"]
+CMD ["devbox", "version", "-v"]

@@ -9,6 +9,7 @@ package sshshim
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -29,7 +30,7 @@ func EnableDebug() {
 		fmt.Fprintf(os.Stderr, "failed to init ssh log file: %s", err)
 	}
 	debug.Enable()
-	debug.Log("started sshshim\n")
+	slog.Debug("started sshshim\n")
 }
 
 // logFile captures output for logging and when there is a failure

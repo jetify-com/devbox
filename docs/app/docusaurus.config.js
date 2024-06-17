@@ -69,12 +69,13 @@ const config = {
                 src: 'img/devbox_logo_light.svg',
                 srcDark: 'img/devbox_logo_dark.svg'
             },
-            items: [{
-                    type: 'doc',
-                    docId: 'index',
+            items: [
+                {
+                    to: 'https://cloud.jetify.com',
+                    label: 'Jetify Cloud',
+                    className: 'header-text-link',
                     position: 'right',
-                    label: "Docs"
-                },
+                  },
                 {
                     href: 'https://discord.gg/jetify',
                     // label: 'Discord',
@@ -100,6 +101,10 @@ const config = {
                             label: "Blog",
                             href: "https://www.jetify.com/blog"
                         },
+                        {
+                            label: "Jetify Cloud",
+                            href: "https://cloud.jetify.com"
+                        }
                     ]
                 },
                 {

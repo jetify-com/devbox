@@ -4,26 +4,18 @@
 package nix
 
 import (
+	"context"
 	"os"
-	"os/exec"
 
-	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
 func ProfileUpgrade(ProfileDir, indexOrName string) error {
-	cmd := command(
+	return command(
 		"profile", "upgrade",
 		"--profile", ProfileDir,
 		indexOrName,
-	)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf(
-			"error running \"nix profile upgrade\": %s: %w", out, err,
-		)
-	}
-	return nil
+	).Run(context.TODO())
 }
 
 func FlakeUpdate(ProfileDir string) error {
@@ -32,16 +24,10 @@ func FlakeUpdate(ProfileDir string) error {
 		return err
 	}
 	ux.Finfo(os.Stderr, "Running \"nix flake update\"\n")
-	cmd := exec.Command("nix", "flake", "update")
+	cmd := command("flake", "update")
 	if version.AtLeast(Version2_19) {
 		cmd.Args = append(cmd.Args, "--flake")
 	}
 	cmd.Args = append(cmd.Args, ProfileDir)
-	cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf(
-			"error running \"nix flake update\": %s: %w", out, err)
-	}
-	return nil
+	return cmd.Run(context.TODO())
 }

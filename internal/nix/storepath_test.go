@@ -35,6 +35,16 @@ func TestStorePathParts(t *testing.T) {
 				Name: "coreutils",
 			},
 		},
+		// With output
+		{
+			storePath: "/nix/store/0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq-foo-1.0.0-bar",
+			expected: StorePathParts{
+				Hash:    "0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq",
+				Name:    "foo",
+				Version: "1.0.0",
+				Output:  "bar",
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

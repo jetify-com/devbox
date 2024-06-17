@@ -7,13 +7,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
@@ -73,7 +73,7 @@ func List(envVars map[string]string, names ...string) ([]Session, error) {
 	debugPrintExecCmd(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		debug.Log("List error: %s, and out: %s", err, string(out))
+		slog.Debug("list error", "err", err, "out", string(out))
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			errMsg := strings.TrimSpace(string(out))
 			// Special handle the case where no sessions are found:
@@ -151,11 +151,11 @@ func execMutagenOut(args []string, envVars map[string]string) ([]byte, error) {
 	debugPrintExecCmd(cmd)
 
 	if err := cmd.Run(); err != nil {
-		debug.Log(
-			"execMutagen error: %s, stdout: %s, stderr: %s",
-			err,
-			stdout.String(),
-			stderr.String(),
+		slog.Debug(
+			"execMutagen error",
+			"err", err,
+			"stdout", stdout.String(),
+			"stderr", stderr.String(),
 		)
 		if e := (&exec.ExitError{}); errors.As(err, &e) {
 			return nil, errors.New(strings.TrimSpace(stderr.String()))
@@ -163,7 +163,7 @@ func execMutagenOut(args []string, envVars map[string]string) ([]byte, error) {
 		return nil, err
 	}
 
-	debug.Log("execMutagen worked for cmd: %s", cmd)
+	slog.Debug("execMutagen worked for cmd", "cmd", cmd)
 	return stdout.Bytes(), nil
 }
 
@@ -175,7 +175,7 @@ func debugPrintExecCmd(cmd *exec.Cmd) {
 			envPrint = fmt.Sprintf("%s, %s", envPrint, cmdEnv)
 		}
 	}
-	debug.Log("running mutagen cmd %s with MUTAGEN env: %s", cmd.String(), envPrint)
+	slog.Debug("running mutagen cmd %s with MUTAGEN env: %s", cmd.String(), envPrint)
 }
 
 // envAsKeyValueStrings prepares the env-vars in key=value format to add to the command to be run

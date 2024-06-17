@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime/trace"
 	"slices"
 	"strconv"
@@ -24,29 +24,27 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/envpath"
-	"go.jetpack.io/devbox/internal/devbox/generate"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/shellgen"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/vercheck"
-
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/conf"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devbox/envpath"
+	"go.jetpack.io/devbox/internal/devbox/generate"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/plugin"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/services"
+	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
 )
 
@@ -245,9 +243,21 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 	}
 
 	lock.SetIgnoreShellMismatch(true)
-	env, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
-	if err != nil {
-		return err
+
+	var env map[string]string
+	if d.IsEnvEnabled() {
+		// Skip ensureStateIsUpToDate if we are already in a shell of this devbox-project
+		env = envir.PairsToMap(os.Environ())
+
+		// We set this to ensure that init-hooks do NOT re-run. They would have
+		// run when initializing the Devbox Environment in the current shell.
+		env[d.SkipInitHookEnvName()] = "true"
+	} else {
+		var err error
+		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Used to determine whether we're inside a shell (e.g. to prevent shell inception)
@@ -581,7 +591,7 @@ func (d *Devbox) StartServices(
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, devopt.ProcessComposeOpts{Background: true})
 	}
 
 	svcSet, err := d.Services()
@@ -703,7 +713,7 @@ func (d *Devbox) RestartServices(
 	if !services.ProcessManagerIsRunning(d.projectDir) {
 		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
 		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, true, "")
+		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, devopt.ProcessComposeOpts{Background: true})
 	}
 
 	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
@@ -731,18 +741,25 @@ func (d *Devbox) StartProcessManager(
 	ctx context.Context,
 	runInCurrentShell bool,
 	requestedServices []string,
-	background bool,
-	processComposeFileOrDir string,
+	processComposeOpts devopt.ProcessComposeOpts,
 ) error {
 	if !runInCurrentShell {
 		args := []string{"services", "up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
-		if processComposeFileOrDir != "" {
-			args = append(args, "--process-compose-file", processComposeFileOrDir)
+
+		// TODO: Here we're attempting to reconstruct arguments from the original command, so that we can reinvoke it in devbox shell.
+		// 		 Instead, we should consider refactoring this so that we can preserve and re-use the original command string,
+		//		 because the current approach is fragile and will need to be updated each time we add new flags.
+		if d.customProcessComposeFile != "" {
+			args = append(args, "--process-compose-file", d.customProcessComposeFile)
 		}
-		if background {
+		if processComposeOpts.Background {
 			args = append(args, "--background")
 		}
+		for _, flag := range processComposeOpts.ExtraFlags {
+			args = append(args, "--pcflags", flag)
+		}
+
 		return d.RunScript(ctx, "devbox", args)
 	}
 
@@ -761,53 +778,28 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 
-	processComposePath, err := utilityLookPath("process-compose")
+	err = initDevboxUtilityProject(ctx, d.stderr)
 	if err != nil {
-		fmt.Fprintln(d.stderr, "Installing process-compose. This may take a minute but will only happen once.")
-		if err = d.addDevboxUtilityPackage(ctx, "github:F1bonacc1/process-compose/"+processComposeTargetVersion); err != nil {
-			return err
-		}
-
-		// re-lookup the path to process-compose
-		processComposePath, err = utilityLookPath("process-compose")
-		if err != nil {
-			fmt.Fprintln(d.stderr, "failed to find process-compose after installing it.")
-			return err
-		}
-	}
-	re := regexp.MustCompile(`(?m)Version:\s*(v\d*\.\d*\.\d*)`)
-	pcVersionString, err := exec.Command(processComposePath, "version").Output()
-	if err != nil {
-		fmt.Fprintln(d.stderr, "failed to get process-compose version")
 		return err
 	}
 
-	pcVersion := re.FindStringSubmatch(strings.TrimSpace(string(pcVersionString)))[1]
-
-	if vercheck.SemverCompare(pcVersion, processComposeTargetVersion) < 0 {
-		fmt.Fprintln(d.stderr, "Upgrading process-compose to "+processComposeTargetVersion+"...")
-		oldProcessComposePkg := "github:F1bonacc1/process-compose/" + pcVersion + "#defaultPackage." + nix.System()
-		newProcessComposePkg := "github:F1bonacc1/process-compose/" + processComposeTargetVersion
-		// Find the old process Compose package
-		if err := d.removeDevboxUtilityPackage(ctx, oldProcessComposePkg); err != nil {
-			return err
-		}
-
-		if err = d.addDevboxUtilityPackage(ctx, newProcessComposePkg); err != nil {
-			return err
-		}
+	processComposeBinPath, err := utilityLookPath("process-compose")
+	if err != nil {
+		return err
 	}
 
 	// Start the process manager
 
 	return services.StartProcessManager(
-		ctx,
 		d.stderr,
 		requestedServices,
 		svcs,
 		d.projectDir,
-		processComposePath,
-		background,
+		services.ProcessComposeOpts{
+			BinPath:    processComposeBinPath,
+			Background: processComposeOpts.Background,
+			ExtraFlags: processComposeOpts.ExtraFlags,
+		},
 	)
 }
 
@@ -838,6 +830,7 @@ func (d *Devbox) StartProcessManager(
 // some additional processing. The computeEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
 func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
 
 	// Append variables from current env if --pure is not passed
@@ -855,7 +848,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		}
 	}
 
-	debug.Log("current environment PATH is: %s", env["PATH"])
+	slog.Debug("current environment PATH", "path", env["PATH"])
 
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
@@ -911,11 +904,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 		env[key] = val.Value.(string)
 	}
 
-	// These variables are only needed for shell, but we include them here in the computed env
-	// for both shell and run in order to be as identical as possible.
-	env["__ETC_PROFILE_NIX_SOURCED"] = "1" // Prevent user init file from loading nix profiles
-
-	debug.Log("nix environment PATH is: %s", env)
+	slog.Debug("nix environment PATH", "path", env)
 
 	env["PATH"] = envpath.JoinPathLists(
 		nix.ProfileBinPath(d.projectDir),
@@ -943,7 +932,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	//  from print-dev-env". Consider moving devboxEnvPath higher up in this function
 	//  where env["PATH"] is written to.
 	devboxEnvPath := env["PATH"]
-	debug.Log("PATH after plugins and config is: %s", devboxEnvPath)
+	slog.Debug("PATH after plugins and config", "path", devboxEnvPath)
 
 	// We filter out nix store paths of devbox-packages (represented here as buildInputs).
 	// Motivation: if a user removes a package from their devbox it should no longer
@@ -961,20 +950,20 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 			// input is of the form: /nix/store/<hash>-<package-name>-<version>
 			// path is of the form: /nix/store/<hash>-<package-name>-<version>/bin
 			if strings.TrimSpace(input) != "" && strings.HasPrefix(path, input) {
-				debug.Log("returning false for path %s and input %s\n", path, input)
+				slog.Debug("filtering out buildInput from PATH", "path", path, "input", input)
 				return false
 			}
 		}
 		return true
 	})
-	debug.Log("PATH after filtering with buildInputs (%v) is: %s", buildInputs, devboxEnvPath)
+	slog.Debug("PATH after filtering buildInputs", "inputs", buildInputs, "path", devboxEnvPath)
 
 	// TODO(gcurtis): this is a massive hack. Please get rid
 	// of this and install the package to the profile.
 	if len(glibcPatchPath) != 0 {
 		patchedPath := strings.Join(glibcPatchPath, string(filepath.ListSeparator))
 		devboxEnvPath = envpath.JoinPathLists(patchedPath, devboxEnvPath)
-		debug.Log("PATH after glibc-patch hack is: %s", devboxEnvPath)
+		slog.Debug("PATH after glibc-patch hack", "path", devboxEnvPath)
 	}
 
 	runXPaths, err := d.RunXPaths(ctx)
@@ -986,9 +975,9 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, d.preservePathStack)
 	env["PATH"] = pathStack.Path(env)
-	debug.Log("New path stack is: %s", pathStack)
+	slog.Debug("new path stack is", "path_stack", pathStack)
 
-	debug.Log("computed environment PATH is: %s", env["PATH"])
+	slog.Debug("computed environment PATH", "path", env["PATH"])
 
 	if !d.pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it

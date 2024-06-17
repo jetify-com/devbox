@@ -5,11 +5,11 @@ package cloud
 
 import (
 	"bytes"
+	"log/slog"
 	"os/exec"
 	"regexp"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
 )
 
 var githubSSHRegexp = regexp.MustCompile("Hi (.+)! You've successfully authenticated, " +
@@ -28,14 +28,11 @@ func queryGithubUsername() (string, error) {
 	if err != nil {
 		if e := (&exec.ExitError{}); errors.As(err, &e) && e.ExitCode() == 1 {
 			// This is the Happy case, and we can parse out the error message
-			debug.Log(
-				"Received expected (this is good) error for cmd `%s` had exit code 1 with stderr: %v", cmd,
-				bufErr.String(),
-			)
+			slog.Debug("received expected (this is good) error with exit code 1", "cmd", cmd, "stderr", bufErr.String())
 			return parseUsernameFromErrorMessage(bufErr.String()), nil
 		}
 		// This is the sad case, and we should let the caller figure out how to proceed with the user
-		debug.Log("error from command `%s`: %v, out: %v, stderr: %v", cmd, err, bufOut.String(), bufErr.String())
+		slog.Error("error from command", "cmd", cmd, "err", err, "stdout", bufOut.String(), "stderr", bufErr.String())
 		return "", errors.WithStack(err)
 	}
 
@@ -45,9 +42,9 @@ func queryGithubUsername() (string, error) {
 func parseUsernameFromErrorMessage(errorMessage string) string {
 	matchedUsernames := githubSSHRegexp.FindSubmatch([]byte(errorMessage))
 	if len(matchedUsernames) < 2 {
-		debug.Log("Did not find a username from github. Message is: %s", errorMessage)
+		slog.Debug("did not find a username from github", "github_msg", errorMessage)
 		return ""
 	}
-	debug.Log("matched username from github is: %s\n", matchedUsernames[1])
+	slog.Debug("matched username from github", "user", matchedUsernames[1])
 	return string(matchedUsernames[1])
 }
