@@ -95,13 +95,10 @@ func shellEnvFunc(
 		return "", err
 	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:               flags.config.path,
-		Environment:       flags.config.environment,
-		OmitNixEnv:        flags.omitNixEnv,
-		Stderr:            cmd.ErrOrStderr(),
-		PreservePathStack: flags.preservePathStack,
-		Pure:              flags.pure,
-		Env:               env,
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+		Env:         env,
 	})
 	if err != nil {
 		return "", err
@@ -115,8 +112,13 @@ func shellEnvFunc(
 
 	envStr, err := box.EnvExports(cmd.Context(), devopt.EnvExportsOpts{
 		DontRecomputeEnvironment: !flags.recomputeEnv,
-		NoRefreshAlias:           flags.noRefreshAlias,
-		RunHooks:                 flags.runInitHook,
+		EnvOptions: devopt.EnvOptions{
+			OmitNixEnv:        flags.omitNixEnv,
+			PreservePathStack: flags.preservePathStack,
+			Pure:              flags.pure,
+		},
+		NoRefreshAlias: flags.noRefreshAlias,
+		RunHooks:       flags.runInitHook,
 	})
 	if err != nil {
 		return "", err
