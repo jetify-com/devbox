@@ -28,20 +28,19 @@ func globalCmd() *cobra.Command {
 		PersistentPostRunE: ensureGlobalEnvEnabled,
 	}
 
-	shellEnv := shellEnvCmd(
-		withEnvForPackageBins(true),
-		withRecompute(false),
-	)
-
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
 	addCommandAndHideConfigFlag(globalCmd, pathCmd())
 	addCommandAndHideConfigFlag(globalCmd, pullCmd())
 	addCommandAndHideConfigFlag(globalCmd, pushCmd())
 	addCommandAndHideConfigFlag(globalCmd, removeCmd())
-	addCommandAndHideConfigFlag(globalCmd, runCmd())
+	addCommandAndHideConfigFlag(globalCmd, runCmd(runFlagDefaults{
+		omitNixEnv: true,
+	}))
 	addCommandAndHideConfigFlag(globalCmd, servicesCmd(persistentPreRunE))
-	addCommandAndHideConfigFlag(globalCmd, shellEnv)
+	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd(shellenvFlagDefaults{
+		omitNixEnv: true,
+	}))
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 	addCommandAndHideConfigFlag(globalCmd, listCmd())
 

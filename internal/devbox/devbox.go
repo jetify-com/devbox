@@ -59,7 +59,7 @@ const (
 type Devbox struct {
 	cfg                      *devconfig.Config
 	env                      map[string]string
-	envForPackageBins        bool
+	omitNixEnv               bool
 	environment              string
 	lockfile                 *lock.File
 	nix                      nix.Nixer
@@ -98,7 +98,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	box := &Devbox{
 		cfg:                      cfg,
 		env:                      opts.Env,
-		envForPackageBins:        opts.EnvForPackageBins,
+		omitNixEnv:               opts.OmitNixEnv,
 		environment:              environment,
 		nix:                      &nix.Nix{},
 		projectDir:               projectDir,
@@ -900,7 +900,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 
 	// TODO: look up callers of computeEnv to ensure we properly cache print-dev-env
 	// when needed in the product flows
-	if !d.envForPackageBins {
+	if !d.omitNixEnv {
 		nixEnv, err := d.execPrintDevEnv(ctx, usePrintDevEnvCache)
 		if err != nil {
 			return nil, err

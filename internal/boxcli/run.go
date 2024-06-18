@@ -22,11 +22,18 @@ import (
 type runCmdFlags struct {
 	envFlag
 	config      configFlags
+	omitNixEnv  bool
 	pure        bool
 	listScripts bool
 }
 
-func runCmd() *cobra.Command {
+// runFlagDefaults are the flag default values that differ
+// from the `devbox` command versus `devbox global` command.
+type runFlagDefaults struct {
+	omitNixEnv bool
+}
+
+func runCmd(defaults runFlagDefaults) *cobra.Command {
 	flags := runCmdFlags{}
 	command := &cobra.Command{
 		Use:   "run [<script> | <cmd>]",
@@ -50,6 +57,11 @@ func runCmd() *cobra.Command {
 		&flags.pure, "pure", false, "if this flag is specified, devbox runs the script in an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
 	command.Flags().BoolVarP(
 		&flags.listScripts, "list", "l", false, "list all scripts defined in devbox.json")
+	command.Flags().BoolVar(
+		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
+		"shell environment will omit the env-vars from print-dev-env",
+	)
+	_ = command.Flags().MarkHidden("omit-nix-env")
 
 	command.ValidArgs = listScripts(command, flags)
 
@@ -102,6 +114,7 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		Dir:         path,
 		Environment: flags.config.environment,
 		Stderr:      cmd.ErrOrStderr(),
+		OmitNixEnv:  flags.omitNixEnv,
 		Pure:        flags.pure,
 		Env:         env,
 	})

@@ -9,13 +9,10 @@ import (
 // - omit suffix Opts for other structs that are composed into an Opts struct
 
 type Opts struct {
-	Dir         string
-	Env         map[string]string
-	Environment string
-	// EnvForPackageBins will create the Devbox environment from print-dev-env
-	// such that it is optimized for executing binaries, and not for developing
-	// software using dependencies installed in the Devbox environment.
-	EnvForPackageBins        bool
+	Dir                      string
+	Env                      map[string]string
+	Environment              string
+	OmitNixEnv               bool
 	PreservePathStack        bool
 	Pure                     bool
 	IgnoreWarnings           bool

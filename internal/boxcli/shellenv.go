@@ -15,9 +15,8 @@ import (
 
 type shellEnvCmdFlags struct {
 	envFlag
-	config configFlags
-	// TODO: is this flag needed in other commands?
-	envForPackageBins bool
+	config            configFlags
+	omitNixEnv        bool
 	install           bool
 	noRefreshAlias    bool
 	preservePathStack bool
@@ -26,33 +25,14 @@ type shellEnvCmdFlags struct {
 	runInitHook       bool
 }
 
+// shellenvFlagDefaults are the flag default values that differ
+// from the `devbox` command versus `devbox global` command.
 type shellenvFlagDefaults struct {
-	envForPackageBins bool
-	recomputeEnv      bool
+	omitNixEnv   bool
+	recomputeEnv bool
 }
 
-type shellenvFlagDefault func(*shellenvFlagDefaults)
-
-func withEnvForPackageBins(envForPackageBins bool) shellenvFlagDefault {
-	return func(o *shellenvFlagDefaults) {
-		o.envForPackageBins = envForPackageBins
-	}
-}
-
-func withRecompute(recompute bool) shellenvFlagDefault {
-	return func(o *shellenvFlagDefaults) {
-		o.recomputeEnv = recompute
-	}
-}
-
-func shellEnvCmd(opts ...shellenvFlagDefault) *cobra.Command {
-	defaults := shellenvFlagDefaults{
-		recomputeEnv: true,
-	}
-	for _, opt := range opts {
-		opt(&defaults)
-	}
-
+func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
 		Use:     "shellenv",
@@ -90,9 +70,10 @@ func shellEnvCmd(opts ...shellenvFlagDefault) *cobra.Command {
 			"Use this flag to disable this behavior.")
 	_ = command.Flags().MarkHidden("no-refresh-alias")
 	command.Flags().BoolVar(
-		&flags.envForPackageBins, "env-for-package-binaries", defaults.envForPackageBins,
-		"include package bin directories in the PATH")
-	_ = command.Flags().MarkHidden("env-for-package-binaries")
+		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
+		"shell environment will omit the env-vars from print-dev-env",
+	)
+	_ = command.Flags().MarkHidden("omit-nix-env")
 
 	command.Flags().BoolVarP(
 		&flags.recomputeEnv, "recompute", "r", defaults.recomputeEnv,
@@ -116,7 +97,7 @@ func shellEnvFunc(
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:               flags.config.path,
 		Environment:       flags.config.environment,
-		EnvForPackageBins: flags.envForPackageBins,
+		OmitNixEnv:        flags.omitNixEnv,
 		Stderr:            cmd.ErrOrStderr(),
 		PreservePathStack: flags.preservePathStack,
 		Pure:              flags.pure,

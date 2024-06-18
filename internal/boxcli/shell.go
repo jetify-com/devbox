@@ -17,12 +17,19 @@ import (
 
 type shellCmdFlags struct {
 	envFlag
-	config   configFlags
-	printEnv bool
-	pure     bool
+	config     configFlags
+	omitNixEnv bool
+	printEnv   bool
+	pure       bool
 }
 
-func shellCmd() *cobra.Command {
+// shellFlagDefaults are the flag default values that differ
+// from the `devbox` command versus `devbox global` command.
+type shellFlagDefaults struct {
+	omitNixEnv bool
+}
+
+func shellCmd(defaults shellFlagDefaults) *cobra.Command {
 	flags := shellCmdFlags{}
 	command := &cobra.Command{
 		Use:   "shell",
@@ -41,6 +48,11 @@ func shellCmd() *cobra.Command {
 		&flags.printEnv, "print-env", false, "print script to setup shell environment")
 	command.Flags().BoolVar(
 		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+	command.Flags().BoolVar(
+		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
+		"shell environment will omit the env-vars from print-dev-env",
+	)
+	_ = command.Flags().MarkHidden("omit-nix-env")
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
@@ -57,6 +69,7 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		Dir:         flags.config.path,
 		Env:         env,
 		Environment: flags.config.environment,
+		OmitNixEnv:  flags.omitNixEnv,
 		Pure:        flags.pure,
 		Stderr:      cmd.ErrOrStderr(),
 	})
