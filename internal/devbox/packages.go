@@ -649,7 +649,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
 	packages := d.InstallablePackages()
 	for _, pkg := range packages {
-		if pkg.IsRunX() {
+		if !pkg.IsDevboxPackage || pkg.IsRunX() {
 			continue
 		}
 		existingStorePaths, err := pkg.GetResolvedStorePaths()

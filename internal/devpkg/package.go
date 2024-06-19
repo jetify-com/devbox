@@ -145,6 +145,7 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 	// assume a Devbox package.
 	parsed, err := flake.ParseInstallable(raw)
 	if err != nil || pkgtype.IsAmbiguous(raw, parsed) {
+		// TODO: This sets runx packages as devbox packages. Not sure if that's what we want.
 		pkg.IsDevboxPackage = true
 		pkg.resolve = sync.OnceValue(func() error { return resolve(pkg) })
 		return pkg
