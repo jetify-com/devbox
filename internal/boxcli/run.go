@@ -73,7 +73,6 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 		Dir:            flags.config.path,
 		Environment:    flags.config.environment,
 		Stderr:         cmd.ErrOrStderr(),
-		Pure:           flags.pure,
 		IgnoreWarnings: true,
 	})
 	if err != nil {
@@ -114,15 +113,17 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		Dir:         path,
 		Environment: flags.config.environment,
 		Stderr:      cmd.ErrOrStderr(),
-		OmitNixEnv:  flags.omitNixEnv,
-		Pure:        flags.pure,
 		Env:         env,
 	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
-	if err := box.RunScript(cmd.Context(), script, scriptArgs); err != nil {
+	envOpts := devopt.EnvOptions{
+		OmitNixEnv: flags.omitNixEnv,
+		Pure:       flags.pure,
+	}
+	if err := box.RunScript(cmd.Context(), envOpts, script, scriptArgs); err != nil {
 		return redact.Errorf("error running script %q in Devbox: %w", script, err)
 	}
 	return nil

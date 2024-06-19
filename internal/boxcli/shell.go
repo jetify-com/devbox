@@ -69,8 +69,6 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		Dir:         flags.config.path,
 		Env:         env,
 		Environment: flags.config.environment,
-		OmitNixEnv:  flags.omitNixEnv,
-		Pure:        flags.pure,
 		Stderr:      cmd.ErrOrStderr(),
 	})
 	if err != nil {
@@ -93,7 +91,10 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell(cmd.Context())
+	return box.Shell(cmd.Context(), devopt.EnvOptions{
+		OmitNixEnv: flags.omitNixEnv,
+		Pure:       flags.pure,
+	})
 }
 
 func shellInceptionErrorMsg(cmdPath string) error {

@@ -59,14 +59,11 @@ const (
 type Devbox struct {
 	cfg                      *devconfig.Config
 	env                      map[string]string
-	omitNixEnv               bool
 	environment              string
 	lockfile                 *lock.File
 	nix                      nix.Nixer
 	projectDir               string
 	pluginManager            *plugin.Manager
-	preservePathStack        bool
-	pure                     bool
 	customProcessComposeFile string
 
 	// This is needed because of the --quiet flag.
@@ -98,14 +95,11 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	box := &Devbox{
 		cfg:                      cfg,
 		env:                      opts.Env,
-		omitNixEnv:               opts.OmitNixEnv,
 		environment:              environment,
 		nix:                      &nix.Nix{},
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,
-		preservePathStack:        opts.PreservePathStack,
-		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 	}
 
@@ -200,11 +194,11 @@ func (d *Devbox) Generate(ctx context.Context) error {
 	return errors.WithStack(shellgen.GenerateForPrintEnv(ctx, d))
 }
 
-func (d *Devbox) Shell(ctx context.Context) error {
+func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx, envOpts)
 	if err != nil {
 		return err
 	}
@@ -228,7 +222,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(telemetry.ShellStart()),
 	}
 
-	shell, err := NewDevboxShell(d, opts...)
+	shell, err := NewDevboxShell(d, envOpts, opts...)
 	if err != nil {
 		return err
 	}
@@ -236,7 +230,14 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
+// runDevboxServicesScript invokes RunScript with the envOptions set to the appropriate
+// defaults for the `devbox services` scenario.
+// TODO: move to services.go
+func (d *Devbox) runDevboxServicesScript(ctx context.Context, cmdArgs []string) error {
+	return d.RunScript(ctx, devopt.EnvOptions{}, "devbox", cmdArgs)
+}
+
+func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
@@ -256,7 +257,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		env[d.SkipInitHookEnvName()] = "true"
 	} else {
 		var err error
-		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, envOpts)
 		if err != nil {
 			return err
 		}
@@ -341,9 +342,9 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 			)
 		}
 
-		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
+		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/, opts.EnvOptions)
 	} else {
-		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, opts.EnvOptions)
 	}
 
 	if err != nil {
@@ -368,7 +369,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx, devopt.EnvOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -578,11 +579,12 @@ func (d *Devbox) Services() (services.Services, error) {
 	return result, nil
 }
 
+// TODO: move to services.go
 func (d *Devbox) StartServices(
 	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
 ) error {
 	if !runInCurrentShell {
-		return d.RunScript(ctx, "devbox",
+		return d.runDevboxServicesScript(ctx,
 			append(
 				[]string{"services", "start", "--run-in-current-shell"},
 				serviceNames...,
@@ -622,6 +624,7 @@ func (d *Devbox) StartServices(
 	return nil
 }
 
+// TODO: move to services.go
 func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
 	if !runInCurrentShell {
 		args := []string{"services", "stop", "--run-in-current-shell"}
@@ -629,7 +632,7 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 		if allProjects {
 			args = append(args, "--all-projects")
 		}
-		return d.RunScript(ctx, "devbox", args)
+		return d.runDevboxServicesScript(ctx, args)
 	}
 
 	if allProjects {
@@ -661,10 +664,10 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 	return nil
 }
 
+// TODO: move to services.go
 func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
 	if !runInCurrentShell {
-		return d.RunScript(ctx,
-			"devbox", []string{"services", "ls", "--run-in-current-shell"})
+		return d.runDevboxServicesScript(ctx, []string{"services", "ls", "--run-in-current-shell"})
 	}
 
 	svcSet, err := d.Services()
@@ -700,11 +703,12 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 	return nil
 }
 
+// TODO: move to services.go
 func (d *Devbox) RestartServices(
 	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
 ) error {
 	if !runInCurrentShell {
-		return d.RunScript(ctx, "devbox",
+		return d.runDevboxServicesScript(ctx,
 			append(
 				[]string{"services", "restart", "--run-in-current-shell"},
 				serviceNames...,
@@ -739,6 +743,7 @@ func (d *Devbox) RestartServices(
 	return nil
 }
 
+// TODO: move to services.go
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
 	runInCurrentShell bool,
@@ -762,7 +767,7 @@ func (d *Devbox) StartProcessManager(
 			args = append(args, "--pcflags", flag)
 		}
 
-		return d.RunScript(ctx, "devbox", args)
+		return d.runDevboxServicesScript(ctx, args)
 	}
 
 	svcs, err := d.Services()
@@ -886,13 +891,17 @@ func (d *Devbox) execPrintDevEnv(ctx context.Context, usePrintDevEnvCache bool) 
 // Note that the shellrc.tmpl template (which sources this environment) does
 // some additional processing. The computeEnv environment won't necessarily
 // represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
+func (d *Devbox) computeEnv(
+	ctx context.Context,
+	usePrintDevEnvCache bool,
+	envOpts devopt.EnvOptions,
+) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
 
 	// Append variables from current env if --pure is not passed
 	currentEnv := os.Environ()
-	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv)
+	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv, envOpts.Pure)
 	if err != nil {
 		return nil, err
 	}
@@ -910,7 +919,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
 
-	if !d.omitNixEnv {
+	if !envOpts.OmitNixEnv {
 		nixEnv, err := d.execPrintDevEnv(ctx, usePrintDevEnvCache)
 		if err != nil {
 			return nil, err
@@ -989,13 +998,13 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
-	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, d.preservePathStack)
+	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
 	env["PATH"] = pathStack.Path(env)
 	slog.Debug("new path stack is", "path_stack", pathStack)
 
 	slog.Debug("computed environment PATH", "path", env["PATH"])
 
-	if !d.pure {
+	if !envOpts.Pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
 	}
@@ -1011,6 +1020,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 // while ensuring these reflect the current (up to date) state of the project.
 func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	ctx context.Context,
+	envOpts devopt.EnvOptions,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
@@ -1037,7 +1047,7 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
+	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/, envOpts)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1256,7 +1266,7 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 
 // parseEnvAndExcludeSpecialCases converts env as []string to map[string]string
 // In case of pure shell, it leaks HOME and it leaks PATH with some modifications
-func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string]string, error) {
+func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string, pure bool) (map[string]string, error) {
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
 		key, val, found := strings.Cut(kv, "=")
@@ -1270,13 +1280,13 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		// - HOME required for devbox binary to work
 		// - PATH to find the nix installation. It is cleaned for pure mode below.
 		// - TERM to enable colored text in the pure shell
-		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
+		if !pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
 	}
 
 	// handling special case for PATH
-	if d.pure {
+	if pure {
 		// Setting a custom env variable to differentiate pure and regular shell
 		env["DEVBOX_PURE_SHELL"] = "1"
 		// Finding nix executables in path and passing it through
