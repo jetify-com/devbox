@@ -898,8 +898,6 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	originalEnv := make(map[string]string, len(env))
 	maps.Copy(originalEnv, env)
 
-	// TODO: look up callers of computeEnv to ensure we properly cache print-dev-env
-	// when needed in the product flows
 	if !d.omitNixEnv {
 		nixEnv, err := d.execPrintDevEnv(ctx, usePrintDevEnvCache)
 		if err != nil {
