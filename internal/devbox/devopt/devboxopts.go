@@ -12,6 +12,7 @@ type Opts struct {
 	Dir                      string
 	Env                      map[string]string
 	Environment              string
+	OmitNixEnv               bool
 	PreservePathStack        bool
 	Pure                     bool
 	IgnoreWarnings           bool

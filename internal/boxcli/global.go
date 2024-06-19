@@ -28,27 +28,19 @@ func globalCmd() *cobra.Command {
 		PersistentPostRunE: ensureGlobalEnvEnabled,
 	}
 
-	shellEnv := shellEnvCmd()
-	// For `devbox shellenv` the default value of recompute is true.
-	// Change the default value to false for `devbox global shellenv` only.
-	shellEnv.Flag("recompute").DefValue = "false" // Needed for help text
-	if err := shellEnv.Flag("recompute").Value.Set("false"); err != nil {
-		// This will never panic because internally it just does
-		// `strconv.ParseBool("false")` which is always valid.
-		// If this were to change, we'll immediately detect this during development
-		// since this code always runs on any devbox command (and will fix it).
-		panic(errors.WithStack(err))
-	}
-
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
 	addCommandAndHideConfigFlag(globalCmd, pathCmd())
 	addCommandAndHideConfigFlag(globalCmd, pullCmd())
 	addCommandAndHideConfigFlag(globalCmd, pushCmd())
 	addCommandAndHideConfigFlag(globalCmd, removeCmd())
-	addCommandAndHideConfigFlag(globalCmd, runCmd())
+	addCommandAndHideConfigFlag(globalCmd, runCmd(runFlagDefaults{
+		omitNixEnv: true,
+	}))
 	addCommandAndHideConfigFlag(globalCmd, servicesCmd(persistentPreRunE))
-	addCommandAndHideConfigFlag(globalCmd, shellEnv)
+	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd(shellenvFlagDefaults{
+		omitNixEnv: true,
+	}))
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 	addCommandAndHideConfigFlag(globalCmd, listCmd())
 

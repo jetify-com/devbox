@@ -16,6 +16,7 @@ import (
 type shellEnvCmdFlags struct {
 	envFlag
 	config            configFlags
+	omitNixEnv        bool
 	install           bool
 	noRefreshAlias    bool
 	preservePathStack bool
@@ -24,11 +25,18 @@ type shellEnvCmdFlags struct {
 	runInitHook       bool
 }
 
-func shellEnvCmd() *cobra.Command {
+// shellenvFlagDefaults are the flag default values that differ
+// from the `devbox` command versus `devbox global` command.
+type shellenvFlagDefaults struct {
+	omitNixEnv   bool
+	recomputeEnv bool
+}
+
+func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
 		Use:     "shellenv",
-		Short:   "Print shell commands that add Devbox packages to your PATH",
+		Short:   "Print shell commands that create a Devbox Environment in the shell",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,10 +69,14 @@ func shellEnvCmd() *cobra.Command {
 		"by default, devbox will add refresh alias to the environment"+
 			"Use this flag to disable this behavior.")
 	_ = command.Flags().MarkHidden("no-refresh-alias")
+	command.Flags().BoolVar(
+		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
+		"shell environment will omit the env-vars from print-dev-env",
+	)
+	_ = command.Flags().MarkHidden("omit-nix-env")
 
-	// Note, `devbox global shellenv` will override the default value to be false
 	command.Flags().BoolVarP(
-		&flags.recomputeEnv, "recompute", "r", true,
+		&flags.recomputeEnv, "recompute", "r", defaults.recomputeEnv,
 		"Recompute environment if needed",
 	)
 
@@ -85,6 +97,7 @@ func shellEnvFunc(
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:               flags.config.path,
 		Environment:       flags.config.environment,
+		OmitNixEnv:        flags.omitNixEnv,
 		Stderr:            cmd.ErrOrStderr(),
 		PreservePathStack: flags.preservePathStack,
 		Pure:              flags.pure,

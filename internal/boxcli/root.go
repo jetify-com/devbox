@@ -71,12 +71,14 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(listCmd())
 	command.AddCommand(logCmd())
 	command.AddCommand(removeCmd())
-	command.AddCommand(runCmd())
+	command.AddCommand(runCmd(runFlagDefaults{}))
 	command.AddCommand(searchCmd())
 	command.AddCommand(servicesCmd())
 	command.AddCommand(setupCmd())
-	command.AddCommand(shellCmd())
-	command.AddCommand(shellEnvCmd())
+	command.AddCommand(shellCmd(shellFlagDefaults{}))
+	command.AddCommand(shellEnvCmd(shellenvFlagDefaults{
+		recomputeEnv: true,
+	}))
 	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
 	// Preview commands
