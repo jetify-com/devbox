@@ -16,7 +16,7 @@ func (d *Devbox) StartServices(
 	if !runInCurrentShell {
 		return d.runDevboxServicesScript(ctx,
 			append(
-				[]string{"services", "start", "--run-in-current-shell"},
+				[]string{"start", "--run-in-current-shell"},
 				serviceNames...,
 			),
 		)
@@ -56,7 +56,7 @@ func (d *Devbox) StartServices(
 
 func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
 	if !runInCurrentShell {
-		args := []string{"services", "stop", "--run-in-current-shell"}
+		args := []string{"stop", "--run-in-current-shell"}
 		args = append(args, serviceNames...)
 		if allProjects {
 			args = append(args, "--all-projects")
@@ -95,7 +95,7 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 
 func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
 	if !runInCurrentShell {
-		return d.runDevboxServicesScript(ctx, []string{"services", "ls", "--run-in-current-shell"})
+		return d.runDevboxServicesScript(ctx, []string{"ls", "--run-in-current-shell"})
 	}
 
 	svcSet, err := d.Services()
@@ -137,7 +137,7 @@ func (d *Devbox) RestartServices(
 	if !runInCurrentShell {
 		return d.runDevboxServicesScript(ctx,
 			append(
-				[]string{"services", "restart", "--run-in-current-shell"},
+				[]string{"restart", "--run-in-current-shell"},
 				serviceNames...,
 			),
 		)
@@ -177,7 +177,7 @@ func (d *Devbox) StartProcessManager(
 	processComposeOpts devopt.ProcessComposeOpts,
 ) error {
 	if !runInCurrentShell {
-		args := []string{"services", "up", "--run-in-current-shell"}
+		args := []string{"up", "--run-in-current-shell"}
 		args = append(args, requestedServices...)
 
 		// TODO: Here we're attempting to reconstruct arguments from the original command, so that we can reinvoke it in devbox shell.
@@ -239,5 +239,6 @@ func (d *Devbox) StartProcessManager(
 // runDevboxServicesScript invokes RunScript with the envOptions set to the appropriate
 // defaults for the `devbox services` scenario.
 func (d *Devbox) runDevboxServicesScript(ctx context.Context, cmdArgs []string) error {
+	cmdArgs = append([]string{"services"}, cmdArgs...)
 	return d.RunScript(ctx, devopt.EnvOptions{}, "devbox", cmdArgs)
 }
