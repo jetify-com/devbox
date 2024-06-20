@@ -36,7 +36,7 @@
       in
       {
         devShells.{{ .System }}.default = pkgs.mkShell {
-          buildInputs = [
+          packages = [
             {{- range $_, $pkg := .Packages }}
             {{- range $_, $output := $pkg.GetOutputsWithCache }}
             {{ if $output.CacheURI -}}

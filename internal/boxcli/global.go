@@ -35,11 +35,11 @@ func globalCmd() *cobra.Command {
 	addCommandAndHideConfigFlag(globalCmd, pushCmd())
 	addCommandAndHideConfigFlag(globalCmd, removeCmd())
 	addCommandAndHideConfigFlag(globalCmd, runCmd(runFlagDefaults{
-		omitNixEnv: true,
+		omitNixEnv: false,
 	}))
 	addCommandAndHideConfigFlag(globalCmd, servicesCmd(persistentPreRunE))
 	addCommandAndHideConfigFlag(globalCmd, shellEnvCmd(shellenvFlagDefaults{
-		omitNixEnv: true,
+		omitNixEnv: false,
 	}))
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
 	addCommandAndHideConfigFlag(globalCmd, listCmd())
