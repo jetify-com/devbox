@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/debug"
@@ -746,7 +747,7 @@ func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, err
 		return storePathsForPackage, err
 	}
 
-	if p.IsDevboxPackage {
+	if featureflag.TidyWarning.Enabled() && p.IsDevboxPackage {
 		// No fast path, we need to query nix.
 		ux.FHidableWarning(ctx, w, MissingStorePathsWarning, p.Raw)
 	}
