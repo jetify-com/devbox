@@ -28,7 +28,8 @@ func (d *Devbox) isGlobal() bool {
 // great, we just print out the entire command.
 func (d *Devbox) refreshAliasOrCommand() string {
 	if !d.isRefreshAliasSet() {
-		return d.refreshCmd()
+		// even if alias is not set, it might still be set by the end of this process
+		return fmt.Sprintf("`%s` or `%s`", d.refreshAliasName(), d.refreshCmd())
 	}
 	return d.refreshAliasName()
 }

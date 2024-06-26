@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type shellEnvCmdFlags struct {
@@ -94,6 +95,10 @@ func shellEnvFunc(
 	if err != nil {
 		return "", err
 	}
+	ctx := cmd.Context()
+	if flags.recomputeEnv {
+		ctx = ux.HideMessage(ctx, devbox.StateOutOfDateMessage)
+	}
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
 		Environment: flags.config.environment,
@@ -105,12 +110,12 @@ func shellEnvFunc(
 	}
 
 	if flags.install {
-		if err := box.Install(cmd.Context()); err != nil {
+		if err := box.Install(ctx); err != nil {
 			return "", err
 		}
 	}
 
-	envStr, err := box.EnvExports(cmd.Context(), devopt.EnvExportsOpts{
+	envStr, err := box.EnvExports(ctx, devopt.EnvExportsOpts{
 		DontRecomputeEnvironment: !flags.recomputeEnv,
 		EnvOptions: devopt.EnvOptions{
 			OmitNixEnv:        flags.omitNixEnv,
