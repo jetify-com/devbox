@@ -24,10 +24,13 @@ FOO3=ToBeOverwrittenByDevboxJSON
   "env": {
     "FOO3": "BAS"
   },
-  "scripts": {
-    "test": "echo $FOO",
-    "test2": "echo $FOO2",
-    "test3": "echo $FOO3",
-    "test4": "echo $FOO4"
-  }
+  "shell": {
+    "scripts": {
+      "test": "echo $FOO",
+      "test2": "echo $FOO2",
+      "test3": "echo $FOO3",
+      "test4": "echo $FOO4"
+    }
+  },
+  "env_from": "test.env"
 }
