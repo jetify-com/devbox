@@ -21,7 +21,7 @@
         });
       in
       {
-        devShells.x86_64-linux.default = pkgs.mkShell {
+        devShells.x86_64-linux.default = pkgs.mkShellNoCC {
           buildInputs = [
             (builtins.trace "evaluating nixpkgs-pkgs.php" nixpkgs-pkgs.php)
             (builtins.trace "evaluating nixpkgs-pkgs.php81Packages.composer" nixpkgs-pkgs.php81Packages.composer)
