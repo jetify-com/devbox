@@ -135,9 +135,9 @@ Devbox의 개발 환경은 *이동성*이 있습니다. 환경을 정확히 한 
 
 ## 기여하기
 
-Devbox는 오픈소스 프로젝트이므로 언제든지 기여를 환영합니다. 풀 리퀘스트를 제출하기 전에 [기여 가이드](CONTRIBUTING.md)를 읽어주세요. 
+Devbox는 오픈소스 프로젝트이므로 언제든지 기여를 환영합니다. 풀 리퀘스트를 제출하기 전에 [기여 가이드](../../CONTRIBUTING.md)를 읽어주세요. 
 
-[Devbox 개발을 위한 README.md](devbox.md)
+[Devbox 개발을 위한 README.md](../../devbox.md)
 
 ## 관련된 작업들
 
@@ -146,7 +146,7 @@ Devbox는 오픈소스 프로젝트이므로 언제든지 기여를 환영합니
 ## 번역판
 
 + [English](https://github.com/jetify-com/devbox/blob/main/README.md)
-+ [Chinese](./docs/translation/README-zh-CN.md)
++ [Chinese](README-zh-CN.md)
 
 ## 라이선스
 
