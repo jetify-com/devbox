@@ -5,7 +5,9 @@
     "stack@latest",
     "cabal-install@latest",
     "zlib@latest",
-    "hpack@latest"
+    "hpack@latest",
+    "bintools@latest", // for ldd
+    "gcc@latest", // for c-compiler
   ],
   "shell": {
     "init_hook": null,

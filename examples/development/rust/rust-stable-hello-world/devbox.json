@@ -1,7 +1,8 @@
 {
     "packages": [
         "rustup@latest",
-        "libiconv@latest"
+        "libiconv@latest",
+        "gcc@latest",
     ],
     "env": {
       "PROJECT_DIR": "$PWD"

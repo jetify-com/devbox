@@ -2,7 +2,8 @@
     "packages": [
         "bundler@latest",
         "ruby@3.1",
-        "libffi@latest"
+        "libffi@latest",
+        "gcc@latest", // for building gem ruby_http_parser.c (and maybe others)
     ],
     "shell": {
         "init_hook": [],
