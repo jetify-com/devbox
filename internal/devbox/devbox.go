@@ -323,14 +323,11 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	if opts.DontRecomputeEnvironment {
 		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 		if !upToDate {
-			cmd := `eval "$(devbox global shellenv --recompute)"`
-			if isFishShell() {
-				cmd = `devbox global shellenv --recompute | source`
-			}
-			ux.Finfo(
+			ux.FHidableWarning(
+				ctx,
 				d.stderr,
-				"Your devbox environment may be out of date. Please run \n\n%s\n\n",
-				cmd,
+				StateOutOfDateMessage,
+				d.refreshAliasOrCommand(),
 			)
 		}
 
