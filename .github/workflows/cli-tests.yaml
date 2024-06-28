@@ -247,6 +247,7 @@ jobs:
           devbox run -- echo "Hello from devbox!"
           devbox rm go
 
+  # just for fast testing, will remove
   test-micromamba-numpy:
     runs-on: ubuntu-latest
     steps:
@@ -256,4 +257,4 @@ jobs:
           enable-cache: true
       - name: Run test
         working-directory: examples/development/python/micromamba/
-        run: devbox run text
+        run: devbox run run_test

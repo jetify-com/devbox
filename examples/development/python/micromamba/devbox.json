@@ -11,7 +11,7 @@
       "pip install -r requirements.txt -q",
     ],
     "scripts": {
-      "test": [
+      "run_test": [
         "python main.py",
       ],
     },
