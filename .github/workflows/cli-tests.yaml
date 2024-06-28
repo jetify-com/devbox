@@ -246,3 +246,14 @@ jobs:
           devbox install
           devbox run -- echo "Hello from devbox!"
           devbox rm go
+
+  test-micromamba-numpy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.11.0
+        with:
+          enable-cache: true
+      - name: Run test
+        working-directory: examples/development/python/micromamba/
+        run: devbox run text
