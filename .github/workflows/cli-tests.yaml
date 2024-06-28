@@ -256,5 +256,4 @@ jobs:
         with:
           enable-cache: true
       - name: Run test
-        working-directory: examples/development/python/micromamba/
-        run: devbox run run_test
+        run: devbox run -c examples/development/python/micromamba/ run_test
