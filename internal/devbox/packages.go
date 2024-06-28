@@ -37,7 +37,7 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
-var StateOutOfDateMessage = "Your devbox environment may be out of date. Run %s to update it.\n"
+const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %s to update it.\n"
 
 // packages.go has functions for adding, removing and getting info about nix
 // packages
