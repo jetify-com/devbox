@@ -951,6 +951,21 @@ func (d *Devbox) configEnvs(
 				}
 			}
 		}
+	} else if d.cfg.Root.IsdotEnvEnabled() {
+		// if env_from points to a .env file, parse and add it
+		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
+		if err != nil {
+			// it's fine to include the error ParseEnvsFromDotEnv here because
+			// the error message is relevant to the user
+			return nil, usererr.New(
+				"failed parsing %s file. Error: %v",
+				d.cfg.Root.EnvFrom,
+				err,
+			)
+		}
+		for k, v := range parsedEnvs {
+			env[k] = v
+		}
 	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
 			"unknown from_env value: %s. Supported value is: %q.",

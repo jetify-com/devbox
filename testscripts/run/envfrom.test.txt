@@ -1,0 +1,36 @@
+# Tests related to setting the env_from for devbox run.
+
+exec devbox run test
+stdout 'BAR'
+
+exec devbox run test2
+stdout 'BAZ'
+
+exec devbox run test3
+stdout 'BAS'
+
+exec devbox run test4
+stdout ''
+
+-- test.env --
+FOO=BAR
+FOO2 = BAZ
+FOO3=ToBeOverwrittenByDevboxJSON
+# FOO4=comment shouldn't be processed
+
+-- devbox.json --
+{
+  "packages": [],
+  "env": {
+    "FOO3": "BAS"
+  },
+  "shell": {
+    "scripts": {
+      "test": "echo $FOO",
+      "test2": "echo $FOO2",
+      "test3": "echo $FOO3",
+      "test4": "echo $FOO4"
+    }
+  },
+  "env_from": "test.env"
+}
