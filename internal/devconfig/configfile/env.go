@@ -1,11 +1,11 @@
 package configfile
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/hashicorp/go-envparse"
 )
 
 func (c *ConfigFile) IsEnvsecEnabled() bool {
@@ -32,32 +32,10 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	}
 	defer file.Close()
 
-	envMap := map[string]string{}
-
-	// Read the file line by line
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		// Ideally .env file shouldn't have empty lines and comments but
-		// this check makes it allowed.
-		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid line in .env file: %s", line)
-		}
-		// Also ideally, .env files should not have space in their `key=value` format
-		// but this allows `key = value` to pass through as well
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		// Add the parsed key-value pair to the map
-		envMap[key] = value
+	envMap, err := envparse.Parse(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse env file: %v", err)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to read env file: %v", err)
-	}
 	return envMap, nil
 }
