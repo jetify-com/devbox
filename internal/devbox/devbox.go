@@ -18,7 +18,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -64,8 +63,6 @@ type Devbox struct {
 	nix                      nix.Nixer
 	projectDir               string
 	pluginManager            *plugin.Manager
-	preservePathStack        bool
-	pure                     bool
 	customProcessComposeFile string
 
 	// This is needed because of the --quiet flag.
@@ -102,8 +99,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		projectDir:               projectDir,
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,
-		preservePathStack:        opts.PreservePathStack,
-		pure:                     opts.Pure,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 	}
 
@@ -198,11 +193,11 @@ func (d *Devbox) Generate(ctx context.Context) error {
 	return errors.WithStack(shellgen.GenerateForPrintEnv(ctx, d))
 }
 
-func (d *Devbox) Shell(ctx context.Context) error {
+func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 	ctx, task := trace.NewTask(ctx, "devboxShell")
 	defer task.End()
 
-	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx, envOpts)
 	if err != nil {
 		return err
 	}
@@ -226,7 +221,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 		WithShellStartTime(telemetry.ShellStart()),
 	}
 
-	shell, err := NewDevboxShell(d, opts...)
+	shell, err := NewDevboxShell(d, envOpts, opts...)
 	if err != nil {
 		return err
 	}
@@ -234,7 +229,7 @@ func (d *Devbox) Shell(ctx context.Context) error {
 	return shell.Run()
 }
 
-func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string) error {
+func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
 
@@ -254,7 +249,7 @@ func (d *Devbox) RunScript(ctx context.Context, cmdName string, cmdArgs []string
 		env[d.SkipInitHookEnvName()] = "true"
 	} else {
 		var err error
-		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		env, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, envOpts)
 		if err != nil {
 			return err
 		}
@@ -328,20 +323,17 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	if opts.DontRecomputeEnvironment {
 		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 		if !upToDate {
-			cmd := `eval "$(devbox global shellenv --recompute)"`
-			if isFishShell() {
-				cmd = `devbox global shellenv --recompute | source`
-			}
-			ux.Finfo(
+			ux.FHidableWarning(
+				ctx,
 				d.stderr,
-				"Your devbox environment may be out of date. Please run \n\n%s\n\n",
-				cmd,
+				StateOutOfDateMessage,
+				d.refreshAliasOrCommand(),
 			)
 		}
 
-		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
+		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/, opts.EnvOptions)
 	} else {
-		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx)
+		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, opts.EnvOptions)
 	}
 
 	if err != nil {
@@ -366,7 +358,7 @@ func (d *Devbox) EnvVars(ctx context.Context) ([]string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxEnvVars")
 	defer task.End()
 	// this only returns env variables for the shell environment excluding hooks
-	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx)
+	envs, err := d.ensureStateIsUpToDateAndComputeEnv(ctx, devopt.EnvOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -576,283 +568,7 @@ func (d *Devbox) Services() (services.Services, error) {
 	return result, nil
 }
 
-func (d *Devbox) StartServices(
-	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
-) error {
-	if !runInCurrentShell {
-		return d.RunScript(ctx, "devbox",
-			append(
-				[]string{"services", "start", "--run-in-current-shell"},
-				serviceNames...,
-			),
-		)
-	}
-
-	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
-		fmt.Fprintln(d.stderr, "\nNOTE: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, devopt.ProcessComposeOpts{Background: true})
-	}
-
-	svcSet, err := d.Services()
-	if err != nil {
-		return err
-	}
-
-	if len(svcSet) == 0 {
-		return usererr.New("No services found in your project")
-	}
-
-	for _, s := range serviceNames {
-		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
-		}
-	}
-
-	for _, s := range serviceNames {
-		err := services.StartServices(ctx, d.stderr, s, d.projectDir)
-		if err != nil {
-			fmt.Fprintf(d.stderr, "Error starting service %s: %s", s, err)
-		} else {
-			fmt.Fprintf(d.stderr, "Service %s started successfully", s)
-		}
-	}
-	return nil
-}
-
-func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
-	if !runInCurrentShell {
-		args := []string{"services", "stop", "--run-in-current-shell"}
-		args = append(args, serviceNames...)
-		if allProjects {
-			args = append(args, "--all-projects")
-		}
-		return d.RunScript(ctx, "devbox", args)
-	}
-
-	if allProjects {
-		return services.StopAllProcessManagers(ctx, d.stderr)
-	}
-
-	if !services.ProcessManagerIsRunning(d.projectDir) {
-		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
-	}
-
-	if len(serviceNames) == 0 {
-		return services.StopProcessManager(ctx, d.projectDir, d.stderr)
-	}
-
-	svcSet, err := d.Services()
-	if err != nil {
-		return err
-	}
-
-	for _, s := range serviceNames {
-		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
-		}
-		err := services.StopServices(ctx, s, d.projectDir, d.stderr)
-		if err != nil {
-			fmt.Fprintf(d.stderr, "Error stopping service %s: %s", s, err)
-		}
-	}
-	return nil
-}
-
-func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
-	if !runInCurrentShell {
-		return d.RunScript(ctx,
-			"devbox", []string{"services", "ls", "--run-in-current-shell"})
-	}
-
-	svcSet, err := d.Services()
-	if err != nil {
-		return err
-	}
-
-	if len(svcSet) == 0 {
-		fmt.Fprintln(d.stderr, "No services found in your project")
-		return nil
-	}
-
-	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
-		fmt.Fprintln(d.stderr, "")
-		for _, s := range svcSet {
-			fmt.Fprintf(d.stderr, "  %s\n", s.Name)
-		}
-		return nil
-	}
-	tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
-	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
-	if err != nil {
-		fmt.Fprintln(d.stderr, "Error listing services: ", err)
-	} else {
-		fmt.Fprintln(d.stderr, "Services running in process-compose:")
-		fmt.Fprintln(tw, "NAME\tSTATUS\tEXIT CODE")
-		for _, s := range pcSvcs {
-			fmt.Fprintf(tw, "%s\t%s\t%d\n", s.Name, s.Status, s.ExitCode)
-		}
-		tw.Flush()
-	}
-	return nil
-}
-
-func (d *Devbox) RestartServices(
-	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
-) error {
-	if !runInCurrentShell {
-		return d.RunScript(ctx, "devbox",
-			append(
-				[]string{"services", "restart", "--run-in-current-shell"},
-				serviceNames...,
-			),
-		)
-	}
-
-	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.stderr, "Process-compose is not running. Starting it now...")
-		fmt.Fprintln(d.stderr, "\nTip: We recommend using `devbox services up` to start process-compose and your services")
-		return d.StartProcessManager(ctx, runInCurrentShell, serviceNames, devopt.ProcessComposeOpts{Background: true})
-	}
-
-	// TODO: Restart with no services should restart the _currently running_ services. This means we should get the list of running services from the process-compose, then restart them all.
-
-	svcSet, err := d.Services()
-	if err != nil {
-		return err
-	}
-
-	for _, s := range serviceNames {
-		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
-		}
-		err := services.RestartServices(ctx, s, d.projectDir, d.stderr)
-		if err != nil {
-			fmt.Printf("Error restarting service %s: %s", s, err)
-		} else {
-			fmt.Printf("Service %s restarted", s)
-		}
-	}
-	return nil
-}
-
-func (d *Devbox) StartProcessManager(
-	ctx context.Context,
-	runInCurrentShell bool,
-	requestedServices []string,
-	processComposeOpts devopt.ProcessComposeOpts,
-) error {
-	if !runInCurrentShell {
-		args := []string{"services", "up", "--run-in-current-shell"}
-		args = append(args, requestedServices...)
-
-		// TODO: Here we're attempting to reconstruct arguments from the original command, so that we can reinvoke it in devbox shell.
-		// 		 Instead, we should consider refactoring this so that we can preserve and re-use the original command string,
-		//		 because the current approach is fragile and will need to be updated each time we add new flags.
-		if d.customProcessComposeFile != "" {
-			args = append(args, "--process-compose-file", d.customProcessComposeFile)
-		}
-		if processComposeOpts.Background {
-			args = append(args, "--background")
-		}
-		for _, flag := range processComposeOpts.ExtraFlags {
-			args = append(args, "--pcflags", flag)
-		}
-
-		return d.RunScript(ctx, "devbox", args)
-	}
-
-	svcs, err := d.Services()
-	if err != nil {
-		return err
-	}
-
-	if len(svcs) == 0 {
-		return usererr.New("No services found in your project")
-	}
-
-	for _, s := range requestedServices {
-		if _, ok := svcs[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
-		}
-	}
-
-	err = initDevboxUtilityProject(ctx, d.stderr)
-	if err != nil {
-		return err
-	}
-
-	processComposeBinPath, err := utilityLookPath("process-compose")
-	if err != nil {
-		return err
-	}
-
-	// Start the process manager
-
-	return services.StartProcessManager(
-		d.stderr,
-		requestedServices,
-		svcs,
-		d.projectDir,
-		services.ProcessComposeOpts{
-			BinPath:    processComposeBinPath,
-			Background: processComposeOpts.Background,
-			ExtraFlags: processComposeOpts.ExtraFlags,
-		},
-	)
-}
-
-// computeEnv computes the set of environment variables that define a Devbox
-// environment. The "devbox run" and "devbox shell" commands source these
-// variables into a shell before executing a command or showing an interactive
-// prompt.
-//
-// The process for building the environment involves layering sets of
-// environment variables on top of each other, with each layer overwriting any
-// duplicate keys from the previous:
-//
-//  1. Copy variables from the current environment except for those in
-//     ignoreCurrentEnvVar, such as PWD and SHELL.
-//  2. Copy variables from "nix print-dev-env" except for those in
-//     ignoreDevEnvVar, such as TMPDIR and HOME.
-//  3. Copy variables from Devbox plugins.
-//  4. Set PATH to the concatenation of the PATHs from step 3, step 2, and
-//     step 1 (in that order).
-//
-// The final result is a set of environment variables where Devbox plugins have
-// the highest priority, then Nix environment variables, and then variables
-// from the current environment. Similarly, the PATH gives Devbox plugin
-// binaries the highest priority, then Nix packages, and then non-Nix
-// programs.
-//
-// Note that the shellrc.tmpl template (which sources this environment) does
-// some additional processing. The computeEnv environment won't necessarily
-// represent the final "devbox run" or "devbox shell" environments.
-func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
-	defer debug.FunctionTimer().End()
-	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
-
-	// Append variables from current env if --pure is not passed
-	currentEnv := os.Environ()
-	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if contents of .envrc is old and print warning
-	if !usePrintDevEnvCache {
-		err := d.checkOldEnvrc()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	slog.Debug("current environment PATH", "path", env["PATH"])
-
-	originalEnv := make(map[string]string, len(env))
-	maps.Copy(originalEnv, env)
-
+func (d *Devbox) execPrintDevEnv(ctx context.Context, usePrintDevEnvCache bool) (map[string]string, error) {
 	var spinny *spinner.Spinner
 	if !usePrintDevEnvCache {
 		spinny = spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(d.stderr))
@@ -875,6 +591,7 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 
 	// Add environment variables from "nix print-dev-env" except for a few
 	// special ones we need to ignore.
+	env := map[string]string{}
 	for key, val := range vaf.Variables {
 		// We only care about "exported" because the var and array types seem to only be used by nix-defined
 		// functions that we don't need (like genericBuild). For reference, each type translates to bash as follows:
@@ -903,8 +620,74 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 
 		env[key] = val.Value.(string)
 	}
+	return env, nil
+}
 
-	slog.Debug("nix environment PATH", "path", env)
+// computeEnv computes the set of environment variables that define a Devbox
+// environment. The "devbox run" and "devbox shell" commands source these
+// variables into a shell before executing a command or showing an interactive
+// prompt.
+//
+// The process for building the environment involves layering sets of
+// environment variables on top of each other, with each layer overwriting any
+// duplicate keys from the previous:
+//
+//  1. Copy variables from the current environment except for those in
+//     ignoreCurrentEnvVar, such as PWD and SHELL.
+//  2. Copy variables from "nix print-dev-env" except for those in
+//     ignoreDevEnvVar, such as TMPDIR and HOME.
+//  3. Copy variables from Devbox plugins.
+//  4. Set PATH to the concatenation of the PATHs from step 3, step 2, and
+//     step 1 (in that order).
+//
+// The final result is a set of environment variables where Devbox plugins have
+// the highest priority, then Nix environment variables, and then variables
+// from the current environment. Similarly, the PATH gives Devbox plugin
+// binaries the highest priority, then Nix packages, and then non-Nix
+// programs.
+//
+// Note that the shellrc.tmpl template (which sources this environment) does
+// some additional processing. The computeEnv environment won't necessarily
+// represent the final "devbox run" or "devbox shell" environments.
+func (d *Devbox) computeEnv(
+	ctx context.Context,
+	usePrintDevEnvCache bool,
+	envOpts devopt.EnvOptions,
+) (map[string]string, error) {
+	defer debug.FunctionTimer().End()
+	defer trace.StartRegion(ctx, "devboxComputeEnv").End()
+
+	// Append variables from current env if --pure is not passed
+	currentEnv := os.Environ()
+	env, err := d.parseEnvAndExcludeSpecialCases(currentEnv, envOpts.Pure)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if contents of .envrc is old and print warning
+	if !usePrintDevEnvCache {
+		err := d.checkOldEnvrc()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	slog.Debug("current environment PATH", "path", env["PATH"])
+
+	originalEnv := make(map[string]string, len(env))
+	maps.Copy(originalEnv, env)
+
+	if !envOpts.OmitNixEnv {
+		nixEnv, err := d.execPrintDevEnv(ctx, usePrintDevEnvCache)
+		if err != nil {
+			return nil, err
+		}
+
+		for k, v := range nixEnv {
+			env[k] = v
+		}
+	}
+	slog.Debug("nix environment PATH", "path", env["PATH"])
 
 	env["PATH"] = envpath.JoinPathLists(
 		nix.ProfileBinPath(d.projectDir),
@@ -973,13 +756,13 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
-	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, d.preservePathStack)
+	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
 	env["PATH"] = pathStack.Path(env)
 	slog.Debug("new path stack is", "path_stack", pathStack)
 
 	slog.Debug("computed environment PATH", "path", env["PATH"])
 
-	if !d.pure {
+	if !envOpts.Pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
 	}
@@ -991,11 +774,11 @@ func (d *Devbox) computeEnv(ctx context.Context, usePrintDevEnvCache bool) (map[
 	return env, d.addHashToEnv(env)
 }
 
-// ensureStateIsUpToDateAndComputeEnv will return a map of the env-vars for the Devbox  Environment
+// ensureStateIsUpToDateAndComputeEnv will return a map of the env-vars for the Devbox Environment
 // while ensuring these reflect the current (up to date) state of the project.
-// TODO: find a better name for this function.
 func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	ctx context.Context,
+	envOpts devopt.EnvOptions,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
@@ -1022,7 +805,7 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// it's ok to use usePrintDevEnvCache=true here always. This does end up
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
-	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/)
+	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/, envOpts)
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1168,6 +951,21 @@ func (d *Devbox) configEnvs(
 				}
 			}
 		}
+	} else if d.cfg.Root.IsdotEnvEnabled() {
+		// if env_from points to a .env file, parse and add it
+		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
+		if err != nil {
+			// it's fine to include the error ParseEnvsFromDotEnv here because
+			// the error message is relevant to the user
+			return nil, usererr.New(
+				"failed parsing %s file. Error: %v",
+				d.cfg.Root.EnvFrom,
+				err,
+			)
+		}
+		for k, v := range parsedEnvs {
+			env[k] = v
+		}
 	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
 			"unknown from_env value: %s. Supported value is: %q.",
@@ -1241,7 +1039,7 @@ func (d *Devbox) addHashToEnv(env map[string]string) error {
 
 // parseEnvAndExcludeSpecialCases converts env as []string to map[string]string
 // In case of pure shell, it leaks HOME and it leaks PATH with some modifications
-func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string]string, error) {
+func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string, pure bool) (map[string]string, error) {
 	env := make(map[string]string, len(currentEnv))
 	for _, kv := range currentEnv {
 		key, val, found := strings.Cut(kv, "=")
@@ -1255,13 +1053,13 @@ func (d *Devbox) parseEnvAndExcludeSpecialCases(currentEnv []string) (map[string
 		// - HOME required for devbox binary to work
 		// - PATH to find the nix installation. It is cleaned for pure mode below.
 		// - TERM to enable colored text in the pure shell
-		if !d.pure || key == "HOME" || key == "PATH" || key == "TERM" {
+		if !pure || key == "HOME" || key == "PATH" || key == "TERM" {
 			env[key] = val
 		}
 	}
 
 	// handling special case for PATH
-	if d.pure {
+	if pure {
 		// Setting a custom env variable to differentiate pure and regular shell
 		env["DEVBOX_PURE_SHELL"] = "1"
 		// Finding nix executables in path and passing it through

@@ -19,18 +19,19 @@ import (
 // It also removes any packages from the nix profile that are no longer in the buildInputs.
 func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 	defer debug.FunctionTimer().End()
-	// Get the computed Devbox environment from the generated flake
-	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
+	// Get the buildInputs from the generated flake
+	env, err := d.execPrintDevEnv(ctx, false /*usePrintDevEnvCache*/)
 	if err != nil {
 		return err
 	}
+	buildInputs := env["buildInputs"]
 
 	// Get the store-paths of the packages we want installed in the nix profile
 	wantStorePaths := []string{}
-	if env["buildInputs"] != "" {
+	if buildInputs != "" {
 		// env["buildInputs"] can be empty string if there are no packages in the project
 		// if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
-		wantStorePaths = strings.Split(env["buildInputs"], " ")
+		wantStorePaths = strings.Split(buildInputs, " ")
 	}
 
 	profilePath, err := d.profilePath()

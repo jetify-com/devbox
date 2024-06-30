@@ -28,7 +28,7 @@ Packages can be structured as a list of package names (`<packages>@<version>`) o
 ```json
 {
     "packages": [
-        "go@latest"
+        "go@latest",
         "golangci-lint@latest"
     ]
 }

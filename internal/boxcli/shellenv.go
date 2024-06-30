@@ -11,11 +11,13 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type shellEnvCmdFlags struct {
 	envFlag
 	config            configFlags
+	omitNixEnv        bool
 	install           bool
 	noRefreshAlias    bool
 	preservePathStack bool
@@ -24,11 +26,18 @@ type shellEnvCmdFlags struct {
 	runInitHook       bool
 }
 
-func shellEnvCmd() *cobra.Command {
+// shellenvFlagDefaults are the flag default values that differ
+// from the `devbox` command versus `devbox global` command.
+type shellenvFlagDefaults struct {
+	omitNixEnv   bool
+	recomputeEnv bool
+}
+
+func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 	flags := shellEnvCmdFlags{}
 	command := &cobra.Command{
 		Use:     "shellenv",
-		Short:   "Print shell commands that add Devbox packages to your PATH",
+		Short:   "Print shell commands that create a Devbox Environment in the shell",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,10 +70,14 @@ func shellEnvCmd() *cobra.Command {
 		"by default, devbox will add refresh alias to the environment"+
 			"Use this flag to disable this behavior.")
 	_ = command.Flags().MarkHidden("no-refresh-alias")
+	command.Flags().BoolVar(
+		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
+		"shell environment will omit the env-vars from print-dev-env",
+	)
+	_ = command.Flags().MarkHidden("omit-nix-env")
 
-	// Note, `devbox global shellenv` will override the default value to be false
 	command.Flags().BoolVarP(
-		&flags.recomputeEnv, "recompute", "r", true,
+		&flags.recomputeEnv, "recompute", "r", defaults.recomputeEnv,
 		"Recompute environment if needed",
 	)
 
@@ -82,28 +95,35 @@ func shellEnvFunc(
 	if err != nil {
 		return "", err
 	}
+	ctx := cmd.Context()
+	if flags.recomputeEnv {
+		ctx = ux.HideMessage(ctx, devbox.StateOutOfDateMessage)
+	}
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:               flags.config.path,
-		Environment:       flags.config.environment,
-		Stderr:            cmd.ErrOrStderr(),
-		PreservePathStack: flags.preservePathStack,
-		Pure:              flags.pure,
-		Env:               env,
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+		Env:         env,
 	})
 	if err != nil {
 		return "", err
 	}
 
 	if flags.install {
-		if err := box.Install(cmd.Context()); err != nil {
+		if err := box.Install(ctx); err != nil {
 			return "", err
 		}
 	}
 
-	envStr, err := box.EnvExports(cmd.Context(), devopt.EnvExportsOpts{
+	envStr, err := box.EnvExports(ctx, devopt.EnvExportsOpts{
 		DontRecomputeEnvironment: !flags.recomputeEnv,
-		NoRefreshAlias:           flags.noRefreshAlias,
-		RunHooks:                 flags.runInitHook,
+		EnvOptions: devopt.EnvOptions{
+			OmitNixEnv:        flags.omitNixEnv,
+			PreservePathStack: flags.preservePathStack,
+			Pure:              flags.pure,
+		},
+		NoRefreshAlias: flags.noRefreshAlias,
+		RunHooks:       flags.runInitHook,
 	})
 	if err != nil {
 		return "", err

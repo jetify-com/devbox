@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path"
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
@@ -16,6 +17,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// Common redirect URLs for use with [AuthClient].
+var (
+	// AuthRedirectDefault redirects to a generic success page.
+	AuthRedirectDefault = build.SuccessRedirect()
+
+	// AuthRedirectCache redirects to the "Cache" tab in the dashboard for
+	// the authenticated organization.
+	AuthRedirectCache = path.Join(build.DashboardHostname(), "team", "cache")
+)
+
 var scopes = []string{"openid", "offline_access", "email", "profile"}
 
 var cachedAccessTokenFromAPIToken *session.Token
@@ -25,7 +36,7 @@ func GenSession(ctx context.Context) (*session.Token, error) {
 		return t, err
 	}
 
-	c, err := AuthClient()
+	c, err := AuthClient(AuthRedirectDefault)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +48,7 @@ func Peek() (*session.Token, error) {
 		return cachedAccessTokenFromAPIToken, nil
 	}
 
-	c, err := AuthClient()
+	c, err := AuthClient(AuthRedirectDefault)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +64,13 @@ func Peek() (*session.Token, error) {
 	return tokens[0].Peek(), nil
 }
 
-func AuthClient() (*auth.Client, error) {
+// AuthClient returns a new client that redirects to a given URL upon success.
+func AuthClient(redirect string) (*auth.Client, error) {
 	return auth.NewClient(
 		build.Issuer(),
 		build.ClientID(),
 		scopes,
-		build.SuccessRedirect(),
+		redirect,
 		build.Audience(),
 	)
 }

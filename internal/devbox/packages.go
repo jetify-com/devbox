@@ -37,6 +37,8 @@ import (
 	"go.jetpack.io/devbox/internal/ux"
 )
 
+const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %s to update it.\n"
+
 // packages.go has functions for adding, removing and getting info about nix
 // packages
 
@@ -285,9 +287,10 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	// be out of date after the user installs something. If have direnv active
 	// it should reload automatically so we don't need to refresh.
 	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
-		ux.Fwarning(
+		ux.FHidableWarning(
+			ctx,
 			d.stderr,
-			"Your shell environment may be out of date. Run `%s` to update it.\n",
+			StateOutOfDateMessage,
 			d.refreshAliasOrCommand(),
 		)
 	}
@@ -649,7 +652,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
 	packages := d.InstallablePackages()
 	for _, pkg := range packages {
-		if pkg.IsRunX() {
+		if !pkg.IsDevboxPackage || pkg.IsRunX() {
 			continue
 		}
 		existingStorePaths, err := pkg.GetResolvedStorePaths()

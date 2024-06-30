@@ -12,8 +12,6 @@ type Opts struct {
 	Dir                      string
 	Env                      map[string]string
 	Environment              string
-	PreservePathStack        bool
-	Pure                     bool
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
 	Stderr                   io.Writer
@@ -64,6 +62,17 @@ type UpdateOpts struct {
 
 type EnvExportsOpts struct {
 	DontRecomputeEnvironment bool
+	EnvOptions               EnvOptions
 	NoRefreshAlias           bool
 	RunHooks                 bool
+}
+
+// EnvOptions configure the Devbox Environment in the `computeEnv` function.
+// - These options are commonly set by flags in some Devbox commands
+// like `shellenv`, `shell` and `run`.
+// - The struct is designed for the "common case" to be zero-initialized as `EnvOptions{}`.
+type EnvOptions struct {
+	OmitNixEnv        bool
+	PreservePathStack bool
+	Pure              bool
 }
