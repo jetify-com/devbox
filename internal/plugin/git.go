@@ -4,10 +4,12 @@ import (
 	"cmp"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
+	"go.jetpack.io/devbox/internal/fileutil"
 	"go.jetpack.io/devbox/nix/flake"
 	"go.jetpack.io/pkg/filecache"
 )
@@ -70,13 +73,34 @@ func (p *gitPlugin) Hash() string {
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	contentURL, err := p.url(subpath)
+	slog.Debug("CONTENT URL: " + contentURL)
+	slog.Debug("SUBPATH: " + subpath + "")
 
 	if err != nil {
 		return nil, err
 	}
 
+	readFile := func() ([]byte, time.Duration, error) {
+		file, err := os.Open(contentURL)
+		info, err := file.Stat()
+
+		if err != nil || info.Size() == 0 {
+			return nil, 0, err
+		}
+
+		defer file.Close()
+		body, err := io.ReadAll(file)
+		slog.Debug(string(body))
+
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return body, 24 * time.Hour, nil
+	}
+
 	retrieve := func() ([]byte, time.Duration, error) {
-		req, err := p.request(contentURL) // TODO: adjust this function to handle private repos
+		req, err := p.request(contentURL)
 
 		if err != nil {
 			return nil, 0, err
@@ -102,6 +126,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		}
 
 		body, err := io.ReadAll(res.Body)
+		slog.Debug(string(body))
 
 		if err != nil {
 			return nil, 0, err
@@ -115,7 +140,8 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		return sshCache.GetOrSet(contentURL, retrieve)
+		slog.Debug("TYPE SSH: " + contentURL)
+		return sshCache.GetOrSet(contentURL, readFile)
 	case flake.TypeGitHub:
 		return githubCache.GetOrSet(contentURL, retrieve)
 	case flake.TypeGitLab:
@@ -123,6 +149,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	case flake.TypeBitBucket:
 		return bitbucketCache.GetOrSet(contentURL, retrieve)
 	default:
+		slog.Debug("HERE")
 		return nil, err
 	}
 }
@@ -130,6 +157,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
 	case flake.TypeSSH:
+		slog.Debug("TYPE SSH in url func: " + subpath)
 		return p.sshGitUrl()
 	case flake.TypeGitLab:
 		return p.gitlabUrl(subpath)
@@ -157,18 +185,48 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	}
 
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
-	baseCommand := "git archive --format=tar --remote=git@"
+	format := "tar.gz"
+	baseCommand := fmt.Sprintf("git archive --format=%s --remote=git@", format)
 	path, err := url.JoinPath(p.ref.Owner, p.ref.Repo)
+	host := address.Query().Get("host")
+	archive := filepath.Join("/", "tmp", p.ref.Dir+"."+format)
 
-	formattedCommand := fmt.Sprintf("%s%s:%s %s %s -o %s.tar ", baseCommand, address.Query().Get("host"), path, branch, p.ref.Dir, p.ref.Dir)
+	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
+	command := fmt.Sprintf("%s%s:%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
 
-	if err == nil {
+	slog.Debug("Generated git archive command: " + command)
+
+	args := strings.Fields(command)
+	archiveInfo, err := os.Stat(archive)
+
+	if err != nil {
 		return "", err
 	}
 
-	// TODO: need to store the git archive in a temporary file...or something. Basically need to figure out how to handle this lol
+	currentTime := time.Now()
+	threshold := 24 * time.Hour // 24 hours is currently when files are considered "expired"
+	oldTime := currentTime.Add(-threshold)
 
-	return formattedCommand, nil
+	if archiveInfo.ModTime().Before(oldTime) {
+		// TODO: make this async
+		cmd := exec.Command(args[0], args[1:]...)
+
+		_, err := cmd.Output()
+
+		if err != nil {
+			slog.Error("Error executing git archive: ", err)
+			return "", err
+		}
+
+		reader, err := os.Open(archive)
+		err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
+
+		if err == nil {
+			return "", err
+		}
+	}
+
+	return filepath.Join("/", "tmp", p.ref.Dir, "plugin.json"), nil
 }
 
 func (p *gitPlugin) githubUrl(subpath string) (string, error) {
@@ -242,11 +300,6 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 func (p *gitPlugin) request(contentURL string) (*http.Request, error) {
 	// TODO: Determine if private repo. Maybe use `git archive`?
 	// git archive --format=tar --remote=git@gitlab.com:astro-tec/devbox-plugin-test HEAD plugin -o plugin.tar
-
-	if p.ref.Type == flake.TypeSSH {
-		command := exec.Command(contentURL)
-		command.Wait()
-	}
 
 	req, err := http.NewRequest(http.MethodGet, contentURL, nil)
 
