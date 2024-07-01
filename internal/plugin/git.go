@@ -73,8 +73,6 @@ func (p *gitPlugin) Hash() string {
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	contentURL, err := p.url(subpath)
-	slog.Debug("CONTENT URL: " + contentURL)
-	slog.Debug("SUBPATH: " + subpath + "")
 
 	if err != nil {
 		return nil, err
@@ -90,7 +88,6 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 
 		defer file.Close()
 		body, err := io.ReadAll(file)
-		slog.Debug(string(body))
 
 		if err != nil {
 			return nil, 0, err
@@ -126,7 +123,6 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		}
 
 		body, err := io.ReadAll(res.Body)
-		slog.Debug(string(body))
 
 		if err != nil {
 			return nil, 0, err
@@ -140,7 +136,6 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		slog.Debug("TYPE SSH: " + contentURL)
 		return sshCache.GetOrSet(contentURL, readFile)
 	case flake.TypeGitHub:
 		return githubCache.GetOrSet(contentURL, retrieve)
@@ -149,7 +144,6 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	case flake.TypeBitBucket:
 		return bitbucketCache.GetOrSet(contentURL, retrieve)
 	default:
-		slog.Debug("HERE")
 		return nil, err
 	}
 }
@@ -157,7 +151,6 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		slog.Debug("TYPE SSH in url func: " + subpath)
 		return p.sshGitUrl()
 	case flake.TypeGitLab:
 		return p.gitlabUrl(subpath)
@@ -193,7 +186,6 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
 	command := fmt.Sprintf("%s%s:%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
-
 	slog.Debug("Generated git archive command: " + command)
 
 	args := strings.Fields(command)
