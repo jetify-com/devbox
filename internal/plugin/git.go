@@ -195,21 +195,16 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
 	slog.Debug("Generated git archive command: " + command)
 
-	args := strings.Fields(command)
-	archiveInfo, err := os.Stat(archive)
-
-	if err != nil {
-		return "", err
-	}
-
 	// 24 hours is currently when files are considered "expired" in other FileContent function
 	currentTime := time.Now()
 	threshold := 24 * time.Hour
-	oldTime := currentTime.Add(-threshold)
+	expiration := currentTime.Add(-threshold)
 
-	if archiveInfo.ModTime().Before(oldTime) {
-		// TODO: make this async
-		cmd := exec.Command(args[0], args[1:]...)
+	args := strings.Fields(command)
+	archiveInfo, err := os.Stat(archive)
+
+	if os.IsNotExist(err) || archiveInfo.ModTime().Before(expiration) {
+		cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
 
 		_, err := cmd.Output()
 
