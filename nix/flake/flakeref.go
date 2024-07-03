@@ -69,6 +69,13 @@ type Ref struct {
 	// or "git". Note that the URL is not the same as the raw unparsed
 	// flake ref.
 	URL string `json:"url,omitempty"`
+
+	// Port of the server git server, to support privately hosted git servers or tunnels
+	Port string `json:port,omitempty`
+
+	// Subgroup pertains to GitLab. GitHub and Bitbucket don't support multi-level
+	// hierarchy, and this allows the subgroup to exist without breaking the parsing logic already in place
+	Subgroup string `json:subgroup,omitempty`
 }
 
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
@@ -230,6 +237,26 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
+	// NOTE: this currently doesn't handle subgroups with GitLab, and will
+	// continue to cause problems restructuring plugins to use JSON objects
+	// will make this much easier in the long run. GitHub and Bitbucket don't support
+	// subgroups, so this won't be an issue with those repos.
+	// something akin to the example below can help eliminate a vast majority
+	// of this URL parsing logic, and make things more flexible
+
+	/*
+		"include": [
+			"username/subgroup/repo": {
+				"type": "ssh",
+				"host": "gitlab",
+				"port": 9999,
+				"dir": "my-plugins",
+				"ref": "myref",
+				"branch": "mybranch"
+			}
+		]
+	*/
+
 	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
 	// refs that have slashes in them. For example,
 	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
@@ -237,8 +264,10 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	if err != nil {
 		return err
 	}
+
 	parsed.Owner = split[0]
 	parsed.Repo = split[1]
+
 	if len(split) > 2 {
 		if revOrRef := split[2]; isGitHash(revOrRef) {
 			parsed.Rev = revOrRef
@@ -249,6 +278,9 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 
 	parsed.Host = refURL.Query().Get("host")
 	parsed.Dir = refURL.Query().Get("dir")
+	parsed.Subgroup = refURL.Query().Get("subgroup")
+	parsed.Port = refURL.Query().Get("port")
+
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
 			return redact.Errorf("%s flake reference has a ref and a rev", parsed.Type)

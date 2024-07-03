@@ -177,12 +177,19 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 		defaultBranch = "master"
 	}
 
+	fileFormat := "tar.gz"
+	baseCommand := fmt.Sprintf("git archive --format=%s --remote=git@", fileFormat)
+
+	path, _ := url.JoinPath(p.ref.Owner, p.ref.Subgroup, p.ref.Repo)
+
+	archive := filepath.Join("/", "tmp", p.ref.Dir+"."+fileFormat)
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
-	format := "tar.gz"
-	baseCommand := fmt.Sprintf("git archive --format=%s --remote=git@", format)
-	path, err := url.JoinPath(p.ref.Owner, p.ref.Repo)
-	host := address.Query().Get("host")
-	archive := filepath.Join("/", "tmp", p.ref.Dir+"."+format)
+
+	host := p.ref.Host
+
+	if p.ref.Port != "" {
+		host += ":" + p.ref.Port
+	}
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
 	command := fmt.Sprintf("%s%s:%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
@@ -195,8 +202,9 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 		return "", err
 	}
 
+	// 24 hours is currently when files are considered "expired" in other FileContent function
 	currentTime := time.Now()
-	threshold := 24 * time.Hour // 24 hours is currently when files are considered "expired"
+	threshold := 24 * time.Hour
 	oldTime := currentTime.Add(-threshold)
 
 	if archiveInfo.ModTime().Before(oldTime) {
@@ -249,7 +257,7 @@ func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 }
 
 func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
-	project, err := url.JoinPath(p.ref.Owner, p.ref.Repo)
+	project, err := url.JoinPath(p.ref.Owner, p.ref.Subgroup, p.ref.Repo)
 
 	if err != nil {
 		return "", err
