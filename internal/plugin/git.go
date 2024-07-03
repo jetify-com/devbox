@@ -178,7 +178,7 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	}
 
 	fileFormat := "tar.gz"
-	baseCommand := fmt.Sprintf("git archive --format=%s --remote=git@", fileFormat)
+	baseCommand := fmt.Sprintf("git archive --format=%s --remote=ssh://git@", fileFormat)
 
 	path, _ := url.JoinPath(p.ref.Owner, p.ref.Subgroup, p.ref.Repo)
 
@@ -192,7 +192,7 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	}
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
-	command := fmt.Sprintf("%s%s:%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
+	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
 	slog.Debug("Generated git archive command: " + command)
 
 	args := strings.Fields(command)
