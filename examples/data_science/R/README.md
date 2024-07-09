@@ -38,6 +38,38 @@ Note that for packages with a dot in the name you will need to replace the dot w
 
 You can access these packages in your R scripts as usual with `library(data.table)``.
 
+## Example script
+
 In this [example repo](https://github.com/jetify-com/devbox/tree/main/examples/data_science/R), after running `devbox shell`, you can start an R repl with `R` then create an example plot with `source("src/examplePlot.R")`. 
 Alternatively run `Rscript src/examplePlot.R`.
 This will create an `Rplots.pdf` file.
+
+## Troubleshooting
+
+If you get warnings like:
+
+> During startup - Warning messages:
+> 1: setting LC_CTYPE failed, using "C"
+> 2: Setting LC_COLLATE failed, using "C"
+> ...
+
+then you need to set your locale.
+Find your locale (outside of a devbox shell) using `locale` in your terminal. You will see something like:
+
+> LANG=en_NZ.UTF-8
+> LANGUAGE=en_NZ:en
+> LC_CTYPE="en_NZ.UTF-8"
+> ...
+
+To set your locale, edit the `init_hook` array in the shell object in `devbox.json` to export two environment variables like below (using your specific locale):
+
+```json
+{
+  "shell": {
+    "init_hook": [
+      "export LANG=en_NZ.UTF-8",
+      "export LC_ALL=en_NZ.UTF-8"
+    ]
+  }
+}
+```
