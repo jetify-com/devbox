@@ -271,7 +271,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	}
 
 	if mode != ensure {
-		// Reload includes because added/rmeoved packages might change plugins. Cases:
+		// Reload includes because added/removed packages might change plugins. Cases:
 		// * New package adds built in. We wanna make sure the plugin is in config.
 		// * Remove built-in that installs multiple packages (e.g. nginx). We wanna clear them up so
 		// they get removed from lockfile in updateLockfile
@@ -305,13 +305,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		)
 	}
 
-	// We only want to update lockfile if we are doing an active command (add, rm, update)
-	// ensure is used for install, shell, run, etc which should never modify the lockfile.
-	if mode != ensure {
-		return d.updateLockfile(recomputeState)
-	}
-
-	return nil
+	return d.updateLockfile(recomputeState)
 }
 
 // updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
