@@ -270,6 +270,16 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		ux.Finfo(d.stderr, "Ensuring packages are installed.\n")
 	}
 
+	if mode != ensure {
+		// Reload includes because added/rmeoved packages might change plugins. Cases:
+		// * New package adds built in. We wanna make sure the plugin is in config.
+		// * Remove built-in that installs multiple packages (e.g. nginx). We wanna clear them up so
+		// they get removed from lockfile in updateLockfile
+		if err = d.cfg.LoadRecursive(d.lockfile); err != nil {
+			return err
+		}
+	}
+
 	if mode == install || mode == update || mode == ensure {
 		if err := d.installPackages(ctx, mode); err != nil {
 			return err
@@ -295,11 +305,17 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		)
 	}
 
-	return d.updateLockfile(recomputeState)
+	// We only want to update lockfile if we are doing an active command (add, rm, update)
+	// ensure is used for install, shell, run, etc which should never modify the lockfile.
+	if mode != ensure {
+		return d.updateLockfile(recomputeState)
+	}
+
+	return nil
 }
 
 // updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
-// If recomputeState is true, then we will also update the local.lock file.
+// If recomputeState is true, then we will also update the state.json file.
 func (d *Devbox) updateLockfile(recomputeState bool) error {
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
@@ -402,6 +418,9 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 	// Create plugin directories first because packages might need them
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
+			return err
+		}
+		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig); err != nil {
 			return err
 		}
 	}
