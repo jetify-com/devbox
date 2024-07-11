@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: Devbox Search API
+  version: 2.0.0
+  description: API for searching and resolving package dependencies
+servers:
+  - url: https://search.devbox.sh/v2
+paths:
+  /pkg:
+    get:
+      summary: Get a Package
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackageResponse"
+        "404":
+          description: Not Found
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name of the package you want to look up. Must be a valid Nixpkgs package name.
+          schema:
+            type: string
+  /search:
+    get:
+      summary: Search Packages
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "404":
+          description: Not Found
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query.
+          schema:
+            type: string
+  /resolve:
+    get:
+      summary: Resolve a Package Version
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveResponse"
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name of the package you want to resolve. Must be a valid Nixpkgs package name.
+          schema:
+            type: string
+        - name: version
+          description: The version string of the package you want to resolve.
+          in: query
+          required: true
+          schema:
+            type: string
+components:
+  schemas:
+    PackageResponse:
+      type: object
+      description: An Object representing a Nixpkgs package
+      properties:
+        name:
+          type: string
+        summary:
+          type: string
+        homepage_url:
+          type: string
+        license:
+          type: string
+        releases:
+          type: array
+          items:
+            $ref: "#/components/schemas/Release"
+    Release:
+      type: object
+      description: A specific release of a package
+      properties:
+        version:
+          type: string
+        last_updated:
+          type: string
+        platforms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Platform"
+        platforms_summary:
+          type: string
+        outputs_summary:
+          type: string
+    Platform:
+      type: object
+      properties:
+        arch:
+          type: string
+        os:
+          type: string
+        attribute_path:
+          type: string
+        commit_hash:
+          type: string
+        date:
+          type: string
+        outputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Output"
+    Output:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        default:
+          type: boolean
+        nargs:
+          type: string
+    SearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        total_results:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+    SearchResult:
+      type: object
+      properties:
+        name:
+          type: string
+        summary:
+          type: string
+        last_updated:
+          type: string
+    Package:
+      type: object
+      properties:
+        flake_installable:
+          type: object
+          properties:
+            ref:
+              type: object
+              properties:
+                type:
+                  type: string
+                owner:
+                  type: string
+                repo:
+                  type: string
+                rev:
+                  type: string
+            attr_path:
+              type: string
+        last_updated:
+          type: string
+        outputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Output"
+    ResolveResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        summary:
+          type: string
+        systems:
+          type: object
+          properties:
+            aarch64-darwin:
+              $ref: "#/components/schemas/Package"
+            aarch64-linux:
+              $ref: "#/components/schemas/Package"
+            x86_64-darwin:
+              $ref: "#/components/schemas/Package"
+            x86_64-linux:
+              $ref: "#/components/schemas/Package"
