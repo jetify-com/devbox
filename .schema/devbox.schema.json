@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-05/schema#",
   "$id": "https://github.com/jetify-com/devbox",
   "title": "Devbox json definition",
   "description": "Defines fields and acceptable values of devbox.json",
