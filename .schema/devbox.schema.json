@@ -1,145 +1,216 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "$id": "https://github.com/jetify-com/devbox",
-    "title": "Devbox json definition",
-    "description": "Defines fields and acceptable values of devbox.json",
-    "type": "object",
-    "properties": {
-        "$schema": {
-            "description": "The schema version of this devbox.json file.",
-            "type": "string"
-        },
-        "name": {
-            "description": "The name of the Devbox development environment.",
-            "type": "string"
-        },
-        "description": {
-            "description": "A description of the Devbox development environment.",
-            "type": "string"
-        },
-        "packages": {
-            "description": "Collection of packages to install",
-            "oneOf": [
-                {
-                    "type": "array",
-                    "items": {
-                        "description": "Name and version of each package in name@version format.",
-                        "type": "string"
-                    }
-                },
-                {
-                    "type": "object",
-                    "description": "Name of each package in {\"name\": {\"version\": \"1.2.3\"}} format.",
-                    "patternProperties": {
-                        ".*": {
-                            "oneOf": [
-                                {
-                                    "type": "object",
-                                    "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
-                                    "properties": {
-                                        "version": {
-                                            "type": "string",
-                                            "description": "Version of the package"
-                                        },
-                                        "platforms": {
-                                            "type": "array",
-                                            "description": "Names of platforms to install the package on. This package will be skipped for any platforms not on this list",
-                                            "items": {
-                                                "enum": [
-                                                    "i686-linux",
-                                                    "aarch64-linux",
-                                                    "aarch64-darwin",
-                                                    "x86_64-darwin",
-                                                    "x86_64-linux",
-                                                    "armv7l-linux"
-                                                ]
-                                            }
-                                        },
-                                        "excluded_platforms": {
-                                            "type": "array",
-                                            "description": "Names of platforms to exclude the package on",
-                                            "items": {
-                                                "enum": [
-                                                    "i686-linux",
-                                                    "aarch64-linux",
-                                                    "aarch64-darwin",
-                                                    "x86_64-darwin",
-                                                    "x86_64-linux",
-                                                    "armv7l-linux"
-                                                ]
-                                            }
-                                        },
-                                        "glibc_patch": {
-                                            "type": "boolean",
-                                            "description": "Whether to patch glibc to the latest available version for this package"
-                                        }
-                                    }
-                                },
-                                {
-                                    "type": "string",
-                                    "description": "Version of the package to install."
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        "env": {
-            "description": "List of additional environment variables to be set in the Devbox environment. Values containing $PATH or $PWD will be expanded. No other variable expansion or command substitution will occur.",
-            "type": "object",
-            "patternProperties": {
-                ".*": {
-                    "type": "string",
-                    "description": "Value of the environment variable."
-                }
-            }
-        },
-        "shell": {
-            "description": "Definitions of scripts and actions to take when in devbox shell.",
-            "type": "object",
-            "properties": {
-                "init_hook": {
-                    "type": [
-                        "array",
-                        "string"
-                    ],
-                    "items": {
-                        "description": "List of shell commands/scripts to run right after devbox shell starts.",
-                        "type": "string"
-                    }
-                },
-                "scripts": {
-                    "description": "List of command/script definitions to run with `devbox run <script_name>`.",
-                    "type": "object",
-                    "patternProperties": {
-                        ".*": {
-                            "description": "Alias name for the script.",
-                            "type": [
-                                "array",
-                                "string"
-                            ],
-                            "items": {
-                                "type": "string",
-                                "description": "The script's shell commands."
-                            }
-                        }
-                    }
-                }
-            },
-            "additionalProperties": false
-        },
-        "include": {
-            "description": "List of additional plugins to activate within your devbox shell",
-            "type": "array",
-            "items": {
-                "description": "Name of the plugin to activate.",
-                "type": "string"
-            }
-        },
-        "env_from": {
-            "type": "string"
-        }
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "https://github.com/jetify-com/devbox",
+  "title": "Devbox json definition",
+  "description": "Defines fields and acceptable values of devbox.json",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "The schema version of this devbox.json file.",
+      "type": "string"
     },
-    "additionalProperties": false
+    "name": {
+      "description": "The name of the Devbox development environment.",
+      "type": "string"
+    },
+    "description": {
+      "description": "A description of the Devbox development environment.",
+      "type": "string"
+    },
+    "packages": {
+      "description": "Collection of packages to install",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "description": "Name and version of each package in name@version format.",
+            "type": "string"
+          }
+        },
+        {
+          "type": "object",
+          "description": "Name of each package in {\"name\": {\"version\": \"1.2.3\"}} format.",
+          "patternProperties": {
+            ".*": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
+                  "properties": {
+                    "version": {
+                      "type": "string",
+                      "description": "Version of the package"
+                    },
+                    "platforms": {
+                      "type": "array",
+                      "description": "Names of platforms to install the package on. This package will be skipped for any platforms not on this list",
+                      "items": {
+                        "enum": [
+                          "i686-linux",
+                          "aarch64-linux",
+                          "aarch64-darwin",
+                          "x86_64-darwin",
+                          "x86_64-linux",
+                          "armv7l-linux"
+                        ]
+                      }
+                    },
+                    "excluded_platforms": {
+                      "type": "array",
+                      "description": "Names of platforms to exclude the package on",
+                      "items": {
+                        "enum": [
+                          "i686-linux",
+                          "aarch64-linux",
+                          "aarch64-darwin",
+                          "x86_64-darwin",
+                          "x86_64-linux",
+                          "armv7l-linux"
+                        ]
+                      }
+                    },
+                    "glibc_patch": {
+                      "type": "boolean",
+                      "description": "Whether to patch glibc to the latest available version for this package"
+                    }
+                  }
+                },
+                {
+                  "type": "string",
+                  "description": "Version of the package to install."
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "env": {
+      "description": "List of additional environment variables to be set in the Devbox environment. Values containing $PATH or $PWD will be expanded. No other variable expansion or command substitution will occur.",
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "type": "string",
+          "description": "Value of the environment variable."
+        }
+      }
+    },
+    "shell": {
+      "description": "Definitions of scripts and actions to take when in devbox shell.",
+      "type": "object",
+      "properties": {
+        "init_hook": {
+          "type": [
+            "array",
+            "string"
+          ],
+          "items": {
+            "description": "List of shell commands/scripts to run right after devbox shell starts.",
+            "type": "string"
+          }
+        },
+        "scripts": {
+          "description": "List of command/script definitions to run with `devbox run <script_name>`.",
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "description": "Alias name for the script.",
+              "type": [
+                "array",
+                "string"
+              ],
+              "items": {
+                "type": "string",
+                "description": "The script's shell commands."
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "include": {
+      "description": "List of additional plugins to activate within your devbox shell",
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9/_.-]+$": {
+          "description": "Configuration for each plugin specified by its path",
+          "type": "object",
+          "properties": {
+            "protocol": {
+              "description": "Protocol to use (https, ssh, or file)",
+              "type": "string",
+              "enum": [
+                "https",
+                "ssh",
+                "file"
+              ]
+            },
+            "host": {
+              "description": "Host of the repository (e.g., gitlab, github, bitbucket, localhost)",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port to use for the connection",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "directory": {
+              "description": "Subdirectory that should be accessed in the repo. Defaults to the path key if not provided",
+              "type": "string"
+            },
+            "ref": {
+              "description": "Git reference",
+              "type": "string"
+            },
+            "branch": {
+              "description": "Git branch (only relevant for https or ssh protocols)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "protocol",
+            "host"
+          ],
+          "dependencies": {
+            "branch": {
+              "oneOf": [
+                {
+                  "properties": {
+                    "protocol": {
+                      "enum": [
+                        "https",
+                        "ssh"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "protocol": {
+                      "enum": [
+                        "file"
+                      ]
+                    }
+                  },
+                  "not": {
+                    "required": [
+                      "branch"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "env_from": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
 }
