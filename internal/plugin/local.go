@@ -16,6 +16,7 @@ type LocalPlugin struct {
 	pluginDir string
 }
 
+// TODO UPDATEME
 func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 	plugin := &LocalPlugin{ref: ref, pluginDir: pluginDir}
 	name, err := getPluginNameFromContent(plugin)

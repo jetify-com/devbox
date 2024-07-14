@@ -79,6 +79,21 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	readFile := func() ([]byte, time.Duration, error) {
+		archive := filepath.Join("/", "tmp", p.ref.Dir+".tar.gz")
+		args := strings.Fields(contentURL)
+		cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
+
+		_, err := cmd.Output()
+
+		if err != nil {
+			slog.Error("Error executing git archive: ", err)
+			return nil, 24 * time.Hour, err
+		}
+
+		reader, err := os.Open(archive)
+		io.ReadAll(reader)
+		err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
+
 		file, err := os.Open(contentURL)
 		info, err := file.Stat()
 
@@ -193,35 +208,43 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
 	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
+
 	slog.Debug("Generated git archive command: " + command)
 
+	return command, nil
+
+	//sshCache.GetOrSet(command, func() ([]byte, time.Duration, error) {
+
+	//})
+
 	// 24 hours is currently when files are considered "expired" in other FileContent function
-	currentTime := time.Now()
-	threshold := 24 * time.Hour
-	expiration := currentTime.Add(-threshold)
+	//currentTime := time.Now()
+	//threshold := 24 * time.Hour
+	//expiration := currentTime.Add(-threshold)
 
-	args := strings.Fields(command)
-	archiveInfo, err := os.Stat(archive)
+	//args := strings.Fields(command)
+	//archiveInfo, err := os.Stat(archive)
 
-	if os.IsNotExist(err) || archiveInfo.ModTime().Before(expiration) {
-		cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
+	//if os.IsNotExist(err) || archiveInfo.ModTime().Before(expiration) {
+	//	cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
 
-		_, err := cmd.Output()
+	//	_, err := cmd.Output()
 
-		if err != nil {
-			slog.Error("Error executing git archive: ", err)
-			return "", err
-		}
+	//	if err != nil {
+	//		slog.Error("Error executing git archive: ", err)
+	//		return "", err
+	//	}
 
-		reader, err := os.Open(archive)
-		err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
+	//	reader, err := os.Open(archive)
+	//	io.ReadAll(reader)
+	//	err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
 
-		if err == nil {
-			return "", err
-		}
-	}
+	//	if err == nil {
+	//		return "", err
+	//	}
+	//}
 
-	return filepath.Join("/", "tmp", p.ref.Dir, "plugin.json"), nil
+	//return filepath.Join("/", "tmp", p.ref.Dir, "plugin.json"), nil
 }
 
 func (p *gitPlugin) githubUrl(subpath string) (string, error) {
@@ -293,9 +316,6 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 }
 
 func (p *gitPlugin) request(contentURL string) (*http.Request, error) {
-	// TODO: Determine if private repo. Maybe use `git archive`?
-	// git archive --format=tar --remote=git@gitlab.com:astro-tec/devbox-plugin-test HEAD plugin -o plugin.tar
-
 	req, err := http.NewRequest(http.MethodGet, contentURL, nil)
 
 	if err != nil {

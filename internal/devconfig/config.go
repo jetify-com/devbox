@@ -123,14 +123,15 @@ func (c *Config) loadRecursive(
 ) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
-	for _, includeRef := range c.Root.Include {
+	// TODO UPDATEME
+	for path, includeRef := range c.Root.Include {
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+			path, includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, includeRef)
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, path)
 		if seen[pluginConfig.Source.Hash()] {
 			// Note that duplicate includes are allowed if they are in different paths
 			// e.g. 2 different plugins can include the same plugin.
