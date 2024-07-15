@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/nix/flake"
 )
 
@@ -18,7 +17,7 @@ type Includable interface {
 }
 
 // TODO UPDATEME
-func parseIncludable(path string, plugin configfile.Plugin, workingDir string) (Includable, error) {
+func parseIncludable(path string, ref flake.Ref, workingDir string) (Includable, error) {
 
 	//ref, err := flake.ParseRef(path)
 
@@ -26,7 +25,7 @@ func parseIncludable(path string, plugin configfile.Plugin, workingDir string) (
 	//	return nil, err
 	//}
 
-	switch plugin.Protocol {
+	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
 	case flake.TypeSSH:

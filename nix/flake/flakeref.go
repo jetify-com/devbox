@@ -73,6 +73,7 @@ type Ref struct {
 	// Port of the server git server, to support privately hosted git servers or tunnels
 	Port string `json:port,omitempty`
 
+	// TODO UPDATEME
 	// Subgroup pertains to GitLab. GitHub and Bitbucket don't support multi-level
 	// hierarchy, and this allows the subgroup to exist without breaking the parsing logic already in place
 	Subgroup string `json:subgroup,omitempty`

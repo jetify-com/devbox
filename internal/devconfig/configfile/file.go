@@ -17,38 +17,12 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 const (
 	DefaultName = "devbox.json"
 )
-
-type Plugin struct {
-	// Reserved to allow including other config files. Proposed format is:
-	// file: for local files
-	// https: for remote files
-	// ssh: for remote files
-	// plugin: for built-in plugins
-	// protocol to use (https, ssh, file, builtin); required
-	Protocol string `json:"protocol,omitempty"`
-
-	// where the plugin is hosted (github.com, gitlab.com, localhost, etc); required
-	Host string `json:"host,omitempty"`
-
-	// port, 1 to 65535; optional
-	Port uint16 `json:"port,omitempty"`
-
-	// Subdirectory of the plugin's repo to retrieve; optional
-	// if empty, the plugin key is the assumed path
-	Directory string `json:"directory,omitempty"`
-
-	// The Git ref; optional
-	Ref string `json:"ref,omitempty"`
-
-	// The branch to access; optional
-	// if omitted, master/main is assumed
-	Branch string `json:"branch,omitempty"`
-}
 
 // ConfigFile defines a devbox environment as JSON.
 type ConfigFile struct {
@@ -80,8 +54,7 @@ type ConfigFile struct {
 	// https:// for remote files
 	// plugin: for built-in plugins
 	// This is a similar format to nix inputs
-	//Include  []string          `json:"include,omitempty"`
-	Include map[string]Plugin `json:"include,omitempty"`
+	Include map[string]flake.Ref `json:"include,omitempty"`
 
 	ast *configAST
 }
