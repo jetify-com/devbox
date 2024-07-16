@@ -42,16 +42,20 @@ func newGitPlugin(ref flake.Ref) (*gitPlugin, error) {
 	// For backward compatibility, we don't strictly require name to be present
 	// in github plugins. If it's missing, we just use the directory as the name.
 	name, err := getPluginNameFromContent(plugin)
+
 	if err != nil && !errors.Is(err, errNameMissing) {
 		return nil, err
 	}
+
 	if name == "" {
 		name = strings.ReplaceAll(ref.Dir, "/", "-")
 	}
+
 	plugin.name = githubNameRegexp.ReplaceAllString(
 		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
 		" ",
 	)
+
 	return plugin, nil
 }
 
@@ -167,35 +171,26 @@ func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
 	case flake.TypeSSH:
 		return p.sshGitUrl()
-	case flake.TypeGitLab:
-		return p.gitlabUrl(subpath)
-	case flake.TypeGitHub:
-		return p.githubUrl(subpath)
-	case flake.TypeBitBucket:
-		return p.bitbucketUrl(subpath)
+	case flake.TypeHttps:
+		u, err := p.repoUrl(subpath)
+		slog.Debug(u)
+		return u, err
+		//return p.repoUrl(subpath)
 	default:
-		return "", nil
+		return "", errors.New("Unsupported plugin type: " + p.ref.Type)
 	}
 }
 
 func (p *gitPlugin) sshGitUrl() (string, error) {
-	address, err := url.Parse(p.ref.URL)
-
-	if err != nil {
-		return "", err
-	}
-
 	defaultBranch := "main"
 
-	if address.Host == flake.TypeGitHub {
+	if p.ref.Host == flake.TypeGitHub {
 		// using master for GitHub repos for the same reasoning established in `githubUrl`
 		defaultBranch = "master"
 	}
 
 	fileFormat := "tar.gz"
 	baseCommand := fmt.Sprintf("git archive --format=%s --remote=ssh://git@", fileFormat)
-
-	path, _ := url.JoinPath(p.ref.Owner, p.ref.Subgroup, p.ref.Repo)
 
 	archive := filepath.Join("/", "tmp", p.ref.Dir+"."+fileFormat)
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
@@ -207,7 +202,7 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	}
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
-	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, path, branch, p.ref.Dir, archive)
+	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, p.ref.Path, branch, p.ref.Dir, archive)
 
 	slog.Debug("Generated git archive command: " + command)
 
@@ -252,8 +247,7 @@ func (p *gitPlugin) githubUrl(subpath string) (string, error) {
 	// so setting master here is better.
 	return url.JoinPath(
 		"https://raw.githubusercontent.com/",
-		p.ref.Owner,
-		p.ref.Repo,
+		p.ref.Path,
 		cmp.Or(p.ref.Rev, p.ref.Ref, "master"),
 		p.ref.Dir,
 		subpath,
@@ -265,8 +259,7 @@ func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 	// as the default in this case
 	return url.JoinPath(
 		"https://api.bitbucket.org/2.0/repositories",
-		p.ref.Owner,
-		p.ref.Repo,
+		p.ref.Path,
 		"src",
 		cmp.Or(p.ref.Rev, p.ref.Ref, "main"),
 		p.ref.Dir,
@@ -274,13 +267,19 @@ func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 	)
 }
 
-func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
-	project, err := url.JoinPath(p.ref.Owner, p.ref.Subgroup, p.ref.Repo)
-
-	if err != nil {
-		return "", err
+func (p *gitPlugin) repoUrl(subpath string) (string, error) {
+	if p.ref.Host == "github.com" {
+		return p.githubUrl(subpath)
+	} else if p.ref.Host == "gitlab.com" {
+		return p.gitlabUrl(subpath)
+	} else if p.ref.Host == "bitbucket.com" {
+		return p.bitbucketUrl(subpath)
 	}
 
+	return "", errors.New("Unknown hostname provided in plugin: " + p.ref.Host)
+}
+
+func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 	file, err := url.JoinPath(p.ref.Dir, subpath)
 
 	if err != nil {
@@ -289,7 +288,7 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 
 	path, err := url.JoinPath(
 		"https://gitlab.com/api/v4/projects",
-		url.PathEscape(project),
+		p.ref.Path,
 		"repository",
 		"files",
 		url.PathEscape(file),

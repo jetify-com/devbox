@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"net/http"
 	"os"
@@ -125,8 +126,10 @@ func (c *Config) loadRecursive(
 
 	// TODO UPDATEME
 	for path, includeRef := range c.Root.Include {
+		includeRef.Path = path
+
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			path, includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
 		if err != nil {
 			return errors.WithStack(err)
 		}

@@ -6,14 +6,14 @@ import (
 	"go.jetpack.io/devbox/nix/flake"
 )
 
-func LoadConfigFromInclude(path string, ref flake.Ref, lockfile *lock.File, workingDir string) (*Config, error) {
+func LoadConfigFromInclude(ref flake.Ref, lockfile *lock.File, workingDir string) (*Config, error) {
 	var includable Includable
 	var err error
 
 	if ref.Type == "builtin" {
-		includable = devpkg.PackageFromStringWithDefaults(path, lockfile)
+		includable = devpkg.PackageFromStringWithDefaults(ref.Path, lockfile)
 	} else {
-		includable, err = parseIncludable(path, ref, workingDir)
+		includable, err = parseIncludable(ref, workingDir)
 		if err != nil {
 			return nil, err
 		}
