@@ -272,9 +272,9 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 
 	if mode != ensure {
 		// Reload includes because added/removed packages might change plugins. Cases:
-		// * New package adds built in. We wanna make sure the plugin is in config.
-		// * Remove built-in that installs multiple packages (e.g. nginx). We wanna clear them up so
-		// they get removed from lockfile in updateLockfile
+		// * New package adds built-in plugin. We wanna make sure the plugin is in config.
+		// * Remove built-in plugin that installs multiple packages (e.g. nginx). We wanna clear them
+		// up so they get removed from lockfile in updateLockfile
 		if err = d.cfg.LoadRecursive(d.lockfile); err != nil {
 			return err
 		}
@@ -317,6 +317,13 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 	// Update lockfile with new packages that are not to be installed
 	for _, pkg := range d.AllPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
+			return err
+		}
+	}
+
+	// Update plugin versions in lockfile.
+	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
+		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig); err != nil {
 			return err
 		}
 	}
@@ -412,9 +419,6 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 	// Create plugin directories first because packages might need them
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
-			return err
-		}
-		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig); err != nil {
 			return err
 		}
 	}
