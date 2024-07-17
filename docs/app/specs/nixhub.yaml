@@ -11,7 +11,7 @@ paths:
       summary: Get a Package
       description: >
         Get information about a specific package in Nixpkgs. This endpoint returns a JSON object that contains information about the package, including a list of releases, platforms, and outputs. 
-        
+
         You should use this endpoint if you know the name of the package you want to look up. If you need to search for packages, use `/v2/search`. If you only need the latest version of a package, use `/v2/resolve`.
       responses:
         "200":
@@ -210,7 +210,7 @@ components:
                   description: The type of flake reference. Usually this will be `github`.
                 owner:
                   type: string
-                  description: The owner of the repositiory that contains the flake. Usually `NixOS`.
+                  description: The owner of the repository that contains the flake. Usually `NixOS`.
                 repo:
                   type: string
                   description: the repository that contains the flake. Usually `nixpkgs`
