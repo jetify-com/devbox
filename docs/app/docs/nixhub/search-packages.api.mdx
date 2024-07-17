@@ -5,7 +5,7 @@ description: "Search Packages"
 sidebar_label: "Search Packages"
 hide_title: true
 hide_table_of_contents: true
-api: eJyFU01v2zAM/SuGThsQ2EbQU24F9oGhQFd026koCsZiYrWypEi00cDIfx9pu2mWuNjJlvjI9/hI9SpiCt4lTGrVq2VZykdjqqIJZLxTK/XzRi1U5R2hI4lCCNZUINHiOQmkV6mqsQH5o31ATvLrZ6yIE0P0ASOZkWDXYtyfwBJF47bqsFDkCewTq2ktpROEYd4tRoFcBiFG2DOJIWzS/9kdNDhLntqmgQ+EWUj01AYNhHoGININWbn6hRCr+n5QyYG5yGC1xDh4VV5dmn3rKfvmW6eHygEiSyaMLP/hTb/aSccCHt0UY3atiSKPYouLs5IjeTaAc0ZfzOrYyuMHqXdQvcCWPVwoVlN7JlJbHPwFqvlQpAEoxTF2b3LbaDlWE4W0KiZIrrFb+9c81UW3VMJo3MYPYiavvgyAbKK+vvvBVaXkqGiZl3mpznUyKtv4mI0c3EwGTme8L952cgpjA5nGgE6jq2QhxF+fqAH3vhszHf/DdPSM8JWKYIHnwHWGTvvJjQc1ucHN1UwgN32/hoR/oj0c5Hp6BuyRNgnWVka3AZvOZ9e/vzv16X6a8ufsfKKzml5wP+1KB7aV+GB3B9EII7M/MqpG0Py6RMqYcF1VGOgk6+K5S5XjGnz/+psX5y8kRnZ9
+api: eJyNVW1LIzEQ/ishnxSkLeKnci8o94IceKLeJxFNd6fdaDZJk9lqKf3vN5NN69rtHQWhNpN5nmeemUxXMkD0zkaIcrySp6MRf5QQi6A9amflWP7+JU9k4SyCRY4q740uFEeHz5GvrGQsKqgV/4dLD5TkJs9QICV+xDq3oo2IAJ6oCVLbmcAK6CA2BqNwU6FEBBWKSswbCMuBuKt0FPQXAJtgoRSTZUp5Gi5Oh+3VJwG29E5b5vTBeQio26ISSEdaxECcPWl3BNilFSxOoPsP0/pEokNlHrP2DgmFYQZhL0vKEbapJxC43E3lUxcSWVcFc/TRVQhq2TdXGB2REW8Twk3GxUqhqBUSJsN3TU1A4lUbIyYgoPa4FHoqrNuKeoUApKyx5YAINUIdD2iziGSx2ZbSgnWEQNxtcq9tVtVwWNf4JlfNxXlVvKgZdKnKvabGpq7VIXNBtVQuoOic7pAxnFERHxtfKoTyMNWcIVDXrJU6sRH+qqLIOELbRHOl3/zLjMffO7nmodNoGL3bZgrsi6S3zTEKnu173ReqFDdAtkQc5wH48AqOIiD16uv886d08CWfexXIdoRwLBP0WR/6yqH4wZOTRG8TqLv3m/bKOQ8VX24bw8M+b3RgEzE0sGvc7c7I9PZONny9fvhH6nXrc6RkUlM5IpIzSFtDYUVf8jNncAiLjdwmGIpViD6Oh/nKoITFxL0NYkXbQTKjtlOXxOQ2fEsX8nMU59eXhMqQraLTwWgw6s/b9WXaBC0Hb0dlS35Bziz422ZQSvC0iMAW/F7YXxexVvb96eyp+APT1jOENxx6o6gPhJMqXWU37mV2g4qriIBPVquJivAnmPWaj/N6JY9KHdXEcOumysTd3q3ef0Pk0U3u8rHY7eheTS+wzLOyUKbheLJ7oYJmRmJ/oFsVqJJWLktpE86LAjx2sno/XYyyHYOf3+9ocP4CUy509g==
 sidebar_class_name: "get api-method"
 info_path: nixhub/devbox-search-api
 custom_edit_url: null
@@ -133,7 +133,7 @@ Search Packages
                         required={false}
                         schemaName={"string"}
                         qualifierMessage={undefined}
-                        schema={{"type":"string"}}
+                        schema={{"type":"string","description":"The search query sent to the `/v2/search` endpoint"}}
                       >
                         
                       </SchemaItem><SchemaItem
@@ -142,7 +142,7 @@ Search Packages
                         required={false}
                         schemaName={"integer"}
                         qualifierMessage={undefined}
-                        schema={{"type":"integer"}}
+                        schema={{"type":"integer","description":"The total number of results for the search query"}}
                       >
                         
                       </SchemaItem><SchemaItem
@@ -172,7 +172,15 @@ Search Packages
                           </summary><div
                             style={{"marginLeft":"1rem"}}
                           >
-                            <li>
+                            <div
+                              style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                            >
+                              
+                              
+                              A list of SearchResults that match the query. This array will be empty if no results were found.
+                              
+                              
+                            </div><li>
                               <div
                                 style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
                               >
@@ -184,7 +192,7 @@ Search Packages
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string"}}
+                              schema={{"type":"string","description":"The name of the package that matched the search query"}}
                             >
                               
                             </SchemaItem><SchemaItem
@@ -193,7 +201,7 @@ Search Packages
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string"}}
+                              schema={{"type":"string","description":"A short description of the package"}}
                             >
                               
                             </SchemaItem><SchemaItem
@@ -202,7 +210,7 @@ Search Packages
                               required={false}
                               schemaName={"string"}
                               qualifierMessage={undefined}
-                              schema={{"type":"string"}}
+                              schema={{"type":"string","description":"The last time this package was updated in the Nixpkgs repo"}}
                             >
                               
                             </SchemaItem><li>
@@ -231,6 +239,19 @@ Search Packages
               </SchemaTabs>
             </TabItem>
           </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Bad Request: empty search query (set a ?q=&lt;query&gt; query parameter)
+          
+          
+        </div><div>
+          
         </div>
       </TabItem><TabItem
         label={"404"}
