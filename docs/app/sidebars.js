@@ -250,15 +250,14 @@ const sidebars = {
       ],
     },
   ],
+
   apiSidebar: [{
     type: "category",
     label: "Nixhub API Reference",
     collapsed: false,
     link: {
-      type: "generated-index",
-      title: "Nixhub API Reference",
-      description: "The Nixhub API lets you search historical package versions for over 100,000 Nix packages. It also lets you resolve the latest version of a package ref, or look up all the available versions for a given package.",
-      slug: "/nixhub/"
+      type: "doc",
+      id: "nixhub/index"
     },
     items: require("./docs/nixhub/sidebar"),
   }],

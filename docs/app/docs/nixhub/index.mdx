@@ -1,0 +1,59 @@
+---
+title: "Devbox Search API"
+description: "API for searching and resolving package dependencies"
+sidebar_label: Introduction
+sidebar_position: 0
+hide_title: true
+custom_edit_url: null
+---
+
+import ApiLogo from "@theme/ApiLogo";
+import Heading from "@theme/Heading";
+import SchemaTabs from "@theme/SchemaTabs";
+import TabItem from "@theme/TabItem";
+import Export from "@theme/ApiExplorer/Export";
+import DocCardList from "@theme/DocCardList";
+
+<span
+  className={"theme-doc-version-badge badge badge--secondary"}
+  children={"Version: 2.0.0"}
+>
+</span>
+
+# Using the Devbox Search API
+
+The Devbox Search API lets you search over 1 million package versions for over 100,000 Nix packages. You can use the Nixhub API to search for packages, resolve historic versions, and then install them using Devbox or Nix. Devbox Search is designed to be simple and easy to use, and is free to use for personal use. 
+
+Devbox Search is a RESTful API that uses standard HTTP methods and status codes. Parameters are passed to the API as query parameters, and the API returns JSON responses. The current version does not make use of pagination, though this may be added in the future.
+
+Devbox Search exposes the following endpoints for searching and resolving packages:
+
+- `v2/search` - Search for packages by name
+- `v2/pkg` - Get details and version history for a specific package
+- `v2/resolve` - Resolve the latest available package for a given name and version string. 
+
+
+### Rate Limits
+
+In order to prevent abuse, personal use of the API is subject to rate limits. API Rate limiting works as follows: 
+
+1. A given IP address starts with a pool of 1000 requests
+2. Each request decrements the pool by 1
+3. The pool is replenished at a rate of 5 requests per minute
+
+If the pool is empty, the API will return a `429 Too Many Requests` status code.
+
+If you have a use case that requires a higher rate limit or would like to use the API for commercial purposes, please Contact Us. 
+
+### Versioning
+
+The API is versioned using a `v2` prefix in the URL. All `v2` endpoints are considered stable and will not change in a backwards-incompatible way. Breaking changes will be introduced in a new version of the API, with a new version prefix. 
+
+## API Reference
+
+* [Search Packages](./search-packages.api.mdx) - Search for packages by name
+* [Get Package Details](./get-a-package.api.mdx) - Get details and version history for a specific package
+* [Resolve Package](./resolve-package.api.mdx) - Resolve the latest available package for a given name and version string
+
+
+      
