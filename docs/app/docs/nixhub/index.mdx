@@ -1,5 +1,5 @@
 ---
-title: "Devbox Search API"
+title: "Nixhub API"
 description: "API for searching and resolving package dependencies"
 sidebar_label: Introduction
 sidebar_position: 0
@@ -20,13 +20,13 @@ import DocCardList from "@theme/DocCardList";
 >
 </span>
 
-# Using the Devbox Search API
+# Using the Nixhub API
 
-The Devbox Search API lets you search over 1 million package versions for over 100,000 Nix packages. You can use the Nixhub API to search for packages, resolve historic versions, and then install them using Devbox or Nix. Devbox Search is designed to be simple and easy to use, and is free to use for personal use. 
+The Nixhub API lets you search over 1 million package versions for over 100,000 Nix packages. You can use the Nixhub API to search for packages, resolve historic versions, and then install them using Devbox or Nix. Nixhub is designed to be simple and easy to use, and is free to use for personal use. 
 
-Devbox Search is a RESTful API that uses standard HTTP methods and status codes. Parameters are passed to the API as query parameters, and the API returns JSON responses. The current version does not make use of pagination, though this may be added in the future.
+Nixhub is a RESTful API that uses standard HTTP methods and status codes. Parameters are passed to the API as query parameters, and the API returns JSON responses. The current version does not make use of pagination, though this may be added in the future.
 
-Devbox Search exposes the following endpoints for searching and resolving packages:
+Nixhub exposes the following endpoints for searching and resolving packages:
 
 - `v2/search` - Search for packages by name
 - `v2/pkg` - Get details and version history for a specific package
