@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"maps"
 	"net/http"
 	"os"
@@ -125,16 +124,22 @@ func (c *Config) loadRecursive(
 	included := make([]*Config, 0, len(c.Root.Include))
 
 	// TODO UPDATEME
-	for path, includeRef := range c.Root.Include {
-		includeRef.Path = path
+	for _, includeRef := range c.Root.Include {
+		if includeRef.Type == "" {
+			includeRef.Type = "https" // default
+		}
 
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+			includeRef,
+			lockfile,
+			filepath.Dir(c.Root.AbsRootPath),
+		)
+
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, path)
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, includeRef)
 		if seen[pluginConfig.Source.Hash()] {
 			// Note that duplicate includes are allowed if they are in different paths
 			// e.g. 2 different plugins can include the same plugin.

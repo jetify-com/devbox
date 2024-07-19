@@ -202,7 +202,7 @@ func (p *gitPlugin) sshGitUrl() (string, error) {
 	}
 
 	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
-	command := fmt.Sprintf("%s%s/%s %s %s -o %s", baseCommand, host, p.ref.Path, branch, p.ref.Dir, archive)
+	command := fmt.Sprintf("%s%s/%s/%s %s %s -o %s", baseCommand, host, p.ref.Owner, p.ref.Repo, branch, p.ref.Dir, archive)
 
 	slog.Debug("Generated git archive command: " + command)
 

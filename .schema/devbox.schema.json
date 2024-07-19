@@ -131,83 +131,111 @@
     },
     "include": {
       "description": "List of additional plugins to activate within your devbox shell",
-      "type": "object",
-      "patternProperties": {
-        "^[a-zA-Z0-9/_.-]+$": {
-          "description": "Configuration for each plugin specified by its path",
-          "type": "object",
-          "properties": {
-            "protocol": {
-              "description": "Protocol to use (https, ssh, or file)",
-              "type": "string",
-              "enum": [
-                "https",
-                "ssh",
-                "file",
-                "builtin"
-              ]
-            },
-            "host": {
-              "description": "Host of the repository (e.g., gitlab, github, bitbucket, localhost)",
-              "type": "string"
-            },
-            "port": {
-              "description": "Port to use for the connection",
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 65535
-            },
-            "dir": {
-              "description": "Subdirectory that should be accessed in the repo. Defaults to the path key if not provided",
-              "type": "string"
-            },
-            "ref": {
-              "description": "Git reference",
-              "type": "string"
-            },
-            "branch": {
-              "description": "Git branch (only relevant for https or ssh protocols)",
-              "type": "string"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "description": "Username or organization name",
+            "type": "string"
+          },
+          "repo": {
+            "description": "Repository name",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of connection (https, ssh, file, builtin)",
+            "type": "string",
+            "enum": [
+              "https",
+              "ssh",
+              "file",
+              "builtin"
+            ],
+            "default": "https"
+          },
+          "host": {
+            "description": "Host of the repository (e.g., gitlab, github, bitbucket, localhost)",
+            "type": "string"
+          },
+          "port": {
+            "description": "Port to use for the connection",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "dir": {
+            "description": "Subdirectory that should be accessed in the repo. Defaults to the path key if not provided",
+            "type": "string"
+          },
+          "ref": {
+            "description": "Git reference",
+            "type": "string"
+          },
+          "rev": {
+            "description": "Git revision (only relevant for https or ssh types)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner",
+          "repo"
+        ],
+        "dependencies": {
+          "host": {
+            "not": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "builtin"
+                  ]
+                }
+              }
             }
           },
-          "required": [
-            "protocol",
-            "host"
-          ],
-          "dependencies": {
-            "branch": {
-              "oneOf": [
-                {
-                  "properties": {
-                    "protocol": {
-                      "enum": [
-                        "https",
-                        "ssh"
-                      ]
-                    }
-                  }
-                },
-                {
-                  "properties": {
-                    "protocol": {
-                      "enum": [
-                        "file"
-                      ]
-                    }
-                  },
-                  "not": {
-                    "required": [
-                      "branch"
+          "owner": {
+            "not": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "builtin"
+                  ]
+                }
+              }
+            }
+          },
+          "rev": {
+            "oneOf": [
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "https",
+                      "ssh"
                     ]
                   }
                 }
-              ]
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "file",
+                      "builtin"
+                    ]
+                  }
+                },
+                "not": {
+                  "required": [
+                    "rev"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
     },
     "env_from": {
       "type": "string"

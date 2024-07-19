@@ -54,7 +54,7 @@ type ConfigFile struct {
 	// https:// for remote files
 	// plugin: for built-in plugins
 	// This is a similar format to nix inputs
-	Include map[string]flake.Ref `json:"include,omitempty"`
+	Include []flake.Ref `json:"include,omitempty"`
 
 	ast *configAST
 }
