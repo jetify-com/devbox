@@ -1,2 +1,3 @@
-devbox.d/apacheHttpd/apache.pid
-.devbox
+*.log
+*.pid
+*.sock
