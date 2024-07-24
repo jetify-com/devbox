@@ -2,6 +2,8 @@
 package flake
 
 import (
+	//"log/slog"
+	"log/slog"
 	"net/url"
 	"path"
 	"slices"
@@ -16,10 +18,10 @@ const (
 	TypePath      = "path"
 	TypeFile      = "file"
 	TypeSSH       = "ssh"
-	TypeGitHub    = "github"    // TODO UPDATEME delete
-	TypeGitLab    = "gitlab"    // TODO UPDATEME delete
-	TypeBitBucket = "bitbucket" // TODO UPDATEME delete
-	TypeHttps     = "https"     // TODO UPDATEME, this should take place of Github, GitLab, and Bitbucket types
+	TypeGitHub    = "github"
+	TypeGitLab    = "gitlab"
+	TypeBitBucket = "bitbucket"
+	TypeHttps     = "https"
 	TypeTarball   = "tarball"
 )
 
@@ -73,11 +75,6 @@ type Ref struct {
 
 	// Port of the server git server, to support privately hosted git servers or tunnels
 	Port string `json:port,omitempty`
-
-	// TODO UPDATEME
-	// Subgroup pertains to GitLab. GitHub and Bitbucket don't support multi-level
-	// hierarchy, and this allows the subgroup to exist without breaking the parsing logic already in place
-	Subgroup string `json:subgroup,omitempty`
 }
 
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
@@ -239,16 +236,20 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
-	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
-	// refs that have slashes in them. For example,
-	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
-	split, err := splitPathOrOpaque(refURL, 3)
+	// gitlab supports up to 20 levels of nesting: https://docs.gitlab.com/ee/user/group/subgroups/
+	// using an object structure allows the subgroup(s) to be easily identified by just getting the splits
+
+	slog.Debug("REEEEEEEEEEEPO: ", parsed.Repo)
+	split, err := splitRepoString(parsed.Repo, 20)
 	if err != nil {
+		slog.Debug("FAILED TO DO THE SPLITS")
 		return err
 	}
 
-	parsed.Owner = split[0]
-	parsed.Repo = split[1]
+	parsed.Owner = strings.Join(split[0:len(split)-2], "/")
+	parsed.Repo = split[len(split)-1]
+
+	slog.Debug("THINGGGGGGS", parsed.Owner, parsed.Repo)
 
 	if len(split) > 2 {
 		if revOrRef := split[2]; isGitHash(revOrRef) {
@@ -257,11 +258,6 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 			parsed.Ref = revOrRef
 		}
 	}
-
-	parsed.Host = refURL.Query().Get("host")
-	parsed.Dir = refURL.Query().Get("dir")
-	parsed.Subgroup = refURL.Query().Get("subgroup")
-	parsed.Port = refURL.Query().Get("port")
 
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
@@ -423,6 +419,8 @@ func isArchive(path string) bool {
 // ensuring that path elements with an encoded '/' (%2F) are not split.
 // For example, "/dir/file%2Fname" becomes the elements "dir" and "file/name".
 // The count limits the number of substrings per [strings.SplitN]
+
+// TODO git rid of this
 func splitPathOrOpaque(u *url.URL, n int) ([]string, error) {
 	upath := u.EscapedPath()
 	if upath == "" {
@@ -441,6 +439,31 @@ func splitPathOrOpaque(u *url.URL, n int) ([]string, error) {
 
 	var err error
 	split := strings.SplitN(upath, "/", n)
+	for i := range split {
+		split[i], err = url.PathUnescape(split[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return split, nil
+}
+
+// TODO maybe use this?
+func splitRepoString(repo string, n int) ([]string, error) {
+	repo = strings.TrimSpace(repo)
+
+	if repo == "" {
+		return nil, nil
+	}
+
+	// We don't want an empty element if the path is rooted.
+	if repo[0] == '/' {
+		repo = repo[1:]
+	}
+	repo = path.Clean(repo)
+
+	var err error
+	split := strings.SplitN(repo, "/", n)
 	for i := range split {
 		split[i], err = url.PathUnescape(split[i])
 		if err != nil {

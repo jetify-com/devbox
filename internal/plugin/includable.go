@@ -18,18 +18,16 @@ type Includable interface {
 
 // TODO UPDATEME
 func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
-	//ref, err := flake.ParseRef(path)
-
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
 	case flake.TypeSSH:
 		fallthrough
-	case flake.TypeHttps:
+	case flake.TypeBitBucket:
+		fallthrough
+	case flake.TypeGitHub:
+		fallthrough
+	case flake.TypeGitLab:
 		return newGitPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)

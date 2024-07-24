@@ -76,36 +76,57 @@ func (p *gitPlugin) Hash() string {
 }
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
-	contentURL, err := p.url(subpath)
+	pluginLocation, err := p.url(subpath)
 
 	if err != nil {
 		return nil, err
 	}
 
-	readFile := func() ([]byte, time.Duration, error) {
-		archive := filepath.Join("/", "tmp", p.ref.Dir+".tar.gz")
-		args := strings.Fields(contentURL)
-		cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
+	retrieveArchive := func() ([]byte, time.Duration, error) {
+		archiveDir, _ := os.MkdirTemp("", p.ref.Owner)
+		archive := filepath.Join(archiveDir, p.ref.Owner+".tar.gz")
+		args := strings.Fields(pluginLocation + archive) // this is really just the base git archive command + file
 
+		// TODO get this working properly
+		//defer func() {
+		//	slog.Debug("Removing archive " + archive)
+		//	os.RemoveAll(archive)
+		//	slog.Debug("Removing archive directory " + archiveDir)
+		//	os.RemoveAll(archiveDir)
+		//}()
+
+		cmd := exec.Command(args[0], args[1:]...)
 		_, err := cmd.Output()
 
 		if err != nil {
 			slog.Error("Error executing git archive: ", err)
-			return nil, 24 * time.Hour, err
-		}
-
-		reader, err := os.Open(archive)
-		io.ReadAll(reader)
-		err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
-
-		file, err := os.Open(contentURL)
-		info, err := file.Stat()
-
-		if err != nil || info.Size() == 0 {
 			return nil, 0, err
 		}
 
+		reader, err := os.Open(archive)
+		err = fileutil.Untar(reader, archiveDir)
+
+		if err != nil {
+			slog.Error("Encountered error while trying to extract "+archive+": ", err)
+			return nil, 0, err
+		}
+
+		pluginJson := filepath.Join(archiveDir, p.ref.Dir, "plugin.json")
+		file, err := os.Open(pluginJson)
 		defer file.Close()
+
+		info, err := file.Stat()
+
+		if err != nil {
+			slog.Error("Error extracting file " + file.Name() + ". Cannot process plugin.")
+			return nil, 0, err
+		}
+
+		if info.Size() == 0 {
+			slog.Error("Extracted file " + file.Name() + " is empty. Cannot process plugin.")
+			return nil, 0, err
+		}
+
 		body, err := io.ReadAll(file)
 
 		if err != nil {
@@ -115,8 +136,8 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		return body, 24 * time.Hour, nil
 	}
 
-	retrieve := func() ([]byte, time.Duration, error) {
-		req, err := p.request(contentURL)
+	retrieveHttp := func() ([]byte, time.Duration, error) {
+		req, err := p.request(pluginLocation)
 
 		if err != nil {
 			return nil, 0, err
@@ -155,13 +176,13 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		return sshCache.GetOrSet(contentURL, readFile)
+		return sshCache.GetOrSet(pluginLocation, retrieveArchive)
 	case flake.TypeGitHub:
-		return githubCache.GetOrSet(contentURL, retrieve)
+		return githubCache.GetOrSet(pluginLocation, retrieveHttp)
 	case flake.TypeGitLab:
-		return gitlabCache.GetOrSet(contentURL, retrieve)
+		return gitlabCache.GetOrSet(pluginLocation, retrieveHttp)
 	case flake.TypeBitBucket:
-		return bitbucketCache.GetOrSet(contentURL, retrieve)
+		return bitbucketCache.GetOrSet(pluginLocation, retrieveHttp)
 	default:
 		return nil, err
 	}
@@ -170,76 +191,40 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		return p.sshGitUrl()
-	case flake.TypeHttps:
-		u, err := p.repoUrl(subpath)
-		slog.Debug(u)
-		return u, err
-		//return p.repoUrl(subpath)
+		return p.sshBaseGitCommand()
+	case flake.TypeBitBucket:
+		fallthrough
+	case flake.TypeGitHub:
+		fallthrough
+	case flake.TypeGitLab:
+		return p.repoUrl(subpath)
 	default:
 		return "", errors.New("Unsupported plugin type: " + p.ref.Type)
 	}
 }
 
-func (p *gitPlugin) sshGitUrl() (string, error) {
+func (p *gitPlugin) sshBaseGitCommand() (string, error) {
 	defaultBranch := "main"
 
-	if p.ref.Host == flake.TypeGitHub {
+	if p.ref.Host == flake.TypeGitHub+".com" {
 		// using master for GitHub repos for the same reasoning established in `githubUrl`
 		defaultBranch = "master"
 	}
 
-	fileFormat := "tar.gz"
-	baseCommand := fmt.Sprintf("git archive --format=%s --remote=ssh://git@", fileFormat)
+	p.ref.Ref = defaultBranch
 
-	archive := filepath.Join("/", "tmp", p.ref.Dir+"."+fileFormat)
+	prefix := "git archive --format=tar.gz --remote=ssh://git@"
+	path, _ := url.JoinPath(p.ref.Owner, p.ref.Repo)
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
 
 	host := p.ref.Host
-
 	if p.ref.Port != "" {
 		host += ":" + p.ref.Port
 	}
 
-	// TODO: try to use the Devbox file hashing mechanism to make sure it's stored properly
-	command := fmt.Sprintf("%s%s/%s/%s %s %s -o %s", baseCommand, host, p.ref.Owner, p.ref.Repo, branch, p.ref.Dir, archive)
-
-	slog.Debug("Generated git archive command: " + command)
-
+	command := fmt.Sprintf("%s%s/%s %s %s -o", prefix, host, path, branch, p.ref.Dir)
+	slog.Debug("Generated base git archive command: " + command)
 	return command, nil
-
-	//sshCache.GetOrSet(command, func() ([]byte, time.Duration, error) {
-
-	//})
-
-	// 24 hours is currently when files are considered "expired" in other FileContent function
-	//currentTime := time.Now()
-	//threshold := 24 * time.Hour
-	//expiration := currentTime.Add(-threshold)
-
-	//args := strings.Fields(command)
-	//archiveInfo, err := os.Stat(archive)
-
-	//if os.IsNotExist(err) || archiveInfo.ModTime().Before(expiration) {
-	//	cmd := exec.Command(args[0], args[1:]...) // Maybe make async?
-
-	//	_, err := cmd.Output()
-
-	//	if err != nil {
-	//		slog.Error("Error executing git archive: ", err)
-	//		return "", err
-	//	}
-
-	//	reader, err := os.Open(archive)
-	//	io.ReadAll(reader)
-	//	err = fileutil.Untar(reader, "/tmp") // TODO: add UUID?
-
-	//	if err == nil {
-	//		return "", err
-	//	}
-	//}
-
-	//return filepath.Join("/", "tmp", p.ref.Dir, "plugin.json"), nil
 }
 
 func (p *gitPlugin) githubUrl(subpath string) (string, error) {
