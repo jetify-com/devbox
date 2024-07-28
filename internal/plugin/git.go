@@ -232,7 +232,8 @@ func (p *gitPlugin) githubUrl(subpath string) (string, error) {
 	// so setting master here is better.
 	return url.JoinPath(
 		"https://raw.githubusercontent.com/",
-		p.ref.Path,
+		p.ref.Owner,
+		p.ref.Repo,
 		cmp.Or(p.ref.Rev, p.ref.Ref, "master"),
 		p.ref.Dir,
 		subpath,
