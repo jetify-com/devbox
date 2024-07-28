@@ -51,8 +51,11 @@ func newGitPlugin(ref flake.Ref) (*gitPlugin, error) {
 		name = strings.ReplaceAll(ref.Dir, "/", "-")
 	}
 
+	// gitlab repos can have up to 20 subgroups. We need to capture the subgroups in the plugin name
+	repoDotted := strings.ReplaceAll(ref.Repo, "/", ".")
+
 	plugin.name = githubNameRegexp.ReplaceAllString(
-		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
+		strings.Join(lo.Compact([]string{ref.Owner, repoDotted, name}), "."),
 		" ",
 	)
 

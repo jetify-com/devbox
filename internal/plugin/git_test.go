@@ -143,8 +143,9 @@ func TestNewGitPlugin(t *testing.T) {
 func newGitPluginForTest(ref flake.Ref) (*gitPlugin, error) {
 	plugin := &gitPlugin{ref: ref}
 	name := strings.ReplaceAll(ref.Dir, "/", "-")
+	repoDotted := strings.ReplaceAll(ref.Repo, "/", ".")
 	plugin.name = githubNameRegexp.ReplaceAllString(
-		strings.Join(lo.Compact([]string{ref.Owner, ref.Repo, name}), "."),
+		strings.Join(lo.Compact([]string{ref.Owner, repoDotted, name}), "."),
 		" ",
 	)
 	return plugin, nil
