@@ -35,10 +35,10 @@ For example -- to add the `ds` extension, run `devbox add php81Extensions.ds`, o
 
 ## PHP Plugin Details
 
-The PHP Plugin will provide the following configuration when you install a PHP runtime with `devbox add`. You can also manually add the PHP plugin by adding `plugin:php` to your `includes` list in `devbox.json`:
+The PHP Plugin will provide the following configuration when you install a PHP runtime with `devbox add`. You can also manually add the PHP plugin by adding `plugin:php` to your `include` list in `devbox.json`:
 
 ```json
-    "includes": [
+    "include": [
         "plugin:php"
     ]
 ```

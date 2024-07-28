@@ -103,13 +103,20 @@ func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 		if err := m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
 			return err
 		}
-
 	}
 
-	if locked != nil {
-		locked.PluginVersion = cfg.Version
-	}
+	return nil
+}
 
+func (m *Manager) UpdateLockfileVersion(cfg *Config) error {
+	pkg := cfg.Source
+	locked := m.lockfile.Packages[pkg.LockfileKey()]
+	// plugins that are not triggered by packages don't have a lockfile entry
+	// this may change if we decide to store all plugins in the lockfile
+	if locked == nil {
+		return nil
+	}
+	locked.PluginVersion = cfg.Version
 	return m.lockfile.Save()
 }
 
