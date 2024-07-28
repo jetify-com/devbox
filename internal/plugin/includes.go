@@ -10,7 +10,7 @@ func LoadConfigFromInclude(ref flake.Ref, lockfile *lock.File, workingDir string
 	var includable Includable
 	var err error
 
-	if ref.Type == "builtin" {
+	if ref.Type == flake.TypeBuiltin {
 		includable = devpkg.PackageFromStringWithDefaults(ref.Path, lockfile)
 	} else {
 		includable, err = parseIncludable(ref, workingDir)

@@ -16,11 +16,10 @@ type Includable interface {
 	LockfileKey() string
 }
 
-// TODO UPDATEME
 func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
 	switch ref.Type {
 	case flake.TypePath:
-		return newLocalPlugin(ref, workingDir) // TODO
+		return newLocalPlugin(ref, workingDir)
 	case flake.TypeSSH:
 		fallthrough
 	case flake.TypeBitBucket:

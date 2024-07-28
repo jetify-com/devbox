@@ -238,10 +238,6 @@ func (c *Config) loadRecursive(
 
 	// TODO UPDATEME
 	for _, includeRef := range c.Root.Include {
-		if includeRef.Type == "" {
-			includeRef.Type = "https" // default
-		}
-
 		pluginConfig, err := plugin.LoadConfigFromInclude(
 			includeRef,
 			lockfile,
@@ -276,6 +272,7 @@ func (c *Config) loadRecursive(
 		c.Root.TopLevelPackages(),
 		lockfile,
 	)
+
 	if err != nil {
 		return errors.WithStack(err)
 	}
