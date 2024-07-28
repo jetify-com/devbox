@@ -87,13 +87,13 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		archive := filepath.Join(archiveDir, p.ref.Owner+".tar.gz")
 		args := strings.Fields(pluginLocation + archive) // this is really just the base git archive command + file
 
-		// TODO get this working properly
-		//defer func() {
-		//	slog.Debug("Removing archive " + archive)
-		//	os.RemoveAll(archive)
-		//	slog.Debug("Removing archive directory " + archiveDir)
-		//	os.RemoveAll(archiveDir)
-		//}()
+		defer func() {
+			slog.Debug("Cleaning up retrieved files related to privately hosted plugin")
+			slog.Debug("Removing archive " + archive)
+			os.RemoveAll(archive)
+			slog.Debug("Removing archive directory " + archiveDir)
+			os.RemoveAll(archiveDir)
+		}()
 
 		cmd := exec.Command(args[0], args[1:]...)
 		_, err := cmd.Output()
@@ -253,11 +253,11 @@ func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 }
 
 func (p *gitPlugin) repoUrl(subpath string) (string, error) {
-	if p.ref.Host == "github.com" {
+	if p.ref.Type == flake.TypeGitHub {
 		return p.githubUrl(subpath)
-	} else if p.ref.Host == "gitlab.com" {
+	} else if p.ref.Type == flake.TypeGitLab {
 		return p.gitlabUrl(subpath)
-	} else if p.ref.Host == "bitbucket.com" {
+	} else if p.ref.Type == flake.TypeBitBucket {
 		return p.bitbucketUrl(subpath)
 	}
 
@@ -271,9 +271,15 @@ func (p *gitPlugin) gitlabUrl(subpath string) (string, error) {
 		return "", err
 	}
 
+	repoPath, err := url.JoinPath(p.ref.Owner, p.ref.Repo)
+
+	if err != nil {
+		return "", err
+	}
+
 	path, err := url.JoinPath(
 		"https://gitlab.com/api/v4/projects",
-		p.ref.Path,
+		url.PathEscape(repoPath),
 		"repository",
 		"files",
 		url.PathEscape(file),
