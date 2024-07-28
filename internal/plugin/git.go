@@ -242,9 +242,11 @@ func (p *gitPlugin) githubUrl(subpath string) (string, error) {
 func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 	// bitbucket doesn't redirect master -> main or main -> master, so using "main"
 	// as the default in this case
+
 	return url.JoinPath(
 		"https://api.bitbucket.org/2.0/repositories",
-		p.ref.Path,
+		p.ref.Owner,
+		p.ref.Repo,
 		"src",
 		cmp.Or(p.ref.Rev, p.ref.Ref, "main"),
 		p.ref.Dir,
