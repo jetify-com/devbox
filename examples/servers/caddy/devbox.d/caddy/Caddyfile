@@ -2,11 +2,11 @@
 {
 	admin 0.0.0.0:2020
 	auto_https disable_certs
-	http_port 8800
+	http_port 8080
 	https_port 4443
 }
 
-:8082 {
+:8080 {
 	root * {$CADDY_ROOT_DIR}
 	log {
 		output file {$CADDY_LOG_DIR}/caddy.log
