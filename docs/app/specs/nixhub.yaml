@@ -34,6 +34,9 @@ paths:
   /search:
     get:
       summary: Search Packages
+      description: > 
+        Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query. 
+        The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint. 
       responses:
         "200":
           description: OK
@@ -55,6 +58,9 @@ paths:
   /resolve:
     get:
       summary: Resolve a Package Version
+      description: > 
+       Resolve a Package Version. This endpoint resolves a package name + version string to the latest version of the package availale in the Nixpkg repository. 
+       The response includes the Flake installable information for the package on each supported platform.
       responses:
         "200":
           description: OK
