@@ -10,8 +10,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
 	"go.jetpack.io/devbox/internal/redact"
 )
@@ -83,11 +85,15 @@ func (c *client) ResolveV2(ctx context.Context, name, version string) (*ResolveR
 	return execGet[ResolveResponse](ctx, searchURL)
 }
 
+var userAgent = fmt.Sprintf("Devbox/%s (%s; %s)", build.Version, runtime.GOOS, runtime.GOARCH)
+
 func execGet[T any](ctx context.Context, url string) (*T, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
 	}
+	req.Header.Set("User-Agent", userAgent)
+
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
