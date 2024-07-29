@@ -132,6 +132,9 @@ components:
         os:
           type: string
           description: The operating system of the platform. This will be one of `macOS` or `Linux`.
+        systems:
+          type: string
+          description: The full Nix compatible name of the system. This will be one of `aarch64-darwin`, `aarch64-linux`, `x86_64-darwin`, or `x86_64-linux`.
         attribute_path:
           type: string
           description: The attribute path to the package in the Nixpkgs. This can be used to install the package with Nix or Devbox.

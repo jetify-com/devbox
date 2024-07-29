@@ -90,12 +90,6 @@ const config = {
             },
             items: [
                 {
-                    to: '/nixhub/',
-                    label: 'Nixhub API',
-                    className: 'header-text-link',
-                    position: 'left',
-                },
-                {
                     to: 'https://cloud.jetify.com',
                     label: 'Jetify Cloud',
                     className: 'header-text-link',
