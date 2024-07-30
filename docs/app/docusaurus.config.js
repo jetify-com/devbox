@@ -28,6 +28,7 @@ const config = {
         mermaid: true,
     },
     themes: [
+        'docusaurus-theme-openapi-docs',
         '@docusaurus/theme-mermaid'
     ],
     i18n: {
@@ -44,6 +45,7 @@ const config = {
                     sidebarPath: require.resolve('./sidebars.js'),
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
+                    docItemComponent: "@theme/ApiItem",
                     editUrl: "https://github.com/jetify-com/devbox/tree/main/docs/app/"
                 },
                 blog: false,
@@ -55,8 +57,25 @@ const config = {
                     trackingID: 'G-PL4J94CXFK',
                     anonymizeIP: true,
                 },
-            }),
+            } ),
         ],
+    ],
+
+    plugins: [
+        [
+            'docusaurus-plugin-openapi-docs',
+            {
+                id: 'api',
+                docsPluginId: 'classic',
+                config: {
+                    nixhub: {
+                        specPath: "specs/nixhub.yaml",
+                        outputDir: "docs/nixhub",
+                        
+                    }
+                }
+            }
+        ]
     ],
 
     themeConfig:
@@ -74,7 +93,7 @@ const config = {
                     to: 'https://cloud.jetify.com',
                     label: 'Jetify Cloud',
                     className: 'header-text-link',
-                    position: 'right',
+                    position: 'left',
                   },
                 {
                     href: 'https://discord.gg/jetify',

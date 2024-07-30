@@ -1,0 +1,492 @@
+---
+id: get-a-package
+title: "Get a Package"
+description: "Get information about a specific package in Nixpkgs. This endpoint returns a JSON object that contains information about the package, including a list of releases, platforms, and outputs."
+sidebar_label: "Get a Package"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWGtr3EYU/SuDPiQ2bNYmmFAMpWxpG1JSOzgJpSRmdyTNWhNLGmUeu16M/3vOnRlppd1NI/cB/VAwWI+573OP7t37JBcm07KxUtXJefJSWCbrpdIVpyeMp8pZxplpRCaXMmMNz275jcAhdiHvmtsbM2XvCmmYqPNGydoyLazTtYHQr28vL5hKP4nMMltwyzJVWy7xbt+ELUSre4LXWelyWd9ASSmNZWoJtaXgRpgJa0puSRyXvM4ZpBtn4cbH+g/lmCmUK3PmjIDOvl9yyTZ4f1urtbdW80qQ4p5lf2DNcdgqVip1y1wzZa+CYC1ETs+N4DorGDxoxeAImVucrJ6fhLeLTkrV5SaKwg48FwhnJbSh0GGdb6PudGhhVLkSi+nHOpkkuGtUjciT8/vk+ekp/RsW7fIWxyi3orb0ljdNKTOf3ZNPho7cJyYrRMXpym4aAaFQFwgOdc3qQdm0aGAfekMxYslbn2Pp8ReKjijTjQ/Ux4Gjiy7/sNRo1QhtZQiF8t/zx1gNG3v+vPtKpQL+Cpee/CRWqbpLHiaJcVXF9ebbSmeEEm1Z7+mOflJXqEo0uJ47XY5z9P3Va0JIT89T5Eorn8pWHalGeQRKOk6rUUu75hroCVIHXG2bo6eQa803ByJv++kqingg99RNISOtqMwIrGxpITrAjiK0jwfY3rLFdA8GUWBcKtrGCUfaRETjEY3h3QRkU6WSILmWtuj5QmgCiRAmDVWrR26H+tKXixs7d02O7s3HOUoSzMoqklCbnjU3LOrp5wQmOlJ7RAk7maERXPIVlyVPS2Cl/tOCDmtB1DUuvqyQDaPj0Jyh9begjD7FYqxlWbKU3PAnFlxXL84WDJBb3H334hmuffTKjDNLznLPRWZjENNIqxXPLt8Gq69l7e6C0aBipOWlg0rUi2DVwAXKbZ+XgrKvRU2ZenH2LOd6LevFZPuk9O5MfDbm/RMxQ/PujHeZW3iYOivm8GFkqToZRjI7/EQopNvhtzzjNbmPD5L/4uGLbTki6sv5pqJ8wNHAwN5BZKeSdl5wM9I7OtnmsP26BCVhZPDI7oyifXxnbXvIW6Wbcebo5Dd1dtnw0AzjxSPa8jJIsCMxvZmitNBAFS5lSv9ysVoch9iI07edusPDAE90tMX2eGJ+ykDNSAH1v3dmyMYdX85Q1HaGiUOXID4MorlYclfaVsWRMw4o2NB9DCCKmL7fhoF1uQajTBm7xAvNlrKkGck4jE2UbZlqf4Cwg3SIUjUVRgxWCJ6DgSc7iYEIz3NJsfFyO+49/Ycmija8r1fL8/PofnO1/OyGzRZNbHsNHymlRcBuyHJPd6oU6lPvKf+9ED6dHhWtypD7nVLtQInMoCTj3D9AEoZdzK7YEfk9I8pfiWNf08gWdLkd7YfDT+okhnGOEi15Zqmj4IuVtiQvQqPgUe/Zm4h2f7D7wM0fM9qFo+2M4IHajbFm8Lkw/fGhZb3IdmACVfcZ4G/4MEDaXyaG6OcghVfds34OQ/qv4uJAL/H27NDq8CPPMQkCr8aeM1E1djOYk9iREbT+/UA33z8pLWjxyY1lENB0UuOxFdp3yNnp2b7+C2XZL8rVeahnK4B2/dD2a/gHbqPzXrFfej47qWnastqJsUvBwfXtNwdaTonXVryU+e4O4xURt+5tSLG6Dw/XkwReFwreJDfCj02eDRLacEhS6FUbk98VksLaxpyfxG1wmocPpCmwFSWkjvZfbylWLKwybPbmFdR1E3HyfHo6Pd2H15tXHhNBuV/MsAaHpZHu2sBy0WD5EnVG9EjZV8ZWvN4ypd/2OYtw2bVzv10p//9Z4L/3s0AEqRV39gSho3tQ4ripBnh+SAie17TIGku39/cpUvVelw8P9Dj0GoE2l4aYBvhe8tLstlsfCEdXsTGP2b/ShAejuhWbLU1A3tER30crzBHkOaK4po3dDxA+pCAzyzLR2J7U3k8jg+Z++fM7tPsXkAupZw==
+sidebar_class_name: "get api-method"
+info_path: nixhub/nixhub-api
+custom_edit_url: null
+---
+
+import ApiTabs from "@theme/ApiTabs";
+import DiscriminatorTabs from "@theme/DiscriminatorTabs";
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import SecuritySchemes from "@theme/ApiExplorer/SecuritySchemes";
+import MimeTabs from "@theme/MimeTabs";
+import ParamsItem from "@theme/ParamsItem";
+import ResponseSamples from "@theme/ResponseSamples";
+import SchemaItem from "@theme/SchemaItem";
+import SchemaTabs from "@theme/SchemaTabs";
+import Markdown from "@theme/Markdown";
+import Heading from "@theme/Heading";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get a Package"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/pkg"}
+>
+  
+</MethodEndpoint>
+
+
+
+Get information about a specific package in Nixpkgs. This endpoint returns a JSON object that contains information about the package, including a list of releases, platforms, and outputs. 
+You should use this endpoint if you know the name of the package you want to look up. If you need to search for packages, use `/v2/search`. If you only need the latest version of a package, use `/v2/resolve`.
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<details
+  style={{"marginBottom":"1rem"}}
+  className={"openapi-markdown__details"}
+  data-collapsed={false}
+  open={true}
+>
+  <summary
+    style={{}}
+  >
+    <h3
+      className={"openapi-markdown__details-summary-header-params"}
+    >
+      Query Parameters
+    </h3>
+  </summary><div>
+    <ul>
+      <ParamsItem
+        className={"paramsItem"}
+        param={{"name":"name","in":"query","required":true,"description":"The name of the package you want to look up. Must be a valid Nixpkgs package name.","schema":{"type":"string"}}}
+      >
+        
+      </ParamsItem>
+    </ul>
+  </div>
+</details><div>
+  <div>
+    <ApiTabs
+      label={undefined}
+      id={undefined}
+    >
+      <TabItem
+        label={"200"}
+        value={"200"}
+      >
+        <div>
+          
+          
+          Ok
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"name"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The name of the package in Nixhub/Devbox"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"summary"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"A short description of the package"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"homepage_url"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The URL to the package's project homepage"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"license"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The software license of the package"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={true}
+                        className={"schemaItem"}
+                      >
+                        <details
+                          style={{}}
+                          className={"openapi-markdown__details"}
+                        >
+                          <summary
+                            style={{}}
+                          >
+                            <span
+                              className={"openapi-schema__container"}
+                            >
+                              <strong
+                                className={"openapi-schema__property"}
+                              >
+                                releases
+                              </strong><span
+                                className={"openapi-schema__name"}
+                              >
+                                 object[]
+                              </span>
+                            </span>
+                          </summary><div
+                            style={{"marginLeft":"1rem"}}
+                          >
+                            <div
+                              style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                            >
+                              
+                              
+                              A list of Releases for the package.
+                              
+                              
+                            </div><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                              >
+                                Array [
+                              </div>
+                            </li><SchemaItem
+                              collapsible={false}
+                              name={"version"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"The version string of the release. This string, combined with a package name, points to a specific version of a package"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"last_updated"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"The last time this release was updated in Nixpkg."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={true}
+                              className={"schemaItem"}
+                            >
+                              <details
+                                style={{}}
+                                className={"openapi-markdown__details"}
+                              >
+                                <summary
+                                  style={{}}
+                                >
+                                  <span
+                                    className={"openapi-schema__container"}
+                                  >
+                                    <strong
+                                      className={"openapi-schema__property"}
+                                    >
+                                      platforms
+                                    </strong><span
+                                      className={"openapi-schema__name"}
+                                    >
+                                       object[]
+                                    </span>
+                                  </span>
+                                </summary><div
+                                  style={{"marginLeft":"1rem"}}
+                                >
+                                  <div
+                                    style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                                  >
+                                    
+                                    
+                                    A list of platforms this release is available on.
+                                    
+                                    
+                                  </div><li>
+                                    <div
+                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                                    >
+                                      Array [
+                                    </div>
+                                  </li><SchemaItem
+                                    collapsible={false}
+                                    name={"arch"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The chip architecture of the platform. This will be one of `arm64` or `x86-64`."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"os"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The operating system of the platform. This will be one of `macOS` or `Linux`."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"systems"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The full Nix compatible name of the system. This will be one of `aarch64-darwin`, `aarch64-linux`, `x86_64-darwin`, or `x86_64-linux`."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"attribute_path"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The attribute path to the package in the Nixpkgs. This can be used to install the package with Nix or Devbox."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"commit_hash"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The hash of the Nixpkgs commit that this package was last updated in."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={false}
+                                    name={"date"}
+                                    required={false}
+                                    schemaName={"string"}
+                                    qualifierMessage={undefined}
+                                    schema={{"type":"string","description":"The date this package was last updated in Nixpkgs."}}
+                                  >
+                                    
+                                  </SchemaItem><SchemaItem
+                                    collapsible={true}
+                                    className={"schemaItem"}
+                                  >
+                                    <details
+                                      style={{}}
+                                      className={"openapi-markdown__details"}
+                                    >
+                                      <summary
+                                        style={{}}
+                                      >
+                                        <span
+                                          className={"openapi-schema__container"}
+                                        >
+                                          <strong
+                                            className={"openapi-schema__property"}
+                                          >
+                                            outputs
+                                          </strong><span
+                                            className={"openapi-schema__name"}
+                                          >
+                                             object[]
+                                          </span>
+                                        </span>
+                                      </summary><div
+                                        style={{"marginLeft":"1rem"}}
+                                      >
+                                        <div
+                                          style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                                        >
+                                          
+                                          
+                                          A list of Outputs (e.g., `out`, `lib`, `dev`) that are available for the package on this platform.
+                                          
+                                          
+                                        </div><li>
+                                          <div
+                                            style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                                          >
+                                            Array [
+                                          </div>
+                                        </li><SchemaItem
+                                          collapsible={false}
+                                          name={"name"}
+                                          required={false}
+                                          schemaName={"string"}
+                                          qualifierMessage={undefined}
+                                          schema={{"type":"string","description":"The name of the output (e.g., `out`, `lib`, `dev`)"}}
+                                        >
+                                          
+                                        </SchemaItem><SchemaItem
+                                          collapsible={false}
+                                          name={"path"}
+                                          required={false}
+                                          schemaName={"string"}
+                                          qualifierMessage={undefined}
+                                          schema={{"type":"string","description":"The unique path to the output in the Nix store."}}
+                                        >
+                                          
+                                        </SchemaItem><SchemaItem
+                                          collapsible={false}
+                                          name={"default"}
+                                          required={false}
+                                          schemaName={"boolean"}
+                                          qualifierMessage={undefined}
+                                          schema={{"type":"boolean","description":"Whether this output is the default output for the package"}}
+                                        >
+                                          
+                                        </SchemaItem><SchemaItem
+                                          collapsible={false}
+                                          name={"nar"}
+                                          required={false}
+                                          schemaName={"string"}
+                                          qualifierMessage={undefined}
+                                          schema={{"type":"string","description":"The path to the packages NAR (Nix Archive) file. This file contains the package's build artifacts."}}
+                                        >
+                                          
+                                        </SchemaItem><li>
+                                          <div
+                                            style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                                          >
+                                            ]
+                                          </div>
+                                        </li>
+                                      </div>
+                                    </details>
+                                  </SchemaItem><li>
+                                    <div
+                                      style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                                    >
+                                      ]
+                                    </div>
+                                  </li>
+                                </div>
+                              </details>
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"platforms_summary"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"A summary string that represents the platforms the release can be installed on."}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"outputs_summary"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"A summary string of the outputs (e.g., `out`, `lib`, `dev`) that are available for the release"}}
+                            >
+                              
+                            </SchemaItem><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                              >
+                                ]
+                              </div>
+                            </li>
+                          </div>
+                        </details>
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"name\": \"string\",\n  \"summary\": \"string\",\n  \"homepage_url\": \"string\",\n  \"license\": \"string\",\n  \"releases\": [\n    {\n      \"version\": \"string\",\n      \"last_updated\": \"string\",\n      \"platforms\": [\n        {\n          \"arch\": \"string\",\n          \"os\": \"string\",\n          \"systems\": \"string\",\n          \"attribute_path\": \"string\",\n          \"commit_hash\": \"string\",\n          \"date\": \"string\",\n          \"outputs\": [\n            {\n              \"name\": \"string\",\n              \"path\": \"string\",\n              \"default\": true,\n              \"nar\": \"string\"\n            }\n          ]\n        }\n      ],\n      \"platforms_summary\": \"string\",\n      \"outputs_summary\": \"string\"\n    }\n  ]\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Bad Request: empty package name (set a ?name=&ltpkg&gt query parameter)
+          
+          
+        </div><div>
+          
+        </div>
+      </TabItem><TabItem
+        label={"404"}
+        value={"404"}
+      >
+        <div>
+          
+          
+          Not Found
+          
+          
+        </div><div>
+          
+        </div>
+      </TabItem>
+    </ApiTabs>
+  </div>
+</div>
+      
