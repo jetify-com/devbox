@@ -38,7 +38,7 @@ var builtInMap = map[*regexp.Regexp]string{
 	regexp.MustCompile(`^python[0-9]*(Full|Minimal|-full|-minimal)?$`): "python",
 	regexp.MustCompile(`^redis$`):                                      "redis",
 	regexp.MustCompile(`^j?ruby([0-9_]*[0-9]+)?$`):                     "ruby",
-	regexp.MustCompile(`^valkey$`):										"valkey",
+	regexp.MustCompile(`^valkey$`):                                     "valkey",
 }
 
 func BuiltInForPackage(pkgName string) ([]byte, error) {
