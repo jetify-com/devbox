@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -93,6 +94,16 @@ func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 			"json.superset":                assertJSONSuperset,
 			"path.order":                   assertPathOrder,
 			"source.path":                  sourcePath,
+		},
+		Condition: func(cond string) (bool, error) {
+			before, key, found := strings.Cut(cond, ":")
+			if found && before == "env" {
+				if v, ok := os.LookupEnv(key); ok {
+					return strconv.ParseBool(v)
+				}
+				return false, nil
+			}
+			return false, fmt.Errorf("unknown condition: %v", cond)
 		},
 	}
 }
