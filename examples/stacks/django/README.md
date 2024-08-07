@@ -9,6 +9,7 @@
 1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
 1. Run `devbox shell` to install your packages and run the init_hook. This will activate your virtual environment and install Django.
 1. Initialize PostgreSQL with `devbox run initdb`.
+1. Start the Postgres service by running `devbox services up postgresql`. You can start it in the background using `devbox services up -b postgresql`.
 1. In the root directory, run `devbox run create_db` to create the database and run your Django migrations
 1. In the root directory, run `devbox run server` to start the server. You can access the Django example at `localhost:8000`
 
