@@ -704,8 +704,14 @@ func (d *Devbox) computeEnv(
 		env["PATH"],
 	)
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
+	env["DEVBOX_WD"] = wd
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
