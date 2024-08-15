@@ -42,7 +42,7 @@ require (
 	github.com/zealic/go2node v0.1.0
 	go.jetify.com/typeid v1.2.0
 	go.jetpack.io/envsec v0.0.16-0.20240604163020-540ad12af899
-	go.jetpack.io/pkg v0.0.0-20240604165525-bc24f2adac25
+	go.jetpack.io/pkg v0.0.0-20240815004735-7649b4283d51
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 	golang.org/x/mod v0.18.0
 	golang.org/x/oauth2 v0.21.0
@@ -89,7 +89,7 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/gofrs/uuid/v5 v5.2.0 // indirect
+	github.com/gofrs/uuid/v5 v5.3.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-github/v53 v53.2.0 // indirect
