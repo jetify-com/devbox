@@ -46,10 +46,10 @@ func (d *Devbox) UploadProjectToCache(
 			return err
 		}
 		if inCache {
-			ux.Finfo(d.stderr, "Package %s is already in cache, skipping\n", pkg.Raw)
+			ux.Finfof(d.stderr, "Package %s is already in cache, skipping\n", pkg.Raw)
 			continue
 		}
-		ux.Finfo(d.stderr, "Uploading package %s to cache\n", pkg.Raw)
+		ux.Finfof(d.stderr, "Uploading package %s to cache\n", pkg.Raw)
 		installables, err := pkg.Installables()
 		if err != nil {
 			return err
@@ -113,7 +113,7 @@ func getWriteCacheURI(
 			)
 	}
 	if len(caches) > 1 {
-		ux.Fwarning(w, "Multiple caches available, using %s.\n", caches[0].GetUri())
+		ux.Fwarningf(w, "Multiple caches available, using %s.\n", caches[0].GetUri())
 	}
 	return caches[0].GetUri(), nil
 }

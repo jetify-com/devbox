@@ -174,7 +174,7 @@ type updatedVersions struct {
 func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 	exePath := os.Getenv(envir.LauncherPath)
 	if exePath == "" {
-		ux.Fwarning(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
+		ux.Fwarningf(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
 		exePath = "devbox"
 	}
 

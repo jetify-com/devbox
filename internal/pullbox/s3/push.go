@@ -54,7 +54,7 @@ func Push(
 		return err
 	}
 
-	ux.Fsuccess(
+	ux.Fsuccessf(
 		os.Stderr,
 		"Profile successfully pushed (profile: %s)\n",
 		profile,

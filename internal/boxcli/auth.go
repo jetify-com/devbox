@@ -133,7 +133,7 @@ func authNewTokenCommand() *cobra.Command {
 				// This is a hack because errors are not returning with correct code.
 				// Once that is fixed, we can switch to use *connect.Error Code() instead.
 				if strings.Contains(err.Error(), "permission_denied") {
-					ux.Ferror(
+					ux.Ferrorf(
 						cmd.ErrOrStderr(),
 						"You do not have permission to create a token. Please contact your"+
 							" administrator.",
@@ -142,7 +142,7 @@ func authNewTokenCommand() *cobra.Command {
 				}
 				return err
 			}
-			ux.Fsuccess(cmd.OutOrStdout(), "Token created.\n\n")
+			ux.Fsuccessf(cmd.OutOrStdout(), "Token created.\n\n")
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
 			table.SetRowLine(true)
 			table.AppendBulk([][]string{

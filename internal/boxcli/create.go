@@ -85,7 +85,7 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 		return err
 	}
 
-	ux.Fsuccess(
+	ux.Fsuccessf(
 		cmd.ErrOrStderr(),
 		"Initialized devbox project using template %s\n",
 		flags.template,

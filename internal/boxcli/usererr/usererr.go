@@ -5,6 +5,7 @@ package usererr
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 )
@@ -123,7 +124,7 @@ func (c *combined) Cause() error { return errors.Cause(c.source) }
 // Format allows us to use %+v as implemented by github.com/pkg/errors.
 func (c *combined) Format(s fmt.State, verb rune) {
 	if c.source == nil {
-		fmt.Fprintf(s, c.userMessage)
+		_, _ = io.WriteString(s, c.userMessage)
 		return
 	}
 	errors.Wrap(c.source, c.userMessage).(interface { //nolint:errorlint

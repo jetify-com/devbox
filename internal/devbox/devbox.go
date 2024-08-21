@@ -124,7 +124,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
 	if err := box.moveAllowInsecureFromLockfile(box.stderr, lock, cfg); err != nil {
-		ux.Fwarning(
+		ux.Fwarningf(
 			box.stderr,
 			"Failed to move allow_insecure from devbox.lock to devbox.json. An insecure package may "+
 				"not work until you invoke `devbox add <pkg> --allow-insecure=<packages>` again: %s\n",
@@ -152,7 +152,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		if err != nil {
 			return nil, err
 		}
-		ux.Fwarning(
+		ux.Fwarningf(
 			os.Stderr, // Always stderr. box.writer should probably always be err.
 			"Your devbox.json contains packages in legacy format. "+
 				"Please run `devbox %supdate` to update your devbox.json.\n",
@@ -538,14 +538,14 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ux.Fsuccess(d.stderr, "generated .envrc file\n")
+	ux.Fsuccessf(d.stderr, "generated .envrc file\n")
 	if cmdutil.Exists("direnv") {
 		cmd := exec.Command("direnv", "allow")
 		err := cmd.Run()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		ux.Fsuccess(d.stderr, "ran `direnv allow`\n")
+		ux.Fsuccessf(d.stderr, "ran `direnv allow`\n")
 	}
 	return nil
 }
@@ -802,13 +802,13 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// returns early if the lockfile is up to date. So we don't need to check here
 	if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {
 		if !fileutil.Exists(d.nixPrintDevEnvCachePath()) {
-			ux.Ferror(
+			ux.Ferrorf(
 				d.stderr,
 				"Error connecting to the internet and no cached environment found. Aborting.\n",
 			)
 			return nil, err
 		}
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"Error connecting to the internet. Will attempt to use cached environment.\n",
 		)
@@ -919,7 +919,7 @@ func (d *Devbox) checkOldEnvrc() error {
 			return err
 		}
 		if !isNewEnvrc {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Your .envrc file seems to be out of date. "+
 					"Run `devbox generate direnv --force` to update it.\n"+
@@ -948,7 +948,7 @@ func (d *Devbox) configEnvs(
 		if err != nil && !strings.Contains(err.Error(), "project not initialized") {
 			return nil, err
 		} else if err != nil {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Ignoring env_from directive. jetify cloud secrets is not "+
 					"initialized. Run `devbox secrets init` to initialize it.\n",
@@ -956,7 +956,7 @@ func (d *Devbox) configEnvs(
 		} else {
 			cloudSecrets, err := secrets.List(ctx)
 			if err != nil {
-				ux.Fwarning(
+				ux.Fwarningf(
 					os.Stderr,
 					"Error reading secrets from jetify cloud: %s\n\n",
 					err,
