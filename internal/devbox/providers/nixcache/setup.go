@@ -124,7 +124,7 @@ func (s *setupTask) Run(ctx context.Context) error {
 	if !trusted {
 		err = nix.IncludeDevboxConfig(ctx, s.username)
 		if errors.Is(err, nix.ErrUnknownServiceManager) {
-			ux.Fwarning(os.Stderr, "Devbox configured Nix to use a new cache. Please restart the Nix daemon and re-run Devbox.\n")
+			ux.Fwarningf(os.Stderr, "Devbox configured Nix to use a new cache. Please restart the Nix daemon and re-run Devbox.\n")
 		} else if err != nil {
 			return redact.Errorf("update nix config: %v", err)
 		}

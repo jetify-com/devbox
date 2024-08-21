@@ -36,7 +36,7 @@ func setupCmd() *cobra.Command {
 
 func runInstallNixCmd(cmd *cobra.Command) error {
 	if nix.BinaryInstalled() {
-		ux.Finfo(
+		ux.Finfof(
 			cmd.ErrOrStderr(),
 			"Nix is already installed. If this is incorrect "+
 				"please remove the nix-shell binary from your path.\n",
@@ -61,7 +61,7 @@ func nixDaemonFlagVal(cmd *cobra.Command) func() *bool {
 	return func() *bool {
 		if !cmd.Flags().Changed(nixDaemonFlag) {
 			if os.Geteuid() == 0 {
-				ux.Fwarning(
+				ux.Fwarningf(
 					cmd.ErrOrStderr(),
 					"Running as root. Installing Nix in multi-user mode.\n",
 				)

@@ -23,7 +23,7 @@ func FlakeUpdate(ProfileDir string) error {
 	if err != nil {
 		return err
 	}
-	ux.Finfo(os.Stderr, "Running \"nix flake update\"\n")
+	ux.Finfof(os.Stderr, "Running \"nix flake update\"\n")
 	cmd := command("flake", "update")
 	if version.AtLeast(Version2_19) {
 		cmd.Args = append(cmd.Args, "--flake")

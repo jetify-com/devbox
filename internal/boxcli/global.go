@@ -108,7 +108,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 	}
 	if !box.IsEnvEnabled() {
 		fmt.Fprintln(cmd.ErrOrStderr())
-		ux.Fwarning(
+		ux.Fwarningf(
 			cmd.ErrOrStderr(),
 			`devbox global is not activated.
 

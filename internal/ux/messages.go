@@ -11,23 +11,50 @@ import (
 	"github.com/fatih/color"
 )
 
-func Fsuccess(w io.Writer, format string, a ...any) {
-	color.New(color.FgHiGreen).Fprint(w, "Success: ")
+var (
+	success = color.New(color.FgHiGreen)
+	info    = color.New(color.FgYellow)
+	warning = color.New(color.FgHiYellow)
+	error   = color.New(color.FgHiRed)
+)
+
+func Fsuccess(w io.Writer, a ...any) {
+	success.Fprint(w, "Success: ")
+	fmt.Fprint(w, a...)
+}
+
+func Fsuccessf(w io.Writer, format string, a ...any) {
+	success.Fprint(w, "Success: ")
 	fmt.Fprintf(w, format, a...)
 }
 
-func Finfo(w io.Writer, format string, a ...any) {
-	color.New(color.FgYellow).Fprint(w, "Info: ")
+func Finfo(w io.Writer, a ...any) {
+	info.Fprint(w, "Info: ")
+	fmt.Fprint(w, a...)
+}
+
+func Finfof(w io.Writer, format string, a ...any) {
+	info.Fprint(w, "Info: ")
 	fmt.Fprintf(w, format, a...)
 }
 
-func Fwarning(w io.Writer, format string, a ...any) {
-	color.New(color.FgHiYellow).Fprint(w, "Warning: ")
+func Fwarning(w io.Writer, a ...any) {
+	warning.Fprint(w, "Warning: ")
+	fmt.Fprint(w, a...)
+}
+
+func Fwarningf(w io.Writer, format string, a ...any) {
+	warning.Fprint(w, "Warning: ")
 	fmt.Fprintf(w, format, a...)
 }
 
-func Ferror(w io.Writer, format string, a ...any) {
-	color.New(color.FgHiRed).Fprint(w, "Error: ")
+func Ferror(w io.Writer, a ...any) {
+	error.Fprint(w, "Error: ")
+	fmt.Fprint(w, a...)
+}
+
+func Ferrorf(w io.Writer, format string, a ...any) {
+	error.Fprint(w, "Error: ")
 	fmt.Fprintf(w, format, a...)
 }
 
@@ -44,7 +71,7 @@ func FHidableWarning(ctx context.Context, w io.Writer, format string, a ...any) 
 	if isHidden(ctx, format) {
 		return
 	}
-	Fwarning(w, format, a...)
+	Fwarningf(w, format, a...)
 }
 
 func isHidden(ctx context.Context, format string) bool {
