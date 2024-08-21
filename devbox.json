@@ -39,6 +39,27 @@
       "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
       "update-examples":    "devbox run build && go run testscripts/testrunner/updater/main.go",
       "tidy":               "go mod tidy",
+
+      // docker-testscripts runs the testscripts with Docker to exercise
+      // Linux-specific tests. It invokes the test binary directly, so any extra
+      // test runner flags must have their "-test." prefix.
+      //
+      // For example, to only run Python tests:
+      //
+      //   devbox run docker-testscripts -test.run ^TestScripts$/python
+      "docker-testscripts": [
+        "cd testscripts",
+
+        // The Dockerfile looks for a testscripts-$TARGETOS-$TARGETARCH binary
+        // to run the tests. Pre-compiling a static test binary lets us avoid
+        // polluting the container with a Go toolchain or shared libraries that
+        // might interfere with linker tests.
+        "trap 'rm -f testscripts-linux-amd64 testscripts-linux-arm64' EXIT",
+        "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o testscripts-linux-amd64",
+        "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go test -c -o testscripts-linux-arm64",
+        "image=$(docker build --quiet --tag devbox-ubuntu:noble --platform linux/amd64 .)",
+        "docker run --rm --platform linux/amd64 -e DEVBOX_RUN_FAILING_TESTS -e DEVBOX_RUN_PROJECT_TESTS -e DEVBOX_DEBUG $image \"$@\"",
+      ],
     },
   },
 }

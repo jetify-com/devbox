@@ -1,0 +1,215 @@
+# Python Old glibc Test
+#
+# Check that an older version of the Python interpreter (3.7) can import and run
+# pip packages that are built from source.
+
+[!env:DEVBOX_RUN_FAILING_TESTS] [linux] skip 'this test doesn''t pass on Linux yet'
+
+exec devbox install
+
+# pip install psycopg2
+exec devbox run venv -- pip install psycopg2==2.9.5
+stdout 'Successfully installed psycopg2'
+
+# run python test script that imports psycopg2
+exec devbox run venv -- python main.py
+! stderr '.*glibc-2.35-224/lib/libc\.so\.6: version `GLIBC_2.38'' not found \(required by .*/site-packages/psycopg2/_psycopg\.cpython-37m-x86_64-linux-gnu\.so\)'
+
+-- main.py --
+import psycopg2
+
+try:
+    conn = psycopg2.connect(dbname="test", user="postgres")
+except psycopg2.OperationalError:
+    pass
+
+-- devbox.json --
+{
+  "packages": {
+    "python":     "3.7",
+    "postgresql": "15.5"
+  },
+  "env": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PIP_NO_CACHE_DIR":              "1",
+    "PIP_NO_INPUT":                  "1",
+    "PIP_NO_PYTHON_VERSION_WARNING": "1",
+    "PIP_PROGRESS_BAR":              "off",
+    "PIP_REQUIRE_VIRTUALENV":        "1",
+    "PIP_ROOT_USER_ACTION":          "ignore"
+  },
+  "shell": {
+    "scripts": {
+      "venv": ". $VENV_DIR/bin/activate && \"$@\""
+    }
+  }
+}
+
+-- devbox.lock --
+{
+  "lockfile_version": "1",
+  "packages": {
+    "postgresql@latest": {
+      "last_modified":  "2024-02-22T01:07:56Z",
+      "plugin_version": "0.0.2",
+      "resolved":       "github:NixOS/nixpkgs/98b00b6947a9214381112bdb6f89c25498db4959#postgresql",
+      "source":         "devbox-search",
+      "version":        "15.5",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/6cn0kmav77wba54xibfg9clqzbpan74b-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name":    "man",
+              "path":    "/nix/store/588y60371pqh3vc9rasjawfwmchpac9d-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/dxivb9x0iwssqzz8wsswis9q9r1sjm18-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/dbc9hjh5ll5pjgxwl3r9nymdxw7sw8cl-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/kvpjir3cjbijs2w8b20yzqjq0nsd63mp-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name":    "man",
+              "path":    "/nix/store/4kcdjf0gg9jl4n9kxvj5iq92byry6b7l-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/srqwd7alwglrsjclsfnrlx01n69iyy9s-postgresql-15.5-debug"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/5fn32sdar6nk5ha9d5zb6rfpndgdbg68-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/addi70hgggl75jm74p0s435bfaay6m1w-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/v5ym92k3kss1af7n1788653vis1d6qsc-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name":    "man",
+              "path":    "/nix/store/x9hm4ip61cichmhzhzpykzypn3pqkh01-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/nd1mhmgpm9w5rfpiibg6m7g4difpl5af-postgresql-15.5-doc"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/q8lijs7rmlkx4qssmh0sjyy77f41y2jh-postgresql-15.5-lib"
+            }
+          ]
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/vvd65gjggb2n8wxbsk1cyxx0wpfidagf-postgresql-15.5",
+              "default": true
+            },
+            {
+              "name":    "man",
+              "path":    "/nix/store/88jhk99imah1v19xqkldi1lfyaayni71-postgresql-15.5-man",
+              "default": true
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/w109qgbl14afcg5akhnahf8r0hkdqqb6-postgresql-15.5-lib"
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/ia44jr4m4jyf3a48qwpf6vgrr95jig46-postgresql-15.5-debug"
+            },
+            {
+              "name": "doc",
+              "path": "/nix/store/7vfnvfb6scmf23y6yj5zx8p5r3wsgnq5-postgresql-15.5-doc"
+            }
+          ]
+        }
+      }
+    },
+    "python@3.7": {
+      "last_modified":  "2022-12-17T09:19:40Z",
+      "plugin_version": "0.0.3",
+      "resolved":       "github:NixOS/nixpkgs/80c24eeb9ff46aa99617844d0c4168659e35175f#python37",
+      "source":         "devbox-search",
+      "version":        "3.7.16",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/a89sd5jwn01cdg97lkspl8cpf75y5142-python3-3.7.16",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/a89sd5jwn01cdg97lkspl8cpf75y5142-python3-3.7.16"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/ymrbxfmljyl73rmh5cfk0bzk3ydcbqg8-python3-3.7.16",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/3x7736j3fyw6j9fzn1y9fc0iqyf1rncc-python3-3.7.16-debug"
+            }
+          ],
+          "store_path": "/nix/store/ymrbxfmljyl73rmh5cfk0bzk3ydcbqg8-python3-3.7.16"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/i028a4nf177g23ksa7kc63ld9nys17nb-python3-3.7.16",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/i028a4nf177g23ksa7kc63ld9nys17nb-python3-3.7.16"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/ik7s754pwxhiky396mjagzmjs1kp0wzq-python3-3.7.16",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/l0xi13a88d4vjn8ada3a58zkwm88hq7h-python3-3.7.16-debug"
+            }
+          ],
+          "store_path": "/nix/store/ik7s754pwxhiky396mjagzmjs1kp0wzq-python3-3.7.16"
+        }
+      }
+    }
+  }
+}
