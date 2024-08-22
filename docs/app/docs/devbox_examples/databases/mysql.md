@@ -71,3 +71,18 @@ These files are used to setup your database and service, and should not be modif
     "MYSQL_UNIX_PORT": "/<some-other-path>/mysql.sock"
 }
 ```
+
+### Disabling the MySQL PLugin
+
+You can disable the built-in MySQL plugin using `devbox add mysql80 --disable-plugin`, or by setting the `disable_plugin` field to `true` in your package definition:
+
+```json
+{
+    "packages": {
+        "mysql80": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

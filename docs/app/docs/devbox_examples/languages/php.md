@@ -65,3 +65,18 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 * \{PROJECT_DIR\}/devbox.d/php81/php.ini
 
 You can modify these files to configure PHP or your PHP-FPM server
+
+### Disabling the PHP Plugin
+
+You can disable the PHP plugin by running `devbox add php --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "php": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

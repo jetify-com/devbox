@@ -51,3 +51,18 @@ Running `devbox services start valkey` will start valkey as a daemon in the back
 You can manually start Valkey in the foreground by running `valkey-server $VALKEY_CONF --port $VALKEY_PORT`.
 
 Logs, pidfile, and data dumps are stored in `.devbox/virtenv/valkey`. You can change this by modifying the `dir` directive in `devbox.d/valkey/valkey.conf`
+
+### Disabling the Valkey Plugin
+
+You can disable the Valkey plugin by running `devbox add valkey --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "valkey": {
+            "version" : "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

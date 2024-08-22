@@ -47,7 +47,9 @@ If you need to provide more options to your packages (such as limiting which pla
             // List of platforms to install the package on. Defaults to all platforms
             "platforms": [string],
             // List of platforms to exclude this package from. Defaults to no excluded platforms
-            "excluded_platforms": [string]
+            "excluded_platforms": [string],
+            // Whether to disable a built-in plugin, if one exists for this package. Defaults to false
+            "disable_plugin": boolean
         }
     }
 }
@@ -143,6 +145,21 @@ The platforms below are also supported, but require you to build packages from s
 
 * `i686-linux`
 * `armv7l-linux`
+
+#### Disabling Built-in Plugins
+
+Some packages include builtin plugins or services that are automatically started when the package is installed. You can disable these plugins using `devbox add <package> --disable-plugin`, or by setting the `disable_plugin` field to `true` in your package definition:
+
+```json
+{
+    "packages": {
+        "glibcLocales": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```
 
 ### Env
 

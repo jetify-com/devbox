@@ -36,6 +36,24 @@ GEM_HOME={PROJECT_DIR}/.devbox/virtenv/ruby
 PATH={PROJECT_DIR}/.devbox/virtenv/ruby/bin:$PATH
 ```
 
+### Disabling the Ruby Plugin
+
+You can disable the Ruby plugin by running `devbox add ruby --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "ruby": {
+            "version": "3.1",
+            "disable_plugin": true
+        },
+        "bundler": {
+            "version": "latest",
+        }
+    },
+}
+```
+
 ## Bundler
 
 In case you are using bundler to install gems, bundler config file can still be used to pass configs and flags to install gems.
