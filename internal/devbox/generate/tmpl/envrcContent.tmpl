@@ -1,5 +1,5 @@
 use_devbox() {
-    watch_file devbox.json
+    watch_file devbox.json devbox.lock
     eval "$(devbox shellenv --init-hook --install --no-refresh-alias{{ if .EnvFlag }} {{ .EnvFlag }}{{ end }})"
 }
 use devbox
