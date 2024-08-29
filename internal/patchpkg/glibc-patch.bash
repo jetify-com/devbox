@@ -23,14 +23,6 @@ hash -p "$gnused/bin/sed" sed
 hash -p "$patchelf/bin/patchelf" patchelf
 hash -p "$ripgrep/bin/rg" rg
 
-# Copy the contents of the original package so we can patch them.
-cp -R "$pkg" "$out"
-
-# Because we copied an existing store path, our new $out directory might be
-# read-only. This might've caused issues with some versions of Nix, so make it
-# writable again just to be safe.
-chmod u+rwx "$out"
-
 # Find the new linker that we'll patch into all of the package's executables as
 # the interpreter.
 interp="$(find "$glibc/lib" -type f -maxdepth 1 -executable -name 'ld-linux-*.so*' | head -n1)"

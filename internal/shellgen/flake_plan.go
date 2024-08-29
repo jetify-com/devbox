@@ -3,6 +3,7 @@ package shellgen
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime/trace"
 	"strings"
@@ -68,6 +69,10 @@ func (f *flakePlan) needsGlibcPatch() bool {
 }
 
 type glibcPatchFlake struct {
+	// DevboxExecutable is the absolute path to the Devbox binary to use as
+	// the flake's builder. It must not be the wrapper script.
+	DevboxExecutable string
+
 	// NixpkgsGlibcFlakeRef is a flake reference to the nixpkgs flake
 	// containing the new glibc package.
 	NixpkgsGlibcFlakeRef string
@@ -85,7 +90,21 @@ type glibcPatchFlake struct {
 }
 
 func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (glibcPatchFlake, error) {
-	flake := glibcPatchFlake{NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev}
+	// Get the path to the actual devbox binary (not the /usr/bin/devbox
+	// wrapper) so the flake build can use it.
+	exe, err := os.Executable()
+	if err != nil {
+		return glibcPatchFlake{}, err
+	}
+	exe, err = filepath.EvalSymlinks(exe)
+	if err != nil {
+		return glibcPatchFlake{}, err
+	}
+
+	flake := glibcPatchFlake{
+		DevboxExecutable:     exe,
+		NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev,
+	}
 	for _, pkg := range packages {
 		if !pkg.PatchGlibc() {
 			continue
@@ -143,9 +162,5 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 }
 
 func (g *glibcPatchFlake) writeTo(dir string) error {
-	err := writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
-	if err != nil {
-		return err
-	}
-	return writeGlibcPatchScript(filepath.Join(dir, "glibc-patch.bash"))
+	return writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
 }
