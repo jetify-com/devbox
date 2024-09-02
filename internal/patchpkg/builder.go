@@ -67,8 +67,7 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 		}
 	}
 
-	bash := filepath.Join(os.Getenv("bash"), "bin/bash")
-	cmd := exec.CommandContext(ctx, bash, "-s")
+	cmd := exec.CommandContext(ctx, lookPath("bash"), "-s")
 	cmd.Stdin = bytes.NewReader(glibcPatchScript)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -150,6 +149,25 @@ func allFiles(fsys fs.FS, root string) iter.Seq2[string, fs.DirEntry] {
 			return nil
 		})
 	}
+}
+
+// lookPath is like [exec.lookPath], but first checks if there's an environment
+// variable with the name prog. If there is, it returns $prog/bin/prog instead
+// of consulting PATH.
+//
+// For example, lookPath would be able to find bash and patchelf in the
+// following derivation:
+//
+//	derivation {
+//	  inherit (nixpkgs.legacyPackages.x86_64-linux) bash patchelf;
+//	  builder = devbox;
+//	}
+func lookPath(prog string) string {
+	pkgPath := os.Getenv(prog)
+	if pkgPath == "" {
+		return prog
+	}
+	return filepath.Join(pkgPath, "bin", prog)
 }
 
 func isExecutable(mode fs.FileMode) bool { return mode&0o111 != 0 }
