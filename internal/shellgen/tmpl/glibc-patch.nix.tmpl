@@ -45,7 +45,7 @@
         system = pkg.system;
 
         # Programs needed by glibc-patch.bash.
-        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc gnused patchelf ripgrep;
+        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils glibc gnused patchelf ripgrep;
 
         # Create a package that puts the local devbox binary in the conventional
         # bin subdirectory. This also ensures that the executable is named
@@ -62,8 +62,9 @@
           args = [ "-c" "${coreutils}/bin/mkdir -p $out/bin && ${coreutils}/bin/cp ${local-devbox} $out/bin/devbox && exit 0" ];
         };
 
+        DEVBOX_DEBUG = 1;
         builder = "${devbox}/bin/devbox";
-        args = [ "patch" pkg ];
+        args = [ "patch" "--glibc" glibc pkg ];
       };
     in
     {
