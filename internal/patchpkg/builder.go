@@ -48,18 +48,29 @@ func (d *DerivationBuilder) init() error {
 // Build applies patches to a package store path and puts the result in the
 // d.Out directory.
 func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) error {
-	slog.DebugContext(ctx, "starting build of patched package", "pkg", pkgStorePath, "out", d.Out)
+	if err := d.init(); err != nil {
+		return err
+	}
 
+	slog.DebugContext(ctx, "starting build to patch package",
+		"pkg", pkgStorePath, "out", d.Out)
+	return d.build(ctx, newPackageFS(pkgStorePath), newPackageFS(d.Out))
+}
+
+func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) error {
 	var err error
-	pkgFS := os.DirFS(pkgStorePath)
-	for path, entry := range allFiles(pkgFS, ".") {
+	for path, entry := range allFiles(pkg, ".") {
+		if ctx.Err() != nil {
+			return err
+		}
+
 		switch {
 		case entry.IsDir():
-			err = d.copyDir(path)
+			err = d.copyDir(out, path)
 		case isSymlink(entry.Type()):
-			err = d.copySymlink(pkgStorePath, path)
+			err = d.copySymlink(pkg, out, path)
 		default:
-			err = d.copyFile(pkgFS, path)
+			err = d.copyFile(pkg, out, path)
 		}
 
 		if err != nil {
@@ -75,16 +86,16 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 	return cmd.Run()
 }
 
-func (d *DerivationBuilder) copyDir(path string) error {
-	osPath, err := filepath.Localize(path)
+func (d *DerivationBuilder) copyDir(out *packageFS, path string) error {
+	path, err := out.OSPath(path)
 	if err != nil {
 		return err
 	}
-	return os.Mkdir(filepath.Join(d.Out, osPath), 0o777)
+	return os.Mkdir(path, 0o777)
 }
 
-func (d *DerivationBuilder) copyFile(pkgFS fs.FS, path string) error {
-	src, err := pkgFS.Open(path)
+func (d *DerivationBuilder) copyFile(pkg, out *packageFS, path string) error {
+	src, err := pkg.Open(path)
 	if err != nil {
 		return err
 	}
@@ -103,12 +114,10 @@ func (d *DerivationBuilder) copyFile(pkgFS fs.FS, path string) error {
 		perm = fs.FileMode(0o777)
 	}
 
-	osPath, err := filepath.Localize(path)
+	dstPath, err := out.OSPath(path)
 	if err != nil {
 		return err
 	}
-	dstPath := filepath.Join(d.Out, osPath)
-
 	dst, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, perm)
 	if err != nil {
 		return err
@@ -122,22 +131,53 @@ func (d *DerivationBuilder) copyFile(pkgFS fs.FS, path string) error {
 	return dst.Close()
 }
 
-func (d *DerivationBuilder) copySymlink(pkgStorePath, path string) error {
-	// The fs package doesn't support symlinks, so we need to convert the
-	// path back to an OS path to see what it points to.
-	osPath, err := filepath.Localize(path)
+func (d *DerivationBuilder) copySymlink(pkg, out *packageFS, path string) error {
+	link, err := out.OSPath(path)
 	if err != nil {
 		return err
 	}
-	target, err := os.Readlink(filepath.Join(pkgStorePath, osPath))
+	target, err := pkg.Readlink(path)
 	if err != nil {
 		return err
 	}
-	// TODO(gcurtis): translate absolute symlink targets to relative paths.
-	return os.Symlink(target, filepath.Join(d.Out, osPath))
+	return os.Symlink(target, link)
 }
 
-// RegularFiles iterates over all files in fsys starting at root. It silently
+// packageFS is the tree of files for a package in the Nix store.
+type packageFS struct {
+	fs.FS
+	storePath string
+}
+
+// newPackageFS returns a packageFS for the given store path.
+func newPackageFS(storePath string) *packageFS {
+	return &packageFS{
+		FS:        os.DirFS(storePath),
+		storePath: storePath,
+	}
+}
+
+// Readlink returns the destination of a symlink.
+func (p *packageFS) Readlink(path string) (string, error) {
+	osPath, err := p.OSPath(path)
+	if err != nil {
+		return "", err
+	}
+	// TODO(gcurtis): check that the symlink isn't absolute or points
+	// outside the Nix store.
+	return os.Readlink(osPath)
+}
+
+// OSPath translates a package-relative path to an operating system path.
+func (p *packageFS) OSPath(path string) (string, error) {
+	local, err := filepath.Localize(path)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(p.storePath, local), nil
+}
+
+// allFiles iterates over all files in fsys starting at root. It silently
 // ignores errors.
 func allFiles(fsys fs.FS, root string) iter.Seq2[string, fs.DirEntry] {
 	return func(yield func(string, fs.DirEntry) bool) {
