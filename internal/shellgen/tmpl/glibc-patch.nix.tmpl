@@ -2,6 +2,11 @@
   description = "Patches packages to use a newer version of glibc";
 
   inputs = {
+    local-devbox = {
+      url = "path://{{ .DevboxExecutable }}";
+      flake = false;
+    };
+
     nixpkgs-glibc.url = "{{ .NixpkgsGlibcFlakeRef }}";
 
     {{- range $name, $flakeref := .Inputs }}
@@ -9,7 +14,7 @@
     {{- end }}
   };
 
-  outputs = args@{ self, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
+  outputs = args@{ self, local-devbox, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
     {{ with .Outputs -}}
     let
       # Initialize each nixpkgs input into a new attribute set with the
@@ -30,17 +35,35 @@
         else null) args;
 
       patchGlibc = pkg: derivation rec {
-        name = "devbox-patched-glibc";
-        system = pkg.system;
-
         # The package we're patching.
         inherit pkg;
+
+        # Keep the name the same as the package we're patching so that the
+        # length of the store path doesn't change. Otherwise patching binaries
+        # becomes trickier.
+        name = pkg.name;
+        system = pkg.system;
 
         # Programs needed by glibc-patch.bash.
         inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc gnused patchelf ripgrep;
 
-        builder = "${bash}/bin/bash";
-        args = [ ./glibc-patch.bash ];
+        # Create a package that puts the local devbox binary in the conventional
+        # bin subdirectory. This also ensures that the executable is named
+        # "devbox" and not "<hash>-source" (which is how Nix names the flake
+        # input). Invoking it as anything other than "devbox" will break
+        # testscripts which look at os.Args[0] to decide to run the real
+        # entrypoint or the test entrypoint.
+        devbox = derivation {
+          name = "devbox";
+          system = pkg.system;
+          builder = "${bash}/bin/bash";
+
+          # exit 0 to work around https://github.com/NixOS/nix/issues/2176
+          args = [ "-c" "${coreutils}/bin/mkdir -p $out/bin && ${coreutils}/bin/cp ${local-devbox} $out/bin/devbox && exit 0" ];
+        };
+
+        builder = "${devbox}/bin/devbox";
+        args = [ "patch" pkg ];
       };
     in
     {

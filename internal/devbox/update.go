@@ -122,21 +122,21 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 ) error {
 	existing := lockfile.Packages[pkg.Raw]
 	if existing == nil {
-		ux.Finfo(d.stderr, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
+		ux.Finfof(d.stderr, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
 		lockfile.Packages[pkg.Raw] = resolved
 		return nil
 	}
 
 	if existing.Version != resolved.Version {
 		if existing.LastModified > resolved.LastModified {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Resolved version for %s has older last_modified time. Not updating\n",
 				pkg,
 			)
 			return nil
 		}
-		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
+		ux.Finfof(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
 		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil
 	}
@@ -170,11 +170,11 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		// if we are updating the system info, then we should also update the other fields
 		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 
-		ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
+		ux.Finfof(d.stderr, "Updated system information for %s\n", pkg)
 		return nil
 	}
 
-	ux.Finfo(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)
+	ux.Finfof(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)
 	return nil
 }
 
@@ -186,7 +186,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 		return err
 	}
 
-	ux.Finfo(
+	ux.Finfof(
 		d.stderr,
 		"Attempting to upgrade %s using `nix profile upgrade`\n",
 		pkg.Raw,
@@ -194,7 +194,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 
 	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"Failed to upgrade %s using `nix profile upgrade`: %s\n",
 			pkg.Raw,

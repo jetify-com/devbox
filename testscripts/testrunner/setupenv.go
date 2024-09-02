@@ -23,7 +23,10 @@ func setupTestEnv(t *testing.T, envs *testscript.Env) error {
 		return err
 	}
 
-	envs.Setenv(debug.DevboxDebug, os.Getenv(debug.DevboxDebug))
+	propagateEnvVars(envs,
+		debug.DevboxDebug, // to enable extra logging
+		"SSL_CERT_FILE",   // so HTTPS works with Nix-installed certs
+	)
 	return nil
 }
 
@@ -72,4 +75,14 @@ func setupCacheHome(envs *testscript.Env) error {
 	}
 
 	return nil
+}
+
+// propagateEnvVars propagates the values of environment variables to the test
+// environment.
+func propagateEnvVars(env *testscript.Env, vars ...string) {
+	for _, key := range vars {
+		if v, ok := os.LookupEnv(key); ok {
+			env.Setenv(key, v)
+		}
+	}
 }

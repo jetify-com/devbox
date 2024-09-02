@@ -50,9 +50,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 	}
 
 	if p.URL != "" {
-		ux.Finfo(os.Stderr, "Pulling global config from %s\n", p.URL)
+		ux.Finfof(os.Stderr, "Pulling global config from %s\n", p.URL)
 	} else {
-		ux.Finfo(os.Stderr, "Pulling global config\n")
+		ux.Finfof(os.Stderr, "Pulling global config\n")
 	}
 
 	var tmpDir string
@@ -103,9 +103,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 
 func (p *pullbox) Push(ctx context.Context) error {
 	if p.URL != "" {
-		ux.Finfo(os.Stderr, "Pushing global config to %s\n", p.URL)
+		ux.Finfof(os.Stderr, "Pushing global config to %s\n", p.URL)
 	} else {
-		ux.Finfo(os.Stderr, "Pushing global config\n")
+		ux.Finfof(os.Stderr, "Pushing global config\n")
 	}
 
 	if p.URL == "" {
@@ -113,7 +113,7 @@ func (p *pullbox) Push(ctx context.Context) error {
 		if p.Credentials.IDToken == "" {
 			return usererr.New("Not logged in")
 		}
-		ux.Finfo(
+		ux.Finfof(
 			os.Stderr,
 			"Logged in as %s, pushing to to devbox cloud (profile: %s)\n",
 			p.Credentials.Email,

@@ -409,7 +409,7 @@ func IsExitErrorInsecurePackage(err error, pkgNameOrEmpty, installableOrEmpty st
 			errMessages = append(errMessages,
 				fmt.Sprintf("To override, use `devbox add %s --allow-insecure=%s`", pkgName, strings.Join(insecurePackages, ", ")))
 
-			return true, usererr.New(strings.Join(errMessages, "\n\n"))
+			return true, usererr.New("%s", strings.Join(errMessages, "\n\n"))
 		}
 	}
 	return false, nil

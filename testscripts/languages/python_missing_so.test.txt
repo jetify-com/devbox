@@ -1,0 +1,113 @@
+# Python Missing Shared Library Test
+#
+# Install NumPy as a binary wheel using pip and verify that it loads.
+# The PIP_ONLY_BINARY environment variable forces downloading the binary wheel.
+#
+# Naively installing and loading NumPy fails because it cannot find
+# libstdc++.so. The nixpkgs Python interpreter doesn't search standard system
+# paths, so Devbox must patch it or provide the location of native dependencies.
+
+[!env:DEVBOX_RUN_FAILING_TESTS] [linux] skip 'this test doesn''t pass on Linux yet'
+
+exec devbox install
+
+# pip install numpy
+exec devbox run venv -- pip install numpy==2.1.0
+stdout 'Successfully installed numpy'
+
+# run python test script that imports numpy
+exec devbox run venv -- python main.py
+! stderr 'libstdc\+\+\.so\.6: cannot open shared object file: No such file or directory'
+
+-- main.py --
+import numpy
+
+array = numpy.array([1, 2, 3, 4, 5])
+print("Array:", array)
+print("Mean:", numpy.mean(array))
+
+-- devbox.json --
+{
+  "packages": {
+    "python": "latest"
+  },
+  "env": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PIP_NO_CACHE_DIR":              "1",
+    "PIP_NO_INPUT":                  "1",
+    "PIP_NO_PYTHON_VERSION_WARNING": "1",
+    "PIP_ONLY_BINARY":               "numpy",
+    "PIP_PROGRESS_BAR":              "off",
+    "PIP_REQUIRE_VIRTUALENV":        "1",
+    "PIP_ROOT_USER_ACTION":          "ignore"
+  },
+  "shell": {
+    "scripts": {
+      "venv": ". $VENV_DIR/bin/activate && \"$@\""
+    }
+  }
+}
+
+-- devbox.lock --
+{
+  "lockfile_version": "1",
+  "packages": {
+    "python@latest": {
+      "last_modified":  "2024-07-07T07:43:47Z",
+      "plugin_version": "0.0.3",
+      "resolved":       "github:NixOS/nixpkgs/b60793b86201040d9dee019a05089a9150d08b5b#python3",
+      "source":         "devbox-search",
+      "version":        "3.12.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/3swy1vadi125g0c1vxqp8ykdr749803j-python3-3.12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3swy1vadi125g0c1vxqp8ykdr749803j-python3-3.12.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/sz2facg15yq3ziqkidb1dkkglwzkkg8a-python3-3.12.4",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/19vjjqg7jbfblqapf63nm9ich1xdq9dx-python3-3.12.4-debug"
+            }
+          ],
+          "store_path": "/nix/store/sz2facg15yq3ziqkidb1dkkglwzkkg8a-python3-3.12.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/3y5wy1i9nq5293knm23mxsj5l6w41h2l-python3-3.12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3y5wy1i9nq5293knm23mxsj5l6w41h2l-python3-3.12.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name":    "out",
+              "path":    "/nix/store/z7xxy35k7620hs6fn6la5fg2lgklv72l-python3-3.12.4",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/3x6jqv5yw212v8rlwql88cn94dginq32-python3-3.12.4-debug"
+            }
+          ],
+          "store_path": "/nix/store/z7xxy35k7620hs6fn6la5fg2lgklv72l-python3-3.12.4"
+        }
+      }
+    }
+  }
+}

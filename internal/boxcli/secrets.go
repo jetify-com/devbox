@@ -244,7 +244,7 @@ func secretsInitFunc(
 		!box.Config().IsEnvsecEnabled() {
 		// Handle edge case where directory is already set up, but devbox.json is
 		// not configured to use jetpack-cloud.
-		ux.Finfo(
+		ux.Finfof(
 			cmd.ErrOrStderr(),
 			"Secrets already initialized. Adding to devbox config.\n",
 		)

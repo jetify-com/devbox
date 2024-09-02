@@ -78,7 +78,7 @@ func (pkgs *PackagesMutator) AddPlatforms(writer io.Writer, versionedname string
 	}
 	if len(pkg.Platforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.Name, "platforms", pkg.Platforms[oldLen:])
-		ux.Finfo(writer,
+		ux.Finfof(writer,
 			"Added platform %s to package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName(),
 		)
@@ -118,7 +118,7 @@ func (pkgs *PackagesMutator) ExcludePlatforms(writer io.Writer, versionedName st
 	}
 	if len(pkg.ExcludedPlatforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.Name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
-		ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+		ux.Finfof(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName())
 	}
 	return nil
@@ -197,7 +197,7 @@ func (pkgs *PackagesMutator) SetOutputs(writer io.Writer, versionedName string, 
 	if len(toAdd) > 0 {
 		pkg := &pkgs.collection[i]
 		pkgs.ast.appendOutputs(pkg.Name, "outputs", toAdd)
-		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
+		ux.Finfof(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
@@ -220,7 +220,7 @@ func (pkgs *PackagesMutator) SetAllowInsecure(writer io.Writer, versionedName st
 		pkg := &pkgs.collection[i]
 		pkgs.ast.appendAllowInsecure(pkg.Name, "allow_insecure", toAdd)
 		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
-		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
+		ux.Finfof(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }

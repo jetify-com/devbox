@@ -39,7 +39,7 @@ func (d *Devbox) StartServices(
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 	}
 
@@ -83,7 +83,7 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 		err := services.StopServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
@@ -158,7 +158,7 @@ func (d *Devbox) RestartServices(
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 		err := services.RestartServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
@@ -207,7 +207,7 @@ func (d *Devbox) StartProcessManager(
 
 	for _, s := range requestedServices {
 		if _, ok := svcs[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 	}
 

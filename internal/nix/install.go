@@ -72,7 +72,7 @@ func Install(writer io.Writer, daemon *bool) error {
 		}
 
 		if strings.Contains(buf.String(), rootError) {
-			ux.Finfo(
+			ux.Finfof(
 				writer,
 				"If installing nix as root, consider using the --daemon flag to install in multi-user mode.\n",
 			)
