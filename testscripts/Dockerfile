@@ -19,13 +19,19 @@ FROM $BASEIMAGE:$BASETAG
 ARG TARGETOS
 ARG TARGETARCH
 
+ENV XDG_CACHE_HOME=/nix/cache
+
 COPY --from=installer --link /nix-installer-$TARGETOS-$TARGETARCH nix-installer
 RUN <<EOF
 set -e
 
+mkdir -p "$XDG_CACHE_HOME"
+
 # Setting this env var is the same as passing --extra-conf to nix-installer.
 export NIX_INSTALLER_EXTRA_CONF="filter-syscalls = false
-sandbox = false"
+sandbox = false
+experimental-features = nix-command flakes fetch-closure ca-derivations
+use-xdg-base-directories = true"
 
 ./nix-installer install linux --no-confirm --logger full --init none
 rm nix-installer
@@ -35,6 +41,6 @@ ENV SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 COPY --link */*.test.txt /devbox/testscripts/
 COPY --link testscripts-$TARGETOS-$TARGETARCH /devbox/testscripts/test
 
-VOLUME /nix/store
+VOLUME "/nix"
 WORKDIR /devbox/testscripts
 ENTRYPOINT [ "/devbox/testscripts/test" ]
