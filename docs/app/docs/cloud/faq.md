@@ -17,7 +17,7 @@ To share secrets and access to deployments with other team members, you will nee
 
 ## How do Jetify Cloud Plans work?
 
-Jetify Cloud Plans are available for a monthly platform fee, and allow you to share your Jetify Cloud resources with your team, along with increased support levels. All plans include usage credits equal to the monthly platform fee, which are billed at standard usage rates. 
+Jetify Cloud Plans are available for a monthly platform fee, and allow you to share your Jetify Cloud resources with your team, along with increased support levels. All plans include usage credits equal to the monthly platform fee, which are billed at standard usage rates.
 
 For more details, see our [**pricing**](https://www.jetify.com/cloud/pricing) page.
 
@@ -25,9 +25,21 @@ For more details, see our [**pricing**](https://www.jetify.com/cloud/pricing) pa
 
 We offer private instances and other features as part of our Enterprise Plan. [Contact us](https://calendly.com/d/3rd-bhp-qym/meet-with-the-jetify-team) so we can build a solution that meets your needs.
 
-## How does pricing for Jetify Deploys work?
+<!-- ## How does pricing for Jetify Deploys work?
 
 Jetify Deploys cost $0.10/vCPU per hour while your deployment is scheduled. If your Deployment is idle for more than 15 minutes, Jetify Cloud will automatically scale down your deployment to zero. You are not charged for usage while your deployment is scaled down.
+
+-->
+
+## What are the specs of the Jetify Cloudboxes?
+
+Jetify Cloudboxes by default have:
+
+* 4 Dedicated vCPUs
+* 16 GB of RAM
+* 10 GB of user SSD Storage
+
+Larger instances or more resources are available on request for paid customers! Contact us at [**help@jetify.com**](mailto:help@jetify.com?subject=Request More Resources)
 
 ## How does pricing for Jetify Cache work?
 
@@ -35,7 +47,7 @@ The Jetify Prebuilt Cache is included in your subscription for no additional cos
 
 Jetify Private Cache costs $0.60/GB of storage per month for the first 50 GB, and $0.50/GB per month after that. Jetify Private cache does not charge for bandwidth or downloads.
 
-## What size instances are available for Jetify Deploys?
+<!-- ## What size instances are available for Jetify Deploys?
 
 You can configure the following instance sizes for your Deployment.
 
@@ -45,6 +57,8 @@ You can configure the following instance sizes for your Deployment.
 | Small    | 0.5 | 1GB   |
 | Medium   | 1   | 2GB   |
 | Large    | 2   | 4GB   |
+
+-->
 
 ## My project needs a custom instance size or scaling policy
 
