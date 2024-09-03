@@ -4,6 +4,7 @@ package patchpkg
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	_ "embed"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 )
 
 //go:embed glibc-patch.bash
@@ -30,7 +32,10 @@ type DerivationBuilder struct {
 	// it's set, the builder will patch ELF binaries to use its shared
 	// libraries and dynamic linker.
 	Glibc        string
-	glibcPatcher glibcPatcher
+	glibcPatcher *glibcPatcher
+
+	RestoreRefs bool
+	bytePatches map[string][]fileSlice
 }
 
 // NewDerivationBuilder initializes a new DerivationBuilder from the current
@@ -73,10 +78,40 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 }
 
 func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) error {
+	if d.RestoreRefs {
+		// Find store path references to build inputs that were removed
+		// from Python.
+		refs, err := d.findRemovedRefs(ctx, pkg)
+		if err != nil {
+			return err
+		}
+
+		// Group the references we want to restore by file path.
+		d.bytePatches = make(map[string][]fileSlice, len(refs))
+		for _, ref := range refs {
+			d.bytePatches[ref.path] = append(d.bytePatches[ref.path], ref)
+		}
+
+		// If any of those references have shared libraries, add them
+		// back to Python's RPATH.
+		if d.glibcPatcher != nil {
+			nixStore := cmp.Or(os.Getenv("NIX_STORE"), "/nix/store")
+			seen := make(map[string]bool)
+			for _, ref := range refs {
+				storePath := filepath.Join(nixStore, string(ref.data))
+				if seen[storePath] {
+					continue
+				}
+				seen[storePath] = true
+				d.glibcPatcher.prependRPATH(newPackageFS(storePath))
+			}
+		}
+	}
+
 	var err error
 	for path, entry := range allFiles(pkg, ".") {
 		if ctx.Err() != nil {
-			return err
+			return ctx.Err()
 		}
 
 		switch {
@@ -156,6 +191,13 @@ func (d *DerivationBuilder) copyFile(ctx context.Context, pkg, out *packageFS, p
 	if err != nil {
 		return err
 	}
+
+	for _, patch := range d.bytePatches[path] {
+		_, err := dst.WriteAt(patch.data, patch.offset)
+		if err != nil {
+			return err
+		}
+	}
 	return dst.Close()
 }
 
@@ -172,7 +214,7 @@ func (d *DerivationBuilder) copySymlink(pkg, out *packageFS, path string) error 
 }
 
 func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string) bool {
-	if d.Glibc == "" {
+	if d.Glibc == "" || d.glibcPatcher == nil {
 		return false
 	}
 	if path.Dir(filePath) != "bin" {
@@ -186,6 +228,51 @@ func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string)
 		return false
 	}
 	return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F'
+}
+
+func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS) ([]fileSlice, error) {
+	var refs []fileSlice
+	matches, err := fs.Glob(pkg, "lib/python*/_sysconfigdata__linux*.py")
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range matches {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		matches, err := searchFile(pkg, name, reRemovedRefs)
+		if err != nil {
+			return nil, err
+		}
+		refs = append(refs, matches...)
+	}
+
+	pkgNameToHash := make(map[string]string, len(refs))
+	for _, ref := range refs {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
+		name := string(ref.data[33:])
+		if hash, ok := pkgNameToHash[name]; ok {
+			copy(ref.data, hash)
+			continue
+		}
+
+		re, err := regexp.Compile(`[0123456789abcdfghijklmnpqrsvwxyz]{32}-` + regexp.QuoteMeta(name) + `([$"'{}/[\] \t\r\n]|$)`)
+		if err != nil {
+			return nil, err
+		}
+		match := searchEnv(re)
+		if match == "" {
+			return nil, fmt.Errorf("can't find hash to restore store path reference %q in %q: regexp %q returned 0 matches", ref.data, ref.path, re)
+		}
+		hash := match[:32]
+		pkgNameToHash[name] = hash
+		copy(ref.data, hash)
+		slog.DebugContext(ctx, "restored store ref", "ref", ref)
+	}
+	return refs, nil
 }
 
 // packageFS is the tree of files for a package in the Nix store.

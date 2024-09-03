@@ -44,6 +44,34 @@
         name = pkg.name;
         system = pkg.system;
 
+        # buildDependencies is the package's build dependencies as a list of
+        # store paths. It includes transitive dependencies.
+        #
+        # Setting this environment variable provides a corpus of store paths
+        # that the `devbox patch --restore-refs` flag can use to restore
+        # references to Python build-time dependencies.
+        buildDependencies =
+          let
+            # mkNodes makes tree nodes for a list of derivation (package)
+            # outputs. A node is just the package with a "key" attribute added
+            # to it so it works with builtins.genericClosure.
+            mkNodes = builtins.map (drv: drv // { key = drv.outPath; });
+
+            # mkTree recursively traverses the buildInputs of the package we're
+            # patching. It returns a list of nodes, where each node represents
+            # a package output path in the dependency tree.
+            mkTree = builtins.genericClosure {
+              # Start with the package's buildInputs + the packages in its
+              # stdenv.
+              startSet = mkNodes (pkg.buildInputs ++ pkg.stdenv.initialPath);
+
+              # For each package, generate nodes for all of its outputs
+              # (node.all) and all of its buildInputs. Then visit those nodes.
+              operator = node: mkNodes (node.all or [ ] ++ node.buildInputs or [ ]);
+            };
+          in
+          builtins.map (drv: drv.outPath) mkTree;
+
         # Programs needed by glibc-patch.bash.
         inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils glibc gnused patchelf ripgrep;
 
@@ -64,7 +92,7 @@
 
         DEVBOX_DEBUG = 1;
         builder = "${devbox}/bin/devbox";
-        args = [ "patch" "--glibc" glibc pkg ];
+        args = [ "patch" "--restore-refs" "--glibc" glibc pkg ];
       };
     in
     {
