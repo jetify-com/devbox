@@ -43,7 +43,7 @@ func RunTestscripts(t *testing.T, testscriptsDir string) {
 			continue
 		}
 
-		testscript.Run(t, getTestscriptParams(t, dir))
+		testscript.Run(t, getTestscriptParams(dir))
 	}
 }
 
@@ -80,12 +80,12 @@ func copyFileCmd(script *testscript.TestScript, neg bool, args []string) {
 	script.Check(err)
 }
 
-func getTestscriptParams(t *testing.T, dir string) testscript.Params {
+func getTestscriptParams(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
 		RequireExplicitExec: true,
 		TestWork:            false, // Set to true if you're trying to debug a test.
-		Setup:               func(env *testscript.Env) error { return setupTestEnv(t, env) },
+		Setup:               func(env *testscript.Env) error { return setupTestEnv(env) },
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
 			"cp":                           copyFileCmd,
 			"devboxjson.packages.contains": assertDevboxJSONPackagesContains,
