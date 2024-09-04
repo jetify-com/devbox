@@ -47,3 +47,18 @@ Note that by default, Caddy is configured with `./devbox.d/web` as the root. To 
 ### Notes
 
 You can customize the config used by the caddy service by modifying the Caddyfile in devbox.d/caddy, or by changing the CADDY_CONFIG environment variable to point to a custom config. The custom config must be either JSON or Caddyfile format.
+
+### Disabling the Caddy Plugin
+
+You can disable the Caddy plugin by running `devbox add caddy --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+  "packages": {
+    "caddy": {
+      "version": "latest",
+      "disable_plugin": true
+    }
+  },
+}
+```

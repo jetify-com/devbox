@@ -49,3 +49,18 @@ HTTPD_CONFDIR={PROJECT_DIR}/devbox.d/apacheHttpd
 ### Notes
 
 We recommend copying your `httpd.conf` file to a new directory and updating HTTPD_CONFDIR if you decide to modify it.
+
+### Disabling the Apache Plugin
+
+You can disable the Apache plugin by running `devbox add apache --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+  "packages": {
+    "apache": {
+      "version": "latest",
+      "disable_plugin": true
+    }
+  }
+}
+```

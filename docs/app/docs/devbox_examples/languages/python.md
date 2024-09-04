@@ -124,3 +124,17 @@ You can install Poetry by adding it to the packages in your `devbox.json`. You c
 }
 ```
 This init_hook will automatically start Poetry's virtualenv when you run `devbox shell`, and provide you with access to all your packages.
+
+## Disabling the Python Plugin
+
+If you would prefer to disable the Python Plugin, you can add python using `devbox add python --disable_plugin` or in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "python": {
+            "version": "3.10",
+            "disable_plugin": true
+        }
+    }
+}

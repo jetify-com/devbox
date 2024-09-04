@@ -59,3 +59,18 @@ To customize:
 * Use $NGINX_GROUP to customize.
 
 You can also customize the `nginx.conf` and `fastcgi.conf` stored in `devbox.d/nginx`
+
+### Disabling the NGINX Plugin
+
+You can disable the NGINX plugin by running `devbox add nginx --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+  "packages": {
+    "nginx": {
+      "version": "latest",
+      "disable_plugin": true
+    }
+  }
+}
+```

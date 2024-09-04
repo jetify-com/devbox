@@ -68,3 +68,18 @@ These files are used to setup your database and service, and should not be modif
     "MYSQL_UNIX_PORT": "/<some-other-path>/mysql.sock"
 }
 ```
+
+### Disabling the MariaDB Plugin
+
+You can disable the MariaDB plugin by running `devbox add mariadb --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "mariadb": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

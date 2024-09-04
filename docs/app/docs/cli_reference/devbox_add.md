@@ -29,6 +29,8 @@ devbox add prometheus --outputs=out,cli
 | --- | --- |
 | `--allow-insecure` | allows Devbox to install a package that is marked insecure by Nix |
 | `-c, --config string` | path to directory containing a devbox.json config file |
+| `--disable-plugin` | disable the build plugin for a package |
+| `--environment string` | Jetify Secrets environment to use, when supported (e.g.secrets support dev, prod, preview.) (default "dev") |
 | `-e, --exclude-platform strings` | exclude packages from a specific platform. |
 | `-h, --help` | help for add |
 | `-o, --outputs strings` | specify the outputs to install for the nix package | 

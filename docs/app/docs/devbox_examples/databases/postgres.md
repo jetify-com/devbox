@@ -67,3 +67,18 @@ createuser -s -r your_new_user_name
 Replace `your_new_user_name` with the desired username for the new superuser.
 
 Remember: Creating a superuser grants them significant power over the database system, so it should be done cautiously and only when absolutely necessary due to the potential security implications.
+
+### Disabling the Postgres Plugin
+
+You can disable the Postgres plugin by running `devbox add postgresql --disable-plugin`, or by setting the `disable_plugin` field to `true` in your package definition:
+
+```json
+{
+    "packages": {
+        "postgresql": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

@@ -51,3 +51,18 @@ Running `devbox services start redis` will start redis as a daemon in the backgr
 You can manually start Redis in the foreground by running `redis-server $REDIS_CONF --port $REDIS_PORT`.
 
 Logs, pidfile, and data dumps are stored in `.devbox/virtenv/redis`. You can change this by modifying the `dir` directive in `devbox.d/redis/redis.conf`
+
+### Disabling the Redis Plugin
+
+You can disable the Redis plugin by running `devbox add redis --disable-plugin`, or by setting the `disable_plugin` field in your `devbox.json`:
+
+```json
+{
+    "packages": {
+        "redis": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```
