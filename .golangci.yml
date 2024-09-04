@@ -70,6 +70,7 @@ linters-settings:
       - m map[string]int
       - n int
       - ns string
+      - ok bool
       - r *http.Request
       - r io.Reader
       - r *os.File
