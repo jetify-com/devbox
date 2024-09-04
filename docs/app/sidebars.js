@@ -212,19 +212,7 @@ const sidebars = {
     },
   ],
 
-  cloudSidebar: [
-    {
-      type: "category",
-      label: "Jetify Cloud",
-      collapsed: false,
-      collapsible: false,
-      link: {
-        type: "doc",
-        id: "cloud/index",
-      },
-      items: require("./docs/cloud/sidebar"),
-    },
-  ],
+  cloudSidebar: require("./docs/cloud/sidebar"),
 };
 
 export default sidebars;
