@@ -11,7 +11,9 @@ func TestOptional(t *testing.T) {
 	t.Run("NewOptional", func(t *testing.T) {
 		opt := NewOptional(42)
 		assert.True(t, opt.IsPresent())
-		assert.Equal(t, 42, opt.Get())
+		value, err := opt.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, 42, value)
 	})
 
 	t.Run("Empty", func(t *testing.T) {
@@ -21,10 +23,13 @@ func TestOptional(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		opt := NewOptional("test")
-		assert.Equal(t, "test", opt.Get())
+		value, err := opt.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, "test", value)
 
 		emptyOpt := Empty[string]()
-		assert.Panics(t, func() { emptyOpt.Get() })
+		_, err = emptyOpt.Get()
+		assert.Error(t, err)
 	})
 
 	t.Run("OrElse", func(t *testing.T) {
@@ -54,7 +59,9 @@ func TestOptional(t *testing.T) {
 		opt := NewOptional(3)
 		mapped := opt.Map(func(v int) int { return v * 2 })
 		assert.True(t, mapped.IsPresent())
-		assert.Equal(t, 6, mapped.Get())
+		value, err := mapped.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, 6, value)
 
 		emptyOpt := Empty[int]()
 		mappedEmpty := emptyOpt.Map(func(v int) int { return v * 2 })
@@ -75,7 +82,9 @@ func TestOptional(t *testing.T) {
 		err := json.Unmarshal([]byte("42"), &opt)
 		assert.NoError(t, err)
 		assert.True(t, opt.IsPresent())
-		assert.Equal(t, 42, opt.Get())
+		value, err := opt.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, 42, value)
 
 		err = json.Unmarshal([]byte("null"), &opt)
 		assert.NoError(t, err)
@@ -106,9 +115,13 @@ func TestOptionalUnmarshalJSONInStruct(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "John Doe", result.Name)
 		assert.True(t, result.Age.IsPresent())
-		assert.Equal(t, 30, result.Age.Get())
+		ageValue, err := result.Age.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, 30, ageValue)
 		assert.True(t, result.Address.IsPresent())
-		assert.Equal(t, "123 Main St", result.Address.Get())
+		addressValue, err := result.Address.Get()
+		assert.NoError(t, err)
+		assert.Equal(t, "123 Main St", addressValue)
 	})
 
 	t.Run("Missing optional values", func(t *testing.T) {

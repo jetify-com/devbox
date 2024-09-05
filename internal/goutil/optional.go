@@ -2,8 +2,11 @@ package goutil
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
+
+var ErrNotPresent = errors.New("Optional value is not present")
 
 // Optional represents a value that may or may not be present.
 type Optional[T any] struct {
@@ -29,12 +32,13 @@ func (o Optional[T]) IsPresent() bool {
 	return o.isSet
 }
 
-// Get returns the value if present, or panics if not present.
-func (o Optional[T]) Get() T {
+// Get returns the value if present, or an error if not present.
+func (o Optional[T]) Get() (T, error) {
 	if !o.isSet {
-		panic("Optional value is not present")
+		var zero T
+		return zero, ErrNotPresent
 	}
-	return o.value
+	return o.value, nil
 }
 
 // OrElse returns the value if present, or the given default value if not present.
