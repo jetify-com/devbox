@@ -18,4 +18,4 @@ https://cloud.jetify.com/new/
 
 You can also start a Sandbox from a template project by navigating to the [Jetify Dashboard](https://cloud.jetify.com/dashboard) and clicking on the `New Sandbox` button.
 
-A full list of available templates and projects can be found in the [Devbox Examples](../../devbox_examples/) page of our documentation.
+A full list of available templates and projects can be found in the [Devbox Examples](../../../devbox_examples/) page of our documentation.

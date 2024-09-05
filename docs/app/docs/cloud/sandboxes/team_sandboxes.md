@@ -4,13 +4,13 @@ sidebar_position: 4
 hide_title: false
 ---
 
-[Jetify Projects](../dashboard/projects) are a great way to share configuration and secrets with your team. A project can store repository settings and secrets that are shared across all Cloudboxes and users in the project. For example, you can configure a project for a Backend API with the database parameters, API keys, and other secrets. When a user launches a Sandbox in the project, they will automatically have access to the project's configuration and secrets.
+**Jetify Projects** are a great way to share configuration and secrets with your team. A project can store repository settings and secrets that are shared across all Cloudboxes and users in the project. For example, you can configure a project for a Backend API with the database parameters, API keys, and other secrets. When a user launches a Sandbox in the project, they will automatically have access to the project's configuration and secrets.
 
 ## Creating a Project
 
 To create a project:
 
-1. Navigate to the [Projects](../dashboard/projects) tab in the Jetify Dashboard
+1. Navigate to the **Projects** tab in the Jetify Dashboard
 2. Click on the `Create New` button on the top right corner of the page
 3. In the modal that appears, give the project a name, and then click "Create Project"
 4. In the new project, navigate to the Settings tab, and then click "Connect with Github" to connect the project to a Github repository
@@ -30,4 +30,4 @@ To add a secret to a project:
 
 Jetify will automatically add the secrets to any Cloudbox that is launched in the project. Note that if a Cloudbox is currently running when you add a secret, you will need to restart it to access the new secret.
 
-For more information on managing secrets, see the [Jetify Secrets](../secrets) guide.
+For more information on managing secrets, see the [Jetify Secrets](../../secrets) guide.
