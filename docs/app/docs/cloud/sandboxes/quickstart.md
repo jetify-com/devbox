@@ -52,7 +52,8 @@ You can find packages to install using `devbox search <package>`, or by searchin
 
 Packages you install will be added to your `devbox.json` file. You can also use this `devbox.json` file configure your environment with [scripts](../../guides/scripts), [services](../../guides/sevices), and more
 
-**Further Reading**
+For further reading on how to install packages with Devbox, see:
+
 * [Devbox Quickstart](../../quickstart)
 * [Devbox CLI Reference](../../cli_reference/devbox)
 
@@ -60,9 +61,8 @@ Packages you install will be added to your `devbox.json` file. You can also use 
 
 Once you've customized your environment, you can save your Dev Environment config to source control by checking in your `devbox.json` and `devbox.lock` files. These files can be used to recreate your environment on Jetify Cloudboxes, or on any other machine that has devbox installed.
 
-You can also use this file to configure initilization hooks, scripts, services, and environment variables for your project.
+You can also use this file to configure initilization hooks, scripts, services, and environment variables for your project. For further reading, see:
 
-**Further Reading**
 * [Devbox Configuration Reference](../../configuration.md)
 * [Devbox Script](../../guides/scripts)
 * [Devbox Services](../../guide/services)
