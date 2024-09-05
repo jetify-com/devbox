@@ -2,6 +2,7 @@
 package patchpkg
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	_ "embed"
@@ -12,6 +13,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 )
 
@@ -23,6 +25,12 @@ type DerivationBuilder struct {
 	// Out is the output directory that will contain the built derivation.
 	// If empty it defaults to $out, which is typically set by Nix.
 	Out string
+
+	// Glibc is an optional store path to an alternative glibc version. If
+	// it's set, the builder will patch ELF binaries to use its shared
+	// libraries and dynamic linker.
+	Glibc        string
+	glibcPatcher glibcPatcher
 }
 
 // NewDerivationBuilder initializes a new DerivationBuilder from the current
@@ -42,6 +50,13 @@ func (d *DerivationBuilder) init() error {
 			return fmt.Errorf("patchpkg: $out is empty (is this being run from a nix build?)")
 		}
 	}
+	if d.Glibc != "" {
+		var err error
+		d.glibcPatcher, err = newGlibcPatcher(newPackageFS(d.Glibc))
+		if err != nil {
+			return fmt.Errorf("patchpkg: can't patch glibc using %s: %v", d.Glibc, err)
+		}
+	}
 	return nil
 }
 
@@ -53,7 +68,7 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 	}
 
 	slog.DebugContext(ctx, "starting build to patch package",
-		"pkg", pkgStorePath, "out", d.Out)
+		"pkg", pkgStorePath, "glibc", d.Glibc, "out", d.Out)
 	return d.build(ctx, newPackageFS(pkgStorePath), newPackageFS(d.Out))
 }
 
@@ -70,7 +85,7 @@ func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) erro
 		case isSymlink(entry.Type()):
 			err = d.copySymlink(pkg, out, path)
 		default:
-			err = d.copyFile(pkg, out, path)
+			err = d.copyFile(ctx, pkg, out, path)
 		}
 
 		if err != nil {
@@ -93,14 +108,28 @@ func (d *DerivationBuilder) copyDir(out *packageFS, path string) error {
 	return os.Mkdir(path, 0o777)
 }
 
-func (d *DerivationBuilder) copyFile(pkg, out *packageFS, path string) error {
-	src, err := pkg.Open(path)
+func (d *DerivationBuilder) copyFile(ctx context.Context, pkg, out *packageFS, path string) error {
+	srcFile, err := pkg.Open(path)
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer srcFile.Close()
 
-	stat, err := src.Stat()
+	src := bufio.NewReader(srcFile)
+	if d.needsGlibcPatch(src, path) {
+		srcPath, err := pkg.OSPath(path)
+		if err != nil {
+			return err
+		}
+		dstPath, err := out.OSPath(path)
+		if err != nil {
+			return err
+		}
+		// No need to copy the file, patchelf will do it for us.
+		return d.glibcPatcher.patch(ctx, srcPath, dstPath)
+	}
+
+	stat, err := srcFile.Stat()
 	if err != nil {
 		return err
 	}
@@ -140,6 +169,23 @@ func (d *DerivationBuilder) copySymlink(pkg, out *packageFS, path string) error 
 		return err
 	}
 	return os.Symlink(target, link)
+}
+
+func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string) bool {
+	if d.Glibc == "" {
+		return false
+	}
+	if path.Dir(filePath) != "bin" {
+		return false
+	}
+
+	// ELF binaries are identifiable by the first 4 magic bytes:
+	// 0x7F E L F
+	magic, err := file.Peek(4)
+	if err != nil {
+		return false
+	}
+	return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F'
 }
 
 // packageFS is the tree of files for a package in the Nix store.
