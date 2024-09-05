@@ -179,6 +179,8 @@ func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string)
 		return false
 	}
 
+	// ELF binaries are identifiable by the first 4 magic bytes:
+	// 0x7F E L F
 	magic, err := file.Peek(4)
 	if err != nil {
 		return false
