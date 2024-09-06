@@ -16,7 +16,7 @@ To manage secrets from the Jetify Cloud Dashboard, you must first:
 
 1. From the Jetify Dashboard, select the project whose secrets you want to manage
 1. Navigate to the Secrets tab of the Jetify Dashboard
-   ![Jetify Dashboard Secrets Tab](../../../static/img/secrets_tab.png)
+   ![Jetify Dashboard Secrets Tab](../../static/img/secrets_tab.png)
 1. To create a new secret, enter the key name of the secret, along with the value that you want to set in the form. Note that secrets are set as environment variables, so the key name must be a valid environment variable name.
 1. You can also use the Environment checkboxes to set the secret for a specific environment. By default, secrets are set for the `Development` environment, but you can also set secrets for a `Preview` and `Prod` environment.
 1. To add multiple secrets at one time, click the **Add Another** button
@@ -26,7 +26,7 @@ To manage secrets from the Jetify Cloud Dashboard, you must first:
 
 You can update or manage secrets by clicking the edit button next to the secret that you want to update. This will open a modal where you can update the value of the secret, or delete the secret entirely.
 
-![Editing Secrets](../../../static/img/edit_secrets.png)
+![Editing Secrets](../../static/img/edit_secrets.png)
 
 ## Further Reading
 

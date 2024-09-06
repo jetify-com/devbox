@@ -11,7 +11,7 @@ If you don't already have Devbox installed, see our [Quickstart](https://www.jet
 
 You can authenticate with Jetify Cloud by running `devbox secrets auth login`. This will launch the browser authentication flow to sign into Jetify Cloud.
 
-![Auth Page](../../../static/img/jetify_auth.jpeg)
+![Auth Page](../../static/img/jetify_auth.jpeg)
 
 Once you complete the authentication flow and select a team, the Devbox CLI will configure itself to use the team you selected
 
@@ -134,5 +134,5 @@ You can download from a specific environment using the `--environment` flag:
 
 ## Further Reading
 
-- [Devbox Secrets CLI Reference](../../cli_reference/devbox_secrets.md)
+- [Devbox Secrets CLI Reference](/devbox/docs/cli_reference/devbox_secrets)
 - [Managing Secrets from the Dashboard](../dashboard_secrets)

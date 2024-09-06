@@ -18,21 +18,21 @@ Team members can be added in one of two Roles:
 
 1. In the Jetify Dashboard, navigate to the **Members** tab
 
-   ![Members Tab](../../../static/img/members_tab.png)
+   ![Members Tab](../../static/img/members_tab.png)
 
 2 . To invite a member, enter their email address, and the **Role** you want to assign to them.
 
-![Inviting a Member](../../../static/img/inviting_member.png)
+![Inviting a Member](../../static/img/inviting_member.png)
 
 1. Once invited, users will receive an email with instructions on how to join your team. They will show up in the **Members** tab as invited until they accept the invitation:
 
-   ![Invited Member](../../../static/img/invited_member.png)
+   ![Invited Member](../../static/img/invited_member.png)
 
    Note that invitations will expire if they are not accepted within 7 days, after which you will need to re-send the invitation.
 
    Once they accept the invitation, they will switch to **active**
 
-   ![Active Member](../../../static/img/active_member.png)
+   ![Active Member](../../static/img/active_member.png)
 
 ## Removing a Team Member
 
@@ -42,6 +42,6 @@ Removing a team member will remove their access to all projects and secrets in y
 2. Click the Options button to the right of the the member’s name
 3. Select Delete from the pop up that appears:
 
-![Delete a member](../../../static/img/delete_member.png)
+![Delete a member](../../static/img/delete_member.png)
 
 1. Click **OK** on the confirmation window that appears to confirm that you want to remove the member from your team

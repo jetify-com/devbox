@@ -7,10 +7,10 @@ const codeTheme = { light: themes.github, dark: themes.dracula };
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Devbox",
+  title: "Jetify Docs",
   tagline: "Instant, easy, and predictable shells and containers",
   url: "https://www.jetify.com",
-  baseUrl: "/devbox/docs/",
+  baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
@@ -38,7 +38,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          routeBasePath: "/",
+          routeBasePath: "/devbox/docs",
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
@@ -59,6 +59,15 @@ const config = {
   ],
 
   plugins: [
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "cloud",
+        path: "cloud",
+        routeBasePath: "/cloud/docs",
+        sidebarPath: require.resolve("./cloud_sidebars.js"),
+      },
+    ],
     [
       "docusaurus-plugin-openapi-docs",
       {
@@ -82,16 +91,17 @@ const config = {
           alt: "Devbox",
           src: "img/devbox_logo_light.svg",
           srcDark: "img/devbox_logo_dark.svg",
+          href: "/devbox/docs",
         },
         items: [
           {
-            to: "cloud",
+            to: "cloud/docs",
             label: "Jetify Cloud",
             className: "header-text-link",
             position: "left",
           },
           {
-            to: "nixhub",
+            to: "/devbox/docs/nixhub",
             label: "NixHub API",
             className: "header-text-link",
             position: "left",

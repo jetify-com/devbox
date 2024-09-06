@@ -5,7 +5,7 @@ sidebar_position: 1
 
 Jetify Secrets is a secure secrets management service that lets you store and access secrets for your projects. Secrets are encrypted and stored in the cloud, and are automatically accessed by your project’s Devbox environment whenever you start a shell, run a script, or start a service.
 
-![Using Devbox Secrets](../../../static/img/secrets.gif)
+![Using Devbox Secrets](../../static/img/secrets.gif)
 
 ## Key Concepts
 

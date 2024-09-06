@@ -93,9 +93,9 @@ path:./my-flake#my-package
 
 ## Caching Flakes with the Jetify Cache
 
-Because flakes are not automatically built and cached by Nix, you may experience slower build times when using flakes in your Devbox project. To speed up your builds, you can use the [Jetify Cache](../cloud/cache/index.md) to cache the binaries built by your flakes for future use.
+Because flakes are not automatically built and cached by Nix, you may experience slower build times when using flakes in your Devbox project. To speed up your builds, you can use the [Jetify Cache](/cloud/docs/cache/) to cache the binaries built by your flakes for future use.
 
-After setting up your cache directly, you can upload the flake by running: 
+After setting up your cache directly, you can upload the flake by running:
 
 ```bash
 devbox cache upload <flake-reference>

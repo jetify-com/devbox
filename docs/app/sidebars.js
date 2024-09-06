@@ -211,8 +211,6 @@ const sidebars = {
       items: require("./docs/nixhub/sidebar"),
     },
   ],
-
-  cloudSidebar: require("./docs/cloud/sidebar"),
 };
 
 export default sidebars;
