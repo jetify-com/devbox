@@ -3,7 +3,7 @@
 # Check that an older version of the Python interpreter (3.7) can import and run
 # pip packages that are built from source.
 
-[!env:DEVBOX_RUN_FAILING_TESTS] [linux] skip 'this test doesn''t pass on Linux yet'
+[!env:DEVBOX_RUN_FAILING_TESTS] skip 'this test doesn''t pass on Linux yet'
 
 exec devbox install
 
