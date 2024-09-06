@@ -142,9 +142,11 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-		if err := d.cfg.PackageMutator().SetPatchGLibc(
-			pkg, opts.PatchGlibc); err != nil {
-			return err
+		if opts.Patch != "" {
+			if err := d.cfg.PackageMutator().SetPatch(
+				pkg, configfile.PatchMode(opts.Patch)); err != nil {
+				return err
+			}
 		}
 		if err := d.cfg.PackageMutator().SetOutputs(
 			d.stderr, pkg, opts.Outputs); err != nil {

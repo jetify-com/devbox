@@ -81,10 +81,10 @@ type Package struct {
 	// Outputs is a list of outputs to build from the package's derivation.
 	outputs outputs
 
-	// patchGlibc applies a function to the package's derivation that
+	// patch applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
 	// It's a function to allow deferring nix System call until it's needed.
-	patchGlibc func() bool
+	patch func() bool
 
 	// AllowInsecure are a list of nix packages that are whitelisted to be
 	// installed even if they are marked as insecure.
@@ -110,9 +110,7 @@ func PackagesFromConfig(packages []configfile.Package, l lock.Locker) []*Package
 	for _, cfgPkg := range packages {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform, l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
-		pkg.patchGlibc = sync.OnceValue(func() bool {
-			return cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		})
+		pkg.patch = patchGlibcFunc(pkg.CanonicalName(), cfgPkg.Patch)
 		pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, cfgPkg.Outputs...))
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
@@ -127,7 +125,7 @@ func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
 func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
-	pkg.patchGlibc = sync.OnceValue(func() bool { return opts.PatchGlibc })
+	pkg.patch = patchGlibcFunc(pkg.CanonicalName(), configfile.PatchMode(opts.Patch))
 	pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, opts.Outputs...))
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
@@ -177,6 +175,22 @@ func resolve(pkg *Package) error {
 
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
+}
+
+func patchGlibcFunc(canonicalName string, mode configfile.PatchMode) func() bool {
+	return sync.OnceValue(func() (patch bool) {
+		switch mode {
+		case configfile.PatchAuto:
+			patch = canonicalName == "python"
+		case configfile.PatchAlways:
+			patch = true
+		case configfile.PatchNever:
+			patch = false
+		}
+
+		// Check nix.SystemIsLinux() last because it's slow.
+		return patch && nix.SystemIsLinux()
+	})
 }
 
 func (p *Package) setInstallable(i flake.Installable, projectDir string) {
@@ -238,7 +252,7 @@ func (p *Package) IsInstallable() bool {
 }
 
 func (p *Package) PatchGlibc() bool {
-	return p.patchGlibc != nil && p.patchGlibc()
+	return p.patch != nil && p.patch()
 }
 
 // Installables for this package. Installables is a nix concept defined here:

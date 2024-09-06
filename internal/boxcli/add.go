@@ -24,6 +24,7 @@ type addCmdFlags struct {
 	platforms        []string
 	excludePlatforms []string
 	patchGlibc       bool
+	patch            string
 	outputs          []string
 }
 
@@ -68,9 +69,15 @@ func addCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.patchGlibc, "patch-glibc", false,
 		"patch any ELF binaries to use the latest glibc version in nixpkgs")
+	command.Flags().StringVar(
+		&flags.patch, "patch", "auto",
+		"allow Devbox to patch the package to fix known issues (auto, always, never)")
 	command.Flags().StringSliceVarP(
 		&flags.outputs, "outputs", "o", []string{},
 		"specify the outputs to select for the nix package")
+
+	_ = command.Flags().MarkDeprecated("patch-glibc", `use --patch=always instead`)
+	command.MarkFlagsMutuallyExclusive("patch", "patch-glibc")
 
 	return command
 }
@@ -85,12 +92,17 @@ func addCmdFunc(cmd *cobra.Command, args []string, flags addCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.Add(cmd.Context(), args, devopt.AddOpts{
+	opts := devopt.AddOpts{
 		AllowInsecure:    flags.allowInsecure,
 		DisablePlugin:    flags.disablePlugin,
 		Platforms:        flags.platforms,
 		ExcludePlatforms: flags.excludePlatforms,
-		PatchGlibc:       flags.patchGlibc,
+		Patch:            flags.patch,
 		Outputs:          flags.outputs,
-	})
+	}
+	if flags.patchGlibc {
+		// Backwards compatibility so --patch-glibc still works.
+		opts.Patch = "always"
+	}
+	return box.Add(cmd.Context(), args, opts)
 }
