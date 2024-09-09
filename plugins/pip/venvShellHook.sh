@@ -1,4 +1,5 @@
 STATE_FILE="$DEVBOX_PROJECT_ROOT/.devbox/venv_check_completed"
+echo $STATE_FILE
 
 is_valid_venv() {
     [ -f "$1/bin/activate" ] && [ -f "$1/bin/python" ]
@@ -10,10 +11,31 @@ is_devbox_python() {
         echo "DEVBOX_PACKAGES_DIR is not set. Unable to check for Devbox Python."
         return 1
     fi
-    local python_path=$(readlink "$1/bin/python")
-    echo $python_path
-    echo $DEVBOX_PACKAGES_DIR
-    [[ $python_path == $DEVBOX_PACKAGES_DIR/bin/python* ]]
+    local python_path="$1/bin/python"
+    local link_target
+
+    while true; do
+        if [ ! -L "$python_path" ]; then
+            echo $python_path
+            # Not a symlink, we're done
+            break
+        fi
+
+        link_target=$(readlink "$python_path")
+        echo "Checking symlink: $link_target"
+
+        if [[ "$link_target" == /* ]]; then
+            # Absolute path, we're done
+            python_path="$link_target"
+            break
+        elif [[ "$link_target" == python* ]] || [[ "$link_target" == ./* ]] || [[ "$link_target" == ../* ]]; then
+            # Relative path or python symlink, continue resolving
+            python_path=$(dirname "$python_path")/"$link_target"
+        else
+            # Unexpected format, stop here
+            break
+        fi
+    done
 }
 
 # Function to check Python version
