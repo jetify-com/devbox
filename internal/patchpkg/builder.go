@@ -232,7 +232,7 @@ func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string)
 
 func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS) ([]fileSlice, error) {
 	var refs []fileSlice
-	matches, err := fs.Glob(pkg, "lib/python*/_sysconfigdata__linux*.py")
+	matches, err := fs.Glob(pkg, "lib/python*/_sysconfigdata_*.py")
 	if err != nil {
 		return nil, err
 	}
