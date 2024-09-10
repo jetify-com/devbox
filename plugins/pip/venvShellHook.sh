@@ -21,7 +21,7 @@ if [ -f "$STATE_FILE" ]; then
     exit 0
 fi
 
-# Check that Python version suports venv
+# Check that Python version supports venv
 if ! python -c "import venv" &>/dev/null; then
     echo "\033[1;33mWARNING: Python version must be > 3.3 to create a virtual environment.\033[0m"
     touch "$STATE_FILE"
