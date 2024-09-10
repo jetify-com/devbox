@@ -73,7 +73,10 @@
           builtins.map (drv: drv.outPath) mkTree;
 
         # Programs needed by glibc-patch.bash.
-        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils glibc gnused patchelf ripgrep;
+        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils gnused patchelf ripgrep;
+
+        isLinux = (builtins.match ".*linux.*" system) != null;
+        glibc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".glibc else null;
 
         # Create a package that puts the local devbox binary in the conventional
         # bin subdirectory. This also ensures that the executable is named
@@ -92,7 +95,9 @@
 
         DEVBOX_DEBUG = 1;
         builder = "${devbox}/bin/devbox";
-        args = [ "patch" "--restore-refs" "--glibc" glibc pkg ];
+        args = [ "patch" "--restore-refs" ] ++
+          (if glibc != null then [ "--glibc" "${glibc}" ] else [ ]) ++
+          [ pkg ];
       };
     in
     {

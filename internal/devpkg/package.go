@@ -187,9 +187,7 @@ func patchGlibcFunc(canonicalName string, mode configfile.PatchMode) func() bool
 		case configfile.PatchNever:
 			patch = false
 		}
-
-		// Check nix.SystemIsLinux() last because it's slow.
-		return patch && nix.SystemIsLinux()
+		return patch
 	})
 }
 
