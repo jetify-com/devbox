@@ -1,3 +1,4 @@
+set -eu
 STATE_FILE="$DEVBOX_PROJECT_ROOT/.devbox/venv_check_completed"
 echo $STATE_FILE
 
@@ -16,7 +17,6 @@ is_devbox_python() {
 
     while true; do
         if [ ! -L "$python_path" ]; then
-            echo $python_path
             # Not a symlink, we're done
             break
         fi
@@ -36,6 +36,8 @@ is_devbox_python() {
             break
         fi
     done
+
+    [[ $python_path == $DEVBOX_PACKAGES_DIR/* ]]
 }
 
 # Function to check Python version
@@ -50,14 +52,13 @@ check_python_version() {
 
 # Check if we've already run this script
 if [ -f "$STATE_FILE" ]; then
+    # "We've already run this script. Exiting..."
     exit 0
 fi
 
 # Check Python version
 if ! check_python_version; then
-    echo "\n\033[1;33m========================================\033[0m"
     echo "\033[1;33mWARNING: Python version must be > 3.3 to create a virtual environment.\033[0m"
-    echo "\033[1;33m========================================\033[0m"
     touch "$STATE_FILE"
     exit 1
 fi
@@ -66,9 +67,7 @@ fi
 if [ -d "$VENV_DIR" ]; then
     if is_valid_venv "$VENV_DIR"; then
         if ! is_devbox_python "$VENV_DIR"; then
-            echo "\n\033[1;33m========================================\033[0m"
-            echo "\033[1;33mWARNING: Existing virtual environment doesn't use Devbox Python.\033[0m"
-            echo "\033[1;33m========================================\033[0m"
+            echo "\033[1;33mWARNING: Virtual environment at $VENV_DIR doesn't use Devbox Python.\033[0m"
             echo "Virtual environment: $VENV_DIR"
             read -p "Do you want to overwrite it? (y/n) " -n 1 -r
             echo
@@ -77,7 +76,7 @@ if [ -d "$VENV_DIR" ]; then
                 rm -rf "$VENV_DIR"
                 python3 -m venv "$VENV_DIR"
             else
-                echo "Operation cancelled."
+                echo "Using existing virtual environment. We recommend changing \$VENV_DIR"
                 touch "$STATE_FILE"
                 exit 1
             fi
