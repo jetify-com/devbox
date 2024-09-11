@@ -15,12 +15,6 @@ create_venv() {
     echo "*\n.*" >> "$VENV_DIR/.gitignore"
 }
 
-# Check if we've already run this script
-if [ -f "$STATE_FILE" ]; then
-    # "We've already run this script. Exiting..."
-    exit 0
-fi
-
 # Check that Python version supports venv
 if ! python -c 'import venv' 1> /dev/null 2> /dev/null; then
     echo "\033[1;33mWARNING: Python version must be > 3.3 to create a virtual environment.\033[0m"
@@ -31,6 +25,11 @@ fi
 # Check if the directory exists
 if [ -d "$VENV_DIR" ]; then
     if is_valid_venv "$VENV_DIR"; then
+        # Check if we've already run this script
+        if [ -f "$STATE_FILE" ]; then
+            # "We've already run this script. Exiting..."
+            exit 0
+        fi
         if ! is_devbox_venv "$VENV_DIR"; then
             echo "\033[1;33mWARNING: Virtual environment at $VENV_DIR doesn't use Devbox Python.\033[0m"
             read -p "Do you want to overwrite it? (y/n) " -n 1 -r
