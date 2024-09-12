@@ -32,7 +32,7 @@ Built-in plugins are available for the following packages. You can activate the 
 * [Redis](../devbox_examples/databases/redis.md) (redis)
 * [Valkey](../devbox_examples/databases/valkey.md) (valkey)
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82...)
-* [Pip](../devbox_examples/languages/python.md) (python39Packages.pip, python310Packages.pip, python311Packages.pip...)
+* [Python](../devbox_examples/languages/python.md) (python, python-full, python-minimal...)
 * [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0...)
 
 
@@ -163,4 +163,3 @@ Developers should directly edit helper files and check them into source control 
 ## Plugins Source Code
 
 Devbox Plugins are written in JSON and stored in the main Devbox Repo. You can view the source code of the current plugins [here](https://github.com/jetify-com/devbox/tree/main/plugins)
-
