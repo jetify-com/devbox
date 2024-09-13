@@ -293,6 +293,30 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 	return nil
 }
 
+func AttachToProcessManager(ctx context.Context, w io.Writer, projectDir string, processComposeConfig ProcessComposeOpts) error {
+	configFile, err := openGlobalConfigFile()
+	if err != nil {
+		return err
+	}
+
+	defer configFile.Close()
+	config := readGlobalProcessComposeJSON(configFile)
+
+	project, ok := config.Instances[projectDir]
+	if !ok {
+		return fmt.Errorf("Process-compose is not running for this project. To start it, run `devbox services up`")
+	}
+
+	flags := []string{"attach", "-p", strconv.Itoa(project.Port)}
+	cmd := exec.Command(processComposeConfig.BinPath, flags...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	return cmd.Run()
+}
+
 func ProcessManagerIsRunning(projectDir string) bool {
 	configFile, err := openGlobalConfigFile()
 	if err != nil {
