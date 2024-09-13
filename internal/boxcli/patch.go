@@ -17,6 +17,7 @@ func patchCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&builder.Glibc, "glibc", "", "patch binaries to use a different glibc")
+	cmd.Flags().StringVar(&builder.Gcc, "gcc", "", "patch binaries to use a different gcc")
 	cmd.Flags().BoolVar(&builder.RestoreRefs, "restore-refs", false, "restore references to removed store paths")
 	return cmd
 }

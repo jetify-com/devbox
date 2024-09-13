@@ -31,8 +31,14 @@ type DerivationBuilder struct {
 	// Glibc is an optional store path to an alternative glibc version. If
 	// it's set, the builder will patch ELF binaries to use its shared
 	// libraries and dynamic linker.
-	Glibc        string
-	glibcPatcher *glibcPatcher
+	Glibc string
+
+	// Gcc is an optional store path to an alternative gcc version. If
+	// it's set, the builder will patch ELF binaries to use its shared
+	// libraries (such as libstdc++.so).
+	Gcc string
+
+	glibcPatcher *libPatcher
 
 	RestoreRefs bool
 	bytePatches map[string][]fileSlice
@@ -56,10 +62,21 @@ func (d *DerivationBuilder) init() error {
 		}
 	}
 	if d.Glibc != "" {
-		var err error
-		d.glibcPatcher, err = newGlibcPatcher(newPackageFS(d.Glibc))
+		if d.glibcPatcher == nil {
+			d.glibcPatcher = &libPatcher{}
+		}
+		err := d.glibcPatcher.setGlibc(newPackageFS(d.Glibc))
 		if err != nil {
 			return fmt.Errorf("patchpkg: can't patch glibc using %s: %v", d.Glibc, err)
+		}
+	}
+	if d.Gcc != "" {
+		if d.glibcPatcher == nil {
+			d.glibcPatcher = &libPatcher{}
+		}
+		err := d.glibcPatcher.setGcc(newPackageFS(d.Gcc))
+		if err != nil {
+			return fmt.Errorf("patchpkg: can't patch gcc using %s: %v", d.Gcc, err)
 		}
 	}
 	return nil
