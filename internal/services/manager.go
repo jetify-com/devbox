@@ -216,6 +216,11 @@ func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeCo
 	cmd.Stdout = logfile
 	cmd.Stderr = logfile
 
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
+
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
