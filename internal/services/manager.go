@@ -159,7 +159,7 @@ func StartProcessManager(
 	if processComposeConfig.Background {
 		flags = append(flags, "-t=false")
 		cmd := exec.Command(processComposeConfig.BinPath, flags...)
-		return runProcessManagerInBackground(cmd, config, port, projectDir)
+		return runProcessManagerInBackground(cmd, config, port, projectDir, w)
 	}
 
 	cmd := exec.Command(processComposeConfig.BinPath, flags...)
@@ -206,7 +206,7 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 	return writeGlobalProcessComposeJSON(config, configFile)
 }
 
-func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string) error {
+func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string, w io.Writer) error {
 	logdir := filepath.Join(projectDir, processComposeLogfile)
 	logfile, err := os.OpenFile(logdir, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0o664)
 	if err != nil {
@@ -216,9 +216,19 @@ func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeCo
 	cmd.Stdout = logfile
 	cmd.Stderr = logfile
 
+	// These attributes set the process group ID to the process ID of process-compose
+	// Starting in it's own process group means it won't be terminated if the shell crashes
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
+
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
+
+	fmt.Fprintf(w, "Process-compose is now running on port %d\n", port)
+	fmt.Fprintf(w, "To stop your services, run `devbox services stop`\n")
 
 	projectConfig := instance{
 		Pid:  cmd.Process.Pid,
@@ -291,6 +301,30 @@ func StopAllProcessManagers(ctx context.Context, w io.Writer) error {
 	}
 
 	return nil
+}
+
+func AttachToProcessManager(ctx context.Context, w io.Writer, projectDir string, processComposeConfig ProcessComposeOpts) error {
+	configFile, err := openGlobalConfigFile()
+	if err != nil {
+		return err
+	}
+
+	defer configFile.Close()
+	config := readGlobalProcessComposeJSON(configFile)
+
+	project, ok := config.Instances[projectDir]
+	if !ok {
+		return fmt.Errorf("process-compose is not running for this project. To start it, run `devbox services up`")
+	}
+
+	flags := []string{"attach", "-p", strconv.Itoa(project.Port)}
+	cmd := exec.Command(processComposeConfig.BinPath, flags...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	return cmd.Run()
 }
 
 func ProcessManagerIsRunning(projectDir string) bool {

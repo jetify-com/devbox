@@ -170,6 +170,31 @@ func (d *Devbox) RestartServices(
 	return nil
 }
 
+func (d *Devbox) AttachToProcessManager(ctx context.Context) error {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
+		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+	}
+
+	err := initDevboxUtilityProject(ctx, d.stderr)
+	if err != nil {
+		return err
+	}
+
+	processComposeBinPath, err := utilityLookPath("process-compose")
+	if err != nil {
+		return err
+	}
+
+	return services.AttachToProcessManager(
+		ctx,
+		d.stderr,
+		d.projectDir,
+		services.ProcessComposeOpts{
+			BinPath: processComposeBinPath,
+		},
+	)
+}
+
 func (d *Devbox) StartProcessManager(
 	ctx context.Context,
 	runInCurrentShell bool,
