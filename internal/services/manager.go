@@ -227,7 +227,7 @@ func runProcessManagerInBackground(cmd *exec.Cmd, config *globalProcessComposeCo
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
 
-	fmt.Fprintf(w, "Process-compose is now running on port %d\n",port)
+	fmt.Fprintf(w, "Process-compose is now running on port %d\n", port)
 	fmt.Fprintf(w, "To stop your services, run `devbox services stop`\n")
 
 	projectConfig := instance{
