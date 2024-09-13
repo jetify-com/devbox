@@ -193,7 +193,6 @@ func (d *Devbox) AttachToProcessManager(ctx context.Context) error {
 			BinPath: processComposeBinPath,
 		},
 	)
-
 }
 
 func (d *Devbox) StartProcessManager(

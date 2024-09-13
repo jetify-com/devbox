@@ -142,7 +142,6 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 }
 
 func attachServices(cmd *cobra.Command, flags servicesCmdFlags) error {
-
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
 		Environment: flags.config.environment,
