@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -167,6 +168,9 @@ func StartProcessManager(
 }
 
 func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string, w io.Writer) error {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGTSTP)
+
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
@@ -186,11 +190,35 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 	// We're waiting now, so we can unlock the file
 	config.File.Close()
 
-	err = cmd.Wait()
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	go func() {
+		for sig := range sigs {
+			var err error
+			if sig == syscall.SIGTSTP {
+				err = cmd.Process.Signal(syscall.SIGINT)
+			} else {
+				err = cmd.Process.Signal(sig)
+			}
+			if err != nil {
+				fmt.Fprint(w, "Unable to terminate process-compose cleanly. You may need to manually terminate your services")
+			}
+		}
+	}()
+
+	err = <-done
+	signal.Stop(sigs)
+	close(sigs)
 	if err != nil {
-		if err.Error() == "exit status 1" {
-			fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", err.Error())
-			return nil
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			if exitErr.ExitCode() == 1 {
+				fmt.Fprintf(w, "Process-compose was terminated, error: %s\n", exitErr.Error())
+				return nil
+			}
 		}
 		return err
 	}
@@ -200,8 +228,9 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 		return err
 	}
 
-	config = readGlobalProcessComposeJSON(configFile)
+	defer configFile.Close()
 
+	config = readGlobalProcessComposeJSON(configFile)
 	delete(config.Instances, projectDir)
 	return writeGlobalProcessComposeJSON(config, configFile)
 }
