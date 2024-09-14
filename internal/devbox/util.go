@@ -16,7 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-const processComposeVersion = "1.5.0"
+const processComposeVersion = "1.24.2"
 
 var utilProjectConfigPath string
 
