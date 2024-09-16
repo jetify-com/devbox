@@ -12,56 +12,88 @@ import (
 	"strings"
 )
 
-// glibcPatcher patches ELF binaries to use an alternative version of glibc.
-type glibcPatcher struct {
+// libPatcher patches ELF binaries to use an alternative version of glibc.
+type libPatcher struct {
 	// ld is the absolute path to the new dynamic linker (ld.so).
 	ld string
 
 	// rpath is the new RPATH with the directories containing the new libc
 	// shared objects (libc.so) and other libraries.
 	rpath []string
+
+	// needed are shared libraries to add as dependencies (DT_NEEDED).
+	needed []string
 }
 
-// newGlibcPatcher creates a new glibcPatcher and verifies that it can find the
-// shared object files in glibc.
-func newGlibcPatcher(glibc *packageFS) (*glibcPatcher, error) {
-	patcher := &glibcPatcher{}
-
+// setGlibc configures the patcher to use the dynamic linker and libc libraries
+// in pkg.
+func (p *libPatcher) setGlibc(pkg *packageFS) error {
 	// Verify that we can find a directory with libc in it.
 	glob := "lib*/libc.so*"
-	matches, _ := fs.Glob(glibc, glob)
+	matches, _ := fs.Glob(pkg, glob)
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("cannot find libc.so file matching %q", glob)
+		return fmt.Errorf("cannot find libc.so file matching %q", glob)
 	}
 	for i := range matches {
 		matches[i] = path.Dir(matches[i])
 	}
-	slices.Sort(matches) // pick the shortest name: lib < lib32 < lib64 < libx32
+	// Pick the shortest name: lib < lib32 < lib64 < libx32
+	//
+	// - lib is usually a symlink to the correct arch (e.g., lib -> lib64)
+	// - *.so is usually a symlink to the correct version (e.g., foo.so -> foo.so.2)
+	slices.Sort(matches)
 
-	lib, err := glibc.OSPath(matches[0])
+	lib, err := pkg.OSPath(matches[0])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	patcher.rpath = append(patcher.rpath, lib)
+	p.rpath = append(p.rpath, lib)
 	slog.Debug("found new libc directory", "path", lib)
 
 	// Verify that we can find the new dynamic linker.
 	glob = "lib*/ld-linux*.so*"
-	matches, _ = fs.Glob(glibc, glob)
+	matches, _ = fs.Glob(pkg, glob)
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("cannot find ld.so file matching %q", glob)
+		return fmt.Errorf("cannot find ld.so file matching %q", glob)
 	}
 	slices.Sort(matches)
-	patcher.ld, err = glibc.OSPath(matches[0])
+	p.ld, err = pkg.OSPath(matches[0])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	slog.Debug("found new dynamic linker", "path", patcher.ld)
-
-	return patcher, nil
+	slog.Debug("found new dynamic linker", "path", p.ld)
+	return nil
 }
 
-func (g *glibcPatcher) prependRPATH(libPkg *packageFS) {
+// setGlibc configures the patcher to use the standard C++ and gcc libraries in
+// pkg.
+func (p *libPatcher) setGcc(pkg *packageFS) error {
+	// Verify that we can find a directory with libstdc++.so in it.
+	glob := "lib*/libstdc++.so*"
+	matches, _ := fs.Glob(pkg, glob)
+	if len(matches) == 0 {
+		return fmt.Errorf("cannot find libstdc++.so file matching %q", glob)
+	}
+	for i := range matches {
+		matches[i] = path.Dir(matches[i])
+	}
+	// Pick the shortest name: lib < lib32 < lib64 < libx32
+	//
+	// - lib is usually a symlink to the correct arch (e.g., lib -> lib64)
+	// - *.so is usually a symlink to the correct version (e.g., foo.so -> foo.so.2)
+	slices.Sort(matches)
+
+	lib, err := pkg.OSPath(matches[0])
+	if err != nil {
+		return err
+	}
+	p.rpath = append(p.rpath, lib)
+	p.needed = append(p.needed, "libstdc++.so")
+	slog.Debug("found new libstdc++ directory", "path", lib)
+	return nil
+}
+
+func (p *libPatcher) prependRPATH(libPkg *packageFS) {
 	glob := "lib*/*.so*"
 	matches, _ := fs.Glob(libPkg, glob)
 	if len(matches) == 0 {
@@ -80,13 +112,13 @@ func (g *glibcPatcher) prependRPATH(libPkg *packageFS) {
 			continue
 		}
 	}
-	g.rpath = append(matches, g.rpath...)
+	p.rpath = append(p.rpath, matches...)
 	slog.Debug("prepended package lib dirs to RPATH", "pkg", libPkg.storePath, "dirs", matches)
 }
 
 // patch applies glibc patches to a binary and writes the patched result to
 // outPath. It does not modify the original binary in-place.
-func (g *glibcPatcher) patch(ctx context.Context, path, outPath string) error {
+func (p *libPatcher) patch(ctx context.Context, path, outPath string) error {
 	cmd := &patchelf{PrintInterpreter: true}
 	out, err := cmd.run(ctx, path)
 	if err != nil {
@@ -102,8 +134,9 @@ func (g *glibcPatcher) patch(ctx context.Context, path, outPath string) error {
 	oldRpath := strings.Split(string(out), ":")
 
 	cmd = &patchelf{
-		SetInterpreter: g.ld,
-		SetRPATH:       append(g.rpath, oldRpath...),
+		SetInterpreter: p.ld,
+		SetRPATH:       append(p.rpath, oldRpath...),
+		AddNeeded:      p.needed,
 		Output:         outPath,
 	}
 	slog.Debug("patching glibc on binary",
@@ -123,6 +156,8 @@ type patchelf struct {
 	SetInterpreter   string
 	PrintInterpreter bool
 
+	AddNeeded []string
+
 	Output string
 }
 
@@ -140,6 +175,9 @@ func (p *patchelf) run(ctx context.Context, elf string) ([]byte, error) {
 	}
 	if p.PrintInterpreter {
 		cmd.Args = append(cmd.Args, "--print-interpreter")
+	}
+	for _, needed := range p.AddNeeded {
+		cmd.Args = append(cmd.Args, "--add-needed", needed)
 	}
 	if p.Output != "" {
 		cmd.Args = append(cmd.Args, "--output", p.Output)
