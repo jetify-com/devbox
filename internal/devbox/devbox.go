@@ -848,6 +848,11 @@ func (d *Devbox) AllPackageNamesIncludingRemovedTriggerPackages() []string {
 	return result
 }
 
+func (d *Devbox) AllPackagesIncludingRemovedTriggerPackages() []*devpkg.Package {
+	packages := d.cfg.Packages(true /*includeRemovedTriggerPackages*/)
+	return devpkg.PackagesFromConfig(packages, d.lockfile)
+}
+
 // AllPackages returns the packages that are defined in devbox.json and
 // recursively added by plugins.
 // NOTE: This will not return packages removed by their plugin with the

@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,8 +33,27 @@ func listCmd() *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			for _, p := range box.AllPackageNamesIncludingRemovedTriggerPackages() {
-				fmt.Fprintf(cmd.OutOrStdout(), "* %s\n", p)
+
+			for _, pkg := range box.AllPackagesIncludingRemovedTriggerPackages() {
+				resolvedVersion, err := pkg.ResolvedVersion()
+				if err != nil {
+					// Continue to print the package even if we can't resolve the version
+					// so that the user can see the error for this package, as well as get the
+					// results for the other packages
+					resolvedVersion = "<error resolving version>"
+				}
+				msg := ""
+
+				// Print the resolved version, unless the user has specified a version already
+				if strings.HasSuffix(pkg.Versioned(), "latest") && resolvedVersion != "" {
+					// Runx packages have a "v" prefix (why?). Trim for consistency.
+					resolvedVersion = strings.TrimPrefix(resolvedVersion, "v")
+					msg = fmt.Sprintf("* %s - %s\n", pkg.Versioned(), resolvedVersion)
+				} else {
+					msg = fmt.Sprintf("* %s\n", pkg.Versioned())
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), msg)
+
 			}
 			return nil
 		},
