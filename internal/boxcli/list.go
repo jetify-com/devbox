@@ -52,8 +52,7 @@ func listCmd() *cobra.Command {
 				} else {
 					msg = fmt.Sprintf("* %s\n", pkg.Versioned())
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), msg)
-
+				fmt.Fprint(cmd.OutOrStdout(), msg)
 			}
 			return nil
 		},
