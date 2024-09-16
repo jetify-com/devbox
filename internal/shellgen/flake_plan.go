@@ -106,7 +106,7 @@ func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (gli
 		NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev,
 	}
 	for _, pkg := range packages {
-		if !pkg.PatchGlibc() {
+		if !pkg.Patch {
 			continue
 		}
 
