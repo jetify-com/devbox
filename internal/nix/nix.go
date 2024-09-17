@@ -74,7 +74,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json",
+		cmd := command("print-dev-env", "--json", "--impure",
 			"path:"+flakeDirResolved,
 		)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
