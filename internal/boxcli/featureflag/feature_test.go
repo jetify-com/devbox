@@ -5,8 +5,6 @@ package featureflag
 
 import (
 	"testing"
-
-	"go.jetpack.io/devbox/internal/envir"
 )
 
 func TestEnabledFeature(t *testing.T) {
@@ -28,7 +26,7 @@ func TestDisabledFeature(t *testing.T) {
 func TestEnabledFeatureEnv(t *testing.T) {
 	name := "TestEnabledFeatureEnv"
 	disable(name)
-	t.Setenv(envir.DevboxFeaturePrefix+name, "1")
+	t.Setenv(envNamePrefix+name, "1")
 	if !features[name].Enabled() {
 		t.Errorf("got %s.Enabled() = false, want true.", name)
 	}
