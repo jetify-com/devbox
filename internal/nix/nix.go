@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/mod/semver"
@@ -74,7 +75,11 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json", "--impure",
+		optionalImpureFlag := ""
+		if featureflag.ImpurePrintDevEnv.Enabled() {
+			optionalImpureFlag = "--impure"
+		}
+		cmd := command("print-dev-env", "--json", optionalImpureFlag,
 			"path:"+flakeDirResolved,
 		)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
