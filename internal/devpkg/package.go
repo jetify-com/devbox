@@ -832,3 +832,15 @@ func packageInstallErrorHandler(err error, pkg *Package, installableOrEmpty stri
 
 	return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
 }
+
+func (p *Package) ResolvedVersion() (string, error) {
+	if err := p.resolve(); err != nil {
+		return "", err
+	}
+	lockPackage := p.lockfile.Get(p.Raw)
+	// Flake packages don't have any values in the lockfile
+	if lockPackage == nil {
+		return "", nil
+	}
+	return p.lockfile.Get(p.Raw).Version, nil
+}
