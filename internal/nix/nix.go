@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 	"golang.org/x/mod/semver"
@@ -74,9 +75,11 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json",
-			"path:"+flakeDirResolved,
-		)
+		cmd := command("print-dev-env", "--json")
+		if featureflag.ImpurePrintDevEnv.Enabled() {
+			cmd.Args = append(cmd.Args, "--impure")
+		}
+		cmd.Args = append(cmd.Args, "path:"+flakeDirResolved)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
 		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
