@@ -75,13 +75,11 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	}
 
 	if len(data) == 0 {
-		optionalImpureFlag := ""
+		cmd := command("print-dev-env", "--json")
 		if featureflag.ImpurePrintDevEnv.Enabled() {
-			optionalImpureFlag = "--impure"
+			cmd.Args = append(cmd.Args, "--impure")
 		}
-		cmd := command("print-dev-env", "--json", optionalImpureFlag,
-			"path:"+flakeDirResolved,
-		)
+		cmd.Args = append(cmd.Args, "path:"+flakeDirResolved)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
 		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
