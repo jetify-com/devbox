@@ -96,32 +96,11 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 
 func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) error {
 	if d.RestoreRefs {
-		// Find store path references to build inputs that were removed
-		// from Python.
-		refs, err := d.findRemovedRefs(ctx, pkg)
-		if err != nil {
-			return err
-		}
-
-		// Group the references we want to restore by file path.
-		d.bytePatches = make(map[string][]fileSlice, len(refs))
-		for _, ref := range refs {
-			d.bytePatches[ref.path] = append(d.bytePatches[ref.path], ref)
-		}
-
-		// If any of those references have shared libraries, add them
-		// back to Python's RPATH.
-		if d.glibcPatcher != nil {
-			nixStore := cmp.Or(os.Getenv("NIX_STORE"), "/nix/store")
-			seen := make(map[string]bool)
-			for _, ref := range refs {
-				storePath := filepath.Join(nixStore, string(ref.data))
-				if seen[storePath] {
-					continue
-				}
-				seen[storePath] = true
-				d.glibcPatcher.prependRPATH(newPackageFS(storePath))
-			}
+		if err := d.restoreMissingRefs(ctx, pkg); err != nil {
+			// Don't break the flake build if we're unable to
+			// restore some of the refs. Having some is still an
+			// improvement.
+			slog.ErrorContext(ctx, "unable to restore all removed refs", "err", err)
 		}
 	}
 
@@ -150,6 +129,37 @@ func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) erro
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func (d *DerivationBuilder) restoreMissingRefs(ctx context.Context, pkg *packageFS) error {
+	// Find store path references to build inputs that were removed
+	// from Python.
+	refs, err := d.findRemovedRefs(ctx, pkg)
+	if err != nil {
+		return err
+	}
+
+	// Group the references we want to restore by file path.
+	d.bytePatches = make(map[string][]fileSlice, len(refs))
+	for _, ref := range refs {
+		d.bytePatches[ref.path] = append(d.bytePatches[ref.path], ref)
+	}
+
+	// If any of those references have shared libraries, add them
+	// back to Python's RPATH.
+	if d.glibcPatcher != nil {
+		nixStore := cmp.Or(os.Getenv("NIX_STORE"), "/nix/store")
+		seen := make(map[string]bool)
+		for _, ref := range refs {
+			storePath := filepath.Join(nixStore, string(ref.data))
+			if seen[storePath] {
+				continue
+			}
+			seen[storePath] = true
+			d.glibcPatcher.prependRPATH(newPackageFS(storePath))
+		}
+	}
+	return nil
 }
 
 func (d *DerivationBuilder) copyDir(out *packageFS, path string) error {
