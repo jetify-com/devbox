@@ -5,7 +5,7 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/postgres)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/postgres)
+[![Open In Devbox.sh](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/postgres)
 
 ## Adding Postgres to your Shell
 

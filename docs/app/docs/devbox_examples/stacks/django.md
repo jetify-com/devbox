@@ -4,7 +4,7 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/django)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/stacks/django)
+[![Open In Devbox.sh](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/stacks/django)
 
 ## How to Use
 
