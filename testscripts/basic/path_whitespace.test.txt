@@ -1,0 +1,23 @@
+# Test that Devbox handles whitespace in project paths.
+
+mkdir 'my project'
+cd 'my project'
+
+exec devbox run -- hello
+stdout 'Hello, world!'
+
+exec devbox run -- touch 'file1 with spaces'
+exists 'file1 with spaces'
+
+exec devbox run test
+exists 'file2 with spaces'
+
+-- my project/devbox.json --
+{
+  "packages": ["hello@latest"],
+  "shell": {
+    "scripts": {
+      "test": "touch 'file2 with spaces'"
+    }
+  }
+}
