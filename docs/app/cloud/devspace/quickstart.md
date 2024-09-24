@@ -1,12 +1,12 @@
 ---
-title: Cloudboxes Quickstart
+title: Jetify Devspace Quickstart
 sidebar_position: 1
 hide_title: false
 ---
 
-Jetify Cloudboxes let you spin up reproducible cloud development environments in your browser in seconds. Jetify Cloudboxes are powered by [Devbox](/devbox/docs), so you can run your environment on any machine. You can launch any
+Jetify Devspace let you spin up reproducible cloud development environments in your browser in seconds. Jetify Devspace is powered by [Devbox](/devbox/docs), so you can run your environment on any machine. You can launch any
 
-Let's launch our first Dev Environment with Jetify Cloudboxes.
+Let's launch our first Dev Environment in Jetify Devspace.
 
 ## Step 1: Launch a Sandbox from Github
 
@@ -16,18 +16,19 @@ You can launch any Github Repo in a Jetify Sandbox by prepend the repo URL with:
 https://cloud.jetify.com/new/
 ```
 
-For example, to launch the [Devbox repo](https://github.com/jetify-com/devbox) in Jetify Cloudboxes, open the following URL in your browser
+For example, to launch the [Devbox repo](https://github.com/jetify-com/devbox), open the following URL in your browser
 
   [https://cloud.jetify.com/new/github.com/jetify-com/devbox](https://cloud.jetify.com/new/github.com/jetify-com/devbox)
 
 :::tip
   If you need some inspiration, you can also launch one of our [templates](/devbox/docs/devbox_examples) projects to get started
 :::
-You can also launch a new Sandbox by navigating to your [Dashboard](https://cloud.jetify.com/dashboard) and clicking on the `New Sandbox` button.
 
-## Step 2: Customize your Sandbox with Devbox
+You can also launch a new Devspace by navigating to your [Dashboard](https://cloud.jetify.com/dashboard) and clicking on the `New Devspace` button.
 
-You can customize your Jetify Sandbox with over 100,000 Nix packages in seconds using Devbox.
+## Step 2: Customize your Environment with Devbox
+
+You can customize your Jetify Devspace with over 100,000 Nix packages in seconds using Devbox.
 
 If your project doesn't already have a devbox.json, you can initialize one with:
 
@@ -58,9 +59,9 @@ For further reading on how to install packages with Devbox, see:
 
 ## Step 3: Save your Dev Environment with `devbox.json`
 
-Once you've customized your environment, you can save your Dev Environment config to source control by checking in your `devbox.json` and `devbox.lock` files. These files can be used to recreate your environment on Jetify Cloudboxes, or on any other machine that has devbox installed.
+Once you've customized your environment, you can save your Dev Environment config to source control by checking in your `devbox.json` and `devbox.lock` files. These files can be used to recreate your environment on Jetify Devspace, or on any other machine that has devbox installed.
 
-You can also use this file to configure initilization hooks, scripts, services, and environment variables for your project. For further reading, see:
+You can also use this file to configure initialization hooks, scripts, services, and environment variables for your project. For further reading, see:
 
 * [Devbox Configuration Reference](/devbox/docs/configuration)
 * [Devbox Script](/devbox/docs/guides/scripts)

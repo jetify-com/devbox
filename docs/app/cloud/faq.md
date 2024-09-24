@@ -31,9 +31,9 @@ Jetify Deploys cost $0.10/vCPU per hour while your deployment is scheduled. If y
 
 -->
 
-## What are the specs of the Jetify Cloudboxes?
+## What are the specs of Jetify Devspace?
 
-Jetify Cloudboxes by default have:
+Devspaces by default have:
 
 * 4 Dedicated vCPUs
 * 16 GB of RAM
