@@ -33,8 +33,8 @@ This will install the latest version of MySQL. You can find other installable ve
 
 Devbox will automatically create the following configuration when you run `devbox add mysql80` or `devbox add mysql57`. You can view the full configuration by running `devbox info mysql`
 
-
 ### Services
+
 * mysql
 
 You can use `devbox services up|stop mysql` to start or stop the MySQL Server.

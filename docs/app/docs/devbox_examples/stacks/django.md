@@ -1,10 +1,10 @@
-# Django 
+# Django
 
 This example demonstrates how to configure and run a Django app using Devbox. It installs Python, PostgreSQL, and uses `pip` to install your Python dependencies in a virtual environment.
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/django)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/django)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/stacks/django)
 
 ## How to Use
 
@@ -30,7 +30,6 @@ This example demonstrates how to configure and run a Django app using Devbox. It
    ```
 
    You can also add these lines to your `init_hook` to automatically activate your venv whenever you start your shell
-
 
 ### Setting up the Database
 
@@ -66,4 +65,4 @@ You can now start your Django server by running the following command.
    python todo_project/manage.py runserver
    ```
 
-This should start the development server. 
+This should start the development server.

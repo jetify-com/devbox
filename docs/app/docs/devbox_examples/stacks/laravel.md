@@ -8,7 +8,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/laravel)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/stacks/laravel)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/stacks/laravel)
 
 ## How to Run
 
@@ -27,7 +27,6 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 1. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
 
 1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
-
 
 ## How to Recreate this Example
 

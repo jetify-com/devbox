@@ -6,7 +6,7 @@ NGINX can be automatically configured by Devbox via the built-in NGINX Plugin. T
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/nginx)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/nginx)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/servers/nginx)
 
 ## Adding NGINX to your Shell
 
@@ -23,11 +23,13 @@ This will install the latest version of NGINX. You can find other installable ve
 ## NGINX Plugin Details
 
 ### Services
+
 * nginx
 
 Use `devbox services start|stop nginx` to start and stop the NGINX service in the background
 
 ### Helper Files
+
 The following helper files will be created in your project directory:
 
 * devbox.d/nginx/nginx.conf
@@ -35,11 +37,12 @@ The following helper files will be created in your project directory:
 * devbox.d/nginx/fastcgi.conf
 * devbox.d/web/index.html
 
-Devbox uses [envsubst](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to generate `nginx.conf` from the `nginx.template` file every time Devbox starts a shell, service, or script. This allows you to create an NGINX config using environment variables by modifying `nginx.template`. To edit your NGINX configuration, you should modify the `nginx.template` file. 
+Devbox uses [envsubst](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to generate `nginx.conf` from the `nginx.template` file every time Devbox starts a shell, service, or script. This allows you to create an NGINX config using environment variables by modifying `nginx.template`. To edit your NGINX configuration, you should modify the `nginx.template` file.
 
 Note that by default, NGINX is configured with `./devbox.d/web` as the root directory. To change this, you should modify `./devbox.d/nginx/nginx.template`
 
 ### Environment Variables
+
 ```bash
 NGINX_CONFDIR=devbox.d/nginx/nginx.conf
 NGINX_PATH_PREFIX=.devbox/virtenv/nginx
@@ -47,9 +50,11 @@ NGINX_TMPDIR=.devbox/virtenv/nginx/temp
 ```
 
 ### Notes
+
 You can easily configure NGINX by modifying these env variables in your shell's `init_hook`
 
 To customize:
+
 * Use $NGINX_CONFDIR to change the configuration directory
 * Use $NGINX_LOGDIR to change the log directory
 * Use $NGINX_PIDDIR to change the pid directory

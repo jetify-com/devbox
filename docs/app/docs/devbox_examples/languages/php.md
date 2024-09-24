@@ -6,7 +6,7 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/php/latest)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?examples/development/php/latest)
 
 ## Adding PHP to your Project
 
@@ -15,7 +15,7 @@ Run `devbox add php php83Packages.composer`, or add the following to your `devbo
 ```json
     "packages": [
         "php@latest",
-        "php83Packages.composer@latest
+        "php83Packages.composer@latest"
     ]
 ```
 
@@ -46,6 +46,7 @@ The PHP Plugin will provide the following configuration when you install a PHP r
 ```
 
 ### Services
+
 * php-fpm
 
 Use `devbox services start|stop php-fpm` to start PHP-FPM in the background.

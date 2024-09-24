@@ -6,7 +6,7 @@ Valkey can be configured automatically using Devbox's built in Valkey plugin. Th
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/valkey)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/valkey)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/valkey)
 
 ## Adding Valkey to your shell
 
@@ -35,7 +35,6 @@ Use `devbox services start|stop [service]` to interact with services
 The following helper files will be created in your project directory:
 
 * \{PROJECT_DIR\}/devbox.d/valkey/valkey.conf
-
 
 ### Environment Variables
 

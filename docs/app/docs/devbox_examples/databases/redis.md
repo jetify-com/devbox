@@ -6,7 +6,7 @@ Redis can be configured automatically using Devbox's built in Redis plugin. This
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/redis)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/redis)
+[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/redis)
 
 ## Adding Redis to your shell
 
@@ -35,7 +35,6 @@ Use `devbox services start|stop [service]` to interact with services
 The following helper files will be created in your project directory:
 
 * \{PROJECT_DIR\}/devbox.d/redis/redis.conf
-
 
 ### Environment Variables
 
