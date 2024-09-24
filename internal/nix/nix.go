@@ -23,6 +23,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/nix/flake"
 	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/debug"
@@ -73,13 +74,14 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
 		cmd := command("print-dev-env", "--json")
 		if featureflag.ImpurePrintDevEnv.Enabled() {
 			cmd.Args = append(cmd.Args, "--impure")
 		}
-		cmd.Args = append(cmd.Args, "path:"+flakeDirResolved)
+		cmd.Args = append(cmd.Args, ref)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
 		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {

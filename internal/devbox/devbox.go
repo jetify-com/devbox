@@ -270,7 +270,16 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	// wrap the arg in double-quotes, and escape any double-quotes inside it
+	// wrap the arg in double-quotes, and escape any double-quotes inside it.
+	//
+	// TODO(gcurtis): this breaks quote-removal in parameter expansion,
+	// command substitution, and arithmetic expansion:
+	//
+	//	$ unset x
+	//	$ echo ${x:-"my file"}
+	//	my file
+	//	$ devbox run -- echo '${x:-"my file"}'
+	//	"my file"
 	for idx, arg := range cmdArgs {
 		cmdArgs[idx] = strconv.Quote(arg)
 	}
@@ -278,7 +287,8 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{shellgen.ScriptPath(d.ProjectDir(), cmdName)}, cmdArgs...)
+		script := shellgen.ScriptPath(d.ProjectDir(), cmdName)
+		cmdWithArgs = append([]string{strconv.Quote(script)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
@@ -293,7 +303,8 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)}
+		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
+		cmdWithArgs = []string{strconv.Quote(script)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
