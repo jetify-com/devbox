@@ -3,13 +3,18 @@ package shellgen
 import (
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime/trace"
+	"slices"
 	"strings"
 
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/internal/patchpkg"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 // flakePlan contains the data to populate the top level flake.nix file
@@ -87,6 +92,12 @@ type glibcPatchFlake struct {
 	Outputs struct {
 		Packages map[string]map[string]string
 	}
+
+	// Dependencies is set of extra packages that are dependencies of the
+	// patched packages. For example, a patched Python interpreter might
+	// need CUDA packages, but the CUDA packages themselves don't need
+	// patching.
+	Dependencies []string
 }
 
 func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (glibcPatchFlake, error) {
@@ -106,43 +117,123 @@ func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (gli
 		NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev,
 	}
 	for _, pkg := range packages {
+		// Check to see if this is a CUDA package. If so, we need to add
+		// it to the flake dependencies so that we can patch other
+		// packages to reference it (like Python).
+		relAttrPath, err := flake.systemRelativeAttrPath(pkg)
+		if err != nil {
+			return glibcPatchFlake{}, err
+		}
+		if strings.HasPrefix(relAttrPath, "cudaPackages") {
+			if err := flake.addDependency(pkg); err != nil {
+				return glibcPatchFlake{}, err
+			}
+		}
+
 		if !pkg.Patch {
 			continue
 		}
-
-		err := flake.addPackageOutput(pkg)
-		if err != nil {
+		if err := flake.addOutput(pkg); err != nil {
 			return glibcPatchFlake{}, err
 		}
 	}
 	return flake, nil
 }
 
-func (g *glibcPatchFlake) addPackageOutput(pkg *devpkg.Package) error {
+// addInput adds a flake input that provides pkg.
+func (g *glibcPatchFlake) addInput(pkg *devpkg.Package) error {
 	if g.Inputs == nil {
 		g.Inputs = make(map[string]string)
 	}
-	inputName := pkg.FlakeInputName()
-	g.Inputs[inputName] = pkg.URLForFlakeInput()
-
-	attrPath, err := pkg.FullPackageAttributePath()
+	installable, err := pkg.FlakeInstallable()
 	if err != nil {
 		return err
 	}
-	// Remove the legacyPackages.<system> prefix.
-	outputName := strings.SplitN(attrPath, ".", 3)[2]
+	inputName := pkg.FlakeInputName()
+	g.Inputs[inputName] = installable.Ref.String()
+	return nil
+}
 
+// addOutput adds a flake output that provides the patched version of pkg.
+func (g *glibcPatchFlake) addOutput(pkg *devpkg.Package) error {
+	if err := g.addInput(pkg); err != nil {
+		return err
+	}
+
+	relAttrPath, err := g.systemRelativeAttrPath(pkg)
+	if err != nil {
+		return err
+	}
 	if g.Outputs.Packages == nil {
 		g.Outputs.Packages = map[string]map[string]string{nix.System(): {}}
 	}
 	if cached, err := pkg.IsInBinaryCache(); err == nil && cached {
 		if expr, err := g.fetchClosureExpr(pkg); err == nil {
-			g.Outputs.Packages[nix.System()][outputName] = expr
+			g.Outputs.Packages[nix.System()][relAttrPath] = expr
 			return nil
 		}
 	}
-	g.Outputs.Packages[nix.System()][outputName] = strings.Join([]string{"pkgs", inputName, nix.System(), outputName}, ".")
+
+	inputAttrPath, err := g.inputRelativeAttrPath(pkg)
+	if err != nil {
+		return err
+	}
+	g.Outputs.Packages[nix.System()][relAttrPath] = inputAttrPath
 	return nil
+}
+
+// addDependency adds pkg to the derivation's patchDependencies attribute,
+// making it available at patch build-time.
+func (g *glibcPatchFlake) addDependency(pkg *devpkg.Package) error {
+	if err := g.addInput(pkg); err != nil {
+		return err
+	}
+	inputAttrPath, err := g.inputRelativeAttrPath(pkg)
+	if err != nil {
+		return err
+	}
+
+	installable, err := pkg.FlakeInstallable()
+	if err != nil {
+		return err
+	}
+	switch installable.Outputs {
+	case flake.DefaultOutputs:
+		expr := "selectDefaultOutputs " + inputAttrPath
+		g.Dependencies = append(g.Dependencies, expr)
+	case flake.AllOutputs:
+		expr := "selectAllOutputs " + inputAttrPath
+		g.Dependencies = append(g.Dependencies, expr)
+	default:
+		expr := fmt.Sprintf("selectOutputs %s %q", inputAttrPath, installable.SplitOutputs())
+		g.Dependencies = append(g.Dependencies, expr)
+	}
+	return nil
+}
+
+// systemRelativeAttrPath strips any leading "legacyPackages.<system>" prefix
+// from a package's attribute path.
+func (g *glibcPatchFlake) systemRelativeAttrPath(pkg *devpkg.Package) (string, error) {
+	installable, err := pkg.FlakeInstallable()
+	if err != nil {
+		return "", err
+	}
+	if strings.HasPrefix(installable.AttrPath, "legacyPackages") {
+		// Remove the legacyPackages.<system> prefix.
+		return strings.SplitN(installable.AttrPath, ".", 3)[2], nil
+	}
+	return installable.AttrPath, nil
+}
+
+// inputRelativeAttrPath joins the package's corresponding flake input with its
+// attribute path.
+func (g *glibcPatchFlake) inputRelativeAttrPath(pkg *devpkg.Package) (string, error) {
+	relAttrPath, err := g.systemRelativeAttrPath(pkg)
+	if err != nil {
+		return "", err
+	}
+	atrrPath := strings.Join([]string{"pkgs", pkg.FlakeInputName(), nix.System(), relAttrPath}, ".")
+	return atrrPath, nil
 }
 
 // TODO: this only handles the first store path, but we should handle all of them
@@ -162,5 +253,46 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 }
 
 func (g *glibcPatchFlake) writeTo(dir string) error {
+	wantCUDA := slices.ContainsFunc(g.Dependencies, func(dep string) bool {
+		return strings.Contains(dep, "cudaPackages")
+	})
+	if wantCUDA {
+		slog.Debug("found CUDA package in devbox environment, attempting to find system driver libraries")
+
+		libDir := filepath.Join(dir, "lib")
+		if err := os.MkdirAll(libDir, 0o755); err != nil {
+			return err
+		}
+
+		// Look for the system's CUDA driver library and copy it into
+		// the flake directory.
+		for lib := range patchpkg.SystemCUDALibraries {
+			slog.Debug("found system CUDA library", "path", lib)
+
+			src, err := os.Open(lib)
+			if err != nil {
+				slog.Error("can't open system CUDA library, searching for another", "err", err)
+				continue
+			}
+			defer src.Close()
+
+			dst, err := os.Create(filepath.Join(libDir, filepath.Base(lib)))
+			if err != nil {
+				slog.Error("can't create copy of system CUDA library in flake directory", "err", err)
+				break
+			}
+			defer dst.Close()
+
+			_, err = io.Copy(dst, src)
+			if err != nil {
+				slog.Error("can't copy system CUDA library, searching for another", "err", err)
+				continue
+			}
+			if err := dst.Close(); err == nil {
+				slog.Debug("copied system CUDA library to flake directory", "src", src.Name(), "dst", dst.Name())
+				break
+			}
+		}
+	}
 	return writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
 }

@@ -1,0 +1,329 @@
+# Python Patch CUDA Test
+#
+# Install TensorFlow as a binary wheel using pip and verify that it's able to
+# use CUDA.
+#
+# Nix is unable to install the CUDA driver and driver library (libcuda.so) on
+# non-NixOS distros. Even when they're installed via the system's package
+# manager, Nix-built binaries are unable to find them.
+#
+# Devbox attempts to find those system libraries, copy them to the Nix store,
+# and patch the DT_NEEDED section of the Python binary so it can find them.
+
+[!env:DEVBOX_RUN_FAILING_TESTS] skip 'this test requires a CUDA-enabled GPU'
+
+exec devbox install
+
+# pip install tensorflow
+exec devbox run venv -- pip install tf_nightly==2.18.0.dev20240910
+stdout 'Successfully installed.* tf_nightly-2.18.0.dev20240910'
+
+# run a python test script that prints the tensorflow devices and check that a
+# GPU is found.
+exec devbox run -e LD_DEBUG=files,libs,versions -e LD_DEBUG_OUTPUT=lddebug venv -- python main.py
+stdout 'TensorFlow Version: 2.18.0-dev20240910'
+stdout 'CUDA Built with: 12.3.2'
+stdout 'cuDNN Built with: 9'
+stdout 'Device: /device:GPU:\d+'
+! stderr 'libstdc\+\+\.so\.6: cannot open shared object file: No such file or directory'
+! stderr 'Could not find cuda drivers on your machine, GPU will not be used.'
+
+-- main.py --
+import tensorflow as tf
+
+print("TensorFlow Version:", tf.__version__)
+print("CUDA Built with:", tf.sysconfig.get_build_info()["cuda_version"])
+print("cuDNN Built with:", tf.sysconfig.get_build_info()["cudnn_version"])
+
+from tensorflow.python.client import device_lib
+
+for device in device_lib.list_local_devices():
+    if device.device_type == 'GPU':
+        print(f"Device: {device.name}")
+        print(f"  Type: {device.device_type}")
+        print(f"  Memory Limit: {device.memory_limit / (1024**3):.2f} GB")
+        print(f"  Description: {device.physical_device_desc}\n")
+
+-- devbox.json --
+{
+  "packages": {
+    "python":                   "latest",
+    "cudaPackages.cudatoolkit": "latest",
+    "cudaPackages.cuda_cudart": {"version": "latest", "outputs": ["lib"]},
+    "cudaPackages.cudnn":       {"version": "latest", "outputs": ["lib"]},
+    "cudaPackages.libcublas":   {"version": "latest", "outputs": ["lib"]}
+  },
+  "env": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PIP_NO_CACHE_DIR":              "1",
+    "PIP_NO_INPUT":                  "1",
+    "PIP_NO_PYTHON_VERSION_WARNING": "1",
+    "PIP_ONLY_BINARY":               "tf_nightly",
+    "PIP_PROGRESS_BAR":              "off",
+    "PIP_REQUIRE_VIRTUALENV":        "1",
+    "PIP_ROOT_USER_ACTION":          "ignore",
+    "TF_CPP_MIN_LOG_LEVEL":          "0"
+  },
+  "shell": {
+    "scripts": {
+      "venv": ". $VENV_DIR/bin/activate && \"$@\""
+    }
+  }
+}
+
+
+-- devbox.lock --
+{
+  "lockfile_version": "1",
+  "packages": {
+    "cudaPackages.cuda_cudart@latest": {
+      "last_modified": "2024-09-20T05:11:28Z",
+      "resolved": "github:NixOS/nixpkgs/79454ee9aacc9714653a4e7eb2a52b717728caff#cudaPackages.cuda_cudart",
+      "source": "devbox-search",
+      "version": "12.4.99",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/iq0qdg5810zvhr490wlzpbj6nqj7v3w9-cuda_cudart-12.4.99",
+              "default": true
+            },
+            {
+              "name": "stubs",
+              "path": "/nix/store/p3dyhp4wbizigkhz19shf74yv1q02pnz-cuda_cudart-12.4.99-stubs"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/fi1rpc8qym035bx0sfm1avpfmiwflvf0-cuda_cudart-12.4.99-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/m2ziw7vwj9wjw6ms0c929qqvmw2040hb-cuda_cudart-12.4.99-lib"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/8k0mfk5530xsd6ln1pvpdlskfvkbijzn-cuda_cudart-12.4.99-static"
+            }
+          ],
+          "store_path": "/nix/store/iq0qdg5810zvhr490wlzpbj6nqj7v3w9-cuda_cudart-12.4.99"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/lss47wk7xb7fx2p80z4hfzra1awrhizf-cuda_cudart-12.4.99",
+              "default": true
+            },
+            {
+              "name": "stubs",
+              "path": "/nix/store/p6ca6q92i6fnj9gl9cqj81v1v2r0svix-cuda_cudart-12.4.99-stubs"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/38aycjz9r5y1fdn7wy89jcyinag1qb1p-cuda_cudart-12.4.99-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/jzp0hpr9avl6i7gkx19dz59xirp0q7m2-cuda_cudart-12.4.99-lib"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/w86y50a4m33l57aw2a6acprc1m2ynpm8-cuda_cudart-12.4.99-static"
+            }
+          ],
+          "store_path": "/nix/store/lss47wk7xb7fx2p80z4hfzra1awrhizf-cuda_cudart-12.4.99"
+        }
+      }
+    },
+    "cudaPackages.cudatoolkit@latest": {
+      "last_modified": "2024-09-10T15:01:03Z",
+      "resolved": "github:NixOS/nixpkgs/5ed627539ac84809c78b2dd6d26a5cebeb5ae269#cudaPackages.cudatoolkit",
+      "source": "devbox-search",
+      "version": "12.4",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/p2dga6q4kclqrg8fbppm8v0swi9438dd-cuda-merged-12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/p2dga6q4kclqrg8fbppm8v0swi9438dd-cuda-merged-12.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6y5smq0gvqvwsarlmqnn7x6w40098yg6-cuda-merged-12.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/6y5smq0gvqvwsarlmqnn7x6w40098yg6-cuda-merged-12.4"
+        }
+      }
+    },
+    "cudaPackages.cudnn@latest": {
+      "last_modified": "2024-09-19T11:39:46Z",
+      "resolved": "github:NixOS/nixpkgs/268bb5090a3c6ac5e1615b38542a868b52ef8088#cudaPackages.cudnn",
+      "source": "devbox-search",
+      "version": "9.3.0.75",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/xxissjyczq2dvb1cwars5dygny0701a1-cudnn-9.3.0.75",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/5fgcg8yaz5c5bdkgh52h4kqf5i76x16v-cudnn-9.3.0.75-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/x36hqzpz3q28rbmrd45l5llag9nibn25-cudnn-9.3.0.75-lib"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/f9v3gjzc861jw48lqilgysj9clmiab3b-cudnn-9.3.0.75-static"
+            }
+          ],
+          "store_path": "/nix/store/xxissjyczq2dvb1cwars5dygny0701a1-cudnn-9.3.0.75"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kb14br97pimdmx43xdkaqdlxj7gih2ap-cudnn-9.3.0.75",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/v94m7vd9wczw72gnwvkx7iqvdqq5wmjb-cudnn-9.3.0.75-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/gzh9l8q8v35lvgp8ywmbna9njz5zw2k8-cudnn-9.3.0.75-lib"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/3c5hc4q6gaf99pgsrc6n4ylzg4k2c2nn-cudnn-9.3.0.75-static"
+            }
+          ],
+          "store_path": "/nix/store/kb14br97pimdmx43xdkaqdlxj7gih2ap-cudnn-9.3.0.75"
+        }
+      }
+    },
+    "cudaPackages.libcublas@latest": {
+      "last_modified": "2024-09-20T22:35:44Z",
+      "resolved": "github:NixOS/nixpkgs/a1d92660c6b3b7c26fb883500a80ea9d33321be2#cudaPackages.libcublas",
+      "source": "devbox-search",
+      "version": "12.4.2.65",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3744yg0pfywwz0l4n5n9hhsg0h61i3j9-libcublas-12.4.2.65",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/ysmhl62cdag39gvm612vv6cb7aph5var-libcublas-12.4.2.65-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/g59p0ml3v53bzag7qzfndhxjvjyscvqr-libcublas-12.4.2.65-lib"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/gm716qm8m7syh2gbcrv7k3qjyjj4gyal-libcublas-12.4.2.65-static"
+            }
+          ],
+          "store_path": "/nix/store/3744yg0pfywwz0l4n5n9hhsg0h61i3j9-libcublas-12.4.2.65"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/zk22yb9jdhnzvfyar58390bq2kimxm41-libcublas-12.4.2.65",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/f4jdxn797sr8bwcxb3q21rrwxb5g784c-libcublas-12.4.2.65-static"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/8s8a7ilxi8h9yamq63ddsmjkhn5jnf5n-libcublas-12.4.2.65-dev"
+            },
+            {
+              "name": "lib",
+              "path": "/nix/store/gj56jqxsgmvzgf9kdnbhciw5p48h78lb-libcublas-12.4.2.65-lib"
+            }
+          ],
+          "store_path": "/nix/store/zk22yb9jdhnzvfyar58390bq2kimxm41-libcublas-12.4.2.65"
+        }
+      }
+    },
+    "python@latest": {
+      "last_modified": "2024-08-31T10:12:23Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/5629520edecb69630a3f4d17d3d33fc96c13f6fe#python3",
+      "source": "devbox-search",
+      "version": "3.12.5",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/75j38g8ii1nqkmpf6sdlj3s5dyah3gas-python3-3.12.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/75j38g8ii1nqkmpf6sdlj3s5dyah3gas-python3-3.12.5"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ajjwc8k8sk3ksrl3dq4fsg83m1j8n8s3-python3-3.12.5",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/9qvs74485a1v5255w2ps0xf4rxww6w89-python3-3.12.5-debug"
+            }
+          ],
+          "store_path": "/nix/store/ajjwc8k8sk3ksrl3dq4fsg83m1j8n8s3-python3-3.12.5"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rv3rj95fxv57c7qwgl43qa7n0fabdy0a-python3-3.12.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rv3rj95fxv57c7qwgl43qa7n0fabdy0a-python3-3.12.5"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pgb120fb7srbh418v4i2a70aq1w9dawd-python3-3.12.5",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/4ws5lqhgsxdpfb924n49ma6ll7i8x0hf-python3-3.12.5-debug"
+            }
+          ],
+          "store_path": "/nix/store/pgb120fb7srbh418v4i2a70aq1w9dawd-python3-3.12.5"
+        }
+      }
+    }
+  }
+}

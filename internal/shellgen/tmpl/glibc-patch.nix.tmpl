@@ -15,7 +15,6 @@
   };
 
   outputs = args@{ self, local-devbox, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
-    {{ with .Outputs -}}
     let
       # Initialize each nixpkgs input into a new attribute set with the
       # schema "pkgs.<input>.<system>.<package>".
@@ -24,7 +23,7 @@
       pkgs = builtins.mapAttrs (name: flake:
         if builtins.hasAttr "legacyPackages" flake then
           {
-            {{- range $system, $_ := .Packages }}
+            {{- range $system, $_ := .Outputs.Packages }}
             {{ $system }} = (import flake {
               system = "{{ $system }}";
               config.allowUnfree = true;
@@ -34,9 +33,19 @@
           }
         else null) args;
 
+      selectDefaultOutputs = drv: selectOutputs drv (drv.meta.outputsToInstall or [ drv.out ]);
+      selectAllOutputs = drv: drv.all;
+      selectOutputs = drv: builtins.map (output: drv.${output});
+
+      patchDependencies = [
+        {{- range .Dependencies }}
+        ({{ . }})
+        {{- end }}
+      ];
+
       patchGlibc = pkg: derivation rec {
-        # The package we're patching.
-        inherit pkg;
+        # The package we're patching and any dependencies the patch needs.
+        inherit pkg patchDependencies;
 
         # Keep the name the same as the package we're patching so that the
         # length of the store path doesn't change. Otherwise patching binaries
@@ -95,6 +104,7 @@
         };
 
         DEVBOX_DEBUG = 1;
+        src = self;
         builder = "${devbox}/bin/devbox";
         args = [ "patch" "--restore-refs" ] ++
           (if glibc != null then [ "--glibc" "${glibc}" ] else [ ]) ++
@@ -103,6 +113,7 @@
       };
     in
     {
+      {{- with .Outputs }}
       packages = {
         {{- range $system, $packages := .Packages }}
         {{ $system }} = {
@@ -118,6 +129,6 @@
         {{ $system }} = nixpkgs-glibc.legacyPackages.{{ $system }}.nixpkgs-fmt;
         {{- end }}
       };
+      {{- end }}
     };
-    {{- end }}
 }
