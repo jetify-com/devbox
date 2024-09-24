@@ -1,7 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"net"
+	"os"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -60,6 +63,34 @@ func getAvailablePort() (int, error) {
 	return 0, errors.New("no available port")
 }
 
+func selectPort(configPort int) (int, error) {
+	if configPort != 0 {
+		return configPort, nil
+	}
+
+	if portStr, exists := os.LookupEnv("PC_PORT_NUM"); exists {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			return 0, fmt.Errorf("invalid PC_PORT_NUM environment variable: %v", err)
+		}
+		if port <= 0 {
+			return 0, fmt.Errorf("invalid PC_PORT_NUM environment variable: ports cannot be less than 0")
+		}
+		return port, nil
+	}
+
+	return getAvailablePort()
+}
+
 func isAllowed(port int) bool {
 	return port > 1024 && disallowedPorts[port] == ""
+}
+
+func isPortAvailable(port int) bool {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return false
+	}
+	ln.Close()
+	return true
 }

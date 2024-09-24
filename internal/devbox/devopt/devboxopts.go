@@ -20,6 +20,7 @@ type Opts struct {
 type ProcessComposeOpts struct {
 	ExtraFlags []string
 	Background bool
+	PCPort     int
 }
 
 type GenerateOpts struct {
