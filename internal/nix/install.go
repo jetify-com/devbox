@@ -47,13 +47,11 @@ func Install(writer io.Writer, daemon *bool) error {
 			installScript += " linux --init none"
 		}
 		installScript += " --no-confirm"
-	} else {
-		if daemon != nil {
-			if *daemon {
-				installScript += " -- --daemon"
-			} else {
-				installScript += " -- --no-daemon"
-			}
+	} else if daemon != nil {
+		if *daemon {
+			installScript += " -- --daemon"
+		} else {
+			installScript += " -- --no-daemon"
 		}
 	}
 
