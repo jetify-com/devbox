@@ -36,16 +36,11 @@ var disallowedPorts = map[int]string{
 
 func getAvailablePort() (int, error) {
 	get := func() (int, error) {
-		addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+		port, err := isPortAvailable(0)
 		if err != nil {
 			return 0, errors.WithStack(err)
 		}
-
-		if isPortAvailable(addr.Port) != nil {
-			return 0, errors.WithStack(err)
-		}
-
-		return addr.Port, nil
+		return port, nil
 	}
 
 	for range 1000 {
@@ -64,7 +59,7 @@ func getAvailablePort() (int, error) {
 
 func selectPort(configPort int) (int, error) {
 	if configPort != 0 {
-		return configPort, isPortAvailable(configPort)
+		return isPortAvailable(configPort)
 	}
 
 	if portStr, exists := os.LookupEnv("DEVBOX_PC_PORT_NUM"); exists {
@@ -75,7 +70,7 @@ func selectPort(configPort int) (int, error) {
 		if port <= 0 {
 			return 0, fmt.Errorf("invalid DEVBOX_PC_PORT_NUM environment variable: ports cannot be less than 0")
 		}
-		return port, isPortAvailable(port)
+		return isPortAvailable(port)
 	}
 
 	return getAvailablePort()
@@ -85,11 +80,11 @@ func isAllowed(port int) bool {
 	return port > 1024 && disallowedPorts[port] == ""
 }
 
-func isPortAvailable(port int) error {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+func isPortAvailable(port int) (int, error) {
+	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
-		return fmt.Errorf("port %d is already in use", port)
+		return 0, fmt.Errorf("port %d is already in use", port)
 	}
-	ln.Close()
-	return nil
+	defer ln.Close()
+	return ln.Addr().(*net.TCPAddr).Port, nil
 }
