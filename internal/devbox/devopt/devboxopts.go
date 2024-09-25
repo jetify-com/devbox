@@ -18,9 +18,9 @@ type Opts struct {
 }
 
 type ProcessComposeOpts struct {
-	ExtraFlags []string
-	Background bool
-	PCPort     int
+	ExtraFlags         []string
+	Background         bool
+	ProcessComposePort int
 }
 
 type GenerateOpts struct {

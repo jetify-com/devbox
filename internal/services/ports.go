@@ -41,12 +41,11 @@ func getAvailablePort() (int, error) {
 			return 0, errors.WithStack(err)
 		}
 
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
+		if isPortAvailable(addr.Port) != nil {
 			return 0, errors.WithStack(err)
 		}
-		defer l.Close()
-		return l.Addr().(*net.TCPAddr).Port, nil
+
+		return addr.Port, nil
 	}
 
 	for range 1000 {
@@ -65,18 +64,18 @@ func getAvailablePort() (int, error) {
 
 func selectPort(configPort int) (int, error) {
 	if configPort != 0 {
-		return configPort, nil
+		return configPort, isPortAvailable(configPort)
 	}
 
-	if portStr, exists := os.LookupEnv("PC_PORT_NUM"); exists {
+	if portStr, exists := os.LookupEnv("DEVBOX_PC_PORT_NUM"); exists {
 		port, err := strconv.Atoi(portStr)
 		if err != nil {
-			return 0, fmt.Errorf("invalid PC_PORT_NUM environment variable: %v", err)
+			return 0, fmt.Errorf("invalid DEVBOX_PC_PORT_NUM environment variable: %v", err)
 		}
 		if port <= 0 {
-			return 0, fmt.Errorf("invalid PC_PORT_NUM environment variable: ports cannot be less than 0")
+			return 0, fmt.Errorf("invalid DEVBOX_PC_PORT_NUM environment variable: ports cannot be less than 0")
 		}
-		return port, nil
+		return port, isPortAvailable(port)
 	}
 
 	return getAvailablePort()
@@ -86,11 +85,11 @@ func isAllowed(port int) bool {
 	return port > 1024 && disallowedPorts[port] == ""
 }
 
-func isPortAvailable(port int) bool {
+func isPortAvailable(port int) error {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return false
+		return fmt.Errorf("port %d is already in use", port)
 	}
 	ln.Close()
-	return true
+	return nil
 }

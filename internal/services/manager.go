@@ -41,10 +41,10 @@ type globalProcessComposeConfig struct {
 }
 
 type ProcessComposeOpts struct {
-	BinPath    string
-	ExtraFlags []string
-	Background bool
-	PCPort     int
+	BinPath            string
+	ExtraFlags         []string
+	Background         bool
+	ProcessComposePort int
 }
 
 func newGlobalProcessComposeConfig() *globalProcessComposeConfig {
@@ -129,13 +129,9 @@ func StartProcessManager(
 	config := readGlobalProcessComposeJSON(configFile)
 	config.File = configFile
 
-	port, err := selectPort(processComposeConfig.PCPort)
+	port, err := selectPort(processComposeConfig.ProcessComposePort)
 	if err != nil {
 		return fmt.Errorf("failed to select port: %v", err)
-	}
-
-	if !isPortAvailable(port) {
-		return fmt.Errorf("port %d is already in use", port)
 	}
 
 	// Start building the process-compose command
