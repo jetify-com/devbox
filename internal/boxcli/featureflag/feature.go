@@ -43,13 +43,6 @@ func enable(name string) *feature {
 	return features[name]
 }
 
-func cicdOnly(name string) *feature {
-	if os.Getenv("CI") != "" || os.Getenv("CIRCLECI") != "" || os.Getenv("GITHUB_ACTIONS") != "" {
-		enable(name)
-	}
-	return disable(name)
-}
-
 var logMap = map[string]bool{}
 
 func (f *feature) Enabled() bool {

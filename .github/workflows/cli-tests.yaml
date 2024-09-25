@@ -183,6 +183,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13]
+        use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -197,6 +198,7 @@ jobs:
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
+          export DEVBOX_FEATURE_DETSYS_INSTALLER=${{ matrix.use-detsys }}
 
           # Setup github authentication to ensure Github's rate limits are not hit.
           # If this works, we can consider refactoring this into a reusable github action helper.
