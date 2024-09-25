@@ -29,7 +29,7 @@ const rootError = "warning: installing Nix as root is not supported by this scri
 
 // Install runs the install script for Nix. daemon has 3 states
 // nil is unset. false is --no-daemon. true is --daemon.
-func Install(writer io.Writer, daemon *bool) error {
+func Install(writer io.Writer, daemon func() *bool) error {
 	if isRoot() && build.OS() == build.OSWSL {
 		return usererr.New("Nix cannot be installed as root on WSL. Please run as a normal user with sudo access.")
 	}
@@ -44,11 +44,15 @@ func Install(writer io.Writer, daemon *bool) error {
 		// Should we pin version? Or just trust detsys
 		installScript = "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install"
 		if isLinuxWithoutSystemd() {
+			ux.Fwarningf(
+				writer,
+				"Could not detect systemd on your system. Installing Nix in root only mode (--init none).\n",
+			)
 			installScript += " linux --init none"
 		}
 		installScript += " --no-confirm"
 	} else if daemon != nil {
-		if *daemon {
+		if *daemon() {
 			installScript += " -- --daemon"
 		} else {
 			installScript += " -- --no-daemon"
@@ -165,7 +169,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 		fmt.Scanln() //nolint:errcheck
 	}
 
-	if err = Install(writer, withDaemonFunc()); err != nil {
+	if err = Install(writer, withDaemonFunc); err != nil {
 		return err
 	}
 

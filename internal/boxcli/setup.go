@@ -49,7 +49,7 @@ func runInstallNixCmd(cmd *cobra.Command) error {
 		)
 		return nil
 	}
-	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd)())
+	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
 // ensureNixInstalled verifies that nix is installed and that it is of a supported version
