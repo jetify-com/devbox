@@ -16,6 +16,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 
+	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
@@ -28,7 +29,7 @@ const rootError = "warning: installing Nix as root is not supported by this scri
 
 // Install runs the install script for Nix. daemon has 3 states
 // nil is unset. false is --no-daemon. true is --daemon.
-func Install(writer io.Writer, daemon *bool) error {
+func Install(writer io.Writer, daemonFn func() *bool) error {
 	if isRoot() && build.OS() == build.OSWSL {
 		return usererr.New("Nix cannot be installed as root on WSL. Please run as a normal user with sudo access.")
 	}
@@ -39,7 +40,18 @@ func Install(writer io.Writer, daemon *bool) error {
 	defer r.Close()
 
 	installScript := "curl -L https://releases.nixos.org/nix/nix-2.24.7/install | sh -s"
-	if daemon != nil {
+	if featureflag.UseDetSysInstaller.Enabled() {
+		// Should we pin version? Or just trust detsys
+		installScript = "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install"
+		if isLinuxWithoutSystemd() {
+			ux.Fwarningf(
+				writer,
+				"Could not detect systemd on your system. Installing Nix in root only mode (--init none).\n",
+			)
+			installScript += " linux --init none"
+		}
+		installScript += " --no-confirm"
+	} else if daemon := daemonFn(); daemon != nil {
 		if *daemon {
 			installScript += " -- --daemon"
 		} else {
@@ -157,7 +169,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 		fmt.Scanln() //nolint:errcheck
 	}
 
-	if err = Install(writer, withDaemonFunc()); err != nil {
+	if err = Install(writer, withDaemonFunc); err != nil {
 		return err
 	}
 
@@ -168,4 +180,15 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 
 	fmt.Fprintln(writer, "Nix installed successfully. Devbox is ready to use!")
 	return nil
+}
+
+func isLinuxWithoutSystemd() bool {
+	if build.OS() != build.OSLinux {
+		return false
+	}
+	// My best interpretation of https://github.com/DeterminateSystems/nix-installer/blob/66ad2759a3ecb6da345373e3c413c25303305e25/src/action/common/configure_init_service.rs#L108-L118
+	if _, err := os.Stat("/run/systemd/system"); errors.Is(err, os.ErrNotExist) {
+		return true
+	}
+	return !cmdutil.Exists("systemctl")
 }
