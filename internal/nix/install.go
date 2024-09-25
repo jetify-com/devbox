@@ -29,7 +29,7 @@ const rootError = "warning: installing Nix as root is not supported by this scri
 
 // Install runs the install script for Nix. daemon has 3 states
 // nil is unset. false is --no-daemon. true is --daemon.
-func Install(writer io.Writer, daemon func() *bool) error {
+func Install(writer io.Writer, daemonFn func() *bool) error {
 	if isRoot() && build.OS() == build.OSWSL {
 		return usererr.New("Nix cannot be installed as root on WSL. Please run as a normal user with sudo access.")
 	}
@@ -51,8 +51,8 @@ func Install(writer io.Writer, daemon func() *bool) error {
 			installScript += " linux --init none"
 		}
 		installScript += " --no-confirm"
-	} else if daemon != nil {
-		if *daemon() {
+	} else if daemon := daemonFn(); daemon != nil {
+		if *daemon {
 			installScript += " -- --daemon"
 		} else {
 			installScript += " -- --no-daemon"
