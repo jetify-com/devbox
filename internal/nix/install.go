@@ -39,7 +39,7 @@ func Install(writer io.Writer, daemon *bool) error {
 	}
 	defer r.Close()
 
-	installScript := "curl -L https://releases.nixos.org/nix/nix-2.18.1/install | sh -s"
+	installScript := "curl -L https://releases.nixos.org/nix/nix-2.24.7/install | sh -s"
 	if featureflag.UseDetSysInstaller.Enabled() {
 		// Should we pin version? Or just trust detsys
 		installScript = "curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install"
