@@ -3,6 +3,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"text/tabwriter"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -217,6 +218,9 @@ func (d *Devbox) StartProcessManager(
 		for _, flag := range processComposeOpts.ExtraFlags {
 			args = append(args, "--pcflags", flag)
 		}
+		if processComposeOpts.ProcessComposePort != 0 {
+			args = append(args, "--pcport", strconv.Itoa(processComposeOpts.ProcessComposePort))
+		}
 
 		return d.runDevboxServicesScript(ctx, args)
 	}
@@ -254,9 +258,10 @@ func (d *Devbox) StartProcessManager(
 		svcs,
 		d.projectDir,
 		services.ProcessComposeOpts{
-			BinPath:    processComposeBinPath,
-			Background: processComposeOpts.Background,
-			ExtraFlags: processComposeOpts.ExtraFlags,
+			BinPath:            processComposeBinPath,
+			Background:         processComposeOpts.Background,
+			ExtraFlags:         processComposeOpts.ExtraFlags,
+			ProcessComposePort: processComposeOpts.ProcessComposePort,
 		},
 	)
 }

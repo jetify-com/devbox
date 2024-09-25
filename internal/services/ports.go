@@ -1,7 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"net"
+	"os"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -33,17 +36,11 @@ var disallowedPorts = map[int]string{
 
 func getAvailablePort() (int, error) {
 	get := func() (int, error) {
-		addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+		port, err := isPortAvailable(0)
 		if err != nil {
 			return 0, errors.WithStack(err)
 		}
-
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			return 0, errors.WithStack(err)
-		}
-		defer l.Close()
-		return l.Addr().(*net.TCPAddr).Port, nil
+		return port, nil
 	}
 
 	for range 1000 {
@@ -60,6 +57,34 @@ func getAvailablePort() (int, error) {
 	return 0, errors.New("no available port")
 }
 
+func selectPort(configPort int) (int, error) {
+	if configPort != 0 {
+		return isPortAvailable(configPort)
+	}
+
+	if portStr, exists := os.LookupEnv("DEVBOX_PC_PORT_NUM"); exists {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			return 0, fmt.Errorf("invalid DEVBOX_PC_PORT_NUM environment variable: %v", err)
+		}
+		if port <= 0 {
+			return 0, fmt.Errorf("invalid DEVBOX_PC_PORT_NUM environment variable: ports cannot be less than 0")
+		}
+		return isPortAvailable(port)
+	}
+
+	return getAvailablePort()
+}
+
 func isAllowed(port int) bool {
 	return port > 1024 && disallowedPorts[port] == ""
+}
+
+func isPortAvailable(port int) (int, error) {
+	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		return 0, fmt.Errorf("port %d is already in use", port)
+	}
+	defer ln.Close()
+	return ln.Addr().(*net.TCPAddr).Port, nil
 }
