@@ -353,10 +353,14 @@ func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error 
 		slog.DebugContext(ctx, "added DT_NEEDED entry for system CUDA library", "path", need)
 	}
 
-	slog.DebugContext(ctx, "looking for nix CUDA libraries in $patchDependencies")
+	slog.DebugContext(ctx, "looking for nix libraries in $patchDependencies")
 	deps := os.Getenv("patchDependencies")
+	if strings.TrimSpace(deps) == "" {
+		slog.DebugContext(ctx, "$patchDependencies is empty")
+		return nil
+	}
 	for _, pkg := range strings.Split(deps, " ") {
-		slog.DebugContext(ctx, "checking for nix CUDA libraries in package", "pkg", pkg)
+		slog.DebugContext(ctx, "checking for nix libraries in package", "pkg", pkg)
 
 		pkgFS := newPackageFS(pkg)
 		libs, err := fs.Glob(pkgFS, "lib*/*.so*")
@@ -375,7 +379,7 @@ func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error 
 			}
 			d.glibcPatcher.needed = append(d.glibcPatcher.needed, need)
 
-			slog.DebugContext(ctx, "added DT_NEEDED entry for nix CUDA library", "path", need)
+			slog.DebugContext(ctx, "added DT_NEEDED entry for nix library", "path", need)
 		}
 	}
 	return nil
