@@ -1,10 +1,10 @@
 ---
-title: Sharing Config and Secrets with Projects
+title: Sharing Devspace
 sidebar_position: 4
 hide_title: false
 ---
 
-**Jetify Projects** are a great way to share configuration and secrets with your team. A project can store repository settings and secrets that are shared across all Devspace users in the project. For example, you can configure a project for a Backend API with the database parameters, API keys, and other secrets. When a user launches a Sandbox in the project, they will automatically have access to the project's configuration and secrets.
+**Jetify Projects** are a great way to share configuration and secrets with your team. A project can store repository settings and secrets that are shared across all Devspace users in the project. For example, you can configure a project for a Backend API with the database parameters, API keys, and other secrets. When a user launches Jetify Devspace in the project, they will automatically have access to the project's configuration and secrets.
 
 ## Creating a Project
 
@@ -18,9 +18,9 @@ To create a project:
 
 Once the project is linked to a repository, developers can automatically create a new Sandbox for that repository by navigating to the project and clicking on the `New Sandbox` button.
 
-## Sharing Secrets across Sandboxes
+## Sharing Secrets 
 
-Jetify Projects can store secrets with Jetify Secrets that are shared across all Devspaces in the project. New Jetify Devspace instance will automatically use the `dev` namespace when accessing secrets.
+Jetify Projects can store secrets with Jetify Secrets that are shared across all Devspaces in the project. New Jetify Devspace instances will automatically use the `dev` namespace when accessing secrets.
 
 To add a secret to a project:
 

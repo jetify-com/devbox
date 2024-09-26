@@ -8,9 +8,9 @@ hide_title: false
 
 Jetify Devspace is a cloud-based development environment that can be customized and preconfigured using Devbox. Your Devspace is fully managed by Jetify, so you don't need to worry about setting up servers or infrastructure to get started.
 
-## What size instances are available for Jetify Sandboxes?
+## What size instances are available for Jetify Devspace?
 
-Currently, all Jetify Sandboxes are configured with the following default specs:
+Currently, all Jetify Devspace are configured with the following default specs:
 
 * 4 vCPUs
 * 16 GB RAM
