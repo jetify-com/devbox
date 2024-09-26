@@ -33,8 +33,17 @@
           }
         else null) args;
 
+      # selectDefaultOutputs takes a derivation and returns a list of its
+      # default outputs.
       selectDefaultOutputs = drv: selectOutputs drv (drv.meta.outputsToInstall or [ drv.out ]);
+
+      # selectAllOutputs takes a derivation and returns all of its outputs (^*).
       selectAllOutputs = drv: drv.all;
+
+      # selectOutputs takes a derivation and a list of output names, and returns
+      # those outputs.
+      #
+      # Example: selectOutputs nixpkgs#foo [ "out", "lib" ]
       selectOutputs = drv: builtins.map (output: drv.${output});
 
       patchDependencies = [
