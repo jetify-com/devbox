@@ -3,7 +3,6 @@ package shellgen
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -252,46 +251,54 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 }`, "devpkg.BinaryCache", storePaths[0]), nil
 }
 
+// copySystemCUDALib searches for the system's libcuda.so shared library and
+// copies it in the flake's lib directory.
+func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
+	slog.Debug("found CUDA package in devbox environment, attempting to find system driver libraries")
+
+	searchPath := slices.Concat(
+		patchpkg.EnvLDLibrarySearchPath,
+		patchpkg.EnvLibrarySearchPath,
+		patchpkg.SystemLibSearchPaths,
+		patchpkg.CUDALibSearchPaths,
+	)
+	for lib := range patchpkg.FindSharedLibrary("libcuda.so", searchPath...) {
+		logger := slog.With("lib", lib)
+		logger.Debug("found potential system CUDA library")
+
+		stat, err := lib.Stat()
+		if err != nil {
+			logger.Error("skipping system CUDA library because of stat error", "err", err)
+		}
+		const mib = 1 << 20
+		if stat.Size() < 1*mib {
+			logger.Debug("skipping system CUDA library because it looks like a stub (size < 1 MiB)", "size", stat.Size())
+			continue
+		}
+		if lib.Soname == "" {
+			logger.Debug("skipping system CUDA library because it's missing a soname")
+			continue
+		}
+
+		libDir := filepath.Join(flakeDir, "lib")
+		if err := lib.CopyAndLink(libDir); err == nil {
+			slog.Debug("copied system CUDA library to flake directory", "dst", libDir)
+		} else {
+			slog.Error("can't copy system CUDA library to flake directory", "err", err)
+		}
+		return err
+	}
+	return fmt.Errorf("can't find the system CUDA library")
+}
+
 func (g *glibcPatchFlake) writeTo(dir string) error {
 	wantCUDA := slices.ContainsFunc(g.Dependencies, func(dep string) bool {
 		return strings.Contains(dep, "cudaPackages")
 	})
 	if wantCUDA {
-		slog.Debug("found CUDA package in devbox environment, attempting to find system driver libraries")
-
-		libDir := filepath.Join(dir, "lib")
-		if err := os.MkdirAll(libDir, 0o755); err != nil {
-			return err
-		}
-
-		// Look for the system's CUDA driver library and copy it into
-		// the flake directory.
-		for lib := range patchpkg.SystemCUDALibraries {
-			slog.Debug("found system CUDA library", "path", lib)
-
-			src, err := os.Open(lib)
-			if err != nil {
-				slog.Error("can't open system CUDA library, searching for another", "err", err)
-				continue
-			}
-			defer src.Close()
-
-			dst, err := os.Create(filepath.Join(libDir, filepath.Base(lib)))
-			if err != nil {
-				slog.Error("can't create copy of system CUDA library in flake directory", "err", err)
-				break
-			}
-			defer dst.Close()
-
-			_, err = io.Copy(dst, src)
-			if err != nil {
-				slog.Error("can't copy system CUDA library, searching for another", "err", err)
-				continue
-			}
-			if err := dst.Close(); err == nil {
-				slog.Debug("copied system CUDA library to flake directory", "src", src.Name(), "dst", dst.Name())
-				break
-			}
+		err := g.copySystemCUDALib(dir)
+		if err != nil {
+			slog.Debug("error copying system libcuda.so to flake", "dir", dir)
 		}
 	}
 	return writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
