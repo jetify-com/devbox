@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"iter"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -79,4 +81,98 @@ func searchEnv(re *regexp.Regexp) string {
 		}
 	}
 	return ""
+}
+
+// SystemCUDALibraries returns an iterator over the system CUDA library paths.
+// It yields them in priority order, where the first path is the most likely to
+// be the correct version.
+var SystemCUDALibraries iter.Seq[string] = func(yield func(string) bool) {
+	// Quick overview of Unix-like shared object versioning.
+	//
+	// Libraries have 3 different names (using libcuda as an example):
+	//
+	//  1. libcuda.so - the "linker name". Typically a symlink pointing to
+	//     the soname. The compiler looks for this name.
+	//  2. libcuda.so.1 - the "soname". Typically a symlink pointing to the
+	//     real name. The dynamic linker looks for this name.
+	//  3. libcuda.so.550.107.02 - the "real name". The actual ELF shared
+	//     library. Usually never referred to directly because that would
+	//     make versioning hard.
+	//
+	// Because we don't know what version of CUDA the user's program
+	// actually needs, we're going to try to find linker names (libcuda.so)
+	// and trust that the system is pointing it to the correct version.
+	// We'll fall back to sonames (libcuda.so.1) that we find if none of the
+	// linker names work.
+
+	// Common direct paths to try first.
+	linkerNames := []string{
+		"/usr/lib/x86_64-linux-gnu/libcuda.so", // Debian
+		"/usr/lib64/libcuda.so",                // Red Hat
+		"/usr/lib/libcuda.so",
+	}
+	for _, path := range linkerNames {
+		// Return what the link is pointing to because the dynamic
+		// linker will want libcuda.so.1, not libcuda.so.
+		soname, err := os.Readlink(path)
+		if err != nil {
+			continue
+		}
+		if filepath.IsLocal(soname) {
+			soname = filepath.Join(filepath.Dir(path), soname)
+		}
+		if !yield(soname) {
+			return
+		}
+	}
+
+	// Directories to recursively search.
+	prefixes := []string{
+		"/usr/lib",
+		"/usr/lib64",
+		"/lib",
+		"/lib64",
+		"/usr/local/lib",
+		"/usr/local/lib64",
+		"/opt/cuda",
+		"/opt/nvidia",
+		"/usr/local/cuda",
+		"/usr/local/nvidia",
+	}
+	sonameRegex := regexp.MustCompile(`^libcuda\.so\.\d+$`)
+	var sonames []string
+	for _, path := range prefixes {
+		_ = filepath.WalkDir(path, func(path string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if entry.Name() == "libcuda.so" && isSymlink(entry.Type()) {
+				soname, err := os.Readlink(path)
+				if err != nil {
+					return nil
+				}
+				if filepath.IsLocal(soname) {
+					soname = filepath.Join(filepath.Dir(path), soname)
+				}
+				if !yield(soname) {
+					return filepath.SkipAll
+				}
+			}
+
+			// Save potential soname matches for later after we've
+			// exhausted all the potential linker names.
+			if sonameRegex.MatchString(entry.Name()) {
+				sonames = append(sonames, entry.Name())
+			}
+			return nil
+		})
+	}
+
+	// We didn't find any symlinks named libcuda.so. Fall back to trying any
+	// sonames (e.g., libcuda.so.1) that we found.
+	for _, path := range sonames {
+		if !yield(path) {
+			return
+		}
+	}
 }

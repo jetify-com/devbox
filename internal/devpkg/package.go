@@ -171,9 +171,7 @@ func resolve(pkg *Package) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO savil. Check with Greg about setting the user-specified outputs
-	// somehow here.
+	parsed.Outputs = strings.Join(pkg.outputs.selectedNames, ",")
 
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
@@ -308,7 +306,10 @@ func (p *Package) InstallableForOutput(output string) (string, error) {
 // a valid flake reference parsable by ParseFlakeRef, optionally followed by an
 // #attrpath and/or an ^output.
 func (p *Package) FlakeInstallable() (flake.Installable, error) {
-	return flake.ParseInstallable(p.Raw)
+	if err := p.resolve(); err != nil {
+		return flake.Installable{}, err
+	}
+	return p.installable, nil
 }
 
 // urlForInstall is used during `nix profile install`.
@@ -322,15 +323,16 @@ func (p *Package) urlForInstall() (string, error) {
 }
 
 func (p *Package) NormalizedDevboxPackageReference() (string, error) {
-	if err := p.resolve(); err != nil {
+	installable, err := p.FlakeInstallable()
+	if err != nil {
 		return "", err
 	}
-	if p.installable.AttrPath == "" {
+	if installable.AttrPath == "" {
 		return "", nil
 	}
-	clone := p.installable
-	clone.AttrPath = fmt.Sprintf("legacyPackages.%s.%s", nix.System(), clone.AttrPath)
-	return clone.String(), nil
+	installable.AttrPath = fmt.Sprintf("legacyPackages.%s.%s", nix.System(), installable.AttrPath)
+	installable.Outputs = ""
+	return installable.String(), nil
 }
 
 // PackageAttributePath returns the short attribute path for a package which
@@ -376,11 +378,12 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 // normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
-	if err := p.resolve(); err != nil {
+	installable, err := p.FlakeInstallable()
+	if err != nil {
 		return "", err
 	}
-
-	query := p.installable.String()
+	installable.Outputs = ""
+	query := installable.String()
 	if query == "" {
 		query = p.Raw
 	}
@@ -388,7 +391,6 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	// We prefer nix.Search over just trying to parse the package's "URL" because
 	// nix.Search will guarantee that the package exists for the current system.
 	var infos map[string]*nix.Info
-	var err error
 	if p.IsDevboxPackage && !p.IsRunX() {
 		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
 		// use a nix.Search cache.

@@ -17,6 +17,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 //go:embed glibc-patch.bash
@@ -42,6 +43,10 @@ type DerivationBuilder struct {
 
 	RestoreRefs bool
 	bytePatches map[string][]fileSlice
+
+	// src contains the source files of the derivation. For flakes, this is
+	// anything in the flake.nix directory.
+	src *packageFS
 }
 
 // NewDerivationBuilder initializes a new DerivationBuilder from the current
@@ -79,6 +84,9 @@ func (d *DerivationBuilder) init() error {
 			return fmt.Errorf("patchpkg: can't patch gcc using %s: %v", d.Gcc, err)
 		}
 	}
+	if src := os.Getenv("src"); src != "" {
+		d.src = newPackageFS(src)
+	}
 	return nil
 }
 
@@ -95,6 +103,11 @@ func (d *DerivationBuilder) Build(ctx context.Context, pkgStorePath string) erro
 }
 
 func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) error {
+	// Create the derivation's $out directory.
+	if err := d.copyDir(out, "."); err != nil {
+		return err
+	}
+
 	if d.RestoreRefs {
 		if err := d.restoreMissingRefs(ctx, pkg); err != nil {
 			// Don't break the flake build if we're unable to
@@ -103,11 +116,18 @@ func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) erro
 			slog.ErrorContext(ctx, "unable to restore all removed refs", "err", err)
 		}
 	}
+	if err := d.findCUDA(ctx, out); err != nil {
+		slog.ErrorContext(ctx, "unable to patch CUDA libraries", "err", err)
+	}
 
 	var err error
 	for path, entry := range allFiles(pkg, ".") {
 		if ctx.Err() != nil {
 			return ctx.Err()
+		}
+		if path == "." {
+			// Skip the $out directory - we already created it.
+			continue
 		}
 
 		switch {
@@ -167,7 +187,7 @@ func (d *DerivationBuilder) copyDir(out *packageFS, path string) error {
 	if err != nil {
 		return err
 	}
-	return os.Mkdir(path, 0o777)
+	return os.MkdirAll(path, 0o777)
 }
 
 func (d *DerivationBuilder) copyFile(ctx context.Context, pkg, out *packageFS, path string) error {
@@ -300,6 +320,69 @@ func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS)
 		slog.DebugContext(ctx, "restored store ref", "ref", ref)
 	}
 	return refs, nil
+}
+
+func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error {
+	if d.src == nil {
+		return fmt.Errorf("patch flake didn't set $src to the path to its source tree")
+	}
+
+	glob, err := fs.Glob(d.src, "lib/libcuda.so*")
+	if err != nil {
+		return fmt.Errorf("glob system libraries: %v", err)
+	}
+	if len(glob) != 0 {
+		err := d.copyDir(out, "lib")
+		if err != nil {
+			return fmt.Errorf("copy system library: %v", err)
+		}
+	}
+	for _, lib := range glob {
+		slog.DebugContext(ctx, "found system CUDA library in flake", "path", lib)
+
+		err := d.copyFile(ctx, d.src, out, lib)
+		if err != nil {
+			return fmt.Errorf("copy system library: %v", err)
+		}
+		need, err := out.OSPath(lib)
+		if err != nil {
+			return fmt.Errorf("get absolute path to library: %v", err)
+		}
+		d.glibcPatcher.needed = append(d.glibcPatcher.needed, need)
+
+		slog.DebugContext(ctx, "added DT_NEEDED entry for system CUDA library", "path", need)
+	}
+
+	slog.DebugContext(ctx, "looking for nix libraries in $patchDependencies")
+	deps := os.Getenv("patchDependencies")
+	if strings.TrimSpace(deps) == "" {
+		slog.DebugContext(ctx, "$patchDependencies is empty")
+		return nil
+	}
+	for _, pkg := range strings.Split(deps, " ") {
+		slog.DebugContext(ctx, "checking for nix libraries in package", "pkg", pkg)
+
+		pkgFS := newPackageFS(pkg)
+		libs, err := fs.Glob(pkgFS, "lib*/*.so*")
+		if err != nil {
+			return fmt.Errorf("glob nix package libraries: %v", err)
+		}
+
+		sonameRegexp := regexp.MustCompile(`(^|/).+\.so\.\d+`)
+		for _, lib := range libs {
+			if !sonameRegexp.MatchString(lib) {
+				continue
+			}
+			need, err := pkgFS.OSPath(lib)
+			if err != nil {
+				return fmt.Errorf("get absolute path to nix package library: %v", err)
+			}
+			d.glibcPatcher.needed = append(d.glibcPatcher.needed, need)
+
+			slog.DebugContext(ctx, "added DT_NEEDED entry for nix library", "path", need)
+		}
+	}
+	return nil
 }
 
 // packageFS is the tree of files for a package in the Nix store.
