@@ -121,8 +121,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		return err
 	}
 	// Open editor with devbox shell environment
-	ideName := flags.ideName
-	cmnd := exec.Command(ideName, message.ConfigDir)
+	cmnd := exec.Command(flags.ideName, message.ConfigDir)
 	cmnd.Env = append(cmnd.Env, envVars...)
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
