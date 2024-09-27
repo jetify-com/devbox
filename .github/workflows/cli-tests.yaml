@@ -84,6 +84,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - run: nix build .
+      - run: ./result/bin/devbox version
   
   golangci-lint:
     strategy:
