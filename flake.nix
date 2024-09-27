@@ -58,7 +58,7 @@
           '';
 
           meta = with pkgs.lib; {
-            description = "Instant, easy, predictable shells and containers";
+            description = "Instant, easy, and predictable development environments";
             homepage = "https://www.jetify.com/devbox";
             license = licenses.asl20;
             maintainers = with maintainers; [ lagoja ];

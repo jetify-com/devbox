@@ -43,11 +43,11 @@
       // The hash is saved to the `vendor-hash` file, which is then
       // read into the Nix Flake.
       "update-hash": [
-        "go mod vendor",
-        "hash=$(nix hash path vendor)",
-        "echo \"$hash\" > vendor-hash",
-        "rm -rf vendor",
-        "echo \"Vendor Hash: $hash\""
+        // realpath to work-around nix hash not liking symlinks
+        "vendor=$(realpath $(mktemp -d))",
+        "trap \"rm -rf $vendor\" EXIT",
+        "go mod vendor -o $vendor",
+        "nix hash path $vendor >vendor-hash",
       ],
       "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
