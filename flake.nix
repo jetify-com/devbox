@@ -59,7 +59,7 @@
 
           meta = with pkgs.lib; {
             description = "Instant, easy, predictable shells and containers";
-            homepage = "https://www.jetpack.io/devbox";
+            homepage = "https://www.jetify.com/devbox";
             license = licenses.asl20;
             maintainers = with maintainers; [ lagoja ];
           };
