@@ -43,7 +43,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	defer telemetry.Stop()
 
 	var userExecErr *usererr.ExitError
-	if errors.As(runErr, &userExecErr) {
+	if errors.As(runErr, &userExecErr) || !usererr.ShouldLogError(runErr) {
 		return
 	}
 
