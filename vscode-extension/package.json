@@ -130,11 +130,6 @@
           "type": "boolean",
           "default": false,
           "description": "Enables debug mode for this extension which creates an extension.log in .devbox/ directory. Currently only works for 'Devbox: Reopen in Devbox shell environment' command."
-        },
-        "devbox.executablePath": {
-          "type": "string",
-          "default": "${execPath}",
-          "description": "Location of this code editor's executable."
         }
       }
     }
