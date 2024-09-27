@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by Jetify",
   "description": "devbox integration for VSCode",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
@@ -21,9 +21,6 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "extensionDependencies": [
-    "ms-vscode-remote.remote-ssh"
-  ],
   "contributes": {
     "commands": [
       {
@@ -133,6 +130,11 @@
           "type": "boolean",
           "default": false,
           "description": "Enables debug mode for this extension which creates an extension.log in .devbox/ directory. Currently only works for 'Devbox: Reopen in Devbox shell environment' command."
+        },
+        "devbox.executablePath": {
+          "type": "string",
+          "default": "${execPath}",
+          "description": "Location of this code editor's executable."
         }
       }
     }

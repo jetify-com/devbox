@@ -23,6 +23,7 @@ import (
 type integrateCmdFlags struct {
 	config    configFlags
 	debugmode bool
+	ideName   string
 }
 
 func integrateCmd() *cobra.Command {
@@ -45,12 +46,13 @@ func integrateVSCodeCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:    "vscode",
 		Hidden: true,
-		Short:  "Integrate devbox environment with VSCode.",
+		Short:  "Integrate devbox environment with VSCode or other VSCode-based editors.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runIntegrateVSCodeCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVar(&flags.debugmode, "debugmode", false, "enable debug outputs to a file.")
+	command.Flags().StringVar(&flags.ideName, "ide", "code", "name of the currently open editor to reopen after it's closed.")
 	flags.config.register(command)
 
 	return command
@@ -65,7 +67,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		enabled: flags.debugmode,
 	}
 	// Setup process communication with node as parent
-	dbug.logToFile("Devbox process initiated. Setting up communication channel with VSCode process")
+	dbug.logToFile("Devbox process initiated. Setting up communication channel with the code editor process")
 	channel, err := go2node.RunAsNodeChild()
 	if err != nil {
 		dbug.logToFile(err.Error())
@@ -110,7 +112,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 	})
 
 	// Send message to parent process to terminate
-	dbug.logToFile("Signaling VSCode to close")
+	dbug.logToFile("Signaling code editor to close")
 	err = channel.Write(&go2node.NodeMessage{
 		Message: []byte(`{"status": "finished"}`),
 	})
@@ -118,13 +120,14 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		dbug.logToFile(err.Error())
 		return err
 	}
-	// Open vscode with devbox shell environment
-	cmnd := exec.Command("code", message.ConfigDir)
+	// Open editor with devbox shell environment
+	ideName := flags.ideName
+	cmnd := exec.Command(ideName, message.ConfigDir)
 	cmnd.Env = append(cmnd.Env, envVars...)
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
 	cmnd.Stderr = &errb
-	dbug.logToFile("Re-opening VSCode in computed devbox environment")
+	dbug.logToFile("Re-opening code editor in computed devbox environment")
 	err = cmnd.Run()
 	if err != nil {
 		dbug.logToFile(fmt.Sprintf("stdout: %s \n stderr: %s", outb.String(), errb.String()))
