@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.1";
+        lastTag = "0.13.2";
 
         # Add the commit to the version string, in case someone builds from main
         getVersion = pkgs.lib.trivial.pipe self [
