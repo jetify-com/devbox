@@ -159,8 +159,6 @@ github.com/go-ole/go-ole v1.2.4/go.mod h1:XCwSNxSkXRo4vlyPy93sltvi/qJq0jqQhjqQNI
 github.com/go-redis/redis v6.15.5+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
-github.com/gofrs/uuid/v5 v5.2.0 h1:qw1GMx6/y8vhVsx626ImfKMuS5CvJmhIKKtuyvfajMM=
-github.com/gofrs/uuid/v5 v5.2.0/go.mod h1:CDOjlDMVAtN56jqyRUZh58JT31Tiw7/oQyEXZV+9bD8=
 github.com/gofrs/uuid/v5 v5.3.0 h1:m0mUMr+oVYUdxpMLgSYCZiXe7PuVPnI94+OMeVBNedk=
 github.com/gofrs/uuid/v5 v5.3.0/go.mod h1:CDOjlDMVAtN56jqyRUZh58JT31Tiw7/oQyEXZV+9bD8=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
@@ -383,8 +381,6 @@ go.jetify.com/typeid v1.2.0 h1:Nd1MZZoWe9q4kkh82xZHQbqCzxJX/ZxgK8RjQWxygwk=
 go.jetify.com/typeid v1.2.0/go.mod h1:CtVGyt2+TSp4Rq5+ARLvGsJqdNypKBAC6INQ9TLPlmk=
 go.jetpack.io/envsec v0.0.16-0.20240604163020-540ad12af899 h1:TfmHWWhwKu1jGmSLp8Iy0fsNyvqP5cAf7w/vD80ub00=
 go.jetpack.io/envsec v0.0.16-0.20240604163020-540ad12af899/go.mod h1:LOdrWtfvoV9dPSVHWN0onLSqeYAOKrS7k1AzwpZg0X0=
-go.jetpack.io/pkg v0.0.0-20240604165525-bc24f2adac25 h1:orsMDGMS4vwdGy0LjF+2etV9AG83z0/ITCm1AfjltTI=
-go.jetpack.io/pkg v0.0.0-20240604165525-bc24f2adac25/go.mod h1:L2QkDS2uIGGONAElwpoeknyvue5gbuGmMGhZqpB/sE0=
 go.jetpack.io/pkg v0.0.0-20240815004735-7649b4283d51 h1:udl601M1zuLyjqsW4EAJRQ0ruTYq8DXbkcFg27Ydk4I=
 go.jetpack.io/pkg v0.0.0-20240815004735-7649b4283d51/go.mod h1:m65l3dl6aFQdVdSvAvih73ZEfs9ndbFGnw03RVC2HFU=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
