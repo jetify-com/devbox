@@ -4,7 +4,7 @@
   "packages": {
     "go": "latest",
     "runx:golangci/golangci-lint": "latest",
-    "runx:mvdan/gofumpt": "latest",
+    "runx:mvdan/gofumpt": "latest"
   },
   "env": {
     "GOENV": "off",
@@ -38,7 +38,7 @@
       "test": "go test -race -cover ./...",
       "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
       "update-examples": "devbox run build && go run testscripts/testrunner/updater/main.go",
-      // Updates the Flake's vendorHash: First run `go mod vendor` to vendor 
+      // Updates the Flake's vendorHash: First run `go mod vendor` to vendor
       // the dependencies, then hash the vendor directory with Nix.
       // The hash is saved to the `vendor-hash` file, which is then
       // read into the Nix Flake.
@@ -46,10 +46,10 @@
         "go mod vendor",
         "hash=$(nix hash path vendor)",
         "echo \"$hash\" > vendor-hash",
-        "rm -rf vendor"
+        "rm -rf vendor",
+        "echo \"Vendor Hash: $hash\""
       ],
-      "tidy": "go mod tidy",
-
+      "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
       // Linux-specific tests. It invokes the test binary directly, so any extra
       // test runner flags must have their "-test." prefix.
