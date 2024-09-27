@@ -12,7 +12,8 @@
         pkgs = nixpkgs.legacyPackages.${system};
 
         lastTag = "0.13.2";
-        
+
+        # Add the commit to the version string, in case someone builds from main
         getVersion = pkgs.lib.trivial.pipe self [
           (x: "${lastTag}")
           (x: if (self ? revCount)
@@ -20,6 +21,7 @@
               else "${x}-${self.dirtyShortRev}")
         ];
 
+        # Run `devbox run update-flake` to update the vendorHash
         vendorHash = if builtins.pathExists ./vendor-hash
                      then builtins.readFile ./vendor-hash
                      else "";
@@ -35,7 +37,7 @@
 
           src = ./.;
 
-          inherit vendorHash;  # Let nix compute the vendor hash
+          inherit vendorHash;
 
           ldflags = [
             "-s"
@@ -59,7 +61,7 @@
             description = "Instant, easy, predictable shells and containers";
             homepage = "https://www.jetpack.io/devbox";
             license = licenses.asl20;
-            maintainers = with maintainers; [ urandom lagoja ];
+            maintainers = with maintainers; [ lagoja ];
           };
         };
       }
