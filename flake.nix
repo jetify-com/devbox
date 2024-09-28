@@ -1,5 +1,5 @@
 {
-  description = "Instant, easy, predictable shells and containers";
+  description = "Instant, easy, predictable dev environments";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,9 +16,9 @@
         # Add the commit to the version string, in case someone builds from main
         getVersion = pkgs.lib.trivial.pipe self [
           (x: "${lastTag}")
-          (x: if (self ? revCount)
+          (x: if (self ? shortRev)
               then "${x}-${self.shortRev}"
-              else "${x}-${self.dirtyShortRev}")
+              else "${x}-${if self ? dirtyShortRev then self.dirtyShortRev else "dirty"}")
         ];
 
         # Run `devbox run update-flake` to update the vendorHash
