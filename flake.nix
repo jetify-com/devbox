@@ -13,15 +13,14 @@
 
         lastTag = "0.13.2";
 
-        # Add the commit to the version string, in case someone builds from main
-        getVersion = pkgs.lib.trivial.pipe self [
-          (x: "${lastTag}")
-          (x: if (self ? shortRev)
-              then "${x}-${self.shortRev}"
-              else "${x}-${self.dirtyShortRev or "dirty"}")
-        ];
+        revision = if (self ? shortRev)
+                   then "${self.shortRev}"
+                   else "${self.dirtyShortRev or "dirty"}";
 
-        # Run `devbox run update-flake` to update the vendorHash
+        # Add the commit to the version string for flake builds
+        version = "${lastTag}-${revision}";
+
+        # Run `devbox run update-flake` to update the vendor-hash
         vendorHash = if builtins.pathExists ./vendor-hash
                      then builtins.readFile ./vendor-hash
                      else "";
@@ -31,18 +30,17 @@
       in
       {
         inherit self;
-        packages.default = buildGoModule rec {
+        packages.default = buildGoModule {
           pname = "devbox";
-          version = getVersion;
+          inherit version vendorHash;
 
           src = ./.;
-
-          inherit vendorHash;
 
           ldflags = [
             "-s"
             "-w"
             "-X go.jetpack.io/devbox/internal/build.Version=${version}"
+            "-X go.jetpack.io/devbox/internal/build.Commit=${revision}"
           ];
 
           # Disable tests if they require network access or are integration tests
