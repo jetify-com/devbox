@@ -18,7 +18,7 @@
           (x: "${lastTag}")
           (x: if (self ? shortRev)
               then "${x}-${self.shortRev}"
-              else "${x}-${if self ? dirtyShortRev then self.dirtyShortRev else "dirty"}")
+              else "${x}-${self.dirtyShortRev or "dirty"}")
         ];
 
         # Run `devbox run update-flake` to update the vendorHash
