@@ -26,8 +26,8 @@ Below are some environment variables that can be used to manage how Devbox sets 
 
 | Variable | Description | Value |
 |:--------|:-----------|:------------|
-|`DEVBOX_DEBUG` | Enable debug output for Devbox. If set to 1, this will print out additional information about what Devbox is doing | 0 |
-|`DEVBOX_FEATURE_DETSYS_INSTALLER` | If enabled, Devbox will use the Determinate Systems installer to setup Nix on your system | 0 |
-|`DEVBOX_NO_PROMPT` | Disables the default shell prompt modification for Devbox. Usually used if you want to configure your own prompt for indicating that you are in a devbox shell | 0 |
+|`DEVBOX_DEBUG` | Enable debug output for Devbox. If set to 1, this will print out additional information about what Devbox is doing. | 0 |
+|`DEVBOX_FEATURE_DETSYS_INSTALLER` | If enabled, Devbox will use the Determinate Systems installer to setup Nix on your system. _This variable must be set on your host_ | 0 |
+|`DEVBOX_NO_PROMPT` | Disables the default shell prompt modification for Devbox. Usually used if you want to configure your own prompt for indicating that you are in a devbox sell | 0 |
 |`DEVBOX_PC_PORT_NUM` | Sets the port number for process-compose when running Devbox services. If this variable is unset and a port is not provided via the CLI, Devbox will choose a random available port | `unset` |
-|`DEVBOX_USE_VERSION` | Setting this variable will force Devbox to use a different version than the current latest. For example: `DEVBOX_USE_VERSION=0.13.0` will install and use Devbox v0.13 for all Devbox commands| `unset`|
+|`DEVBOX_USE_VERSION` | Setting this variable will force Devbox to use a different version than the current latest. For example: `DEVBOX_USE_VERSION=0.13.0` will install and use Devbox v0.13 for all Devbox commands. _This variable must be set on your host_ | `unset`|
