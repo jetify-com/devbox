@@ -12,8 +12,8 @@ Below are some useful environment variables that Devbox sets up for you. These v
 
 | Variable | Description |
 |:--------|:-----------|
-|`DEVBOX_CONFIG_DIR`| The directory where Devbox stores user-editable config files for your project's packages. These files can be checked into source control|
-|`DEVBOX_PACKAGES_DIR`| The directory containing the binaries and files for the packages in your current project.|
+|`DEVBOX_CONFIG_DIR`| The directory where Devbox stores user-editable config files for your project's packages. These files can be checked into source control |
+|`DEVBOX_PACKAGES_DIR`| The directory containing the binaries and files for the packages in your current project |
 | `DEVBOX_PROJECT_ROOT` | The root directory of your current project. This will match the directory location of the `devbox.json` file for your currently running shell |
 | `DEVBOX_PURE_SHELL` | Indicates whether you are running your current shell in pure mode. Pure mode clears your current environment variables before starting a devbox shell |
 | `DEVBOX_SHELL_ENABLED` | Whether or not Devbox is enabled in the current shell. This is automatically set to `1` when you start a shell, run a script, or start services |
@@ -26,8 +26,8 @@ Below are some environment variables that can be used to manage how Devbox sets 
 
 | Variable | Description | Value |
 |:--------|:-----------|:------------|
-|`DEVBOX_DEBUG` | Enable debug output for Devbox. If set to 1, this will print out additional information about what Devbox is doing. | 0 |
-|`DEVBOX_FEATURE_DETSYS_INSTALLER` | If enabled, Devbox will use the Determinate Systems installer to setup Nix on your system. | 0 |
-|`DEVBOX_NO_PROMPT` | Disables the default shell prompt modification for Devbox. Usually used if you want to configure your own prompt for indicating that you are in a devbox sell | 0 |
+|`DEVBOX_DEBUG` | Enable debug output for Devbox. If set to 1, this will print out additional information about what Devbox is doing | 0 |
+|`DEVBOX_FEATURE_DETSYS_INSTALLER` | If enabled, Devbox will use the Determinate Systems installer to setup Nix on your system | 0 |
+|`DEVBOX_NO_PROMPT` | Disables the default shell prompt modification for Devbox. Usually used if you want to configure your own prompt for indicating that you are in a devbox shell | 0 |
 |`DEVBOX_PC_PORT_NUM` | Sets the port number for process-compose when running Devbox services. If this variable is unset and a port is not provided via the CLI, Devbox will choose a random available port | `unset` |
 |`DEVBOX_USE_VERSION` | Setting this variable will force Devbox to use a different version than the current latest. For example: `DEVBOX_USE_VERSION=0.13.0` will install and use Devbox v0.13 for all Devbox commands| `unset`|
