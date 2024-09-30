@@ -2,7 +2,7 @@
 title: Devbox Env Variables
 ---
 
-Thw following is a list of Environment variables used by Devbox to manage your environment. Some of these variables are set by Devbox, while others can be used to manage how Devbox sets up your shell.
+The following is a list of Environment variables used by Devbox to manage your environment. Some of these variables are set by Devbox, while others can be used to manage how Devbox sets up your shell.
 
 Note that
 
