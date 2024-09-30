@@ -36,7 +36,7 @@ Packages can be structured as a list of package names (`<packages>@<version>`) o
 
 If you need to provide more options to your packages (such as limiting which platforms will install the package), you can structure packages as a map, where each package follows the schema below:
 
-```json
+```js
 {
     "packages": {
         // If only a version is specified, you can abbreviate the maps as "package_name": "version"
@@ -44,6 +44,8 @@ If you need to provide more options to your packages (such as limiting which pla
         "package_name": {
             // Version of the package to install. Defaults to "latest"
             "version": string,
+            // Whether native library patching is enabled for this package. This defaults to `auto`, but can be overridden to `always` or `never` for individual packages.
+            "patch": ["auto" | "always" | "never"],
             // List of platforms to install the package on. Defaults to all platforms
             "platforms": [string],
             // List of platforms to exclude this package from. Defaults to no excluded platforms
@@ -244,9 +246,9 @@ To run multiple commands in a single script, you can pass them as an array:
 
 ### Include
 
-Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
+Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed.
 
-Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your project config conflicts with a plugin (e.g., your `devbox.json` has a script with the same name as a plugin script), your project config will take precedence. 
+Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your project config conflicts with a plugin (e.g., your `devbox.json` has a script with the same name as a plugin script), your project config will take precedence.
 ```json
 {
     "include": [

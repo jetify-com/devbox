@@ -33,9 +33,9 @@ devbox add prometheus --outputs=out,cli
 | `--environment string` | Jetify Secrets environment to use, when supported (e.g.secrets support dev, prod, preview.) (default "dev") |
 | `-e, --exclude-platform strings` | exclude packages from a specific platform. |
 | `-h, --help` | help for add |
-| `-o, --outputs strings` | specify the outputs to install for the nix package | 
+| `-o, --outputs strings` | specify the outputs to install for the nix package |
 | `-p`, `--platform strings` | install packages only on specific platforms. |
-|  `--patch-glibc` | Patches ELF binaries to use a newer version of `glibc` |
+|  `--patch` | Allow Devbox to patch your packages to fix issues with missing native libraries (auto, always, never) (default "auto")|
 | `-q, --quiet` | quiet mode: Suppresses logs. |
 
 Valid Platforms include:
@@ -54,4 +54,3 @@ The platforms below are also supported, but will build packages from source
 ## SEE ALSO
 
 * [devbox](./devbox.md)	 - Instant, easy, predictable shells and containers
-
