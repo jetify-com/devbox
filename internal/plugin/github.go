@@ -69,8 +69,28 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Cache for 24 hours. Once we store the plugin in the lockfile, we
+	// should cache this indefinitely and only invalidate if the plugin
+	// is updated.
+	ttl := 24 * time.Hour
+
+	// This is a stopgap until plugin is stored in lockfile.
+	// DEVBOX_X indicates this is an experimental env var.
+	// Use DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL to override the default TTL.
+	// e.g. DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=1h will cache the plugin for 1 hour.
+	// Note: If you want to disable cache, we recommend using a low second value instead of zero to
+	// ensure only one network request is made.
+	ttlStr := os.Getenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL")
+	if ttlStr != "" {
+		ttl, err = time.ParseDuration(ttlStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return githubCache.GetOrSet(
-		contentURL,
+		contentURL+ttlStr,
 		func() ([]byte, time.Duration, error) {
 			req, err := p.request(contentURL)
 			if err != nil {
@@ -96,10 +116,8 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 			if err != nil {
 				return nil, 0, err
 			}
-			// Cache for 24 hours. Once we store the plugin in the lockfile, we
-			// should cache this indefinitely and only invalidate if the plugin
-			// is updated.
-			return body, 24 * time.Hour, nil
+
+			return body, ttl, nil
 		},
 	)
 }
