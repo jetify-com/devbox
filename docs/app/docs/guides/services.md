@@ -16,6 +16,16 @@ You can also start a specific service by passing the name as an argument. For ex
 
 If you want to restart your services (for example, after changing your configuration), you can run `devbox services restart`
 
+## Starting your Services in the Background
+
+If you want to start your services in the background, without launching the process-compose TUI, you can use the `-b` flag. For example, to start all services in the background, you can run `devbox services up -b`.
+
+Services started in the background will continue running, even if the current shell is closed. To stop your backgrounded services, run `devbox services stop`.
+
+To see the current state of your running services, you can run `devbox services ls`.
+
+You can also attach the process-compose TUI to your running background services by running `devbox services attach`.
+
 ## Defining your Own Services
 
 If you have a process or service that you want to run with your Devbox project, you can define it using a process-compose.yml in your project's root directory. For example, if you want to run a Django server, you could add the following yaml:
@@ -75,8 +85,6 @@ postgresql        Launched        0
 You can stop your services with `devbox services stop`. This will stop process-compose, as well as all the running services associated with your project.
 
 If you want to stop a specific service, you can pass the name as an argument. For example, to stop just `postgresql`, you can run `devbox services stop postgresql`
-
-
 
 ## Further Reading
 

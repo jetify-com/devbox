@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 Select your OS below for the steps to install Devbox.
 
-<Tabs>
+<Tabs queryString="install-method">
 <TabItem value="linux" label="Linux">
 
 Run the following install script as a *non-root user* to install the latest version of Devbox:
@@ -39,7 +39,7 @@ If you would like to install Nix yourself, we recommend the [Determinate Nix Ins
 
 <TabItem value="wsl" label="Windows/WSL2">
 
-You can use Devbox on a Windows machine using [**Windows Subsystem for Linux 2**](https://learn.microsoft.com/en-us/windows/wsl/install). 
+You can use Devbox on a Windows machine using [**Windows Subsystem for Linux 2**](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 <details>
 <summary>Installing WSL2</summary>
@@ -71,7 +71,7 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download/). If Nix i
 
 <TabItem value="nix" label="NixOS/Nixpkg">
 
-Devbox is available through the [**Nix Package Manager**](https://search.nixos.org/packages?channel=unstable&show=devbox&from=0&size=50&sort=relevance&type=packages&query=devbox). 
+Devbox is available through the [**Nix Package Manager**](https://search.nixos.org/packages?channel=unstable&show=devbox&from=0&size=50&sort=relevance&type=packages&query=devbox).
 
 To install on NixOS:
 
@@ -85,18 +85,38 @@ To install on a non NixOS:
 nix-env -iA nixpkgs.devbox
 ```
 
-or 
+or
 
 ```bash
 nix profile install nixpkgs#devbox
 ```
+
+Note: New releases of Devbox need to be updated in Nixpkgs before they are available for installation. If you want to use the latest version of Devbox, you can install it using the [Nix Flake](.?install-method=flake).
+
+</TabItem>
+<TabItem value="flake" label="Nix Flake">
+
+You can also install Devbox on a NixOS/Nixpkgs system using our Nix Flake. Using the Nix Flake can help you access pre-releases and final releases of Devbox as soon as they are published.
+
+To get the latest version:
+
+```bash
+nix profile install github:jetify-com/devbox/latest
+```
+
+To install a specific version, you can run the following command (only supports versions 0.13.2 and above).
+
+```bash
+nix profile install github:jetify-com/devbox/0.13.2
+```
+
 
 </TabItem>
 </Tabs>
 
 ## Updating Devbox
 
-Devbox will notify you when a new version is available. To update to the latest released version of Devbox, you can run `devbox version update`. 
+Devbox will notify you when a new version is available. To update to the latest released version of Devbox, you can run `devbox version update`.
 
 If you installed Devbox with Nix, you can update Devbox via Nix using `nix-env -u devbox`, or `nix profile upgrade`.
 
@@ -104,15 +124,15 @@ You can find release notes and details on the [Releases page](https://github.com
 
 ## Rolling Back or Pinning a Specific Version of Devbox
 
-You can rollback or pin the version of Devbox on your system using the `DEVBOX_USE_VERSION` environment variable. For example, to use version 0.8.0: 
+You can rollback or pin the version of Devbox on your system using the `DEVBOX_USE_VERSION` environment variable. For example, to use version 0.8.0:
 
 ```bash
 export DEVBOX_USE_VERSION=0.8.0
 ```
 
-Setting this variable will use the specified version of Devbox even if a newer version has been installed on your machine. 
+Setting this variable will use the specified version of Devbox even if a newer version has been installed on your machine.
 
-If you installed Devbox with Nixpkgs, you will need to pin Devbox in your profile or Nix configuration. You can find the Nixpkg commits for previous versions of Devbox on [Nixhub](https://www.nixhub.io/packages/devbox). 
+If you installed Devbox with Nixpkgs, you will need to pin Devbox in your profile or Nix configuration. You can find the Nixpkg commits for previous versions of Devbox on [Nixhub](https://www.nixhub.io/packages/devbox).
 
 ## Next Steps
 

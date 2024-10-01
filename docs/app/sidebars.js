@@ -171,6 +171,10 @@ const sidebars = {
         },
         {
           type: "doc",
+          id: "env_variables",
+        },
+        {
+          type: "doc",
           id: "devbox_cloud/beta_faq",
         },
         {
@@ -251,16 +255,18 @@ const sidebars = {
     },
   ],
 
-  apiSidebar: [{
-    type: "category",
-    label: "Nixhub API Reference",
-    collapsed: false,
-    link: {
-      type: "doc",
-      id: "nixhub/index"
+  apiSidebar: [
+    {
+      type: "category",
+      label: "Nixhub API Reference",
+      collapsed: false,
+      link: {
+        type: "doc",
+        id: "nixhub/index",
+      },
+      items: require("./docs/nixhub/sidebar"),
     },
-    items: require("./docs/nixhub/sidebar"),
-  }],
+  ],
 };
 
 export default sidebars;
