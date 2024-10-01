@@ -6,7 +6,7 @@ NGINX can be automatically configured by Devbox via the built-in NGINX Plugin. T
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/nginx)
 
-[![Open In Devbox.sh](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/servers/nginx)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/servers/nginx)
 
 ## Adding NGINX to your Shell
 

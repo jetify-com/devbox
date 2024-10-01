@@ -6,7 +6,7 @@ The easiest way to manage Rust with Devbox is to install `rustup`, and then conf
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/rust)
 
-[![Open In Devbox.sh](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/development/rust)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/rust)
 
 ```json
 {

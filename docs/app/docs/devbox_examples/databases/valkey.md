@@ -6,7 +6,7 @@ Valkey can be configured automatically using Devbox's built in Valkey plugin. Th
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/valkey)
 
-[![Open In Devbox.sh](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/valkey)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=examples/databases/valkey)
 
 ## Adding Valkey to your shell
 

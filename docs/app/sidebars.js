@@ -39,10 +39,6 @@ const sidebars = {
           type: "doc",
           id: "devbox_global",
         },
-        {
-          type: "doc",
-          id: "devbox_cloud/index",
-        },
       ],
     },
     {
