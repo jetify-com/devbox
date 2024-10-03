@@ -9,7 +9,7 @@ If you don't already have Devbox installed, see our [Quickstart](https://www.jet
 
 ## Authenticating with Devbox
 
-You can authenticate with Jetify Cloud by running `devbox secrets auth login`. This will launch the browser authentication flow to sign into Jetify Cloud.
+You can authenticate with Jetify Cloud by running `devbox auth login`. This will launch the browser authentication flow to sign into Jetify Cloud.
 
 ![Auth Page](../../static/img/jetify_auth.jpeg)
 

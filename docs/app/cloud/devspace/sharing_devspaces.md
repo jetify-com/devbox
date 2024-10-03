@@ -16,7 +16,7 @@ To create a project:
 4. In the new project, navigate to the Settings tab, and then click "Connect with Github" to connect the project to a Github repository
 5. Select the account and repository to link to the project.
 
-Once the project is linked to a repository, developers can automatically create a new Sandbox for that repository by navigating to the project and clicking on the `New Sandbox` button.
+Once the project is linked to a repository, developers can automatically create a new Devspace for that repository by navigating to the project and clicking on the `New Devspace` button.
 
 ## Sharing Secrets 
 
