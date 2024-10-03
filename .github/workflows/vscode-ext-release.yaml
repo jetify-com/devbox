@@ -29,6 +29,6 @@ jobs:
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
-          sed -i 's/"ms-vscode-remote.remote-ssh"//g' package.json
+          sed -i 's/"publisher": "jetpack-io"/"publisher": "Jetify"/g' package.json
           ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension
