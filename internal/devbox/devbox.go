@@ -853,8 +853,8 @@ func (d *Devbox) flakeDir() string {
 // flakes  (lockfile vs devbox list)
 func (d *Devbox) AllPackageNamesIncludingRemovedTriggerPackages() []string {
 	result := []string{}
-	for _, p := range d.AllPackagesIncludingRemovedTriggerPackages() {
-		result = append(result, p.Versioned())
+	for _, p := range d.cfg.Packages(true /*includeRemovedTriggerPackages*/) {
+		result = append(result, p.VersionedName())
 	}
 	return result
 }

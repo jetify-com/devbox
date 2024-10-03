@@ -31,10 +31,11 @@ devbox services up web
 |  `-e, --env stringToString` |  environment variables to set in the devbox environment (default []) |
 |  `--env-file string` | path to a file containing environment variables to set in the devbox environment |
 | `-h, --help` | help for up |
+| `--pcflags stringArray` | additional flags to pass directly to process-compose |
+| `-p, --pcport int` | specify the port for process-compose to use. You can also set the pcport by exporting DEVBOX_PC_PORT_NUM |
 | `--process-compose-file string` | path to process compose file or directory  containing process compose-file.yaml\|yml. Default is directory containing devbox.json |
 | `-q, --quiet` | Quiet mode: Suppresses logs. |
 
 ## SEE ALSO
 
 * [devbox services](devbox_services.md)	 - Interact with devbox services
-

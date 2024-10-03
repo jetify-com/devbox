@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 // maxFileSize limits the amount of data to load from a file when
@@ -83,96 +84,45 @@ func searchEnv(re *regexp.Regexp) string {
 	return ""
 }
 
-// SystemCUDALibraries returns an iterator over the system CUDA library paths.
-// It yields them in priority order, where the first path is the most likely to
-// be the correct version.
-var SystemCUDALibraries iter.Seq[string] = func(yield func(string) bool) {
-	// Quick overview of Unix-like shared object versioning.
-	//
-	// Libraries have 3 different names (using libcuda as an example):
-	//
-	//  1. libcuda.so - the "linker name". Typically a symlink pointing to
-	//     the soname. The compiler looks for this name.
-	//  2. libcuda.so.1 - the "soname". Typically a symlink pointing to the
-	//     real name. The dynamic linker looks for this name.
-	//  3. libcuda.so.550.107.02 - the "real name". The actual ELF shared
-	//     library. Usually never referred to directly because that would
-	//     make versioning hard.
-	//
-	// Because we don't know what version of CUDA the user's program
-	// actually needs, we're going to try to find linker names (libcuda.so)
-	// and trust that the system is pointing it to the correct version.
-	// We'll fall back to sonames (libcuda.so.1) that we find if none of the
-	// linker names work.
-
-	// Common direct paths to try first.
-	linkerNames := []string{
-		"/usr/lib/x86_64-linux-gnu/libcuda.so", // Debian
-		"/usr/lib64/libcuda.so",                // Red Hat
-		"/usr/lib/libcuda.so",
-	}
-	for _, path := range linkerNames {
-		// Return what the link is pointing to because the dynamic
-		// linker will want libcuda.so.1, not libcuda.so.
-		soname, err := os.Readlink(path)
-		if err != nil {
-			continue
-		}
-		if filepath.IsLocal(soname) {
-			soname = filepath.Join(filepath.Dir(path), soname)
-		}
-		if !yield(soname) {
-			return
-		}
-	}
-
-	// Directories to recursively search.
-	prefixes := []string{
-		"/usr/lib",
-		"/usr/lib64",
-		"/lib",
-		"/lib64",
-		"/usr/local/lib",
-		"/usr/local/lib64",
-		"/opt/cuda",
-		"/opt/nvidia",
-		"/usr/local/cuda",
-		"/usr/local/nvidia",
-	}
-	sonameRegex := regexp.MustCompile(`^libcuda\.so\.\d+$`)
-	var sonames []string
-	for _, path := range prefixes {
-		_ = filepath.WalkDir(path, func(path string, entry fs.DirEntry, err error) error {
+// searchGlobs iterates over the paths matched by multiple [filepath.Glob]
+// patterns. It will not yield a path more than once, even if the path matches
+// multiple patterns. It silently ignores any pattern syntax errors.
+func searchGlobs(patterns []string) iter.Seq[string] {
+	seen := make(map[string]bool, len(patterns))
+	return func(yield func(string) bool) {
+		for _, pattern := range patterns {
+			glob, err := filepath.Glob(pattern)
 			if err != nil {
-				return nil
+				continue
 			}
-			if entry.Name() == "libcuda.so" && isSymlink(entry.Type()) {
-				soname, err := os.Readlink(path)
-				if err != nil {
-					return nil
+			for _, match := range glob {
+				if seen[match] {
+					continue
 				}
-				if filepath.IsLocal(soname) {
-					soname = filepath.Join(filepath.Dir(path), soname)
-				}
-				if !yield(soname) {
-					return filepath.SkipAll
-				}
-			}
+				seen[match] = true
 
-			// Save potential soname matches for later after we've
-			// exhausted all the potential linker names.
-			if sonameRegex.MatchString(entry.Name()) {
-				sonames = append(sonames, entry.Name())
+				if !yield(match) {
+					return
+				}
 			}
-			return nil
-		})
-	}
-
-	// We didn't find any symlinks named libcuda.so. Fall back to trying any
-	// sonames (e.g., libcuda.so.1) that we found.
-	for _, path := range sonames {
-		if !yield(path) {
-			return
 		}
 	}
+}
+
+// globEscape escapes all metacharacters ('*', '?', '\\', '[') in s so that they
+// match their literal values in a [filepath.Glob] or [fs.Glob] pattern.
+func globEscape(s string) string {
+	if !strings.ContainsAny(s, `*?\[`) {
+		return s
+	}
+
+	b := make([]byte, 0, len(s)+1)
+	for _, r := range s {
+		switch r {
+		case '*', '?', '\\', '[':
+			b = append(b, '\\')
+		}
+		b = utf8.AppendRune(b, r)
+	}
+	return string(b)
 }
