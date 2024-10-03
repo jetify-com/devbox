@@ -4,7 +4,7 @@ Caddy can be configured automatically using Devbox's built in Caddy plugin. This
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/caddy)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/caddy)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/caddy)
 
 ### Adding Caddy to your Shell
 

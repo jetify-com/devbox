@@ -4,7 +4,7 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-npm)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/new/templates/node-npm)
 
 ## Adding NodeJS to your Shell
 

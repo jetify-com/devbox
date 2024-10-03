@@ -180,6 +180,34 @@ For example, you could set variable `$FOO` to `bar` by adding the following to y
 Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell.
 
 
+### Env From
+
+Env from takes a string or list of strings for loading environment variables into your shells and scripts. Currently it supports loading from two sources: .env files, and Jetify Secrsts.
+
+#### .env Files
+
+You can load environment variables from a `.env` file by adding the path to the file in the `env_from` field. This is useful for loading secrets or other sensitive information that you don't want to store in your `devbox.json`.
+
+```json
+{
+    "env_from": "path/to/.env"
+}
+```
+
+This will load the environment variables from the `.env` file into your shell when you run `devbox shell` or `devbox run`. Note that environment variables set in the `.env` file will be overridden if the same variable is set directly in your `devbox.json`
+
+#### Jetify Secrets
+
+You can securely load secrets from Jetify Secrets by running `devbox secrets init` and creating a project in Jetify Cloud. This will add the `jetpack-cloud` field to `env_from` in your project.
+
+```json
+{
+    "env_from": "jetpack-cloud"
+}
+```
+
+Note that setting secrets securetly with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/cloud/docs/secrets/) guide.
+
 ### Shell
 
 The Shell object defines init hooks and scripts that can be run with your shell. Right now two fields are supported: `init_hook`, which run a set of commands every time you start a devbox shell, and `scripts`, which are commands that can be run using `devbox run`

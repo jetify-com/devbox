@@ -80,10 +80,10 @@ Devbox requires the [Nix Package Manager](https://nixos.org/download.html). If N
 
 ### Boost your dev environment with Jetify Cloud
 
-* **[Jetify Secrets](./cloud/secrets/index.md):** Securely store and access your secrets and environment variables in your Devbox projects.
-* **[Jetify Deploys](./cloud/deploys/index.md):** Deploy your Devbox projects as autoscaling services with a single command.
-* **[Jetify Cache](./cloud/cache/index.md):** Share and cache packages across all your Devbox projects and environments.
-* **[Jetify Prebuilt Cache](./cloud/cache/prebuilt_cache.md):** Use the Jetify Public Cache to speed up your Devbox builds and share packages with the community.
+* **[Jetify Secrets](/cloud/docs/secrets/):** Securely store and access your secrets and environment variables in your Devbox projects.
+* **[Jetify Deploys](/cloud/docs/deploys/):** Deploy your Devbox projects as autoscaling services with a single command.
+* **[Jetify Cache](/cloud/docs/cache/):** Share and cache packages across all your Devbox projects and environments.
+* **[Jetify Prebuilt Cache](/cloud/docs/cache/):** Use the Jetify Public Cache to speed up your Devbox builds and share packages with the community.
 
 ### Get Involved
 * **[Join our Discord Community](https://discord.gg/jetify):** Chat with the development team and our growing community of Devbox users.

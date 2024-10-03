@@ -6,7 +6,7 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-npm)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/nodejs)
 
 ## Adding NodeJS to your Shell
 
@@ -39,15 +39,15 @@ To disable Corepack, remove the `DEVBOX_COREPACK_ENABLED` variable from your dev
 
 ### Yarn
 
-[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs/nodejs-yarn)
+[**Example Repo**](https://github.com/jetify-com/devbox?folder=examples/development/nodejs/nodejs-yarn)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-yarn)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/nodejs-yarn)
 
 ### pnpm
 
-[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/nodejs/nodejs-pnpm)
+[**Example Repo**](https://github.com/jetify-com/devbox?folder=examples/development/nodejs/nodejs-pnpm)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-pnpm)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/nodejs-pnpm)
 
 ## Installing Global Packages
 

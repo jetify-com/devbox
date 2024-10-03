@@ -6,7 +6,7 @@ MongoDB is a popular NoSQL database that is available on Nixpkgs. You can config
 
 ## Adding MongoDB to your Shell
 
-You can start by adding the mongodb server to your project by running `devbox add mongodb`. We also recommend adding the MongoDB shell for interacting with your database using `devbox add mongosh`: 
+You can start by adding the mongodb server to your project by running `devbox add mongodb`. We also recommend adding the MongoDB shell for interacting with your database using `devbox add mongosh`:
 
 ```json
     "packages": [
@@ -23,7 +23,7 @@ You can add the MongoDB Plugin to your `devbox.json` by adding it to your `inclu
     ]
 ```
 
-Adding these packages and the plugin will configure Devbox for working with MongoDB. 
+Adding these packages and the plugin will configure Devbox for working with MongoDB.
 
 ## Starting the MongoDB Service
 
@@ -38,7 +38,7 @@ processes:
       max_restarts: 5
 ```
 
-You can configure this service by modifying the environment variable shown below. 
+You can configure this service by modifying the environment variable shown below.
 
 If you want to create your own version of the mongodb service, you can create a process-compose.yaml in your project's root, and define a new process named `mongodb`. For more details, see the [process-compose documentation](https://f1bonacc1.github.io/process-compose/)
 

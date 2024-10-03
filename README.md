@@ -16,13 +16,13 @@
 
 In practice, Devbox works similar to a package manager like `yarn` – except the packages it manages are at the operating-system level (the sort of thing you would normally install with `brew` or `apt-get`). With Devbox, you can install over [400,000 package versions](https://www.nixhub.io) from the Nix Package Registry
 
-Devbox was originally developed by [Jetify](https://www.jetify.com) and is internally powered by `nix`. 
+Devbox was originally developed by [Jetify](https://www.jetify.com) and is internally powered by `nix`.
 
 ## Demo
 
 You can try out Devbox in your browser using the button below:
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/tutorial)
 
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 

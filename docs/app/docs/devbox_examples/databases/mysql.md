@@ -5,7 +5,7 @@ MySQL can be automatically configured for your dev environment by Devbox via the
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/mysql)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/databases/mysql)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/mysql)
 
 ## Adding MySQL to your Shell
 
@@ -33,8 +33,8 @@ This will install the latest version of MySQL. You can find other installable ve
 
 Devbox will automatically create the following configuration when you run `devbox add mysql80` or `devbox add mysql57`. You can view the full configuration by running `devbox info mysql`
 
-
 ### Services
+
 * mysql
 
 You can use `devbox services up|stop mysql` to start or stop the MySQL Server.

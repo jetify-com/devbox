@@ -20,7 +20,7 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pip)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pip)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/python-pip)
 
 [pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
 

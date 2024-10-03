@@ -53,18 +53,18 @@ If your repo contains a Dockerfile, Jetify Cloud will use that Dockerfile to dep
 
 ## Connecting your Repo
 
-Jetify requires you to connect a Github repo in order to deploy your service. To access private repositories, you will need to install the Devbox Cloud Github app in your repository: 
+Jetify requires you to connect a Github repo in order to deploy your service. To access private repositories, you will need to install the Devbox Cloud Github app in your repository:
 
 1. From the Create Project screen, select Continue with Github to sign in with Github
-2. Select a Github Org to import your project from. If you are only a member of one org, it will be selected for you by default. 
+2. Select a Github Org to import your project from. If you are only a member of one org, it will be selected for you by default.
    1. If this is your first time importing a project from your org, you will need to install the Devbox Cloud app to provide access to your project
-3. Select a Repository to import your repo. If your project is not in the root directory of your repository, you can specify a subdirectory for Jetify to search for your project. 
+3. Select a Repository to import your repo. If your project is not in the root directory of your repository, you can specify a subdirectory for Jetify to search for your project.
 
-![Select the Repo for your Jetify Project](../../../static/img/newproject-tworepos.png)
+![Select the Repo for your Jetify Project](../../static/img/newproject-tworepos.png)
 
 ## Choosing an Instance Size
 
-Jetify will default your deployment to the smallest instance size (0.1 CPU + 512MB RAM). To choose a different size: 
+Jetify will default your deployment to the smallest instance size (0.1 CPU + 512MB RAM). To choose a different size:
 
 1. Navigate to the **Settings** tab of your project
 2. Scroll down to **Deployments**
