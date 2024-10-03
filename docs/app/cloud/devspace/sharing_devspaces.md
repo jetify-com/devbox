@@ -13,7 +13,7 @@ To create a project:
 1. Navigate to the **Projects** tab in the Jetify Dashboard
 2. Click on the `Create New` button on the top right corner of the page
 3. In the modal that appears, give the project a name, and then click "Create Project"
-4. In the new project, navigate to the Settings tab, and then click "Connect with Github" to connect the project to a Github repository
+4. In the new project, click "Connect with Github" to connect the project to a Github repository
 5. Select the account and repository to link to the project.
 
 Once the project is linked to a repository, developers can automatically create a new Devspace for that repository by navigating to the project and clicking on the `New Devspace` button.
