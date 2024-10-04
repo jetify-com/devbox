@@ -20,7 +20,7 @@ If you have direnv installed, Devbox will generate an .envrc file when you run `
 ➜  devbox generate direnv
 Success: generated .envrc file
 Success: ran `direnv allow`
-direnv: loading ~/src/devbox/docs/.envrc
+direnv: loading ~/src/docs/devbox/.envrc
 direnv: using devbox
 ```
 
@@ -35,7 +35,7 @@ For an existing project, you can add a `.envrc` file by running `devbox generate
 ➜  devbox generate direnv
 Success: generated .envrc file
 Success: ran `direnv allow`
-direnv: loading ~/src/devbox/docs/.envrc
+direnv: loading ~/src/docs/devbox/.envrc
 direnv: using devbox
 ```
 
@@ -59,7 +59,7 @@ The resulting .envrc will have the following:
 
 eval "$(devbox generate direnv --print-envrc --env MY_CUSTOM_ENV_VAR=my-value)"
 
-# check out https://www.jetify.com/devbox/docs/ide_configuration/direnv/
+# check out https://www.jetify.com/docs/devbox/ide_configuration/direnv/
 # for more details
 ```
 
@@ -77,7 +77,7 @@ The resulting .envrc will have the following:
 
 eval "$(devbox generate direnv --print-envrc --env-file .env.devbox)"
 
-# check out https://www.jetify.com/devbox/docs/ide_configuration/direnv/
+# check out https://www.jetify.com/docs/devbox/ide_configuration/direnv/
 # for more details
 ```
 

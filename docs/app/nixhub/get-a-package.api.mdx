@@ -7,7 +7,7 @@ hide_title: true
 hide_table_of_contents: true
 api: eJztWGtr3EYU/SuDPiQ2bNYmmFAMpWxpG1JSOzgJpSRmdyTNWhNLGmUeu16M/3vOnRlppd1NI/cB/VAwWI+573OP7t37JBcm07KxUtXJefJSWCbrpdIVpyeMp8pZxplpRCaXMmMNz275jcAhdiHvmtsbM2XvCmmYqPNGydoyLazTtYHQr28vL5hKP4nMMltwyzJVWy7xbt+ELUSre4LXWelyWd9ASSmNZWoJtaXgRpgJa0puSRyXvM4ZpBtn4cbH+g/lmCmUK3PmjIDOvl9yyTZ4f1urtbdW80qQ4p5lf2DNcdgqVip1y1wzZa+CYC1ETs+N4DorGDxoxeAImVucrJ6fhLeLTkrV5SaKwg48FwhnJbSh0GGdb6PudGhhVLkSi+nHOpkkuGtUjciT8/vk+ekp/RsW7fIWxyi3orb0ljdNKTOf3ZNPho7cJyYrRMXpym4aAaFQFwgOdc3qQdm0aGAfekMxYslbn2Pp8ReKjijTjQ/Ux4Gjiy7/sNRo1QhtZQiF8t/zx1gNG3v+vPtKpQL+Cpee/CRWqbpLHiaJcVXF9ebbSmeEEm1Z7+mOflJXqEo0uJ47XY5z9P3Va0JIT89T5Eorn8pWHalGeQRKOk6rUUu75hroCVIHXG2bo6eQa803ByJv++kqingg99RNISOtqMwIrGxpITrAjiK0jwfY3rLFdA8GUWBcKtrGCUfaRETjEY3h3QRkU6WSILmWtuj5QmgCiRAmDVWrR26H+tKXixs7d02O7s3HOUoSzMoqklCbnjU3LOrp5wQmOlJ7RAk7maERXPIVlyVPS2Cl/tOCDmtB1DUuvqyQDaPj0Jyh9begjD7FYqxlWbKU3PAnFlxXL84WDJBb3H334hmuffTKjDNLznLPRWZjENNIqxXPLt8Gq69l7e6C0aBipOWlg0rUi2DVwAXKbZ+XgrKvRU2ZenH2LOd6LevFZPuk9O5MfDbm/RMxQ/PujHeZW3iYOivm8GFkqToZRjI7/EQopNvhtzzjNbmPD5L/4uGLbTki6sv5pqJ8wNHAwN5BZKeSdl5wM9I7OtnmsP26BCVhZPDI7oyifXxnbXvIW6Wbcebo5Dd1dtnw0AzjxSPa8jJIsCMxvZmitNBAFS5lSv9ysVoch9iI07edusPDAE90tMX2eGJ+ykDNSAH1v3dmyMYdX85Q1HaGiUOXID4MorlYclfaVsWRMw4o2NB9DCCKmL7fhoF1uQajTBm7xAvNlrKkGck4jE2UbZlqf4Cwg3SIUjUVRgxWCJ6DgSc7iYEIz3NJsfFyO+49/Ycmija8r1fL8/PofnO1/OyGzRZNbHsNHymlRcBuyHJPd6oU6lPvKf+9ED6dHhWtypD7nVLtQInMoCTj3D9AEoZdzK7YEfk9I8pfiWNf08gWdLkd7YfDT+okhnGOEi15Zqmj4IuVtiQvQqPgUe/Zm4h2f7D7wM0fM9qFo+2M4IHajbFm8Lkw/fGhZb3IdmACVfcZ4G/4MEDaXyaG6OcghVfds34OQ/qv4uJAL/H27NDq8CPPMQkCr8aeM1E1djOYk9iREbT+/UA33z8pLWjxyY1lENB0UuOxFdp3yNnp2b7+C2XZL8rVeahnK4B2/dD2a/gHbqPzXrFfej47qWnastqJsUvBwfXtNwdaTonXVryU+e4O4xURt+5tSLG6Dw/XkwReFwreJDfCj02eDRLacEhS6FUbk98VksLaxpyfxG1wmocPpCmwFSWkjvZfbylWLKwybPbmFdR1E3HyfHo6Pd2H15tXHhNBuV/MsAaHpZHu2sBy0WD5EnVG9EjZV8ZWvN4ypd/2OYtw2bVzv10p//9Z4L/3s0AEqRV39gSho3tQ4ripBnh+SAie17TIGku39/cpUvVelw8P9Dj0GoE2l4aYBvhe8tLstlsfCEdXsTGP2b/ShAejuhWbLU1A3tER30crzBHkOaK4po3dDxA+pCAzyzLR2J7U3k8jg+Z++fM7tPsXkAupZw==
 sidebar_class_name: "get api-method"
-info_path: nixhub/nixhub-api
+info_path: devbox/nixhub/nixhub-api
 custom_edit_url: null
 ---
 
@@ -20,7 +20,6 @@ import ParamsItem from "@theme/ParamsItem";
 import ResponseSamples from "@theme/ResponseSamples";
 import SchemaItem from "@theme/SchemaItem";
 import SchemaTabs from "@theme/SchemaTabs";
-import Markdown from "@theme/Markdown";
 import Heading from "@theme/Heading";
 import OperationTabs from "@theme/OperationTabs";
 import TabItem from "@theme/TabItem";
@@ -35,6 +34,7 @@ import TabItem from "@theme/TabItem";
 <MethodEndpoint
   method={"get"}
   path={"/pkg"}
+  context={"endpoint"}
 >
   
 </MethodEndpoint>
@@ -71,7 +71,7 @@ You should use this endpoint if you know the name of the package you want to loo
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"name","in":"query","required":true,"description":"The name of the package you want to look up. Must be a valid Nixpkgs package name.","schema":{"type":"string"}}}
+        param={{"name":"name","in":"query","required":true,"description":"The name of the package you want to look up. Must be a valid Nixpkgs package name.","schema":{"type":"string"},"enumDescriptions":[]}}
       >
         
       </ParamsItem>

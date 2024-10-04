@@ -10,7 +10,7 @@ const config = {
   title: "Jetify Docs",
   tagline: "Instant, easy, and predictable shells and containers",
   url: "https://www.jetify.com",
-  baseUrl: "/",
+  baseUrl: "/docs",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
@@ -38,11 +38,10 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          routeBasePath: "/devbox/docs",
+          routeBasePath: "/devbox",
           sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          docItemComponent: "@theme/ApiItem",
           editUrl: "https://github.com/jetify-com/devbox/tree/main/docs/app/",
         },
         blog: false,
@@ -64,14 +63,23 @@ const config = {
       {
         id: "cloud",
         path: "cloud",
-        routeBasePath: "/cloud/docs",
+        routeBasePath: "cloud",
         sidebarPath: require.resolve("./cloud_sidebars.js"),
       },
+    ],[
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "nixhub",
+        path: "nixhub",
+        routeBasePath: "nixhub",
+        sidebarPath: require.resolve("./nixhub_sidebars.js"),
+        docItemComponent: "@theme/ApiItem"
+      }
     ],
     [
       "docusaurus-plugin-openapi-docs",
       {
-        id: "api",
+        id: "nixhub",
         docsPluginId: "classic",
         config: {
           nixhub: {
@@ -88,20 +96,26 @@ const config = {
     ({
       navbar: {
         logo: {
-          alt: "Devbox",
-          src: "img/devbox_logo_light.svg",
-          srcDark: "img/devbox_logo_dark.svg",
-          href: "/devbox/docs",
+          alt: "Jetify Docs",
+          src: "img/jetify-docs-logo-light.svg",
+          srcDark: "img/jetify-docs-logo-dark.svg",
+          href: "devbox",
         },
         items: [
           {
-            to: "cloud/docs",
+            to: "devbox",
+            label: "Devbox",
+            className: "header-text-link",
+            position: "left"
+          },
+          {
+            to: "cloud",
             label: "Jetify Cloud",
             className: "header-text-link",
             position: "left",
           },
           {
-            to: "/devbox/docs/nixhub",
+            to: "nixhub",
             label: "NixHub API",
             className: "header-text-link",
             position: "left",
@@ -148,7 +162,7 @@ const config = {
               },
               {
                 label: "Docs",
-                to: "https://www.jetify.com/devbox/docs/",
+                to: "https://www.jetify.com/docs/devbox",
               },
             ],
           },

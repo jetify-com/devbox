@@ -113,6 +113,7 @@ aside>div {
         margin-right: 8;
     }
     .header-text-link{
+        padding-top: 2px;
         height: 32px;
     }
     [data-theme='dark'] .header-github-link::before {

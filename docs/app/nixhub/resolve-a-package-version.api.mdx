@@ -1,13 +1,13 @@
 ---
 id: resolve-a-package-version
 title: "Resolve a Package Version"
-description: "Resolve a Package Version"
+description: "Resolve a Package Version. This endpoint resolves a package name + version string to the latest version of the package available in the Nixpkg repository.  The response includes the Flake installable information for the package on each supported platform."
 sidebar_label: "Resolve a Package Version"
 hide_title: true
 hide_table_of_contents: true
-api: eJztWltr5DYU/ivCL5vAdCaEsJTQC1PaLktpEtJs+xBCRrbPjLWRJa8uzgxD/nvPkeS5ZpNp2L4ZAo5lnXO+c/08yMvMgG20smCz82V2enJClxJsYUTjhFbZeXb5RzbICq0cKEdPedNIUXB6Ovpsacsys0UFNaf/3KIBFNL5ZygcCm7rGisWnzADDZpGlULNmKsAF6yXjukp46zhxQOfhTUtPckO2U0lLMM/A84bBSXLF0FuMmpPR2FjCxMGqmy0UGS5MboB40R0TfEaNvBZZ9DwHr4bVEg7CQYp74C4ijv2yC1Lhsph9jTIWjBWxAC8rlZyB9axJLOvveYOg2jDg25TVMfQk1aU6LJQKVRfPOoKGKyva24Wr2MYM1tp49jG6o6XQd3COqjtAZlkUtiQriQSvdh0q+CK5YCgreNSInytBoxLjR49CleFvSU4LqTtkFwl0RAgVBd1D/eyybkpqvdn35XcPAr1HNrt/VPJH+A+IeG5hP0ypxwJNdWmDqXNFACF3OnOAUSE5dc5h7XAWVCL6ZiCAVUA4XwZB259PbSEZOrR4IWYr5UTEgpRtBmiQ03JEd0Wsv1gRWuH1CjtoFTs+sU+WY8RWERDjwKxYWInM8yizyehDvWjAnOYlbC1yzjOAW2F02ax51PydW19ggG5/CvaI7nXzf1nC0rMm4eZnUQT7WEOfRA0z1phN3oqKe6mlk8GOJqva9xfcVuhI09ohztn7hvuqsOs0XaRe0eNRl2kt5oujYhN86kPvd0t57VU6EcqN23Yr9Dmep6wSW7dvW9KHF7loXMOx4ITNWz3Cw3PpKfDeBFjHRIUSsi7xrvN2cON4YsXRs9llGBHMJwNB2yCGiZ4kSKnSwnt5DjmnBuMW4uThnqfYZNveR+mDWHFGU0DgFpIHDYG3zGcqxgK1Brh7xKYBG4xEWMMeFrEelCF9CUi6kRLmPJAflHFUVcteJ8cSCJ2E7dluVDcYJcPGbvEB4ZNhQQ7YNYXFU0oDIQJGyivGA6QuqmRc1kFvESOGewEhoZaWQryjcuEBpW/+0Zs2rn39WxRGRzeCV4JJMKtNkgm1hWGHKoNhJGRoryhO9ca86P2lP9TQQhnqIpOpU2EtZWqnVIiM5iSw+A/076WXYyv2RHhHiPDiRaOQ05TJ9O/2/Mryb3DWvBClphPJ6a8wKxl1L5OOOK6LDZKbOlu7WoNuaNTKZSf92zas2nPpj2b9mzas2nPpm9g0/n37+/736Y9m/Zs2rNpz6Y9m/Zs+g3YtP9p2pNpT6Y9mfZk2pNpT6ZvI9Ot1et4kn2dzv/T07PnvgDARfYLL9l1PHc+Z1A3bhEzfmQBu479TDc//tBy6eEnhttwCDfc4KIDE7J9dnK2r/lCO/a79qoMTqwEsPRuu9qLF+xT2h8UZzSxv3hhaFI54+HQU/yF9jiesCswF+kgf8j+9DhicupRBC/K1bDqhEgRzYm9TxxSwhH4Cmr3QcBzgHbO9A+A9prTX0d0twsgJRud7E7Y/15BxYhXGpVmMwjvMaErs+6TCvIcTNvlxBuJDyvnGns+Glmgg4NhGYnEVqP2NCPj9HoVcKVaw5ji+wMbX33MNr6ayE6HJ8OT/al/9TF0W1ROseKqTEEJX0MkD0poQJX42kKjiqpHW1dztZ5aL3q9ZXMVQQdzN0J2wLijxuDsMkXkNusigg5WaIuWlsscp/4nI5+eaDlmiuJUCkuDFsM65dLuVuhy/T1NdnSd0nrM/pe6fdazB1isOys0Ld5mVMlvBv6m+n4B3LqX1vju6MaI+F5/e4d7I7+FkEexcVFA4zak9j5XIi2rmv/w2w32y7+Tk/jt
+api: eJztWm1v2zYQ/iuEvjTFPDsIgmII9gIPW4tiWBOk7fahK2JaOkdsZFElKSeGkf++50jKkuy08YLum4AAjsnjvT1398gQN0lGNjWqckqXyVlySVYXKxJSXMj0Rl6T+IuMxd5YvMuVFVRmlValEyYIWkhWUbKUSxLfiVU4IKwzqrwWTguXkyikI+u2m3rhV5ujciVVIecFCVX6jTfqrrq5hpVKW+W0WY8FHCA2W+nSslxa1PDdS78s5A0vWSeLRs1Cm6XkqAT+6xnDEsk0F7auKm0cZaKCdyw//qdMRkljwyZnm+Tk+Jg/+lk6/wNiqS4dlY53ZVUVKvXWJp8si2wSm+a0lPyfW1eEQ3r+iVKHg31dUyTD73CwMA2VPm0h2LpwnKs2yT7vtWsRwZ8hV5sScczX/txssjqZRIBmW8hguTK6IuNUCI3x6vgX8Nrzj7Pukd2BzOXSiVtpm0rIxsn9KIn4HqZ2pyb2tAM/JDFAvFNViGSlMoQc68XQ5xq6vA+2Xi6lWT/uw1TYHAUgOqs7UXp1a+toaQ9AUhTKerjikRBFN6xUlmK+rVS4r8uRkIVGRLfK5V42I4dmsI0nF23VenVB93gPTSlNmr84/T6T5laVD3nbl19wz1x1ema/zBmjbiOVRJxydHQ8Bo9Qftsm5mHg1QKOBRkqU2I/v+4HRB9PLXuyqGEQc6FV3syWYNNnh5tSwrueZ/vJCtYOqVGWYCh24xLvbY0MrIOhWwXfAOzsGijW85mvQ31bkjnMihdtEG+H3l5MMdbW+gwJOX8b7PG5x839ZwulH8V2FkysDgvoleJ5tlLdYR8VN1OrjgYkzC+XkM+lzRHIPexI58xVJV1+mDUWV/PacaNxF+le08UR0TUf+7C2u+XcnvL9yOUG9viNVnN9F30rpHVXdZVheGWHzjmMBaeW1O8XHp5RT5/2rAfIl1Dtqtp1Z480Rq6/MnrOwwlxROPr8UjMoGGGj0LN+SOj1ex5wFyaLu0+wJHB14YZYVIdNgafCcxVpAJag/u7BFaQtABiioTHRdvQOeTi0YwW0pNfUHHUVAu+xwB6TwBbRXNVSoMux/PCOTaMWKiC7AhkD8ZHwpEI4wUYV6SDCl0twbkiJ5mBY0Y7ieGhlmWKY5NF9AbKn30jNm3C+zJaXAaHd0JdKhBhrw2iibbCwKHakB8ZMcsd3XOtgU+5p/zvnHw6fVU0Km0krB5UO6XEZgDJYe4/0L5WvJleiiP2ewqGUyt67jGNncz/9udXPPcMtVCrIgOeTi1kCtQSbl+nHHNdEholtHSzdtG63NBpocr6bmDTgU0HNh3YdGDTgU0HNn0Cm9798OJq+G06sOnApgObDmw6sOnApt+ATYefpgOZDmQ6kOlApgOZDmT6NDLtrcbLD5fx/X/cPX3oBgAWxa8yE5fhvfOZoGXl1gHxI0voOvELf/npx5UsavpZQAxDuJIGi46MR/v0+HRf8xvtxEtdl5kPYnsApfehqb3wgT5lea/Y31r4XCvDk8qZmg59i7/WNcYTugJYxBf5Y/FnjREz5x6F8yrbDqvuRQ+eE3tXHCLgcHzranMh4CGHdt7pH+DaY0F/2aOPowR5zDVEk2vyTye+15LmogTHQ2bVZLo2BTZz5yp7NplY4tcB4yzQg80nq5OEVfJDk7cWKwiZwlOBmF68Tjp3IZKT8fH4eH+WX7z2PRSUcwZkmcVQ/R2HmIiMKiozPIzwAOKa0NYtZdnOoi/f2tm1uWlvrQxXfdonVkd3boId1Bby66HfxPr4kDT1AbhzZJ6XNps5mO29Ke7veTlUI1dNpiz7hCJbyMLudmE3+0eXsXSfi/+lNx+M7IbW7fTwgwlfE+7WJzv+pB7+inPtvGj9+8hfjAq/XT58hGzgcJ/ycGyaplS5zqm9K1m9CfDq93eYCf8CWKOwnA==
 sidebar_class_name: "get api-method"
-info_path: nixhub/nixhub-api
+info_path: devbox/nixhub/nixhub-api
 custom_edit_url: null
 ---
 
@@ -20,7 +20,6 @@ import ParamsItem from "@theme/ParamsItem";
 import ResponseSamples from "@theme/ResponseSamples";
 import SchemaItem from "@theme/SchemaItem";
 import SchemaTabs from "@theme/SchemaTabs";
-import Markdown from "@theme/Markdown";
 import Heading from "@theme/Heading";
 import OperationTabs from "@theme/OperationTabs";
 import TabItem from "@theme/TabItem";
@@ -35,13 +34,15 @@ import TabItem from "@theme/TabItem";
 <MethodEndpoint
   method={"get"}
   path={"/resolve"}
+  context={"endpoint"}
 >
   
 </MethodEndpoint>
 
 
 
-Resolve a Package Version. This endpoint resolves a package name + version string to the latest version of the package available in the Nixpkg repository. The response includes the Flake installable information for the package on each supported platform.
+Resolve a Package Version. This endpoint resolves a package name + version string to the latest version of the package available in the Nixpkg repository.  The response includes the Flake installable information for the package on each supported platform.
+
 
 <Heading
   id={"request"}
@@ -69,12 +70,12 @@ Resolve a Package Version. This endpoint resolves a package name + version strin
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"name","in":"query","required":true,"description":"The name of the package you want to resolve. Must be a valid Nixpkgs package name.","schema":{"type":"string"}}}
+        param={{"name":"name","in":"query","required":true,"description":"The name of the package you want to resolve. Must be a valid Nixpkgs package name.","schema":{"type":"string"},"enumDescriptions":[]}}
       >
         
       </ParamsItem><ParamsItem
         className={"paramsItem"}
-        param={{"name":"version","description":"The version string of the package you want to resolve.","in":"query","required":true,"schema":{"type":"string"}}}
+        param={{"name":"version","description":"The version string of the package you want to resolve.","in":"query","required":true,"schema":{"type":"string"},"enumDescriptions":[]}}
       >
         
       </ParamsItem>

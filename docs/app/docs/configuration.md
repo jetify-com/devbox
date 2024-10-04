@@ -206,7 +206,7 @@ You can securely load secrets from Jetify Secrets by running `devbox secrets ini
 }
 ```
 
-Note that setting secrets securetly with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/cloud/docs/secrets/) guide.
+Note that setting secrets securetly with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/docs/cloud/secrets/) guide.
 
 ### Shell
 
