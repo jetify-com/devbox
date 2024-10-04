@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
+	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
 	"go.jetpack.io/devbox/internal/nix"
 
@@ -138,7 +139,8 @@ func commandEvent(meta Metadata) (id string, msg *segment.Track) {
 // Error reports an error to the telemetry server.
 func Error(err error, meta Metadata) {
 	errToLog := err // use errToLog to avoid shadowing err later. Use err to keep API clean.
-	if !started || errToLog == nil {
+
+	if !started || !usererr.ShouldLogError(errToLog) {
 		return
 	}
 

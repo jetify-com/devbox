@@ -83,9 +83,14 @@ func Extract(err error) (error, bool) { // nolint: revive
 	return nil, false
 }
 
-// ShouldLogError returns true if the it's a logged user error or is a non-user error
+// ShouldLogError returns true if the it's a combined error specifically marked to be logged
+// or if it's not an ExitError.
 func ShouldLogError(err error) bool {
 	if err == nil {
+		return false
+	}
+	var userExecErr *ExitError
+	if errors.As(err, &userExecErr) {
 		return false
 	}
 	c := &combined{}
