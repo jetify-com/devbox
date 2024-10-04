@@ -5,7 +5,7 @@
     "scripts": {
         "docusaurus": "docusaurus",
         "start": "docusaurus start",
-        "build": "docusaurus build && yarn run postbuild",
+        "build": "docusaurus build && pnpm run postbuild",
         "postbuild": "mkdir -p tmp && cp -r build/* tmp/ && mkdir -p build/devbox/docs && cp -r tmp/* build/devbox/docs/ && rm -rf tmp",
         "swizzle": "docusaurus swizzle",
         "deploy": "docusaurus deploy",
@@ -16,22 +16,23 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@docusaurus/core": "^3.1",
-        "@docusaurus/preset-classic": "^3.1",
-        "@docusaurus/theme-mermaid": "^3.1",
-        "@mdx-js/react": "^3.0",
-        "clsx": "^2.1",
-        "docusaurus-plugin-openapi-docs": "^3.0.1",
-        "docusaurus-theme-openapi-docs": "^3.0.1",
-        "prism-react-renderer": "^2.3",
-        "react": "^18.2",
-        "react-dom": "^18.2",
-        "reactflow": "^11.10"
+        "@docusaurus/core": "^3.5.2",
+        "@docusaurus/preset-classic": "^3.5.2",
+        "@docusaurus/theme-common": "^3.5.2",
+        "@docusaurus/theme-mermaid": "^3.5.2",
+        "@mdx-js/react": "^3.0.1",
+        "clsx": "^2.1.1",
+        "docusaurus-plugin-openapi-docs": "^4.1.0",
+        "docusaurus-theme-openapi-docs": "^4.1.0",
+        "prism-react-renderer": "^2.4.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "reactflow": "^11.11.4"
     },
     "devDependencies": {
-        "@docusaurus/module-type-aliases": "^3.1",
-        "@tsconfig/docusaurus": "^2.0",
-        "typescript": "^5.3"
+        "@docusaurus/module-type-aliases": "^3.5.2",
+        "@tsconfig/docusaurus": "^2.0.3",
+        "typescript": "^5.6.2"
     },
     "browserslist": {
         "production": [

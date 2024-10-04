@@ -192,20 +192,6 @@ const sidebars = {
       id: "faq",
     },
   ],
-
-  apiSidebar: [
-    {
-      type: "category",
-      label: "Nixhub API Reference",
-      collapsed: false,
-      collapsible: false,
-      link: {
-        type: "doc",
-        id: "nixhub/index",
-      },
-      items: require("./docs/nixhub/sidebar"),
-    },
-  ],
 };
 
 export default sidebars;

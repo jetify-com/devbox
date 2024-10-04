@@ -1,13 +1,13 @@
 ---
 id: search-packages
 title: "Search Packages"
-description: "Search Packages"
+description: "Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query.  The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint."
 sidebar_label: "Search Packages"
 hide_title: true
 hide_table_of_contents: true
-api: eJyNVe9LIzEQ/VdCPilIW8RP5X7Qg7tDDjxR75OIZnen3Wg2SZPZaln6v99MdlvXbu8oCLWZzHtv5k2mjQwQvbMRopw28nwy4Y8CYh60R+2snMrfv+SZzJ1FsMhR5b3RueLo+DnylUbGvIRK8X+49kBJLnuGHCnxI9bMijYiAniiJkhtFwJLoINYG4zCzYUSEVTIS7GsIaxH4q7UUdBfAKyDhUJk65TyNF6dj9urTwJs4Z22zOmD8xBQt0UlkJ60iIE4B9LuCLBPK1icQPcfps2ZRIfKPHbaeyQUhgWEgywpR9i6yiBwudvK5y4ksr4K5hiiqxDUethcYXRERrxNCDcdLpYKRaWQMBm+39QEJF61MSIDAZXHtdBzYd1O1CsEIGW1LUZEqBGqeITNIlKLza6UFqwnBOK+yQPbrKrgONf4JlfNxXmVv6gF9KmKg02NdVWpY+aCaildQNE73SNjOKMiPta+UAjFcao5Q6CuWCs5sRX+qqLocIS2ieZKv/mXBY+/d3LDQ6fRMHrfZgociqS3zTEKXhx63d9UIW6A2hJx2g3Ah1dwEgHJq6/Lz5/SwZfu3KtAbUcIpzJBXwyhrxyKHzw5SfQugdy939orlzxUfLk1hod9WevATcRQw37jbvdGZrB3uoZvNg//SL1u+xwpmdSUjojkAtLWUFjSl+6ZMziE1VZuHQzFSkQfp+PuyqiAVebeRrGk7SCZUdu5S2I6G8i5ss7E7PqS4BirlXI+mowmw0G7vkwroAXntahswU/HmRV/205IAZ42ENicHwo31kWslH1/MwdK/cC0axbCG469UWQA4aQSm64N97JrA1VVEgGfNE2mIvwJZrPh426vUnMKHVVm2LO5MnHftOb9x0Oe3HT2nop9Kw9qeoF1NyQrZWqOpz6vVNDMSOwPdKsEVdCuZSltwizPwWMva/CbxSg7/39+v6OJ+QsKVnKG
+api: eJztVU1v2zAM/SuETx1QJEXRU7EPdMA2FAO6ottO3bApNhOrlSVVotMGQf77SFlOHScDuvtObUzxvUfyUVoXFcYyaE/a2eK8+IoqlDVcq/JeLTBO4FutI6CtvNOWQBnjHiOsXAvkIHaH5y6AzwmgLVCNcKWf/P0iQkDvoiYXVtBGbReg+qyHFsNqAkyAfCp6ZyNydmlaVsTHjI4Ebt4jg1WNfDeOQR411UKjAwzks1gHC2SVS6WNmhmEJYbIEc6zFYNH4gIkEJNo1YMfp4pKZVkkMjCXLHRbHvg9XZ5OuaDf21ZM4IctjoteeSzO18XpyYn82e3ol898rHSW0JJElfdGl0qi07soR9ZFLGtslPxHK4+c5GZ3WBIn7mJdWOgi0lemZkjpKXUtbA1F6di4xWmEWmZBbbBYwWz1XFR39Lku5vTBeQyku6ISyEBapMCce9JkjENaEHFikr8zbY4LcjyRX1n7gITDuMBwkCXlgG2bGQYpt69cJkojFcKxj65CUKv95m4t1y3BTcalWhE0isrOCsOmJiB2iTEwQ8DG0wr0HKzbinrEgKystdWECTVhE18wZpBVMdtSOrCBkLQgO0PeG5v492VTS07nqqW4ftkGVNXBpsa2adRLfMG11C7QcE9HZAJnVKRfra8UYfUy1ZIBpJu8rr3wRxUh4xy6ioqNmE6Twe1d142ZA4ciabclxsGzQ9v9XlVwg9yWSOfZADtbcBTlPoJ3D29epw9v83evAredMLwqEvTZPvSVI/gozkmitwk83dt+vMWDmEoOd4MRsz+0OkgTKbQ4btzXkWX27p3c8M3m53HBbLVjoIKvVLGXopp/5DWWZAzLXk4bDMdqIh/Pp/nIpMLlzD1NYs3bXwiitnOXyHKbeTJ1O4OL60uGy1c1fz6dnExO9o10fZlWvANPTwnf6bwazizlV++ACj3fMGhLWQRpnIvUKPu8E+M3bsy0fr6t/z+H//gcZhsRPtHUG8XW5Akkc6yzgW6LbCD2Q82jkS/r9UxF/B7MZiOf84vDtqp0FHlswrkycWzn4aCObrLxX8HY5Ac13eMqr89SmVbiyaFLFbQwMvtPPlWjqvgVEildwkVZoqdB1t5rvrM5nz584136A40nS2E=
 sidebar_class_name: "get api-method"
-info_path: nixhub/nixhub-api
+info_path: devbox/nixhub/nixhub-api
 custom_edit_url: null
 ---
 
@@ -20,7 +20,6 @@ import ParamsItem from "@theme/ParamsItem";
 import ResponseSamples from "@theme/ResponseSamples";
 import SchemaItem from "@theme/SchemaItem";
 import SchemaTabs from "@theme/SchemaTabs";
-import Markdown from "@theme/Markdown";
 import Heading from "@theme/Heading";
 import OperationTabs from "@theme/OperationTabs";
 import TabItem from "@theme/TabItem";
@@ -35,13 +34,15 @@ import TabItem from "@theme/TabItem";
 <MethodEndpoint
   method={"get"}
   path={"/search"}
+  context={"endpoint"}
 >
   
 </MethodEndpoint>
 
 
 
-Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query. The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint. 
+Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query.  The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint. 
+
 
 <Heading
   id={"request"}
@@ -69,7 +70,7 @@ Search Packages. This endpoint allows you to search for packages in the Nixpkgs 
     <ul>
       <ParamsItem
         className={"paramsItem"}
-        param={{"name":"q","in":"query","required":true,"description":"Search query.","schema":{"type":"string"}}}
+        param={{"name":"q","in":"query","required":true,"description":"Search query.","schema":{"type":"string"},"enumDescriptions":[]}}
       >
         
       </ParamsItem>
