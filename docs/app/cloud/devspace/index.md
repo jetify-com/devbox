@@ -4,7 +4,7 @@ sidebar_position: 1
 hide_title: false
 ---
 
-Jetify Devspace let you spin up reproducible cloud development environments in your browser in seconds. Jetify Devspace is powered by [Devbox](/devbox/docs), so you can run your environment on any machine. You can launch any
+Jetify Devspace let you spin up reproducible cloud development environments in your browser in seconds. Jetify Devspace is powered by [Devbox](/devbox), so you can run your environment on any machine. You can launch any
 
 Let's launch our first Dev Environment in Jetify Devspace.
 
@@ -21,7 +21,7 @@ For example, to launch the [Devbox repo](https://github.com/jetify-com/devbox), 
   [https://cloud.jetify.com/new/github.com/jetify-com/devbox](https://cloud.jetify.com/new/github.com/jetify-com/devbox)
 
 :::tip
-  If you need some inspiration, you can also launch one of our [templates](/devbox/docs/devbox_examples) projects to get started
+  If you need some inspiration, you can also launch one of our [templates](/docs/devbox/devbox_examples) projects to get started
 :::
 
 You can also launch a new Devspace by navigating to your [Dashboard](https://cloud.jetify.com/dashboard) and clicking on the `New Devspace` button.
@@ -50,12 +50,12 @@ devbox add python@3.11
 
 You can find packages to install using `devbox search <package>`, or by searching in your browser with [Nixhub](https://www.nixhub.io)
 
-Packages you install will be added to your `devbox.json` file. You can also use this `devbox.json` file configure your environment with [scripts](/devbox/docs/guides/scripts), [services](/devbox/docs/guides/services), and more
+Packages you install will be added to your `devbox.json` file. You can also use this `devbox.json` file configure your environment with [scripts](/docs/devbox/guides/scripts), [services](/docs/devbox/guides/services), and more
 
 For further reading on how to install packages with Devbox, see:
 
-* [Devbox Quickstart](/devbox/docs/quickstart)
-* [Devbox CLI Reference](/devbox/docs/cli_reference/devbox)
+* [Devbox Quickstart](/docs/devbox/quickstart)
+* [Devbox CLI Reference](/docs/devbox/cli_reference/devbox)
 
 ## Step 3: Save your Dev Environment with `devbox.json`
 
@@ -63,6 +63,6 @@ Once you've customized your environment, you can save your Dev Environment confi
 
 You can also use this file to configure initialization hooks, scripts, services, and environment variables for your project. For further reading, see:
 
-* [Devbox Configuration Reference](/devbox/docs/configuration)
-* [Devbox Script](/devbox/docs/guides/scripts)
-* [Devbox Services](/devbox/docs/guides/services)
+* [Devbox Configuration Reference](/docs/devbox/configuration)
+* [Devbox Script](/docs/devbox/guides/scripts)
+* [Devbox Services](/docs/devbox/guides/services)

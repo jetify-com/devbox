@@ -8,7 +8,7 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 
 ## How to Use
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing_devbox/)
 1. Run `devbox shell` to install your packages and run the init_hook. This will activate your virtual environment and install Django.
 1. Initialize PostgreSQL with `devbox run initdb`.
 1. In the root directory, run `devbox run create_db` to create the database and run your Django migrations.
@@ -18,7 +18,7 @@ This example demonstrates how to configure and run a Django app using Devbox. It
 
 ### Setting up the Project
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/).
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing_devbox/).
 1. Run `devbox init` to create a new Devbox project in your directory.
 1. Install Python and PostgreSQL with `devbox install python python310Packages.pip openssl postgresql`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
 1. Copy the requirements.txt and `todo_project` directory into the root folder of your project

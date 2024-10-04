@@ -5,7 +5,7 @@ sidebar_position: 3
 
 You can access your Jetify Secrets locally using Devbox. When you authenticate your Devbox CLI with Jetify Cloud, Devbox will automatically identify your project, and make your secrets available in your Devbox shell. Developers who are part of your Jetify Cloud team can also access your project’s secrets automatically, whenever they use devbox to start a shell, run a script, or launch a service
 
-If you don't already have Devbox installed, see our [Quickstart](https://www.jetify.com/devbox/docs/quickstart/) guide to get started.
+If you don't already have Devbox installed, see our [Quickstart](https://www.jetify.com/docs/devbox/quickstart/) guide to get started.
 
 ## Authenticating with Devbox
 
@@ -134,5 +134,5 @@ You can download from a specific environment using the `--environment` flag:
 
 ## Further Reading
 
-- [Devbox Secrets CLI Reference](/devbox/docs/cli_reference/devbox_secrets)
+- [Devbox Secrets CLI Reference](/docs/devbox/cli_reference/devbox_secrets)
 - [Managing Secrets from the Dashboard](../dashboard_secrets)

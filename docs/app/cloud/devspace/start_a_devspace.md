@@ -37,7 +37,7 @@ https://cloud.jetify.com/new/github.com/jetify-com/devbox
 
 ## From a Template
 
-A full list of available templates and projects can be found in the [Devbox Examples](/devbox/docs/devbox_examples/) page of our documentation.
+A full list of available templates and projects can be found in the [Devbox Examples](/docs/devbox/devbox_examples/) page of our documentation.
 
 ## From a Project
 
