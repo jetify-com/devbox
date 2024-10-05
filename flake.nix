@@ -36,6 +36,8 @@
 
           src = ./.;
 
+          subpackage = [./cmd/devbox];
+
           ldflags = [
             "-s"
             "-w"
