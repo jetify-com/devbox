@@ -71,7 +71,7 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func InitConfig(dir string) (bool, error) {
+func InitConfig(dir string) error {
 	return devconfig.Init(dir)
 }
 

@@ -63,7 +63,7 @@ func ensureGlobalConfig() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = devbox.InitConfig(globalConfigPath)
+	err = devbox.InitConfig(globalConfigPath)
 	if err != nil {
 		return "", err
 	}

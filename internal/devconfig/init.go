@@ -11,17 +11,17 @@ import (
 	"go.jetpack.io/devbox/internal/devconfig/configfile"
 )
 
-func Init(dir string) (created bool, err error) {
+func Init(dir string) error {
 	file, err := os.OpenFile(
 		filepath.Join(dir, configfile.DefaultName),
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
 		0o644,
 	)
 	if errors.Is(err, os.ErrExist) {
-		return false, nil
+		return nil
 	}
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer func() {
 		if err != nil {
@@ -32,10 +32,7 @@ func Init(dir string) (created bool, err error) {
 	_, err = file.Write(DefaultConfig().Root.Bytes())
 	if err != nil {
 		file.Close()
-		return false, err
+		return err
 	}
-	if err := file.Close(); err != nil {
-		return false, err
-	}
-	return true, nil
+	return file.Close()
 }
