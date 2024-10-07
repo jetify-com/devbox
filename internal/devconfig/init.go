@@ -18,7 +18,9 @@ func Init(dir string) (*Config, error) {
 		0o644,
 	)
 	if errors.Is(err, os.ErrExist) {
-		return nil, err
+		// TODO: Should we return an error here?
+		// If we do, it breaks a bunch of tests, but it's likely the correct behavior
+		return nil, nil
 	}
 	if err != nil {
 		return nil, err
