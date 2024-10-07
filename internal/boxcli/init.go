@@ -4,6 +4,8 @@
 package boxcli
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -31,7 +33,7 @@ func initCmd() *cobra.Command {
 	}
 
 	command.Flags().BoolVar(&flags.auto, "auto", false, "Automatically detect packages to add")
-	command.Flags().BoolVar(&flags.dryRun, "dry-run", false, "Dry run")
+	command.Flags().BoolVar(&flags.dryRun, "dry-run", false, "Dry run for auto mode. Prints the config that would be used")
 	_ = command.Flags().MarkHidden("auto")
 	_ = command.Flags().MarkHidden("dry-run")
 
@@ -41,18 +43,17 @@ func initCmd() *cobra.Command {
 func runInitCmd(cmd *cobra.Command, args []string, flags *initFlags) error {
 	path := pathArg(args)
 
-	if flags.auto && flags.dryRun {
-		return autodetect.DryRun(cmd.Context(), path, cmd.ErrOrStderr())
-	}
-
-	err := devbox.InitConfig(path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
 	if flags.auto {
-		err = autodetect.PopulateConfig(cmd.Context(), path, cmd.ErrOrStderr())
+		if flags.dryRun {
+			config, err := autodetect.DryRun(cmd.Context(), path)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), string(config))
+			return nil
+		}
+		return autodetect.InitConfig(cmd.Context(), path)
 	}
 
-	return errors.WithStack(err)
+	return devbox.InitConfig(path)
 }

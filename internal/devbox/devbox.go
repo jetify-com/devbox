@@ -72,7 +72,8 @@ type Devbox struct {
 var legacyPackagesWarningHasBeenShown = false
 
 func InitConfig(dir string) error {
-	return devconfig.Init(dir)
+	_, err := devconfig.Init(dir)
+	return err
 }
 
 func Open(opts *devopt.Opts) (*Devbox, error) {

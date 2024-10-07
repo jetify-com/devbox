@@ -16,7 +16,7 @@ import (
 func TestOpen(t *testing.T) {
 	t.Run("Dir", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -31,7 +31,7 @@ func TestOpen(t *testing.T) {
 	})
 	t.Run("File", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 		path := filepath.Join(root, "devbox.json")
@@ -50,7 +50,7 @@ func TestOpen(t *testing.T) {
 func TestOpenError(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -79,7 +79,7 @@ func TestOpenError(t *testing.T) {
 	})
 	t.Run("ParentNotFound", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -96,10 +96,10 @@ func TestOpenError(t *testing.T) {
 func TestFind(t *testing.T) {
 	t.Run("StartInSameDir", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
-		if err := Init(child); err != nil {
+		if _, err := Init(child); err != nil {
 			t.Fatalf("Init(%q) error: %v", child, err)
 		}
 
@@ -114,7 +114,7 @@ func TestFind(t *testing.T) {
 	})
 	t.Run("StartInChildDir", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -129,10 +129,10 @@ func TestFind(t *testing.T) {
 	})
 	t.Run("StartInNestedChildDir", func(t *testing.T) {
 		root, child, nested := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
-		if err := Init(child); err != nil {
+		if _, err := Init(child); err != nil {
 			t.Fatalf("Init(%q) error: %v", child, err)
 		}
 
@@ -147,7 +147,7 @@ func TestFind(t *testing.T) {
 	})
 	t.Run("IgnoreDirsWithMatchingName", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -171,7 +171,7 @@ func TestFind(t *testing.T) {
 	})
 	t.Run("ExactFile", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -189,7 +189,7 @@ func TestFind(t *testing.T) {
 func TestFindError(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -207,7 +207,7 @@ func TestFindError(t *testing.T) {
 	})
 	t.Run("NotFound", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(child); err != nil {
+		if _, err := Init(child); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 
@@ -221,10 +221,10 @@ func TestFindError(t *testing.T) {
 	})
 	t.Run("Permissions", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
-		if err := Init(child); err != nil {
+		if _, err := Init(child); err != nil {
 			t.Fatalf("Init(%q) error: %v", child, err)
 		}
 		path := filepath.Join(child, "devbox.json")
@@ -260,7 +260,7 @@ func TestFindError(t *testing.T) {
 	})
 	t.Run("ExactFilePermissions", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
-		if err := Init(root); err != nil {
+		if _, err := Init(root); err != nil {
 			t.Fatalf("Init(%q) error: %v", root, err)
 		}
 		path := filepath.Join(root, "devbox.json")
