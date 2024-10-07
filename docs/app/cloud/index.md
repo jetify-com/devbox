@@ -33,4 +33,4 @@ More features are coming soon, keep an eye on our [**blog**](https://www.jetify.
 - Speed up your dev environments with [**Jetify Cache**](./cache/index.md)
 - Integrate Secrets with your Devbox project using [**Jetify Secrets**](./secrets/index.md)
 - Learn how to [**create your team**](./dashboard/creating_your_team.md) and [**invite members**](./dashboard/inviting_members.md)
-<!---  Learn how to deploy your application with [**Jetify Deploys**](./deploys/index.md) -->
+- Learn how to deploy your application with [**Jetify Deploys**](./deploys/index.md)
