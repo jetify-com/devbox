@@ -10,7 +10,9 @@ type PythonDetector struct {
 	Root string
 }
 
-func (d *PythonDetector) IsRelevant(path string) (float64, error) {
+var _ Detector = &PythonDetector{}
+
+func (d *PythonDetector) Relevance(path string) (float64, error) {
 	requirementsPath := filepath.Join(d.Root, "requirements.txt")
 	_, err := os.Stat(requirementsPath)
 	if err == nil {

@@ -16,7 +16,9 @@ type PoetryDetector struct {
 	Root string
 }
 
-func (d *PoetryDetector) IsRelevant(path string) (float64, error) {
+var _ Detector = &PoetryDetector{}
+
+func (d *PoetryDetector) Relevance(path string) (float64, error) {
 	pyprojectPath := filepath.Join(d.Root, "pyproject.toml")
 	_, err := os.Stat(pyprojectPath)
 	if err == nil {

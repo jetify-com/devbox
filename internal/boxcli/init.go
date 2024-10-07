@@ -12,8 +12,8 @@ import (
 )
 
 type initFlags struct {
-	autoDetect bool
-	dryRun     bool
+	auto   bool
+	dryRun bool
 }
 
 func initCmd() *cobra.Command {
@@ -30,9 +30,10 @@ func initCmd() *cobra.Command {
 		},
 	}
 
-	command.Flags().BoolVar(&flags.autoDetect, "autodetect", false, "Automatically detect packages to add")
+	command.Flags().BoolVar(&flags.auto, "auto", false, "Automatically detect packages to add")
 	command.Flags().BoolVar(&flags.dryRun, "dry-run", false, "Dry run")
-	command.Flag("autodetect").Hidden = true
+	_ = command.Flags().MarkHidden("auto")
+	_ = command.Flags().MarkHidden("dry-run")
 
 	return command
 }
@@ -40,7 +41,7 @@ func initCmd() *cobra.Command {
 func runInitCmd(cmd *cobra.Command, args []string, flags *initFlags) error {
 	path := pathArg(args)
 
-	if flags.autoDetect && flags.dryRun {
+	if flags.auto && flags.dryRun {
 		return autodetect.DryRun(cmd.Context(), path, cmd.ErrOrStderr())
 	}
 
@@ -49,7 +50,7 @@ func runInitCmd(cmd *cobra.Command, args []string, flags *initFlags) error {
 		return errors.WithStack(err)
 	}
 
-	if flags.autoDetect {
+	if flags.auto {
 		err = autodetect.PopulateConfig(cmd.Context(), path, cmd.ErrOrStderr())
 	}
 
