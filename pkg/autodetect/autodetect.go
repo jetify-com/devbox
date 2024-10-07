@@ -62,7 +62,7 @@ func relevantDetector(path string) (detector.Detector, error) {
 	relevantScore := 0.0
 	var mostRelevantDetector detector.Detector
 	for _, detector := range detectors(path) {
-		score, err := detector.IsRelevant(path)
+		score, err := detector.Relevance(path)
 		if err != nil {
 			return nil, err
 		}
