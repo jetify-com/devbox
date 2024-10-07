@@ -2,40 +2,35 @@ package autodetect
 
 import (
 	"context"
-	"fmt"
-	"io"
 
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/internal/devconfig"
 	"go.jetpack.io/devbox/pkg/autodetect/detector"
 )
 
-func PopulateConfig(ctx context.Context, path string, stderr io.Writer) error {
-	pkgs, err := packages(ctx, path)
+func InitConfig(ctx context.Context, path string) error {
+	config, err := devconfig.Init(path)
 	if err != nil {
 		return err
 	}
-	devbox, err := devbox.Open(&devopt.Opts{
-		Dir:    path,
-		Stderr: stderr,
-	})
-	if err != nil {
-		return err
-	}
-	return devbox.Add(ctx, pkgs, devopt.AddOpts{})
+
+	return populateConfig(ctx, path, config)
 }
 
-func DryRun(ctx context.Context, path string, stderr io.Writer) error {
+func DryRun(ctx context.Context, path string) ([]byte, error) {
+	config := devconfig.DefaultConfig()
+	if err := populateConfig(ctx, path, config); err != nil {
+		return nil, err
+	}
+	return config.Root.Bytes(), nil
+}
+
+func populateConfig(ctx context.Context, path string, config *devconfig.Config) error {
 	pkgs, err := packages(ctx, path)
 	if err != nil {
 		return err
-	} else if len(pkgs) == 0 {
-		fmt.Fprintln(stderr, "No packages to add")
-		return nil
 	}
-	fmt.Fprintln(stderr, "Packages to add:")
 	for _, pkg := range pkgs {
-		fmt.Fprintln(stderr, pkg)
+		config.PackageMutator().Add(pkg)
 	}
 	return nil
 }
