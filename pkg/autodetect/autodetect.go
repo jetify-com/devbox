@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
+	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/pkg/autodetect/detector"
-	"go.jetpack.io/devbox/pkg/devbox"
-	"go.jetpack.io/devbox/pkg/devbox/devopt"
 )
 
 func PopulateConfig(ctx context.Context, path string, stderr io.Writer) error {
@@ -62,7 +62,7 @@ func relevantDetector(path string) (detector.Detector, error) {
 	relevantScore := 0.0
 	var mostRelevantDetector detector.Detector
 	for _, detector := range detectors(path) {
-		score, err := detector.Relevance(path)
+		score, err := detector.IsRelevant(path)
 		if err != nil {
 			return nil, err
 		}

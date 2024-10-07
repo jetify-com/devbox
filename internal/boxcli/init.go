@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/autodetect"
 	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/pkg/autodetect"
 )
 
 type initFlags struct {
