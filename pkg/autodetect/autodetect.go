@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"go.jetpack.io/devbox/internal/autodetect/detector"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetpack.io/devbox/pkg/autodetect/detector"
 )
 
 func PopulateConfig(ctx context.Context, path string, stderr io.Writer) error {
