@@ -122,7 +122,7 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 
 func devboxForTesting(t *testing.T) *Devbox {
 	path := t.TempDir()
-	_, err := devconfig.Init(path)
+	err := devconfig.Init(path)
 	require.NoError(t, err, "InitConfig should not fail")
 	d, err := Open(&devopt.Opts{
 		Dir:    path,
