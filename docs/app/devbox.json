@@ -1,3 +1,18 @@
 {
-  "packages": ["nodejs@latest"]
+  "packages": [
+    "nodejs@20.12.2",
+  ],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true",
+  },
+  "shell": {
+    "init_hook": [
+      "test \"$SKIP_INIT_HOOK\" = \"1\" || pnpm install",
+    ],
+    "scripts": {
+      "build": "pnpm run build",
+      "start": "pnpm run start",
+      "serve": "pnpm run serve",
+    },
+  },
 }
