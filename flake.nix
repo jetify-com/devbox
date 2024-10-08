@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.3";
+        lastTag = "0.13.4";
 
         revision = if (self ? shortRev)
                    then "${self.shortRev}"
@@ -50,7 +50,7 @@
 
           nativeBuildInputs = [ pkgs.installShellFiles ];
 
-          postInstall = ''
+          postInstall = pkgs.lib.optionalString (pkgs.stdenv.buildPlatform.canExecute pkgs.stdenv.hostPlatform) ''
             installShellCompletion --cmd devbox \
               --bash <($out/bin/devbox completion bash) \
               --fish <($out/bin/devbox completion fish) \
