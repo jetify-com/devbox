@@ -17,7 +17,7 @@ create_venv() {
 
 # Check that Python version supports venv
 if ! python -c 'import venv' 1> /dev/null 2> /dev/null; then
-    echo "\033[1;33mWARNING: Python version must be > 3.3 to create a virtual environment.\033[0m"
+    echo "WARNING: Python version must be > 3.3 to create a virtual environment."
     touch "$STATE_FILE"
     exit 1
 fi
@@ -31,15 +31,19 @@ if [ -d "$VENV_DIR" ]; then
             exit 0
         fi
         if ! is_devbox_venv "$VENV_DIR"; then
-            echo "\033[1;33mWARNING: Virtual environment at $VENV_DIR doesn't use Devbox Python.\033[0m"
-            read -p "Do you want to overwrite it? (y/n) " -n 1 -r
+            echo "WARNING: Virtual environment at $VENV_DIR doesn't use Devbox Python."
+            echo "Do you want to overwrite it? (y/n)"
+            read reply
             echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if [[ $reply =~ ^[Yy]$ ]]; then
                 echo "Overwriting existing virtual environment..."
                 create_venv
-            else
+            elif [[ $reply =~ ^[Nn]$ ]]; then
                 echo "Using your existing virtual environment. We recommend changing \$VENV_DIR to a different location"
                 touch "$STATE_FILE"
+                exit 0
+            else
+                echo "Invalid input. Exiting..."
                 exit 1
             fi
         fi
