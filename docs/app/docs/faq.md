@@ -49,7 +49,7 @@ devbox add github:NixOS/nixpkgs#prometheus^out,cli
 
 Packages may take a long time to install if they do not have a binary available in the public Nix Cache. If a prebuilt binary is not available, Nix will built the package from source.
 
-If prebuilt binaries are not available in the public cache, you may want to use the [Jetify Cache](./cloud/cache/index.md) or the [Jetify Prebuilt Cache](./cloud/cache/prebuilt_cache.md) to cache the binaries you build for future use. Using a package cache can reduce package install by up to 90% compared to building from source.
+If prebuilt binaries are not available in the public cache, you may want to use the [Jetify Cache](/docs/cloud/cache/) or the [Jetify Prebuilt Cache](/docs/cloud/cache/prebuilt_cache) to cache the binaries you build for future use. Using a package cache can reduce package install by up to 90% compared to building from source.
 
 ## I'm trying to build a project, but it says that I'm missing `libstdc++`. How do I install this library in my project?
 
@@ -66,7 +66,7 @@ There are three ways to work around this issue:
 
 ## How can I use custom Nix packages or overrides with Devbox?
 
-You can add customized packages to your Devbox environment using our [Flake support](./guides/using_flakes.md). You can use these flakes to modify or override packages from nixpkgs, or to create your own custom packages.
+You can add customized packages to your Devbox environment using our [Flake support](/docs/devbox/guides/using_flakes). You can use these flakes to modify or override packages from nixpkgs, or to create your own custom packages.
 
 ## Can I use Devbox if I use [Fish](https://fishshell.com/)?
 

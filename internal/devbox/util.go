@@ -16,7 +16,7 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-const processComposeVersion = "1.24.2"
+const processComposeVersion = "1.34.0"
 
 var utilProjectConfigPath string
 
@@ -55,7 +55,7 @@ func ensureDevboxUtilityConfig() (string, error) {
 		return "", err
 	}
 
-	_, err = InitConfig(path)
+	err = InitConfig(path)
 	if err != nil {
 		return "", err
 	}

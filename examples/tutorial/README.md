@@ -2,7 +2,7 @@
 
 This shell includes a basic `devbox.json` with a few useful packages installed, and an example init_hook and script
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox-examples?folder=tutorial)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/tutorial)
 
 ## Adding New Packages
 

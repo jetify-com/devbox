@@ -11,19 +11,21 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.3";
+        lastTag = "0.13.4";
 
-        revision = if (self ? shortRev)
-                   then "${self.shortRev}"
-                   else "${self.dirtyShortRev or "dirty"}";
+        revision =
+          if (self ? shortRev)
+          then "${self.shortRev}"
+          else "${self.dirtyShortRev or "dirty"}";
 
         # Add the commit to the version string for flake builds
         version = "${lastTag}-${revision}";
 
         # Run `devbox run update-flake` to update the vendor-hash
-        vendorHash = if builtins.pathExists ./vendor-hash
-                     then builtins.readFile ./vendor-hash
-                     else "";
+        vendorHash =
+          if builtins.pathExists ./vendor-hash
+          then builtins.readFile ./vendor-hash
+          else "";
 
         buildGoModule = pkgs.buildGo123Module;
 
@@ -35,6 +37,8 @@
           inherit version vendorHash;
 
           src = ./.;
+
+          subpackage = [ ./cmd/devbox ];
 
           ldflags = [
             "-s"
@@ -48,7 +52,7 @@
 
           nativeBuildInputs = [ pkgs.installShellFiles ];
 
-          postInstall = ''
+          postInstall = pkgs.lib.optionalString (pkgs.stdenv.buildPlatform.canExecute pkgs.stdenv.hostPlatform) ''
             installShellCompletion --cmd devbox \
               --bash <($out/bin/devbox completion bash) \
               --fish <($out/bin/devbox completion fish) \
