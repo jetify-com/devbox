@@ -5,6 +5,7 @@ package nix
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,6 +36,7 @@ func SourceNixEnv() error {
 	// installed before we get here)
 	srcFile := ""
 	for _, f := range nixLinks() {
+		fmt.Println(f)
 		if _, err := os.Stat(f); err == nil {
 			srcFile = f
 			break
