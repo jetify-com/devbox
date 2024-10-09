@@ -10,10 +10,17 @@ import (
 )
 
 func Clean(dir string) error {
-	filesToDelete := []string{configfile.DefaultName, "devbox.lock", ".devbox"}
+	filesToDelete := []string{
+		configfile.DefaultName,
+		"devbox.lock",
+		".devbox",
+	}
 	for _, f := range filesToDelete {
 		// TODO: what should we do here? print an error?
-		_ = os.Remove(f)
+		_ = os.RemoveAll(dir + f)
 	}
+
+	// TODO: should the devbox shell be killed here?
+
 	return nil
 }

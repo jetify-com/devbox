@@ -16,9 +16,9 @@ func cleanCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "clean",
 		Short: "Cleans up an existing devbox directory.",
-		Long: "Cleans up an existing devbox directory." +
-			"This will delete all devbox files and directories." +
-			"This includes .devbox, devbox.json, devbox.lock.",
+		Long: "Cleans up an existing devbox directory.\n" +
+			"This will delete all devbox files and directories.\n" +
+			"This includes .devbox, devbox.json, devbox.lock.\n",
 		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCleanCmd(cmd, args, flags)
