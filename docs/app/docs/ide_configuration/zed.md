@@ -31,3 +31,11 @@ If you are having trouble getting Zed's LSP to detect your Devbox environment, t
   ...
 }
 ```
+
+3. If you have a version of the binary/language server installed on your host machine, Zed's default behavior for loading direnv directly may cause conflicts with the packages installed via Devbox. To fix this, add the following to your `~/.config/zed/config.json` file:
+
+```json
+{
+  "load_direnv": "shell_hook"
+}
+```
