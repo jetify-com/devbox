@@ -6,29 +6,48 @@ package boxcli
 import (
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/devconfig"
 )
 
-type cleanFlags struct{}
+type cleanFlags struct {
+	hard bool
+}
+
+const (
+	devboxLockFile   = "devbox.lock"
+	devboxConfigFile = "devbox.json"
+	devboxDotDir     = ".devbox"
+)
 
 func cleanCmd() *cobra.Command {
 	flags := &cleanFlags{}
 	command := &cobra.Command{
 		Use:   "clean",
 		Short: "Cleans up an existing devbox directory.",
-		Long: "Cleans up an existing devbox directory.\n" +
-			"This will delete all devbox files and directories.\n" +
-			"This includes .devbox, devbox.json, devbox.lock.\n",
+		Long: "Cleans up an existing devbox directory. " +
+			"This will delete .devbox and devbox.lock. ",
 		Args: cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCleanCmd(cmd, args, flags)
 		},
 	}
 
+	command.Flags().BoolVar(&flags.hard, "hard", false, "Also delete the devbox.json file")
+
 	return command
 }
 
-func runCleanCmd(_ *cobra.Command, args []string, _ *cleanFlags) error {
+func runCleanCmd(_ *cobra.Command, args []string, flags *cleanFlags) error {
 	path := pathArg(args)
-	return devbox.Clean(path)
+
+	filesToDelete := []string{
+		devboxLockFile,
+		devboxDotDir,
+	}
+
+	if flags.hard {
+		filesToDelete = append(filesToDelete, devboxConfigFile)
+	}
+
+	return devconfig.Clean(path, filesToDelete)
 }

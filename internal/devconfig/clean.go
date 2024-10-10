@@ -7,11 +7,7 @@ import (
 	"os"
 )
 
-func Clean(dir string) error {
-	filesToDelete := []string{
-		"devbox.lock",
-		".devbox",
-	}
+func Clean(dir string, filesToDelete []string) error {
 	for _, f := range filesToDelete {
 		// TODO: what should we do here when an unexpected error occurs? print an error?
 		_ = os.RemoveAll(dir + f)

@@ -76,11 +76,6 @@ func InitConfig(dir string) error {
 	return err
 }
 
-func Clean(dir string) error {
-	err := devconfig.Clean(dir)
-	return err
-}
-
 func Open(opts *devopt.Opts) (*Devbox, error) {
 	var cfg *devconfig.Config
 	var err error
