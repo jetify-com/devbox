@@ -5,18 +5,15 @@ package devconfig
 
 import (
 	"os"
-
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
 )
 
 func Clean(dir string) error {
 	filesToDelete := []string{
-		configfile.DefaultName,
 		"devbox.lock",
 		".devbox",
 	}
 	for _, f := range filesToDelete {
-		// TODO: what should we do here? print an error?
+		// TODO: what should we do here when an unexpected error occurs? print an error?
 		_ = os.RemoveAll(dir + f)
 	}
 

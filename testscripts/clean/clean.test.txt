@@ -12,7 +12,6 @@ exists devbox.lock
 exists .devbox
 
 exec devbox clean
-! exists devbox.json
 ! exists devbox.lock
 ! exists .devbox
 
