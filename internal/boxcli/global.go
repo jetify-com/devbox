@@ -5,6 +5,7 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -63,8 +64,8 @@ func ensureGlobalConfig() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = devbox.InitConfig(globalConfigPath)
-	if err != nil {
+	err = devbox.EnsureConfig(globalConfigPath)
+	if err != nil && !errors.Is(err, os.ErrExist) {
 		return "", err
 	}
 	return globalConfigPath, nil
