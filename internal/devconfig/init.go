@@ -4,7 +4,6 @@
 package devconfig
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
@@ -17,11 +16,6 @@ func Init(dir string) (*Config, error) {
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
 		0o644,
 	)
-	if errors.Is(err, os.ErrExist) {
-		// TODO: Should we return an error here?
-		// If we do, it breaks a bunch of tests, but it's likely the correct behavior
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}

@@ -55,7 +55,7 @@ func ensureDevboxUtilityConfig() (string, error) {
 		return "", err
 	}
 
-	err = InitConfig(path)
+	err = EnsureConfig(path)
 	if err != nil {
 		return "", err
 	}

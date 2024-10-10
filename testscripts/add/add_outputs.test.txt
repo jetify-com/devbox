@@ -15,12 +15,6 @@ exec devbox run -- prometheus --version
 
 
 
--- devbox.json --
-{
-  "packages": [
-  ]
-}
-
 -- expected_devbox.json --
 {
   "packages": {

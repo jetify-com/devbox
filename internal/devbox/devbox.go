@@ -76,6 +76,14 @@ func InitConfig(dir string) error {
 	return err
 }
 
+func EnsureConfig(dir string) error {
+	err := InitConfig(dir)
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		return err
+	}
+	return nil
+}
+
 func Open(opts *devopt.Opts) (*Devbox, error) {
 	var cfg *devconfig.Config
 	var err error

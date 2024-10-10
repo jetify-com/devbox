@@ -8,9 +8,3 @@ exec devbox global shellenv --recompute
 source.path
 exec rg --version
 exec vim --version
-
--- devbox.json --
-{
-  "packages": [
-  ]
-}
