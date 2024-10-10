@@ -60,6 +60,7 @@ func RootCmd() *cobra.Command {
 		command.AddCommand(authCmd())
 	}
 	command.AddCommand(cacheCmd())
+	command.AddCommand(cleanCmd())
 	command.AddCommand(createCmd())
 	command.AddCommand(secretsCmd())
 	command.AddCommand(generateCmd())

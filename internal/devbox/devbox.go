@@ -32,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox/envpath"
 	"go.jetpack.io/devbox/internal/devbox/generate"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/envir"
@@ -1166,4 +1167,21 @@ func validateEnvironment(environment string) (string, error) {
 		"invalid environment %q. Environment must be one of dev, prod, or preview.",
 		environment,
 	)
+}
+
+func Clean(path string, w io.Writer) error {
+	toDelete := []string{
+		filepath.Join(path, lock.FileName),
+		filepath.Join(path, shellgen.DevboxHiddenDirName),
+		filepath.Join(path, configfile.DefaultName),
+	}
+	for _, path := range toDelete {
+		if fileutil.Exists(path) {
+			ux.Finfof(w, "Deleting %s\n", path)
+		}
+		if err := os.RemoveAll(path); err != nil {
+			return err
+		}
+	}
+	return nil
 }
