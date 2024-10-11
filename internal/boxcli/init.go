@@ -5,11 +5,13 @@ package boxcli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/pkg/autodetect"
 )
 
@@ -28,7 +30,16 @@ func initCmd() *cobra.Command {
 			"You can then add packages using `devbox add`",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInitCmd(cmd, args, flags)
+			err := runInitCmd(cmd, args, flags)
+			if errors.Is(err, os.ErrExist) {
+				path := pathArg(args)
+				if path == "" || path == "." {
+					path, _ = os.Getwd()
+				}
+				ux.Fwarningf(cmd.ErrOrStderr(), "devbox.json already exists in %q.", path)
+				err = nil
+			}
+			return err
 		},
 	}
 
