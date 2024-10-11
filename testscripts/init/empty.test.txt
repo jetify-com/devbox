@@ -6,8 +6,8 @@ exists devbox.json
 
 json.superset devbox.json expected.json
 
-# Second init should be an error.
-! exec devbox init
+# Second init should be a no-op with a warning
+exec devbox init
 stderr 'devbox.json already exists in'
 
 -- expected.json --
