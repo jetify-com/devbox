@@ -18,7 +18,7 @@ Devbox最初由 [Jetify](https://www.jetify.com) 进行开发，其内部由 `ni
 
 你可以点击下面的按钮在浏览器中试用 Devbox：
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devspace)
 
 下面的例子创建了一个带有 `python 2.7` 和 `go 1.18` 的开发环境，尽管这些包并没有在底层机器中被安装。
 

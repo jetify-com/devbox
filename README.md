@@ -22,7 +22,7 @@ Devbox was originally developed by [Jetify](https://www.jetify.com) and is inter
 
 You can try out Devbox in your browser using the button below:
 
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/tutorial)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/tutorial)
 
 The example below creates a development environment with `python 2.7` and `go 1.18`, even though those packages are not installed in the underlying machine:
 
