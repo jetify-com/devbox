@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devbox"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/devbox/pkg/autodetect"
 )
 
@@ -36,7 +36,8 @@ func initCmd() *cobra.Command {
 				if path == "" || path == "." {
 					path, _ = os.Getwd()
 				}
-				return usererr.New("devbox.json already exists in %q.", path)
+				ux.Fwarningf(cmd.ErrOrStderr(), "devbox.json already exists in %q.", path)
+				err = nil
 			}
 			return err
 		},
