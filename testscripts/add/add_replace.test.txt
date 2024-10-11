@@ -1,5 +1,7 @@
 # Testscript for exercising adding packages
 
+exec devbox init
+
 exec devbox add go@1.20
 devboxjson.packages.contains devbox.json go@1.20
 ! devboxjson.packages.contains devbox.json go@1.19

@@ -2,8 +2,10 @@ exec devbox init
 exec devbox info hello
 stdout 'hello '
 
+exec devbox init
 exec devbox info hello@latest
 stdout 'hello '
 
+exec devbox init
 ! exec devbox info notapackage
 stderr 'Package "notapackage" not found'

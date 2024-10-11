@@ -20,6 +20,12 @@ exec rg --version
 exec vim --version
 json.superset devbox.json expected_devbox2.json
 
+-- devbox.json --
+{
+  "packages": [
+  ]
+}
+
 -- expected_devbox1.json --
 {
   "packages": [
