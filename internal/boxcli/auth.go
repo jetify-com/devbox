@@ -96,8 +96,15 @@ func whoAmICmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return box.UninitializedSecrets(cmd.Context()).
+			// TODO: WhoAmI should be a function in opensource/pkg/auth that takes in a session.
+			// That way we don't need to handle failed refresh token errors here.
+			err = box.UninitializedSecrets(cmd.Context()).
 				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
+			if identity.IsRefreshTokenError(err) {
+				ux.Fwarningf(cmd.ErrOrStderr(), "Your session is expired. Please login again.\n")
+				return loginCmd().RunE(cmd, args)
+			}
+			return err
 		},
 	}
 
