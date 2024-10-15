@@ -27,8 +27,9 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 		return nil, fmt.Errorf("env file does not have a .env extension")
 	}
 	envFileAbsPath := filepath.Dir(c.AbsRootPath)
+	// We don't allow absolute path for env_from as it breaks reproducibility
 	if filepath.IsAbs(c.EnvFrom) {
-		envFileAbsPath = path.Join(envFileAbsPath, path.Base(c.EnvFrom))
+		return nil, fmt.Errorf("`env_from` field can't take an absolute path")
 	} else {
 		envFileAbsPath = path.Join(envFileAbsPath, c.EnvFrom)
 	}
