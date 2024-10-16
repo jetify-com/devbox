@@ -13,7 +13,11 @@ func InitConfig(ctx context.Context, path string) error {
 		return err
 	}
 
-	return populateConfig(ctx, path, config)
+	if err = populateConfig(ctx, path, config); err != nil {
+		return err
+	}
+
+	return config.Root.Save()
 }
 
 func DryRun(ctx context.Context, path string) ([]byte, error) {

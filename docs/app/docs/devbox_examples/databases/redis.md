@@ -6,7 +6,7 @@ Redis can be configured automatically using Devbox's built in Redis plugin. This
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/redis)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/redis)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/redis)
 
 ## Adding Redis to your shell
 

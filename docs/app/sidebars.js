@@ -133,6 +133,10 @@ const sidebars = {
               type: "doc",
               id: "ide_configuration/vscode",
             },
+            {
+              type: "doc",
+              id: "ide_configuration/zed"
+            }
           ],
         },
       ],

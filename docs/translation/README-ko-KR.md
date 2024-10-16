@@ -16,7 +16,7 @@ Devbox는 원래 [Jetify](https://www.jetify.com)에서 개발되었으며 내�
 
 아래 버튼을 사용하여 브라우저에서 Devbox를 사용해 볼 수 있습니다:
 
-[![Devbox.sh에서 열기](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/new)
+[![Devspace에서 열기](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devspace)
 
 아래 예제는 기본 머신에 해당 패키지가 설치되어 있지 않더라도 `python 2.7`과 `go 1.18`로 개발 환경을 생성합니다:
 

@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.4";
+        lastTag = "0.13.5";
 
         revision =
           if (self ? shortRev)

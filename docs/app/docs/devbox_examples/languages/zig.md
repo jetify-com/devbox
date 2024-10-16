@@ -6,7 +6,7 @@ Zig projects can be run in Devbox by adding Zig and Nimble to your project.
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/zig/zig-hello-world)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/devbox/templates/zig)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/zig)
 
 ## Adding Zig to your Project
 
