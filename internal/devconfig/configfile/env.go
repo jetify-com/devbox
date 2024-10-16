@@ -3,7 +3,6 @@ package configfile
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/hashicorp/go-envparse"
@@ -26,11 +25,10 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	if !c.IsdotEnvEnabled() {
 		return nil, fmt.Errorf("env file does not have a .env extension")
 	}
-	// We don't allow absolute path for env_from as it breaks reproducibility
-	if filepath.IsAbs(c.EnvFrom) {
-		return nil, fmt.Errorf("`env_from` field can't take an absolute path")
+	envFileAbsPath := c.EnvFrom
+	if !filepath.IsAbs(c.EnvFrom) {
+		envFileAbsPath = filepath.Join(filepath.Dir(c.AbsRootPath), c.EnvFrom)
 	}
-	envFileAbsPath := path.Join(filepath.Dir(c.AbsRootPath), c.EnvFrom)
 	file, err := os.Open(envFileAbsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %s", envFileAbsPath)
