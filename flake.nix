@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.4";
+        lastTag = "0.13.5";
 
         revision = if (self ? shortRev)
                    then "${self.shortRev}"
@@ -36,7 +36,7 @@
 
           src = ./.;
 
-          subpackage = [./cmd/devbox];
+          subpackage = [ ./cmd/devbox ];
 
           ldflags = [
             "-s"
