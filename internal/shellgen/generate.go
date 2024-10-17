@@ -20,6 +20,8 @@ import (
 	"go.jetpack.io/devbox/internal/redact"
 )
 
+const DevboxHiddenDirName = ".devbox"
+
 //go:embed tmpl/*
 var tmplFS embed.FS
 
@@ -43,7 +45,7 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore", ".gitignore")
+	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), DevboxHiddenDirName), plan, ".gitignore", ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
