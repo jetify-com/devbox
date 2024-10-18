@@ -195,12 +195,12 @@ const config = {
       colorMode: {
         respectPrefersColorScheme: true,
       },
-      // algolia: {
-      //   appId: "J1RTMNIB0R",
-      //   apiKey: "b1bcbf465b384ccd6d986e85d6a62c28",
-      //   indexName: "jetpack",
-      //   searchParameters: {},
-      // },
+      algolia: {
+        appId: "J1RTMNIB0R",
+        apiKey: "b1bcbf465b384ccd6d986e85d6a62c28",
+        indexName: "jetpack",
+        searchParameters: {},
+      },
       prism: {
         theme: codeTheme.light,
         darkTheme: codeTheme.dark,
