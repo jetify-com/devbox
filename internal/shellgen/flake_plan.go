@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
 	"strings"
 
+	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/patchpkg"
@@ -73,9 +73,11 @@ func (f *flakePlan) needsGlibcPatch() bool {
 }
 
 type glibcPatchFlake struct {
-	// DevboxExecutable is the absolute path to the Devbox binary to use as
-	// the flake's builder. It must not be the wrapper script.
-	DevboxExecutable string
+	// DevboxFlake provides the devbox binary that will act as the patch
+	// flake's builder. By default it's set to "github:jetify-com/devbox/" +
+	// [build.Version]. For dev builds, it's set to the local path to the
+	// Devbox source code (this Go module) if it's available.
+	DevboxFlake flake.Ref
 
 	// NixpkgsGlibcFlakeRef is a flake reference to the nixpkgs flake
 	// containing the new glibc package.
@@ -100,31 +102,43 @@ type glibcPatchFlake struct {
 }
 
 func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (glibcPatchFlake, error) {
-	// Get the path to the actual devbox binary (not the /usr/bin/devbox
-	// wrapper) so the flake build can use it.
-	exe, err := os.Executable()
-	if err != nil {
-		return glibcPatchFlake{}, err
-	}
-	exe, err = filepath.EvalSymlinks(exe)
-	if err != nil {
-		return glibcPatchFlake{}, err
-	}
-
-	flake := glibcPatchFlake{
-		DevboxExecutable:     exe,
+	patchFlake := glibcPatchFlake{
+		DevboxFlake: flake.Ref{
+			Type:  flake.TypeGitHub,
+			Owner: "jetify-com",
+			Repo:  "devbox",
+			Ref:   build.Version,
+		},
 		NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev,
 	}
+
+	// In dev builds, use the local Devbox flake for patching packages
+	// instead of the one on GitHub. Using build.IsDev doesn't work because
+	// DEVBOX_PROD=1 will attempt to download 0.0.0-dev from GitHub.
+	if strings.HasPrefix(build.Version, "0.0.0") {
+		src, err := build.SourceDir()
+		if err != nil {
+			slog.Error("can't find the local devbox flake for patching, falling back to the latest github release", "err", err)
+			patchFlake.DevboxFlake = flake.Ref{
+				Type:  flake.TypeGitHub,
+				Owner: "jetify-com",
+				Repo:  "devbox",
+			}
+		} else {
+			patchFlake.DevboxFlake = flake.Ref{Type: flake.TypePath, Path: src}
+		}
+	}
+
 	for _, pkg := range packages {
 		// Check to see if this is a CUDA package. If so, we need to add
 		// it to the flake dependencies so that we can patch other
 		// packages to reference it (like Python).
-		relAttrPath, err := flake.systemRelativeAttrPath(pkg)
+		relAttrPath, err := patchFlake.systemRelativeAttrPath(pkg)
 		if err != nil {
 			return glibcPatchFlake{}, err
 		}
 		if strings.HasPrefix(relAttrPath, "cudaPackages") {
-			if err := flake.addDependency(pkg); err != nil {
+			if err := patchFlake.addDependency(pkg); err != nil {
 				return glibcPatchFlake{}, err
 			}
 		}
@@ -132,11 +146,13 @@ func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (gli
 		if !pkg.Patch {
 			continue
 		}
-		if err := flake.addOutput(pkg); err != nil {
+		if err := patchFlake.addOutput(pkg); err != nil {
 			return glibcPatchFlake{}, err
 		}
 	}
-	return flake, nil
+
+	slog.Debug("creating new patch flake", "flake", &patchFlake)
+	return patchFlake, nil
 }
 
 // addInput adds a flake input that provides pkg.
@@ -302,4 +318,26 @@ func (g *glibcPatchFlake) writeTo(dir string) error {
 		}
 	}
 	return writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
+}
+
+func (g *glibcPatchFlake) LogValue() slog.Value {
+	inputs := make([]slog.Attr, 0, 2+len(g.Inputs))
+	inputs = append(inputs,
+		slog.String("devbox", g.DevboxFlake.String()),
+		slog.String("nixpkgs-glibc", g.NixpkgsGlibcFlakeRef),
+	)
+	for k, v := range g.Inputs {
+		inputs = append(inputs, slog.String(k, v))
+	}
+
+	var outputs []string
+	for _, pkg := range g.Outputs.Packages {
+		for attrPath := range pkg {
+			outputs = append(outputs, attrPath)
+		}
+	}
+	return slog.GroupValue(
+		slog.Attr{Key: "inputs", Value: slog.GroupValue(inputs...)},
+		slog.Attr{Key: "outputs", Value: slog.AnyValue(outputs)},
+	)
 }
