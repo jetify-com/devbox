@@ -43,6 +43,7 @@ func detectors(path string) []detector.Detector {
 	return []detector.Detector{
 		&detector.PythonDetector{Root: path},
 		&detector.PoetryDetector{Root: path},
+		&detector.GoDetector{Root: path},
 	}
 }
 
