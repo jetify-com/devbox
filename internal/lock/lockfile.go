@@ -21,6 +21,8 @@ import (
 	"go.jetpack.io/devbox/internal/cuecfg"
 )
 
+const FileName = "devbox.lock"
+
 const lockFileVersion = "1"
 
 // Lightly inspired by package-lock.json
@@ -232,7 +234,7 @@ func (f *File) isDirty() (bool, error) {
 }
 
 func lockFilePath(projectDir string) string {
-	return filepath.Join(projectDir, "devbox.lock")
+	return filepath.Join(projectDir, FileName)
 }
 
 func ResolveRunXPackage(ctx context.Context, pkg string) (types.PkgRef, error) {
