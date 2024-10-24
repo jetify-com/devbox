@@ -44,7 +44,7 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 		dur = time.Since(meta.EventStart)
 	}
 	uid := userID()
-	return &segment.Track{
+	track := &segment.Track{
 		MessageId: newEventID(),
 		Type:      "track",
 		// Only set anonymous ID if user ID is not set. Otherwise segment will
@@ -66,17 +66,30 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			},
 		},
 		Properties: segment.Properties{
-			"cloud_region": meta.CloudRegion,
 			"command":      meta.Command,
 			"command_args": meta.CommandFlags,
 			"duration":     dur.Milliseconds(),
+			"nix_version":  nixVersion,
 			"org_id":       orgID(),
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),
-			"nix_version":  nixVersion,
 		},
 	}
+
+	// Property keys match the API events (search "Devspace Created").
+	insertEnv := func(envKey, propKey string) {
+		v, ok := os.LookupEnv(envKey)
+		if ok {
+			track.Properties[propKey] = v
+		}
+	}
+	insertEnv("_JETIFY_SANDBOX_ID", "devspace")
+	insertEnv("_JETIFY_GH_REPO", "repo")
+	insertEnv("_JETIFY_GIT_REF", "ref")
+	insertEnv("_JETIFY_GIT_SUBDIR", "subdir")
+
+	return track
 }
 
 // bufferSegmentMessage buffers a Segment message to disk so that Report can
