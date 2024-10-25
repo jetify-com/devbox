@@ -20,7 +20,7 @@ func TestGoDetectorRelevance(t *testing.T) {
 	})
 
 	t.Run("With go.mod file", func(t *testing.T) {
-		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte("module example.com"), 0644)
+		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte("module example.com"), 0o644)
 		assert.NoError(t, err)
 
 		relevance, err := detector.Relevance(tempDir)
@@ -40,7 +40,7 @@ func TestGoDetectorPackages(t *testing.T) {
 	})
 
 	t.Run("With go.mod file and no version", func(t *testing.T) {
-		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte("module example.com"), 0644)
+		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte("module example.com"), 0o644)
 		assert.NoError(t, err)
 
 		packages, err := detector.Packages(context.Background())
@@ -54,7 +54,7 @@ module example.com
 
 go 1.18
 `
-		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goModContent), 0644)
+		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goModContent), 0o644)
 		assert.NoError(t, err)
 
 		packages, err := detector.Packages(context.Background())
