@@ -42,7 +42,7 @@ require (
 	github.com/zealic/go2node v0.1.0
 	go.jetify.com/typeid v1.2.0
 	go.jetpack.io/envsec v0.0.16-0.20240604163020-540ad12af899
-	go.jetpack.io/pkg v0.0.0-20240815004735-7649b4283d51
+	go.jetpack.io/pkg v0.0.0-20241025162924-f10fa2908e6a
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 	golang.org/x/mod v0.18.0
 	golang.org/x/oauth2 v0.21.0
