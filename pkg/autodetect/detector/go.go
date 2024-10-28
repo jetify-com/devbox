@@ -34,10 +34,8 @@ func (d *GoDetector) Packages(ctx context.Context) ([]string, error) {
 
 	// Parse the Go version from go.mod
 	goVersion := parseGoVersion(string(goModContent))
-	if goVersion != "" {
-		return []string{"go@" + goVersion}, nil
-	}
-	return []string{"go@latest"}, nil
+	goVersion = determineBestVersion(ctx, "go", goVersion)
+	return []string{"go@" + goVersion}, nil
 }
 
 func parseGoVersion(goModContent string) string {
