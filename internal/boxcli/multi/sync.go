@@ -104,7 +104,7 @@ func collectLockfiles() ([]string, error) {
 				return err
 			}
 
-			if !dirEntry.IsDir() && filepath.Base(path) == "devbox.lock" {
+			if !dirEntry.IsDir() && filepath.Base(path) == lock.FileName {
 				lockfiles = append(lockfiles, path)
 			}
 

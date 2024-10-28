@@ -1,0 +1,17 @@
+# Create a new devbox, install a package and run clean
+
+! exists devbox.json
+exec devbox init
+exists devbox.json
+
+exec devbox add go
+
+exec devbox shell
+exists devbox.json
+exists devbox.lock
+exists .devbox
+
+exec devbox clean
+! exists devbox.lock
+! exists .devbox
+
