@@ -17,10 +17,11 @@ import (
 
 type shellCmdFlags struct {
 	envFlag
-	config     configFlags
-	omitNixEnv bool
-	printEnv   bool
-	pure       bool
+	config       configFlags
+	omitNixEnv   bool
+	printEnv     bool
+	pure         bool
+	recomputeEnv bool
 }
 
 // shellFlagDefaults are the flag default values that differ
@@ -53,6 +54,7 @@ func shellCmd(defaults shellFlagDefaults) *cobra.Command {
 		"shell environment will omit the env-vars from print-dev-env",
 	)
 	_ = command.Flags().MarkHidden("omit-nix-env")
+	command.Flags().BoolVar(&flags.recomputeEnv, "recompute", true, "recompute environment if needed")
 
 	flags.config.register(command)
 	flags.envFlag.register(command)
@@ -60,10 +62,12 @@ func shellCmd(defaults shellFlagDefaults) *cobra.Command {
 }
 
 func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
+	ctx := cmd.Context()
 	env, err := flags.Env(flags.config.path)
 	if err != nil {
 		return err
 	}
+
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
@@ -91,9 +95,13 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	return box.Shell(cmd.Context(), devopt.EnvOptions{
+	return box.Shell(ctx, devopt.EnvOptions{
 		OmitNixEnv: flags.omitNixEnv,
 		Pure:       flags.pure,
+		RecomputeEnv: &devopt.RecomputeEnvOpts{
+			Disabled:              !flags.recomputeEnv,
+			StateOutOfDateMessage: fmt.Sprintf(devbox.StateOutOfDateMessage, "with --recompute=true"),
+		},
 	})
 }
 

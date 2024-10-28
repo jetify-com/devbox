@@ -62,10 +62,9 @@ type UpdateOpts struct {
 }
 
 type EnvExportsOpts struct {
-	DontRecomputeEnvironment bool
-	EnvOptions               EnvOptions
-	NoRefreshAlias           bool
-	RunHooks                 bool
+	EnvOptions     EnvOptions
+	NoRefreshAlias bool
+	RunHooks       bool
 }
 
 // EnvOptions configure the Devbox Environment in the `computeEnv` function.
@@ -76,4 +75,10 @@ type EnvOptions struct {
 	OmitNixEnv        bool
 	PreservePathStack bool
 	Pure              bool
+	RecomputeEnv      *RecomputeEnvOpts
+}
+
+type RecomputeEnvOpts struct {
+	Disabled              bool // Disabled instead of Enabled, because zero-value is false
+	StateOutOfDateMessage string
 }

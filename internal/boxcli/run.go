@@ -21,10 +21,11 @@ import (
 
 type runCmdFlags struct {
 	envFlag
-	config      configFlags
-	omitNixEnv  bool
-	pure        bool
-	listScripts bool
+	config       configFlags
+	omitNixEnv   bool
+	pure         bool
+	listScripts  bool
+	recomputeEnv bool
 }
 
 // runFlagDefaults are the flag default values that differ
@@ -62,6 +63,7 @@ func runCmd(defaults runFlagDefaults) *cobra.Command {
 		"shell environment will omit the env-vars from print-dev-env",
 	)
 	_ = command.Flags().MarkHidden("omit-nix-env")
+	command.Flags().BoolVar(&flags.recomputeEnv, "recompute", true, "recompute environment if needed")
 
 	command.ValidArgs = listScripts(command, flags)
 
@@ -84,6 +86,7 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 }
 
 func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
+	ctx := cmd.Context()
 	if len(args) == 0 || flags.listScripts {
 		scripts := listScripts(cmd, flags)
 		if len(scripts) == 0 {
@@ -111,9 +114,9 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         path,
+		Env:         env,
 		Environment: flags.config.environment,
 		Stderr:      cmd.ErrOrStderr(),
-		Env:         env,
 	})
 	if err != nil {
 		return redact.Errorf("error reading devbox.json: %w", err)
@@ -122,8 +125,12 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 	envOpts := devopt.EnvOptions{
 		OmitNixEnv: flags.omitNixEnv,
 		Pure:       flags.pure,
+		RecomputeEnv: &devopt.RecomputeEnvOpts{
+			Disabled:              !flags.recomputeEnv,
+			StateOutOfDateMessage: fmt.Sprintf(devbox.StateOutOfDateMessage, "with --recompute=true"),
+		},
 	}
-	if err := box.RunScript(cmd.Context(), envOpts, script, scriptArgs); err != nil {
+	if err := box.RunScript(ctx, envOpts, script, scriptArgs); err != nil {
 		return redact.Errorf("error running script %q in Devbox: %w", script, err)
 	}
 	return nil
