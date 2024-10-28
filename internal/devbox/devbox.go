@@ -32,6 +32,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox/envpath"
 	"go.jetpack.io/devbox/internal/devbox/generate"
 	"go.jetpack.io/devbox/internal/devconfig"
+	"go.jetpack.io/devbox/internal/devconfig/configfile"
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/envir"
@@ -1009,9 +1010,9 @@ func (d *Devbox) configEnvs(
 		}
 	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
-			"unknown from_env value: %s. Supported value is: %q.",
+			"unknown env_from value: %s. Supported values are: \"%q\" or a path to a file ending in \".env\"",
 			d.cfg.Root.EnvFrom,
-			"jetpack-cloud",
+			configfile.JetifyCloudEnvFromValue,
 		)
 	}
 	for k, v := range d.cfg.Env() {
