@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
@@ -317,7 +318,14 @@ func (g *glibcPatchFlake) writeTo(dir string) error {
 			slog.Debug("error copying system libcuda.so to flake", "dir", dir)
 		}
 	}
-	return writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
+	changed, err := writeFromTemplate(dir, g, "glibc-patch.nix", "flake.nix")
+	if err != nil {
+		return err
+	}
+	if changed {
+		_ = os.Remove(filepath.Join(dir, "flake.lock"))
+	}
+	return nil
 }
 
 func (g *glibcPatchFlake) LogValue() slog.Value {
