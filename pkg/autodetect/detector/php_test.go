@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,43 +14,44 @@ import (
 func TestPHPDetector_Relevance(t *testing.T) {
 	tests := []struct {
 		name     string
-		setup    func(t *testing.T) string
+		fs       fstest.MapFS
 		expected float64
 	}{
 		{
-			name: "no composer.json",
-			setup: func(t *testing.T) string {
-				dir := t.TempDir()
-				return dir
-			},
-			expected: 1,
+			name:     "no composer.json",
+			fs:       fstest.MapFS{},
+			expected: 0,
 		},
 		{
 			name: "with composer.json",
-			setup: func(t *testing.T) string {
-				dir := t.TempDir()
-				err := os.WriteFile(filepath.Join(dir, "composer.json"), []byte(`{
-					"require": {
-						"php": "^8.1"
-					}
-				}`), 0644)
-				require.NoError(t, err)
-				return dir
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {
+							"php": "^8.1"
+						}
+					}`),
+				},
 			},
-			expected: 0,
+			expected: 1,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dir := tt.setup(t)
+	for _, curTest := range tests {
+		t.Run(curTest.name, func(t *testing.T) {
+			dir := t.TempDir()
+			for name, file := range curTest.fs {
+				err := os.WriteFile(filepath.Join(dir, name), file.Data, 0o644)
+				require.NoError(t, err)
+			}
+
 			d := &PHPDetector{Root: dir}
 			err := d.Init()
 			require.NoError(t, err)
 
 			score, err := d.Relevance(dir)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, score)
+			assert.Equal(t, curTest.expected, score)
 		})
 	}
 }
@@ -57,38 +59,54 @@ func TestPHPDetector_Relevance(t *testing.T) {
 func TestPHPDetector_Packages(t *testing.T) {
 	tests := []struct {
 		name          string
-		composerJSON  string
+		fs            fstest.MapFS
 		expectedPHP   string
 		expectedError bool
 	}{
 		{
 			name: "no php version specified",
-			composerJSON: `{
-				"require": {}
-			}`,
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {}
+					}`),
+				},
+			},
 			expectedPHP: "php@latest",
 		},
 		{
 			name: "specific php version",
-			composerJSON: `{
-				"require": {
-					"php": "^8.1"
-				}
-			}`,
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {
+							"php": "^8.1"
+						}
+					}`),
+				},
+			},
 			expectedPHP: "php@8.1",
 		},
 		{
 			name: "php version with patch",
-			composerJSON: `{
-				"require": {
-					"php": "^8.1.2"
-				}
-			}`,
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {
+							"php": "^8.1.2"
+						}
+					}`),
+				},
+			},
 			expectedPHP: "php@8.1.2",
 		},
 		{
-			name:          "invalid composer.json",
-			composerJSON:  `invalid json`,
+			name: "invalid composer.json",
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`invalid json`),
+				},
+			},
 			expectedError: true,
 		},
 	}
@@ -96,8 +114,8 @@ func TestPHPDetector_Packages(t *testing.T) {
 	for _, curTest := range tests {
 		t.Run(curTest.name, func(t *testing.T) {
 			dir := t.TempDir()
-			if curTest.composerJSON != "" {
-				err := os.WriteFile(filepath.Join(dir, "composer.json"), []byte(curTest.composerJSON), 0644)
+			for name, file := range curTest.fs {
+				err := os.WriteFile(filepath.Join(dir, name), file.Data, 0o644)
 				require.NoError(t, err)
 			}
 
@@ -119,46 +137,57 @@ func TestPHPDetector_Packages(t *testing.T) {
 func TestPHPDetector_PHPExtensions(t *testing.T) {
 	tests := []struct {
 		name               string
-		composerJSON       string
+		fs                 fstest.MapFS
 		expectedExtensions []string
 	}{
 		{
 			name: "no extensions",
-			composerJSON: `{
-				"require": {
-					"php": "^8.1"
-				}
-			}`,
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {
+							"php": "^8.1"
+						}
+					}`),
+				},
+			},
 			expectedExtensions: []string{},
 		},
 		{
 			name: "multiple extensions",
-			composerJSON: `{
-				"require": {
-					"ext-mbstring": "*",
-					"ext-imagick": "*"
-				}
-			}`,
+			fs: fstest.MapFS{
+				"composer.json": &fstest.MapFile{
+					Data: []byte(`{
+						"require": {
+							"php": "^8.1",
+							"ext-mbstring": "*",
+							"ext-imagick": "*"
+						}
+					}`),
+				},
+			},
 			expectedExtensions: []string{
-				"phpExtensions.mbstring",
-				"phpExtensions.imagick",
+				"php81Extensions.mbstring@latest",
+				"php81Extensions.imagick@latest",
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, curTest := range tests {
+		t.Run(curTest.name, func(t *testing.T) {
 			dir := t.TempDir()
-			err := os.WriteFile(filepath.Join(dir, "composer.json"), []byte(tt.composerJSON), 0644)
-			require.NoError(t, err)
+			for name, file := range curTest.fs {
+				err := os.WriteFile(filepath.Join(dir, name), file.Data, 0o644)
+				require.NoError(t, err)
+			}
 
 			d := &PHPDetector{Root: dir}
-			err = d.Init()
+			err := d.Init()
 			require.NoError(t, err)
 
-			extensions, err := d.phpExtensions()
+			extensions, err := d.phpExtensions(context.Background())
 			require.NoError(t, err)
-			assert.ElementsMatch(t, tt.expectedExtensions, extensions)
+			assert.ElementsMatch(t, curTest.expectedExtensions, extensions)
 		})
 	}
 }
