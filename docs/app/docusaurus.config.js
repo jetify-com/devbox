@@ -66,7 +66,7 @@ const config = {
         routeBasePath: "cloud",
         sidebarPath: require.resolve("./cloud_sidebars.js"),
       },
-    ],[
+    ], [
       "@docusaurus/plugin-content-docs",
       {
         id: "nixhub",

@@ -182,11 +182,11 @@ Currently, you can only set values using string literals, `$PWD`, and `$PATH`. A
 
 ### Env From
 
-Env from takes a string or list of strings for loading environment variables into your shells and scripts. Currently it supports loading from two sources: .env files, and Jetify Secrsts.
+Env from takes a string for loading environment variables into your shells and scripts. Currently it supports loading from two sources: .env files, and Jetify Secrets.
 
 #### .env Files
 
-You can load environment variables from a `.env` file by adding the path to the file in the `env_from` field. This is useful for loading secrets or other sensitive information that you don't want to store in your `devbox.json`.
+You can load environment variables from a `.env` file by adding the path to the file in the `env_from` field (the file must end with `.env`). This is useful for loading secrets or other sensitive information that you don't want to store in your `devbox.json`.
 
 ```json
 {
@@ -198,15 +198,15 @@ This will load the environment variables from the `.env` file into your shell wh
 
 #### Jetify Secrets
 
-You can securely load secrets from Jetify Secrets by running `devbox secrets init` and creating a project in Jetify Cloud. This will add the `jetpack-cloud` field to `env_from` in your project.
+You can securely load secrets from Jetify Secrets by running `devbox secrets init` and creating a project in Jetify Cloud. This will add the `jetify-cloud` field to `env_from` in your project.
 
 ```json
 {
-    "env_from": "jetpack-cloud"
+    "env_from": "jetify-cloud"
 }
 ```
 
-Note that setting secrets securetly with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/docs/cloud/secrets/) guide.
+Note that setting secrets securely with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/docs/cloud/secrets/) guide.
 
 ### Shell
 

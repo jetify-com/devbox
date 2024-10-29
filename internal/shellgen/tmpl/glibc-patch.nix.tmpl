@@ -2,11 +2,7 @@
   description = "Patches packages to use a newer version of glibc";
 
   inputs = {
-    local-devbox = {
-      url = "path://{{ .DevboxExecutable }}";
-      flake = false;
-    };
-
+    devbox.url = "{{ .DevboxFlake }}";
     nixpkgs-glibc.url = "{{ .NixpkgsGlibcFlakeRef }}";
 
     {{- range $name, $flakeref := .Inputs }}
@@ -14,7 +10,7 @@
     {{- end }}
   };
 
-  outputs = args@{ self, local-devbox, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
+  outputs = args@{ self, devbox, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
     let
       # Initialize each nixpkgs input into a new attribute set with the
       # schema "pkgs.<input>.<system>.<package>".
@@ -97,24 +93,9 @@
         glibc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".glibc else null;
         gcc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".stdenv.cc.cc.lib else null;
 
-        # Create a package that puts the local devbox binary in the conventional
-        # bin subdirectory. This also ensures that the executable is named
-        # "devbox" and not "<hash>-source" (which is how Nix names the flake
-        # input). Invoking it as anything other than "devbox" will break
-        # testscripts which look at os.Args[0] to decide to run the real
-        # entrypoint or the test entrypoint.
-        devbox = derivation {
-          name = "devbox";
-          system = pkg.system;
-          builder = "${bash}/bin/bash";
-
-          # exit 0 to work around https://github.com/NixOS/nix/issues/2176
-          args = [ "-c" "${coreutils}/bin/mkdir -p $out/bin && ${coreutils}/bin/cp ${local-devbox} $out/bin/devbox && exit 0" ];
-        };
-
         DEVBOX_DEBUG = 1;
-        src = self;
-        builder = "${devbox}/bin/devbox";
+
+        builder = "${devbox.packages.${system}.default}/bin/devbox";
         args = [ "patch" "--restore-refs" ] ++
           (if glibc != null then [ "--glibc" "${glibc}" ] else [ ]) ++
           (if gcc != null then [ "--gcc" "${gcc}" ] else [ ]) ++

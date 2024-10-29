@@ -4,7 +4,10 @@
 package build
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
@@ -97,4 +100,34 @@ func DashboardHostname() string {
 		return "http://localhost:8080"
 	}
 	return "https://cloud.jetify.com"
+}
+
+// SourceDir searches for the source code directory that built the current
+// binary.
+func SourceDir() (string, error) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok || file == "" {
+		return "", fmt.Errorf("build.SourceDir: binary is missing path info")
+	}
+	slog.Debug("trying to determine path to devbox source using runtime.Caller", "path", file)
+
+	dir := filepath.Dir(file)
+	if _, err := os.Stat(dir); err != nil {
+		if filepath.IsAbs(file) {
+			return "", fmt.Errorf("build.SourceDir: path to binary source doesn't exist: %v", err)
+		}
+		return "", fmt.Errorf("build.SourceDir: binary was built with -trimpath")
+	}
+
+	for {
+		_, err := os.Stat(filepath.Join(dir, "go.mod"))
+		if err == nil {
+			slog.Debug("found devbox source directory", "path", dir)
+			return dir, nil
+		}
+		if dir == "/" || dir == "." {
+			return "", fmt.Errorf("build.SourceDir: can't find go.mod in any parent directories of %s", file)
+		}
+		dir = filepath.Dir(dir)
+	}
 }

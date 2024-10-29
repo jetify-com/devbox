@@ -219,7 +219,7 @@ The plugin.json below installs MongoDB + the Mongo shell, and sets the environme
   "version": "0.0.1",
   "description": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
   "packages": [
-    "mongodb@latest"
+    "mongodb@latest",
     "mongosh@latest"
   ],
   "env": {

@@ -41,8 +41,10 @@ func populateConfig(ctx context.Context, path string, config *devconfig.Config) 
 
 func detectors(path string) []detector.Detector {
 	return []detector.Detector{
-		&detector.PythonDetector{Root: path},
+		&detector.GoDetector{Root: path},
+		&detector.PHPDetector{Root: path},
 		&detector.PoetryDetector{Root: path},
+		&detector.PythonDetector{Root: path},
 	}
 }
 
@@ -61,6 +63,13 @@ func relevantDetector(path string) (detector.Detector, error) {
 	relevantScore := 0.0
 	var mostRelevantDetector detector.Detector
 	for _, detector := range detectors(path) {
+		if d, ok := detector.(interface {
+			Init() error
+		}); ok {
+			if err := d.Init(); err != nil {
+				return nil, err
+			}
+		}
 		score, err := detector.Relevance(path)
 		if err != nil {
 			return nil, err
