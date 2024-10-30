@@ -425,3 +425,25 @@ func (c *configAST) beforeComment(path ...any) []byte {
 		}),
 	)
 }
+
+func (c *configAST) setEnv(env map[string]string) {
+	members := make([]hujson.ObjectMember, 0, len(env))
+	for k, v := range env {
+		members = append(members, hujson.ObjectMember{
+			Name:  hujson.Value{Value: hujson.String(k)},
+			Value: hujson.Value{Value: hujson.String(v)},
+		})
+	}
+	i := c.memberIndex(c.root.Value.(*hujson.Object), "env")
+	if i == -1 {
+		c.root.Value.(*hujson.Object).Members = append(c.root.Value.(*hujson.Object).Members, hujson.ObjectMember{
+			Name:  hujson.Value{Value: hujson.String("env")},
+			Value: hujson.Value{Value: &hujson.Object{Members: members}},
+		})
+	} else {
+		c.root.Value.(*hujson.Object).Members[i].Value.Value = &hujson.Object{
+			Members: members,
+		}
+	}
+	c.root.Format()
+}
