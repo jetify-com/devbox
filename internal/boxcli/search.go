@@ -111,7 +111,7 @@ func printSearchResults(
 
 	if resultsAreTrimmed {
 		fmt.Println()
-		ux.Fwarning(
+		ux.Fwarningf(
 			w,
 			"Showing top 10 results and truncated versions. Use --show-all to "+
 				"show all.\n\n",

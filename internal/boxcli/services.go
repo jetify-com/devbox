@@ -20,6 +20,7 @@ type serviceUpFlags struct {
 	background          bool
 	processComposeFile  string
 	processComposeFlags []string
+	pcport              int
 }
 
 type serviceStopFlags struct {
@@ -38,6 +39,8 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 		&flags.background, "background", "b", false, "run service in background")
 	cmd.Flags().StringArrayVar(
 		&flags.processComposeFlags, "pcflags", []string{}, "pass flags directly to process compose")
+	cmd.Flags().IntVarP(
+		&flags.pcport, "pcport", "p", 0, "specify the port for process-compose to use. You can also set the pcport by exporting DEVBOX_PC_PORT_NUM")
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
@@ -66,6 +69,15 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 				}
 			}
 			return nil
+		},
+	}
+
+	attachCommand := &cobra.Command{
+		Use:   "attach",
+		Short: "Attach to a running process-compose for the current project",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return attachServices(cmd, flags)
 		},
 	}
 
@@ -123,12 +135,26 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
+	servicesCommand.AddCommand(attachCommand)
 	servicesCommand.AddCommand(lsCommand)
 	servicesCommand.AddCommand(upCommand)
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
 	return servicesCommand
+}
+
+func attachServices(cmd *cobra.Command, flags servicesCmdFlags) error {
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.AttachToProcessManager(cmd.Context())
 }
 
 func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
@@ -222,6 +248,10 @@ func startProcessManager(
 		return err
 	}
 
+	if flags.pcport < 0 {
+		return errors.Errorf("invalid pcport %d: ports cannot be less than 0", flags.pcport)
+	}
+
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:                      servicesFlags.config.path,
 		Env:                      env,
@@ -238,8 +268,9 @@ func startProcessManager(
 		servicesFlags.runInCurrentShell,
 		args,
 		devopt.ProcessComposeOpts{
-			Background: flags.background,
-			ExtraFlags: flags.processComposeFlags,
+			Background:         flags.background,
+			ExtraFlags:         flags.processComposeFlags,
+			ProcessComposePort: flags.pcport,
 		},
 	)
 }

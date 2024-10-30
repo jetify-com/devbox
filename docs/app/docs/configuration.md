@@ -36,7 +36,7 @@ Packages can be structured as a list of package names (`<packages>@<version>`) o
 
 If you need to provide more options to your packages (such as limiting which platforms will install the package), you can structure packages as a map, where each package follows the schema below:
 
-```json
+```js
 {
     "packages": {
         // If only a version is specified, you can abbreviate the maps as "package_name": "version"
@@ -44,10 +44,14 @@ If you need to provide more options to your packages (such as limiting which pla
         "package_name": {
             // Version of the package to install. Defaults to "latest"
             "version": string,
+            // Whether native library patching is enabled for this package. This defaults to `auto`, but can be overridden to `always` or `never` for individual packages.
+            "patch": ["auto" | "always" | "never"],
             // List of platforms to install the package on. Defaults to all platforms
             "platforms": [string],
             // List of platforms to exclude this package from. Defaults to no excluded platforms
-            "excluded_platforms": [string]
+            "excluded_platforms": [string],
+            // Whether to disable a built-in plugin, if one exists for this package. Defaults to false
+            "disable_plugin": boolean
         }
     }
 }
@@ -144,6 +148,21 @@ The platforms below are also supported, but require you to build packages from s
 * `i686-linux`
 * `armv7l-linux`
 
+#### Disabling Built-in Plugins
+
+Some packages include builtin plugins or services that are automatically started when the package is installed. You can disable these plugins using `devbox add <package> --disable-plugin`, or by setting the `disable_plugin` field to `true` in your package definition:
+
+```json
+{
+    "packages": {
+        "glibcLocales": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```
+
 ### Env
 
 This is a a map of key-value pairs that should be set as Environment Variables when activating `devbox shell`, running a script with `devbox run`, or starting a service. These variables will only be set in your Devbox shell, and will have precedence over any environment variables set in your local machine or by [Devbox Plugins](guides/plugins.md).
@@ -160,6 +179,34 @@ For example, you could set variable `$FOO` to `bar` by adding the following to y
 
 Currently, you can only set values using string literals, `$PWD`, and `$PATH`. Any other values with environment variables will not be expanded when starting your shell.
 
+
+### Env From
+
+Env from takes a string or list of strings for loading environment variables into your shells and scripts. Currently it supports loading from two sources: .env files, and Jetify Secrsts.
+
+#### .env Files
+
+You can load environment variables from a `.env` file by adding the path to the file in the `env_from` field. This is useful for loading secrets or other sensitive information that you don't want to store in your `devbox.json`.
+
+```json
+{
+    "env_from": "path/to/.env"
+}
+```
+
+This will load the environment variables from the `.env` file into your shell when you run `devbox shell` or `devbox run`. Note that environment variables set in the `.env` file will be overridden if the same variable is set directly in your `devbox.json`
+
+#### Jetify Secrets
+
+You can securely load secrets from Jetify Secrets by running `devbox secrets init` and creating a project in Jetify Cloud. This will add the `jetpack-cloud` field to `env_from` in your project.
+
+```json
+{
+    "env_from": "jetpack-cloud"
+}
+```
+
+Note that setting secrets securetly with Jetify Secrets requires a Jetify Cloud account. For more information, see the [Jetify Secrets](/docs/cloud/secrets/) guide.
 
 ### Shell
 
@@ -227,9 +274,9 @@ To run multiple commands in a single script, you can pass them as an array:
 
 ### Include
 
-Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
+Includes can be used to explicitly add extra configuration from [plugins](./guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed.
 
-Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your project config conflicts with a plugin (e.g., your `devbox.json` has a script with the same name as a plugin script), your project config will take precedence. 
+Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your project config conflicts with a plugin (e.g., your `devbox.json` has a script with the same name as a plugin script), your project config will take precedence.
 ```json
 {
     "include": [

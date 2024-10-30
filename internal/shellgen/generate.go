@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime/trace"
@@ -98,20 +97,6 @@ func writeFromTemplate(path string, plan any, tmplName, generatedName string) er
 	err := overwriteFileIfChanged(filepath.Join(path, generatedName), tmplBuf.Bytes(), 0o644)
 	if err != nil {
 		return redact.Errorf("write %s to file: %v", redact.Safe(tmplName), err)
-	}
-	return nil
-}
-
-// writeGlibcPatchScript writes the embedded glibc patching script to disk so
-// that a generated flake can use it.
-func writeGlibcPatchScript(path string) error {
-	script, err := fs.ReadFile(tmplFS, "tmpl/glibc-patch.bash")
-	if err != nil {
-		return redact.Errorf("read embedded glibc-patch.bash: %v", redact.Safe(err))
-	}
-	err = overwriteFileIfChanged(path, script, 0o755)
-	if err != nil {
-		return redact.Errorf("write glibc-patch.bash to file: %v", err)
 	}
 	return nil
 }

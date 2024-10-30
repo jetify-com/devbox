@@ -2,6 +2,11 @@
   description = "Patches packages to use a newer version of glibc";
 
   inputs = {
+    local-devbox = {
+      url = "path://{{ .DevboxExecutable }}";
+      flake = false;
+    };
+
     nixpkgs-glibc.url = "{{ .NixpkgsGlibcFlakeRef }}";
 
     {{- range $name, $flakeref := .Inputs }}
@@ -9,8 +14,7 @@
     {{- end }}
   };
 
-  outputs = args@{ self, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
-    {{ with .Outputs -}}
+  outputs = args@{ self, local-devbox, nixpkgs-glibc {{- range $name, $_ := .Inputs -}}, {{ $name }} {{- end }} }:
     let
       # Initialize each nixpkgs input into a new attribute set with the
       # schema "pkgs.<input>.<system>.<package>".
@@ -19,7 +23,7 @@
       pkgs = builtins.mapAttrs (name: flake:
         if builtins.hasAttr "legacyPackages" flake then
           {
-            {{- range $system, $_ := .Packages }}
+            {{- range $system, $_ := .Outputs.Packages }}
             {{ $system }} = (import flake {
               system = "{{ $system }}";
               config.allowUnfree = true;
@@ -29,21 +33,96 @@
           }
         else null) args;
 
+      # selectDefaultOutputs takes a derivation and returns a list of its
+      # default outputs.
+      selectDefaultOutputs = drv: selectOutputs drv (drv.meta.outputsToInstall or [ drv.out ]);
+
+      # selectAllOutputs takes a derivation and returns all of its outputs (^*).
+      selectAllOutputs = drv: drv.all;
+
+      # selectOutputs takes a derivation and a list of output names, and returns
+      # those outputs.
+      #
+      # Example: selectOutputs nixpkgs#foo [ "out", "lib" ]
+      selectOutputs = drv: builtins.map (output: drv.${output});
+
+      patchDependencies = [
+        {{- range .Dependencies }}
+        ({{ . }})
+        {{- end }}
+      ];
+
       patchGlibc = pkg: derivation rec {
-        name = "devbox-patched-glibc";
+        # The package we're patching and any dependencies the patch needs.
+        inherit pkg patchDependencies;
+
+        # Keep the name the same as the package we're patching so that the
+        # length of the store path doesn't change. Otherwise patching binaries
+        # becomes trickier.
+        name = pkg.name;
         system = pkg.system;
 
-        # The package we're patching.
-        inherit pkg;
+        # buildDependencies is the package's build dependencies as a list of
+        # store paths. It includes transitive dependencies.
+        #
+        # Setting this environment variable provides a corpus of store paths
+        # that the `devbox patch --restore-refs` flag can use to restore
+        # references to Python build-time dependencies.
+        buildDependencies =
+          let
+            # mkNodes makes tree nodes for a list of derivation (package)
+            # outputs. A node is just the package with a "key" attribute added
+            # to it so it works with builtins.genericClosure.
+            mkNodes = builtins.map (drv: drv // { key = drv.outPath; });
+
+            # mkTree recursively traverses the buildInputs of the package we're
+            # patching. It returns a list of nodes, where each node represents
+            # a package output path in the dependency tree.
+            mkTree = builtins.genericClosure {
+              # Start with the package's buildInputs + the packages in its
+              # stdenv.
+              startSet = mkNodes (pkg.buildInputs ++ pkg.stdenv.initialPath);
+
+              # For each package, generate nodes for all of its outputs
+              # (node.all) and all of its buildInputs. Then visit those nodes.
+              operator = node: mkNodes (node.all or [ ] ++ node.buildInputs or [ ]);
+            };
+          in
+          builtins.map (drv: drv.outPath) mkTree;
 
         # Programs needed by glibc-patch.bash.
-        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils file findutils glibc gnused patchelf ripgrep;
+        inherit (nixpkgs-glibc.legacyPackages."${system}") bash coreutils gnused patchelf ripgrep;
 
-        builder = "${bash}/bin/bash";
-        args = [ ./glibc-patch.bash ];
+        isLinux = (builtins.match ".*linux.*" system) != null;
+        glibc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".glibc else null;
+        gcc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".stdenv.cc.cc.lib else null;
+
+        # Create a package that puts the local devbox binary in the conventional
+        # bin subdirectory. This also ensures that the executable is named
+        # "devbox" and not "<hash>-source" (which is how Nix names the flake
+        # input). Invoking it as anything other than "devbox" will break
+        # testscripts which look at os.Args[0] to decide to run the real
+        # entrypoint or the test entrypoint.
+        devbox = derivation {
+          name = "devbox";
+          system = pkg.system;
+          builder = "${bash}/bin/bash";
+
+          # exit 0 to work around https://github.com/NixOS/nix/issues/2176
+          args = [ "-c" "${coreutils}/bin/mkdir -p $out/bin && ${coreutils}/bin/cp ${local-devbox} $out/bin/devbox && exit 0" ];
+        };
+
+        DEVBOX_DEBUG = 1;
+        src = self;
+        builder = "${devbox}/bin/devbox";
+        args = [ "patch" "--restore-refs" ] ++
+          (if glibc != null then [ "--glibc" "${glibc}" ] else [ ]) ++
+          (if gcc != null then [ "--gcc" "${gcc}" ] else [ ]) ++
+          [ pkg ];
       };
     in
     {
+      {{- with .Outputs }}
       packages = {
         {{- range $system, $packages := .Packages }}
         {{ $system }} = {
@@ -59,6 +138,6 @@
         {{ $system }} = nixpkgs-glibc.legacyPackages.{{ $system }}.nixpkgs-fmt;
         {{- end }}
       };
+      {{- end }}
     };
-    {{- end }}
 }

@@ -5,7 +5,7 @@ PostgreSQL can be automatically configured by Devbox via the built-in Postgres P
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/postgres)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/postgres)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/postgres)
 
 ## Adding Postgres to your Shell
 
@@ -30,6 +30,7 @@ This will install the latest version of Postgres. You can find other installable
 Devbox will automatically create the following configuration when you run `devbox add postgresql`:
 
 ### Services
+
 * postgresql
 
 You can use `devbox services start|stop postgresql` to start or stop the Postgres server in the background.
@@ -44,14 +45,19 @@ This variable tells PostgreSQL which directory to use for creating and storing d
 ### NOTES
 
 1. To initialize PostgreSQL run:
+
 ```sh
 initdb
 ```
-3. You also need to create a user using:
+
+1. You also need to create a user using:
+
 ```sh
 createuser --interactive
 ```
-5. (OPTIONAL) If the user has no permissions to create or drop a database, you also need to create a database using:
+
+1. (OPTIONAL) If the user has no permissions to create or drop a database, you also need to create a database using:
+
 ```sh
 createdb <db-name>
 ```
@@ -67,3 +73,18 @@ createuser -s -r your_new_user_name
 Replace `your_new_user_name` with the desired username for the new superuser.
 
 Remember: Creating a superuser grants them significant power over the database system, so it should be done cautiously and only when absolutely necessary due to the potential security implications.
+
+### Disabling the Postgres Plugin
+
+You can disable the Postgres plugin by running `devbox add postgresql --disable-plugin`, or by setting the `disable_plugin` field to `true` in your package definition:
+
+```json
+{
+    "packages": {
+        "postgresql": {
+            "version": "latest",
+            "disable_plugin": true
+        }
+    }
+}
+```

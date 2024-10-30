@@ -13,63 +13,74 @@ import (
 	"go.jetpack.io/devbox/internal/xdg"
 )
 
-func setupTestEnv(t *testing.T, envs *testscript.Env) error {
-	setupPATH(envs)
-
-	setupHome(t, envs)
-
-	err := setupCacheHome(envs)
-	if err != nil {
-		return err
-	}
-
-	envs.Setenv(debug.DevboxDebug, os.Getenv(debug.DevboxDebug))
+// setupTestEnv configures env for devbox tests.
+func setupTestEnv(env *testscript.Env) error {
+	setupPATH(env)
+	setupHome(env)
+	setupCacheHome(env)
+	propagateEnvVars(env,
+		debug.DevboxDebug, // to enable extra logging
+		"SSL_CERT_FILE",   // so HTTPS works with Nix-installed certs
+	)
 	return nil
 }
 
-func setupHome(t *testing.T, envs *testscript.Env) {
-	// We set a HOME env-var because:
-	// 1. testscripts overrides it to /no-home, presumably to improve isolation
-	// 2. but many language tools rely on a $HOME being set, and break due to 1.
-	//    examples include ~/.dotnet folder and GOCACHE=$HOME/Library/Caches/go-build
-	envs.Setenv(envir.Home, t.TempDir())
+// setupHome sets the test's HOME to a unique temp directory. The testscript
+// package sets it to /no-home by default (presumably to improve isolation), but
+// this breaks most programs.
+func setupHome(env *testscript.Env) {
+	env.Setenv(envir.Home, env.T().(testing.TB).TempDir())
 }
 
-func setupPATH(envs *testscript.Env) {
-	// Ensure path is empty so that we rely only on the PATH set by devbox
-	// itself.
-	// The one entry we need to keep is the /bin directory in the testing directory.
-	// That directory is setup by the testing framework itself, and it's what allows
-	// us to call our own custom "devbox" command.
-	oldPath := envs.Getenv(envir.Path)
-	newPath := strings.Split(oldPath, ":")[0]
-	envs.Setenv(envir.Path, newPath)
+// setupPATH removes all directories from the test's PATH to ensure that it only
+// uses the PATH set by devbox. The one exception is the testscript's bin
+// directory, which contains the commands given to testscript.RunMain
+// (such as devbox itself).
+func setupPATH(env *testscript.Env) {
+	s, _, _ := strings.Cut(env.Getenv(envir.Path), string(filepath.ListSeparator))
+	env.Setenv(envir.Path, s)
 }
 
-func setupCacheHome(envs *testscript.Env) error {
-	// Both devbox itself and nix occasionally create some files in
-	// XDG_CACHE_HOME (which defaults to ~/.cache). For purposes of this
-	// test set it to a location within the test's working directory:
-	cacheHome := filepath.Join(envs.WorkDir, ".cache")
-	envs.Setenv(envir.XDGCacheHome, cacheHome)
-	err := os.MkdirAll(cacheHome, 0o755) // Ensure dir exists.
+// setupCacheHome sets the test's XDG_CACHE_HOME to a unique temp directory so
+// that it doesn't share caches with other tests or the user's system. For
+// programs where this would make tests too slow, it symlinks specific cache
+// subdirectories to a shared location that persists between test runs. For
+// example, $WORK/.cache/nix would symlink to $XDG_CACHE_HOME/devbox-tests/nix
+// so that Nix doesn't re-download tarballs for every test.
+func setupCacheHome(env *testscript.Env) {
+	t := env.T().(testing.TB) //nolint:varnamelen
+
+	cacheHome := filepath.Join(env.WorkDir, ".cache")
+	env.Setenv(envir.XDGCacheHome, cacheHome)
+	err := os.MkdirAll(cacheHome, 0o755)
 	if err != nil {
-		return err
+		t.Fatal("create XDG_CACHE_HOME for test:", err)
 	}
 
-	// There is one directory we do want to share across tests: nix's cache.
-	// Without it tests are very slow, and nix would end up re-downloading
-	// nixpkgs every time.
-	// Here we create a shared location for nix's cache, and symlink from
-	// the test's working directory.
-	err = os.MkdirAll(xdg.CacheSubpath("devbox-tests/nix"), 0o755) // Ensure dir exists.
-	if err != nil {
-		return err
-	}
-	err = os.Symlink(xdg.CacheSubpath("devbox-tests/nix"), filepath.Join(cacheHome, "nix"))
-	if err != nil {
-		return err
-	}
+	// Symlink cache subdirectories that we want to share and persist
+	// between tests.
+	sharedCacheDir := xdg.CacheSubpath("devbox-tests")
+	for _, subdir := range []string{"nix", "pip"} {
+		sharedSubdir := filepath.Join(sharedCacheDir, subdir)
+		err := os.MkdirAll(sharedSubdir, 0o755)
+		if err != nil {
+			t.Fatal("create shared XDG_CACHE_HOME subdir:", err)
+		}
 
-	return nil
+		testSubdir := filepath.Join(cacheHome, subdir)
+		err = os.Symlink(sharedSubdir, testSubdir)
+		if err != nil {
+			t.Fatal("symlink test's XDG_CACHE_HOME subdir to shared XDG_CACHE_HOME subdir:", err)
+		}
+	}
+}
+
+// propagateEnvVars propagates the values of environment variables to the test
+// environment.
+func propagateEnvVars(env *testscript.Env, vars ...string) {
+	for _, key := range vars {
+		if v, ok := os.LookupEnv(key); ok {
+			env.Setenv(key, v)
+		}
+	}
 }

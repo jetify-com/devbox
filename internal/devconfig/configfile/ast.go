@@ -173,7 +173,7 @@ func (c *configAST) removePackageElement(arr *hujson.Array, name string) {
 
 // setPackageBool sets a bool field on a package.
 func (c *configAST) setPackageBool(name, fieldName string, val bool) {
-	pkgObject := c.FindPkgObject(name)
+	pkgObject := c.findPkgObject(name)
 	if pkgObject == nil {
 		return
 	}
@@ -216,7 +216,72 @@ func (c *configAST) appendAllowInsecure(name, fieldName string, whitelist []stri
 	c.appendStringSliceField(name, fieldName, whitelist)
 }
 
-func (c *configAST) FindPkgObject(name string) *hujson.Object {
+// removePatch removes the patch field from the named package.
+func (c *configAST) removePatch(name string) {
+	pkgs := c.packagesField(false)
+	obj, ok := pkgs.Value.Value.(*hujson.Object)
+	if !ok {
+		// Packages field is an array.
+		return
+	}
+	i := c.memberIndex(obj, name)
+	if i == -1 {
+		// Package not found.
+		return
+	}
+
+	obj, ok = obj.Members[i].Value.Value.(*hujson.Object)
+	if !ok {
+		// Package is a string, not an object.
+		return
+	}
+	i = c.memberIndex(obj, "patch")
+	if i == -1 {
+		// Patch field doesn't exist.
+		return
+	}
+
+	obj.Members = slices.Delete(obj.Members, i, i+1)
+	c.root.Format()
+}
+
+// setPatch sets the patch field of the named package.
+func (c *configAST) setPatch(name string, mode PatchMode) {
+	pkgObject := c.findPkgObject(name)
+	if pkgObject == nil {
+		return
+	}
+
+	glibcIndex := c.memberIndex(pkgObject, "patch_glibc") // deprecated
+	patchIndex := c.memberIndex(pkgObject, "patch")
+	switch {
+	// Neither patch_glibc or patch exist - append a new field.
+	case patchIndex == -1 && glibcIndex == -1:
+		pkgObject.Members = append(pkgObject.Members, hujson.ObjectMember{
+			Name: hujson.Value{
+				BeforeExtra: []byte{'\n'},
+			},
+		})
+		patchIndex = len(pkgObject.Members) - 1
+		defer c.root.Format()
+	// patch_glibc exists and patch doesn't - rename patch_glibc to
+	// preserve formatting/comments.
+	case patchIndex == -1 && glibcIndex != -1:
+		patchIndex = glibcIndex
+	// Both patch_glibc and patch exist - delete patch_glibc.
+	case patchIndex != -1 && glibcIndex != -1:
+		pkgObject.Members = slices.Delete(pkgObject.Members, glibcIndex, glibcIndex+1)
+		if patchIndex > glibcIndex {
+			patchIndex--
+		}
+		defer c.root.Format()
+	}
+
+	pkgObject.Members[patchIndex].Name.Value = hujson.String("patch")
+	pkgObject.Members[patchIndex].Value.Value = hujson.String(string(mode))
+}
+
+func (c *configAST) findPkgObject(name string) *hujson.Object {
 	pkgs := c.packagesField(true).Value.Value.(*hujson.Object)
 	i := c.memberIndex(pkgs, name)
 	if i == -1 {
@@ -301,7 +366,7 @@ func joinNameVersion(name, version string) string {
 }
 
 func (c *configAST) appendStringSliceField(name, fieldName string, fieldValues []string) {
-	pkgObject := c.FindPkgObject(name)
+	pkgObject := c.findPkgObject(name)
 	if pkgObject == nil {
 		return
 	}

@@ -109,7 +109,11 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 		// return ErrPackageNotFound only for that case.
 		return nil, fmt.Errorf("error searching for pkg %s: %w", url, err)
 	}
-	return parseSearchResults(out), nil
+	parsed := parseSearchResults(out)
+	if len(parsed) == 0 {
+		return nil, fmt.Errorf("package not found: %s", url)
+	}
+	return parsed, nil
 }
 
 // allowableQuery specifies the regex that queries for SearchNixpkgsAttribute must match.

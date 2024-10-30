@@ -219,8 +219,8 @@ func (p *Package) outputsForOutputName(output string) ([]lock.Output, error) {
 // the package to query it from the binary cache.
 func (p *Package) isEligibleForBinaryCache() (bool, error) {
 	defer debug.FunctionTimer().End()
-	// Patched glibc packages are not in the binary cache.
-	if p.PatchGlibc() {
+	// Patched packages are not in the binary cache.
+	if p.Patch {
 		return false, nil
 	}
 	sysInfo, err := p.sysInfoIfExists()

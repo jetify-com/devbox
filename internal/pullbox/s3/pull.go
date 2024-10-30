@@ -34,7 +34,7 @@ func PullToTmp(
 	s3Client := manager.NewDownloader(s3.NewFromConfig(*config))
 	buf := manager.WriteAtBuffer{}
 
-	ux.Finfo(
+	ux.Finfof(
 		os.Stderr,
 		"Logged in as %s, pulling from jetify cloud (profile: %s)\n",
 		creds.Email,
@@ -66,7 +66,7 @@ func PullToTmp(
 		return "", err
 	}
 
-	ux.Fsuccess(
+	ux.Fsuccessf(
 		os.Stderr,
 		"Profile successfully pulled (profile: %s)\n",
 		profile,

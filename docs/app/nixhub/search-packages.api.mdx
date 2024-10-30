@@ -1,0 +1,274 @@
+---
+id: search-packages
+title: "Search Packages"
+description: "Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query.  The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint."
+sidebar_label: "Search Packages"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVU1v2zAM/SuETx1QJEXRU7EPdMA2FAO6ottO3bApNhOrlSVVotMGQf77SFlOHScDuvtObUzxvUfyUVoXFcYyaE/a2eK8+IoqlDVcq/JeLTBO4FutI6CtvNOWQBnjHiOsXAvkIHaH5y6AzwmgLVCNcKWf/P0iQkDvoiYXVtBGbReg+qyHFsNqAkyAfCp6ZyNydmlaVsTHjI4Ebt4jg1WNfDeOQR411UKjAwzks1gHC2SVS6WNmhmEJYbIEc6zFYNH4gIkEJNo1YMfp4pKZVkkMjCXLHRbHvg9XZ5OuaDf21ZM4IctjoteeSzO18XpyYn82e3ol898rHSW0JJElfdGl0qi07soR9ZFLGtslPxHK4+c5GZ3WBIn7mJdWOgi0lemZkjpKXUtbA1F6di4xWmEWmZBbbBYwWz1XFR39Lku5vTBeQyku6ISyEBapMCce9JkjENaEHFikr8zbY4LcjyRX1n7gITDuMBwkCXlgG2bGQYpt69cJkojFcKxj65CUKv95m4t1y3BTcalWhE0isrOCsOmJiB2iTEwQ8DG0wr0HKzbinrEgKystdWECTVhE18wZpBVMdtSOrCBkLQgO0PeG5v492VTS07nqqW4ftkGVNXBpsa2adRLfMG11C7QcE9HZAJnVKRfra8UYfUy1ZIBpJu8rr3wRxUh4xy6ioqNmE6Twe1d142ZA4ciabclxsGzQ9v9XlVwg9yWSOfZADtbcBTlPoJ3D29epw9v83evAredMLwqEvTZPvSVI/gozkmitwk83dt+vMWDmEoOd4MRsz+0OkgTKbQ4btzXkWX27p3c8M3m53HBbLVjoIKvVLGXopp/5DWWZAzLXk4bDMdqIh/Pp/nIpMLlzD1NYs3bXwiitnOXyHKbeTJ1O4OL60uGy1c1fz6dnExO9o10fZlWvANPTwnf6bwazizlV++ACj3fMGhLWQRpnIvUKPu8E+M3bsy0fr6t/z+H//gcZhsRPtHUG8XW5Akkc6yzgW6LbCD2Q82jkS/r9UxF/B7MZiOf84vDtqp0FHlswrkycWzn4aCObrLxX8HY5Ac13eMqr89SmVbiyaFLFbQwMvtPPlWjqvgVEildwkVZoqdB1t5rvrM5nz584136A40nS2E=
+sidebar_class_name: "get api-method"
+info_path: devbox/nixhub/nixhub-api
+custom_edit_url: null
+---
+
+import ApiTabs from "@theme/ApiTabs";
+import DiscriminatorTabs from "@theme/DiscriminatorTabs";
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import SecuritySchemes from "@theme/ApiExplorer/SecuritySchemes";
+import MimeTabs from "@theme/MimeTabs";
+import ParamsItem from "@theme/ParamsItem";
+import ResponseSamples from "@theme/ResponseSamples";
+import SchemaItem from "@theme/SchemaItem";
+import SchemaTabs from "@theme/SchemaTabs";
+import Heading from "@theme/Heading";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Search Packages"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/search"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Search Packages. This endpoint allows you to search for packages in the Nixpkgs repository using a search query.  The response includes a list of package names along with their description. To get available versions and installables for a package, you can use this name with the `/v2/pkg` endpoint. 
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<details
+  style={{"marginBottom":"1rem"}}
+  className={"openapi-markdown__details"}
+  data-collapsed={false}
+  open={true}
+>
+  <summary
+    style={{}}
+  >
+    <h3
+      className={"openapi-markdown__details-summary-header-params"}
+    >
+      Query Parameters
+    </h3>
+  </summary><div>
+    <ul>
+      <ParamsItem
+        className={"paramsItem"}
+        param={{"name":"q","in":"query","required":true,"description":"Search query.","schema":{"type":"string"},"enumDescriptions":[]}}
+      >
+        
+      </ParamsItem>
+    </ul>
+  </div>
+</details><div>
+  <div>
+    <ApiTabs
+      label={undefined}
+      id={undefined}
+    >
+      <TabItem
+        label={"200"}
+        value={"200"}
+      >
+        <div>
+          
+          
+          OK
+          
+          
+        </div><div>
+          <MimeTabs
+            className={"openapi-tabs__mime"}
+            schemaType={"response"}
+          >
+            <TabItem
+              label={"application/json"}
+              value={"application/json"}
+            >
+              <SchemaTabs
+                className={"openapi-tabs__schema"}
+              >
+                <TabItem
+                  label={"Schema"}
+                  value={"Schema"}
+                >
+                  <details
+                    style={{}}
+                    className={"openapi-markdown__details response"}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary
+                      style={{}}
+                      className={"openapi-markdown__details-summary-response"}
+                    >
+                      <strong>
+                        Schema
+                      </strong>
+                    </summary><div
+                      style={{"textAlign":"left","marginLeft":"1rem"}}
+                    >
+                      
+                    </div><ul
+                      style={{"marginLeft":"1rem"}}
+                    >
+                      <SchemaItem
+                        collapsible={false}
+                        name={"query"}
+                        required={false}
+                        schemaName={"string"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"string","description":"The search query sent to the `/v2/search` endpoint"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={false}
+                        name={"total_results"}
+                        required={false}
+                        schemaName={"integer"}
+                        qualifierMessage={undefined}
+                        schema={{"type":"integer","description":"The total number of results for the search query"}}
+                      >
+                        
+                      </SchemaItem><SchemaItem
+                        collapsible={true}
+                        className={"schemaItem"}
+                      >
+                        <details
+                          style={{}}
+                          className={"openapi-markdown__details"}
+                        >
+                          <summary
+                            style={{}}
+                          >
+                            <span
+                              className={"openapi-schema__container"}
+                            >
+                              <strong
+                                className={"openapi-schema__property"}
+                              >
+                                results
+                              </strong><span
+                                className={"openapi-schema__name"}
+                              >
+                                 object[]
+                              </span>
+                            </span>
+                          </summary><div
+                            style={{"marginLeft":"1rem"}}
+                          >
+                            <div
+                              style={{"marginTop":".5rem","marginBottom":".5rem"}}
+                            >
+                              
+                              
+                              A list of SearchResults that match the query. This array will be empty if no results were found.
+                              
+                              
+                            </div><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem","paddingBottom":".5rem"}}
+                              >
+                                Array [
+                              </div>
+                            </li><SchemaItem
+                              collapsible={false}
+                              name={"name"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"The name of the package that matched the search query"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"summary"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"A short description of the package"}}
+                            >
+                              
+                            </SchemaItem><SchemaItem
+                              collapsible={false}
+                              name={"last_updated"}
+                              required={false}
+                              schemaName={"string"}
+                              qualifierMessage={undefined}
+                              schema={{"type":"string","description":"The last time this package was updated in the Nixpkgs repo"}}
+                            >
+                              
+                            </SchemaItem><li>
+                              <div
+                                style={{"fontSize":"var(--ifm-code-font-size)","opacity":"0.6","marginLeft":"-.5rem"}}
+                              >
+                                ]
+                              </div>
+                            </li>
+                          </div>
+                        </details>
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem><TabItem
+                  label={"Example (from schema)"}
+                  value={"Example (from schema)"}
+                >
+                  <ResponseSamples
+                    responseExample={"{\n  \"query\": \"string\",\n  \"total_results\": 0,\n  \"results\": [\n    {\n      \"name\": \"string\",\n      \"summary\": \"string\",\n      \"last_updated\": \"string\"\n    }\n  ]\n}"}
+                    language={"json"}
+                  >
+                    
+                  </ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem><TabItem
+        label={"400"}
+        value={"400"}
+      >
+        <div>
+          
+          
+          Bad Request: empty search query (set a ?q=&lt;query&gt; query parameter)
+          
+          
+        </div><div>
+          
+        </div>
+      </TabItem><TabItem
+        label={"404"}
+        value={"404"}
+      >
+        <div>
+          
+          
+          Not Found
+          
+          
+        </div><div>
+          
+        </div>
+      </TabItem>
+    </ApiTabs>
+  </div>
+</div>
+      

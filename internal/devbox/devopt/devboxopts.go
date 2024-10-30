@@ -18,8 +18,9 @@ type Opts struct {
 }
 
 type ProcessComposeOpts struct {
-	ExtraFlags []string
-	Background bool
+	ExtraFlags         []string
+	Background         bool
+	ProcessComposePort int
 }
 
 type GenerateOpts struct {
@@ -51,7 +52,7 @@ type AddOpts struct {
 	Platforms        []string
 	ExcludePlatforms []string
 	DisablePlugin    bool
-	PatchGlibc       bool
+	Patch            string
 	Outputs          []string
 }
 

@@ -2,8 +2,6 @@
 package flake
 
 import (
-	//"log/slog"
-	"log/slog"
 	"net/url"
 	"path"
 	"slices"
@@ -21,8 +19,8 @@ const (
 	TypeGitHub    = "github"
 	TypeGitLab    = "gitlab"
 	TypeBitBucket = "bitbucket"
-	TypeHttps     = "https"
 	TypeTarball   = "tarball"
+	TypeBuiltin   = "plugin"
 )
 
 // Ref is a parsed Nix flake reference. A flake reference is a subset of the
@@ -236,21 +234,17 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
-	// gitlab supports up to 20 levels of nesting: https://docs.gitlab.com/ee/user/group/subgroups/
-	// using an object structure allows the subgroup(s) to be easily identified by just getting the splits
+	parsed.Type = TypeGitHub
 
-	slog.Debug("REEEEEEEEEEEPO: ", parsed.Repo)
-	split, err := splitRepoString(parsed.Repo, 20)
+	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
+	// refs that have slashes in them. For example,
+	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
+	split, err := splitPathOrOpaque(refURL, 3)
 	if err != nil {
-		slog.Debug("FAILED TO DO THE SPLITS")
 		return err
 	}
-
-	parsed.Owner = strings.Join(split[0:len(split)-2], "/")
-	parsed.Repo = split[len(split)-1]
-
-	slog.Debug("THINGGGGGGS", parsed.Owner, parsed.Repo)
-
+	parsed.Owner = split[0]
+	parsed.Repo = split[1]
 	if len(split) > 2 {
 		if revOrRef := split[2]; isGitHash(revOrRef) {
 			parsed.Rev = revOrRef
@@ -259,21 +253,23 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 		}
 	}
 
+	parsed.Host = refURL.Query().Get("host")
+	parsed.Dir = refURL.Query().Get("dir")
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
-			return redact.Errorf("%s flake reference has a ref and a rev", parsed.Type)
+			return redact.Errorf("github flake reference has a ref and a rev")
 		}
 		if parsed.Ref != "" && qRef != parsed.Ref {
-			return redact.Errorf("%s flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Type, parsed.Ref, qRef)
+			return redact.Errorf("github flake reference has a ref in the path (%q) and a ref query parameter (%q)", parsed.Ref, qRef)
 		}
 		parsed.Ref = qRef
 	}
 	if qRev := refURL.Query().Get("rev"); qRev != "" {
 		if parsed.Ref != "" {
-			return redact.Errorf("%s flake reference has a ref and a rev", parsed.Type)
+			return redact.Errorf("github flake reference has a ref and a rev")
 		}
 		if parsed.Rev != "" && qRev != parsed.Rev {
-			return redact.Errorf("%s flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Type, parsed.Rev, qRev)
+			return redact.Errorf("github flake reference has a rev in the path (%q) and a rev query parameter (%q)", parsed.Rev, qRev)
 		}
 		parsed.Rev = qRev
 	}

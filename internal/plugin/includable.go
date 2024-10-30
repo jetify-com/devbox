@@ -24,6 +24,9 @@ func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
 		fallthrough
 	case flake.TypeBitBucket:
 		fallthrough
+	case flake.TypeBuiltin:
+		// TODO FIXME
+		fallthrough
 	case flake.TypeGitHub:
 		fallthrough
 	case flake.TypeGitLab:

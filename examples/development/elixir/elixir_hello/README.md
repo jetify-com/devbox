@@ -2,6 +2,8 @@
 
 Basic Elixir project using Mix in Devbox.
 
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/elixir)
+
 ## Configuration
 
 This project configures Hex and Mix to install packages + dependencies in local project directories. You can modify where these packages are installed by changing the variables in `conf/set-env.sh`

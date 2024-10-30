@@ -4,7 +4,7 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/php/latest)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/php)
 
 ## Adding PHP to your Project
 

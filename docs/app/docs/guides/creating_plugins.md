@@ -6,7 +6,7 @@ Plugins make it easier to get started with packages that require additional setu
 
 ## Getting Started
 
-Before writing a plugin, we recommend reading the [User Documentation](https://www.jetify.com/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetify-com/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
+Before writing a plugin, we recommend reading the [User Documentation](https://www.jetify.com/docs/devbox/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in the [plugin directory](https://github.com/jetify-com/devbox/tree/main/plugins) of our repo. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
 
 If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetify-com/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
@@ -77,10 +77,10 @@ Plugins are defined as Go JSON Template files, using the following schema:
     ],
      "scripts": {
       "<key>": "<value>"
-    } 
+    }
   },
   "include": [
-   "<path_to_plugin>" 
+   "<path_to_plugin>"
   ]
 }
 ```
@@ -91,7 +91,8 @@ A plugin can define services by adding a `process-compose.yaml` file in its `cre
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
-* `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+* `{{ .DevboxProjectDir }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+* `{{ .DevboxDirRoot }}` - points to `<projectDir>/devbox.d`. This directory is public and added to source control by default.
 * `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
 * `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 
@@ -111,9 +112,9 @@ Special usage instructions or notes to display when your plugin activates or whe
 
 #### `packages` *string[] | object*
 
-A list of packages that the plugin will install when activated or included in a package. This section follows the same format as [`packages`](../configuration.md#packages) section in a project's `devbox.json`. 
+A list of packages that the plugin will install when activated or included in a package. This section follows the same format as [`packages`](../configuration.md#packages) section in a project's `devbox.json`.
 
-Packages installed by a plugin can be overridden if a user installs a different version of the same package in their `devbox.json` config. For example, if a plugin installs `python@3.10`, and a user's devbox.json installs `python@3.11`, the project will use `python@3.11`. 
+Packages installed by a plugin can be overridden if a user installs a different version of the same package in their `devbox.json` config. For example, if a plugin installs `python@3.10`, and a user's devbox.json installs `python@3.11`, the project will use `python@3.11`.
 
 #### `env` *object*
 
@@ -168,12 +169,12 @@ To run multiple commands in a single script, you can pass them as an array:
         }
     }
 }
-``` 
-Scripts defined in a plugin will be overridden if a user's `devbox.json` defines a script with the same name. For example, if both the plugin and the devbox.json that includes it defined a `print_once` script, the version in the user's `devbox.json` will take precedence in the shell. 
+```
+Scripts defined in a plugin will be overridden if a user's `devbox.json` defines a script with the same name. For example, if both the plugin and the devbox.json that includes it defined a `print_once` script, the version in the user's `devbox.json` will take precedence in the shell.
 
 #### `include` *string[]*
 
-Include can be used to explicitly add extra configuration from [plugins](../guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed. 
+Include can be used to explicitly add extra configuration from [plugins](../guides/plugins.md) to your Devbox project. Plugins are parsed and merged in the order they are listed.
 
 Note that in the event of a conflict, plugins near the end of the list will override plugins at the beginning of the list. Likewise, if a setting in your plugin.json conflicts with an included plugin, your setting will take precedence.
 ```json
@@ -218,7 +219,7 @@ The plugin.json below installs MongoDB + the Mongo shell, and sets the environme
   "version": "0.0.1",
   "description": "Plugin for the [`mongodb`](https://www.nixhub.io/packages/mongodb) package. This plugin configures MonogoDB to use a local config file and data directory for this project, and configures a mongodb service.",
   "packages": [
-    "mongodb@latest"
+    "mongodb@latest",
     "mongosh@latest"
   ],
   "env": {

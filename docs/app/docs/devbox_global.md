@@ -56,20 +56,6 @@ devbox global rm ripgrep
 removing 'github:NixOS/nixpkgs/ripgrep'
 ```
 
-## Using Fleek with Devbox Global
-
-[Fleek](https://getfleek.dev/) provides a nicely tuned set of packages and configuration for common tools that is compatible with Devbox Global. Configurations are provided at different [levels of bling](https://getfleek.dev/docs/bling), with higher levels adding more packages and opinionated configuration.
-
-To install a Fleek profile, you can use `devbox global pull <fleek-url>`, where the Fleek URL indicates the profile you want to install. For example, to install the `high` bling profile, you can run:
-
-```bash
-devbox global pull https://devbox.getfleek.dev/high
-```
-
-Fleek profiles also provide a few convenience scripts to automate setting up your profile. You can view the full list of scripts using `devbox global run` with no arguments
-
-For more information, see the [Fleek for Devbox Docs](https://getfleek.dev/docs/devbox)
-
 ## Using Global Packages in your Host Shell
 
 If you want to make your global packages available in your host shell, you can add them to your shell PATH. Running `devbox global shellenv` will print the command necessary to source the packages.

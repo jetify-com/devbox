@@ -70,7 +70,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
 			unchangedPackageNames = append(unchangedPackageNames, pkg.Versioned())
-			ux.Finfo(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
+			ux.Finfof(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
 			continue
 		}
 
@@ -80,7 +80,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		// match.
 		found, _ := d.findPackageByName(pkg.CanonicalName())
 		if found != nil {
-			ux.Finfo(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
+			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
 			if err := d.Remove(ctx, found.Raw); err != nil {
 				return err
 			}
@@ -107,7 +107,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			return usererr.New("Package %s not found", pkg.Raw)
 		}
 
-		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
+		ux.Finfof(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
 		d.cfg.PackageMutator().Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
@@ -142,9 +142,11 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-		if err := d.cfg.PackageMutator().SetPatchGLibc(
-			pkg, opts.PatchGlibc); err != nil {
-			return err
+		if opts.Patch != "" {
+			if err := d.cfg.PackageMutator().SetPatch(
+				pkg, configfile.PatchMode(opts.Patch)); err != nil {
+				return err
+			}
 		}
 		if err := d.cfg.PackageMutator().SetOutputs(
 			d.stderr, pkg, opts.Outputs); err != nil {
@@ -179,9 +181,9 @@ func (d *Devbox) printPostAddMessage(
 
 	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && len(opts.Outputs) == 0 && len(opts.AllowInsecure) == 0 {
 		if len(unchangedPackageNames) == 1 {
-			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
+			ux.Finfof(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {
-			ux.Finfo(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
+			ux.Finfof(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
 				strings.Join(unchangedPackageNames, ", "),
 			)
 		}
@@ -208,7 +210,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	if len(missingPkgs) > 0 {
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"the following packages were not found in your devbox.json: %s\n",
 			strings.Join(missingPkgs, ", "),
@@ -267,7 +269,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		if upToDate {
 			return nil
 		}
-		ux.Finfo(d.stderr, "Ensuring packages are installed.\n")
+		ux.Finfof(d.stderr, "Ensuring packages are installed.\n")
 	}
 
 	if mode != ensure {
@@ -434,7 +436,7 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 }
 
 func (d *Devbox) handleInstallFailure(ctx context.Context, mode installMode) error {
-	ux.Fwarning(d.stderr, "Failed to build from cache, building from source.\n")
+	ux.Fwarningf(d.stderr, "Failed to build from cache, building from source.\n")
 	telemetry.Event(telemetry.EventNixBuildWithSubstitutersFailed, telemetry.Metadata{
 		Packages: lo.Map(
 			d.InstallablePackages(), func(p *devpkg.Package, _ int) string { return p.Raw }),
@@ -491,7 +493,7 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		packages,
 		func(p *devpkg.Package, _ int) string { return p.Raw },
 	)
-	ux.Finfo(
+	ux.Finfof(
 		d.stderr,
 		"Installing the following packages to the nix store: %s\n",
 		strings.Join(packageNames, ", "),
@@ -534,7 +536,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 		return nil
 	}
 	if err != nil {
-		ux.Fwarning(d.stderr, "Devbox was unable to authenticate with the Jetify Nix cache. Some packages might be built from source.\n")
+		ux.Fwarningf(d.stderr, "Devbox was unable to authenticate with the Jetify Nix cache. Some packages might be built from source.\n")
 		return nil //nolint:nilerr
 	}
 
@@ -553,7 +555,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 		return nil
 	}
 	if errors.Is(err, setup.ErrUserRefused) {
-		ux.Finfo(d.stderr, "Skipping cache setup. Run `devbox cache configure` to enable the cache at a later time.\n")
+		ux.Finfof(d.stderr, "Skipping cache setup. Run `devbox cache configure` to enable the cache at a later time.\n")
 		return nil
 	}
 	var daemonErr *nix.DaemonError
@@ -565,7 +567,7 @@ func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArg
 	// continue by building from source if necessary.
 	if err != nil {
 		slog.Error("error configuring nix cache", "err", err)
-		ux.Fwarning(d.stderr, "Devbox was unable to configure Nix to use the Jetify Nix cache. Some packages might be built from source.\n")
+		ux.Fwarningf(d.stderr, "Devbox was unable to configure Nix to use the Jetify Nix cache. Some packages might be built from source.\n")
 		return nil
 	}
 
@@ -657,7 +659,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 		return err
 	}
 
-	ux.Finfo(
+	ux.Finfof(
 		writer,
 		"Modernized the allow_insecure setting for package %q by moving it from devbox.lock to devbox.json. Please commit the changes.\n",
 		strings.Join(insecurePackages, ", "),

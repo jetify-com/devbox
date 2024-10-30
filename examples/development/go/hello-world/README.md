@@ -4,7 +4,7 @@ Go projects can be run in Devbox by adding the Go SDK to your project. If your p
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/go/hello-world)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/go)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/go)
 
 ## Adding Go to your Project
 

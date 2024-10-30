@@ -251,6 +251,6 @@
   "required": [
     "name",
     "version",
-    "readme"
+    "description"
   ]
 }

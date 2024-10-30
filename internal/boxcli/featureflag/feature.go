@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/envir"
 )
+
+const envNamePrefix = "DEVBOX_FEATURE_"
 
 type feature struct {
 	name    string
@@ -48,7 +49,7 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if on, err := strconv.ParseBool(os.Getenv(envir.DevboxFeaturePrefix + f.name)); err == nil {
+	if on, err := strconv.ParseBool(os.Getenv(envNamePrefix + f.name)); err == nil {
 		status := "enabled"
 		if !on {
 			status = "disabled"
@@ -70,7 +71,7 @@ func (f *feature) EnableOnDev() *feature {
 }
 
 func (f *feature) EnableForTest(t *testing.T) {
-	t.Setenv(envir.DevboxFeaturePrefix+f.name, "1")
+	t.Setenv(envNamePrefix+f.name, "1")
 }
 
 // All returns a map of all known features flags and whether they're enabled.

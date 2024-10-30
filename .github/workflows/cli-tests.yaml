@@ -76,6 +76,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: crate-ci/typos@v1.16.26
 
+  flake-test:
+    name: Test Flake Build
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - run: nix build .
+      - run: ./result/bin/devbox version
+  
   golangci-lint:
     strategy:
       matrix:
@@ -183,6 +193,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13]
+        use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -197,6 +208,7 @@ jobs:
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
+          export DEVBOX_FEATURE_DETSYS_INSTALLER=${{ matrix.use-detsys }}
 
           # Setup github authentication to ensure Github's rate limits are not hit.
           # If this works, we can consider refactoring this into a reusable github action helper.
@@ -208,13 +220,13 @@ jobs:
         run: devbox rm go
 
   # Run a sanity test to make sure Devbox can install and remove packages with
-  # the last 3 Nix releases.
+  # the last few Nix releases.
   test-nix-versions:
     needs: build-devbox
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13]
-        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2]
+        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

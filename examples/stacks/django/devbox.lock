@@ -234,91 +234,6 @@
         }
       }
     },
-    "python311Packages.pip@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.2",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python311Packages.pip",
-      "source": "devbox-search",
-      "version": "23.3.1",
-      "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/k6snj78rgh2x8vwifg7dgr1fjcgpsfdx-python3.11-pip-23.3.1",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/pzaf53l42g6vkifk0ds6nzp4xbjb7rcq-python3.11-pip-23.3.1-man",
-              "default": true
-            },
-            {
-              "name": "dist",
-              "path": "/nix/store/93lazq44rfpkz6ibfk18rbkhc88hkb02-python3.11-pip-23.3.1-dist"
-            }
-          ],
-          "store_path": "/nix/store/k6snj78rgh2x8vwifg7dgr1fjcgpsfdx-python3.11-pip-23.3.1"
-        },
-        "aarch64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/2f2666vr91manr2290mc6r8ysjspj32s-python3.11-pip-23.3.1",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/i5mjfwavfy5zi9i52bm2hznkzapa2y01-python3.11-pip-23.3.1-man",
-              "default": true
-            },
-            {
-              "name": "dist",
-              "path": "/nix/store/cazjlkbrsj4d9rvjvj5lmy52bjszz55q-python3.11-pip-23.3.1-dist"
-            }
-          ],
-          "store_path": "/nix/store/2f2666vr91manr2290mc6r8ysjspj32s-python3.11-pip-23.3.1"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/k7pk07yj3ich8q93w6g4c60ac6zwm5cd-python3.11-pip-23.3.1",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/74p97gd82q10ngfgypv7p6d0w9b5s2mw-python3.11-pip-23.3.1-man",
-              "default": true
-            },
-            {
-              "name": "dist",
-              "path": "/nix/store/cg5s3fj3g6pzc2zxqv9sfqvrci2jg9jb-python3.11-pip-23.3.1-dist"
-            }
-          ],
-          "store_path": "/nix/store/k7pk07yj3ich8q93w6g4c60ac6zwm5cd-python3.11-pip-23.3.1"
-        },
-        "x86_64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/9mywabcbd363zr20bl2cvz09hij0ywiw-python3.11-pip-23.3.1",
-              "default": true
-            },
-            {
-              "name": "man",
-              "path": "/nix/store/f5m5mxqq4nhnkl9i8qzpx0ypwhs7xd3p-python3.11-pip-23.3.1-man",
-              "default": true
-            },
-            {
-              "name": "dist",
-              "path": "/nix/store/z9232w9zq46dypkka116bbbjqdhj6wnc-python3.11-pip-23.3.1-dist"
-            }
-          ],
-          "store_path": "/nix/store/9mywabcbd363zr20bl2cvz09hij0ywiw-python3.11-pip-23.3.1"
-        }
-      }
-    },
     "python@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.3",
@@ -373,6 +288,86 @@
             }
           ],
           "store_path": "/nix/store/y4dxr00qg40pwgxx9nxj61091zk8bsvl-python3-3.12.1"
+        }
+      }
+    },
+    "zlib@latest": {
+      "last_modified": "2024-08-04T20:22:49Z",
+      "resolved": "github:NixOS/nixpkgs/785feb91183a50959823ff9ba9ef673105259cd5#zlib",
+      "source": "devbox-search",
+      "version": "1.3.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/0ib2jb462dh3mg5yrv77g4zv7x5m2gy3-zlib-1.3.1",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/4fj2pdvfkjswrar0psn7hs83izdsz5p1-zlib-1.3.1-static"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/f2xa3kz4yi0dld22v26gx7szqqvcrh32-zlib-1.3.1-dev"
+            }
+          ],
+          "store_path": "/nix/store/0ib2jb462dh3mg5yrv77g4zv7x5m2gy3-zlib-1.3.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/s6wl1gipyv3zrg2qxg3r95fz8fr3wx9v-zlib-1.3.1",
+              "default": true
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/cfc0kw9iw953753my6hnbi3issc01i39-zlib-1.3.1-static"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/b1nffz5ndqpxfhbmga9rln62cqp2v69h-zlib-1.3.1-dev"
+            }
+          ],
+          "store_path": "/nix/store/s6wl1gipyv3zrg2qxg3r95fz8fr3wx9v-zlib-1.3.1"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/nkvmqr2m7p5i3grkrlypnj4jgp7gkl15-zlib-1.3.1",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/bh4s6742cgmqqyxjc018b6wynlmbq2rc-zlib-1.3.1-dev"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/sdsilixvl5q3mpi3yybns6k3malr28p2-zlib-1.3.1-static"
+            }
+          ],
+          "store_path": "/nix/store/nkvmqr2m7p5i3grkrlypnj4jgp7gkl15-zlib-1.3.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/phnpfqk1j35nil4hqgaslqm9a1q2gffy-zlib-1.3.1",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/fw1jqi1ia1sinknci20m95mybpidrbhc-zlib-1.3.1-dev"
+            },
+            {
+              "name": "static",
+              "path": "/nix/store/3wwn6ydps6ph61yzh0iiaib4a452h8k7-zlib-1.3.1-static"
+            }
+          ],
+          "store_path": "/nix/store/phnpfqk1j35nil4hqgaslqm9a1q2gffy-zlib-1.3.1"
         }
       }
     }

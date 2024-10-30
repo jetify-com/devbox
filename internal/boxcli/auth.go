@@ -96,8 +96,15 @@ func whoAmICmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return box.UninitializedSecrets(cmd.Context()).
+			// TODO: WhoAmI should be a function in opensource/pkg/auth that takes in a session.
+			// That way we don't need to handle failed refresh token errors here.
+			err = box.UninitializedSecrets(cmd.Context()).
 				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
+			if identity.IsRefreshTokenError(err) {
+				ux.Fwarningf(cmd.ErrOrStderr(), "Your session is expired. Please login again.\n")
+				return loginCmd().RunE(cmd, args)
+			}
+			return err
 		},
 	}
 
@@ -133,7 +140,7 @@ func authNewTokenCommand() *cobra.Command {
 				// This is a hack because errors are not returning with correct code.
 				// Once that is fixed, we can switch to use *connect.Error Code() instead.
 				if strings.Contains(err.Error(), "permission_denied") {
-					ux.Ferror(
+					ux.Ferrorf(
 						cmd.ErrOrStderr(),
 						"You do not have permission to create a token. Please contact your"+
 							" administrator.",
@@ -142,7 +149,7 @@ func authNewTokenCommand() *cobra.Command {
 				}
 				return err
 			}
-			ux.Fsuccess(cmd.OutOrStdout(), "Token created.\n\n")
+			ux.Fsuccessf(cmd.OutOrStdout(), "Token created.\n\n")
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
 			table.SetRowLine(true)
 			table.AppendBulk([][]string{

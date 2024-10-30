@@ -4,9 +4,11 @@
 package devpkg
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -81,10 +83,9 @@ type Package struct {
 	// Outputs is a list of outputs to build from the package's derivation.
 	outputs outputs
 
-	// patchGlibc applies a function to the package's derivation that
-	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
-	// It's a function to allow deferring nix System call until it's needed.
-	patchGlibc func() bool
+	// Patch controls if Devbox environments will do additional patching to
+	// address known issues with the package.
+	Patch bool
 
 	// AllowInsecure are a list of nix packages that are whitelisted to be
 	// installed even if they are marked as insecure.
@@ -110,9 +111,7 @@ func PackagesFromConfig(packages []configfile.Package, l lock.Locker) []*Package
 	for _, cfgPkg := range packages {
 		pkg := newPackage(cfgPkg.VersionedName(), cfgPkg.IsEnabledOnPlatform, l)
 		pkg.DisablePlugin = cfgPkg.DisablePlugin
-		pkg.patchGlibc = sync.OnceValue(func() bool {
-			return cfgPkg.PatchGlibc && nix.SystemIsLinux()
-		})
+		pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), cfgPkg.Patch)
 		pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, cfgPkg.Outputs...))
 		pkg.AllowInsecure = cfgPkg.AllowInsecure
 		result = append(result, pkg)
@@ -127,7 +126,7 @@ func PackageFromStringWithDefaults(raw string, locker lock.Locker) *Package {
 func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.AddOpts) *Package {
 	pkg := PackageFromStringWithDefaults(raw, locker)
 	pkg.DisablePlugin = opts.DisablePlugin
-	pkg.patchGlibc = sync.OnceValue(func() bool { return opts.PatchGlibc })
+	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchMode(opts.Patch))
 	pkg.outputs.selectedNames = lo.Uniq(append(pkg.outputs.selectedNames, opts.Outputs...))
 	pkg.AllowInsecure = opts.AllowInsecure
 	return pkg
@@ -157,6 +156,7 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 	pkg.resolve = sync.OnceValue(func() error { return nil })
 	pkg.setInstallable(parsed, locker.ProjectDir())
 	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
+	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchAuto)
 	return pkg
 }
 
@@ -171,9 +171,7 @@ func resolve(pkg *Package) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO savil. Check with Greg about setting the user-specified outputs
-	// somehow here.
+	parsed.Outputs = strings.Join(pkg.outputs.selectedNames, ",")
 
 	pkg.setInstallable(parsed, pkg.lockfile.ProjectDir())
 	return nil
@@ -184,6 +182,24 @@ func (p *Package) setInstallable(i flake.Installable, projectDir string) {
 		i.Ref.Path = filepath.Join(projectDir, i.Ref.Path)
 	}
 	p.installable = i
+}
+
+func pkgNeedsPatch(canonicalName string, mode configfile.PatchMode) (patch bool) {
+	mode = cmp.Or(mode, configfile.PatchAuto)
+	switch mode {
+	case configfile.PatchAuto:
+		patch = canonicalName == "python"
+	case configfile.PatchAlways:
+		patch = true
+	case configfile.PatchNever:
+		patch = false
+	}
+	if patch {
+		slog.Debug("package needs patching", "pkg", canonicalName, "mode", mode)
+	} else {
+		slog.Debug("package doesn't need patching", "pkg", canonicalName, "mode", mode)
+	}
+	return patch
 }
 
 var inputNameRegex = regexp.MustCompile("[^a-zA-Z0-9-]+")
@@ -235,10 +251,6 @@ func (p *Package) URLForFlakeInput() string {
 // with the Installable() method which returns the corresponding nix concept.
 func (p *Package) IsInstallable() bool {
 	return p.isInstallable()
-}
-
-func (p *Package) PatchGlibc() bool {
-	return p.patchGlibc != nil && p.patchGlibc()
 }
 
 // Installables for this package. Installables is a nix concept defined here:
@@ -294,7 +306,10 @@ func (p *Package) InstallableForOutput(output string) (string, error) {
 // a valid flake reference parsable by ParseFlakeRef, optionally followed by an
 // #attrpath and/or an ^output.
 func (p *Package) FlakeInstallable() (flake.Installable, error) {
-	return flake.ParseInstallable(p.Raw)
+	if err := p.resolve(); err != nil {
+		return flake.Installable{}, err
+	}
+	return p.installable, nil
 }
 
 // urlForInstall is used during `nix profile install`.
@@ -308,15 +323,16 @@ func (p *Package) urlForInstall() (string, error) {
 }
 
 func (p *Package) NormalizedDevboxPackageReference() (string, error) {
-	if err := p.resolve(); err != nil {
+	installable, err := p.FlakeInstallable()
+	if err != nil {
 		return "", err
 	}
-	if p.installable.AttrPath == "" {
+	if installable.AttrPath == "" {
 		return "", nil
 	}
-	clone := p.installable
-	clone.AttrPath = fmt.Sprintf("legacyPackages.%s.%s", nix.System(), clone.AttrPath)
-	return clone.String(), nil
+	installable.AttrPath = fmt.Sprintf("legacyPackages.%s.%s", nix.System(), installable.AttrPath)
+	installable.Outputs = ""
+	return installable.String(), nil
 }
 
 // PackageAttributePath returns the short attribute path for a package which
@@ -362,11 +378,12 @@ func (p *Package) NormalizedPackageAttributePath() (string, error) {
 // normalizePackageAttributePath calls nix search to find the normalized attribute
 // path. It may be an expensive call (~100ms).
 func (p *Package) normalizePackageAttributePath() (string, error) {
-	if err := p.resolve(); err != nil {
+	installable, err := p.FlakeInstallable()
+	if err != nil {
 		return "", err
 	}
-
-	query := p.installable.String()
+	installable.Outputs = ""
+	query := installable.String()
 	if query == "" {
 		query = p.Raw
 	}
@@ -374,7 +391,6 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	// We prefer nix.Search over just trying to parse the package's "URL" because
 	// nix.Search will guarantee that the package exists for the current system.
 	var infos map[string]*nix.Info
-	var err error
 	if p.IsDevboxPackage && !p.IsRunX() {
 		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
 		// use a nix.Search cache.
@@ -817,4 +833,16 @@ func packageInstallErrorHandler(err error, pkg *Package, installableOrEmpty stri
 	}
 
 	return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
+}
+
+func (p *Package) ResolvedVersion() (string, error) {
+	if err := p.resolve(); err != nil {
+		return "", err
+	}
+	lockPackage := p.lockfile.Get(p.Raw)
+	// Flake packages don't have any values in the lockfile
+	if lockPackage == nil {
+		return "", nil
+	}
+	return p.lockfile.Get(p.Raw).Version, nil
 }

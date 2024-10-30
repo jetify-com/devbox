@@ -8,11 +8,9 @@ import (
 	"runtime/trace"
 	"sort"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/envir"
@@ -42,11 +40,6 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	defer trace.StartRegion(cmd.Context(), "telemetryPostRun").End()
 	defer telemetry.Stop()
 
-	var userExecErr *usererr.ExitError
-	if errors.As(runErr, &userExecErr) {
-		return
-	}
-
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
 		CloudRegion:  os.Getenv(envir.DevboxRegion),
@@ -68,6 +61,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 
 	if runErr != nil {
 		telemetry.Error(runErr, meta)
+		// TODO: This is skipping event logging of calls that end in error. We probably want to log them.
 		return
 	}
 	telemetry.Event(telemetry.EventCommandSuccess, meta)

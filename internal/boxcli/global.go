@@ -63,7 +63,7 @@ func ensureGlobalConfig() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = devbox.InitConfig(globalConfigPath)
+	err = devbox.EnsureConfig(globalConfigPath)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +108,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 	}
 	if !box.IsEnvEnabled() {
 		fmt.Fprintln(cmd.ErrOrStderr())
-		ux.Fwarning(
+		ux.Fwarningf(
 			cmd.ErrOrStderr(),
 			`devbox global is not activated.
 

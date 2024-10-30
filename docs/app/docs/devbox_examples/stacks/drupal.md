@@ -6,9 +6,9 @@ This example shows how to run a Drupal application in Devbox. It makes use of th
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/drupal)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/drupal)
+[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/drupal)
 
-## How to Run 
+## How to Run
 
 In this directory, run:
 
@@ -24,7 +24,7 @@ To install Drupal and your dependencies, run `composer install`. The Drupal app 
 
 To exit the shell, use `exit`
 
-## Installing the Umami Example 
+## Installing the Umami Example
 
 Run the `install-drupal.sh` script to install the Umami Drupal example. This is a good starter project for trying out and familiarizing yourself with Drupal
 

@@ -3,6 +3,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"text/tabwriter"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -39,7 +40,7 @@ func (d *Devbox) StartServices(
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 	}
 
@@ -83,7 +84,7 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 		err := services.StopServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
@@ -158,7 +159,7 @@ func (d *Devbox) RestartServices(
 
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 		err := services.RestartServices(ctx, s, d.projectDir, d.stderr)
 		if err != nil {
@@ -168,6 +169,31 @@ func (d *Devbox) RestartServices(
 		}
 	}
 	return nil
+}
+
+func (d *Devbox) AttachToProcessManager(ctx context.Context) error {
+	if !services.ProcessManagerIsRunning(d.projectDir) {
+		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
+	}
+
+	err := initDevboxUtilityProject(ctx, d.stderr)
+	if err != nil {
+		return err
+	}
+
+	processComposeBinPath, err := utilityLookPath("process-compose")
+	if err != nil {
+		return err
+	}
+
+	return services.AttachToProcessManager(
+		ctx,
+		d.stderr,
+		d.projectDir,
+		services.ProcessComposeOpts{
+			BinPath: processComposeBinPath,
+		},
+	)
 }
 
 func (d *Devbox) StartProcessManager(
@@ -192,6 +218,9 @@ func (d *Devbox) StartProcessManager(
 		for _, flag := range processComposeOpts.ExtraFlags {
 			args = append(args, "--pcflags", flag)
 		}
+		if processComposeOpts.ProcessComposePort != 0 {
+			args = append(args, "--pcport", strconv.Itoa(processComposeOpts.ProcessComposePort))
+		}
 
 		return d.runDevboxServicesScript(ctx, args)
 	}
@@ -207,7 +236,7 @@ func (d *Devbox) StartProcessManager(
 
 	for _, s := range requestedServices {
 		if _, ok := svcs[s]; !ok {
-			return usererr.New(fmt.Sprintf("Service %s not found in your project", s))
+			return usererr.New("Service %s not found in your project", s)
 		}
 	}
 
@@ -229,9 +258,10 @@ func (d *Devbox) StartProcessManager(
 		svcs,
 		d.projectDir,
 		services.ProcessComposeOpts{
-			BinPath:    processComposeBinPath,
-			Background: processComposeOpts.Background,
-			ExtraFlags: processComposeOpts.ExtraFlags,
+			BinPath:            processComposeBinPath,
+			Background:         processComposeOpts.Background,
+			ExtraFlags:         processComposeOpts.ExtraFlags,
+			ProcessComposePort: processComposeOpts.ProcessComposePort,
 		},
 	)
 }

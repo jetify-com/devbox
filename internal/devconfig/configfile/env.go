@@ -25,10 +25,13 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	if !c.IsdotEnvEnabled() {
 		return nil, fmt.Errorf("env file does not have a .env extension")
 	}
-
-	file, err := os.Open(c.EnvFrom)
+	envFileAbsPath := c.EnvFrom
+	if !filepath.IsAbs(c.EnvFrom) {
+		envFileAbsPath = filepath.Join(filepath.Dir(c.AbsRootPath), c.EnvFrom)
+	}
+	file, err := os.Open(envFileAbsPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %s", c.EnvFrom)
+		return nil, fmt.Errorf("failed to open file: %s", envFileAbsPath)
 	}
 	defer file.Close()
 

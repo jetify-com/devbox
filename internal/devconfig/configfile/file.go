@@ -116,6 +116,11 @@ func (c *ConfigFile) SaveTo(path string) error {
 	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
 }
 
+// TODO: Can we remove SaveTo and just use Save()?
+func (c *ConfigFile) Save() error {
+	return c.SaveTo(c.AbsRootPath)
+}
+
 // Get returns the package with the given versionedName
 func (c *ConfigFile) GetPackage(versionedName string) (*Package, bool) {
 	name, version := parseVersionedName(versionedName)

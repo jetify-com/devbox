@@ -29,21 +29,27 @@ func setupCmd() *cobra.Command {
 		},
 	}
 
-	installNixCommand.Flags().Bool(nixDaemonFlag, false, "Install Nix in multi-user mode.")
+	installNixCommand.Flags().Bool(
+		nixDaemonFlag,
+		false,
+		"Install Nix in multi-user mode. This flag is not supported if you are using DetSys installer",
+	)
 	setupCommand.AddCommand(installNixCommand)
 	return setupCommand
 }
 
 func runInstallNixCmd(cmd *cobra.Command) error {
 	if nix.BinaryInstalled() {
-		ux.Finfo(
+		// TODO: If existing installation is not detsys, but new installation is detsys can we detect
+		// that and replace it?
+		ux.Finfof(
 			cmd.ErrOrStderr(),
 			"Nix is already installed. If this is incorrect "+
 				"please remove the nix-shell binary from your path.\n",
 		)
 		return nil
 	}
-	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd)())
+	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
 // ensureNixInstalled verifies that nix is installed and that it is of a supported version
@@ -61,7 +67,7 @@ func nixDaemonFlagVal(cmd *cobra.Command) func() *bool {
 	return func() *bool {
 		if !cmd.Flags().Changed(nixDaemonFlag) {
 			if os.Geteuid() == 0 {
-				ux.Fwarning(
+				ux.Fwarningf(
 					cmd.ErrOrStderr(),
 					"Running as root. Installing Nix in multi-user mode.\n",
 				)

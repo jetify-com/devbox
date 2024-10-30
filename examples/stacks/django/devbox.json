@@ -1,10 +1,13 @@
 {
-  "packages": [
-    "python@latest",
-    "python311Packages.pip@latest",
-    "openssl@latest",
-    "postgresql@latest"
-  ],
+  "packages": {
+    "python": "latest",
+    "openssl": {
+      "version": "latest",
+      "outputs": ["out", "dev"]
+    },
+    "postgresql": "latest",
+    "zlib":       "latest"
+  },
   "env": {
     "PGPORT": "5434"
   },
@@ -19,6 +22,8 @@
         "dropdb --if-exists todo_db",
         "createdb todo_db",
         "psql todo_db -c \"CREATE USER todo_user WITH PASSWORD 'secretpassword';\"",
+        "psql todo_db -c \"ALTER DATABASE todo_db OWNER TO todo_user;\"",
+        "psql todo_db -c \"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO todo_user;\"",
         "python todo_project/manage.py makemigrations",
         "python todo_project/manage.py migrate"
       ],

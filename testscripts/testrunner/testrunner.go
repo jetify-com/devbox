@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -42,7 +43,7 @@ func RunTestscripts(t *testing.T, testscriptsDir string) {
 			continue
 		}
 
-		testscript.Run(t, getTestscriptParams(t, dir))
+		testscript.Run(t, getTestscriptParams(dir))
 	}
 }
 
@@ -79,12 +80,12 @@ func copyFileCmd(script *testscript.TestScript, neg bool, args []string) {
 	script.Check(err)
 }
 
-func getTestscriptParams(t *testing.T, dir string) testscript.Params {
+func getTestscriptParams(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
 		RequireExplicitExec: true,
 		TestWork:            false, // Set to true if you're trying to debug a test.
-		Setup:               func(env *testscript.Env) error { return setupTestEnv(t, env) },
+		Setup:               func(env *testscript.Env) error { return setupTestEnv(env) },
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
 			"cp":                           copyFileCmd,
 			"devboxjson.packages.contains": assertDevboxJSONPackagesContains,
@@ -93,6 +94,16 @@ func getTestscriptParams(t *testing.T, dir string) testscript.Params {
 			"json.superset":                assertJSONSuperset,
 			"path.order":                   assertPathOrder,
 			"source.path":                  sourcePath,
+		},
+		Condition: func(cond string) (bool, error) {
+			before, key, found := strings.Cut(cond, ":")
+			if found && before == "env" {
+				if v, ok := os.LookupEnv(key); ok {
+					return strconv.ParseBool(v)
+				}
+				return false, nil
+			}
+			return false, fmt.Errorf("unknown condition: %v", cond)
 		},
 	}
 }

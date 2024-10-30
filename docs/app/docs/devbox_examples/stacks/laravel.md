@@ -8,11 +8,11 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/laravel)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/github.com/jetify-com/devbox/?folder=examples/stacks/laravel)
+[![Open In Devspace](/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/laravel)
 
 ## How to Run
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing_devbox/)
 
 1. Create a new Laravel App by running `devbox create --template laravel`. This will create a new Laravel project in your current directory.
 
@@ -27,7 +27,6 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 1. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
 
 1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
-
 
 ## How to Recreate this Example
 

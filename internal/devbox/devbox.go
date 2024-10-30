@@ -71,8 +71,17 @@ type Devbox struct {
 
 var legacyPackagesWarningHasBeenShown = false
 
-func InitConfig(dir string) (bool, error) {
-	return devconfig.Init(dir)
+func InitConfig(dir string) error {
+	_, err := devconfig.Init(dir)
+	return err
+}
+
+func EnsureConfig(dir string) error {
+	err := InitConfig(dir)
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		return err
+	}
+	return nil
 }
 
 func Open(opts *devopt.Opts) (*Devbox, error) {
@@ -124,7 +133,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
 	if err := box.moveAllowInsecureFromLockfile(box.stderr, lock, cfg); err != nil {
-		ux.Fwarning(
+		ux.Fwarningf(
 			box.stderr,
 			"Failed to move allow_insecure from devbox.lock to devbox.json. An insecure package may "+
 				"not work until you invoke `devbox add <pkg> --allow-insecure=<packages>` again: %s\n",
@@ -152,7 +161,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		if err != nil {
 			return nil, err
 		}
-		ux.Fwarning(
+		ux.Fwarningf(
 			os.Stderr, // Always stderr. box.writer should probably always be err.
 			"Your devbox.json contains packages in legacy format. "+
 				"Please run `devbox %supdate` to update your devbox.json.\n",
@@ -270,7 +279,16 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	// wrap the arg in double-quotes, and escape any double-quotes inside it
+	// wrap the arg in double-quotes, and escape any double-quotes inside it.
+	//
+	// TODO(gcurtis): this breaks quote-removal in parameter expansion,
+	// command substitution, and arithmetic expansion:
+	//
+	//	$ unset x
+	//	$ echo ${x:-"my file"}
+	//	my file
+	//	$ devbox run -- echo '${x:-"my file"}'
+	//	"my file"
 	for idx, arg := range cmdArgs {
 		cmdArgs[idx] = strconv.Quote(arg)
 	}
@@ -278,7 +296,8 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	var cmdWithArgs []string
 	if _, ok := d.cfg.Scripts()[cmdName]; ok {
 		// it's a script, so replace the command with the script file's path.
-		cmdWithArgs = append([]string{shellgen.ScriptPath(d.ProjectDir(), cmdName)}, cmdArgs...)
+		script := shellgen.ScriptPath(d.ProjectDir(), cmdName)
+		cmdWithArgs = append([]string{strconv.Quote(script)}, cmdArgs...)
 	} else {
 		// Arbitrary commands should also run the hooks, so we write them to a file as well. However, if the
 		// command args include env variable evaluations, then they'll be evaluated _before_ the hooks run,
@@ -293,7 +312,8 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if err != nil {
 			return err
 		}
-		cmdWithArgs = []string{shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)}
+		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
+		cmdWithArgs = []string{strconv.Quote(script)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 	}
 
@@ -538,14 +558,14 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ux.Fsuccess(d.stderr, "generated .envrc file\n")
+	ux.Fsuccessf(d.stderr, "generated .envrc file\n")
 	if cmdutil.Exists("direnv") {
 		cmd := exec.Command("direnv", "allow")
 		err := cmd.Run()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		ux.Fsuccess(d.stderr, "ran `direnv allow`\n")
+		ux.Fsuccessf(d.stderr, "ran `direnv allow`\n")
 	}
 	return nil
 }
@@ -704,8 +724,14 @@ func (d *Devbox) computeEnv(
 		env["PATH"],
 	)
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
 	// Add helpful env vars for a Devbox project
 	env["DEVBOX_PROJECT_ROOT"] = d.projectDir
+	env["DEVBOX_WD"] = wd
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
@@ -796,13 +822,13 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// returns early if the lockfile is up to date. So we don't need to check here
 	if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {
 		if !fileutil.Exists(d.nixPrintDevEnvCachePath()) {
-			ux.Ferror(
+			ux.Ferrorf(
 				d.stderr,
 				"Error connecting to the internet and no cached environment found. Aborting.\n",
 			)
 			return nil, err
 		}
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"Error connecting to the internet. Will attempt to use cached environment.\n",
 		)
@@ -840,6 +866,11 @@ func (d *Devbox) AllPackageNamesIncludingRemovedTriggerPackages() []string {
 		result = append(result, p.VersionedName())
 	}
 	return result
+}
+
+func (d *Devbox) AllPackagesIncludingRemovedTriggerPackages() []*devpkg.Package {
+	packages := d.cfg.Packages(true /*includeRemovedTriggerPackages*/)
+	return devpkg.PackagesFromConfig(packages, d.lockfile)
 }
 
 // AllPackages returns the packages that are defined in devbox.json and
@@ -913,7 +944,7 @@ func (d *Devbox) checkOldEnvrc() error {
 			return err
 		}
 		if !isNewEnvrc {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Your .envrc file seems to be out of date. "+
 					"Run `devbox generate direnv --force` to update it.\n"+
@@ -942,7 +973,7 @@ func (d *Devbox) configEnvs(
 		if err != nil && !strings.Contains(err.Error(), "project not initialized") {
 			return nil, err
 		} else if err != nil {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Ignoring env_from directive. jetify cloud secrets is not "+
 					"initialized. Run `devbox secrets init` to initialize it.\n",
@@ -950,7 +981,7 @@ func (d *Devbox) configEnvs(
 		} else {
 			cloudSecrets, err := secrets.List(ctx)
 			if err != nil {
-				ux.Fwarning(
+				ux.Fwarningf(
 					os.Stderr,
 					"Error reading secrets from jetify cloud: %s\n\n",
 					err,

@@ -5,11 +5,13 @@ import (
 	"errors"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 	"go.jetify.com/typeid"
 	"go.jetpack.io/devbox/internal/build"
+	"go.jetpack.io/devbox/internal/ux"
 	"go.jetpack.io/pkg/api"
 	"go.jetpack.io/pkg/auth"
 	"go.jetpack.io/pkg/auth/session"
@@ -40,7 +42,12 @@ func GenSession(ctx context.Context) (*session.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.GetSession(ctx)
+	tok, err := c.GetSession(ctx)
+	if IsRefreshTokenError(err) {
+		ux.Fwarningf(os.Stderr, "Your session is expired. Please login again.\n")
+		return c.LoginFlow()
+	}
+	return tok, err
 }
 
 func Peek() (*session.Token, error) {
@@ -128,4 +135,14 @@ func GetOrgSlug(ctx context.Context) (string, error) {
 	}
 
 	return claims["org_trusted_metadata"].(map[string]any)["slug"].(string), nil
+}
+
+// invalid_grant or invalid_request usually means the refresh token is expired, revoked, or
+// malformed. this belongs in opensource/pkg/auth
+func IsRefreshTokenError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "invalid_grant") ||
+		strings.Contains(err.Error(), "invalid_request")
 }

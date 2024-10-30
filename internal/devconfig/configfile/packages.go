@@ -3,6 +3,7 @@ package configfile
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -78,7 +79,7 @@ func (pkgs *PackagesMutator) AddPlatforms(writer io.Writer, versionedname string
 	}
 	if len(pkg.Platforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.Name, "platforms", pkg.Platforms[oldLen:])
-		ux.Finfo(writer,
+		ux.Finfof(writer,
 			"Added platform %s to package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName(),
 		)
@@ -118,7 +119,7 @@ func (pkgs *PackagesMutator) ExcludePlatforms(writer io.Writer, versionedName st
 	}
 	if len(pkg.ExcludedPlatforms) > oldLen {
 		pkgs.ast.appendPlatforms(pkg.Name, "excluded_platforms", pkg.ExcludedPlatforms[oldLen:])
-		ux.Finfo(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
+		ux.Finfof(writer, "Excluded platform %s for package %s\n", strings.Join(platforms, ", "),
 			pkg.VersionedName())
 	}
 	return nil
@@ -154,15 +155,24 @@ func (pkgs *PackagesMutator) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (pkgs *PackagesMutator) SetPatchGLibc(versionedName string, v bool) error {
+func (pkgs *PackagesMutator) SetPatch(versionedName string, mode PatchMode) error {
+	if err := mode.validate(); err != nil {
+		return fmt.Errorf("set patch field for %s: %v", versionedName, err)
+	}
+
 	name, version := parseVersionedName(versionedName)
 	i := pkgs.index(name, version)
 	if i == -1 {
 		return errors.Errorf("package %s not found", versionedName)
 	}
-	if pkgs.collection[i].PatchGlibc != v {
-		pkgs.collection[i].PatchGlibc = v
-		pkgs.ast.setPackageBool(name, "patch_glibc", v)
+
+	pkgs.collection[i].PatchGlibc = false
+	pkgs.collection[i].Patch = mode
+	if mode == PatchAuto {
+		// PatchAuto is the default behavior, so just remove the field.
+		pkgs.ast.removePatch(name)
+	} else {
+		pkgs.ast.setPatch(name, mode)
 	}
 	return nil
 }
@@ -197,7 +207,7 @@ func (pkgs *PackagesMutator) SetOutputs(writer io.Writer, versionedName string, 
 	if len(toAdd) > 0 {
 		pkg := &pkgs.collection[i]
 		pkgs.ast.appendOutputs(pkg.Name, "outputs", toAdd)
-		ux.Finfo(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
+		ux.Finfof(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
@@ -220,7 +230,7 @@ func (pkgs *PackagesMutator) SetAllowInsecure(writer io.Writer, versionedName st
 		pkg := &pkgs.collection[i]
 		pkgs.ast.appendAllowInsecure(pkg.Name, "allow_insecure", toAdd)
 		pkg.AllowInsecure = append(pkg.AllowInsecure, toAdd...)
-		ux.Finfo(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
+		ux.Finfof(writer, "Allowed insecure %s for package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
 }
@@ -229,6 +239,34 @@ func (pkgs *PackagesMutator) index(name, version string) int {
 	return slices.IndexFunc(pkgs.collection, func(p Package) bool {
 		return p.Name == name && p.Version == version
 	})
+}
+
+// PatchMode specifies when to patch packages.
+type PatchMode string
+
+const (
+	// PatchAuto automatically applies patches to fix known issues with
+	// certain packages. It is the default behavior when the config doesn't
+	// specify a patching mode.
+	PatchAuto PatchMode = "auto"
+
+	// PatchAlways always applies patches to a package, overriding the
+	// default behavior of PatchAuto. It might cause problems with untested
+	// packages.
+	PatchAlways PatchMode = "always"
+
+	// PatchNever disables all patching for a package.
+	PatchNever PatchMode = "never"
+)
+
+func (p PatchMode) validate() error {
+	switch p {
+	case PatchAuto, PatchAlways, PatchNever:
+		return nil
+	default:
+		return fmt.Errorf("invalid patch mode %q (must be %s, %s or %s)",
+			p, PatchAuto, PatchAlways, PatchNever)
+	}
 }
 
 type Package struct {
@@ -241,7 +279,13 @@ type Package struct {
 
 	// PatchGlibc applies a function to the package's derivation that
 	// patches any ELF binaries to use the latest version of nixpkgs#glibc.
+	//
+	// Deprecated: Use Patch instead, which also patches glibc.
 	PatchGlibc bool `json:"patch_glibc,omitempty"`
+
+	// Patch controls when to patch the package. If empty, it defaults to
+	// [PatchAuto].
+	Patch PatchMode `json:"patch,omitempty"`
 
 	// Outputs is the list of outputs to use for this package, assuming
 	// it is a nix package. If empty, the default output is used.
@@ -291,21 +335,28 @@ func (p *Package) VersionedName() string {
 
 func (p *Package) UnmarshalJSON(data []byte) error {
 	// First, attempt to unmarshal as a version-only string
-	var version string
-	if err := json.Unmarshal(data, &version); err == nil {
-		p.Version = version
-		return nil
+	if err := json.Unmarshal(data, &p.Version); err != nil {
+		// Second, attempt to unmarshal as a Package struct
+		type packageAlias Package // Use an alias-type to avoid infinite recursion
+		alias := &packageAlias{}
+		if err := json.Unmarshal(data, alias); err != nil {
+			return errors.WithStack(err)
+		}
+		*p = Package(*alias)
 	}
 
-	// Second, attempt to unmarshal as a Package struct
-	type packageAlias Package // Use an alias-type to avoid infinite recursion
-	alias := &packageAlias{}
-	if err := json.Unmarshal(data, alias); err != nil {
-		return errors.WithStack(err)
+	if p.Patch == "" {
+		if p.PatchGlibc {
+			// Force patching if the user has an old config with the deprecated
+			// patch_glibc field set to true.
+			p.Patch = PatchAlways
+		} else {
+			// Default to PatchAuto if the field is missing, null,
+			// or empty.
+			p.Patch = PatchAuto
+		}
 	}
-
-	*p = Package(*alias)
-	return nil
+	return p.Patch.validate()
 }
 
 // parseVersionedName parses the name and version from package@version representation

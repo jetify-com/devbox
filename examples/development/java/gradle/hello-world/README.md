@@ -26,7 +26,7 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java/gradle/hello-world)
 
-[![Open In Devbox.sh](https://www.jetify.com/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/java-gradle)
+[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/java-gradle)
 
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below:
 
