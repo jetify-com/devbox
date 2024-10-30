@@ -42,6 +42,7 @@ func populateConfig(ctx context.Context, path string, config *devconfig.Config) 
 func detectors(path string) []detector.Detector {
 	return []detector.Detector{
 		&detector.GoDetector{Root: path},
+		&detector.NodeJSDetector{Root: path},
 		&detector.PHPDetector{Root: path},
 		&detector.PoetryDetector{Root: path},
 		&detector.PythonDetector{Root: path},

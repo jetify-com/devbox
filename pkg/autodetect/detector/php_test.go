@@ -13,14 +13,16 @@ import (
 
 func TestPHPDetector_Relevance(t *testing.T) {
 	tests := []struct {
-		name     string
-		fs       fstest.MapFS
-		expected float64
+		name             string
+		fs               fstest.MapFS
+		expected         float64
+		expectedPackages []string
 	}{
 		{
-			name:     "no composer.json",
-			fs:       fstest.MapFS{},
-			expected: 0,
+			name:             "no composer.json",
+			fs:               fstest.MapFS{},
+			expected:         0,
+			expectedPackages: nil,
 		},
 		{
 			name: "with composer.json",
@@ -33,7 +35,8 @@ func TestPHPDetector_Relevance(t *testing.T) {
 					}`),
 				},
 			},
-			expected: 1,
+			expected:         1,
+			expectedPackages: []string{"php@8.1"},
 		},
 	}
 
@@ -52,16 +55,23 @@ func TestPHPDetector_Relevance(t *testing.T) {
 			score, err := d.Relevance(dir)
 			require.NoError(t, err)
 			assert.Equal(t, curTest.expected, score)
+
+			if score > 0 {
+				packages, err := d.Packages(context.Background())
+				require.NoError(t, err)
+				assert.Equal(t, curTest.expectedPackages, packages)
+			}
 		})
 	}
 }
 
 func TestPHPDetector_Packages(t *testing.T) {
 	tests := []struct {
-		name          string
-		fs            fstest.MapFS
-		expectedPHP   string
-		expectedError bool
+		name             string
+		fs               fstest.MapFS
+		expectedPHP      string
+		expectedError    bool
+		expectedPackages []string
 	}{
 		{
 			name: "no php version specified",
@@ -72,7 +82,8 @@ func TestPHPDetector_Packages(t *testing.T) {
 					}`),
 				},
 			},
-			expectedPHP: "php@latest",
+			expectedPHP:      "php@latest",
+			expectedPackages: []string{"php@latest"},
 		},
 		{
 			name: "specific php version",
@@ -85,7 +96,8 @@ func TestPHPDetector_Packages(t *testing.T) {
 					}`),
 				},
 			},
-			expectedPHP: "php@8.1",
+			expectedPHP:      "php@8.1",
+			expectedPackages: []string{"php@8.1"},
 		},
 		{
 			name: "php version with patch",
@@ -98,7 +110,8 @@ func TestPHPDetector_Packages(t *testing.T) {
 					}`),
 				},
 			},
-			expectedPHP: "php@8.1.2",
+			expectedPHP:      "php@8.1.2",
+			expectedPackages: []string{"php@8.1.2"},
 		},
 		{
 			name: "invalid composer.json",
@@ -107,7 +120,8 @@ func TestPHPDetector_Packages(t *testing.T) {
 					Data: []byte(`invalid json`),
 				},
 			},
-			expectedError: true,
+			expectedError:    true,
+			expectedPackages: nil,
 		},
 	}
 
@@ -129,7 +143,7 @@ func TestPHPDetector_Packages(t *testing.T) {
 
 			packages, err := d.Packages(context.Background())
 			require.NoError(t, err)
-			assert.Equal(t, []string{curTest.expectedPHP}, packages)
+			assert.Equal(t, curTest.expectedPackages, packages)
 		})
 	}
 }
@@ -139,6 +153,7 @@ func TestPHPDetector_PHPExtensions(t *testing.T) {
 		name               string
 		fs                 fstest.MapFS
 		expectedExtensions []string
+		expectedPackages   []string
 	}{
 		{
 			name: "no extensions",
@@ -152,6 +167,7 @@ func TestPHPDetector_PHPExtensions(t *testing.T) {
 				},
 			},
 			expectedExtensions: []string{},
+			expectedPackages:   []string{"php@8.1"},
 		},
 		{
 			name: "multiple extensions",
@@ -167,6 +183,11 @@ func TestPHPDetector_PHPExtensions(t *testing.T) {
 				},
 			},
 			expectedExtensions: []string{
+				"php81Extensions.mbstring@latest",
+				"php81Extensions.imagick@latest",
+			},
+			expectedPackages: []string{
+				"php@8.1",
 				"php81Extensions.mbstring@latest",
 				"php81Extensions.imagick@latest",
 			},
@@ -188,6 +209,10 @@ func TestPHPDetector_PHPExtensions(t *testing.T) {
 			extensions, err := d.phpExtensions(context.Background())
 			require.NoError(t, err)
 			assert.ElementsMatch(t, curTest.expectedExtensions, extensions)
+
+			packages, err := d.Packages(context.Background())
+			require.NoError(t, err)
+			assert.ElementsMatch(t, curTest.expectedPackages, packages)
 		})
 	}
 }
