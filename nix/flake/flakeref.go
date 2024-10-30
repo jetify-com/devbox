@@ -20,7 +20,7 @@ const (
 	TypeGitLab    = "gitlab"
 	TypeBitBucket = "bitbucket"
 	TypeTarball   = "tarball"
-	TypeBuiltin   = "plugin"
+	TypeBuiltin   = "builtin"
 )
 
 // Ref is a parsed Nix flake reference. A flake reference is a subset of the
