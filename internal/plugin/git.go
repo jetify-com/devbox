@@ -102,7 +102,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		_, err := cmd.Output()
 
 		if err != nil {
-			slog.Error("Error executing git archive: ", err)
+			slog.Error("Error executing git archive: " + err.Error())
 			return nil, 0, err
 		}
 
@@ -110,7 +110,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		err = fileutil.Untar(reader, archiveDir)
 
 		if err != nil {
-			slog.Error("Encountered error while trying to extract "+archive+": ", err)
+			slog.Error("Encountered error while trying to extract " + archive + ": " + err.Error())
 			return nil, 0, err
 		}
 
