@@ -1,6 +1,8 @@
 {
   "name": "plugin1a",
-  "packages": ["cowsay@latest"],
+  "packages": [
+    "cowsay@latest"
+  ],
   "env": {
     "PLUGIN1A_ENV": "success"
   },
@@ -15,6 +17,9 @@
     }
   },
   "include": [
-    "../../plugin2"
+    {
+      "type": "path",
+      "path": "../../plugin2"
+    }
   ]
 }
