@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/envir"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type shellCmdFlags struct {
@@ -95,13 +96,22 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
+	onStaleState := func() {
+		ux.FHidableWarning(
+			ctx,
+			cmd.ErrOrStderr(),
+			devbox.StateOutOfDateMessage,
+			"with --recompute=true",
+		)
+	}
+
 	return box.Shell(ctx, devopt.EnvOptions{
-		OmitNixEnv: flags.omitNixEnv,
-		Pure:       flags.pure,
-		RecomputeEnv: &devopt.RecomputeEnvOpts{
-			Disabled:              !flags.recomputeEnv,
-			StateOutOfDateMessage: fmt.Sprintf(devbox.StateOutOfDateMessage, "with --recompute=true"),
+		Hooks: devopt.EnvLifecycleHooks{
+			OnStaleStateWithSkipRecompute: onStaleState,
 		},
+		OmitNixEnv:    flags.omitNixEnv,
+		Pure:          flags.pure,
+		SkipRecompute: !flags.recomputeEnv,
 	})
 }
 

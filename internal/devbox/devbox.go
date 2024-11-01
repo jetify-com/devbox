@@ -804,14 +804,12 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	if envOpts.RecomputeEnv.Disabled {
+	if envOpts.SkipRecompute {
 		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
 		if !upToDate {
-			ux.FHidableWarning(
-				ctx,
-				d.stderr,
-				envOpts.RecomputeEnv.StateOutOfDateMessage, //nolint:govet
-			)
+			if envOpts.Hooks.OnStaleStateWithSkipRecompute != nil {
+				envOpts.Hooks.OnStaleStateWithSkipRecompute()
+			}
 		}
 	} else {
 		// When ensureStateIsUpToDate is called with ensure=true, it always

@@ -17,6 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/internal/ux"
 )
 
 type runCmdFlags struct {
@@ -122,13 +123,22 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
+	onStaleState := func() {
+		ux.FHidableWarning(
+			ctx,
+			cmd.ErrOrStderr(),
+			devbox.StateOutOfDateMessage,
+			"with --recompute=true",
+		)
+	}
+
 	envOpts := devopt.EnvOptions{
-		OmitNixEnv: flags.omitNixEnv,
-		Pure:       flags.pure,
-		RecomputeEnv: &devopt.RecomputeEnvOpts{
-			Disabled:              !flags.recomputeEnv,
-			StateOutOfDateMessage: fmt.Sprintf(devbox.StateOutOfDateMessage, "with --recompute=true"),
+		Hooks: devopt.EnvLifecycleHooks{
+			OnStaleStateWithSkipRecompute: onStaleState,
 		},
+		OmitNixEnv:    flags.omitNixEnv,
+		Pure:          flags.pure,
+		SkipRecompute: !flags.recomputeEnv,
 	}
 	if err := box.RunScript(ctx, envOpts, script, scriptArgs); err != nil {
 		return redact.Errorf("error running script %q in Devbox: %w", script, err)
