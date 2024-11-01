@@ -86,7 +86,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	retrieveArchive := func() ([]byte, time.Duration, error) {
-		archiveDir, _ := os.MkdirTemp("", p.ref.Owner)
+		archiveDir, _ := os.MkdirTemp("", p.ref.Repo)
 		archive := filepath.Join(archiveDir, p.ref.Owner+".tar.gz")
 		args := strings.Fields(pluginLocation + archive) // this is really just the base git archive command + file
 
@@ -221,8 +221,8 @@ func (p *gitPlugin) sshBaseGitCommand() (string, error) {
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
 
 	host := p.ref.Host
-	if p.ref.Port != "" {
-		host += ":" + p.ref.Port
+	if p.ref.Port != -1 {
+		host += ":" + fmt.Sprintf("%d", p.ref.Port)
 	}
 
 	command := fmt.Sprintf("%s%s/%s %s %s -o", prefix, host, path, branch, p.ref.Dir)

@@ -172,7 +172,8 @@
             "description": "Port to use for the connection",
             "type": "integer",
             "minimum": 1,
-            "maximum": 65535
+            "maximum": 65535,
+            "default": -1
           },
           "dir": {
             "description": "Subdirectory that should be accessed in the repo. Defaults to the path key if not provided",

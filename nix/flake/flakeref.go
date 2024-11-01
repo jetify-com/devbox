@@ -72,7 +72,7 @@ type Ref struct {
 	URL string `json:"url,omitempty"`
 
 	// Port of the server git server, to support privately hosted git servers or tunnels
-	Port string `json:port,omitempty`
+	Port int32 `json:port,omitempty`
 }
 
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
