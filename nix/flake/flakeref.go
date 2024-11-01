@@ -19,6 +19,7 @@ const (
 	TypeSSH       = "ssh"
 	TypeGitHub    = "github"
 	TypeGitLab    = "gitlab"
+	TypeGit       = "git"
 	TypeBitBucket = "bitbucket"
 	TypeTarball   = "tarball"
 	TypeBuiltin   = "builtin"
@@ -203,6 +204,8 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 			parsed.Type = TypeSSH
 		} else if strings.HasPrefix(refURL.Scheme, TypeFile) {
 			parsed.Type = TypeFile
+		} else {
+			parsed.Type = TypeGit
 		}
 
 		parsed.URL = refURL.String()
@@ -256,6 +259,7 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 
 	parsed.Host = refURL.Query().Get("host")
 	parsed.Dir = refURL.Query().Get("dir")
+
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
 			return redact.Errorf("github flake reference has a ref and a rev")

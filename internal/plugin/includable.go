@@ -20,7 +20,7 @@ func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
 	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
-	case flake.TypeSSH, flake.TypeBuiltin, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket:
+	case flake.TypeSSH, flake.TypeBuiltin, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket, flake.TypeGit:
 		if ref.Host == "" {
 			ref.Host = ref.Type + ".com"
 		}

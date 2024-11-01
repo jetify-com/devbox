@@ -24,6 +24,7 @@ import (
 )
 
 var sshCache = filecache.New[[]byte]("devbox/plugin/ssh")
+var gitCache = filecache.New[[]byte]("devbox/plugin/git")
 var githubCache = filecache.New[[]byte]("devbox/plugin/github")
 var gitlabCache = filecache.New[[]byte]("devbox/plugin/gitlab")
 var bitbucketCache = filecache.New[[]byte]("devbox/plugin/bitbucket")
@@ -78,115 +79,116 @@ func (p *gitPlugin) Hash() string {
 	return cachehash.Bytes([]byte(p.ref.String()))
 }
 
-func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
-	pluginLocation, err := p.url(subpath)
+func (p *gitPlugin) fetchSSHArchive(location string) ([]byte, error) {
+	archiveDir, _ := os.MkdirTemp("", p.ref.Repo)
+	archive := filepath.Join(archiveDir, p.ref.Owner+".tar.gz")
+	args := strings.Fields(location + archive) // this is really just the base git archive command + file
+
+	defer os.RemoveAll(archiveDir)
+
+	cmd := exec.Command(args[0], args[1:]...)
+	_, err := cmd.Output()
+
+	if err != nil {
+		slog.Error("Error executing git archive: " + err.Error())
+		return nil, err
+	}
+
+	reader, err := os.Open(archive)
+	err = fileutil.Untar(reader, archiveDir)
+
+	if err != nil {
+		slog.Error("Encountered error while trying to extract " + archive + ": " + err.Error())
+		return nil, err
+	}
+
+	pluginJson := filepath.Join(archiveDir, p.ref.Dir, "plugin.json")
+	file, err := os.Open(pluginJson)
+
+	defer file.Close()
+	info, err := file.Stat()
+
+	if err != nil {
+		slog.Error("Error extracting file " + file.Name() + ". Cannot process plugin.")
+		return nil, err
+	}
+
+	if info.Size() == 0 {
+		slog.Error("Extracted file " + file.Name() + " is empty. Cannot process plugin.")
+		return nil, err
+	}
+
+	return io.ReadAll(file)
+}
+
+func (p *gitPlugin) fetchHttp(location string) ([]byte, error) {
+	req, err := p.request(location)
 
 	if err != nil {
 		return nil, err
 	}
 
-	retrieveArchive := func() ([]byte, time.Duration, error) {
-		archiveDir, _ := os.MkdirTemp("", p.ref.Repo)
-		archive := filepath.Join(archiveDir, p.ref.Owner+".tar.gz")
-		args := strings.Fields(pluginLocation + archive) // this is really just the base git archive command + file
+	client := &http.Client{}
+	res, err := client.Do(req)
 
-		defer func() {
-			slog.Debug("Cleaning up retrieved files related to privately hosted plugin")
-			slog.Debug("Removing archive " + archive)
-			os.RemoveAll(archive)
-			slog.Debug("Removing archive directory " + archiveDir)
-			os.RemoveAll(archiveDir)
-		}()
-
-		cmd := exec.Command(args[0], args[1:]...)
-		_, err := cmd.Output()
-
-		if err != nil {
-			slog.Error("Error executing git archive: " + err.Error())
-			return nil, 0, err
-		}
-
-		reader, err := os.Open(archive)
-		err = fileutil.Untar(reader, archiveDir)
-
-		if err != nil {
-			slog.Error("Encountered error while trying to extract " + archive + ": " + err.Error())
-			return nil, 0, err
-		}
-
-		pluginJson := filepath.Join(archiveDir, p.ref.Dir, "plugin.json")
-		file, err := os.Open(pluginJson)
-		defer file.Close()
-
-		info, err := file.Stat()
-
-		if err != nil {
-			slog.Error("Error extracting file " + file.Name() + ". Cannot process plugin.")
-			return nil, 0, err
-		}
-
-		if info.Size() == 0 {
-			slog.Error("Extracted file " + file.Name() + " is empty. Cannot process plugin.")
-			return nil, 0, err
-		}
-
-		body, err := io.ReadAll(file)
-
-		if err != nil {
-			return nil, 0, err
-		}
-
-		return body, 24 * time.Hour, nil
+	if err != nil {
+		return nil, err
 	}
 
-	retrieveHttp := func() ([]byte, time.Duration, error) {
-		req, err := p.request(pluginLocation)
+	defer res.Body.Close()
 
-		if err != nil {
-			return nil, 0, err
-		}
+	if res.StatusCode != http.StatusOK {
+		return nil, usererr.New(
+			"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
+				"sure a plugin.json file exists in plugin directory.",
+			p.LockfileKey(),
+			req.URL.String(),
+			res.StatusCode,
+		)
+	}
 
-		client := &http.Client{}
-		res, err := client.Do(req)
+	return io.ReadAll(res.Body)
+}
 
-		if err != nil {
-			return nil, 0, err
-		}
+func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
+	location, err := p.url(subpath)
 
-		defer res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
-		if res.StatusCode != http.StatusOK {
-			return nil, 0, usererr.New(
-				"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
-					"sure a plugin.json file exists in plugin directory.",
-				p.LockfileKey(),
-				req.URL.String(),
-				res.StatusCode,
-			)
-		}
+	var bytes []byte
 
-		body, err := io.ReadAll(res.Body)
+	if p.ref.Type == flake.TypeSSH {
+		bytes, err = p.fetchSSHArchive(location)
+	} else {
+		bytes, err = p.fetchHttp(location)
+	}
 
-		if err != nil {
-			return nil, 0, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
+	process := func() ([]byte, time.Duration, error) {
 		// Cache for 24 hours. Once we store the plugin in the lockfile, we
 		// should cache this indefinitely and only invalidate if the plugin
 		// is updated.
-		return body, 24 * time.Hour, nil
+		return bytes, 24 * time.Hour, nil
 	}
 
 	switch p.ref.Type {
 	case flake.TypeSSH:
-		return sshCache.GetOrSet(pluginLocation, retrieveArchive)
+		return sshCache.GetOrSet(location, process)
 	case flake.TypeGitHub:
-		return githubCache.GetOrSet(pluginLocation, retrieveHttp)
+		return githubCache.GetOrSet(location, process)
 	case flake.TypeGitLab:
-		return gitlabCache.GetOrSet(pluginLocation, retrieveHttp)
+		return gitlabCache.GetOrSet(location, process)
 	case flake.TypeBitBucket:
-		return bitbucketCache.GetOrSet(pluginLocation, retrieveHttp)
+		return bitbucketCache.GetOrSet(location, process)
+	case flake.TypeGit:
+		return gitCache.GetOrSet(location, process)
 	default:
+		slog.Error("Unable to handle flake ref type: " + p.ref.Type)
 		return nil, err
 	}
 }
@@ -195,11 +197,7 @@ func (p *gitPlugin) url(subpath string) (string, error) {
 	switch p.ref.Type {
 	case flake.TypeSSH:
 		return p.sshBaseGitCommand()
-	case flake.TypeBitBucket:
-		fallthrough
-	case flake.TypeGitHub:
-		fallthrough
-	case flake.TypeGitLab:
+	case flake.TypeGit, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket:
 		return p.repoUrl(subpath)
 	default:
 		return "", errors.New("Unsupported plugin type: " + p.ref.Type)
@@ -260,6 +258,45 @@ func (p *gitPlugin) bitbucketUrl(subpath string) (string, error) {
 	)
 }
 
+func (p *gitPlugin) genericGitUrl(subpath string) (string, error) {
+	address, err := url.JoinPath(
+		p.ref.Host,
+		p.ref.Repo,
+		cmp.Or(p.ref.Rev, p.ref.Ref, "main"),
+		p.ref.Dir,
+		subpath,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	parsed, err := url.Parse(address)
+
+	if err != nil {
+		return "", err
+	}
+
+	// gitlab doesn't redirect master -> main or main -> master, so using "main"
+	// as the default in this case
+	query := parsed.Query()
+	query.Add("ref", cmp.Or(p.ref.Rev, p.ref.Ref, "main"))
+
+	if p.ref.Dir != "" {
+		query.Add("dir", p.ref.Dir)
+	}
+
+	if p.ref.Port != 0 {
+		query.Add("port", fmt.Sprintf("%d", p.ref.Port))
+	}
+
+	parsed.RawQuery = query.Encode()
+	query.Add("ref", cmp.Or(p.ref.Rev, p.ref.Ref, "main"))
+	parsed.RawQuery = query.Encode()
+
+	return parsed.String(), nil
+}
+
 func (p *gitPlugin) repoUrl(subpath string) (string, error) {
 	if p.ref.Type == flake.TypeGitHub {
 		return p.githubUrl(subpath)
@@ -267,6 +304,8 @@ func (p *gitPlugin) repoUrl(subpath string) (string, error) {
 		return p.gitlabUrl(subpath)
 	} else if p.ref.Type == flake.TypeBitBucket {
 		return p.bitbucketUrl(subpath)
+	} else if p.ref.Type == flake.TypeGit {
+		return p.genericGitUrl(subpath)
 	}
 
 	return "", errors.New("Unknown hostname provided in plugin: " + p.ref.Host)
