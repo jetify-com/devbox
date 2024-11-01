@@ -2,6 +2,7 @@
 package flake
 
 import (
+	"fmt"
 	"net/url"
 	"path"
 	"slices"
@@ -295,44 +296,53 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 // string.
 func (r Ref) String() string {
 	switch r.Type {
+
 	case TypeFile:
 		if r.URL == "" {
 			return ""
 		}
 		return "file+" + r.URL
 	case TypeSSH:
-		if r.URL == "" {
-			return ""
-		}
-		if !strings.HasPrefix(r.URL, "git") {
-			r.URL = "git+" + r.URL
+		base := fmt.Sprintf("git+ssh://git@%s", r.Host)
+		if r.Port > 0 {
+			base = fmt.Sprintf("%s:%d", base, r.Port)
 		}
 
-		// Nix removes "ref" and "rev" from the query string
-		// (but not other parameters) after parsing. If they're empty,
-		// we can skip parsing the URL. Otherwise, we need to add them
-		// back.
-		if r.Ref == "" && r.Rev == "" {
-			return r.URL
+		queryParams := url.Values{}
+
+		if r.Rev != "" {
+			queryParams.Add("rev", r.Rev)
 		}
-		url, err := url.Parse(r.URL)
-		if err != nil {
-			// This should be rare and only happen if the caller
-			// messed with the parsed URL.
-			return ""
+		if r.Ref != "" {
+			queryParams.Add("ref", r.Ref)
 		}
-		url.RawQuery = buildQueryString("ref", r.Ref, "rev", r.Rev, "dir", r.Dir)
-		return url.String()
-	case TypeGitHub:
+		if r.Dir != "" {
+			queryParams.Add("dir", r.Dir)
+		}
+
+		return fmt.Sprintf("%s/%s/%s?%s", base, r.Owner, r.Repo, queryParams.Encode())
+
+	case TypeGitLab, TypeBitBucket, TypeGitHub:
 		if r.Owner == "" || r.Repo == "" {
 			return ""
 		}
+
+		scheme := "github" // using as default
+		if r.Type == TypeGitLab {
+			scheme = "gitlab"
+		}
+		if r.Type == TypeBitBucket {
+			scheme = "bitbucket"
+		}
+
 		url := &url.URL{
-			Scheme:   "github",
+			Scheme:   scheme,
 			Opaque:   buildEscapedPath(r.Owner, r.Repo, r.Rev, r.Ref),
 			RawQuery: buildQueryString("host", r.Host, "dir", r.Dir),
 		}
+
 		return url.String()
+
 	case TypeIndirect:
 		if r.ID == "" {
 			return ""

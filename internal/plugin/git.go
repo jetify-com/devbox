@@ -221,7 +221,9 @@ func (p *gitPlugin) sshBaseGitCommand() (string, error) {
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
 
 	host := p.ref.Host
-	if p.ref.Port != -1 {
+
+	// the Ref struct defaults the field to 0. This technically a valid port for UDP, but we aren't using UDP
+	if p.ref.Port > 0 {
 		host += ":" + fmt.Sprintf("%d", p.ref.Port)
 	}
 
