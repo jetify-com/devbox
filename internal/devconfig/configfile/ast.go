@@ -426,7 +426,18 @@ func (c *configAST) beforeComment(path ...any) []byte {
 	)
 }
 
-func (c *configAST) setEnv(env map[string]string) {
+func (c *configAST) createMemberIfMissing(key string) *hujson.ObjectMember {
+	i := c.memberIndex(c.root.Value.(*hujson.Object), key)
+	if i == -1 {
+		c.root.Value.(*hujson.Object).Members = append(c.root.Value.(*hujson.Object).Members, hujson.ObjectMember{
+			Name: hujson.Value{Value: hujson.String(key)},
+		})
+		i = len(c.root.Value.(*hujson.Object).Members) - 1
+	}
+	return &c.root.Value.(*hujson.Object).Members[i]
+}
+
+func mapToObjectMembers(env map[string]string) []hujson.ObjectMember {
 	members := make([]hujson.ObjectMember, 0, len(env))
 	for k, v := range env {
 		members = append(members, hujson.ObjectMember{
@@ -434,16 +445,12 @@ func (c *configAST) setEnv(env map[string]string) {
 			Value: hujson.Value{Value: hujson.String(v)},
 		})
 	}
-	i := c.memberIndex(c.root.Value.(*hujson.Object), "env")
-	if i == -1 {
-		c.root.Value.(*hujson.Object).Members = append(c.root.Value.(*hujson.Object).Members, hujson.ObjectMember{
-			Name:  hujson.Value{Value: hujson.String("env")},
-			Value: hujson.Value{Value: &hujson.Object{Members: members}},
-		})
-	} else {
-		c.root.Value.(*hujson.Object).Members[i].Value.Value = &hujson.Object{
-			Members: members,
-		}
+	return members
+}
+
+func (c *configAST) setEnv(env map[string]string) {
+	c.createMemberIfMissing("env").Value.Value = &hujson.Object{
+		Members: mapToObjectMembers(env),
 	}
 	c.root.Format()
 }
