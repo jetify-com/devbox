@@ -17,6 +17,7 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 		fs               fstest.MapFS
 		expected         float64
 		expectedPackages []string
+		expectedEnv      map[string]string
 	}{
 		{
 			name: "package.json in root",
@@ -27,6 +28,7 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 			},
 			expected:         1,
 			expectedPackages: []string{"nodejs@latest"},
+			expectedEnv:      map[string]string{"DEVBOX_COREPACK_ENABLED": "1"},
 		},
 		{
 			name: "package.json with node version",
@@ -41,6 +43,7 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 			},
 			expected:         1,
 			expectedPackages: []string{"nodejs@18.0.0"},
+			expectedEnv:      map[string]string{"DEVBOX_COREPACK_ENABLED": "1"},
 		},
 		{
 			name: "no nodejs files",
@@ -54,12 +57,14 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 			},
 			expected:         0,
 			expectedPackages: []string{},
+			expectedEnv:      map[string]string{},
 		},
 		{
 			name:             "empty directory",
 			fs:               fstest.MapFS{},
 			expected:         0,
 			expectedPackages: []string{},
+			expectedEnv:      map[string]string{},
 		},
 	}
 
@@ -74,17 +79,21 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			d := &NodeJSDetector{Root: dir}
-			err := d.Init()
+			detector := &NodeJSDetector{Root: dir}
+			err := detector.Init()
 			require.NoError(t, err)
 
-			score, err := d.Relevance(dir)
+			score, err := detector.Relevance(dir)
 			require.NoError(t, err)
 			assert.Equal(t, curTest.expected, score)
 			if score > 0 {
-				packages, err := d.Packages(context.Background())
+				packages, err := detector.Packages(context.Background())
 				require.NoError(t, err)
 				assert.Equal(t, curTest.expectedPackages, packages)
+
+				env, err := detector.Env(context.Background())
+				require.NoError(t, err)
+				assert.Equal(t, curTest.expectedEnv, env)
 			}
 		})
 	}
@@ -95,4 +104,11 @@ func TestNodeJSDetector_Packages(t *testing.T) {
 	packages, err := d.Packages(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, []string{"nodejs@latest"}, packages)
+}
+
+func TestNodeJSDetector_Env(t *testing.T) {
+	d := &NodeJSDetector{}
+	env, err := d.Env(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, map[string]string{"DEVBOX_COREPACK_ENABLED": "1"}, env)
 }
