@@ -2,7 +2,7 @@ version: "0.5"
 
 processes:
   postgresql:
-    command: "pg_ctl start -o \"-k $PGHOST\""
+    command: "pg_ctl start -o \"-k '$PGHOST'\""
     is_daemon: true
     shutdown: 
       command: "pg_ctl stop -m fast"
