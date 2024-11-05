@@ -80,6 +80,6 @@ type EnvOptions struct {
 }
 
 type LifecycleHooks struct {
-	// OnStaleState is called when the Devbox state is out of date, AND it is not being recomputed.
+	// OnStaleState is called when the Devbox state is out of date
 	OnStaleState func()
 }
