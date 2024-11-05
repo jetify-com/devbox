@@ -72,14 +72,14 @@ type EnvExportsOpts struct {
 // like `shellenv`, `shell` and `run`.
 // - The struct is designed for the "common case" to be zero-initialized as `EnvOptions{}`.
 type EnvOptions struct {
-	Hooks             EnvLifecycleHooks
+	Hooks             LifecycleHooks
 	OmitNixEnv        bool
 	PreservePathStack bool
 	Pure              bool
 	SkipRecompute     bool
 }
 
-type EnvLifecycleHooks struct {
-	// OnStaleStateWithSkipRecompute is called when the Devbox state is out of date, AND it is not being recomputed.
-	OnStaleStateWithSkipRecompute func()
+type LifecycleHooks struct {
+	// OnStaleState is called when the Devbox state is out of date, AND it is not being recomputed.
+	OnStaleState func()
 }

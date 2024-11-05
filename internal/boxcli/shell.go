@@ -96,18 +96,18 @@ func runShellCmd(cmd *cobra.Command, flags shellCmdFlags) error {
 		return shellInceptionErrorMsg("devbox shell")
 	}
 
-	onStaleState := func() {
-		ux.FHidableWarning(
-			ctx,
-			cmd.ErrOrStderr(),
-			devbox.StateOutOfDateMessage,
-			"with --recompute=true",
-		)
-	}
-
 	return box.Shell(ctx, devopt.EnvOptions{
-		Hooks: devopt.EnvLifecycleHooks{
-			OnStaleStateWithSkipRecompute: onStaleState,
+		Hooks: devopt.LifecycleHooks{
+			OnStaleState: func() {
+				if !flags.recomputeEnv {
+					ux.FHidableWarning(
+						ctx,
+						cmd.ErrOrStderr(),
+						devbox.StateOutOfDateMessage,
+						"with --recompute=true",
+					)
+				}
+			},
 		},
 		OmitNixEnv:    flags.omitNixEnv,
 		Pure:          flags.pure,

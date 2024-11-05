@@ -804,14 +804,17 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	if envOpts.SkipRecompute {
-		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
-		if !upToDate {
-			if envOpts.Hooks.OnStaleStateWithSkipRecompute != nil {
-				envOpts.Hooks.OnStaleStateWithSkipRecompute()
-			}
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled(isFishShell())
+	if err != nil {
+		return nil, err
+	}
+	if !upToDate {
+		if envOpts.Hooks.OnStaleState != nil {
+			envOpts.Hooks.OnStaleState()
 		}
-	} else {
+	}
+
+	if !envOpts.SkipRecompute {
 		// When ensureStateIsUpToDate is called with ensure=true, it always
 		// returns early if the lockfile is up to date. So we don't need to check here
 		if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {

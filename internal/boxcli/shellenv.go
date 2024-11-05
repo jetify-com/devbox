@@ -115,19 +115,19 @@ func shellEnvFunc(
 		}
 	}
 
-	onStaleState := func() {
-		ux.FHidableWarning(
-			ctx,
-			cmd.ErrOrStderr(),
-			devbox.StateOutOfDateMessage,
-			box.RefreshAliasOrCommand(),
-		)
-	}
-
 	envStr, err := box.EnvExports(ctx, devopt.EnvExportsOpts{
 		EnvOptions: devopt.EnvOptions{
-			Hooks: devopt.EnvLifecycleHooks{
-				OnStaleStateWithSkipRecompute: onStaleState,
+			Hooks: devopt.LifecycleHooks{
+				OnStaleState: func() {
+					if !flags.recomputeEnv {
+						ux.FHidableWarning(
+							ctx,
+							cmd.ErrOrStderr(),
+							devbox.StateOutOfDateMessage,
+							box.RefreshAliasOrCommand(),
+						)
+					}
+				},
 			},
 			OmitNixEnv:        flags.omitNixEnv,
 			PreservePathStack: flags.preservePathStack,

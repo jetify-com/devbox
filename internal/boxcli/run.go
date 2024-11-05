@@ -123,18 +123,18 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return redact.Errorf("error reading devbox.json: %w", err)
 	}
 
-	onStaleState := func() {
-		ux.FHidableWarning(
-			ctx,
-			cmd.ErrOrStderr(),
-			devbox.StateOutOfDateMessage,
-			"with --recompute=true",
-		)
-	}
-
 	envOpts := devopt.EnvOptions{
-		Hooks: devopt.EnvLifecycleHooks{
-			OnStaleStateWithSkipRecompute: onStaleState,
+		Hooks: devopt.LifecycleHooks{
+			OnStaleState: func() {
+				if !flags.recomputeEnv {
+					ux.FHidableWarning(
+						ctx,
+						cmd.ErrOrStderr(),
+						devbox.StateOutOfDateMessage,
+						"with --recompute=true",
+					)
+				}
+			},
 		},
 		OmitNixEnv:    flags.omitNixEnv,
 		Pure:          flags.pure,
