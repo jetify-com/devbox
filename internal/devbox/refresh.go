@@ -26,7 +26,7 @@ func (d *Devbox) isGlobal() bool {
 // In some cases (e.g. 2 non-global projects somehow active at the same time),
 // refresh might not match. This is a tiny edge case, so no need to make UX
 // great, we just print out the entire command.
-func (d *Devbox) refreshAliasOrCommand() string {
+func (d *Devbox) RefreshAliasOrCommand() string {
 	if !d.isRefreshAliasSet() {
 		// even if alias is not set, it might still be set by the end of this process
 		return fmt.Sprintf("`%s` or `%s`", d.refreshAliasName(), d.refreshCmd())

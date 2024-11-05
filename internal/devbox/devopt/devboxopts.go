@@ -62,10 +62,9 @@ type UpdateOpts struct {
 }
 
 type EnvExportsOpts struct {
-	DontRecomputeEnvironment bool
-	EnvOptions               EnvOptions
-	NoRefreshAlias           bool
-	RunHooks                 bool
+	EnvOptions     EnvOptions
+	NoRefreshAlias bool
+	RunHooks       bool
 }
 
 // EnvOptions configure the Devbox Environment in the `computeEnv` function.
@@ -73,7 +72,14 @@ type EnvExportsOpts struct {
 // like `shellenv`, `shell` and `run`.
 // - The struct is designed for the "common case" to be zero-initialized as `EnvOptions{}`.
 type EnvOptions struct {
+	Hooks             LifecycleHooks
 	OmitNixEnv        bool
 	PreservePathStack bool
 	Pure              bool
+	SkipRecompute     bool
+}
+
+type LifecycleHooks struct {
+	// OnStaleState is called when the Devbox state is out of date, AND it is not being recomputed.
+	OnStaleState func()
 }
