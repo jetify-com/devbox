@@ -13,17 +13,19 @@
 
         lastTag = "0.13.6";
 
-        revision = if (self ? shortRev)
-                   then "${self.shortRev}"
-                   else "${self.dirtyShortRev or "dirty"}";
+        revision =
+          if (self ? shortRev)
+          then "${self.shortRev}"
+          else "${self.dirtyShortRev or "dirty"}";
 
         # Add the commit to the version string for flake builds
-        version = "${lastTag}-${revision}";
+        version = "${lastTag}";
 
         # Run `devbox run update-flake` to update the vendor-hash
-        vendorHash = if builtins.pathExists ./vendor-hash
-                     then builtins.readFile ./vendor-hash
-                     else "";
+        vendorHash =
+          if builtins.pathExists ./vendor-hash
+          then builtins.readFile ./vendor-hash
+          else "";
 
         buildGoModule = pkgs.buildGo123Module;
 
