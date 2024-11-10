@@ -277,10 +277,7 @@ func (p *gitPlugin) genericGitUrl(subpath string) (string, error) {
 		return "", err
 	}
 
-	// gitlab doesn't redirect master -> main or main -> master, so using "main"
-	// as the default in this case
 	query := parsed.Query()
-	query.Add("ref", cmp.Or(p.ref.Rev, p.ref.Ref, "main"))
 
 	if p.ref.Dir != "" {
 		query.Add("dir", p.ref.Dir)
@@ -290,7 +287,8 @@ func (p *gitPlugin) genericGitUrl(subpath string) (string, error) {
 		query.Add("port", fmt.Sprintf("%d", p.ref.Port))
 	}
 
-	parsed.RawQuery = query.Encode()
+	// gitlab doesn't redirect master -> main or main -> master, so using "main"
+	// as the default in this case
 	query.Add("ref", cmp.Or(p.ref.Rev, p.ref.Ref, "main"))
 	parsed.RawQuery = query.Encode()
 

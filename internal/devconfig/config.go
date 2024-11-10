@@ -239,7 +239,6 @@ func (c *Config) loadRecursive(
 
 	// TODO UPDATEME
 	for _, ref := range c.Root.Include {
-
 		switch ref.Type {
 		case flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket:
 			ref.Host = fmt.Sprintf("%s.com", ref.Type)
