@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/go-envparse"
 )
 
+var JetifyCloudEnvFromValue = "jetify-cloud"
+
 func (c *ConfigFile) IsEnvsecEnabled() bool {
 	// envsec for legacy. jetpack-cloud for legacy
-	return c.EnvFrom == "envsec" || c.EnvFrom == "jetpack-cloud" || c.EnvFrom == "jetify-cloud"
+	return c.EnvFrom == "envsec" || c.EnvFrom == "jetpack-cloud" || c.EnvFrom == JetifyCloudEnvFromValue
 }
 
 func (c *ConfigFile) IsdotEnvEnabled() bool {
@@ -41,4 +43,9 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	}
 
 	return envMap, nil
+}
+
+func (c *ConfigFile) SetEnv(env map[string]string) {
+	c.Env = env
+	c.ast.setEnv(env)
 }

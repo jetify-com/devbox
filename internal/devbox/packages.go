@@ -303,7 +303,7 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 			ctx,
 			d.stderr,
 			StateOutOfDateMessage,
-			d.refreshAliasOrCommand(),
+			d.RefreshAliasOrCommand(),
 		)
 	}
 

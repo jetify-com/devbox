@@ -28,9 +28,7 @@ For environment variables that you want to keep out of your `devbox.json` file, 
 {
   "packages": {},
   "shell": {},
-  "env_from": [
-    "path/to/.env"
-  ]
+  "env_from": "path/to/.env"
 }
 ```
 

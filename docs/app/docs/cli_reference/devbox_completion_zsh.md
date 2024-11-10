@@ -2,8 +2,15 @@
 
 Generate the autocompletion script for the zsh shell.
 
-If shell completion is not already enabled in your environment you will need
-to enable it.  You can execute the following once:
+If you are using Oh My Zsh, just run the following:
+
+```bash
+mkdir -p ~/.oh-my-zsh/completions
+devbox completion zsh > ~/.oh-my-zsh/completions/_devbox
+```
+
+If you are not using Oh My Zsh and shell completion is not already enabled in your environment you will need
+to enable it. You can execute the following once:
 
 ```bash
 echo "autoload -U compinit; compinit" >> ~/.zshrc
