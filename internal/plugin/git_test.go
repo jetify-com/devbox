@@ -1,10 +1,8 @@
 package plugin
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"go.jetpack.io/devbox/nix/flake"
 )
@@ -20,7 +18,7 @@ func TestNewGitPlugin(t *testing.T) {
 			name: "parse basic github plugin",
 			Include: []flake.Ref{
 				{
-					Host:  "github.com",
+					Type:  "github",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 				},
@@ -28,6 +26,7 @@ func TestNewGitPlugin(t *testing.T) {
 			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
+					Host:  "github.com",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 				},
@@ -39,15 +38,16 @@ func TestNewGitPlugin(t *testing.T) {
 			name: "parse github plugin with dir param",
 			Include: []flake.Ref{
 				{
-					Host:  "github.com",
+					Type:  "github",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
-					Dir:   "monogodb",
+					Dir:   "mongodb",
 				},
 			},
 			expected: gitPlugin{
 				ref: flake.Ref{
 					Type:  "github",
+					Host:  "github.com",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Dir:   "mongodb",
@@ -60,16 +60,17 @@ func TestNewGitPlugin(t *testing.T) {
 			name: "parse github plugin with dir param and rev",
 			Include: []flake.Ref{
 				{
-					Host:  "github.com",
+					Type:  "github",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
-					Dir:   "monogodb",
 					Ref:   "my-branch",
+					Dir:   "mongodb",
 				},
 			},
 			expected: gitPlugin{
 				ref: flake.Ref{
-					Type:  "https",
+					Type:  "github",
+					Host:  "github.com",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Ref:   "my-branch",
@@ -83,22 +84,22 @@ func TestNewGitPlugin(t *testing.T) {
 			name: "parse github plugin with dir param and rev",
 			Include: []flake.Ref{
 				{
-					Host:  "github.com",
+					Type:  "github",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
-					Dir:   "monogodb",
-					Ref:   "my-branch",
+					Dir:   "mongodb",
+					Ref:   "initials/my-branch",
 					Rev:   "initials",
 				},
 			},
 			expected: gitPlugin{
 				ref: flake.Ref{
-					Type:  "https",
-					Host:  "github.com",
+					Type:  "github",
 					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
-					Ref:   "initials/my-branch",
 					Dir:   "mongodb",
+					Ref:   "initials/my-branch", // FIXME
+					Rev:   "initials",
 				},
 				name: "jetify-com.devbox-plugins.mongodb",
 			},
@@ -108,7 +109,7 @@ func TestNewGitPlugin(t *testing.T) {
 			name: "parse gitlab plugin",
 			Include: []flake.Ref{
 				{
-					Host:  "gitlab.com",
+					Type:  "gitlab",
 					Owner: "username",
 					Repo:  "my-repo",
 				},
@@ -116,20 +117,20 @@ func TestNewGitPlugin(t *testing.T) {
 
 			expected: gitPlugin{
 				ref: flake.Ref{
-					Type:  "https",
+					Type:  "gitlab",
+					Host:  "gitlab.com",
 					Owner: "username",
 					Repo:  "my-repo",
-					Host:  "gitlab.com",
 				},
 				name: "username.my-repo",
 			},
-			expectedURL: "https://gitlab.com/api/v4/projects/username/my-repo/files/plugin.json/raw",
+			expectedURL: "https://gitlab.com/api/v4/projects/username%2Fmy-repo/repository/files/raw?ref=main",
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, err := newGitPluginForTest(testCase.Include[0])
+			actual, err := newGitPlugin(testCase.Include[0]) // FIXME: need to evaluate URL
 			assert.NoError(t, err)
 			assert.Equal(t, &testCase.expected, actual)
 			u, err := testCase.expected.url("")
@@ -137,18 +138,6 @@ func TestNewGitPlugin(t *testing.T) {
 			assert.Equal(t, testCase.expectedURL, u)
 		})
 	}
-}
-
-// keep in sync with newGithubPlugin
-func newGitPluginForTest(ref flake.Ref) (*gitPlugin, error) {
-	plugin := &gitPlugin{ref: ref}
-	name := strings.ReplaceAll(ref.Dir, "/", "-")
-	repoDotted := strings.ReplaceAll(ref.Repo, "/", ".")
-	plugin.name = githubNameRegexp.ReplaceAllString(
-		strings.Join(lo.Compact([]string{ref.Owner, repoDotted, name}), "."),
-		" ",
-	)
-	return plugin, nil
 }
 
 func TestGitPluginAuth(t *testing.T) {

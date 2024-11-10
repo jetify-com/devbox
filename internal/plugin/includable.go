@@ -21,9 +21,6 @@ func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
 	case flake.TypeSSH, flake.TypeBuiltin, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket, flake.TypeGit:
-		if ref.Host == "" {
-			ref.Host = ref.Type + ".com"
-		}
 		return newGitPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
