@@ -212,12 +212,9 @@ func (p *gitPlugin) sshBaseGitCommand() (string, error) {
 		defaultBranch = "master"
 	}
 
-	p.ref.Ref = defaultBranch
-
 	prefix := "git archive --format=tar.gz --remote=ssh://git@"
 	path, _ := url.JoinPath(p.ref.Owner, p.ref.Repo)
 	branch := cmp.Or(p.ref.Rev, p.ref.Ref, defaultBranch)
-
 	host := p.ref.Host
 
 	// the Ref struct defaults the field to 0. This technically a valid port for UDP, but we aren't using UDP
@@ -225,7 +222,12 @@ func (p *gitPlugin) sshBaseGitCommand() (string, error) {
 		host += ":" + fmt.Sprintf("%d", p.ref.Port)
 	}
 
-	command := fmt.Sprintf("%s%s/%s %s %s -o", prefix, host, path, branch, p.ref.Dir)
+	command := fmt.Sprintf("%s%s/%s %s", prefix, host, path, branch)
+	if p.ref.Dir != "" {
+		command += fmt.Sprintf(" %s", p.ref.Dir)
+	}
+	command += " -o"
+
 	slog.Debug("Generated base git archive command: " + command)
 	return command, nil
 }

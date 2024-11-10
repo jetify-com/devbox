@@ -371,6 +371,164 @@ func TestNewGitPlugin(t *testing.T) {
 			},
 			expectedURL: "https://api.bitbucket.org/2.0/repositories/username/my-plugin/src/1234567/subdir",
 		},
+		{
+			name: "parse basic ssh plugin",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Owner: "username",
+					Repo:  "my-plugin",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Owner: "username",
+					Repo:  "my-plugin",
+				},
+				name: "username.my-plugin",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost/username/my-plugin main -o",
+		},
+		{
+			name: "parse ssh plugin with port",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+				},
+				name: "username.my-plugin",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost:9999/username/my-plugin main -o",
+		},
+		{
+			name: "parse ssh plugin with port and dir",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+				},
+				name: "username.my-plugin.subdir",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost:9999/username/my-plugin main subdir -o",
+		},
+		{
+			name: "parse ssh plugin with port, dir and rev",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Rev:   "1234567",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Rev:   "1234567",
+				},
+				name: "username.my-plugin.subdir",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost:9999/username/my-plugin 1234567 subdir -o",
+		},
+		{
+			name: "parse ssh plugin with port, dir and ref",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Ref:   "some/branch",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Ref:   "some/branch",
+				},
+				name: "username.my-plugin.subdir",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost:9999/username/my-plugin some/branch subdir -o",
+		},
+		{
+			name: "parse ssh plugin with port, dir, ref and ref",
+			Include: []flake.Ref{
+				{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Ref:   "some/branch",
+					Rev:   "1234567",
+				},
+			},
+
+			expected: gitPlugin{
+				ref: flake.Ref{
+					Type:  "ssh",
+					Host:  "localhost",
+					Port:  9999,
+					Owner: "username",
+					Repo:  "my-plugin",
+					Dir:   "subdir",
+					Ref:   "some/branch",
+					Rev:   "1234567",
+				},
+				name: "username.my-plugin.subdir",
+			},
+			expectedURL: "git archive --format=tar.gz --remote=ssh://git@localhost:9999/username/my-plugin 1234567 subdir -o",
+		},
 	}
 
 	for _, testCase := range testCases {
