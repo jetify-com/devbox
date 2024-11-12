@@ -27,6 +27,10 @@ type serviceStopFlags struct {
 	allProjects bool
 }
 
+type serviceListFlags struct {
+	json bool
+}
+
 func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	cmd.Flags().StringVar(
 		&flags.processComposeFile,
@@ -48,10 +52,15 @@ func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 		&flags.allProjects, "all-projects", false, "stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
 }
 
+func (flags *serviceListFlags) register(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&flags.json, "json", false, "Outputs the list of services as json")
+}
+
 func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	flags := servicesCmdFlags{}
 	serviceUpFlags := serviceUpFlags{}
 	serviceStopFlags := serviceStopFlags{}
+	serviceListFlags := serviceListFlags{}
 	servicesCommand := &cobra.Command{
 		Use:   "services",
 		Short: "Interact with devbox services.",
@@ -86,7 +95,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 		Short: "List available services",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return listServices(cmd, flags)
+			return listServices(cmd, flags, serviceListFlags)
 		},
 	}
 
@@ -135,6 +144,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
+	serviceListFlags.register(lsCommand)
 	servicesCommand.AddCommand(attachCommand)
 	servicesCommand.AddCommand(lsCommand)
 	servicesCommand.AddCommand(upCommand)
@@ -157,7 +167,7 @@ func attachServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	return box.AttachToProcessManager(cmd.Context())
 }
 
-func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
+func listServices(cmd *cobra.Command, flags servicesCmdFlags, serviceListFlags serviceListFlags) error {
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
 		Environment: flags.config.environment,
@@ -166,8 +176,8 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	return box.ListServices(cmd.Context(), flags.runInCurrentShell)
+	println(serviceListFlags.json)
+	return box.ListServices(cmd.Context(), flags.runInCurrentShell, serviceListFlags.json)
 }
 
 func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags) error {

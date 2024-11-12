@@ -7,9 +7,22 @@ import (
 	"text/tabwriter"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
+	"go.jetpack.io/devbox/internal/cuecfg"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/services"
 )
+
+type ServicesList struct {
+	ProcessComposeRunnning bool      `json:"status"`
+	ProcessComposePort     int       `json:"port,omitempty"`
+	Services               []Service `json:"processes"`
+}
+
+type Service struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	ExitCode int    `json:"exitCode"`
+}
 
 func (d *Devbox) StartServices(
 	ctx context.Context, runInCurrentShell bool, serviceNames ...string,
@@ -94,9 +107,14 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 	return nil
 }
 
-func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
+func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool, printJSON bool) error {
 	if !runInCurrentShell {
-		return d.runDevboxServicesScript(ctx, []string{"ls", "--run-in-current-shell"})
+		args := []string{"ls", "--run-in-current-shell"}
+		if printJSON {
+			args = append(args, "--json")
+		}
+
+		return d.runDevboxServicesScript(ctx, args)
 	}
 
 	svcSet, err := d.Services()
@@ -110,12 +128,54 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 	}
 
 	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
-		fmt.Fprintln(d.stderr, "")
-		for _, s := range svcSet {
-			fmt.Fprintf(d.stderr, "  %s\n", s.Name)
+		if printJSON {
+			serviceList := ServicesList{
+				ProcessComposeRunnning: false,
+			}
+			for _, s := range svcSet {
+				serviceList.Services = append(serviceList.Services, Service{
+					Name:   s.Name,
+					Status: "Stopped",
+				})
+			}
+			json, err := cuecfg.MarshalJSON(serviceList)
+			if err != nil {
+				return err
+			}
+			fmt.Print(string(json))
+		} else {
+			fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
+			for _, s := range svcSet {
+				fmt.Fprintf(d.stderr, "  %s\n", s.Name)
+			}
 		}
 		return nil
+	}
+
+	if printJSON {
+		processComposePort, err := services.GetProcessManagerPort(d.projectDir)
+		if err != nil {
+			return err
+		}
+		serviceList := ServicesList{
+			ProcessComposeRunnning: true,
+			ProcessComposePort:     processComposePort,
+		}
+		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
+		if err != nil {
+			return err
+		}
+		for _, s := range pcSvcs {
+			serviceList.Services = append(serviceList.Services, Service{
+				Name:   s.Name,
+				Status: s.Status,
+			})
+		}
+		json, err := cuecfg.MarshalJSON(serviceList)
+		if err != nil {
+			return err
+		}
+		fmt.Print(string(json))
 	}
 	tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
 	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
