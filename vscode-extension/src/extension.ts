@@ -19,7 +19,7 @@ import { handleOpenInVSCode } from "./openinvscode";
 import { devboxReopen } from "./devbox";
 import path = require("path");
 import json5 = require("json5");
-import { exec } from "child_process";
+import { spawnSync } from 'node:child_process';
 import { json } from "stream/consumers";
 
 interface PackageDetails {
@@ -388,21 +388,19 @@ class DevboxTreeDataProvider implements TreeDataProvider<TreeItem> {
       return [];
     }
     const serviceItems: TreeItem[] = [];
+    const servicesList = spawnSync('devbox', ["services", "ls", "--json"], {
+      cwd: "/Users/mohsenansari/code/jetpack/go.jetpack.io/devbox/examples/databases/redis/",
+    });
+    const servicesListOutput = servicesList.stdout.toString();
+    const servicesParsed = json5.parse(servicesListOutput);
+    servicesParsed.processes.forEach((process: Service) => {
+      const processItem = new TreeItem(process.name);
+      processItem.contextValue = "service";
+      processItem.iconPath = new ThemeIcon("play");
+      processItem.description = process.status;
+      serviceItems.push(processItem);
+    });
 
-    const p = new Promise<TreeItem[]>(async (resolve, reject) => {
-      const servicesList = spawn("devbox", ["services", "ls", "--json"]);
-      servicesList.stdout.on("data", (data) => {
-        const serviceList: ServiceList = JSON.parse(data.toString());
-        serviceList.services.forEach((service) => {
-          serviceItems.push(new TreeItem(service.name));
-        });
-      });
-      servicesList.on("close", (stream) => {
-        console.log("Stream closed with code " + stream?.toString());
-      });
-  });
-    
-    
     return serviceItems;
   }
 
