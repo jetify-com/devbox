@@ -176,7 +176,6 @@ func listServices(cmd *cobra.Command, flags servicesCmdFlags, serviceListFlags s
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	println(serviceListFlags.json)
 	return box.ListServices(cmd.Context(), flags.runInCurrentShell, serviceListFlags.json)
 }
 

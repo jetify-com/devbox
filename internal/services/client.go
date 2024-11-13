@@ -25,7 +25,7 @@ type Process struct {
 func StartServices(ctx context.Context, w io.Writer, serviceName, projectDir string) error {
 	path := fmt.Sprintf("/process/start/%s", serviceName)
 
-	body, status, err := clientRequest(path, http.MethodPost, projectDir)
+	body, status, err := clientRequest(path, http.MethodPost, 0, projectDir)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func StartServices(ctx context.Context, w io.Writer, serviceName, projectDir str
 func StopServices(ctx context.Context, serviceName, projectDir string, w io.Writer) error {
 	path := fmt.Sprintf("/process/stop/%s", serviceName)
 
-	body, status, err := clientRequest(path, http.MethodPatch, projectDir)
+	body, status, err := clientRequest(path, http.MethodPatch, 0, projectDir)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func StopServices(ctx context.Context, serviceName, projectDir string, w io.Writ
 func RestartServices(ctx context.Context, serviceName, projectDir string, w io.Writer) error {
 	path := fmt.Sprintf("/process/restart/%s", serviceName)
 
-	body, status, err := clientRequest(path, http.MethodPost, projectDir)
+	body, status, err := clientRequest(path, http.MethodPost, 0, projectDir)
 	if err != nil {
 		return err
 	}
@@ -73,11 +73,11 @@ func RestartServices(ctx context.Context, serviceName, projectDir string, w io.W
 	}
 }
 
-func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Process, error) {
+func ListServices(ctx context.Context, projectDir string, port int, w io.Writer) ([]Process, error) {
 	path := "/processes"
 	results := []Process{}
 
-	body, status, err := clientRequest(path, http.MethodGet, projectDir)
+	body, status, err := clientRequest(path, http.MethodGet, port, projectDir)
 	if err != nil {
 		return results, err
 	}
@@ -102,13 +102,15 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 	}
 }
 
-func clientRequest(path, method, projectDir string) (string, int, error) {
-	port, err := GetProcessManagerPort(projectDir)
+func clientRequest(path string, method string, port int, projectDir string) (string, int, error) {
+	var err error
+	if port == 0 {
+		port, err = GetProcessManagerPort(projectDir)
+	}
 	if err != nil {
 		err := fmt.Errorf("unable to connect to process-compose server: %s", err.Error())
 		return "", 0, err
 	}
-
 	req, err := http.NewRequest(method, fmt.Sprintf("http://localhost:%d%s", port, path), nil)
 	if err != nil {
 		return "", 0, err

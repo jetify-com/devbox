@@ -161,7 +161,7 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool, print
 			ProcessComposeRunnning: true,
 			ProcessComposePort:     processComposePort,
 		}
-		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
+		pcSvcs, err := services.ListServices(ctx, d.projectDir, processComposePort, d.stderr)
 		if err != nil {
 			return err
 		}
@@ -176,9 +176,10 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool, print
 			return err
 		}
 		fmt.Print(string(json))
+		return nil
 	}
 	tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
-	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
+	pcSvcs, err := services.ListServices(ctx, d.projectDir, 0, d.stderr)
 	if err != nil {
 		fmt.Fprintln(d.stderr, "Error listing services: ", err)
 	} else {
