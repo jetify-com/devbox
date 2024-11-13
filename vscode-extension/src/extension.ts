@@ -387,9 +387,10 @@ class DevboxTreeDataProvider implements TreeDataProvider<TreeItem> {
     ) {
       return [];
     }
+    const workingDir = workspace.workspaceFolders[0].uri;
     const serviceItems: TreeItem[] = [];
     const servicesList = spawnSync('devbox', ["services", "ls", "--json"], {
-      cwd: "/Users/mohsenansari/code/jetpack/go.jetpack.io/devbox/examples/databases/redis/",
+      cwd: workingDir.path,
     });
     const servicesListOutput = servicesList.stdout.toString();
     const servicesParsed = json5.parse(servicesListOutput);
