@@ -347,25 +347,18 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.included {
-		// instead of overwriting PATH we need to append it
-		// so copying /plugin1/bin//my/bin/:$PATH into /my2/bin/:$PATH
-		// should result in /my/bin/:/my2/bin/:$PATH
-		iEnv := i.Env()
-		iEnvPath := iEnv["PATH"]
-		fmt.Println("existing env path is: ", iEnvPath)
-		if env["PATH"] != "" {
-			iEnv["PATH"] = strings.Replace(iEnvPath, "$PATH", env["PATH"], 1)
-		}
-		maps.Copy(env, iEnv)
-		fmt.Println("PATH now is: ", env["PATH"])
+		// Here, in new pluginPath we replace the keyword "$PATH"
+		// with what we have for PATH so far. If so far we have /plugin1/bin:$PATH
+		// and new plugin adds /plugin2/bin/:$PATH the result becomes
+		// /plugin2/bin/:/plugin1/bin/:$PATH
+		pluginEnv := mergePATHsFromTwoEnvs(env, i.Env())
+		maps.Copy(env, pluginEnv)
 	}
-	fmt.Println("PATH before last copy is: ", env["PATH"])
-	rootEnv := c.Root.Env
-	if env["PATH"] != "" {
-		rootEnv["PATH"] = strings.Replace(rootEnv["PATH"], "$PATH", env["PATH"], 1)
-	}
-	maps.Copy(env, rootEnv) // this results in PATH from devbox.json overwrite PATH from plugin
-	fmt.Println("PATH after config copy becomes: ", env["PATH"])
+	// Here we merge the processed PATH from all plugins to PATH in config env.
+	// So if config env has /config/env/:$PATH merging with the plugin PATH
+	// it becomes /config/env/:/plugin2/bin/:/plugin1/bin/:$PATH
+	rootEnv := mergePATHsFromTwoEnvs(env, c.Root.Env)
+	maps.Copy(env, rootEnv)
 	return env
 }
 
@@ -422,4 +415,19 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 		includable.Root.AbsRootPath = localPlugin.Path()
 	}
 	return includable
+}
+
+// Instead of overwriting PATH modifications we need to merge them
+// so merging of /plugin1/bin/:$PATH and /plugin2/bin/:$PATH
+// and /config/env/bin/:$PATH should result in
+//
+//	/config/env/bin/:/plugin2/bin/:/plugin1/bin/:$PATH
+//
+// because config env should take priority over plugins
+func mergePATHsFromTwoEnvs(currentEnv map[string]string, newEnv map[string]string) map[string]string {
+	if currentEnv["PATH"] != "" {
+		slog.Debug("A Plugin or Config wants to modify PATH. Processing the merge", "AddedPATH", newEnv["PATH"])
+		newEnv["PATH"] = strings.Replace(newEnv["PATH"], "$PATH", currentEnv["PATH"], 1)
+	}
+	return newEnv
 }
