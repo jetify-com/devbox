@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -346,9 +347,25 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.included {
-		maps.Copy(env, i.Env())
+		// instead of overwriting PATH we need to append it
+		// so copying /plugin1/bin//my/bin/:$PATH into /my2/bin/:$PATH
+		// should result in /my/bin/:/my2/bin/:$PATH
+		iEnv := i.Env()
+		iEnvPath := iEnv["PATH"]
+		fmt.Println("existing env path is: ", iEnvPath)
+		if env["PATH"] != "" {
+			iEnv["PATH"] = strings.Replace(iEnvPath, "$PATH", env["PATH"], 1)
+		}
+		maps.Copy(env, iEnv)
+		fmt.Println("PATH now is: ", env["PATH"])
 	}
-	maps.Copy(env, c.Root.Env)
+	fmt.Println("PATH before last copy is: ", env["PATH"])
+	rootEnv := c.Root.Env
+	if env["PATH"] != "" {
+		rootEnv["PATH"] = strings.Replace(rootEnv["PATH"], "$PATH", env["PATH"], 1)
+	}
+	maps.Copy(env, rootEnv) // this results in PATH from devbox.json overwrite PATH from plugin
+	fmt.Println("PATH after config copy becomes: ", env["PATH"])
 	return env
 }
 
