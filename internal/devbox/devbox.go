@@ -726,8 +726,6 @@ func (d *Devbox) computeEnv(
 	if err != nil {
 		return nil, err
 	}
-	// fmt.Println("PATH before configEnv: ", env["PATH"])
-	// fmt.Println("PATH after configEnv: ", configEnv["PATH"])
 
 	addEnvIfNotPreviouslySetByDevbox(env, configEnv)
 
