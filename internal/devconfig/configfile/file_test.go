@@ -684,6 +684,78 @@ func TestSetAllowInsecure(t *testing.T) {
 	}
 }
 
+func TestSetEnv(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{}
+-- want --
+{
+  "env": {
+    "BAZ": "qux",
+    "FOO": "bar"
+  }
+}`)
+
+	in.SetEnv(map[string]string{
+		"FOO": "bar",
+		"BAZ": "qux",
+	})
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
+func TestSetEnvExisting(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "env": {
+    "EXISTING": "value"
+  }
+}
+-- want --
+{
+  "env": {
+    "FOO": "bar"
+  }
+}`)
+
+	in.SetEnv(map[string]string{
+		"FOO": "bar",
+	})
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
+func TestSetEnvClear(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "env": {
+    "EXISTING": "value"
+  }
+}
+-- want --
+{
+  "env": {}
+}`)
+
+	in.SetEnv(map[string]string{})
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
+		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
 func TestNixpkgsValidation(t *testing.T) {
 	testCases := map[string]struct {
 		commit   string
