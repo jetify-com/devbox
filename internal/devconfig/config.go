@@ -425,7 +425,7 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 //
 // because config env should take priority over plugins
 func mergePATHsFromTwoEnvs(currentEnv, newEnv map[string]string) map[string]string {
-	if currentEnv["PATH"] != "" {
+	if currentEnv["PATH"] != "" && newEnv["PATH"] != "" {
 		slog.Debug("A Plugin or Config wants to modify PATH. Processing the merge", "AddedPATH", newEnv["PATH"])
 		newEnv["PATH"] = strings.Replace(newEnv["PATH"], "$PATH", currentEnv["PATH"], 1)
 	}
