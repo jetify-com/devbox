@@ -726,7 +726,6 @@ func (d *Devbox) computeEnv(
 	if err != nil {
 		return nil, err
 	}
-
 	addEnvIfNotPreviouslySetByDevbox(env, configEnv)
 
 	markEnvsAsSetByDevbox(configEnv)
