@@ -2,6 +2,7 @@ package configfile
 
 import (
 	"bytes"
+	"cmp"
 	"regexp"
 	"slices"
 
@@ -430,7 +431,10 @@ func (c *configAST) createMemberIfMissing(key string) *hujson.ObjectMember {
 	i := c.memberIndex(c.root.Value.(*hujson.Object), key)
 	if i == -1 {
 		c.root.Value.(*hujson.Object).Members = append(c.root.Value.(*hujson.Object).Members, hujson.ObjectMember{
-			Name: hujson.Value{Value: hujson.String(key)},
+			Name: hujson.Value{
+				Value:       hujson.String(key),
+				BeforeExtra: []byte{'\n'},
+			},
 		})
 		i = len(c.root.Value.(*hujson.Object).Members) - 1
 	}
@@ -441,10 +445,17 @@ func mapToObjectMembers(env map[string]string) []hujson.ObjectMember {
 	members := make([]hujson.ObjectMember, 0, len(env))
 	for k, v := range env {
 		members = append(members, hujson.ObjectMember{
-			Name:  hujson.Value{Value: hujson.String(k)},
+			Name: hujson.Value{
+				Value:       hujson.String(k),
+				BeforeExtra: []byte{'\n'},
+			},
 			Value: hujson.Value{Value: hujson.String(v)},
 		})
 	}
+	// Make the order deterministic so we don't keep moving fields around.
+	slices.SortFunc(members, func(a, b hujson.ObjectMember) int {
+		return cmp.Compare(a.Name.Value.(hujson.Literal).String(), b.Name.Value.(hujson.Literal).String())
+	})
 	return members
 }
 
