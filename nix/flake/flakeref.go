@@ -77,6 +77,8 @@ type Ref struct {
 	Port int32 `json:port,omitempty`
 }
 
+// TODO move `ParseRef` to the unit test file. It isn't used anywhere else
+
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
 // formats, and isn't entirely consistent about how it parses them. ParseRef
 // attempts to mimic how Nix parses flake refs on the command line. The raw ref
