@@ -238,8 +238,6 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 func parseGitRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
-	parsed.Type = TypeGitHub
-
 	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
 	// refs that have slashes in them. For example,
 	// "github:jetify-com/devbox/gcurtis/flakeref" parses as "gcurtis/flakeref".
