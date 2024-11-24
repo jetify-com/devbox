@@ -157,19 +157,19 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 		return nil, err
 	}
 
-	var bytes []byte
-
-	if p.ref.Type == flake.TypeSSH {
-		bytes, err = p.fetchSSHArchive(location)
-	} else {
-		bytes, err = p.fetchHttp(location)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	process := func() ([]byte, time.Duration, error) {
+		var bytes []byte
+
+		if p.ref.Type == flake.TypeSSH {
+			bytes, err = p.fetchSSHArchive(location)
+		} else {
+			bytes, err = p.fetchHttp(location)
+		}
+
+		if err != nil {
+			return nil, 0, err
+		}
+
 		// Cache for 24 hours. Once we store the plugin in the lockfile, we
 		// should cache this indefinitely and only invalidate if the plugin
 		// is updated.
