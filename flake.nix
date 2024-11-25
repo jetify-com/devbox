@@ -19,7 +19,7 @@
           else "${self.dirtyShortRev or "dirty"}";
 
         # Add the commit to the version string for flake builds
-        version = "${lastTag}-${revision}";
+        version = "${lastTag}";
 
         # Run `devbox run update-flake` to update the vendor-hash
         vendorHash =
