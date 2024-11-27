@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
@@ -347,18 +346,11 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.included {
-		// Here, in new pluginPath we replace the keyword "$PATH"
-		// with what we have for PATH so far. If so far we have /plugin1/bin:$PATH
-		// and new plugin adds /plugin2/bin/:$PATH the result becomes
-		// /plugin2/bin/:/plugin1/bin/:$PATH
-		pluginEnv := mergePATHsFromTwoEnvs(env, i.Env())
-		maps.Copy(env, pluginEnv)
+		expandedEnvFromPlugin := OSExpandIfPossible(i.Env(), env)
+		maps.Copy(env, expandedEnvFromPlugin)
 	}
-	// Here we merge the processed PATH from all plugins to PATH in config env.
-	// So if config env has /config/env/:$PATH merging with the plugin PATH
-	// it becomes /config/env/:/plugin2/bin/:/plugin1/bin/:$PATH
-	rootEnv := mergePATHsFromTwoEnvs(env, c.Root.Env)
-	maps.Copy(env, rootEnv)
+	rootConfigEnv := OSExpandIfPossible(c.Root.Env, env)
+	maps.Copy(env, rootConfigEnv)
 	return env
 }
 
@@ -417,17 +409,18 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 	return includable
 }
 
-// Instead of overwriting PATH modifications we need to merge them
-// so merging of /plugin1/bin/:$PATH and /plugin2/bin/:$PATH
-// and /config/env/bin/:$PATH should result in
-//
-//	/config/env/bin/:/plugin2/bin/:/plugin1/bin/:$PATH
-//
-// because config env should take priority over plugins
-func mergePATHsFromTwoEnvs(currentEnv, newEnv map[string]string) map[string]string {
-	if currentEnv["PATH"] != "" && newEnv["PATH"] != "" {
-		slog.Debug("A Plugin or Config wants to modify PATH. Processing the merge", "AddedPATH", newEnv["PATH"])
-		newEnv["PATH"] = strings.Replace(newEnv["PATH"], "$PATH", currentEnv["PATH"], 1)
+func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
+	mapping := func(value string) string {
+		// If the value is not set in existingEnv, return the value wrapped in ${...}
+		if existingEnv == nil || existingEnv[value] == "" {
+			return fmt.Sprintf("${%s}", value)
+		}
+		return existingEnv[value]
 	}
-	return newEnv
+
+	res := map[string]string{}
+	for k, v := range env {
+		res[k] = os.Expand(v, mapping)
+	}
+	return res
 }
