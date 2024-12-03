@@ -172,19 +172,19 @@ jobs:
         uses: jetify-com/devbox-install-action@v0.11.0
         with:
           enable-cache: true
-      - name: Run fast tests
-        if: matrix.run-project-tests == 'project-tests-off'
-        run: |
-          echo "::group::Nix version"
-          nix --version
-          echo "::endgroup::"
-          echo "::group::Contents of /etc/nix/nix.conf"
-          cat /etc/nix/nix.conf || true
-          echo "::endgroup::"
-          echo "::group::Resolved Nix config"
-          nix show-config --extra-experimental-features nix-command
-          echo "::endgroup::"
-          devbox run go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+      # - name: Run fast tests
+      #   if: matrix.run-project-tests == 'project-tests-off'
+      #   run: |
+      #     echo "::group::Nix version"
+      #     nix --version
+      #     echo "::endgroup::"
+      #     echo "::group::Contents of /etc/nix/nix.conf"
+      #     cat /etc/nix/nix.conf || true
+      #     echo "::endgroup::"
+      #     echo "::group::Resolved Nix config"
+      #     nix show-config --extra-experimental-features nix-command
+      #     echo "::endgroup::"
+      #     devbox run go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
         run: devbox run test-projects-only

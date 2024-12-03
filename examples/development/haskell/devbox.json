@@ -1,12 +1,18 @@
 {
-  "packages": [
-    "ghc@latest",
-    "gmp@latest",
-    "stack@latest",
-    "cabal-install@latest",
-    "zlib@latest",
-    "hpack@latest"
-  ],
+  "packages": {
+    "ghc": "latest",
+    "gmp": "latest",
+    "stack": "latest",
+    "cabal-install": "latest",
+    "zlib": "latest",
+    "hpack": "latest",
+    "darwin.Security": {
+      "version": "latest",
+      "platforms": [
+        "aarch64-linux"
+      ]
+    }
+  },
   "env": {
     "PATH": "/usr/bin/security:$PATH"
   },
