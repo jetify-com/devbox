@@ -9,17 +9,20 @@
     "darwin.Security": {
       "version": "latest",
       "platforms": [
-        "aarch64-linux"
+        "aarch64-darwin"
       ]
-    }
+    },
+    "which": "latest"
   },
   "env": {
-    "PATH": "/usr/bin/security:$PATH"
+    "WORK": "$PWD"
   },
   "shell": {
     "init_hook": null,
     "scripts": {
       "run_test": [
+        "ls -l /usr/bin/",
+        "echo $PATH",
         "cd my-project",
         "stack build",
         "stack exec my-project-exe"

@@ -49,6 +49,24 @@
         }
       }
     },
+    "darwin.Security@latest": {
+      "last_modified": "2024-11-16T04:25:12Z",
+      "resolved": "github:NixOS/nixpkgs/34a626458d686f1b58139620a8b2793e9e123bba#darwin.Security",
+      "source": "devbox-search",
+      "version": "11.0",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/nvzqysba0ga8w7b93y2jsfmw6bicrk35-Security-11.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/nvzqysba0ga8w7b93y2jsfmw6bicrk35-Security-11.0"
+        }
+      }
+    },
     "ghc@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.2",
@@ -287,6 +305,54 @@
             }
           ],
           "store_path": "/nix/store/9qvy8xzbdw7aljdfjkhqydxlvllfdsij-stack-2.13.1"
+        }
+      }
+    },
+    "which@latest": {
+      "last_modified": "2024-11-28T07:51:56Z",
+      "resolved": "github:NixOS/nixpkgs/226216574ada4c3ecefcbbec41f39ce4655f78ef#which",
+      "source": "devbox-search",
+      "version": "2.21",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3njbfjzp8rs1gci6piwfgcjim4kz0mvh-which-2.21",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3njbfjzp8rs1gci6piwfgcjim4kz0mvh-which-2.21"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/nmm227n8fgij8yqba78q5dgnid0gfrbv-which-2.21",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/nmm227n8fgij8yqba78q5dgnid0gfrbv-which-2.21"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8axi57jgpmsxbyy1lyhxz203w37m3j7y-which-2.21",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8axi57jgpmsxbyy1lyhxz203w37m3j7y-which-2.21"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/20mggxpyrbcbs2vxdk3zr7wlgnblwk74-which-2.21"
         }
       }
     },
