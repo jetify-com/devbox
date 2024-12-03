@@ -15,13 +15,12 @@
     "which": "latest"
   },
   "env": {
-    "WORK": "$PWD"
+    "PATH": "$PATH:/usr/bin"
   },
   "shell": {
     "init_hook": null,
     "scripts": {
       "run_test": [
-        "ls -l /usr/bin/",
         "echo $PATH",
         "cd my-project",
         "stack build",
