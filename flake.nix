@@ -47,6 +47,9 @@
             "-X go.jetpack.io/devbox/internal/build.Commit=${revision}"
           ];
 
+          # Don't generate test binaries (as we'd include them as a bin)
+          excludedPackages = [ "testscripts" ];
+
           # Disable tests if they require network access or are integration tests
           doCheck = false;
 
