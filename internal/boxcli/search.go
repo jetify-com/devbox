@@ -104,7 +104,11 @@ func printSearchResults(
 		versionString := ""
 		if len(nonEmptyVersions) > 0 {
 			ellipses := lo.Ternary(resultsAreTrimmed && pkg.NumVersions > trimmedVersionsLength, " ...", "")
-			versionString = fmt.Sprintf(" (%s%s)", strings.Join(nonEmptyVersions, ", "), ellipses)
+			if showAll {
+				versionString = fmt.Sprintf("\n > %s \n", strings.Join(nonEmptyVersions, "\n > "))
+			} else {
+				versionString = fmt.Sprintf(" (%s%s)", strings.Join(nonEmptyVersions, ", "), ellipses)
+			}
 		}
 		fmt.Fprintf(w, "* %s %s\n", pkg.Name, versionString)
 	}
