@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cloud"
 	"go.jetpack.io/devbox/internal/devbox"
 	"go.jetpack.io/devbox/internal/devbox/devopt"
 	"go.jetpack.io/devbox/internal/devbox/docgen"
@@ -24,7 +23,6 @@ type generateCmdFlags struct {
 	config            configFlags
 	force             bool
 	printEnvrcContent bool
-	githubUsername    string
 	rootUser          bool
 }
 
@@ -61,7 +59,6 @@ func generateCmd() *cobra.Command {
 	command.AddCommand(debugCmd())
 	command.AddCommand(direnvCmd())
 	command.AddCommand(genReadmeCmd())
-	command.AddCommand(sshConfigCmd())
 	flags.config.register(command)
 
 	return command
@@ -154,27 +151,6 @@ func direnvCmd() *cobra.Command {
 	// this command marks a flag as hidden. Error handling for it is not necessary.
 	_ = command.Flags().MarkHidden("print-envrc")
 
-	flags.config.register(command)
-	return command
-}
-
-func sshConfigCmd() *cobra.Command {
-	flags := &generateCmdFlags{}
-	command := &cobra.Command{
-		Use:    "ssh-config",
-		Hidden: true,
-		Short:  "Generate ssh config to connect to devbox cloud",
-		Long:   "Check ssh config and if they don't exist, it generates the configs necessary to connect to devbox cloud VMs.",
-		Args:   cobra.MaximumNArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// ssh-config command is exception and it should run without a config file present
-			_, err := cloud.SSHSetup(flags.githubUsername)
-			return errors.WithStack(err)
-		},
-	}
-	command.Flags().StringVarP(
-		&flags.githubUsername, "username", "u", "", "GitHub username to use for ssh",
-	)
 	flags.config.register(command)
 	return command
 }
