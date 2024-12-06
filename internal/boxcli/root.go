@@ -15,7 +15,6 @@ import (
 
 	"go.jetpack.io/devbox/internal/boxcli/featureflag"
 	"go.jetpack.io/devbox/internal/boxcli/midcobra"
-	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -82,8 +81,6 @@ func RootCmd() *cobra.Command {
 	}))
 	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
-	// Preview commands
-	command.AddCommand(cloudCmd())
 	// Internal commands
 	command.AddCommand(genDocsCmd())
 
@@ -120,10 +117,6 @@ func Main() {
 	timer := debug.Timer(strings.Join(os.Args, " "))
 	setSystemBinaryPaths()
 	ctx := context.Background()
-	if strings.HasSuffix(os.Args[0], "ssh") ||
-		strings.HasSuffix(os.Args[0], "scp") {
-		os.Exit(sshshim.Execute(ctx, os.Args))
-	}
 
 	if len(os.Args) > 1 && os.Args[1] == "upload-telemetry" {
 		// This subcommand is hidden and only run by devbox itself as a

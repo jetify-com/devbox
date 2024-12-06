@@ -49,6 +49,10 @@ func (d *PHPDetector) Packages(ctx context.Context) ([]string, error) {
 	return packages, nil
 }
 
+func (d *PHPDetector) Env(ctx context.Context) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
 func (d *PHPDetector) phpVersion(ctx context.Context) string {
 	require := d.composerJSON.Require
 

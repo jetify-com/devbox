@@ -38,6 +38,10 @@ func (d *GoDetector) Packages(ctx context.Context) ([]string, error) {
 	return []string{"go@" + goVersion}, nil
 }
 
+func (d *GoDetector) Env(ctx context.Context) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
 func parseGoVersion(goModContent string) string {
 	// Use a regular expression to find the Go version directive
 	re := regexp.MustCompile(`(?m)^go\s+(\d+\.\d+(\.\d+)?)`)

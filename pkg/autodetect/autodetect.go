@@ -36,12 +36,18 @@ func populateConfig(ctx context.Context, path string, config *devconfig.Config) 
 	for _, pkg := range pkgs {
 		config.PackageMutator().Add(pkg)
 	}
+	env, err := env(ctx, path)
+	if err != nil {
+		return err
+	}
+	config.Root.SetEnv(env)
 	return nil
 }
 
 func detectors(path string) []detector.Detector {
 	return []detector.Detector{
 		&detector.GoDetector{Root: path},
+		&detector.NodeJSDetector{Root: path},
 		&detector.PHPDetector{Root: path},
 		&detector.PoetryDetector{Root: path},
 		&detector.PythonDetector{Root: path},
@@ -54,6 +60,14 @@ func packages(ctx context.Context, path string) ([]string, error) {
 		return nil, err
 	}
 	return mostRelevantDetector.Packages(ctx)
+}
+
+func env(ctx context.Context, path string) (map[string]string, error) {
+	mostRelevantDetector, err := relevantDetector(path)
+	if err != nil || mostRelevantDetector == nil {
+		return nil, err
+	}
+	return mostRelevantDetector.Env(ctx)
 }
 
 // relevantDetector returns the most relevant detector for the given path.

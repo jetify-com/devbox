@@ -44,3 +44,8 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 
 	return envMap, nil
 }
+
+func (c *ConfigFile) SetEnv(env map[string]string) {
+	c.Env = env
+	c.ast.setEnv(env)
+}

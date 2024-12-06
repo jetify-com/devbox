@@ -116,11 +116,23 @@ func shellEnvFunc(
 	}
 
 	envStr, err := box.EnvExports(ctx, devopt.EnvExportsOpts{
-		DontRecomputeEnvironment: !flags.recomputeEnv,
 		EnvOptions: devopt.EnvOptions{
+			Hooks: devopt.LifecycleHooks{
+				OnStaleState: func() {
+					if !flags.recomputeEnv {
+						ux.FHidableWarning(
+							ctx,
+							cmd.ErrOrStderr(),
+							devbox.StateOutOfDateMessage,
+							box.RefreshAliasOrCommand(),
+						)
+					}
+				},
+			},
 			OmitNixEnv:        flags.omitNixEnv,
 			PreservePathStack: flags.preservePathStack,
 			Pure:              flags.pure,
+			SkipRecompute:     !flags.recomputeEnv,
 		},
 		NoRefreshAlias: flags.noRefreshAlias,
 		RunHooks:       flags.runInitHook,
