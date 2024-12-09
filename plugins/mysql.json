@@ -15,9 +15,13 @@
       "{{ .Virtenv }}/setup_db.sh": "mysql/setup_db.sh",
       "{{ .Virtenv }}/process-compose.yaml": "mysql/process-compose.yaml"
     },
-    "packages": [
-      "path:{{ .Virtenv }}/flake"
-    ],
+    "packages": {
+      "path:{{ .Virtenv }}/flake": {},
+      "glibcLocales": {
+        "version": "latest",
+        "platforms": ["x86_64-linux", "aarch64-linux"]
+      }
+    },
     "__remove_trigger_package": true,
     "shell": {
       "init_hook": [
