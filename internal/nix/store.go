@@ -12,6 +12,7 @@ import (
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/nix"
 	"golang.org/x/exp/maps"
 )
 
@@ -128,17 +129,13 @@ func (e *DaemonError) Redact() string {
 
 // DaemonVersion returns the version of the currently running Nix daemon.
 func DaemonVersion(ctx context.Context) (string, error) {
-	// We only need the version to decide which CLI flags to use. We can
-	// ignore the error because an empty version assumes nix.MinVersion.
-	cliVersion, _ := Version()
-
 	storeCmd := "ping"
-	if cliVersion.AtLeast(Version2_19) {
+	if nix.AtLeast(nix.Version2_19) {
 		// "nix store ping" is deprecated as of 2.19 in favor of
 		// "nix store info".
 		storeCmd = "info"
 	}
-	canJSON := cliVersion.AtLeast(Version2_14)
+	canJSON := nix.AtLeast(nix.Version2_14)
 
 	cmd := command("store", storeCmd, "--store", "daemon")
 	if canJSON {

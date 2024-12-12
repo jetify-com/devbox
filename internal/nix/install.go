@@ -21,8 +21,8 @@ import (
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/cmdutil"
 	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/nix"
 )
 
 const rootError = "warning: installing Nix as root is not supported by this script!"
@@ -121,33 +121,23 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 			return
 		}
 
-		var version VersionInfo
-		version, err = Version()
-		if err != nil {
-			err = redact.Errorf("nix: ensure install: get version: %w", err)
-			return
-		}
-
 		// ensure minimum nix version installed
-		if !version.AtLeast(MinVersion) {
+		if !nix.AtLeast(MinVersion) {
 			err = usererr.New(
 				"Devbox requires nix of version >= %s. Your version is %s. "+
 					"Please upgrade nix and try again.\n",
 				MinVersion,
-				version,
+				nix.Version(),
 			)
 			return
 		}
-		// call ComputeSystem to ensure its value is internally cached so other
-		// callers can rely on just calling System
-		err = ComputeSystem()
 	}()
 
 	if BinaryInstalled() {
 		return nil
 	}
 	if dirExists() {
-		if err = SourceNixEnv(); err != nil {
+		if _, err = SourceProfile(); err != nil {
 			return err
 		} else if BinaryInstalled() {
 			return nil
@@ -174,7 +164,7 @@ func EnsureNixInstalled(writer io.Writer, withDaemonFunc func() *bool) (err erro
 	}
 
 	// Source again
-	if err = SourceNixEnv(); err != nil {
+	if _, err = SourceProfile(); err != nil {
 		return err
 	}
 
