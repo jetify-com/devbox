@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/samber/lo"
@@ -82,6 +84,43 @@ func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 			}
 		} else if err != nil {
 			return fmt.Errorf("error installing packages in nix profile %s: %w", add, err)
+		}
+	}
+	if len(add) > 0 || len(remove) > 0 {
+		err := wipeProfileHistory(profilePath)
+		if err != nil {
+			// Log the error, but nothing terrible happens if this
+			// fails.
+			slog.DebugContext(ctx, "error cleaning up profile history", "err", err)
+		}
+	}
+	return nil
+}
+
+// wipeProfileHistory removes all old generations of a Nix profile, similar to
+// nix profile wipe-history. profile should be a path to the "default" symlink,
+// like .devbox/nix/profile/default.
+func wipeProfileHistory(profile string) error {
+	link, err := os.Readlink(profile)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(profile)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, dent := range entries {
+		if dent.Name() == "default" || dent.Name() == link {
+			continue
+		}
+		err := os.Remove(filepath.Join(dir, dent.Name()))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
 		}
 	}
 	return nil
