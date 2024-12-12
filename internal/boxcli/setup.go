@@ -47,14 +47,13 @@ func runInstallNixCmd(cmd *cobra.Command) error {
 			"Nix is already installed. If this is incorrect "+
 				"please remove the nix-shell binary from your path.\n",
 		)
-		return nil
 	}
-	return nix.Install(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
+	return new(nix.Installer).Run(cmd.Context())
 }
 
 // ensureNixInstalled verifies that nix is installed and that it is of a supported version
 func ensureNixInstalled(cmd *cobra.Command, _args []string) error {
-	return nix.EnsureNixInstalled(cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
+	return nix.EnsureNixInstalled(cmd.Context(), cmd.ErrOrStderr(), nixDaemonFlagVal(cmd))
 }
 
 // We return a closure to avoid printing the warning every time and just
