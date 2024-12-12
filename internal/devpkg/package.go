@@ -568,7 +568,7 @@ func (p *Package) HashFromNixPkgsURL() string {
 	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-// InputAddressedPath is the input-addressed path in /nix/store
+// InputAddressedPaths is the input-addressed path in /nix/store
 // It is also the key in the BinaryCache for this package
 func (p *Package) InputAddressedPaths() ([]string, error) {
 	if inCache, err := p.IsInBinaryCache(); err != nil {

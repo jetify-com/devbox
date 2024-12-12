@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// storePath are the constituent parts of
+// StorePathParts are the constituent parts of
 // /nix/store/<hash>-<name>-<version>
 //
 // This is a helper struct for analyzing the string representation
