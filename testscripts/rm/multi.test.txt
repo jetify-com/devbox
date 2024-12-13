@@ -10,6 +10,10 @@ exec devbox rm vim hello
 
 json.superset devbox.json expected.json
 
+# Check that profile history was cleaned up. There should only be
+# default and default-N-link.
+glob -count=2 .devbox/nix/profile/*
+
 -- expected.json --
 {
   "packages": []
