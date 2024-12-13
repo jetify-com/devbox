@@ -1,6 +1,8 @@
 package nix
 
-import "go.jetpack.io/devbox/nix"
+import (
+	"go.jetpack.io/devbox/nix"
+)
 
 // The types and functions in this file act a shim for the non-internal version
 // of this package (go.jetpack.io/devbox/nix). That way callers don't need to
@@ -26,8 +28,9 @@ const (
 )
 
 type (
-	Nix  = nix.Nix
-	Info = nix.Info
+	Nix       = nix.Nix
+	Info      = nix.Info
+	Installer = nix.Installer
 )
 
 var Default = nix.Default
