@@ -407,5 +407,5 @@ func TestBuildQueryString(t *testing.T) {
 	// directives).
 	var elems []string
 	elems = append(elems, "1")
-	buildQueryString(nil, elems...)
+	appendQueryString(nil, elems...)
 }

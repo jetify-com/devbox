@@ -2,7 +2,7 @@
 package flake
 
 import (
-	"maps"
+	"cmp"
 	"net/url"
 	"path"
 	"slices"
@@ -167,8 +167,9 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 			parsed.Path = refURL.Path
 		}
 
-		parsed.NARHash = refURL.Query().Get("narHash")
-		parsed.LastModified, err = atoiOmitZero(refURL.Query().Get("lastModified"))
+		query := refURL.Query()
+		parsed.NARHash = query.Get("narHash")
+		parsed.LastModified, err = atoiOmitZero(query.Get("lastModified"))
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL query parameter: lastModified=%s: %v", redact.Safe(parsed.LastModified), redact.Safe(err))
 		}
@@ -180,8 +181,8 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		}
 		query := refURL.Query()
 		parsed.Dir = query.Get("dir")
-		parsed.NARHash = refURL.Query().Get("narHash")
-		parsed.LastModified, err = atoiOmitZero(refURL.Query().Get("lastModified"))
+		parsed.NARHash = query.Get("narHash")
+		parsed.LastModified, err = atoiOmitZero(query.Get("lastModified"))
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL query parameter: lastModified=%s: %v", redact.Safe(parsed.LastModified), redact.Safe(err))
 		}
@@ -196,8 +197,8 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		parsed.Type = TypeTarball
 		query := refURL.Query()
 		parsed.Dir = query.Get("dir")
-		parsed.NARHash = refURL.Query().Get("narHash")
-		parsed.LastModified, err = atoiOmitZero(refURL.Query().Get("lastModified"))
+		parsed.NARHash = query.Get("narHash")
+		parsed.LastModified, err = atoiOmitZero(query.Get("lastModified"))
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL query parameter: lastModified=%s: %v", redact.Safe(parsed.LastModified), redact.Safe(err))
 		}
@@ -213,8 +214,8 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		parsed.Type = TypeFile
 		query := refURL.Query()
 		parsed.Dir = query.Get("dir")
-		parsed.NARHash = refURL.Query().Get("narHash")
-		parsed.LastModified, err = atoiOmitZero(refURL.Query().Get("lastModified"))
+		parsed.NARHash = query.Get("narHash")
+		parsed.LastModified, err = atoiOmitZero(query.Get("lastModified"))
 		if err != nil {
 			return Ref{}, "", redact.Errorf("parse flake reference URL query parameter: lastModified=%s: %v", redact.Safe(parsed.LastModified), redact.Safe(err))
 		}
@@ -228,16 +229,16 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		parsed.URL = refURL.String()
 	case "git", "git+http", "git+https", "git+ssh", "git+git", "git+file":
 		parsed.Type = TypeGit
-		q := refURL.Query()
-		parsed.Dir = q.Get("dir")
-		parsed.Ref = q.Get("ref")
-		parsed.Rev = q.Get("rev")
+		query := refURL.Query()
+		parsed.Dir = query.Get("dir")
+		parsed.Ref = query.Get("ref")
+		parsed.Rev = query.Get("rev")
 
 		// ref and rev get stripped from the query parameters, but dir
 		// stays.
-		q.Del("ref")
-		q.Del("rev")
-		refURL.RawQuery = q.Encode()
+		query.Del("ref")
+		query.Del("rev")
+		refURL.RawQuery = query.Encode()
 		if len(refURL.Scheme) > 3 {
 			refURL.Scheme = refURL.Scheme[4:] // remove git+
 		}
@@ -360,7 +361,7 @@ func (r Ref) String() string {
 			// messed with the parsed URL.
 			return ""
 		}
-		url.RawQuery = buildQueryString(url.Query(),
+		url.RawQuery = appendQueryString(url.Query(),
 			"lastModified", itoaOmitZero(r.LastModified),
 			"narHash", r.NARHash,
 		)
@@ -386,7 +387,7 @@ func (r Ref) String() string {
 			// messed with the parsed URL.
 			return ""
 		}
-		url.RawQuery = buildQueryString(url.Query(), "ref", r.Ref, "rev", r.Rev, "dir", r.Dir)
+		url.RawQuery = appendQueryString(url.Query(), "ref", r.Ref, "rev", r.Rev, "dir", r.Dir)
 		return url.String()
 	case TypeGitHub:
 		if r.Owner == "" || r.Repo == "" {
@@ -395,7 +396,7 @@ func (r Ref) String() string {
 		url := &url.URL{
 			Scheme: "github",
 			Opaque: buildEscapedPath(r.Owner, r.Repo, r.Rev, r.Ref),
-			RawQuery: buildQueryString(nil,
+			RawQuery: appendQueryString(nil,
 				"host", r.Host,
 				"dir", r.Dir,
 				"lastModified", itoaOmitZero(r.LastModified),
@@ -410,7 +411,7 @@ func (r Ref) String() string {
 		url := &url.URL{
 			Scheme: "flake",
 			Opaque: buildEscapedPath(r.ID, r.Ref, r.Rev),
-			RawQuery: buildQueryString(nil,
+			RawQuery: appendQueryString(nil,
 				"dir", r.Dir,
 				"lastModified", itoaOmitZero(r.LastModified),
 				"narHash", r.NARHash,
@@ -434,7 +435,7 @@ func (r Ref) String() string {
 			url.Opaque = "."
 		}
 
-		url.RawQuery = buildQueryString(nil,
+		url.RawQuery = appendQueryString(nil,
 			"lastModified", itoaOmitZero(r.LastModified),
 			"narHash", r.NARHash,
 		)
@@ -453,7 +454,7 @@ func (r Ref) String() string {
 			// messed with the parsed URL.
 			return ""
 		}
-		url.RawQuery = buildQueryString(url.Query(),
+		url.RawQuery = appendQueryString(url.Query(),
 			"dir", r.Dir,
 			"lastModified", itoaOmitZero(r.LastModified),
 			"narHash", r.NARHash,
@@ -532,22 +533,27 @@ func buildEscapedPath(elem ...string) string {
 	return u.JoinPath(elem...).String()
 }
 
-// buildQueryString builds a URL query string from a list of key-value string
+// appendQueryString builds a URL query string from a list of key-value string
 // pairs, omitting any keys with empty values.
-func buildQueryString(initial url.Values, keyval ...string) string {
+func appendQueryString(query url.Values, keyval ...string) string {
 	if len(keyval)%2 != 0 {
-		panic("buildQueryString: odd number of key-value pairs")
+		panic("appendQueryString: odd number of key-value pairs")
 	}
 
-	q := make(url.Values, len(initial)+len(keyval)/2)
-	maps.Copy(q, initial)
+	appended := make(url.Values, len(query)+len(keyval)/2)
+	for k, vals := range query {
+		v := cmp.Or(vals...)
+		if v != "" {
+			appended.Set(k, v)
+		}
+	}
 	for i := 0; i < len(keyval); i += 2 {
 		k, v := keyval[i], keyval[i+1]
 		if v != "" {
-			q.Set(k, v)
+			appended.Set(k, v)
 		}
 	}
-	return q.Encode()
+	return appended.Encode()
 }
 
 // itoaOmitZero returns an empty string if i == 0, otherwise it formats i as a
