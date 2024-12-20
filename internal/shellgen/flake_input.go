@@ -10,40 +10,42 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
-const glibcPatchFlakeRef = "path:./glibc-patch"
+var glibcPatchFlakeRef = flake.Ref{Type: flake.TypePath, Path: "./glibc-patch"}
 
 type flakeInput struct {
 	Name     string
 	Packages []*devpkg.Package
-	URL      string
+	Ref      flake.Ref
 }
 
-// IsNixpkgs returns true if the input is a nixpkgs flake of the form:
-// github:NixOS/nixpkgs/...
+// IsNixpkgs reports whether the input looks like a nixpkgs flake.
 //
 // While there are many ways to specify this input, devbox always uses
 // github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
 // themselves, this function may not return true.
 func (f *flakeInput) IsNixpkgs() bool {
-	return nix.IsGithubNixpkgsURL(f.URL)
+	switch f.Ref.Type {
+	case flake.TypeGitHub:
+		return f.Ref.Owner == "NixOS" && f.Ref.Repo == "nixpkgs"
+	case flake.TypeIndirect:
+		return f.Ref.ID == "nixpkgs"
+	default:
+		return false
+	}
 }
 
 func (f *flakeInput) HashFromNixPkgsURL() string {
-	if !f.IsNixpkgs() {
-		return ""
-	}
-	return nix.HashFromNixPkgsURL(f.URL)
+	return f.Ref.Rev
 }
 
 func (f *flakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
-		return f.URL
+		return f.Ref.String()
 	}
-	hash := nix.HashFromNixPkgsURL(f.URL)
-	return getNixpkgsInfo(hash).URL
+	return getNixpkgsInfo(f.Ref.Rev).URL
 }
 
 func (f *flakeInput) PkgImportName() string {
@@ -180,17 +182,24 @@ func flakeInputs(ctx context.Context, packages []*devpkg.Package) []flakeInput {
 		// glibc-patched flake input. This input refers to the
 		// glibc-patch.nix flake.
 		if pkg.Patch {
-			nixpkgsGlibc := flakeInputs.getOrAppend(glibcPatchFlakeRef)
+			nixpkgsGlibc := flakeInputs.getOrAppend(glibcPatchFlakeRef.String())
 			nixpkgsGlibc.Name = "glibc-patch"
-			nixpkgsGlibc.URL = glibcPatchFlakeRef
+			nixpkgsGlibc.Ref = glibcPatchFlakeRef
 			nixpkgsGlibc.Packages = append(nixpkgsGlibc.Packages, pkg)
 			continue
 		}
 
-		pkgURL := pkg.URLForFlakeInput()
-		flake := flakeInputs.getOrAppend(pkgURL)
+		installable, err := pkg.FlakeInstallable()
+		if err != nil {
+			// I don't think this should happen at this point. The
+			// packages should already be resolved to valid nixpkgs
+			// packages.
+			slog.Debug("error resolving package to flake installable", "err", err)
+			continue
+		}
+		flake := flakeInputs.getOrAppend(installable.Ref.String())
 		flake.Name = pkg.FlakeInputName()
-		flake.URL = pkgURL
+		flake.Ref = installable.Ref
 
 		// TODO(gcurtis): is the uniqueness check necessary? We're
 		// comparing pointers.

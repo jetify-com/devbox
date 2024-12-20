@@ -13,6 +13,7 @@ import (
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/nix"
+	"go.jetpack.io/devbox/nix/flake"
 	"golang.org/x/exp/maps"
 )
 
@@ -27,6 +28,19 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
+
+	// Some older versions of Nix have a bug where specifying a narHash
+	// without a lastModifiedDate query parameter results in an error. I'm
+	// not sure when it was fixed, but I know it works in 2.25+.
+	if !nix.AtLeast(nix.Version2_25) {
+		parsed, err := flake.ParseInstallable(installable)
+		if err == nil {
+			parsed.Ref.NARHash = ""
+			parsed.Ref.LastModified = 0
+			installable = parsed.String()
+		}
+	}
+
 	// --impure for NIXPKGS_ALLOW_UNFREE
 	cmd := command("path-info", installable, "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
