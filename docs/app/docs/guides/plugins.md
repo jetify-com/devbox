@@ -8,7 +8,7 @@ This doc describes how to use Devbox Plugins with your project. **Plugins** prov
 
 ### Built-in Plugins
 
-If you add one of the packages listed above to your project using `devbox add <pkg>`, Devbox will automatically activate the plugin for that package.
+If you add one of the packages listed below to your project using `devbox add <pkg>`, Devbox will automatically activate the plugin for that package.
 
 You can also explicitly add a built-in plugin in your project by adding it to the [`include` section](../configuration.md#include) of your `devbox.json` file. For example, to explicitly add the plugin for Nginx, you can add the following to your `devbox.json` file:
 
@@ -34,6 +34,7 @@ Built-in plugins are available for the following packages. You can activate the 
 * [PHP](../devbox_examples/languages/php.md) (php, php80, php81, php82...)
 * [Python](../devbox_examples/languages/python.md) (python, python-full, python-minimal...)
 * [Ruby](../devbox_examples/languages/ruby.md)(ruby, ruby_3_1, ruby_3_0...)
+* [Elixir](../devbox_examples/languages/elixir.md)(elixir, elixir_1_16, elixir_1_15...)
 
 
 ### Local Plugins
