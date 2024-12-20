@@ -1,0 +1,9 @@
+{
+  "name": "elixir",
+  "version": "0.0.1",
+  "env": {
+    "MIX_HOME": "{{ .Virtenv }}/mix",
+    "HEX_HOME": "{{ .Virtenv }}/hex",
+    "ERL_AFLAGS": "-kernel shell_history enabled"
+  }
+}
