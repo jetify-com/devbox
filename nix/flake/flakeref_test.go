@@ -34,6 +34,7 @@ func TestParseFlakeRef(t *testing.T) {
 		"path:/":                     {Type: TypePath, Path: "/"},
 		"path:/flake":                {Type: TypePath, Path: "/flake"},
 		"path:/absolute/flake":       {Type: TypePath, Path: "/absolute/flake"},
+		"path:/absolute/flake?lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D": {Type: TypePath, Path: "/absolute/flake", LastModified: 1734435836, NARHash: "sha256-kMBQ5PRiFLagltK0sH+08aiNt3zGERC2297iB6vrvlU="},
 
 		// URL-like paths can omit the "./" prefix for relative
 		// directories.
@@ -65,6 +66,7 @@ func TestParseFlakeRef(t *testing.T) {
 		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":  {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 		"github:NixOS/nix?host=example.com":                              {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
 		"github:NixOS/nix?host=example.com&dir=subdir":                   {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir"},
+		"github:NixOS/nix?host=example.com&dir=subdir&lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir", NARHash: "sha256-kMBQ5PRiFLagltK0sH+08aiNt3zGERC2297iB6vrvlU="},
 
 		// The github type allows clone-style URLs. The username and
 		// host are ignored.
@@ -81,7 +83,8 @@ func TestParseFlakeRef(t *testing.T) {
 		"git+ssh://git@example.com/repo/flake": {Type: TypeGit, URL: "ssh://git@example.com/repo/flake"},
 		"git:/repo/flake":                      {Type: TypeGit, URL: "git:/repo/flake"},
 		"git+file:///repo/flake":               {Type: TypeGit, URL: "file:///repo/flake"},
-		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir": {Type: TypeGit, URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
+		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir":                                                                                         {Type: TypeGit, URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
+		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir&lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D": {Type: TypeGit, URL: "git://example.com/repo/flake?dir=subdir&lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
 
 		// Tarball references.
 		"tarball+http://example.com/flake":  {Type: TypeTarball, URL: "http://example.com/flake"},
@@ -99,14 +102,15 @@ func TestParseFlakeRef(t *testing.T) {
 		"http://example.com/flake.tar.bz2":        {Type: TypeTarball, URL: "http://example.com/flake.tar.bz2"},
 		"http://example.com/flake.tar.zst":        {Type: TypeTarball, URL: "http://example.com/flake.tar.zst"},
 		"http://example.com/flake.tar?dir=subdir": {Type: TypeTarball, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
-		"file:///flake.zip":                       {Type: TypeTarball, URL: "file:///flake.zip"},
-		"file:///flake.tar":                       {Type: TypeTarball, URL: "file:///flake.tar"},
-		"file:///flake.tgz":                       {Type: TypeTarball, URL: "file:///flake.tgz"},
-		"file:///flake.tar.gz":                    {Type: TypeTarball, URL: "file:///flake.tar.gz"},
-		"file:///flake.tar.xz":                    {Type: TypeTarball, URL: "file:///flake.tar.xz"},
-		"file:///flake.tar.bz2":                   {Type: TypeTarball, URL: "file:///flake.tar.bz2"},
-		"file:///flake.tar.zst":                   {Type: TypeTarball, URL: "file:///flake.tar.zst"},
-		"file:///flake.tar?dir=subdir":            {Type: TypeTarball, URL: "file:///flake.tar?dir=subdir", Dir: "subdir"},
+		"http://example.com/flake.tar?dir=subdir&lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D": {Type: TypeTarball, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir", LastModified: 1734435836, NARHash: "sha256-kMBQ5PRiFLagltK0sH+08aiNt3zGERC2297iB6vrvlU="},
+		"file:///flake.zip":            {Type: TypeTarball, URL: "file:///flake.zip"},
+		"file:///flake.tar":            {Type: TypeTarball, URL: "file:///flake.tar"},
+		"file:///flake.tgz":            {Type: TypeTarball, URL: "file:///flake.tgz"},
+		"file:///flake.tar.gz":         {Type: TypeTarball, URL: "file:///flake.tar.gz"},
+		"file:///flake.tar.xz":         {Type: TypeTarball, URL: "file:///flake.tar.xz"},
+		"file:///flake.tar.bz2":        {Type: TypeTarball, URL: "file:///flake.tar.bz2"},
+		"file:///flake.tar.zst":        {Type: TypeTarball, URL: "file:///flake.tar.zst"},
+		"file:///flake.tar?dir=subdir": {Type: TypeTarball, URL: "file:///flake.tar?dir=subdir", Dir: "subdir"},
 
 		// File URL references.
 		"file+file:///flake":                           {Type: TypeFile, URL: "file:///flake"},
@@ -403,5 +407,5 @@ func TestBuildQueryString(t *testing.T) {
 	// directives).
 	var elems []string
 	elems = append(elems, "1")
-	buildQueryString(elems...)
+	appendQueryString(nil, elems...)
 }
