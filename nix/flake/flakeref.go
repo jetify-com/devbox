@@ -395,7 +395,7 @@ func (r Ref) String() string {
 		}
 		url := &url.URL{
 			Scheme: "github",
-			Opaque: buildEscapedPath(r.Owner, r.Repo, r.Rev, r.Ref),
+			Opaque: buildEscapedPath(r.Owner, r.Repo, cmp.Or(r.Rev, r.Ref)),
 			RawQuery: appendQueryString(nil,
 				"host", r.Host,
 				"dir", r.Dir,
