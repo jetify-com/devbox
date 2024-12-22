@@ -2,50 +2,51 @@
   "lockfile_version": "1",
   "packages": {
     "elixir@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#elixir",
+      "last_modified": "2024-11-28T07:51:56Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/226216574ada4c3ecefcbbec41f39ce4655f78ef#elixir",
       "source": "devbox-search",
-      "version": "1.15.7",
+      "version": "1.17.3",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/kf294q6pwmqv8hb5ivis509y1wjjgm09-elixir-1.15.7",
+              "path": "/nix/store/91w79z55qsjkhnbs3a21l3h27va98mf6-elixir-1.17.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/kf294q6pwmqv8hb5ivis509y1wjjgm09-elixir-1.15.7"
+          "store_path": "/nix/store/91w79z55qsjkhnbs3a21l3h27va98mf6-elixir-1.17.3"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/f5x2w7df45vahjcpjf76dv101il8xq98-elixir-1.15.7",
+              "path": "/nix/store/pz4hk0sp4zj76waaprlfdmvc4xdblz55-elixir-1.17.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/f5x2w7df45vahjcpjf76dv101il8xq98-elixir-1.15.7"
+          "store_path": "/nix/store/pz4hk0sp4zj76waaprlfdmvc4xdblz55-elixir-1.17.3"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/6vv8qlvhpi62nk5d06lhi5isvlg7bcj9-elixir-1.15.7",
+              "path": "/nix/store/gnjg57wv71svvqw7s3rxyjc6lkps2r95-elixir-1.17.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/6vv8qlvhpi62nk5d06lhi5isvlg7bcj9-elixir-1.15.7"
+          "store_path": "/nix/store/gnjg57wv71svvqw7s3rxyjc6lkps2r95-elixir-1.17.3"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/dlq14nswvq479pmnrwlyn2hyk6cwp65a-elixir-1.15.7",
+              "path": "/nix/store/rx7qr8bar4qldx6yg3njvm8hn84d3yyk-elixir-1.17.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/dlq14nswvq479pmnrwlyn2hyk6cwp65a-elixir-1.15.7"
+          "store_path": "/nix/store/rx7qr8bar4qldx6yg3njvm8hn84d3yyk-elixir-1.17.3"
         }
       }
     }

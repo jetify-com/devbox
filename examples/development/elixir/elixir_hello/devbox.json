@@ -1,18 +1,9 @@
 {
-  "packages": {
-    "elixir": "latest"
-  },
-  "env": {
-    "MIX_HOME":   "$PWD/.nix-mix",
-    "HEX_HOME":   "$PWD/.nix-hex",
-    "ERL_AFLAGS": "-kernel shell_history enabled"
-  },
+  "packages": [
+    "elixir@latest"
+  ],
   "shell": {
     "init_hook": [
-      "mkdir -p .nix-mix",
-      "mkdir -p .nix-hex",
-      "mix local.hex --force",
-      "mix local.rebar --force",
       "mix deps.get"
     ],
     "scripts": {
