@@ -15,6 +15,7 @@ import (
 const (
 	TypeIndirect  = "indirect"
 	TypePath      = "path"
+	TypeHttps     = "https"
 	TypeFile      = "file"
 	TypeSSH       = "ssh"
 	TypeGitHub    = "github"
@@ -75,49 +76,6 @@ type Ref struct {
 
 	// Port of the server git server, to support privately hosted git servers or tunnels
 	Port int32 `json:port,omitempty`
-}
-
-// TODO move `ParseRef` to the unit test file. It isn't used anywhere else
-
-// ParseRef parses a raw flake reference. Nix supports a variety of flake ref
-// formats, and isn't entirely consistent about how it parses them. ParseRef
-// attempts to mimic how Nix parses flake refs on the command line. The raw ref
-// can be one of the following:
-//
-//   - Indirect reference such as "nixpkgs" or "nixpkgs/unstable".
-//   - Path-like reference such as "./flake" or "/path/to/flake". They must
-//     start with a '.' or '/' and not contain a '#' or '?'.
-//   - URL-like reference which must be a valid URL with any special characters
-//     encoded. The scheme can be any valid flake ref type except for mercurial,
-//     gitlab, and sourcehut.
-//
-// ParseRef does not guarantee that a parsed flake ref is valid or that an
-// error indicates an invalid flake ref. Use the "nix flake metadata" command or
-// the builtins.parseFlakeRef Nix function to validate a flake ref.
-func ParseRef(ref string) (Ref, error) {
-	if ref == "" {
-		return Ref{}, redact.Errorf("empty flake reference")
-	}
-
-	// Handle path-style references first.
-	parsed := Ref{}
-	if ref[0] == '.' || ref[0] == '/' {
-		if strings.ContainsAny(ref, "?#") {
-			// The Nix CLI does seem to allow paths with a '?'
-			// (contrary to the manual) but ignores everything that
-			// comes after it. This is a bit surprising, so we just
-			// don't allow it at all.
-			return Ref{}, redact.Errorf("path-style flake reference %q contains a '?' or '#'", ref)
-		}
-		parsed.Type = TypePath
-		parsed.Path = ref
-		return parsed, nil
-	}
-	parsed, fragment, err := parseURLRef(ref)
-	if fragment != "" {
-		return Ref{}, redact.Errorf("flake reference %q contains a URL fragment", ref)
-	}
-	return parsed, err
 }
 
 func parseURLRef(ref string) (parsed Ref, fragment string, err error) {

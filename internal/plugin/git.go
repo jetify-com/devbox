@@ -23,11 +23,7 @@ import (
 	"go.jetpack.io/pkg/filecache"
 )
 
-var sshCache = filecache.New[[]byte]("devbox/plugin/ssh")
 var gitCache = filecache.New[[]byte]("devbox/plugin/git")
-var githubCache = filecache.New[[]byte]("devbox/plugin/github")
-var gitlabCache = filecache.New[[]byte]("devbox/plugin/gitlab")
-var bitbucketCache = filecache.New[[]byte]("devbox/plugin/bitbucket")
 
 type gitPlugin struct {
 	ref  flake.Ref
@@ -177,15 +173,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	switch p.ref.Type {
-	case flake.TypeSSH:
-		return sshCache.GetOrSet(location, process)
-	case flake.TypeGitHub:
-		return githubCache.GetOrSet(location, process)
-	case flake.TypeGitLab:
-		return gitlabCache.GetOrSet(location, process)
-	case flake.TypeBitBucket:
-		return bitbucketCache.GetOrSet(location, process)
-	case flake.TypeGit:
+	case flake.TypeSSH, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket, flake.TypeGit:
 		return gitCache.GetOrSet(location, process)
 	default:
 		slog.Error("Unable to handle flake ref type: " + p.ref.Type)

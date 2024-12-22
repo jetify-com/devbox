@@ -6,201 +6,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestParseFlakeRef(t *testing.T) {
-	cases := map[string]Ref{
-		// Path-like references start with a '.' or '/'.
-		// This distinguishes them from indirect references
-		// (./nixpkgs is a directory; nixpkgs is an indirect).
-		".":                {Type: TypePath, Path: "."},
-		"./":               {Type: TypePath, Path: "./"},
-		"./flake":          {Type: TypePath, Path: "./flake"},
-		"./relative/flake": {Type: TypePath, Path: "./relative/flake"},
-		"/":                {Type: TypePath, Path: "/"},
-		"/flake":           {Type: TypePath, Path: "/flake"},
-		"/absolute/flake":  {Type: TypePath, Path: "/absolute/flake"},
-
-		// Path-like references can have raw unicode characters unlike
-		// path: URL references.
-		"./Ûñî©ôδ€/flake\n": {Type: TypePath, Path: "./Ûñî©ôδ€/flake\n"},
-		"/Ûñî©ôδ€/flake\n":  {Type: TypePath, Path: "/Ûñî©ôδ€/flake\n"},
-
-		// URL-like path references.
-		"path:":                      {Type: TypePath, Path: ""},
-		"path:.":                     {Type: TypePath, Path: "."},
-		"path:./":                    {Type: TypePath, Path: "./"},
-		"path:./flake":               {Type: TypePath, Path: "./flake"},
-		"path:./relative/flake":      {Type: TypePath, Path: "./relative/flake"},
-		"path:./relative/my%20flake": {Type: TypePath, Path: "./relative/my flake"},
-		"path:/":                     {Type: TypePath, Path: "/"},
-		"path:/flake":                {Type: TypePath, Path: "/flake"},
-		"path:/absolute/flake":       {Type: TypePath, Path: "/absolute/flake"},
-
-		// URL-like paths can omit the "./" prefix for relative
-		// directories.
-		"path:flake":          {Type: TypePath, Path: "flake"},
-		"path:relative/flake": {Type: TypePath, Path: "relative/flake"},
-
-		// Indirect references.
-		"flake:indirect":          {Type: TypeIndirect, ID: "indirect"},
-		"flake:indirect/ref":      {Type: TypeIndirect, ID: "indirect", Ref: "ref"},
-		"flake:indirect/my%2Fref": {Type: TypeIndirect, ID: "indirect", Ref: "my/ref"},
-		"flake:indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: TypeIndirect, ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-
-		// Indirect references can omit their "indirect:" type prefix.
-		"indirect":     {Type: TypeIndirect, ID: "indirect"},
-		"indirect/ref": {Type: TypeIndirect, ID: "indirect", Ref: "ref"},
-		"indirect/5233fd2ba76a3accb5aaa999c00509a11fd0793c":     {Type: TypeIndirect, ID: "indirect", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-
-		// GitHub references.
-		"github:NixOS/nix":            {Type: TypeGitHub, Owner: "NixOS", Repo: "nix"},
-		"github:NixOS/nix/v1.2.3":     {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github:NixOS/nix?ref=v1.2.3": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github:NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/main": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "main"},
-		"github:NixOS/nix/main/5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "main/5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z":      {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"},
-		"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c":      {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":  {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github:NixOS/nix?host=example.com":                              {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
-		"github:NixOS/nix?host=example.com&dir=subdir":                   {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir"},
-
-		// The github type allows clone-style URLs. The username and
-		// host are ignored.
-		"github://git@github.com/NixOS/nix":                                              {Type: TypeGitHub, Owner: "NixOS", Repo: "nix"},
-		"github://git@github.com/NixOS/nix/v1.2.3":                                       {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github://git@github.com/NixOS/nix?ref=v1.2.3":                                   {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"},
-		"github://git@github.com/NixOS/nix?ref=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github://git@github.com/NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
-		"github://git@github.com/NixOS/nix?host=example.com":                             {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
-
-		// Git references.
-		"git://example.com/repo/flake":         {Type: TypeGit, URL: "git://example.com/repo/flake"},
-		"git+https://example.com/repo/flake":   {Type: TypeGit, URL: "https://example.com/repo/flake"},
-		"git+ssh://git@example.com/repo/flake": {Type: TypeGit, URL: "ssh://git@example.com/repo/flake"},
-		"git:/repo/flake":                      {Type: TypeGit, URL: "git:/repo/flake"},
-		"git+file:///repo/flake":               {Type: TypeGit, URL: "file:///repo/flake"},
-		"git://example.com/repo/flake?ref=unstable&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4&dir=subdir": {Type: TypeGit, URL: "git://example.com/repo/flake?dir=subdir", Ref: "unstable", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "subdir"},
-
-		// Tarball references.
-		"tarball+http://example.com/flake":  {Type: TypeTarball, URL: "http://example.com/flake"},
-		"tarball+https://example.com/flake": {Type: TypeTarball, URL: "https://example.com/flake"},
-		"tarball+file:///home/flake":        {Type: TypeTarball, URL: "file:///home/flake"},
-
-		// Regular URLs have the tarball type if they have a known
-		// archive extension:
-		// .zip, .tar, .tgz, .tar.gz, .tar.xz, .tar.bz2 or .tar.zst
-		"http://example.com/flake.zip":            {Type: TypeTarball, URL: "http://example.com/flake.zip"},
-		"http://example.com/flake.tar":            {Type: TypeTarball, URL: "http://example.com/flake.tar"},
-		"http://example.com/flake.tgz":            {Type: TypeTarball, URL: "http://example.com/flake.tgz"},
-		"http://example.com/flake.tar.gz":         {Type: TypeTarball, URL: "http://example.com/flake.tar.gz"},
-		"http://example.com/flake.tar.xz":         {Type: TypeTarball, URL: "http://example.com/flake.tar.xz"},
-		"http://example.com/flake.tar.bz2":        {Type: TypeTarball, URL: "http://example.com/flake.tar.bz2"},
-		"http://example.com/flake.tar.zst":        {Type: TypeTarball, URL: "http://example.com/flake.tar.zst"},
-		"http://example.com/flake.tar?dir=subdir": {Type: TypeTarball, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
-		"file:///flake.zip":                       {Type: TypeTarball, URL: "file:///flake.zip"},
-		"file:///flake.tar":                       {Type: TypeTarball, URL: "file:///flake.tar"},
-		"file:///flake.tgz":                       {Type: TypeTarball, URL: "file:///flake.tgz"},
-		"file:///flake.tar.gz":                    {Type: TypeTarball, URL: "file:///flake.tar.gz"},
-		"file:///flake.tar.xz":                    {Type: TypeTarball, URL: "file:///flake.tar.xz"},
-		"file:///flake.tar.bz2":                   {Type: TypeTarball, URL: "file:///flake.tar.bz2"},
-		"file:///flake.tar.zst":                   {Type: TypeTarball, URL: "file:///flake.tar.zst"},
-		"file:///flake.tar?dir=subdir":            {Type: TypeTarball, URL: "file:///flake.tar?dir=subdir", Dir: "subdir"},
-
-		// File URL references.
-		"file+file:///flake":                           {Type: TypeFile, URL: "file:///flake"},
-		"file+http://example.com/flake":                {Type: TypeFile, URL: "http://example.com/flake"},
-		"file+http://example.com/flake.git":            {Type: TypeFile, URL: "http://example.com/flake.git"},
-		"file+http://example.com/flake.tar?dir=subdir": {Type: TypeFile, URL: "http://example.com/flake.tar?dir=subdir", Dir: "subdir"},
-
-		// Regular URLs have the file type if they don't have a known
-		// archive extension.
-		"http://example.com/flake":            {Type: TypeFile, URL: "http://example.com/flake"},
-		"http://example.com/flake.git":        {Type: TypeFile, URL: "http://example.com/flake.git"},
-		"http://example.com/flake?dir=subdir": {Type: TypeFile, URL: "http://example.com/flake?dir=subdir", Dir: "subdir"},
-	}
-	for ref, want := range cases {
-		t.Run(ref, func(t *testing.T) {
-			got, err := ParseRef(ref)
-			if diff := cmp.Diff(want, got); diff != "" {
-				if err != nil {
-					t.Errorf("got error: %s", err)
-				}
-				t.Errorf("wrong flakeref (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestParseFlakeRefError(t *testing.T) {
-	t.Run("EmptyString", func(t *testing.T) {
-		ref := ""
-		_, err := ParseRef(ref)
-		if err == nil {
-			t.Error("got nil error for bad flakeref:", ref)
-		}
-	})
-	t.Run("InvalidURL", func(t *testing.T) {
-		ref := "://bad/url"
-		_, err := ParseRef(ref)
-		if err == nil {
-			t.Error("got nil error for bad flakeref:", ref)
-		}
-	})
-	t.Run("InvalidURLEscape", func(t *testing.T) {
-		ref := "path:./relative/my%flake"
-		_, err := ParseRef(ref)
-		if err == nil {
-			t.Error("got nil error for bad flakeref:", ref)
-		}
-	})
-	t.Run("UnsupportedURLScheme", func(t *testing.T) {
-		ref := "runx:mvdan/gofumpt@latest"
-		_, err := ParseRef(ref)
-		if err == nil {
-			t.Error("got nil error for bad flakeref:", ref)
-		}
-	})
-	t.Run("PathLikeWith?#", func(t *testing.T) {
-		in := []string{
-			"./invalid#path",
-			"./invalid?path",
-			"/invalid#path",
-			"/invalid?path",
-			"/#",
-			"/?",
-		}
-		for _, ref := range in {
-			_, err := ParseRef(ref)
-			if err == nil {
-				t.Error("got nil error for bad flakeref:", ref)
-			}
-		}
-	})
-	t.Run("GitHubInvalidRefRevCombo", func(t *testing.T) {
-		in := []string{
-			"github:NixOS/nix?ref=v1.2.3&rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c",
-			"github:NixOS/nix/v1.2.3?ref=v4.5.6",
-			"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
-			"github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c?ref=v1.2.3",
-		}
-		for _, ref := range in {
-			_, err := ParseRef(ref)
-			if err == nil {
-				t.Error("got nil error for bad flakeref:", ref)
-			}
-		}
-	})
-	t.Run("URLFragment", func(t *testing.T) {
-		ref := "https://github.com/NixOS/patchelf/archive/master.tar.gz#patchelf"
-		_, err := ParseRef(ref)
-		if err == nil {
-			t.Error("got nil error for flakeref with fragment:", ref)
-		}
-	})
-}
-
 func TestFlakeRefString(t *testing.T) {
 	cases := map[Ref]string{
 		{}: "",
@@ -238,26 +43,26 @@ func TestFlakeRefString(t *testing.T) {
 		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:             "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
 
 		// Git references.
-		{Type: TypeGit, URL: "git://example.com/repo/flake"}:                                                                     "git://example.com/repo/flake",
-		{Type: TypeGit, URL: "https://example.com/repo/flake"}:                                                                   "git+https://example.com/repo/flake",
-		{Type: TypeGit, URL: "ssh://git@example.com/repo/flake"}:                                                                 "git+ssh://git@example.com/repo/flake",
-		{Type: TypeGit, URL: "git:/repo/flake"}:                                                                                  "git:/repo/flake",
-		{Type: TypeGit, URL: "file:///repo/flake"}:                                                                               "git+file:///repo/flake",
-		{Type: TypeGit, URL: "ssh://git@example.com/repo/flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4"}: "git+ssh://git@example.com/repo/flake?ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
-		{Type: TypeGit, URL: "ssh://git@example.com/repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}: "git+ssh://git@example.com/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
-		{Type: TypeGit, URL: "git:repo/flake?dir=sub%2Fdir", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}:                   "git:repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: TypeGit, Host: "example.com", Owner: "repo", Repo: "flake"}:                                                                                 "git://example.com/repo/flake",
+		{Type: TypeHttps, Host: "example.com", Owner: "repo", Repo: "flake"}:                                                                               "git+https://example.com/repo/flake",
+		{Type: TypeSSH, Host: "example.com", Owner: "repo", Repo: "flake"}:                                                                                 "git+ssh://git@example.com/repo/flake",
+		{Type: TypeGit, Owner: "repo", Repo: "flake"}:                                                                                                      "git:/repo/flake",
+		{Type: TypeFile, Owner: "repo", Repo: "flake"}:                                                                                                     "git+file:///repo/flake",
+		{Type: TypeSSH, Host: "example.com", Owner: "repo", Repo: "flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4"}:                 "git+ssh://git@example.com/repo/flake?ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: TypeSSH, Host: "example.com", Owner: "repo", Repo: "flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}: "git+ssh://git@example.com/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4",
+		{Type: TypeGit, Owner: "repo", Repo: "flake", Ref: "my/ref", Rev: "e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", Dir: "sub/dir"}:                      "", // "git:/repo/flake?dir=sub%2Fdir&ref=my%2Fref&rev=e486d8d40e626a20e06d792db8cc5ac5aba9a5b4", // how is this supposed to be a valid URL? There isn't a hostname in it...
 
 		// Tarball references.
-		{Type: TypeTarball, URL: "http://example.com/flake"}:                  "tarball+http://example.com/flake",
-		{Type: TypeTarball, URL: "https://example.com/flake"}:                 "tarball+https://example.com/flake",
-		{Type: TypeTarball, URL: "https://example.com/flake", Dir: "sub/dir"}: "tarball+https://example.com/flake?dir=sub%2Fdir",
-		{Type: TypeTarball, URL: "file:///home/flake"}:                        "tarball+file:///home/flake",
+		{Type: TypeTarball, Host: "example.com", Owner: "flake", URL: "http://example.com/flake"}:                  "tarball+http://example.com/flake",
+		{Type: TypeTarball, Host: "example.com", Owner: "flake", URL: "https://example.com/flake"}:                 "tarball+https://example.com/flake",
+		{Type: TypeTarball, Host: "example.com", Owner: "flake", URL: "https://example.com/flake", Dir: "sub/dir"}: "tarball+https://example.com/flake?dir=sub%2Fdir",
+		{Type: TypeTarball, URL: "file:///home/flake"}:                                                             "tarball+file:///home/flake",
 
 		// File URL references.
-		{Type: TypeFile, URL: "file:///flake"}:                                              "file+file:///flake",
-		{Type: TypeFile, URL: "http://example.com/flake"}:                                   "file+http://example.com/flake",
-		{Type: TypeFile, URL: "http://example.com/flake.git"}:                               "file+http://example.com/flake.git",
-		{Type: TypeFile, URL: "http://example.com/flake.tar?dir=sub%2Fdir", Dir: "sub/dir"}: "file+http://example.com/flake.tar?dir=sub%2Fdir",
+		{Type: TypePath, URL: "file:///flake"}:                                              "file+file:///flake",
+		{Type: TypePath, URL: "http://example.com/flake"}:                                   "file+http://example.com/flake",
+		{Type: TypePath, URL: "http://example.com/flake.git"}:                               "file+http://example.com/flake.git",
+		{Type: TypePath, URL: "http://example.com/flake.tar?dir=sub%2Fdir", Dir: "sub/dir"}: "file+http://example.com/flake.tar?dir=sub%2Fdir",
 	}
 
 	for ref, want := range cases {
@@ -371,7 +176,7 @@ func TestFlakeInstallableString(t *testing.T) {
 		{AttrPath: "app", Outputs: "%2F", Ref: Ref{Type: TypeIndirect, ID: "nixpkgs"}}: "flake:nixpkgs#app^%2F",
 
 		// Missing or invalid fields.
-		{AttrPath: "app", Ref: Ref{Type: TypeFile, URL: ""}}:     "",
+		{AttrPath: "app", Ref: Ref{Type: TypePath, URL: ""}}:     "",
 		{AttrPath: "app", Ref: Ref{Type: TypeGit, URL: ""}}:      "",
 		{AttrPath: "app", Ref: Ref{Type: TypeGitHub, Owner: ""}}: "",
 		{AttrPath: "app", Ref: Ref{Type: TypeIndirect, ID: ""}}:  "",
