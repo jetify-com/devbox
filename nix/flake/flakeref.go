@@ -3,7 +3,6 @@ package flake
 
 import (
 	"cmp"
-	"fmt"
 	"net/url"
 	"path"
 	"slices"
@@ -86,6 +85,47 @@ type Ref struct {
 
 	// Port of the server git server, to support privately hosted git servers or tunnels
 	Port int32 `json:port,omitempty`
+}
+
+// ParseRef parses a raw flake reference. Nix supports a variety of flake ref
+// formats, and isn't entirely consistent about how it parses them. ParseRef
+// attempts to mimic how Nix parses flake refs on the command line. The raw ref
+// can be one of the following:
+//
+//   - Indirect reference such as "nixpkgs" or "nixpkgs/unstable".
+//   - Path-like reference such as "./flake" or "/path/to/flake". They must
+//     start with a '.' or '/' and not contain a '#' or '?'.
+//   - URL-like reference which must be a valid URL with any special characters
+//     encoded. The scheme can be any valid flake ref type except for mercurial,
+//     gitlab, and sourcehut.
+//
+// ParseRef does not guarantee that a parsed flake ref is valid or that an
+// error indicates an invalid flake ref. Use the "nix flake metadata" command or
+// the builtins.parseFlakeRef Nix function to validate a flake ref.
+func ParseRef(ref string) (Ref, error) {
+	if ref == "" {
+		return Ref{}, redact.Errorf("empty flake reference")
+	}
+
+	// Handle path-style references first.
+	parsed := Ref{}
+	if ref[0] == '.' || ref[0] == '/' {
+		if strings.ContainsAny(ref, "?#") {
+			// The Nix CLI does seem to allow paths with a '?'
+			// (contrary to the manual) but ignores everything that
+			// comes after it. This is a bit surprising, so we just
+			// don't allow it at all.
+			return Ref{}, redact.Errorf("path-style flake reference %q contains a '?' or '#'", ref)
+		}
+		parsed.Type = TypePath
+		parsed.Path = ref
+		return parsed, nil
+	}
+	parsed, fragment, err := parseURLRef(ref)
+	if fragment != "" {
+		return Ref{}, redact.Errorf("flake reference %q contains a URL fragment", ref)
+	}
+	return parsed, err
 }
 
 func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
@@ -196,6 +236,7 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		refURL.Scheme = refURL.Scheme[5:] // remove file+
 		parsed.URL = refURL.String()
 	case "git", "git+http", "git+https", "git+ssh", "git+git", "git+file":
+		parsed.Type = TypeGit
 		query := refURL.Query()
 		parsed.Dir = query.Get("dir")
 		parsed.Ref = query.Get("ref")
@@ -206,48 +247,24 @@ func parseURLRef(ref string) (parsed Ref, fragment string, err error) {
 		query.Del("ref")
 		query.Del("rev")
 		refURL.RawQuery = query.Encode()
-
 		if len(refURL.Scheme) > 3 {
 			refURL.Scheme = refURL.Scheme[4:] // remove git+
 		}
-
-		if strings.HasPrefix(refURL.Scheme, TypeSSH) {
-			parsed.Type = TypeSSH
-		} else if strings.HasPrefix(refURL.Scheme, TypeFile) {
-			parsed.Type = TypeFile
-		} else {
-			parsed.Type = TypeGit
-		}
-
 		parsed.URL = refURL.String()
-
-		if err := parseGitRef(refURL, &parsed); err != nil {
-			return Ref{}, "", err
-		}
-	case "bitbucket":
-		parsed.Type = TypeBitBucket
-		if err := parseGitRef(refURL, &parsed); err != nil {
-			return Ref{}, "", err
-		}
-	case "gitlab":
-		parsed.Type = TypeGitLab
-		if err := parseGitRef(refURL, &parsed); err != nil {
-			return Ref{}, "", err
-		}
 	case "github":
-		parsed.Type = TypeGitHub
-		if err := parseGitRef(refURL, &parsed); err != nil {
+		if err := parseGitHubRef(refURL, &parsed); err != nil {
 			return Ref{}, "", err
 		}
 	default:
 		return Ref{}, "", redact.Errorf("unsupported flake reference URL scheme: %s", redact.Safe(refURL.Scheme))
 	}
-
 	return parsed, fragment, nil
 }
 
-func parseGitRef(refURL *url.URL, parsed *Ref) error {
+func parseGitHubRef(refURL *url.URL, parsed *Ref) error {
 	// github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
+
+	parsed.Type = TypeGitHub
 
 	// Only split up to 3 times (owner, repo, ref/rev) so that we handle
 	// refs that have slashes in them. For example,
@@ -268,7 +285,6 @@ func parseGitRef(refURL *url.URL, parsed *Ref) error {
 
 	parsed.Host = refURL.Query().Get("host")
 	parsed.Dir = refURL.Query().Get("dir")
-
 	if qRef := refURL.Query().Get("ref"); qRef != "" {
 		if parsed.Rev != "" {
 			return redact.Errorf("github flake reference has a ref and a rev")
@@ -342,50 +358,52 @@ func (r Ref) Locked() bool {
 // string.
 func (r Ref) String() string {
 	switch r.Type {
-
 	case TypeFile:
 		if r.URL == "" {
 			return ""
 		}
-		return "file+" + r.URL
-	case TypeSSH:
-		base := fmt.Sprintf("git+ssh://git@%s", r.Host)
-		if r.Port > 0 {
-			base = fmt.Sprintf("%s:%d", base, r.Port)
+
+		url, err := url.Parse("file+" + r.URL)
+		if err != nil {
+			// This should be rare and only happen if the caller
+			// messed with the parsed URL.
+			return ""
+		}
+		url.RawQuery = appendQueryString(url.Query(),
+			"lastModified", itoaOmitZero(r.LastModified),
+			"narHash", r.NARHash,
+		)
+		return url.String()
+	case TypeGit:
+		if r.URL == "" {
+			return ""
+		}
+		if !strings.HasPrefix(r.URL, "git") {
+			r.URL = "git+" + r.URL
 		}
 
-		queryParams := url.Values{}
-
-		if r.Rev != "" {
-			queryParams.Add("rev", r.Rev)
+		// Nix removes "ref" and "rev" from the query string
+		// (but not other parameters) after parsing. If they're empty,
+		// we can skip parsing the URL. Otherwise, we need to add them
+		// back.
+		if r.Ref == "" && r.Rev == "" {
+			return r.URL
 		}
-		if r.Ref != "" {
-			queryParams.Add("ref", r.Ref)
+		url, err := url.Parse(r.URL)
+		if err != nil {
+			// This should be rare and only happen if the caller
+			// messed with the parsed URL.
+			return ""
 		}
-
-		if r.Dir != "" {
-			queryParams.Add("dir", r.Dir)
-		}
-
-		return fmt.Sprintf("%s/%s/%s?%s", base, r.Owner, r.Repo, queryParams.Encode())
-
-	case TypeGitLab, TypeBitBucket, TypeGitHub:
+		url.RawQuery = appendQueryString(url.Query(), "ref", r.Ref, "rev", r.Rev, "dir", r.Dir)
+		return url.String()
+	case TypeGitHub:
 		if r.Owner == "" || r.Repo == "" {
 			return ""
 		}
-
-		scheme := "github" // using as default
-		if r.Type == TypeGitLab {
-			scheme = "gitlab"
-		}
-		if r.Type == TypeBitBucket {
-			scheme = "bitbucket"
-		}
-
 		url := &url.URL{
-			Scheme: scheme,
-			Opaque: buildEscapedPath(r.Owner, r.Repo, r.Rev, r.Ref),
-			//RawQuery: buildQueryString("host", r.Host, "dir", r.Dir),
+			Scheme: "github",
+			Opaque: buildEscapedPath(r.Owner, r.Repo, cmp.Or(r.Rev, r.Ref)),
 			RawQuery: appendQueryString(nil,
 				"host", r.Host,
 				"dir", r.Dir,
@@ -393,9 +411,7 @@ func (r Ref) String() string {
 				"narHash", r.NARHash,
 			),
 		}
-
 		return url.String()
-
 	case TypeIndirect:
 		if r.ID == "" {
 			return ""
@@ -660,7 +676,13 @@ func ParseInstallable(raw string) (Installable, error) {
 
 	// Interpret installables with path-style flake refs as URLs to extract
 	// the attribute path (fragment). This means that path-style flake refs
-	// cannot point to files with a '#' or '?' in their name, since those
+	//
+	//
+	//
+	//
+	//
+	//
+	//// cannot point to files with a '#' or '?' in their name, since those
 	// would be parsed as the URL fragment or query string. This mimic's
 	// Nix's CLI behavior.
 	if raw[0] == '.' || raw[0] == '/' {
