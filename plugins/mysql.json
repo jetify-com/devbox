@@ -1,6 +1,6 @@
 {
     "name": "mysql",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "* This plugin wraps mysqld and mysql_install_db to work in your local project\n* This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init. This DB will be started in `insecure` mode, so be sure to add a root password after creation if needed.\n* Use mysqld to manually start the server, and `mysqladmin -u root shutdown` to manually stop it",
     "env": {
       "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
