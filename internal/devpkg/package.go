@@ -390,7 +390,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 
 	// We prefer nix.Search over just trying to parse the package's "URL" because
 	// nix.Search will guarantee that the package exists for the current system.
-	var infos map[string]*nix.Info
+	var infos map[string]*nix.PkgInfo
 	if p.IsDevboxPackage && !p.IsRunX() {
 		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
 		// use a nix.Search cache.
@@ -568,7 +568,7 @@ func (p *Package) HashFromNixPkgsURL() string {
 	return nix.HashFromNixPkgsURL(p.URLForFlakeInput())
 }
 
-// InputAddressedPath is the input-addressed path in /nix/store
+// InputAddressedPaths is the input-addressed path in /nix/store
 // It is also the key in the BinaryCache for this package
 func (p *Package) InputAddressedPaths() ([]string, error) {
 	if inCache, err := p.IsInBinaryCache(); err != nil {

@@ -115,7 +115,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		cfg:                      cfg,
 		env:                      opts.Env,
 		environment:              environment,
-		nix:                      &nix.Nix{},
+		nix:                      &nix.NixInstance{},
 		projectDir:               filepath.Dir(cfg.Root.AbsRootPath),
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,

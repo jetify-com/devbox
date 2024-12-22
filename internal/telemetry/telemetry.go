@@ -4,6 +4,7 @@
 package telemetry
 
 import (
+	"cmp"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -26,7 +27,7 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/devbox/providers/identity"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/nix"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -144,10 +145,7 @@ func Error(err error, meta Metadata) {
 		return
 	}
 
-	nixVersion := "unknown"
-	if v, err := nix.Version(); err == nil {
-		nixVersion = v.Version
-	}
+	nixVersion := cmp.Or(nix.Version(), "unknown")
 
 	event := &sentry.Event{
 		EventID:   sentry.EventID(ExecutionID),

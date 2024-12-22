@@ -80,6 +80,54 @@ func copyFileCmd(script *testscript.TestScript, neg bool, args []string) {
 	script.Check(err)
 }
 
+func globCmd(script *testscript.TestScript, neg bool, args []string) {
+	count := -1
+	if neg {
+		count = 0
+	}
+	if len(args) != 0 {
+		after, ok := strings.CutPrefix(args[0], "-count=")
+		if ok {
+			var err error
+			count, err = strconv.Atoi(after)
+			if err != nil {
+				script.Fatalf("invalid -count=: %v", err)
+			}
+			if count < 1 {
+				script.Fatalf("invalid -count=: must be at least 1")
+			}
+			args = args[1:]
+		}
+	}
+	if len(args) == 0 {
+		script.Fatalf("usage: glob [-count=N] pattern")
+	}
+
+	var matches []string
+	for _, a := range args {
+		glob := script.MkAbs(a)
+		m, err := filepath.Glob(glob)
+		if err != nil {
+			script.Fatalf("invalid glob pattern: %v", err)
+		}
+		for _, match := range m {
+			script.Logf("glob %q matched: %s", glob, match)
+		}
+		matches = append(matches, m...)
+	}
+
+	// -1 means that no -count= was given, so we want at least 1 match.
+	if count == -1 {
+		if len(matches) == 0 && !neg {
+			script.Fatalf("no matches for globs %q, want at least 1", strings.Join(args, " "))
+		}
+		return
+	}
+	if len(matches) != count {
+		script.Fatalf("got %d matches for globs %q, want %d", len(matches), strings.Join(args, " "), count)
+	}
+}
+
 func getTestscriptParams(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 dir,
@@ -91,6 +139,7 @@ func getTestscriptParams(dir string) testscript.Params {
 			"devboxjson.packages.contains": assertDevboxJSONPackagesContains,
 			"devboxlock.packages.contains": assertDevboxLockPackagesContains,
 			"env.path.len":                 assertPathLength,
+			"glob":                         globCmd,
 			"json.superset":                assertJSONSuperset,
 			"path.order":                   assertPathOrder,
 			"source.path":                  sourcePath,

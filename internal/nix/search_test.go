@@ -66,7 +66,7 @@ func TestParseSearchResults(t *testing.T) {
 	testCases := []struct {
 		name           string
 		input          []byte
-		expectedResult map[string]*Info
+		expectedResult map[string]*PkgInfo
 	}{
 		{
 			name: "Valid JSON input",
@@ -80,7 +80,7 @@ func TestParseSearchResults(t *testing.T) {
 					"version": "3.9.16"
 				}
 			}`),
-			expectedResult: map[string]*Info{
+			expectedResult: map[string]*PkgInfo{
 				"go": {
 					AttributeKey: "go",
 					PName:        "go",
@@ -96,7 +96,7 @@ func TestParseSearchResults(t *testing.T) {
 		{
 			name:           "Empty JSON input",
 			input:          []byte(`{}`),
-			expectedResult: map[string]*Info{},
+			expectedResult: map[string]*PkgInfo{},
 		},
 	}
 

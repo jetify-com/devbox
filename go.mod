@@ -14,8 +14,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.11
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/briandowns/spinner v1.23.0
-	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/f1bonacc1/process-compose v1.6.1
 	github.com/fatih/color v1.17.0
@@ -48,7 +46,6 @@ require (
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/tools v0.22.0
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -78,6 +75,7 @@ require (
 	github.com/bodgit/sevenzip v1.5.1 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/cavaliergopher/grab/v3 v3.0.1 // indirect
 	github.com/charmbracelet/lipgloss v0.11.0 // indirect
 	github.com/charmbracelet/x/ansi v0.1.2 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect

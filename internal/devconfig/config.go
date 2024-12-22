@@ -355,9 +355,11 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.included {
-		maps.Copy(env, i.Env())
+		expandedEnvFromPlugin := OSExpandIfPossible(i.Env(), env)
+		maps.Copy(env, expandedEnvFromPlugin)
 	}
-	maps.Copy(env, c.Root.Env)
+	rootConfigEnv := OSExpandIfPossible(c.Root.Env, env)
+	maps.Copy(env, rootConfigEnv)
 	return env
 }
 
@@ -414,4 +416,20 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 		includable.Root.AbsRootPath = localPlugin.Path()
 	}
 	return includable
+}
+
+func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
+	mapping := func(value string) string {
+		// If the value is not set in existingEnv, return the value wrapped in ${...}
+		if existingEnv == nil || existingEnv[value] == "" {
+			return fmt.Sprintf("${%s}", value)
+		}
+		return existingEnv[value]
+	}
+
+	res := map[string]string{}
+	for k, v := range env {
+		res[k] = os.Expand(v, mapping)
+	}
+	return res
 }

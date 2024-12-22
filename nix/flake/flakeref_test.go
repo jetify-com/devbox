@@ -34,13 +34,14 @@ func TestFlakeRefString(t *testing.T) {
 		{Type: TypeIndirect, ID: "indirect", Ref: "ref", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "flake:indirect/ref/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
 
 		// GitHub references.
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix"}:                                                  "github:NixOS/nix",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"}:                                   "github:NixOS/nix/v1.2.3",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "my/ref"}:                                   "github:NixOS/nix/my%2Fref",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}: "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"}: "github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir"}:                                  "github:NixOS/nix?dir=sub%2Fdir",
-		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:             "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix"}:                                                               "github:NixOS/nix",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "v1.2.3"}:                                                "github:NixOS/nix/v1.2.3",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "my/ref"}:                                                "github:NixOS/nix/my%2Fref",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"}:              "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Ref: "5233fd2bb76a3accb5aaa999c00509a11fd0793z"}:              "github:NixOS/nix/5233fd2bb76a3accb5aaa999c00509a11fd0793z",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c", Ref: "main"}: "github:NixOS/nix/5233fd2ba76a3accb5aaa999c00509a11fd0793c",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir"}:                                               "github:NixOS/nix?dir=sub%2Fdir",
+		{Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Dir: "sub/dir", Host: "example.com"}:                          "github:NixOS/nix?dir=sub%2Fdir&host=example.com",
 
 		// Git references.
 		{Type: TypeGit, Host: "example.com", Owner: "repo", Repo: "flake"}:                                                                                 "git://example.com/repo/flake",
@@ -208,5 +209,5 @@ func TestBuildQueryString(t *testing.T) {
 	// directives).
 	var elems []string
 	elems = append(elems, "1")
-	buildQueryString(elems...)
+	appendQueryString(nil, elems...)
 }

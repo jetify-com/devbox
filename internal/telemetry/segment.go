@@ -4,6 +4,7 @@
 package telemetry
 
 import (
+	"cmp"
 	"io"
 	"log"
 	"os"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetpack.io/devbox/nix"
 
 	"go.jetpack.io/devbox/internal/build"
 	"go.jetpack.io/devbox/internal/envir"
@@ -34,10 +35,7 @@ func initSegmentClient() bool {
 }
 
 func newTrackMessage(name string, meta Metadata) *segment.Track {
-	nixVersion := "unknown"
-	if v, err := nix.Version(); err == nil {
-		nixVersion = v.Version
-	}
+	nixVersion := cmp.Or(nix.Version(), "unknown")
 
 	dur := time.Since(procStartTime)
 	if !meta.EventStart.IsZero() {

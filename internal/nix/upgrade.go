@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/nix"
 )
 
 func ProfileUpgrade(ProfileDir, indexOrName string) error {
@@ -19,13 +20,9 @@ func ProfileUpgrade(ProfileDir, indexOrName string) error {
 }
 
 func FlakeUpdate(ProfileDir string) error {
-	version, err := Version()
-	if err != nil {
-		return err
-	}
 	ux.Finfof(os.Stderr, "Running \"nix flake update\"\n")
 	cmd := command("flake", "update")
-	if version.AtLeast(Version2_19) {
+	if nix.AtLeast(Version2_19) {
 		cmd.Args = append(cmd.Args, "--flake")
 	}
 	cmd.Args = append(cmd.Args, ProfileDir)

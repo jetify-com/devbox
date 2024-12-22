@@ -11,7 +11,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.13.6";
+        lastTag = "0.13.7";
 
         revision =
           if (self ? shortRev)
@@ -46,6 +46,9 @@
             "-X go.jetpack.io/devbox/internal/build.Version=${version}"
             "-X go.jetpack.io/devbox/internal/build.Commit=${revision}"
           ];
+
+          # Don't generate test binaries (as we'd include them as a bin)
+          excludedPackages = [ "testscripts" ];
 
           # Disable tests if they require network access or are integration tests
           doCheck = false;
