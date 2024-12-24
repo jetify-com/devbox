@@ -49,6 +49,54 @@
         }
       }
     },
+    "gopls@latest": {
+      "last_modified": "2024-09-12T02:28:40Z",
+      "resolved": "github:NixOS/nixpkgs/111ed8812c10d7dc3017de46cbf509600c93f551#gopls",
+      "source": "devbox-search",
+      "version": "0.16.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/62algcwigrdx7ak14dwppjdsdy9aziva-gopls-0.16.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/62algcwigrdx7ak14dwppjdsdy9aziva-gopls-0.16.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l4xb6niqplxri2ziwajjm87apdwgld21-gopls-0.16.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/l4xb6niqplxri2ziwajjm87apdwgld21-gopls-0.16.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8ffc2jqw59mkhzj7s06rnwgh7i16qric-gopls-0.16.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8ffc2jqw59mkhzj7s06rnwgh7i16qric-gopls-0.16.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6nysag23irns7ldbsdrjwc1ckap1hqm6-gopls-0.16.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/6nysag23irns7ldbsdrjwc1ckap1hqm6-gopls-0.16.2"
+        }
+      }
+    },
     "runx:golangci/golangci-lint@latest": {
       "resolved": "golangci/golangci-lint@v1.60.2",
       "version": "v1.60.2"
