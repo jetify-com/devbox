@@ -237,7 +237,6 @@ func (c *Config) loadRecursive(
 ) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
-	// TODO UPDATEME
 	for _, ref := range c.Root.Include {
 		switch ref.Type {
 		case flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket:
