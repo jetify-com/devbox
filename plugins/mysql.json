@@ -1,33 +1,31 @@
 {
-    "name": "mysql",
-    "version": "0.0.4",
-    "description": "* This plugin wraps mysqld and mysql_install_db to work in your local project\n* This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init. This DB will be started in `insecure` mode, so be sure to add a root password after creation if needed.\n* Use mysqld to manually start the server, and `mysqladmin -u root shutdown` to manually stop it",
-    "env": {
-      "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
-      "MYSQL_HOME": "{{ .Virtenv }}/run",
-      "MYSQL_DATADIR": "{{ .Virtenv }}/data",
-      "MYSQL_UNIX_PORT": "{{ .Virtenv }}/run/mysql.sock",
-      "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid",
-      "MYSQL_CONF": "{{ .DevboxDir }}/my.cnf"
-    },
-    "create_files": {
-      "{{ .Virtenv }}/run": "",
-      "{{ .Virtenv }}/flake/flake.nix": "mysql/flake.nix",
-      "{{ .Virtenv }}/setup_db.sh": "mysql/setup_db.sh",
-      "{{ .Virtenv }}/process-compose.yaml": "mysql/process-compose.yaml",
-      "{{ .DevboxDir }}/my.cnf": "mysql/my.cnf"
-    },
-    "packages": {
-      "path:{{ .Virtenv }}/flake": {},
-      "glibcLocales": {
-        "version": "latest",
-        "platforms": ["x86_64-linux", "aarch64-linux"]
-      }
-    },
-    "__remove_trigger_package": true,
-    "shell": {
-      "init_hook": [
-        "bash {{ .Virtenv }}/setup_db.sh"
-      ]
+  "name": "mysql",
+  "version": "0.0.4",
+  "description": "* This plugin wraps mysqld and mysql_install_db to work in your local project\n* This plugin will create a new database for your project in MYSQL_DATADIR if one doesn't exist on shell init. This DB will be started in `insecure` mode, so be sure to add a root password after creation if needed.\n* Use mysqld to manually start the server, and `mysqladmin -u root shutdown` to manually stop it",
+  "env": {
+    "MYSQL_BASEDIR": "{{ .DevboxProfileDefault }}",
+    "MYSQL_HOME": "{{ .Virtenv }}/run",
+    "MYSQL_DATADIR": "{{ .Virtenv }}/data",
+    "MYSQL_UNIX_PORT": "{{ .Virtenv }}/run/mysql.sock",
+    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid",
+    "MYSQL_CONF": "{{ .DevboxDir }}/my.cnf"
+  },
+  "create_files": {
+    "{{ .Virtenv }}/run": "",
+    "{{ .Virtenv }}/flake/flake.nix": "mysql/flake.nix",
+    "{{ .Virtenv }}/setup_db.sh": "mysql/setup_db.sh",
+    "{{ .Virtenv }}/process-compose.yaml": "mysql/process-compose.yaml",
+    "{{ .DevboxDir }}/my.cnf": "mysql/my.cnf"
+  },
+  "packages": {
+    "path:{{ .Virtenv }}/flake": {},
+    "glibcLocales": {
+      "version": "latest",
+      "platforms": ["x86_64-linux", "aarch64-linux"]
     }
+  },
+  "__remove_trigger_package": true,
+  "shell": {
+    "init_hook": ["bash {{ .Virtenv }}/setup_db.sh"]
   }
+}
