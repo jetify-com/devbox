@@ -10,6 +10,7 @@ import (
 
 	"github.com/samber/lo"
 	"go.jetpack.io/devbox/internal/devpkg"
+	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/nix/flake"
 )
 
@@ -43,7 +44,7 @@ func (f *flakeInput) HashFromNixPkgsURL() string {
 
 func (f *flakeInput) URLWithCaching() string {
 	if !f.IsNixpkgs() {
-		return f.Ref.String()
+		return nix.FixInstallableArg(f.Ref.String())
 	}
 	return getNixpkgsInfo(f.Ref.Rev).URL
 }
