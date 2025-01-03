@@ -14,6 +14,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/lock"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 // update overwrites golden files with the new test results.
@@ -41,10 +42,6 @@ func TestWriteFromTemplate(t *testing.T) {
 	})
 	t.Run("WriteModifiedSmaller", func(t *testing.T) {
 		emptyPlan := &flakePlan{
-			NixpkgsInfo: &NixpkgsInfo{
-				URL:    "",
-				TarURL: "",
-			},
 			Packages:    []*devpkg.Package{},
 			FlakeInputs: []flakeInput{},
 			System:      "x86_64-linux",
@@ -89,15 +86,11 @@ If the new file is correct, you can update the golden file with:
 var (
 	locker            = &lockmock{}
 	testFlakeTmplPlan = &flakePlan{
-		NixpkgsInfo: &NixpkgsInfo{
-			URL:    "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
-			TarURL: "", // TODO savil
-		},
 		Packages: []*devpkg.Package{}, // TODO savil
 		FlakeInputs: []flakeInput{
 			{
 				Name: "nixpkgs",
-				URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
+				Ref:  flake.Ref{Type: flake.TypeGitHub, Owner: "NixOS", Repo: "nixpkgs", Rev: "b9c00c1d41ccd6385da243415299b39aa73357be"},
 				Packages: []*devpkg.Package{
 					devpkg.PackageFromStringWithDefaults("php@latest", locker),
 					devpkg.PackageFromStringWithDefaults("php81Packages.composer@latest", locker),
@@ -137,14 +130,6 @@ func (*lockmock) Resolve(pkg string) (*lock.Package, error) {
 	}, nil
 }
 
-func (*lockmock) Get(pkg string) *lock.Package {
-	return nil
-}
-
-func (*lockmock) LegacyNixpkgsPath(pkg string) string {
-	return ""
-}
-
-func (*lockmock) ProjectDir() string {
-	return ""
-}
+func (*lockmock) Get(pkg string) *lock.Package { return nil }
+func (*lockmock) Stdenv() flake.Ref            { return flake.Ref{} }
+func (*lockmock) ProjectDir() string           { return "" }

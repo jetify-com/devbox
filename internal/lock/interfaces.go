@@ -3,16 +3,18 @@
 
 package lock
 
+import "go.jetpack.io/devbox/nix/flake"
+
 type devboxProject interface {
 	ConfigHash() (string, error)
-	NixPkgsCommitHash() string
+	Stdenv() flake.Ref
 	AllPackageNamesIncludingRemovedTriggerPackages() []string
 	ProjectDir() string
 }
 
 type Locker interface {
 	Get(string) *Package
-	LegacyNixpkgsPath(string) string
+	Stdenv() flake.Ref
 	ProjectDir() string
 	Resolve(string) (*Package, error)
 }

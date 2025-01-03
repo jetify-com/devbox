@@ -52,6 +52,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		"--priority", nextPriority(args.ProfilePath),
 	)
 
+	FixInstallableArgs(args.Installables)
 	cmd.Args = appendArgs(cmd.Args, args.Installables)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
@@ -75,6 +76,8 @@ func ProfileRemove(profilePath string, packageNames ...string) error {
 		"--profile", profilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
 	)
+
+	FixInstallableArgs(packageNames)
 	cmd.Args = appendArgs(cmd.Args, packageNames)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 	return cmd.Run(context.TODO())

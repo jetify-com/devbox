@@ -20,7 +20,7 @@ import (
 // flakePlan contains the data to populate the top level flake.nix file
 // that builds the devbox environment
 type flakePlan struct {
-	NixpkgsInfo *NixpkgsInfo
+	Stdenv      flake.Ref
 	Packages    []*devpkg.Package
 	FlakeInputs []flakeInput
 	System      string
@@ -44,21 +44,9 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 		return nil, err
 	}
 
-	flakeInputs := flakeInputs(ctx, packages)
-	nixpkgsInfo := getNixpkgsInfo(devbox.Config().NixPkgsCommitHash())
-
-	// This is an optimization. Try to reuse the nixpkgs info from the flake
-	// inputs to avoid introducing a new one.
-	for _, input := range flakeInputs {
-		if input.IsNixpkgs() {
-			nixpkgsInfo = getNixpkgsInfo(input.HashFromNixPkgsURL())
-			break
-		}
-	}
-
 	return &flakePlan{
-		FlakeInputs: flakeInputs,
-		NixpkgsInfo: nixpkgsInfo,
+		FlakeInputs: flakeInputs(ctx, packages),
+		Stdenv:      devbox.Lockfile().Stdenv(),
 		Packages:    packages,
 		System:      nix.System(),
 	}, nil
@@ -66,7 +54,7 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 
 func (f *flakePlan) needsGlibcPatch() bool {
 	for _, in := range f.FlakeInputs {
-		if in.URL == glibcPatchFlakeRef {
+		if in.Ref == glibcPatchFlakeRef {
 			return true
 		}
 	}
