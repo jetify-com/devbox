@@ -17,6 +17,7 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/cachehash"
 	"go.jetpack.io/devbox/internal/devbox/shellcmd"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 const (
@@ -53,7 +54,7 @@ type ConfigFile struct {
 	// https:// for remote files
 	// plugin: for built-in plugins
 	// This is a similar format to nix inputs
-	Include []string `json:"include,omitempty"`
+	Include []flake.Ref `json:"include,omitempty"`
 
 	ast *configAST
 }
