@@ -29,6 +29,8 @@ const (
 
 type (
 	Nix       = nix.Nix
+	Cmd       = nix.Cmd
+	Args      = nix.Args
 	Info      = nix.Info
 	Installer = nix.Installer
 )
@@ -36,6 +38,7 @@ type (
 var Default = nix.Default
 
 func AtLeast(version string) bool              { return nix.AtLeast(version) }
+func Command(args ...any) *Cmd                 { return nix.Command(args...) }
 func SourceProfile() (sourced bool, err error) { return nix.SourceProfile() }
 func System() string                           { return nix.System() }
 func Version() string                          { return nix.Version() }

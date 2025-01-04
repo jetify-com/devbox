@@ -12,7 +12,7 @@ import (
 )
 
 func ProfileUpgrade(ProfileDir, indexOrName string) error {
-	return command(
+	return Command(
 		"profile", "upgrade",
 		"--profile", ProfileDir,
 		indexOrName,
@@ -21,7 +21,7 @@ func ProfileUpgrade(ProfileDir, indexOrName string) error {
 
 func FlakeUpdate(ProfileDir string) error {
 	ux.Finfof(os.Stderr, "Running \"nix flake update\"\n")
-	cmd := command("flake", "update")
+	cmd := Command("flake", "update")
 	if nix.AtLeast(Version2_19) {
 		cmd.Args = append(cmd.Args, "--flake")
 	}
