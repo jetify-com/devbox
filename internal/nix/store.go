@@ -27,8 +27,9 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
+
 	// --impure for NIXPKGS_ALLOW_UNFREE
-	cmd := command("path-info", installable, "--json", "--impure")
+	cmd := command("path-info", FixInstallableArg(installable), "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {

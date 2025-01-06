@@ -18,6 +18,7 @@ import (
 	"go.jetpack.io/devbox/internal/nix"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetpack.io/devbox/nix/flake"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -29,7 +30,17 @@ import (
 // to update because it would be slow and wasteful.
 func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	if pkgtype.IsFlake(pkg) {
-		return nil, nil
+		installable, err := flake.ParseInstallable(pkg)
+		if err != nil {
+			return nil, fmt.Errorf("package %q: %v", pkg, err)
+		}
+		installable.Ref, err = lockFlake(context.TODO(), installable.Ref)
+		if err != nil {
+			return nil, err
+		}
+		return &Package{
+			Resolved: installable.String(),
+		}, nil
 	}
 
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
@@ -193,4 +204,25 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 		sysInfos[sysName] = sysInfo
 	}
 	return sysInfos, nil
+}
+
+func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
+	if ref.Locked() {
+		return ref, nil
+	}
+
+	// Nix requires a NAR hash for GitHub flakes to be locked. A Devbox lock
+	// file is a bit more lenient and only requires a revision so that we
+	// don't need to download the nixpkgs source for cached packages. If the
+	// search index is ever able to return the NAR hash then we can remove
+	// this check.
+	if ref.Type == flake.TypeGitHub && (ref.Rev != "") {
+		return ref, nil
+	}
+
+	meta, err := nix.ResolveFlake(ctx, ref)
+	if err != nil {
+		return ref, err
+	}
+	return meta.Locked, nil
 }

@@ -65,6 +65,9 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
+	if err := d.updateStdenv(); err != nil {
+		return err
+	}
 	if err := d.ensureStateIsUpToDate(ctx, update); err != nil {
 		return err
 	}
@@ -101,6 +104,15 @@ func (d *Devbox) inputsToUpdate(
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	return pkgsToUpdate, nil
+}
+
+func (d *Devbox) updateStdenv() error {
+	err := d.lockfile.Remove(d.Stdenv().String())
+	if err != nil {
+		return err
+	}
+	d.lockfile.Stdenv() // will re-resolve the stdenv flake
+	return nil
 }
 
 func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
