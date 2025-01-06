@@ -75,7 +75,7 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json")
+		cmd := Command("print-dev-env", "--json")
 		if featureflag.ImpurePrintDevEnv.Enabled() {
 			cmd.Args = append(cmd.Args, "--impure")
 		}

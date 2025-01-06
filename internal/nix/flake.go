@@ -16,7 +16,7 @@ type FlakeMetadata struct {
 }
 
 func ResolveFlake(ctx context.Context, ref flake.Ref) (FlakeMetadata, error) {
-	cmd := command("flake", "metadata", "--json", ref)
+	cmd := Command("flake", "metadata", "--json", ref)
 	out, err := cmd.Output(ctx)
 	if err != nil {
 		return FlakeMetadata{}, err

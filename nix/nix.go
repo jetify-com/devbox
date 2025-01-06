@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
@@ -21,6 +22,12 @@ import (
 
 // Default is the default Nix installation.
 var Default = &Nix{}
+
+// Command creates an arbitrary command using the Nix executable found in $PATH.
+// It's the same as calling [Nix.Command] on the default Nix installation.
+func Command(args ...any) *Cmd {
+	return Default.Command(args...)
+}
 
 // System calls [Nix.System] on the default Nix installation.
 func System() string {
@@ -48,9 +55,16 @@ type Nix struct {
 	Path     string
 	lookPath atomic.Pointer[string]
 
+	// ExtraArgs are command line arguments to pass to every Nix command.
+	ExtraArgs Args
+
 	info     Info
 	infoErr  error
 	infoOnce sync.Once
+
+	// Logger logs information at [slog.LevelDebug] about Nix command
+	// starts and exits. If nil, it defaults to [slog.Default].
+	Logger *slog.Logger
 }
 
 // resolvePath resolves the path to the Nix executable. It returns n.Path if it
@@ -92,13 +106,11 @@ func (n *Nix) resolvePath() (string, error) {
 	return "", pathErr
 }
 
-// command runs an arbitrary Nix command.
-func (n *Nix) command(ctx context.Context, args ...string) (*exec.Cmd, error) {
-	path, err := n.resolvePath()
-	if err != nil {
-		return nil, err
+func (n *Nix) logger() *slog.Logger {
+	if n.Logger == nil {
+		return slog.Default()
 	}
-	return exec.CommandContext(ctx, path, args...), nil
+	return n.Logger
 }
 
 // System returns the system from [Nix.Info] or an empty string if there was an
@@ -122,13 +134,13 @@ func (n *Nix) Info() (Info, error) {
 	// Create the command first, which will catch any errors finding the Nix
 	// executable outside of the once. This allows us to retry after
 	// installing Nix.
-	cmd, err := n.command(context.Background(), "--version", "--debug")
-	if err != nil {
-		return Info{}, err
+	cmd := n.Command("--version", "--debug")
+	if cmd.err != nil {
+		return Info{}, cmd.err
 	}
 
 	n.infoOnce.Do(func() {
-		out, err := cmd.Output()
+		out, err := cmd.Output(context.Background())
 		if err != nil {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) && len(exitErr.Stderr) != 0 {
