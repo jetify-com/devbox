@@ -345,6 +345,9 @@ func (d *Devbox) ListScripts() []string {
 		keys[i] = k
 		i++
 	}
+
+	slices.Sort(keys)
+
 	return keys
 }
 
