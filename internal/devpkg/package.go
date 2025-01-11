@@ -151,9 +151,13 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 		return pkg
 	}
 
-	// We currently don't lock flake references in devbox.lock, so there's
-	// nothing to resolve.
-	pkg.resolve = sync.OnceValue(func() error { return nil })
+	pkg.resolve = sync.OnceValue(func() error {
+		// Don't lock flakes that are local paths.
+		if parsed.Ref.Type == flake.TypePath {
+			return nil
+		}
+		return resolve(pkg)
+	})
 	pkg.setInstallable(parsed, locker.ProjectDir())
 	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
 	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchAuto)

@@ -38,7 +38,7 @@ func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
 	}
 
 	fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded.\n")
-	cmd := command(
+	cmd := Command(
 		"flake", "prefetch",
 		FlakeNixpkgs(commit),
 	)
@@ -72,7 +72,7 @@ func nixpkgsCommitFileContents() (map[string]string, error) {
 
 func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) error {
 	// Make a query to get the /nix/store path for this commit hash.
-	cmd := command("flake", "prefetch", "--json",
+	cmd := Command("flake", "prefetch", "--json",
 		FlakeNixpkgs(commit),
 	)
 	out, err := cmd.Output(context.TODO())

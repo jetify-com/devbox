@@ -28,6 +28,7 @@ import (
 	"go.jetpack.io/devbox/internal/setup"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetpack.io/devbox/nix/flake"
 	"go.jetpack.io/pkg/auth"
 
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
@@ -101,10 +102,17 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
 			return err
-		} else if _, err := nix.Search(d.lockfile.LegacyNixpkgsPath(pkg.Raw)); err != nil {
-			// This means it looked like a devbox package or attribute path, but we
-			// could not find it in search or in the legacy nixpkgs path.
-			return usererr.New("Package %s not found", pkg.Raw)
+		} else {
+			installable := flake.Installable{
+				Ref:      d.lockfile.Stdenv(),
+				AttrPath: pkg.Raw,
+			}
+			_, err := nix.Search(installable.String())
+			if err != nil {
+				// This means it looked like a devbox package or attribute path, but we
+				// could not find it in search or in the legacy nixpkgs path.
+				return usererr.New("Package %s not found", pkg.Raw)
+			}
 		}
 
 		ux.Finfof(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)

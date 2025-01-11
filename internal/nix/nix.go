@@ -75,7 +75,7 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json")
+		cmd := Command("print-dev-env", "--json")
 		if featureflag.ImpurePrintDevEnv.Enabled() {
 			cmd.Args = append(cmd.Args, "--impure")
 		}
@@ -258,4 +258,37 @@ func restartDaemon(ctx context.Context) error {
 	// TODO(gcurtis): poll for daemon to come back instead.
 	time.Sleep(2 * time.Second)
 	return nil
+}
+
+// FixInstallableArgs removes the narHash and lastModifiedDate query parameters
+// from any args that are valid installables and the Nix version is <2.25.
+// Otherwise it returns them unchanged.
+//
+// This fixes an issues with some older versions of Nix where specifying a
+// narHash without a lastModifiedDate results in an error.
+func FixInstallableArgs(args []string) {
+	if AtLeast(Version2_25) {
+		return
+	}
+
+	for i := range args {
+		parsed, _ := flake.ParseInstallable(args[i])
+		if parsed.Ref.NARHash == "" && parsed.Ref.LastModified == 0 {
+			continue
+		}
+		if parsed.Ref.NARHash != "" && parsed.Ref.LastModified != 0 {
+			continue
+		}
+
+		parsed.Ref.NARHash = ""
+		parsed.Ref.LastModified = 0
+		args[i] = parsed.String()
+	}
+}
+
+// fixInstallableArg calls fixInstallableArgs with a single argument.
+func FixInstallableArg(arg string) string {
+	args := []string{arg}
+	FixInstallableArgs(args)
+	return args[0]
 }
