@@ -57,6 +57,8 @@ Sometimes, you may want to share a plugin across multiple projects or users. In 
   ]
 ```
 
+Note that Devbox will cache Github plugins for 24 hours. This is to aid performance of `devbox shell` and similar commands, and avoids downloading the plugin from Github each time. In extenuating circumstances, you can bypass this cache by setting `export DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=<time>` , where time is a valid input to `time.ParseDuration` (see [doc](https://pkg.go.dev/time#ParseDuration)) such as "120s" or "2m".
+
 ## An Example of a Plugin: Nginx
 Let's take a look at the plugin for Nginx. To get started, let's initialize a new devbox project, and add the `nginx` package:
 
