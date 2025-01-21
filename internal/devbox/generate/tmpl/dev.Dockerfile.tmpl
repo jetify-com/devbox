@@ -21,7 +21,7 @@ COPY devbox.lock devbox.lock
 {{range $i, $element := .LocalFlakeDirs -}}
 COPY {{$element}} {{$element}}
 {{end}}
-RUN devbox run -- echo "Installed Packages."
+RUN devbox run -- echo "Installed Packages." && nix-store --gc && nix-store --optimise
 {{if .IsDevcontainer}}
 RUN devbox shellenv --init-hook >> ~/.profile
 {{- else}}
