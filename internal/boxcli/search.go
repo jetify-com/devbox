@@ -33,7 +33,7 @@ func searchCmd() *cobra.Command {
 			query := args[0]
 			name, version, isVersioned := searcher.ParseVersionedPackage(query)
 			if !isVersioned {
-				results, err := searcher.Client().Search(query)
+				results, err := searcher.Client().Search(cmd.Context(), query)
 				if err != nil {
 					return err
 				}
