@@ -25,7 +25,6 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/setup"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -51,36 +50,25 @@ type UpdateVersion struct {
 
 // Outdated returns a map of package names to their available latest version.
 func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error) {
-	ctx, task := trace.NewTask(ctx, "devboxOutdated")
-	defer task.End()
-
+	lockfile := d.Lockfile()
 	outdatedPackages := map[string]UpdateVersion{}
 
 	for _, pkg := range d.AllPackages() {
-		if strings.HasSuffix(pkg.Versioned(), "latest") {
+		// For non-devbox packages, like flakes or runx, we can skip for now
+		if !pkg.IsDevboxPackage {
 			continue
 		}
 
-		result, err := searcher.Client().Search(ctx, pkg.CanonicalName())
+		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to fetch resolved package")
+		}
+		existingLockPackage := lockfile.Packages[pkg.Raw]
+		if lockPackage.Version == existingLockPackage.Version {
+			continue
 		}
 
-		for _, p := range result.Packages {
-			if p.Name == pkg.CanonicalName() {
-				for _, v := range p.Versions {
-					vv, err := pkg.ResolvedVersion()
-					if err != nil {
-						return nil, err
-					}
-
-					if v.Version > vv {
-						outdatedPackages[p.Name] = UpdateVersion{Current: vv, Latest: v.Version}
-						break
-					}
-				}
-			}
-		}
+		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
 	}
 
 	return outdatedPackages, nil
