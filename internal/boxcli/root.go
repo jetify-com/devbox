@@ -66,6 +66,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(infoCmd())
 	command.AddCommand(initCmd())
 	command.AddCommand(installCmd())
+	command.AddCommand(outdatedCmd())
 	command.AddCommand(integrateCmd())
 	command.AddCommand(listCmd())
 	command.AddCommand(logCmd())

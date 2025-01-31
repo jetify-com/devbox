@@ -25,6 +25,7 @@ import (
 	"go.jetpack.io/devbox/internal/devpkg"
 	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
 	"go.jetpack.io/devbox/internal/lock"
+	"go.jetpack.io/devbox/internal/searcher"
 	"go.jetpack.io/devbox/internal/setup"
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
@@ -42,6 +43,48 @@ const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %
 
 // packages.go has functions for adding, removing and getting info about nix
 // packages
+
+type UpdateVersion struct {
+	Current string
+	Latest  string
+}
+
+// Outdated returns a map of package names to their available latest version.
+func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error) {
+	ctx, task := trace.NewTask(ctx, "devboxOutdated")
+	defer task.End()
+
+	outdatedPackages := map[string]UpdateVersion{}
+
+	for _, pkg := range d.AllPackages() {
+		if strings.HasSuffix(pkg.Versioned(), "latest") {
+			continue
+		}
+
+		result, err := searcher.Client().Search(ctx, pkg.CanonicalName())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, p := range result.Packages {
+			if p.Name == pkg.CanonicalName() {
+				for _, v := range p.Versions {
+					vv, err := pkg.ResolvedVersion()
+					if err != nil {
+						return nil, err
+					}
+
+					if v.Version > vv {
+						outdatedPackages[p.Name] = UpdateVersion{Current: vv, Latest: v.Version}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return outdatedPackages, nil
+}
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
