@@ -8,19 +8,7 @@
     "gopls": "latest",
   },
   "include": [
-    //{
-    //  "type":  "ssh",
-    //  "host":  "gitlab.com",
-    //  "owner": "astro-tec",
-    //  "repo":  "devbox-plugin-test",
-    //  "dir":   "plugin",
-    //},
-    //,
-    //{
-    //  "type": "path",
-    //  "path": "/home/bmarlowe/Development/bitbucket/devbox-plugin-test/plugin"
-    //}
-    //,
+    // examples:
     //{
     //  "type": "github",
     //  "owner": "jetify-com",
@@ -28,12 +16,12 @@
     //  "dir": "tmux"
     //}
     //,
-    {
-      "type": "github",
-      "owner": "jetify-com",
-      "repo": "devbox-plugins",
-      "dir": "mongodb"
-    }
+    //{
+    //  "type": "github",
+    //  "owner": "jetify-com",
+    //  "repo": "devbox-plugins",
+    //  "dir": "mongodb"
+    //}
     //,
     //{
     //  "type": "builtin",
