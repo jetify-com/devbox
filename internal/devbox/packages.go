@@ -43,6 +43,37 @@ const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %
 // packages.go has functions for adding, removing and getting info about nix
 // packages
 
+type UpdateVersion struct {
+	Current string
+	Latest  string
+}
+
+// Outdated returns a map of package names to their available latest version.
+func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error) {
+	lockfile := d.Lockfile()
+	outdatedPackages := map[string]UpdateVersion{}
+
+	for _, pkg := range d.AllPackages() {
+		// For non-devbox packages, like flakes or runx, we can skip for now
+		if !pkg.IsDevboxPackage {
+			continue
+		}
+
+		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to fetch resolved package")
+		}
+		existingLockPackage := lockfile.Packages[pkg.Raw]
+		if lockPackage.Version == existingLockPackage.Version {
+			continue
+		}
+
+		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
+	}
+
+	return outdatedPackages, nil
+}
+
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
 func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpts) error {
