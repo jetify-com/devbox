@@ -54,7 +54,7 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 	outdatedPackages := map[string]UpdateVersion{}
 
 	for _, pkg := range d.AllPackages() {
-		// For non-devbox packages, like flakes or runx, we can skip for now
+		// For non-devbox packages, like flakes, we can skip for now
 		if !pkg.IsDevboxPackage {
 			continue
 		}
