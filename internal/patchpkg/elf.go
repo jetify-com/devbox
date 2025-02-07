@@ -182,14 +182,14 @@ func (lib SharedLibrary) CopyAndLink(dir string) error {
 		return err
 	}
 
-	sonameLink := filepath.Join(dir, lib.Soname)
+	sonameLink := filepath.Join(dir, filepath.Base(lib.Soname))
 	var sonameErr error
 	if lib.Soname != "" {
 		// Symlink must be relative.
 		sonameErr = os.Symlink(filepath.Base(lib.RealName), sonameLink)
 	}
 
-	linkerNameLink := filepath.Join(dir, lib.LinkerName)
+	linkerNameLink := filepath.Join(dir, filepath.Base(lib.LinkerName))
 	var linkerNameErr error
 	if lib.LinkerName != "" {
 		// Symlink must be relative.
@@ -209,9 +209,9 @@ func (lib SharedLibrary) CopyAndLink(dir string) error {
 
 func (lib SharedLibrary) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.String("lib.path", lib.Name()),
-		slog.String("lib.linkername", lib.LinkerName),
-		slog.String("lib.soname", lib.Soname),
-		slog.String("lib.realname", lib.RealName),
+		slog.String("path", lib.Name()),
+		slog.String("linkername", lib.LinkerName),
+		slog.String("soname", lib.Soname),
+		slog.String("realname", lib.RealName),
 	)
 }
