@@ -58,6 +58,7 @@ type AddOpts struct {
 
 type UpdateOpts struct {
 	Pkgs                  []string
+	NoInstall             bool
 	IgnoreMissingPackages bool
 }
 
