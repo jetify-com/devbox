@@ -73,10 +73,8 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
 	}
 
-	if len(warnings) > 0 {
-		for _, warning := range warnings {
-			fmt.Fprintf(d.stderr, "%s\n", warning)
-		}
+	for _, warning := range warnings {
+		fmt.Fprintf(d.stderr, "%s\n", warning)
 	}
 
 	return outdatedPackages, nil
