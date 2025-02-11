@@ -52,6 +52,7 @@ type UpdateVersion struct {
 func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error) {
 	lockfile := d.Lockfile()
 	outdatedPackages := map[string]UpdateVersion{}
+	var warnings []string
 
 	for _, pkg := range d.AllPackages() {
 		// For non-devbox packages, like flakes, we can skip for now
@@ -61,7 +62,8 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 
 		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to fetch resolved package")
+			warnings = append(warnings, fmt.Sprintf("Note: unable to check updates for %s", pkg.CanonicalName()))
+			continue
 		}
 		existingLockPackage := lockfile.Packages[pkg.Raw]
 		if lockPackage.Version == existingLockPackage.Version {
@@ -69,6 +71,12 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 		}
 
 		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
+	}
+
+	if len(warnings) > 0 {
+		for _, warning := range warnings {
+			fmt.Fprintf(d.stderr, "%s\n", warning)
+		}
 	}
 
 	return outdatedPackages, nil
