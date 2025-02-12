@@ -28,6 +28,10 @@ func (d *PythonDetector) Packages(ctx context.Context) ([]string, error) {
 	return []string{"python@latest"}, nil
 }
 
+func (d *PythonDetector) Env(ctx context.Context) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
 func (d *PythonDetector) maxRelevance() float64 {
 	return 1.0
 }

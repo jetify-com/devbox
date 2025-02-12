@@ -19,7 +19,7 @@ import (
 )
 
 func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, error) {
-	cmd := command("profile", "list", "--profile", profilePath)
+	cmd := Command("profile", "list", "--profile", profilePath)
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
@@ -41,7 +41,7 @@ var ErrPriorityConflict = errors.New("priority conflict")
 func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 	defer debug.FunctionTimer().End()
 
-	cmd := command(
+	cmd := Command(
 		"profile", "install",
 		"--profile", args.ProfilePath,
 		"--offline", // makes it faster. Package is already in store
@@ -52,6 +52,7 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 		"--priority", nextPriority(args.ProfilePath),
 	)
 
+	FixInstallableArgs(args.Installables)
 	cmd.Args = appendArgs(cmd.Args, args.Installables)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
@@ -70,11 +71,13 @@ func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
 // WARNING, don't use indexes, they are not supported by nix 2.20+
 func ProfileRemove(profilePath string, packageNames ...string) error {
 	defer debug.FunctionTimer().End()
-	cmd := command(
+	cmd := Command(
 		"profile", "remove",
 		"--profile", profilePath,
 		"--impure", // for NIXPKGS_ALLOW_UNFREE
 	)
+
+	FixInstallableArgs(packageNames)
 	cmd.Args = appendArgs(cmd.Args, packageNames)
 	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 	return cmd.Run(context.TODO())

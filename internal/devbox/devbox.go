@@ -46,6 +46,7 @@ import (
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 const (
@@ -115,7 +116,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		cfg:                      cfg,
 		env:                      opts.Env,
 		environment:              environment,
-		nix:                      &nix.Nix{},
+		nix:                      &nix.NixInstance{},
 		projectDir:               filepath.Dir(cfg.Root.AbsRootPath),
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,
@@ -202,8 +203,14 @@ func (d *Devbox) ConfigHash() (string, error) {
 	return cachehash.Bytes(buf.Bytes()), nil
 }
 
-func (d *Devbox) NixPkgsCommitHash() string {
-	return d.cfg.NixPkgsCommitHash()
+func (d *Devbox) Stdenv() flake.Ref {
+	return flake.Ref{
+		Type:  flake.TypeGitHub,
+		Owner: "NixOS",
+		Repo:  "nixpkgs",
+		Ref:   "nixpkgs-unstable",
+		Rev:   d.cfg.NixPkgsCommitHash(),
+	}
 }
 
 func (d *Devbox) Generate(ctx context.Context) error {
@@ -338,6 +345,9 @@ func (d *Devbox) ListScripts() []string {
 		keys[i] = k
 		i++
 	}
+
+	slices.Sort(keys)
+
 	return keys
 }
 
@@ -351,22 +361,7 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	var envs map[string]string
 	var err error
 
-	if opts.DontRecomputeEnvironment {
-		upToDate, _ := d.lockfile.IsUpToDateAndInstalled(isFishShell())
-		if !upToDate {
-			ux.FHidableWarning(
-				ctx,
-				d.stderr,
-				StateOutOfDateMessage,
-				d.refreshAliasOrCommand(),
-			)
-		}
-
-		envs, err = d.computeEnv(ctx, true /*usePrintDevEnvCache*/, opts.EnvOptions)
-	} else {
-		envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, opts.EnvOptions)
-	}
-
+	envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, opts.EnvOptions)
 	if err != nil {
 		return "", err
 	}
@@ -819,23 +814,35 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	// When ensureStateIsUpToDate is called with ensure=true, it always
-	// returns early if the lockfile is up to date. So we don't need to check here
-	if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {
-		if !fileutil.Exists(d.nixPrintDevEnvCachePath()) {
-			ux.Ferrorf(
+	upToDate, err := d.lockfile.IsUpToDateAndInstalled(isFishShell())
+	if err != nil {
+		return nil, err
+	}
+	if !upToDate {
+		if envOpts.Hooks.OnStaleState != nil {
+			envOpts.Hooks.OnStaleState()
+		}
+	}
+
+	if !envOpts.SkipRecompute {
+		// When ensureStateIsUpToDate is called with ensure=true, it always
+		// returns early if the lockfile is up to date. So we don't need to check here
+		if err := d.ensureStateIsUpToDate(ctx, ensure); isConnectionError(err) {
+			if !fileutil.Exists(d.nixPrintDevEnvCachePath()) {
+				ux.Ferrorf(
+					d.stderr,
+					"Error connecting to the internet and no cached environment found. Aborting.\n",
+				)
+				return nil, err
+			}
+			ux.Fwarningf(
 				d.stderr,
-				"Error connecting to the internet and no cached environment found. Aborting.\n",
+				"Error connecting to the internet. Will attempt to use cached environment.\n",
 			)
+		} else if err != nil {
+			// Some other non connection error, just return it.
 			return nil, err
 		}
-		ux.Fwarningf(
-			d.stderr,
-			"Error connecting to the internet. Will attempt to use cached environment.\n",
-		)
-	} else if err != nil {
-		// Some other non connection error, just return it.
-		return nil, err
 	}
 
 	// Since ensureStateIsUpToDate calls computeEnv when not up do date,

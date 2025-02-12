@@ -19,7 +19,7 @@ var (
 	ErrPackageNotInstalled = errors.New("package not installed")
 )
 
-type Info struct {
+type PkgInfo struct {
 	// attribute key is different in flakes vs legacy so we should only use it
 	// if we know exactly which version we are using
 	AttributeKey string `json:"attribute"`
@@ -28,28 +28,28 @@ type Info struct {
 	Version      string `json:"version"`
 }
 
-func (i *Info) String() string {
+func (i *PkgInfo) String() string {
 	return fmt.Sprintf("%s-%s", i.PName, i.Version)
 }
 
-func Search(url string) (map[string]*Info, error) {
+func Search(url string) (map[string]*PkgInfo, error) {
 	if strings.HasPrefix(url, "runx:") {
 		// TODO implement runx search. Also, move this check outside this function: nix package
 		// should not be handling runx logic.
-		return map[string]*Info{}, nil
+		return map[string]*PkgInfo{}, nil
 	}
 	return searchSystem(url, "" /* system */)
 }
 
-func parseSearchResults(data []byte) map[string]*Info {
+func parseSearchResults(data []byte) map[string]*PkgInfo {
 	var results map[string]map[string]any
 	err := json.Unmarshal(data, &results)
 	if err != nil {
 		panic(err)
 	}
-	infos := map[string]*Info{}
+	infos := map[string]*PkgInfo{}
 	for key, result := range results {
-		infos[key] = &Info{
+		infos[key] = &PkgInfo{
 			AttributeKey: key,
 			PName:        result["pname"].(string),
 			Version:      result["version"].(string),
@@ -85,7 +85,7 @@ func PkgExistsForAnySystem(pkg string) bool {
 	return false
 }
 
-func searchSystem(url, system string) (map[string]*Info, error) {
+func searchSystem(url, system string) (map[string]*PkgInfo, error) {
 	// Eventually we may pass a writer here, but for now it is safe to use stderr
 	writer := os.Stderr
 	// Search will download nixpkgs if it's not already downloaded. Adding this
@@ -98,7 +98,7 @@ func searchSystem(url, system string) (map[string]*Info, error) {
 	}
 
 	// The `^` is added to indicate we want to show all packages
-	cmd := command("search", url, "^" /*regex*/, "--json")
+	cmd := Command("search", url, "^" /*regex*/, "--json")
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}
@@ -125,7 +125,7 @@ var allowableQuery = regexp.MustCompile("^github:NixOS/nixpkgs/[0-9a-f]{40}#[^#]
 // queries of the form `nixpkgs/<commit-hash>#attribute`, we can know for sure that
 // once `nix search` returns a valid result, it will always be the very same result.
 // Hence we can cache it locally and answer future queries fast, by not calling `nix search`.
-func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
+func SearchNixpkgsAttribute(query string) (map[string]*PkgInfo, error) {
 	if !allowableQuery.MatchString(query) {
 		return nil, errors.Errorf("invalid query: %s, must match regex: %s", query, allowableQuery)
 	}
@@ -135,7 +135,7 @@ func SearchNixpkgsAttribute(query string) (map[string]*Info, error) {
 	// Check if the query was already cached, and return the result if so
 	cache := filecache.New(
 		"devbox/nix",
-		filecache.WithCacheDir[map[string]*Info](xdg.CacheSubpath("")),
+		filecache.WithCacheDir[map[string]*PkgInfo](xdg.CacheSubpath("")),
 	)
 
 	if results, err := cache.Get(key); err == nil {

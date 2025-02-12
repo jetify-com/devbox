@@ -45,6 +45,8 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 		"git", "clone", parsedRepoURL,
 		// Clone and checkout a specific ref
 		"-b", lo.Ternary(build.IsDev, "main", build.Version),
+		// Create shallow clone with depth of 1
+		"--depth", "1",
 		tmp,
 	)
 	fmt.Fprintf(w, "%s\n", cmd)

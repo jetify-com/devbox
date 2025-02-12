@@ -16,7 +16,6 @@ import (
 	"runtime"
 	"runtime/trace"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -24,7 +23,6 @@ import (
 	"go.jetpack.io/devbox/internal/boxcli/usererr"
 	"go.jetpack.io/devbox/internal/redact"
 	"go.jetpack.io/devbox/nix/flake"
-	"golang.org/x/mod/semver"
 
 	"go.jetpack.io/devbox/internal/debug"
 )
@@ -51,7 +49,7 @@ type PrintDevEnvArgs struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
+func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
 	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
@@ -77,7 +75,7 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
-		cmd := command("print-dev-env", "--json")
+		cmd := Command("print-dev-env", "--json")
 		if featureflag.ImpurePrintDevEnv.Enabled() {
 			cmd.Args = append(cmd.Args, "--impure")
 		}
@@ -128,224 +126,8 @@ func ExperimentalFlags() []string {
 	}
 }
 
-func System() string {
-	if cachedSystem == "" {
-		// While this should have been initialized, we do a best-effort to avoid
-		// a panic.
-		if err := ComputeSystem(); err != nil {
-			panic(fmt.Sprintf(
-				"System called before being initialized by ComputeSystem: %v",
-				err,
-			))
-		}
-	}
-	return cachedSystem
-}
-
-var cachedSystem string
-
-func ComputeSystem() error {
-	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
-	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
-	// and flake.nix files.
-	// This is also used by unit tests.
-	if cachedSystem != "" {
-		return nil
-	}
-	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
-	if override != "" {
-		cachedSystem = override
-	} else {
-		cmd := command("eval", "--impure", "--raw", "--expr", "builtins.currentSystem")
-		out, err := cmd.Output(context.TODO())
-		if err != nil {
-			return err
-		}
-		cachedSystem = string(out)
-	}
-	return nil
-}
-
 func SystemIsLinux() bool {
 	return strings.Contains(System(), "linux")
-}
-
-// All major Nix versions supported by Devbox.
-const (
-	Version2_12 = "2.12.0"
-	Version2_13 = "2.13.0"
-	Version2_14 = "2.14.0"
-	Version2_15 = "2.15.0"
-	Version2_16 = "2.16.0"
-	Version2_17 = "2.17.0"
-	Version2_18 = "2.18.0"
-	Version2_19 = "2.19.0"
-	Version2_20 = "2.20.0"
-	Version2_21 = "2.21.0"
-	Version2_22 = "2.22.0"
-
-	MinVersion = Version2_12
-)
-
-// versionRegexp matches the first line of "nix --version" output.
-//
-// The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
-// It's been modified to tolerate Nix prerelease versions, which don't have a
-// hyphen before the prerelease component and contain underscores.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
-
-// preReleaseRegexp matches Nix prerelease version strings, which are not valid
-// semvers.
-var preReleaseRegexp = regexp.MustCompile(`pre(?P<date>[0-9]+)_(?P<commit>[a-f0-9]{4,40})$`)
-
-// VersionInfo contains information about a Nix installation.
-type VersionInfo struct {
-	// Name is the executed program name (the first element of argv).
-	Name string
-
-	// Version is the semantic Nix version string.
-	Version string
-
-	// System is the current Nix system. It follows the pattern <arch>-<os>
-	// and does not use the same values as GOOS or GOARCH.
-	System string
-
-	// ExtraSystems are other systems that the current machine supports.
-	// Usually set by the extra-platforms setting in nix.conf.
-	ExtraSystems []string
-
-	// Features are the capabilities that the Nix binary was compiled with.
-	Features []string
-
-	// SystemConfig is the path to the Nix system configuration file,
-	// usually /etc/nix/nix.conf.
-	SystemConfig string
-
-	// UserConfigs is a list of paths to the user's Nix configuration files.
-	UserConfigs []string
-
-	// StoreDir is the path to the Nix store directory, usually /nix/store.
-	StoreDir string
-
-	// StateDir is the path to the Nix state directory, usually
-	// /nix/var/nix.
-	StateDir string
-
-	// DataDir is the path to the Nix data directory, usually somewhere
-	// within the Nix store. This field is empty for Nix versions <= 2.12.
-	DataDir string
-}
-
-func parseVersionInfo(data []byte) (VersionInfo, error) {
-	// Example nix --version --debug output from Nix versions 2.12 to 2.21.
-	// Version 2.12 omits the data directory, but they're otherwise
-	// identical.
-	//
-	// See https://github.com/NixOS/nix/blob/5b9cb8b3722b85191ee8cce8f0993170e0fc234c/src/libmain/shared.cc#L284-L305
-	//
-	// nix (Nix) 2.21.2
-	// System type: aarch64-darwin
-	// Additional system types: x86_64-darwin
-	// Features: gc, signed-caches
-	// System configuration file: /etc/nix/nix.conf
-	// User configuration files: /Users/nobody/.config/nix/nix.conf:/etc/xdg/nix/nix.conf
-	// Store directory: /nix/store
-	// State directory: /nix/var/nix
-	// Data directory: /nix/store/m0ns07v8by0458yp6k30rfq1rs3kaz6g-nix-2.21.2/share
-
-	info := VersionInfo{}
-	if len(data) == 0 {
-		return info, redact.Errorf("empty nix --version output")
-	}
-
-	lines := strings.Split(string(data), "\n")
-	matches := versionRegexp.FindStringSubmatch(lines[0])
-	if len(matches) < 3 {
-		return info, redact.Errorf("parse nix version: %s", redact.Safe(lines[0]))
-	}
-	info.Name = matches[1]
-	info.Version = matches[2]
-	for _, line := range lines {
-		name, value, found := strings.Cut(line, ": ")
-		if !found {
-			continue
-		}
-
-		switch name {
-		case "System type":
-			info.System = value
-		case "Additional system types":
-			info.ExtraSystems = strings.Split(value, ", ")
-		case "Features":
-			info.Features = strings.Split(value, ", ")
-		case "System configuration file":
-			info.SystemConfig = value
-		case "User configuration files":
-			info.UserConfigs = strings.Split(value, ":")
-		case "Store directory":
-			info.StoreDir = value
-		case "State directory":
-			info.StateDir = value
-		case "Data directory":
-			info.DataDir = value
-		}
-	}
-	return info, nil
-}
-
-// AtLeast returns true if v.Version is >= version per semantic versioning. It
-// always returns false if v.Version is empty or invalid, such as when the
-// current Nix version cannot be parsed. It panics if version is an invalid
-// semver.
-func (v VersionInfo) AtLeast(version string) bool {
-	if !strings.HasPrefix(version, "v") {
-		version = "v" + version
-	}
-	if !semver.IsValid(version) {
-		panic(fmt.Sprintf("nix.atLeast: invalid version %q", version[1:]))
-	}
-	if semver.IsValid("v" + v.Version) {
-		return semver.Compare("v"+v.Version, version) >= 0
-	}
-
-	// If the version isn't a valid semver, check to see if it's a
-	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
-	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
-	prerelease := preReleaseRegexp.ReplaceAllString(v.Version, "-pre.$date+$commit")
-	return semver.Compare("v"+prerelease, version) >= 0
-}
-
-// version is the cached output of `nix --version --debug`.
-var versionInfo = sync.OnceValues(runNixVersion)
-
-func runNixVersion() (VersionInfo, error) {
-	// Arbitrary timeout to make sure we don't take too long or hang.
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	// Intentionally don't use the nix.command function here. We use this to
-	// perform Nix version checks and don't want to pass any extra-features
-	// or flags that might be missing from old versions.
-	cmd := exec.CommandContext(ctx, "nix", "--version", "--debug")
-	out, err := cmd.Output()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && len(exitErr.Stderr) != 0 {
-			return VersionInfo{}, redact.Errorf("nix command: %s: %q: %v", redact.Safe(cmd), exitErr.Stderr, err)
-		}
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return VersionInfo{}, redact.Errorf("nix command: %s: timed out while reading output: %v", redact.Safe(cmd), err)
-		}
-		return VersionInfo{}, redact.Errorf("nix command: %s: %v", redact.Safe(cmd), err)
-	}
-
-	slog.Debug("nix --version --debug output", "out", out)
-	return parseVersionInfo(out)
-}
-
-// Version returns the currently installed version of Nix.
-func Version() (VersionInfo, error) {
-	return versionInfo()
 }
 
 var nixPlatforms = []string{
@@ -476,4 +258,37 @@ func restartDaemon(ctx context.Context) error {
 	// TODO(gcurtis): poll for daemon to come back instead.
 	time.Sleep(2 * time.Second)
 	return nil
+}
+
+// FixInstallableArgs removes the narHash and lastModifiedDate query parameters
+// from any args that are valid installables and the Nix version is <2.25.
+// Otherwise it returns them unchanged.
+//
+// This fixes an issues with some older versions of Nix where specifying a
+// narHash without a lastModifiedDate results in an error.
+func FixInstallableArgs(args []string) {
+	if AtLeast(Version2_25) {
+		return
+	}
+
+	for i := range args {
+		parsed, _ := flake.ParseInstallable(args[i])
+		if parsed.Ref.NARHash == "" && parsed.Ref.LastModified == 0 {
+			continue
+		}
+		if parsed.Ref.NARHash != "" && parsed.Ref.LastModified != 0 {
+			continue
+		}
+
+		parsed.Ref.NARHash = ""
+		parsed.Ref.LastModified = 0
+		args[i] = parsed.String()
+	}
+}
+
+// fixInstallableArg calls fixInstallableArgs with a single argument.
+func FixInstallableArg(arg string) string {
+	args := []string{arg}
+	FixInstallableArgs(args)
+	return args[0]
 }

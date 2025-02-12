@@ -12,11 +12,12 @@ import (
 
 	"go.jetpack.io/devbox/internal/debug"
 	"go.jetpack.io/devbox/internal/redact"
+	"go.jetpack.io/devbox/nix"
 	"golang.org/x/exp/maps"
 )
 
 func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string, error) {
-	cmd := command("store", "path-from-hash-part", "--store", storeAddr, hash)
+	cmd := Command("store", "path-from-hash-part", "--store", storeAddr, hash)
 	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
 		return "", err
@@ -26,8 +27,9 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
+
 	// --impure for NIXPKGS_ALLOW_UNFREE
-	cmd := command("path-info", installable, "--json", "--impure")
+	cmd := Command("path-info", FixInstallableArg(installable), "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {
@@ -54,7 +56,7 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 	if len(storePaths) == 0 {
 		return map[string]bool{}, nil
 	}
-	cmd := command("path-info", "--offline", "--json")
+	cmd := Command("path-info", "--offline", "--json")
 	cmd.Args = appendArgs(cmd.Args, storePaths)
 	output, err := cmd.Output(ctx)
 	if err != nil {
@@ -128,19 +130,15 @@ func (e *DaemonError) Redact() string {
 
 // DaemonVersion returns the version of the currently running Nix daemon.
 func DaemonVersion(ctx context.Context) (string, error) {
-	// We only need the version to decide which CLI flags to use. We can
-	// ignore the error because an empty version assumes nix.MinVersion.
-	cliVersion, _ := Version()
-
 	storeCmd := "ping"
-	if cliVersion.AtLeast(Version2_19) {
+	if nix.AtLeast(nix.Version2_19) {
 		// "nix store ping" is deprecated as of 2.19 in favor of
 		// "nix store info".
 		storeCmd = "info"
 	}
-	canJSON := cliVersion.AtLeast(Version2_14)
+	canJSON := nix.AtLeast(nix.Version2_14)
 
-	cmd := command("store", storeCmd, "--store", "daemon")
+	cmd := Command("store", storeCmd, "--store", "daemon")
 	if canJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}

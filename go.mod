@@ -14,14 +14,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.11
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/briandowns/spinner v1.23.0
-	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/cloudflare/ahocorasick v0.0.0-20210425175752-730270c3e184
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/f1bonacc1/process-compose v1.6.1
 	github.com/fatih/color v1.17.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/getsentry/sentry-go v0.28.0
-	github.com/go-jose/go-jose/v4 v4.0.2
+	github.com/go-jose/go-jose/v4 v4.0.4
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-envparse v0.1.0
@@ -46,9 +44,8 @@ require (
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 	golang.org/x/mod v0.18.0
 	golang.org/x/oauth2 v0.21.0
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.10.0
 	golang.org/x/tools v0.22.0
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -78,6 +75,7 @@ require (
 	github.com/bodgit/sevenzip v1.5.1 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/cavaliergopher/grab/v3 v3.0.1 // indirect
 	github.com/charmbracelet/lipgloss v0.11.0 // indirect
 	github.com/charmbracelet/x/ansi v0.1.2 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
@@ -130,9 +128,9 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 )

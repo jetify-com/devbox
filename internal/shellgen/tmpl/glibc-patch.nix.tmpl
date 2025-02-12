@@ -94,7 +94,7 @@
         gcc = if isLinux then nixpkgs-glibc.legacyPackages."${system}".stdenv.cc.cc.lib else null;
 
         DEVBOX_DEBUG = 1;
-
+	src = self;
         builder = "${devbox.packages.${system}.default}/bin/devbox";
         args = [ "patch" "--restore-refs" ] ++
           (if glibc != null then [ "--glibc" "${glibc}" ] else [ ]) ++

@@ -139,6 +139,15 @@
         },
         "env_from": {
             "type": "string"
+        },
+        "nixpkgs": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "type": "string",
+                    "description": "The commit hash of the nixpkgs repository to use"
+                }
+            }
         }
     },
     "additionalProperties": false

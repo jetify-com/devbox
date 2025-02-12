@@ -27,9 +27,10 @@ type BuiltIn struct{}
 var builtInMap = map[*regexp.Regexp]string{
 	regexp.MustCompile(`^(apache|apacheHttpd)$`):                       "apacheHttpd",
 	regexp.MustCompile(`^(gradle|gradle_[0-9])$`):                      "gradle",
+	regexp.MustCompile(`^elixir_?([0-9_]*[0-9]+)?$`):                   "elixir",
 	regexp.MustCompile(`^(ghc|haskell\.compiler\.(.*))$`):              "haskell",
-	regexp.MustCompile(`^mariadb(-embedded)?_?[0-9]*$`):                "mariadb",
-	regexp.MustCompile(`^mysql?[0-9]*$`):                               "mysql",
+	regexp.MustCompile(`(^mariadb(-embedded)?_?[0-9]*$|^mysql$)`):      "mariadb",
+	regexp.MustCompile(`^mysql(80|57|50)$`):                            "mysql",
 	regexp.MustCompile(`^nodejs(-slim)?_?[0-9]*$`):                     "nodejs",
 	regexp.MustCompile(`^php[0-9]*$`):                                  "php",
 	regexp.MustCompile(`^python3[0-9]*Packages.pip$`):                  "pip",

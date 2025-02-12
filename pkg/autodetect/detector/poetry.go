@@ -58,6 +58,10 @@ func (d *PoetryDetector) Packages(ctx context.Context) ([]string, error) {
 	return []string{"python@" + pythonVersion, "poetry@" + poetryVersion}, nil
 }
 
+func (d *PoetryDetector) Env(ctx context.Context) (map[string]string, error) {
+	return d.PythonDetector.Env(ctx)
+}
+
 func determineBestVersion(ctx context.Context, pkg, version string) string {
 	if version == "" {
 		return "latest"

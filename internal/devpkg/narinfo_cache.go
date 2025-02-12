@@ -73,14 +73,6 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 		return nil
 	}
 
-	// Pre-compute values read in fillNarInfoCache
-	// so they can be read from multiple go-routines without locks
-	_, err := nix.Version()
-	if err != nil {
-		return err
-	}
-	_ = nix.System()
-
 	group, _ := errgroup.WithContext(ctx)
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
@@ -240,14 +232,9 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 		return nil, nil
 	}
 
-	version, err := nix.Version()
-	if err != nil {
-		return nil, err
-	}
-
 	// disable for nix < 2.17
-	if !version.AtLeast(nix.Version2_17) {
-		return nil, err
+	if !nix.AtLeast(nix.Version2_17) {
+		return nil, nil
 	}
 
 	entry, err := p.lockfile.Resolve(p.Raw)
@@ -255,14 +242,12 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 		return nil, err
 	}
 
-	userSystem := nix.System()
-
 	if entry.Systems == nil {
 		return nil, nil
 	}
 
 	// Check if the user's system's info is present in the lockfile
-	sysInfo, ok := entry.Systems[userSystem]
+	sysInfo, ok := entry.Systems[nix.System()]
 	if !ok {
 		return nil, nil
 	}

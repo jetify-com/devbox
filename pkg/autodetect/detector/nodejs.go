@@ -41,6 +41,10 @@ func (d *NodeJSDetector) Packages(ctx context.Context) ([]string, error) {
 	return []string{"nodejs@" + d.nodeVersion(ctx)}, nil
 }
 
+func (d *NodeJSDetector) Env(ctx context.Context) (map[string]string, error) {
+	return map[string]string{"DEVBOX_COREPACK_ENABLED": "1"}, nil
+}
+
 func (d *NodeJSDetector) nodeVersion(ctx context.Context) string {
 	if d.packageJSON == nil || d.packageJSON.Engines.Node == "" {
 		return "latest" // Default to latest if not specified

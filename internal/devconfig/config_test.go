@@ -327,3 +327,103 @@ func TestDefault(t *testing.T) {
 		t.Errorf("got different JSON after load/save/load:\ninput:\n%s\noutput:\n%s", inBytes, outBytes)
 	}
 }
+
+func TestOSExpandIfPossible(t *testing.T) {
+	tests := []struct {
+		name        string
+		env         map[string]string
+		existingEnv map[string]string
+		want        map[string]string
+	}{
+		{
+			name: "basic expansion",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+				"QUX": "qux_value",
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+				"BAZ": "qux_value",
+			},
+		},
+		{
+			name: "missing values remain as template",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+				// QUX is missing
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+				"BAZ": "${QUX}",
+			},
+		},
+		{
+			name: "nil existing env",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: nil,
+			want: map[string]string{
+				"FOO": "${BAR}",
+				"BAZ": "${QUX}",
+			},
+		},
+		{
+			name: "empty existing env",
+			env: map[string]string{
+				"FOO": "$BAR",
+			},
+			existingEnv: map[string]string{},
+			want: map[string]string{
+				"FOO": "${BAR}",
+			},
+		},
+		{
+			name: "mixed literal and variable",
+			env: map[string]string{
+				"FOO": "prefix_${BAR}_suffix",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+			},
+			want: map[string]string{
+				"FOO": "prefix_bar_value_suffix",
+			},
+		},
+		{
+			name: "path special case",
+			env: map[string]string{
+				"FOO": "/my/config:$FOO",
+			},
+			existingEnv: map[string]string{
+				"FOO": "/my/plugin:$FOO",
+			},
+			want: map[string]string{
+				"FOO": "/my/config:/my/plugin:$FOO",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := OSExpandIfPossible(tt.env, tt.existingEnv)
+			if len(got) != len(tt.want) {
+				t.Errorf("OSExpandIfPossible() got %v entries, want %v entries", len(got), len(tt.want))
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Errorf("OSExpandIfPossible() for key %q = %q, want %q", k, got[k], v)
+				}
+			}
+		})
+	}
+}

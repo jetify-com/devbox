@@ -7,6 +7,9 @@
     "zlib@latest",
     "hpack@latest"
   ],
+  "env": {
+    "PATH": "$PATH:/usr/bin"
+  },
   "shell": {
     "init_hook": null,
     "scripts": {

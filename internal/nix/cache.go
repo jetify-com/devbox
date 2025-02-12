@@ -18,7 +18,7 @@ func CopyInstallableToCache(
 	env []string,
 ) error {
 	fmt.Fprintf(out, "Copying %s to %s\n", installable, to)
-	cmd := command(
+	cmd := Command(
 		"copy", "--to", to,
 		// --impure makes NIXPKGS_ALLOW_* environment variables work.
 		"--impure",
