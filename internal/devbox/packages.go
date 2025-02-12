@@ -281,8 +281,9 @@ const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
 	// update is both install new package version and uninstall old package version
-	update installMode = "update"
-	ensure installMode = "ensure"
+	update    installMode = "update"
+	ensure    installMode = "ensure"
+	noInstall installMode = "noInstall"
 )
 
 // ensureStateIsUpToDate ensures the Devbox project state is up to date.

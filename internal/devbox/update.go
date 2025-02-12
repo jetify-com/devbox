@@ -68,7 +68,11 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	if err := d.updateStdenv(); err != nil {
 		return err
 	}
-	if err := d.ensureStateIsUpToDate(ctx, update); err != nil {
+	mode := update
+	if opts.NoInstall {
+		mode = noInstall
+	}
+	if err := d.ensureStateIsUpToDate(ctx, mode); err != nil {
 		return err
 	}
 
