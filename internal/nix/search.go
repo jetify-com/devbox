@@ -98,7 +98,7 @@ func searchSystem(url, system string) (map[string]*PkgInfo, error) {
 	}
 
 	// The `^` is added to indicate we want to show all packages
-	cmd := command("search", url, "^" /*regex*/, "--json")
+	cmd := Command("search", url, "^" /*regex*/, "--json")
 	if system != "" {
 		cmd.Args = append(cmd.Args, "--system", system)
 	}

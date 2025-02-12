@@ -13,7 +13,8 @@
     "{{ .Virtenv }}/run": "",
     "{{ .Virtenv }}/flake/flake.nix": "mariadb/flake.nix",
     "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh",
-    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml"
+    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml",
+    "{{ .DevboxDir }}/my.cnf": "mariadb/my.cnf"
   },
   "packages": {
     "path:{{ .Virtenv }}/flake": {},

@@ -327,11 +327,15 @@ func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error 
 		return fmt.Errorf("patch flake didn't set $src to the path to its source tree")
 	}
 
-	glob, err := fs.Glob(d.src, "lib/libcuda.so*")
+	pattern := "lib/libcuda.so*"
+	slog.DebugContext(ctx, "looking for system CUDA libraries in flake", "glob", filepath.Join(d.src.storePath, "lib/libcuda.so*"))
+	glob, err := fs.Glob(d.src, pattern)
 	if err != nil {
 		return fmt.Errorf("glob system libraries: %v", err)
 	}
-	if len(glob) != 0 {
+	if len(glob) == 0 {
+		slog.DebugContext(ctx, "no system CUDA libraries found in flake")
+	} else {
 		err := d.copyDir(out, "lib")
 		if err != nil {
 			return fmt.Errorf("copy system library: %v", err)

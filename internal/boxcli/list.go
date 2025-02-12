@@ -1,4 +1,4 @@
-// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
+// Copyright 2025 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -15,7 +15,8 @@ import (
 )
 
 type listCmdFlags struct {
-	config configFlags
+	config   configFlags
+	outdated bool
 }
 
 func listCmd() *cobra.Command {
@@ -32,6 +33,10 @@ func listCmd() *cobra.Command {
 			})
 			if err != nil {
 				return errors.WithStack(err)
+			}
+
+			if flags.outdated {
+				return printOutdatedPackages(cmd, box)
 			}
 
 			for _, pkg := range box.AllPackagesIncludingRemovedTriggerPackages() {
@@ -57,6 +62,28 @@ func listCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(&flags.outdated, "outdated", false, "List outdated packages")
 	flags.config.register(cmd)
 	return cmd
+}
+
+// printOutdatedPackages prints a list of outdated packages.
+func printOutdatedPackages(cmd *cobra.Command, box *devbox.Devbox) error {
+	results, err := box.Outdated(cmd.Context())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if len(results) == 0 {
+		cmd.Println("Your packages are up to date!")
+		return nil
+	}
+
+	cmd.Println("The following packages can be updated:")
+	for pkg, version := range results {
+		cmd.Printf(" * %-30s %s -> %s\n", pkg, version.Current, version.Latest)
+	}
+
+	return nil
 }

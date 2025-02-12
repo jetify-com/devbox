@@ -17,7 +17,7 @@ import (
 )
 
 func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string, error) {
-	cmd := command("store", "path-from-hash-part", "--store", storeAddr, hash)
+	cmd := Command("store", "path-from-hash-part", "--store", storeAddr, hash)
 	resultBytes, err := cmd.Output(ctx)
 	if err != nil {
 		return "", err
@@ -27,8 +27,9 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
+
 	// --impure for NIXPKGS_ALLOW_UNFREE
-	cmd := command("path-info", installable, "--json", "--impure")
+	cmd := Command("path-info", FixInstallableArg(installable), "--json", "--impure")
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {
@@ -55,7 +56,7 @@ func StorePathsAreInStore(ctx context.Context, storePaths []string) (map[string]
 	if len(storePaths) == 0 {
 		return map[string]bool{}, nil
 	}
-	cmd := command("path-info", "--offline", "--json")
+	cmd := Command("path-info", "--offline", "--json")
 	cmd.Args = appendArgs(cmd.Args, storePaths)
 	output, err := cmd.Output(ctx)
 	if err != nil {
@@ -137,7 +138,7 @@ func DaemonVersion(ctx context.Context) (string, error) {
 	}
 	canJSON := nix.AtLeast(nix.Version2_14)
 
-	cmd := command("store", storeCmd, "--store", "daemon")
+	cmd := Command("store", storeCmd, "--store", "daemon")
 	if canJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}

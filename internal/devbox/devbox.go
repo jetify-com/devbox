@@ -46,6 +46,7 @@ import (
 	"go.jetpack.io/devbox/internal/shellgen"
 	"go.jetpack.io/devbox/internal/telemetry"
 	"go.jetpack.io/devbox/internal/ux"
+	"go.jetpack.io/devbox/nix/flake"
 )
 
 const (
@@ -202,8 +203,14 @@ func (d *Devbox) ConfigHash() (string, error) {
 	return cachehash.Bytes(buf.Bytes()), nil
 }
 
-func (d *Devbox) NixPkgsCommitHash() string {
-	return d.cfg.NixPkgsCommitHash()
+func (d *Devbox) Stdenv() flake.Ref {
+	return flake.Ref{
+		Type:  flake.TypeGitHub,
+		Owner: "NixOS",
+		Repo:  "nixpkgs",
+		Ref:   "nixpkgs-unstable",
+		Rev:   d.cfg.NixPkgsCommitHash(),
+	}
 }
 
 func (d *Devbox) Generate(ctx context.Context) error {
@@ -338,6 +345,9 @@ func (d *Devbox) ListScripts() []string {
 		keys[i] = k
 		i++
 	}
+
+	slices.Sort(keys)
+
 	return keys
 }
 

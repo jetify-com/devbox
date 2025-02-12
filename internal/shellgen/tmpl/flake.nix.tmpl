@@ -2,7 +2,7 @@
    description = "A devbox shell";
 
    inputs = {
-     nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
+     nixpkgs.url = "{{ .Stdenv }}";
 
      {{- range .FlakeInputs }}
      {{.Name}}.url = "{{.URLWithCaching}}";
@@ -41,7 +41,7 @@
             {{- range $_, $output := $pkg.GetOutputsWithCache }}
             {{ if $output.CacheURI -}}
             (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
-              {{/*  
+              {{/*
                 HACK HACK HACK! fetchClosure only supports http(s) caches and not
                 s3 caches. Until we implement that, we put a fake store here.
                 Since we pre-build everything, fetchClosure will not actually

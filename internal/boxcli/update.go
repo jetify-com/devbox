@@ -17,6 +17,7 @@ type updateCmdFlags struct {
 	config      configFlags
 	sync        bool
 	allProjects bool
+	noInstall   bool
 }
 
 func updateCmd() *cobra.Command {
@@ -49,6 +50,12 @@ func updateCmd() *cobra.Command {
 		false,
 		"update all projects in the working directory, recursively.",
 	)
+	command.Flags().BoolVar(
+		&flags.noInstall,
+		"no-install",
+		false,
+		"update lockfile but don't install anything",
+	)
 	return command
 }
 
@@ -75,7 +82,8 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	}
 
 	return box.Update(cmd.Context(), devopt.UpdateOpts{
-		Pkgs: args,
+		Pkgs:      args,
+		NoInstall: flags.noInstall,
 	})
 }
 
