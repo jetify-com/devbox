@@ -11,8 +11,22 @@
     }
   },
   "include": [
-    "github:jetify-com/devbox-plugin-example",
-    "github:jetify-com/devbox-plugin-example?dir=custom-dir",
-    "github:jetify-com/devbox-plugin-example/test/branch",
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example"
+    },
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example",
+      "dir": "custom-dir"
+    },
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example/test",
+      "ref": "branch"
+    }
   ]
 }
