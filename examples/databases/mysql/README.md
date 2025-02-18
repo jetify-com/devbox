@@ -3,7 +3,7 @@
 ## mysql Notes
 
 1. Start the mysql server using `devbox services up`
-1. Create a database using `"mysql -u root < setup_db.sql"`
+1. Create a database using `"mysql -u root --password='' < setup_db.sql"`
 1. You can now connect to the database from the command line by running `devbox run connect_db`
 
 ## Services
