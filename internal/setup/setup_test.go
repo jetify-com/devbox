@@ -35,7 +35,7 @@ func TestTaskNeedsRunTrue(t *testing.T) {
 		},
 	}
 
-	err := Run(context.Background(), t.Name(), task)
+	err := Run(t.Context(), t.Name(), task)
 	if err != nil {
 		t.Error("got non-nil error:", err)
 	}
@@ -58,7 +58,7 @@ func TestTaskNeedsRunFalse(t *testing.T) {
 		},
 	}
 
-	err := Run(context.Background(), t.Name(), task)
+	err := Run(t.Context(), t.Name(), task)
 	if err != nil {
 		t.Error("got non-nil error:", err)
 	}
@@ -74,7 +74,7 @@ func TestTaskLastRun(t *testing.T) {
 		RunFunc:      func(ctx context.Context) error { return nil },
 		NeedsRunFunc: func(context.Context, RunInfo) bool { return true },
 	}
-	err := Run(context.Background(), t.Name(), task)
+	err := Run(t.Context(), t.Name(), task)
 	if err != nil {
 		t.Error("got non-nil error on first run:", err)
 	}
@@ -91,7 +91,7 @@ func TestTaskLastRun(t *testing.T) {
 		}
 		return false
 	}
-	err = Run(context.Background(), t.Name(), task)
+	err = Run(t.Context(), t.Name(), task)
 	if err != nil {
 		t.Error("got non-nil error on second run:", err)
 	}
@@ -106,7 +106,7 @@ func TestTaskConfirmPromptAllow(t *testing.T) {
 	}
 
 	setPromptResponse(t, true)
-	err := ConfirmRun(context.Background(), t.Name(), task, "continue?")
+	err := ConfirmRun(t.Context(), t.Name(), task, "continue?")
 	if err != nil {
 		t.Error("got non-nil error:", err)
 	}
@@ -121,7 +121,7 @@ func TestTaskConfirmPromptDeny(t *testing.T) {
 	}
 
 	setPromptResponse(t, false)
-	err := ConfirmRun(context.Background(), t.Name(), task, "continue?")
+	err := ConfirmRun(t.Context(), t.Name(), task, "continue?")
 	if err == nil {
 		t.Error("got nil error, want ErrUserRefused")
 	} else if !errors.Is(err, ErrUserRefused) {
@@ -141,7 +141,7 @@ func TestTaskConfirmPromptDeny(t *testing.T) {
 func TestSudoDevbox(t *testing.T) {
 	t.Skip("this test must be run manually because it requires sudo")
 
-	ctx := context.Background()
+	ctx := t.Context()
 	key := "test-sudo-devbox"
 	resultFile := key + "-result"
 

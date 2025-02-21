@@ -1,7 +1,6 @@
 package detector
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -87,11 +86,11 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, curTest.expected, score)
 			if score > 0 {
-				packages, err := detector.Packages(context.Background())
+				packages, err := detector.Packages(t.Context())
 				require.NoError(t, err)
 				assert.Equal(t, curTest.expectedPackages, packages)
 
-				env, err := detector.Env(context.Background())
+				env, err := detector.Env(t.Context())
 				require.NoError(t, err)
 				assert.Equal(t, curTest.expectedEnv, env)
 			}
@@ -101,14 +100,14 @@ func TestNodeJSDetector_Relevance(t *testing.T) {
 
 func TestNodeJSDetector_Packages(t *testing.T) {
 	d := &NodeJSDetector{}
-	packages, err := d.Packages(context.Background())
+	packages, err := d.Packages(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, []string{"nodejs@latest"}, packages)
 }
 
 func TestNodeJSDetector_Env(t *testing.T) {
 	d := &NodeJSDetector{}
-	env, err := d.Env(context.Background())
+	env, err := d.Env(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"DEVBOX_COREPACK_ENABLED": "1"}, env)
 }

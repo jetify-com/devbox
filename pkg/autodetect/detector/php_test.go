@@ -1,7 +1,6 @@
 package detector
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -57,7 +56,7 @@ func TestPHPDetector_Relevance(t *testing.T) {
 			assert.Equal(t, curTest.expected, score)
 
 			if score > 0 {
-				packages, err := d.Packages(context.Background())
+				packages, err := d.Packages(t.Context())
 				require.NoError(t, err)
 				assert.Equal(t, curTest.expectedPackages, packages)
 			}
@@ -141,7 +140,7 @@ func TestPHPDetector_Packages(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			packages, err := d.Packages(context.Background())
+			packages, err := d.Packages(t.Context())
 			require.NoError(t, err)
 			assert.Equal(t, curTest.expectedPackages, packages)
 		})
@@ -206,11 +205,11 @@ func TestPHPDetector_PHPExtensions(t *testing.T) {
 			err := d.Init()
 			require.NoError(t, err)
 
-			extensions, err := d.phpExtensions(context.Background())
+			extensions, err := d.phpExtensions(t.Context())
 			require.NoError(t, err)
 			assert.ElementsMatch(t, curTest.expectedExtensions, extensions)
 
-			packages, err := d.Packages(context.Background())
+			packages, err := d.Packages(t.Context())
 			require.NoError(t, err)
 			assert.ElementsMatch(t, curTest.expectedPackages, packages)
 		})

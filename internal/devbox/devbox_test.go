@@ -69,7 +69,7 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 func TestComputeEnv(t *testing.T) {
 	d := devboxForTesting(t)
 	d.nix = &testNix{}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := d.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	assert.NotNil(t, env, "computeEnv should return a valid env")
@@ -78,7 +78,7 @@ func TestComputeEnv(t *testing.T) {
 func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
@@ -99,7 +99,7 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
