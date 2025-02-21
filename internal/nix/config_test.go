@@ -1,7 +1,6 @@
 package nix
 
 import (
-	"context"
 	"os/user"
 	"testing"
 )
@@ -16,7 +15,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 	t.Run("UsernameInList", func(t *testing.T) {
 		t.Setenv("NIX_CONFIG", "trusted-users = "+curUser.Username)
 
-		ctx := context.Background()
+		ctx := t.Context()
 		cfg, err := CurrentConfig(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -37,7 +36,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 		}
 		t.Setenv("NIX_CONFIG", "trusted-users = @"+g.Name)
 
-		ctx := context.Background()
+		ctx := t.Context()
 		cfg, err := CurrentConfig(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -54,7 +53,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 	t.Run("NotInList", func(t *testing.T) {
 		t.Setenv("NIX_CONFIG", "trusted-users = root")
 
-		ctx := context.Background()
+		ctx := t.Context()
 		cfg, err := CurrentConfig(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -71,7 +70,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 	t.Run("EmptyList", func(t *testing.T) {
 		t.Setenv("NIX_CONFIG", "trusted-users =")
 
-		ctx := context.Background()
+		ctx := t.Context()
 		cfg, err := CurrentConfig(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -88,7 +87,7 @@ func TestConfigIsUserTrusted(t *testing.T) {
 	t.Run("UnknownGroup", func(t *testing.T) {
 		t.Setenv("NIX_CONFIG", "trusted-users = @dummygroup")
 
-		ctx := context.Background()
+		ctx := t.Context()
 		cfg, err := CurrentConfig(ctx)
 		if err != nil {
 			t.Fatal(err)

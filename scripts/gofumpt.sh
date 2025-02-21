@@ -1,7 +1,7 @@
 #!/bin/bash
 
-find . -name '*.go' -exec gofumpt -extra -w {} \+
+fd --extension go --exec-batch go tool gofumpt -extra -w
 
 if [ -n "${CI:-}" ]; then
-  git diff --exit-code
+	git diff --exit-code
 fi
