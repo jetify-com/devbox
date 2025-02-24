@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"go.jetpack.io/devbox/testscripts/testrunner"
+	"go.jetify.com/devbox/testscripts/testrunner"
 )
 
 // When true, tests that `devbox run run_test` succeeds on every project (i.e. having devbox.json)

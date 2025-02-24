@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/cuecfg"
 )
 
 // Formats for marshalling and unmarshalling a series of shell commands in a

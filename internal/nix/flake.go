@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 type FlakeMetadata struct {

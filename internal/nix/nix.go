@@ -19,12 +19,12 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/nix/flake"
 
-	"go.jetpack.io/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/debug"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`

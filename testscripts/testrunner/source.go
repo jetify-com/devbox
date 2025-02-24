@@ -5,7 +5,7 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // Sources whatever path is exported in stdout. Ignored everything else

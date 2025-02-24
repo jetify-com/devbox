@@ -14,11 +14,11 @@ import (
 	"time"
 	"unicode"
 
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/setup"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/setup"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 const setupKey = "nixcache-setup"

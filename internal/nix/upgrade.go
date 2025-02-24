@@ -7,8 +7,8 @@ import (
 	"context"
 	"os"
 
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/nix"
 )
 
 func ProfileUpgrade(ProfileDir, indexOrName string) error {

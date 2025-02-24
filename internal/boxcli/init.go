@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/pkg/autodetect"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/pkg/autodetect"
 )
 
 type initFlags struct {

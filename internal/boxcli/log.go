@@ -6,8 +6,8 @@ package boxcli
 import (
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/telemetry"
 )
 
 func logCmd() *cobra.Command {

@@ -16,8 +16,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 type integrateCmdFlags struct {

@@ -14,12 +14,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/plugin"
 )
 
 // ErrNotFound occurs when [Open] or [Find] cannot find a devbox config file
