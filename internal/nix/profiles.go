@@ -14,8 +14,8 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, error) {

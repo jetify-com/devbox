@@ -17,11 +17,11 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mattn/go-isatty"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 // ErrUserRefused indicates that the user responded no to an interactive

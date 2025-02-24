@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 func DataSubpath(subpath string) string {

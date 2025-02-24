@@ -13,10 +13,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/nix/flake"
-	"go.jetpack.io/pkg/filecache"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/nix/flake"
+	"go.jetify.com/pkg/filecache"
 )
 
 var githubCache = filecache.New[[]byte]("devbox/plugin/github")

@@ -3,7 +3,7 @@
 
 package lock
 
-import "go.jetpack.io/devbox/nix/flake"
+import "go.jetify.com/devbox/nix/flake"
 
 type devboxProject interface {
 	ConfigHash() (string, error)

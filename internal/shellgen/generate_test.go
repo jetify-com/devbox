@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 // update overwrites golden files with the new test results.

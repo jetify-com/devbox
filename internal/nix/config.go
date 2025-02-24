@@ -15,8 +15,8 @@ import (
 	"slices"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/nix"
 )
 
 // Config is a parsed Nix configuration.

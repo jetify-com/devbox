@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/cuecfg"
 )
 
 func FromUserProcessCompose(projectDir, userProcessCompose string) Services {

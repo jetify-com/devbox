@@ -9,9 +9,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 func (p *pullbox) IsTextDevboxConfig() bool {

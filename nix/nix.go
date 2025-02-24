@@ -16,7 +16,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/redact"
 	"golang.org/x/mod/semver"
 )
 

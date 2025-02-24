@@ -12,7 +12,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rogpeppe/go-internal/testscript"
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/internal/boxcli"
+	"go.jetify.com/devbox/internal/boxcli"
 )
 
 func Main(m *testing.M) int {

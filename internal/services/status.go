@@ -17,7 +17,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating

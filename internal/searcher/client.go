@@ -13,9 +13,9 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"

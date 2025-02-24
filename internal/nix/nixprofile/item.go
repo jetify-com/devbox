@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 // NixProfileListItem is a go-struct of a line of printed output from `nix profile list`
