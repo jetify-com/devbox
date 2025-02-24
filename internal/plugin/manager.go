@@ -4,7 +4,7 @@
 package plugin
 
 import (
-	"go.jetpack.io/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/lock"
 )
 
 type Manager struct {

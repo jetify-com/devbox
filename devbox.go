@@ -5,8 +5,8 @@ import (
 	"context"
 	"io"
 
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 // Devbox is a Devbox development environment.

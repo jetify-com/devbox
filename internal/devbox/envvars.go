@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/devbox/envpath"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/devbox/envpath"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"

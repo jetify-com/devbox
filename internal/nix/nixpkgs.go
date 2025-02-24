@@ -16,8 +16,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 // EnsureNixpkgsPrefetched runs the prefetch step to download the flake of the registry

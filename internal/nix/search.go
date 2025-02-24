@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/xdg"
-	"go.jetpack.io/pkg/filecache"
+	"go.jetify.com/devbox/internal/xdg"
+	"go.jetify.com/pkg/filecache"
 )
 
 var (

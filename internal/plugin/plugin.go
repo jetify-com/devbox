@@ -17,11 +17,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/services"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/services"
 )
 
 const (

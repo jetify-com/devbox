@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/telemetry"
 )
 
 // We collect some light telemetry to be able to improve devbox over time.

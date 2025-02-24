@@ -8,9 +8,9 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/cuecfg"
 )
 
 var ignoreShellMismatch = false

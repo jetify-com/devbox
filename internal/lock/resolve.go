@@ -12,13 +12,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/nix/flake"
 	"golang.org/x/sync/errgroup"
 )
 

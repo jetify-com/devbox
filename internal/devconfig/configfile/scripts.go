@@ -3,7 +3,7 @@ package configfile
 import (
 	"strings"
 
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
 )
 
 type script struct {

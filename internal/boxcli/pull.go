@@ -12,13 +12,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devbox/providers/identity"
-	"go.jetpack.io/devbox/internal/goutil"
-	"go.jetpack.io/devbox/internal/pullbox/s3"
-	"go.jetpack.io/pkg/auth"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox/providers/identity"
+	"go.jetify.com/devbox/internal/goutil"
+	"go.jetify.com/devbox/internal/pullbox/s3"
+	"go.jetify.com/pkg/auth"
 )
 
 type pullCmdFlags struct {

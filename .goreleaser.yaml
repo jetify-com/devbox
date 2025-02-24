@@ -10,11 +10,11 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}" # For reproducible builds
     ldflags:
       - -s -w
-      - -X go.jetpack.io/devbox/internal/build.Version={{.Version}}
-      - -X go.jetpack.io/devbox/internal/build.Commit={{.Commit}}
-      - -X go.jetpack.io/devbox/internal/build.CommitDate={{.CommitDate}}
-      - -X go.jetpack.io/devbox/internal/build.SentryDSN={{ .Env.SENTRY_DSN }}
-      - -X go.jetpack.io/devbox/internal/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
+      - -X go.jetify.com/devbox/internal/build.Version={{.Version}}
+      - -X go.jetify.com/devbox/internal/build.Commit={{.Commit}}
+      - -X go.jetify.com/devbox/internal/build.CommitDate={{.CommitDate}}
+      - -X go.jetify.com/devbox/internal/build.SentryDSN={{ .Env.SENTRY_DSN }}
+      - -X go.jetify.com/devbox/internal/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

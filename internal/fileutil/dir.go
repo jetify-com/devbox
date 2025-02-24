@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/cmdutil"
 )
 
 func CopyAll(src, dst string) error {

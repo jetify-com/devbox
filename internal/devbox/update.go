@@ -8,15 +8,15 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
-	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/shellgen"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/nix/nixprofile"
+	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/shellgen"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {

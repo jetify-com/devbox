@@ -2,7 +2,7 @@ package boxcli
 
 import (
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/patchpkg"
+	"go.jetify.com/devbox/internal/patchpkg"
 )
 
 func patchCmd() *cobra.Command {

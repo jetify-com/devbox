@@ -8,8 +8,8 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 const nixDaemonFlag = "daemon"

@@ -8,10 +8,10 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/plugins"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/plugins"
 )
 
 func getConfigIfAny(inc Includable, projectDir string) (*Config, error) {

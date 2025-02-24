@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/build"
+	"go.jetify.com/devbox/internal/build"
 )
 
 const envNamePrefix = "DEVBOX_FEATURE_"

@@ -10,9 +10,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/nix"
 	"golang.org/x/exp/maps"
 )
 

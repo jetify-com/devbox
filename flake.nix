@@ -43,8 +43,8 @@
           ldflags = [
             "-s"
             "-w"
-            "-X go.jetpack.io/devbox/internal/build.Version=${version}"
-            "-X go.jetpack.io/devbox/internal/build.Commit=${revision}"
+            "-X go.jetify.com/devbox/internal/build.Version=${version}"
+            "-X go.jetify.com/devbox/internal/build.Commit=${revision}"
           ];
 
           # Don't generate test binaries (as we'd include them as a bin)

@@ -5,8 +5,8 @@ import (
 	"os"
 	"text/template"
 
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 //go:embed readme.tmpl
