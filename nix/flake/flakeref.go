@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 // Flake reference types supported by this package.

@@ -12,9 +12,9 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 const trimmedVersionsLength = 10

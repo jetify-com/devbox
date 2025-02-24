@@ -10,12 +10,12 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devbox/providers/identity"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/pkg/api"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox/providers/identity"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/pkg/api"
 )
 
 func authCmd() *cobra.Command {

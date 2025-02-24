@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
-	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/searcher"
 )
 
 type PoetryDetector struct {

@@ -3,8 +3,8 @@ package autodetect
 import (
 	"context"
 
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/pkg/autodetect/detector"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/pkg/autodetect/detector"
 )
 
 func InitConfig(ctx context.Context, path string) error {

@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
 
 func TestOpen(t *testing.T) {

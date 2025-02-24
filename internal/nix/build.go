@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/debug"
 )
 
 type BuildArgs struct {

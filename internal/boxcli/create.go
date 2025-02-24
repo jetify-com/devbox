@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/templates"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/templates"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type createCmdFlags struct {

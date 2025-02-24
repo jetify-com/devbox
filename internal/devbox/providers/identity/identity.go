@@ -9,13 +9,13 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/pkg/api"
+	"go.jetify.com/pkg/auth"
+	"go.jetify.com/pkg/auth/session"
+	"go.jetify.com/pkg/ids"
 	"go.jetify.com/typeid"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/pkg/api"
-	"go.jetpack.io/pkg/auth"
-	"go.jetpack.io/pkg/auth/session"
-	"go.jetpack.io/pkg/ids"
 	"golang.org/x/oauth2"
 )
 

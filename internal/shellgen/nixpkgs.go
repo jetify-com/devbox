@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // Contains default nixpkgs used for mkShell

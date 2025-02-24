@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"go.jetpack.io/pkg/runx/impl/registry"
-	"go.jetpack.io/pkg/runx/impl/runx"
+	"go.jetify.com/pkg/runx/impl/registry"
+	"go.jetify.com/pkg/runx/impl/runx"
 )
 
 const (

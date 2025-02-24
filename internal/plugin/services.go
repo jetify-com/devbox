@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"go.jetpack.io/devbox/internal/services"
+	"go.jetify.com/devbox/internal/services"
 )
 
 func GetServices(configs []*Config) (services.Services, error) {
