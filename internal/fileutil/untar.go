@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mholt/archiver/v4"
+	"github.com/mholt/archives"
 )
 
 func Untar(archive io.Reader, destPath string) error {
@@ -23,13 +23,13 @@ func Untar(archive io.Reader, destPath string) error {
 	}
 
 	// We assume `tar.gz` since that's the only format we need for now.
-	format := archiver.CompressedArchive{
-		Compression: archiver.Gz{},
-		Archival:    archiver.Tar{},
+	format := archives.CompressedArchive{
+		Compression: archives.Gz{},
+		Archival:    archives.Tar{},
 	}
 
 	// The handler will be called for each entry in the archive.
-	handler := func(ctx context.Context, fromFile archiver.File) error {
+	handler := func(ctx context.Context, fromFile archives.FileInfo) error {
 		// TODO: consider whether the path provided in the archive is a valid
 		// relative path to begin with.
 		rel := filepath.Clean(fromFile.NameInArchive)
@@ -49,10 +49,10 @@ func Untar(archive io.Reader, destPath string) error {
 	}
 
 	// Start extraction using our handler.
-	return format.Extract(context.Background(), archive, nil /* all files */, handler)
+	return format.Extract(context.Background(), archive, handler)
 }
 
-func untarFile(fromFile archiver.File, abs string) error {
+func untarFile(fromFile archives.FileInfo, abs string) error {
 	fromReader, err := fromFile.Open()
 	if err != nil {
 		return err
