@@ -19,7 +19,7 @@ func TestScripts(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	os.Exit(testrunner.Main(m))
+	testrunner.Main(m)
 }
 
 // TestExamples runs testscripts on the devbox-projects in the examples folder.
