@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"github.com/samber/lo/mutable"
 	"go.jetify.com/devbox/internal/build"
 	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
@@ -333,10 +334,14 @@ func (c *Config) Packages(
 	}
 
 	// Keep only the last occurrence of each package (by name).
-	return lo.Reverse(lo.UniqBy(
-		lo.Reverse(packages),
+	mutable.Reverse(packages)
+	packages = lo.UniqBy(
+		packages,
 		func(p configfile.Package) string { return p.Name },
-	))
+	)
+	mutable.Reverse(packages)
+
+	return packages
 }
 
 func (c *Config) NixPkgsCommitHash() string {
