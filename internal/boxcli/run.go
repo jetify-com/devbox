@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -98,7 +99,8 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 		for _, box := range boxes {
 			scripts = append(scripts, box.ListScripts()...)
 		}
-		return scripts
+		sort.Strings(scripts)
+		return lo.Uniq(scripts)
 	}
 	box, err := devbox.Open(devboxOpts)
 	if err != nil {
