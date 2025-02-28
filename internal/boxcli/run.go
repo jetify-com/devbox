@@ -9,10 +9,12 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"go.jetify.com/devbox/internal/boxcli/multi"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox"
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -27,6 +29,7 @@ type runCmdFlags struct {
 	pure         bool
 	listScripts  bool
 	recomputeEnv bool
+	allProjects  bool
 }
 
 // runFlagDefaults are the flag default values that differ
@@ -65,6 +68,12 @@ func runCmd(defaults runFlagDefaults) *cobra.Command {
 	)
 	_ = command.Flags().MarkHidden("omit-nix-env")
 	command.Flags().BoolVar(&flags.recomputeEnv, "recompute", true, "recompute environment if needed")
+	command.Flags().BoolVar(
+		&flags.allProjects,
+		"all-projects",
+		false,
+		"run command in all projects in the working directory, recursively. If command is not found in any project, it will be skipped.",
+	)
 
 	command.ValidArgs = listScripts(command, flags)
 
@@ -72,17 +81,30 @@ func runCmd(defaults runFlagDefaults) *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
-	box, err := devbox.Open(&devopt.Opts{
+	devboxOpts := &devopt.Opts{
 		Dir:            flags.config.path,
 		Environment:    flags.config.environment,
 		Stderr:         cmd.ErrOrStderr(),
 		IgnoreWarnings: true,
-	})
+	}
+
+	if flags.allProjects {
+		boxes, err := multi.Open(devboxOpts)
+		if err != nil {
+			slog.Error("failed to open devbox", "err", err)
+			return nil
+		}
+		scripts := []string{}
+		for _, box := range boxes {
+			scripts = append(scripts, box.ListScripts()...)
+		}
+		return scripts
+	}
+	box, err := devbox.Open(devboxOpts)
 	if err != nil {
 		slog.Error("failed to open devbox", "err", err)
 		return nil
 	}
-
 	return box.ListScripts()
 }
 
@@ -112,15 +134,25 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		return err
 	}
 
-	// Check the directory exists.
-	box, err := devbox.Open(&devopt.Opts{
+	boxes := []*devbox.Devbox{}
+	devboxOpts := &devopt.Opts{
 		Dir:         path,
 		Env:         env,
 		Environment: flags.config.environment,
 		Stderr:      cmd.ErrOrStderr(),
-	})
-	if err != nil {
-		return redact.Errorf("error reading devbox.json: %w", err)
+	}
+
+	if flags.allProjects {
+		boxes, err = multi.Open(devboxOpts)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		box, err := devbox.Open(devboxOpts)
+		if err != nil {
+			return redact.Errorf("error reading devbox.json: %w", err)
+		}
+		boxes = append(boxes, box)
 	}
 
 	envOpts := devopt.EnvOptions{
@@ -140,8 +172,23 @@ func runScriptCmd(cmd *cobra.Command, args []string, flags runCmdFlags) error {
 		Pure:          flags.pure,
 		SkipRecompute: !flags.recomputeEnv,
 	}
-	if err := box.RunScript(ctx, envOpts, script, scriptArgs); err != nil {
-		return redact.Errorf("error running script %q in Devbox: %w", script, err)
+
+	if flags.allProjects {
+		boxes = lo.Filter(boxes, func(box *devbox.Devbox, _ int) bool {
+			return slices.Contains(box.ListScripts(), script)
+		})
+	}
+
+	for _, box := range boxes {
+		ux.Finfof(
+			cmd.ErrOrStderr(),
+			"Running script %q on %s\n",
+			script,
+			box.ProjectDir(),
+		)
+		if err := box.RunScript(ctx, envOpts, script, scriptArgs); err != nil {
+			return redact.Errorf("error running script %q in Devbox: %w", script, err)
+		}
 	}
 	return nil
 }
