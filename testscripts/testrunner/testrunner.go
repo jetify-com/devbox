@@ -19,7 +19,7 @@ func Main(m *testing.M) {
 	commands := map[string]func(){
 		"devbox": func() {
 			// Call the devbox CLI directly:
-			boxcli.Execute(context.Background(), os.Args[1:])
+			os.Exit(boxcli.Execute(context.Background(), os.Args[1:]))
 		},
 		"print": func() { // Not 'echo' because we don't expand variables
 			fmt.Println(strings.Join(os.Args[1:], " "))

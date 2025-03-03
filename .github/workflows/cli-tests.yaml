@@ -83,7 +83,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - run: nix build .
+      - name: Build flake
+        run: |
+          if ! nix build .; then
+            echo "::warning::If this fails, you probably have to run 'devbox run update-hash'"
+            exit 1
+          fi
       - run: ./result/bin/devbox version
   
   golangci-lint:
