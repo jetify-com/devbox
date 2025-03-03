@@ -165,8 +165,9 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		}
 		ux.Fwarningf(
 			os.Stderr, // Always stderr. box.writer should probably always be err.
-			"Your devbox.json contains packages in legacy format. "+
+			"Your devbox.json at %s contains packages in legacy format. "+
 				"Please run `devbox %supdate` to update your devbox.json.\n",
+			box.projectDir,
 			lo.Ternary(box.projectDir == globalPath, "global ", ""),
 		)
 	}
