@@ -36,11 +36,10 @@ The easiest way to develop Devbox is with Devbox!
 Tip: you can also start VSCode from inside your Devbox shell with
 `devbox run code`.
 
-- If you are encountering an error similar to:
-  `line 3: command 'code' not found`, this means you do not have the Visual
-  Studio Code "Shell Command" installed. To do this, follow the official guide:
-  https://code.visualstudio.com/docs/setup/mac. Please refer to the section
-  under: "Launching from the command line".
+- If you encounter an error similar to: `line 3: command 'code' not found`, it
+  means you do not have the Visual Studio Code "Shell Command" installed. Follow
+  the official guide at https://code.visualstudio.com/docs/setup/mac. Please
+  refer to the section under: "Launching from the command line".
 
 ### Setting up the Environment Without Devbox
 
@@ -67,7 +66,7 @@ environment by following the steps below.
 ## Pull Request Process
 
 1. For new features or non-trivial changes, consider first filing an issue to
-   discuss what changes you plan on making. This will let us help you with
+   discuss what changes you intend to make. This will let us help you with
    implementation details and to make sure we don't duplicate any work.
 2. Ensure any new feature or functionality includes tests to verify its
    correctness.

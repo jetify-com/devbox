@@ -75,7 +75,7 @@ extra-layer of virtualization slowing your file system or every command. When
 you're ready to ship, it'll turn it into an equivalent container – but not
 before.
 
-### Good-bye conflicting versions
+### Goodbye conflicting versions
 
 Are you working on multiple projects, all of which need different versions of
 the same binary? Instead of attempting to install conflicting versions of the
@@ -183,7 +183,7 @@ the full list of commands.
 
 ## Contributing
 
-Devbox is an opensource project so contributions are always welcome. Please read
+Devbox is an opensource project, so contributions are always welcome. Please read
 [our contributing guide](CONTRIBUTING.md) before submitting pull requests.
 
 [Devbox development readme](devbox.md)
