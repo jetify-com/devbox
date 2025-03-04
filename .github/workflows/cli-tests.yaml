@@ -83,7 +83,7 @@ jobs:
               "name": "nightly-${{ runner.os }}",
               "content": "'$ARTIFACT_URL'",
               "ttl": 1,
-              "proxied": tru
+              "proxied": true
             }'
 
   typos:
