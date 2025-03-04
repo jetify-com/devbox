@@ -3,7 +3,7 @@
 ## mysql Notes
 
 1. Start the mysql server using `devbox services up`
-1. Create a database using `"mysql -u root < setup_db.sql"`
+1. Create a database using `"mysql -u root --password='' < setup_db.sql"`
 1. You can now connect to the database from the command line by running `devbox run connect_db`
 
 ## Services
@@ -22,10 +22,4 @@ Use `devbox services start|stop [service]` to interact with services
 
 To show this information, run `devbox info mysql`
 
-Note that the `.sock` filepath can only be maximum 100 characters long. You can point to a different path by setting the `MYSQL_UNIX_PORT` env variable in your `devbox.json` as follows:
-
-```json
-"env": {
-    "MYSQL_UNIX_PORT": "/<some-other-path>/mysql.sock"
-}
-```
+Note that the `.sock` filepath can only be maximum 100 characters long. You can point to a different path by setting the `MYSQL_UNIX_PORT` env variable in your `devbox.json`.
