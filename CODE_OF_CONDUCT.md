@@ -59,8 +59,8 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement. Use the
-"Report to repository admins" functionality on GitHub to report.
+reported to the community leaders responsible for enforcement. Use the "Report
+to repository admins" functionality on GitHub to report.
 
 All complaints will be reviewed and investigated promptly and fairly.
 
