@@ -67,6 +67,24 @@ jobs:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
           path: ./dist/devbox
           retention-days: 7
+      - name: Publish to Cloudflare DNS
+        # comment out for testing
+        # if: github.event_name == 'schedule' # Only run on nightly builds
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{
+              "type": "CNAME",
+              "name": "nightly-${{ runner.os }}",
+              "content": "'$ARTIFACT_URL'",
+              "ttl": 1,
+              "proxied": tru
+            }'
 
   typos:
     name: Spell Check with Typos
