@@ -130,7 +130,7 @@ require (
 	github.com/ghostiam/protogetter v0.3.9 // indirect
 	github.com/go-critic/go-critic v0.12.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
 	github.com/go-toolsmith/astequal v1.2.0 // indirect
