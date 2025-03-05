@@ -70,8 +70,7 @@ jobs:
           retention-days: 7
       - name: Publish to Cloudflare DNS
         # comment out for testing
-        # if: github.event_name == 'schedule' && matrix.os == 'ubuntu-latest' # Only run on nightly builds for Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+        if: github.event_name == 'schedule' && matrix.os == 'ubuntu-latest' # Only run on nightly builds for Ubuntu
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_DEV_JETIFY_COM_ZONE_ID: ${{ secrets.CLOUDFLARE_DEV_JETIFY_COM_ZONE_ID }}
