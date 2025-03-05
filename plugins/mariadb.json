@@ -7,7 +7,8 @@
     "MYSQL_HOME": "{{ .Virtenv }}/run",
     "MYSQL_DATADIR": "{{ .Virtenv }}/data",
     "MYSQL_UNIX_PORT": "{{ .Virtenv }}/run/mysql.sock",
-    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid"
+    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid",
+    "MYSQL_CONF": "{{ .DevboxDir }}/my.cnf"
   },
   "create_files": {
     "{{ .Virtenv }}/run": "",
