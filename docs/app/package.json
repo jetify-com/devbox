@@ -17,23 +17,23 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@docusaurus/core": "^3.5.2",
-        "@docusaurus/preset-classic": "^3.5.2",
-        "@docusaurus/theme-common": "^3.5.2",
-        "@docusaurus/theme-mermaid": "^3.5.2",
-        "@mdx-js/react": "^3.0.1",
+        "@docusaurus/core": "^3.7.0",
+        "@docusaurus/preset-classic": "^3.7.0",
+        "@docusaurus/theme-common": "^3.7.0",
+        "@docusaurus/theme-mermaid": "^3.7.0",
+        "@mdx-js/react": "^3.1.0",
         "clsx": "^2.1.1",
-        "docusaurus-plugin-openapi-docs": "^4.1.0",
-        "docusaurus-theme-openapi-docs": "^4.1.0",
-        "prism-react-renderer": "^2.4.0",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
+        "docusaurus-plugin-openapi-docs": "^4.3.5",
+        "docusaurus-theme-openapi-docs": "^4.3.5",
+        "prism-react-renderer": "^2.4.1",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
         "reactflow": "^11.11.4"
     },
     "devDependencies": {
-        "@docusaurus/module-type-aliases": "^3.5.2",
+        "@docusaurus/module-type-aliases": "^3.7.0",
         "@tsconfig/docusaurus": "^2.0.3",
-        "typescript": "^5.6.2"
+        "typescript": "^5.8.2"
     },
     "browserslist": {
         "production": [
