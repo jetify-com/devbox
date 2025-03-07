@@ -30,7 +30,12 @@ func updateCmd() *cobra.Command {
 			"If no packages are specified, all packages will be updated. " +
 			"Legacy non-versioned packages will be converted to @latest versioned " +
 			"packages resolved to their current version.",
-		PreRunE: ensureNixInstalled,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if flags.noInstall {
+				return nil
+			}
+			return ensureNixInstalled(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)
 		},
