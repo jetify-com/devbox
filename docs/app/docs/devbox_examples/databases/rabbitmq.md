@@ -26,7 +26,7 @@ Adding these packages and the plugin will configure Devbox for working with Rabb
 
 ## Starting the RabbitMQ Service
 
-The RabbitMQ plugin will automatically create a service for you that can be run with `devbox service up`. The process-compose.yaml for this service is shown below:
+The RabbitMQ plugin will automatically create a service for you that can be run with `devbox services up`. The process-compose.yaml for this service is shown below:
 
 ```yaml
 processes:
