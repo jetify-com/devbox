@@ -14,12 +14,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/plugin"
+	"github.com/samber/lo/mutable"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/plugin"
 )
 
 // ErrNotFound occurs when [Open] or [Find] cannot find a devbox config file
@@ -333,10 +334,14 @@ func (c *Config) Packages(
 	}
 
 	// Keep only the last occurrence of each package (by name).
-	return lo.Reverse(lo.UniqBy(
-		lo.Reverse(packages),
+	mutable.Reverse(packages)
+	packages = lo.UniqBy(
+		packages,
 		func(p configfile.Package) string { return p.Name },
-	))
+	)
+	mutable.Reverse(packages)
+
+	return packages
 }
 
 func (c *Config) NixPkgsCommitHash() string {

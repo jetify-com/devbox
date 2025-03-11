@@ -18,12 +18,12 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/mod/semver"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 // Keep this in-sync with latest version in launch.sh.

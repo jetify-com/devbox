@@ -6,7 +6,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 func TestNewGithubPlugin(t *testing.T) {

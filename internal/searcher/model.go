@@ -6,7 +6,7 @@ package searcher
 import (
 	"time"
 
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 type SearchResults struct {

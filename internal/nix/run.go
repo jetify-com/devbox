@@ -10,8 +10,8 @@ import (
 	"os"
 	"os/exec"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cmdutil"
 )
 
 func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {

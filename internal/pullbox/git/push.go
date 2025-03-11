@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 const nothingToCommitErrorText = "nothing to commit"

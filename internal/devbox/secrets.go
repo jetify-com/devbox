@@ -3,10 +3,10 @@ package devbox
 import (
 	"context"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/envsec/pkg/envsec"
-	"go.jetpack.io/envsec/pkg/stores/jetstore"
-	"go.jetpack.io/pkg/envvar"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/envsec/pkg/envsec"
+	"go.jetify.com/envsec/pkg/stores/jetstore"
+	"go.jetify.com/pkg/envvar"
 )
 
 func (d *Devbox) UninitializedSecrets(ctx context.Context) *envsec.Envsec {

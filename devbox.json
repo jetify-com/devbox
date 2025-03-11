@@ -2,13 +2,13 @@
   "name":        "devbox",
   "description": "Instant, easy, and predictable development environments",
   "packages": {
-    "go":                          "latest",
-    "runx:golangci/golangci-lint": "latest",
-    "runx:mvdan/gofumpt":          "latest",
+    "fd":  "latest",
+    "git": "latest",
+    "go":  "latest"
   },
   "env": {
     "GOENV": "off",
-    "PATH":  "$PATH:$PWD/dist",
+    "PATH":  "$PWD/dist/tools:$PATH:$PWD/dist"
   },
   "shell": {
     "init_hook": [
@@ -17,6 +17,7 @@
       "test -z $FISH_VERSION && \\",
       "unset       CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK || \\",
       "set --erase CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
+      "GOBIN=$PWD/dist/tools go install tool"
     ],
     "scripts": {
       // Build devbox for the current platform
@@ -29,11 +30,11 @@
         "devbox run build-darwin-amd64",
         "devbox run build-darwin-arm64",
         "devbox run build-linux-amd64",
-        "devbox run build-linux-arm64",
+        "devbox run build-linux-arm64"
       ],
       // Open VSCode
       "code":               "code .",
-      "lint":               "golangci-lint run --timeout 5m && scripts/gofumpt.sh",
+      "lint":               "go tool golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":                "scripts/gofumpt.sh",
       "test":               "go test -race -cover ./...",
       "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
@@ -47,7 +48,7 @@
         "vendor=$(realpath $(mktemp -d))",
         "trap \"rm -rf $vendor\" EXIT",
         "go mod vendor -o $vendor",
-        "nix hash path $vendor >vendor-hash",
+        "nix hash path $vendor >vendor-hash"
       ],
       "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
@@ -68,8 +69,8 @@
         "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o testscripts-linux-amd64",
         "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go test -c -o testscripts-linux-arm64",
         "image=$(docker build --quiet --tag devbox-testscripts-ubuntu:noble --platform linux/amd64 .)",
-        "docker run --rm --mount type=volume,src=devbox-testscripts-amd64,dst=/nix --platform linux/amd64 -e DEVBOX_RUN_FAILING_TESTS -e DEVBOX_RUN_PROJECT_TESTS -e DEVBOX_DEBUG $image \"$@\"",
-      ],
-    },
-  },
+        "docker run --rm --mount type=volume,src=devbox-testscripts-amd64,dst=/nix --platform linux/amd64 -e DEVBOX_RUN_FAILING_TESTS -e DEVBOX_RUN_PROJECT_TESTS -e DEVBOX_DEBUG $image \"$@\""
+      ]
+    }
+  }
 }

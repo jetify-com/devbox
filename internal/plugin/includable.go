@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 type Includable interface {

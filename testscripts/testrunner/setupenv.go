@@ -8,9 +8,9 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 // setupTestEnv configures env for devbox tests.

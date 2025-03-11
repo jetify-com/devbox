@@ -17,7 +17,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/build"
+	"go.jetify.com/devbox/internal/build"
 )
 
 var ExecutionID = newEventID()
@@ -169,9 +169,9 @@ func exportedErrType(err error) string {
 // package path and base name components.
 func splitPkgFunc(name string) (pkgPath, funcName string) {
 	// Using the following fully-qualified function name as an example:
-	// go.jetpack.io/devbox/internal/devbox.(*Devbox).RunScript
+	// go.jetify.com/devbox/internal/devbox.(*Devbox).RunScript
 
-	// dir = go.jetpack.io/devbox/internal/
+	// dir = go.jetify.com/devbox/internal/
 	// base = devbox.(*Devbox).RunScript
 	dir, base := path.Split(name)
 
@@ -179,7 +179,7 @@ func splitPkgFunc(name string) (pkgPath, funcName string) {
 	// fn = (*Devbox).RunScript
 	pkgName, fn, _ := strings.Cut(base, ".")
 
-	// pkgPath = go.jetpack.io/devbox/internal/devbox
+	// pkgPath = go.jetify.com/devbox/internal/devbox
 	// funcName = (*Devbox).RunScript
 	return dir + pkgName, fn
 }

@@ -8,9 +8,9 @@ import (
 
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/lock"
 )
 
 // Usage: env.path.len <number>

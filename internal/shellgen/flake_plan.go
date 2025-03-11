@@ -10,11 +10,11 @@ import (
 	"slices"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/patchpkg"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/patchpkg"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 // flakePlan contains the data to populate the top level flake.nix file

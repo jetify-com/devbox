@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
 
 func Init(dir string) (*Config, error) {

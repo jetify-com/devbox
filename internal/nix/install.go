@@ -15,10 +15,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/fileutil"
+	"go.jetify.com/devbox/nix"
 )
 
 func BinaryInstalled() bool {
