@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 func CloneToTmp(repo string) (string, error) {

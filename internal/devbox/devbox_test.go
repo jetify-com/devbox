@@ -14,12 +14,12 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/internal/devbox/envpath"
+	"go.jetify.com/devbox/internal/devbox/envpath"
 
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/nix"
 )
 
 func TestDevbox(t *testing.T) {
@@ -69,7 +69,7 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 func TestComputeEnv(t *testing.T) {
 	d := devboxForTesting(t)
 	d.nix = &testNix{}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := d.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	assert.NotNil(t, env, "computeEnv should return a valid env")
@@ -78,7 +78,7 @@ func TestComputeEnv(t *testing.T) {
 func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
@@ -99,7 +99,7 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
+	ctx := t.Context()
 	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]

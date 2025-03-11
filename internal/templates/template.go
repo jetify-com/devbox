@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/build"
 )
 
 func InitFromName(w io.Writer, template, target string) error {

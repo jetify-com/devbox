@@ -13,12 +13,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/midcobra"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/vercheck"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/midcobra"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/vercheck"
 )
 
 type cobraFunc func(cmd *cobra.Command, args []string) error

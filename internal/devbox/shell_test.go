@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/shellgen"
 )
 
 // updateFlag overwrites golden files with the new test results.

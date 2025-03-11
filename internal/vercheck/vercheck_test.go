@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 func TestCheckVersion(t *testing.T) {

@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 var glibcPatchFlakeRef = flake.Ref{Type: flake.TypePath, Path: "./glibc-patch"}

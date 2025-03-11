@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/multi"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/boxcli/multi"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 type updateCmdFlags struct {
@@ -30,7 +30,12 @@ func updateCmd() *cobra.Command {
 			"If no packages are specified, all packages will be updated. " +
 			"Legacy non-versioned packages will be converted to @latest versioned " +
 			"packages resolved to their current version.",
-		PreRunE: ensureNixInstalled,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if flags.noInstall {
+				return nil
+			}
+			return ensureNixInstalled(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)
 		},

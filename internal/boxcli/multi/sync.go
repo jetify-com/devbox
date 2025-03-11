@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/searcher"
 )
 
 func SyncLockfiles(pkgs []string) error {

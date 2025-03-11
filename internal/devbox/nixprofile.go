@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/nix/nixprofile"
 )
 
 // syncNixProfileFromFlake ensures the nix profile has the packages from the buildInputs

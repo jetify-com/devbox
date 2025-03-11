@@ -1,11 +1,11 @@
 package nix
 
 import (
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/nix"
 )
 
 // The types and functions in this file act a shim for the non-internal version
-// of this package (go.jetpack.io/devbox/nix). That way callers don't need to
+// of this package (go.jetify.com/devbox/nix). That way callers don't need to
 // import two nix packages and alias one of them.
 
 const (
