@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"go.jetpack.io/devbox/testscripts/testrunner"
+	"go.jetify.com/devbox/testscripts/testrunner"
 )
 
 // When true, tests that `devbox run run_test` succeeds on every project (i.e. having devbox.json)
@@ -19,7 +19,7 @@ func TestScripts(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	os.Exit(testrunner.Main(m))
+	testrunner.Main(m)
 }
 
 // TestExamples runs testscripts on the devbox-projects in the examples folder.

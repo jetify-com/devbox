@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/services"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/services"
 )
 
 func (d *Devbox) StartServices(

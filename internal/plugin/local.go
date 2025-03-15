@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 type LocalPlugin struct {

@@ -6,15 +6,15 @@ import (
 	"io"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devbox/providers/identity"
-	"go.jetpack.io/devbox/internal/devbox/providers/nixcache"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/pkg/auth"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/devbox/providers/identity"
+	"go.jetify.com/devbox/internal/devbox/providers/nixcache"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/pkg/auth"
 )
 
 func (d *Devbox) UploadProjectToCache(

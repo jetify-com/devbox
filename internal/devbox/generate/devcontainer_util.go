@@ -21,8 +21,8 @@ import (
 	"text/template"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 //go:embed tmpl/*

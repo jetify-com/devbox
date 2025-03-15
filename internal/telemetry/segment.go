@@ -13,10 +13,10 @@ import (
 
 	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
-	"go.jetpack.io/devbox/nix"
+	"go.jetify.com/devbox/nix"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 var segmentClient segment.Client

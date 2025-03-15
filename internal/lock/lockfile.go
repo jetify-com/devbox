@@ -12,14 +12,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/nix/flake"
-	"go.jetpack.io/pkg/runx/impl/types"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/nix/flake"
+	"go.jetify.com/pkg/runx/impl/types"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/cuecfg"
 )
 
 const lockFileVersion = "1"

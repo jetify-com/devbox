@@ -12,21 +12,20 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rogpeppe/go-internal/testscript"
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/internal/boxcli"
+	"go.jetify.com/devbox/internal/boxcli"
 )
 
-func Main(m *testing.M) int {
-	commands := map[string]func() int{
-		"devbox": func() int {
+func Main(m *testing.M) {
+	commands := map[string]func(){
+		"devbox": func() {
 			// Call the devbox CLI directly:
-			return boxcli.Execute(context.Background(), os.Args[1:])
+			os.Exit(boxcli.Execute(context.Background(), os.Args[1:]))
 		},
-		"print": func() int { // Not 'echo' because we don't expand variables
+		"print": func() { // Not 'echo' because we don't expand variables
 			fmt.Println(strings.Join(os.Args[1:], " "))
-			return 0
 		},
 	}
-	return testscript.RunMain(m, commands)
+	testscript.Main(m, commands)
 }
 
 func RunTestscripts(t *testing.T, testscriptsDir string) {

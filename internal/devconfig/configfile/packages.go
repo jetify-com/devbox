@@ -10,10 +10,10 @@ import (
 
 	"github.com/pkg/errors"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type PackagesMutator struct {

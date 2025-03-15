@@ -1,7 +1,6 @@
 package detector
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -34,7 +33,7 @@ func TestGoDetectorPackages(t *testing.T) {
 	detector := &GoDetector{Root: tempDir}
 
 	t.Run("No go.mod file", func(t *testing.T) {
-		packages, err := detector.Packages(context.Background())
+		packages, err := detector.Packages(t.Context())
 		assert.Error(t, err)
 		assert.Nil(t, packages)
 	})
@@ -43,7 +42,7 @@ func TestGoDetectorPackages(t *testing.T) {
 		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte("module example.com"), 0o644)
 		assert.NoError(t, err)
 
-		packages, err := detector.Packages(context.Background())
+		packages, err := detector.Packages(t.Context())
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"go@latest"}, packages)
 	})
@@ -57,7 +56,7 @@ go 1.18
 		err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(goModContent), 0o644)
 		assert.NoError(t, err)
 
-		packages, err := detector.Packages(context.Background())
+		packages, err := detector.Packages(t.Context())
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"go@1.18"}, packages)
 	})

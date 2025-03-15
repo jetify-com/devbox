@@ -2,8 +2,8 @@ version: "0.5"
 
 processes:
   mariadb:
-    command: "mysqld --log-error=$MYSQL_HOME/mysql.log & MYSQL_PID=$! && echo 'Starting mysqld... check mariadb_logs for details'"
-    is_daemon: true
+    command: "echo 'Starting mysqld... check mariadb_logs for details'; mysqld --log-error=$MYSQL_HOME/mysql.log"
+    is_daemon: false
     shutdown:
       command: "mysqladmin -u root shutdown"
     availability:

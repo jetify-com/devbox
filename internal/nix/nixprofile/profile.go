@@ -12,11 +12,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 // ProfileListItems returns a list of the installed packages.

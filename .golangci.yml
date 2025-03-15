@@ -2,8 +2,8 @@ linters:
   disable-all: true
   enable:
     - dupl
-    - errorlint
     - errcheck
+    - errorlint
     - gofmt
     - goimports
     - gosimple
@@ -16,12 +16,12 @@ linters:
     - revive
     - staticcheck
     - stylecheck
-    - tenv
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - varnamelen
     # - wrapcheck If we're going to use github.com/pkg/errors we should probably turn this on?
     # We'd like to have the following linter enabled, but it's broken for Go
@@ -86,7 +86,7 @@ linters-settings:
       - w *os.File
   wrapcheck:
     ignorePackageGlobs:
-      - go.jetpack.io/devbox/*
+      - go.jetify.com/devbox/*
   misspell:
     ignore-words:
       - substituters

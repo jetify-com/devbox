@@ -15,9 +15,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 //go:embed tmpl/*

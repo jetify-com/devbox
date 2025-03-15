@@ -15,7 +15,7 @@ import (
 	"io"
 	"os"
 
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 // Bytes returns a hex-encoded hash of b.

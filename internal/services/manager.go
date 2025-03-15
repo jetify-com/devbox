@@ -17,9 +17,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 const (

@@ -13,10 +13,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type DebugMiddleware struct {

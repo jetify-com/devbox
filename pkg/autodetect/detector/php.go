@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/searcher"
 )
 
 type composerJSON struct {

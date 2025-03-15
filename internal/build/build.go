@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"sync"
 
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 var forceProd, _ = strconv.ParseBool(os.Getenv("DEVBOX_PROD"))

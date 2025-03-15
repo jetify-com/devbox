@@ -14,10 +14,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
-	"go.jetpack.io/devbox/nix/flake"
+
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 const (

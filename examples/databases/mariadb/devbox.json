@@ -10,15 +10,17 @@
       ],
       "test_db_setup": [
         "mkdir -p /tmp/devbox/mariadb/run",
-        "export MYSQL_UNIX_PORT=/tmp/devbox/mariadb/run/mysql.sock",
         "devbox services up -b",
         "sleep 5",
-        "mysql -u root < setup_db.sql",
+        "mysql -u root --password='' < setup_db.sql",
         "devbox services stop"
       ]
     }
   },
   "nixpkgs": {
     "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
-  }
+  },
+  "env": {
+    "MYSQL_UNIX_PORT": "/tmp/devbox/mariadb/run/mysql.sock"
+   }
 }

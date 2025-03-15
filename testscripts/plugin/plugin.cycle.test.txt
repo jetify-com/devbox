@@ -10,25 +10,25 @@ stderr 'Finished installing packages.'
 -- devbox.json --
 {
   "name": "test-with-cycle",
-  "include": ["./plugin1"]
+  "include": [{"type": "path", "path": "./plugin1"}]
 }
 
 -- plugin1/plugin.json --
 {
   "name": "plugin1",
-  "include": ["../plugin2"]
+  "include": [{"type": "path", "path": "../plugin2"}]
 }
 
 -- plugin2/plugin.json --
 {
   "name": "plugin2",
-  "include": ["../plugin1"]
+  "include": [{"type": "path", "path": "../plugin1"}]
 }
 
 -- no-cycle/devbox.json --
 {
   "name": "test-without-cycle",
-  "include": ["./plugin3"]
+  "include": [{"type": "path", "path": "./plugin3"}]
 }
 
 -- no-cycle/plugin3/plugin.json --
@@ -40,8 +40,8 @@ stderr 'Finished installing packages.'
 {
   "name": "test-with-duplicate",
   "include": [
-    "./plugin4",
-    "./plugin4"
+    {"type": "path", "path": "./plugin4/plugin.json"},
+    {"type": "path", "path": "./plugin4"},
   ]
 }
 
