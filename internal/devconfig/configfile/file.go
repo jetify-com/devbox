@@ -17,6 +17,8 @@ import (
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/build"
+	"github.com/hashicorp/go-version"
 )
 
 const (
@@ -31,6 +33,9 @@ type ConfigFile struct {
 
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+
+	// Let's users specify the version of devbox.
+	DevboxVersion string `json:"devbox_version,omitempty"`
 
 	// PackagesMutator is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
@@ -109,7 +114,6 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 
 // SaveTo writes the config to a file.
 func (c *ConfigFile) SaveTo(path string) error {
-	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
 	finalPath := path
   if filepath.Base(path) != DefaultName {
       finalPath = filepath.Join(path, DefaultName)
@@ -164,6 +168,7 @@ func validateConfig(cfg *ConfigFile) error {
 	fns := []func(cfg *ConfigFile) error{
 		ValidateNixpkg,
 		validateScripts,
+		ValidateDevboxVersion,
 	}
 
 	for _, fn := range fns {
@@ -209,4 +214,34 @@ func ValidateNixpkg(cfg *ConfigFile) error {
 		)
 	}
 	return nil
+}
+
+func ValidateDevboxVersion(cfg *ConfigFile) error {
+    if cfg.DevboxVersion == "" {
+    	return usererr.New("Missing devbox_version field in config, suggested value: \"~%s\",", build.Version)
+    }
+
+    // Use hashicorp/go-version for version constraint checking
+    constraints, err := version.NewConstraint(cfg.DevboxVersion)
+    if err != nil {
+        return usererr.New("Invalid devbox_version constraint in config: %s", cfg.DevboxVersion)
+    }
+
+    currentVersion, err := version.NewVersion(build.Version)
+    if err != nil {
+        return usererr.New("Invalid current devbox version: %s", build.Version)
+    }
+
+    if !constraints.Check(currentVersion) {
+        return usererr.New("Devbox version mismatch: project requires version %s but your running version is %s",
+            cfg.DevboxVersion, build.Version)
+    }
+
+    return nil
+}
+
+// SetDevboxVersion sets the devbox_version field in the config
+func (c *ConfigFile) SetDevboxVersion(version string) {
+    c.DevboxVersion = version
+    c.SetStringField("DevboxVersion", version)
 }
