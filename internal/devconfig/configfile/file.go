@@ -110,6 +110,13 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 // SaveTo writes the config to a file.
 func (c *ConfigFile) SaveTo(path string) error {
 	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+	finalPath := path
+  if filepath.Base(path) != DefaultName {
+      finalPath = filepath.Join(path, DefaultName)
+  }
+
+	//return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+	return os.WriteFile(filepath.Join(finalPath), c.Bytes(), 0o644)
 }
 
 // TODO: Can we remove SaveTo and just use Save()?
