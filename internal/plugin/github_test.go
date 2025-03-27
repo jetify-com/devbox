@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -133,4 +134,42 @@ func TestGithubPluginAuth(t *testing.T) {
 		assert.Equal(t, expectedURL, actual.URL.String())
 		assert.Equal(t, "token gh_abcd", actual.Header.Get("Authorization"))
 	})
+}
+
+func TestGetRedactedAuthHeader(t *testing.T) {
+	testCases := []struct {
+		name       string
+		authHeader string
+		expected   string
+	}{
+		{
+			"normal length token partially readable for debugging",
+			"token ghp_61b296fb898349778e20532cb65ce38e",
+			"token ghp_********************************",
+		},
+		{
+			"short token redacted",
+			"token ghp_61b29",
+			"token *********",
+		},
+		{
+			"short header fully redacted",
+			"token xyz",
+			"*********",
+		},
+		{
+			"no token returns empty string",
+			"",
+			"",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+			assert.NoError(t, err)
+			req.Header.Add("Authorization", testCase.authHeader)
+			assert.Equal(t, testCase.expected, getRedactedAuthHeader(req))
+		})
+	}
 }
