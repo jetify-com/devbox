@@ -105,10 +105,10 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 			}
 			defer res.Body.Close()
 			if res.StatusCode != http.StatusOK {
-				authInfo := "No auth header was send with this request."
+				authInfo := "No auth header was sent with this request."
 				if req.Header.Get("Authorization") != "" {
 					authInfo = fmt.Sprintf(
-						"The auth header `%s` was send with this request.",
+						"The auth header `%s` was sent with this request.",
 						getRedactedAuthHeader(req),
 					)
 				}
@@ -181,7 +181,7 @@ func getRedactedAuthHeader(req *http.Request) string {
 
 	authType, token := parts[0], parts[1]
 	if len(token) < 10 {
-		// second word to short to reveal any, but show first word
+		// second word too short to reveal any, but show first word
 		return authType + " " + strings.Repeat("*", len(token))
 	}
 
