@@ -105,6 +105,6 @@ To uninstall Devbox:
 
 1. Remove the Devbox launcher using `rm /usr/local/bin/devbox`
 2. Remove the Devbox binaries using `rm -rf ~/.cache/devbox`
-3. Remove your Devbox global config using `rm -rf .local/share/devbox`
+3. Remove your Devbox global config using `rm -rf ~/.local/share/devbox`
 
 If you want to uninstall Nix, you will need to follow the instructions in the Nix Documentation: https://nixos.org/manual/nix/stable/installation/uninstall.
