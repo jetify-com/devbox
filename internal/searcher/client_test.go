@@ -8,9 +8,13 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"slices"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestExecGetRetries(t *testing.T) {
@@ -102,5 +106,180 @@ func TestExecGetStopsRetryingWhenCanceled(t *testing.T) {
 	}
 	if n := requests.Load(); n != 1 {
 		t.Errorf("got %d requests, want 1", n)
+	}
+}
+
+func TestSearchInlineReleases(t *testing.T) {
+	var gotReleases string
+	var pkgCalls atomic.Int32
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v2/search", func(w http.ResponseWriter, r *http.Request) {
+		gotReleases = r.URL.Query().Get("releases")
+		_, _ = w.Write([]byte(`{"total_results": 3, "results": [
+			{"name": "ripgrep", "releases": [
+				{"version": "15.0.0", "systems": ["x86_64-linux", "aarch64-darwin"]},
+				{"version": "14.1.1", "systems": []}
+			]},
+			{"name": "ripgrep-all", "releases": []},
+			{"name": "past-limit", "releases": []}
+		]}`))
+	})
+	mux.HandleFunc("/v2/pkg", func(w http.ResponseWriter, r *http.Request) {
+		pkgCalls.Add(1)
+		http.NotFound(w, r)
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	got, err := (&client{host: server.URL}).Search(t.Context(), "ripgrep", 2)
+	if err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+	if gotReleases != "2" {
+		t.Errorf("releases = %q, want %q", gotReleases, "2")
+	}
+	if n := pkgCalls.Load(); n != 0 {
+		t.Errorf("made %d /v2/pkg calls, want 0", n)
+	}
+	want := &SearchResults{
+		NumResults: 3,
+		Packages: []Package{
+			{Name: "ripgrep", Versions: []SearchRelease{
+				{Version: "15.0.0", Systems: []string{"aarch64-darwin", "x86_64-linux"}},
+				{Version: "14.1.1", Systems: []string{}},
+			}},
+			{Name: "ripgrep-all", Versions: []SearchRelease{}},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Search() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSearchAllReleases(t *testing.T) {
+	var gotReleases string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotReleases = r.URL.Query().Get("releases")
+		_, _ = w.Write([]byte(`{"total_results": 0, "results": []}`))
+	}))
+	t.Cleanup(server.Close)
+
+	if _, err := (&client{host: server.URL}).Search(t.Context(), "go", 0); err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+	if gotReleases != "all" {
+		t.Errorf("releases = %q, want %q", gotReleases, "all")
+	}
+}
+
+func TestSearchFallsBackToPkg(t *testing.T) {
+	origBackoff := retryBackoff
+	retryBackoff = func(int) time.Duration { return 0 }
+	t.Cleanup(func() { retryBackoff = origBackoff })
+
+	var lookedMu sync.Mutex
+	var looked []string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v2/search", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"total_results": 14, "results": [
+			{"name": "ripgrep"}, {"name": "removed"}, {"name": "broken"},
+			{"name": "ripgrep-all"}, {"name": "past-limit"}
+		]}`))
+	})
+	mux.HandleFunc("/v2/pkg", func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		lookedMu.Lock()
+		looked = append(looked, name)
+		lookedMu.Unlock()
+		switch name {
+		case "ripgrep":
+			_, _ = w.Write([]byte(`{"name": "ripgrep", "releases": [
+				{"version": "15.0.0", "platforms": [
+					{"arch": "x86-64", "os": "Linux", "attribute_path": "ripgrep"},
+					{"arch": "arm64", "os": "macOS", "attribute_path": "ripgrep"},
+					{"arch": "x86-64", "os": "Linux", "attribute_path": "rg"}
+				]},
+				{"version": "14.1.1", "platforms": []},
+				{"version": "13.0.0", "platforms": []},
+				{"version": "12.1.1", "platforms": []},
+				{"version": "11.0.2", "platforms": []}
+			]}`))
+		case "ripgrep-all":
+			_, _ = w.Write([]byte(`{"name": "ripgrep-all", "releases": [
+				{"version": "0.10.10", "platforms": [{"arch": "x86-64", "os": "Linux"}]}
+			]}`))
+		case "broken":
+			http.Error(w, "boom", http.StatusInternalServerError)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	got, err := (&client{host: server.URL}).Search(t.Context(), "ripgrep", 4)
+	if err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+	slices.Sort(looked)
+	looked = slices.Compact(looked)
+	if diff := cmp.Diff([]string{"broken", "removed", "ripgrep", "ripgrep-all"}, looked); diff != "" {
+		t.Errorf("/v2/pkg lookups mismatch (-want +got):\n%s", diff)
+	}
+	want := &SearchResults{
+		NumResults: 14,
+		Packages: []Package{
+			{Name: "ripgrep", Versions: []SearchRelease{
+				{Version: "15.0.0", Systems: []string{"aarch64-darwin", "x86_64-linux"}},
+				{Version: "14.1.1", Systems: []string{}},
+				{Version: "13.0.0", Systems: []string{}},
+				{Version: "12.1.1", Systems: []string{}},
+			}},
+			{Name: "ripgrep-all", Versions: []SearchRelease{
+				{Version: "0.10.10", Systems: []string{"x86_64-linux"}},
+			}},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Search() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSearchFailsWhenEveryLookupFails(t *testing.T) {
+	origBackoff := retryBackoff
+	retryBackoff = func(int) time.Duration { return 0 }
+	t.Cleanup(func() { retryBackoff = origBackoff })
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v2/search", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"total_results": 2, "results": [{"name": "removed"}, {"name": "broken"}]}`))
+	})
+	mux.HandleFunc("/v2/pkg", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("name") == "broken" {
+			http.Error(w, "boom", http.StatusInternalServerError)
+			return
+		}
+		http.NotFound(w, r)
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	if _, err := (&client{host: server.URL}).Search(t.Context(), "q", 0); err == nil {
+		t.Error("Search() error = nil, want the failed lookup's error")
+	}
+}
+
+func TestSearchNoResults(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"total_results": 0, "results": []}`))
+	}))
+	t.Cleanup(server.Close)
+
+	got, err := (&client{host: server.URL}).Search(t.Context(), "nothing", 0)
+	if err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+	if len(got.Packages) != 0 {
+		t.Errorf("Search() packages = %v, want none", got.Packages)
 	}
 }
