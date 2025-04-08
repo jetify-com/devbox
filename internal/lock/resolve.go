@@ -39,7 +39,8 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 			return nil, err
 		}
 		return &Package{
-			Resolved: installable.String(),
+			Resolved:     installable.String(),
+			LastModified: time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339),
 		}, nil
 	}
 
@@ -220,7 +221,25 @@ func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
 		return ref, nil
 	}
 
-	meta, err := nix.ResolveFlake(ctx, ref)
+	var meta nix.FlakeMetadata
+	var err error
+	// For nixpkgs, we cache resolutions (currently flakeCacheTTL=90 days) to avoid downloading
+	// new nixpkgs too often which is really slow and rarely changes anything.
+	//
+	// Ideally we can do something similar for all packages (flake and otherwise)
+	// Specifically, if user adds python@3.12 (or python@latest that resolves to 3.12) and that
+	// package is already installed, we should use it instead of using 3.12 from search service
+	// (which may have different store path). This would allow all devbox projects to share packages
+	// if the version resolution is the same.
+	//
+	// That said, the logic for caching resolved versions and non-locked flake references would not
+	// be the same.
+	if ref.IsNixpkgs() {
+		meta, err = nix.ResolveCachedFlake(ctx, ref)
+	} else {
+		meta, err = nix.ResolveFlake(ctx, ref)
+	}
+
 	if err != nil {
 		return ref, err
 	}

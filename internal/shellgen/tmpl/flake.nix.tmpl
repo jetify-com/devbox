@@ -19,7 +19,7 @@
       let
         pkgs = nixpkgs.legacyPackages.{{ .System }};
         {{- range $_, $flake := .FlakeInputs }}
-        {{- if .IsNixpkgs }}
+        {{- if $flake.Ref.IsNixpkgs }}
         {{.PkgImportName}} = (import {{.Name}} {
           system = "{{ $.System }}";
           config.allowUnfree = true;
