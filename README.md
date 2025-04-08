@@ -9,10 +9,12 @@
 ### Instant, easy, and predictable development environments
 
 [![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff&cacheSeconds=1800)](https://discord.gg/jetify)
+[![Discord](https://img.shields.io/discord/102860784329052160?color=7289DA&label=Discord&logo=discord&logoColor=fff)](https://discord.gg/devbox)
 ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox)
 [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases)
 [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main)
 [![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
+[![Twitter](https://img.shields.io/twitter/follow/jetify?style=social)](https://twitter.com/jetify)
 
 ## What is it?
 
@@ -31,10 +33,6 @@ Devbox was originally developed by [Jetify](https://www.jetify.com) and is
 internally powered by `nix`.
 
 ## Demo
-
-You can try out Devbox in your browser using the button below:
-
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/tutorial)
 
 The example below creates a development environment with `python 2.7` and
 `go 1.18`, even though those packages are not installed in the underlying
@@ -97,9 +95,9 @@ ways, including:
 
 ## Quickstart: Fast, Deterministic Shell
 
-In this quickstart we’ll create a development shell with specific tools
+In this quickstart we'll create a development shell with specific tools
 installed. These tools will only be available when using this Devbox shell,
-ensuring we don’t pollute your machine.
+ensuring we don't pollute your machine.
 
 1. Open a terminal in a new empty folder.
 
@@ -137,12 +135,12 @@ ensuring we don’t pollute your machine.
    devbox shell
    ```
 
-   You can tell you’re in a Devbox shell (and not your regular terminal) because
+   You can tell you're in a Devbox shell (and not your regular terminal) because
    the shell prompt changed.
 
 6. Use your favorite tools.
 
-   In this example we installed Python 3.10, so let’s use it.
+   In this example we installed Python 3.10, so let's use it.
 
    ```bash
    python --version
@@ -174,11 +172,11 @@ the full list of commands.
 
 ## Join our Developer Community
 
-- Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify)
+- Chat with us by joining the [Jetify Discord Server](https://discord.gg/devbox)
   – we have a #devbox channel dedicated to this project.
 - File bug reports and feature requests using
   [Github Issues](https://github.com/jetify-com/devbox/issues)
-- Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product
+- Follow us on [Jetify's Twitter](https://twitter.com/jetify) for product
   updates
 
 ## Contributing

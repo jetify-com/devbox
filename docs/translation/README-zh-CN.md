@@ -16,10 +16,6 @@ Devbox最初由 [Jetify](https://www.jetify.com) 进行开发，其内部由 `ni
 
 ## 示例
 
-你可以点击下面的按钮在浏览器中试用 Devbox：
-
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devspace)
-
 下面的例子创建了一个带有 `python 2.7` 和 `go 1.18` 的开发环境，尽管这些包并没有在底层机器中被安装。
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
@@ -133,7 +129,7 @@ Devbox 的开发环境是*可移植的*。我们使您能够只声明一次环�
 
 + 通过加入 [Jetify Discord Server](https://discord.gg/jetify) 来与我们聊天——我们有一个 #devbox 频道专门用于这个项目。
 + 使用 [Github Issues](https://github.com/jetify-com/devbox/issues) 提交错误报告和功能请求。
-+ 在 [Jetify’s Twitter](https://twitter.com/jetify_com) 上关注我们的产品更新。
++ 在 [Jetify's Twitter](https://twitter.com/jetify_com) 上关注我们的产品更新。
 
 ## 贡献
 
@@ -152,3 +148,7 @@ Devbox 是一个开源项目，所以欢迎贡献。在提交拉取请求之前�
 ## 许可证
 
 本项目在 [Apache 2.0 License](https://github.com/jetify-com/devbox/blob/main/LICENSE) 下自豪地开放源代码。
+
+# Devbox 文档翻译指南
+
+欢迎参与 Devbox 文档的翻译工作！本指南将帮助您了解如何为 Devbox 文档贡献翻译。

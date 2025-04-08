@@ -1,10 +1,7 @@
 # Website
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-You can also test and contribute to our docs online using Jetify Devspace!
-
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devbox?folder=docs/app)
 
 ## Installation
 
@@ -35,3 +32,11 @@ This command generates static content into the `build` directory and can be serv
 When a pull request is opened, it will automatically deploy via CICD to a preview.
 When a pull request is merged, it will automatically deploy to production.
 Check https://www.jetify.com/devbox/ after merge to see the latest changes.
+
+# Devbox Documentation
+
+Welcome to the Devbox documentation! This documentation is built using Docusaurus and contains all the information you need to get started with Devbox.
+
+## Contributing to Documentation
+
+We welcome contributions to our documentation! If you find any issues or would like to suggest improvements, please feel free to open a pull request.

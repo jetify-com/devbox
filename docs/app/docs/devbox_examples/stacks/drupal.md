@@ -6,7 +6,6 @@ This example shows how to run a Drupal application in Devbox. It makes use of th
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/drupal)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/drupal)
 
 ## How to Run
 

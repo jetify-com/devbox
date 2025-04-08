@@ -75,7 +75,7 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 		},
 	}
 
-	// Property keys match the API events (search "Devspace Created").
+	// Property keys match the API events.
 	insertEnv := func(envKey, propKey string) {
 		v, ok := os.LookupEnv(envKey)
 		if ok {

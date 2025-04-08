@@ -5,7 +5,6 @@ MySQL can be automatically configured for your dev environment by Devbox via the
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/databases/mysql)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/mysql)
 
 ## Adding MySQL to your Shell
 

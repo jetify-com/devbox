@@ -2,7 +2,6 @@
 
 This example shows how to run a Drupal application in Devbox. It makes use of the PHP and Apache Plugins, while demonstrating how to configure a MariaDB instance to work with Devbox Cloud.
 
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/drupal)
 
 ## How to Run the example
 

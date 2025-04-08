@@ -31,15 +31,6 @@ Jetify Deploys cost $0.10/vCPU per hour while your deployment is scheduled. If y
 
 -->
 
-## What are the specs of Jetify Devspace?
-
-Devspaces by default have:
-
-* 4 Dedicated vCPUs
-* 16 GB of RAM
-* 10 GB of user SSD Storage
-
-Larger instances or more resources are available on request for paid customers! Contact us at [**help@jetify.com**](mailto:help@jetify.com?subject=Request More Resources)
 
 ## How does pricing for Jetify Cache work?
 
