@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -104,12 +105,20 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 			}
 			defer res.Body.Close()
 			if res.StatusCode != http.StatusOK {
+				authInfo := "No auth header was sent with this request."
+				if req.Header.Get("Authorization") != "" {
+					authInfo = fmt.Sprintf(
+						"The auth header `%s` was sent with this request.",
+						getRedactedAuthHeader(req),
+					)
+				}
 				return nil, 0, usererr.New(
-					"failed to get plugin %s @ %s (Status code %d). \nPlease make "+
+					"failed to get plugin %s @ %s (Status code %d).\n%s\nPlease make "+
 						"sure a plugin.json file exists in plugin directory.",
 					p.LockfileKey(),
 					req.URL.String(),
 					res.StatusCode,
+					authInfo,
 				)
 			}
 			body, err := io.ReadAll(res.Body)
@@ -147,6 +156,11 @@ func (p *githubPlugin) request(contentURL string) (*http.Request, error) {
 	if ghToken != "" {
 		authValue := fmt.Sprintf("token %s", ghToken)
 		req.Header.Add("Authorization", authValue)
+		slog.Debug(
+			"GITHUB_TOKEN env var found, adding to request's auth header",
+			"headerValue",
+			getRedactedAuthHeader(req),
+		)
 	}
 
 	return req, nil
@@ -154,4 +168,23 @@ func (p *githubPlugin) request(contentURL string) (*http.Request, error) {
 
 func (p *githubPlugin) LockfileKey() string {
 	return p.ref.String()
+}
+
+func getRedactedAuthHeader(req *http.Request) string {
+	authHeader := req.Header.Get("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+
+	if len(authHeader) < 10 || len(parts) < 2 {
+		// too short to safely reveal any part
+		return strings.Repeat("*", len(authHeader))
+	}
+
+	authType, token := parts[0], parts[1]
+	if len(token) < 10 {
+		// second word too short to reveal any, but show first word
+		return authType + " " + strings.Repeat("*", len(token))
+	}
+
+	// show first 4 chars of token to help with debugging (will often be "ghp_")
+	return authType + " " + token[:4] + strings.Repeat("*", len(token)-4)
 }
