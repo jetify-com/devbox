@@ -6,6 +6,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -20,6 +21,20 @@ import (
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
+	if len(opts.Pkgs) == 0 || slices.Contains(opts.Pkgs, "nixpkgs") {
+		if err := d.lockfile.UpdateStdenv(); err != nil {
+			return err
+		}
+		// if nixpkgs is the only package to update, just return here.
+		if len(opts.Pkgs) == 1 {
+			return nil
+		}
+		// Otherwise, remove nixpkgs and continue
+		opts.Pkgs = slices.DeleteFunc(opts.Pkgs, func(pkg string) bool {
+			return pkg == "nixpkgs"
+		})
+	}
+
 	inputs, err := d.inputsToUpdate(opts)
 	if err != nil {
 		return err
@@ -65,9 +80,6 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
-	if err := d.updateStdenv(); err != nil {
-		return err
-	}
 	mode := update
 	if opts.NoInstall {
 		mode = noInstall
@@ -108,15 +120,6 @@ func (d *Devbox) inputsToUpdate(
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	return pkgsToUpdate, nil
-}
-
-func (d *Devbox) updateStdenv() error {
-	err := d.lockfile.Remove(d.Stdenv().String())
-	if err != nil {
-		return err
-	}
-	d.lockfile.Stdenv() // will re-resolve the stdenv flake
-	return nil
 }
 
 func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {

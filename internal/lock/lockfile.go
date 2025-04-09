@@ -141,6 +141,23 @@ func (f *File) Save() error {
 	return cuecfg.WriteFile(lockFilePath(f.devboxProject.ProjectDir()), f)
 }
 
+func (f *File) UpdateStdenv() error {
+	if err := nix.ClearFlakeCache(f.devboxProject.Stdenv()); err != nil {
+		return err
+	}
+	if err := f.Remove(f.devboxProject.Stdenv().String()); err != nil {
+		return err
+	}
+	return f.Add(f.devboxProject.Stdenv().String())
+}
+
+// TODO: We should improve a few issues with this function:
+// * It shared the same name as Devbox.Stdenv() which is confusing.
+// * Since File implements DevboxProject, IDEs really struggle to accurately find call sites.
+// (side note, we should remove DevboxProject interface)
+// * This function forces a resolution of the stdenv flake which is slow and doesn't give us a
+// chance to "prep" the user for some waiting.
+// * Should we rename to Nixpkgs() ? Stdenv feels a bit ambiguous.
 func (f *File) Stdenv() flake.Ref {
 	unlocked := f.devboxProject.Stdenv()
 	pkg, err := f.Resolve(unlocked.String())
