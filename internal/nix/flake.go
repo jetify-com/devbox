@@ -9,7 +9,7 @@ import (
 	"go.jetify.com/pkg/filecache"
 )
 
-const flakeCacheTTL = time.Hour * 24 * 90
+const flakeCacheTTL = time.Hour * 24 * 30
 
 var flakeFileCache = filecache.New[FlakeMetadata]("devbox/flakes")
 

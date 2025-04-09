@@ -223,7 +223,7 @@ func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
 
 	var meta nix.FlakeMetadata
 	var err error
-	// For nixpkgs, we cache resolutions (currently flakeCacheTTL=90 days) to avoid downloading
+	// For nixpkgs, we cache resolutions (currently flakeCacheTTL=30 days) to avoid downloading
 	// new nixpkgs too often which is really slow and rarely changes anything.
 	//
 	// Ideally we can do something similar for all packages (flake and otherwise)
