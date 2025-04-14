@@ -53,5 +53,4 @@ func TestNewGlibcPatchFlake(t *testing.T) {
 	if len(patchFlake.Outputs.Packages) != 1 {
 		t.Errorf("expected 1 package in Outputs, got %d", len(patchFlake.Outputs.Packages))
 	}
-
 }
