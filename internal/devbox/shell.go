@@ -69,9 +69,9 @@ type DevboxShell struct {
 
 type ShellOption func(*DevboxShell)
 
-// newDevboxShell initializes the DevboxShell struct so it can be used to start a shell environment
+// newShell initializes the DevboxShell struct so it can be used to start a shell environment
 // for the devbox project.
-func (d *Devbox) newDevboxShell(envOpts devopt.EnvOptions, opts ...ShellOption) (*DevboxShell, error) {
+func (d *Devbox) newShell(envOpts devopt.EnvOptions, opts ...ShellOption) (*DevboxShell, error) {
 	shPath, err := d.shellPath(envOpts)
 	if err != nil {
 		return nil, err
