@@ -249,7 +249,7 @@ func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 		WithShellStartTime(telemetry.ShellStart()),
 	}
 
-	shell, err := NewDevboxShell(d, envOpts, opts...)
+	shell, err := d.newDevboxShell(envOpts, opts...)
 	if err != nil {
 		return err
 	}
