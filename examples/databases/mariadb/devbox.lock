@@ -1,6 +1,9 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    },
     "mariadb@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
       "plugin_version": "0.0.4",

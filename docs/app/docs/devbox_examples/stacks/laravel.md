@@ -8,7 +8,6 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/laravel)
 
-[![Open In Devspace](/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/laravel)
 
 ## How to Run
 

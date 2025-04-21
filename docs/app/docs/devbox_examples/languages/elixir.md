@@ -6,7 +6,6 @@ Elixir can be installed by simply running `devbox add elixir`. This will automat
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/elixir/elixir_hello)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/elixir/)
 
 ## Adding Elixir to your project
 

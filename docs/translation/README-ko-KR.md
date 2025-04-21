@@ -14,10 +14,6 @@ Devbox는 원래 [Jetify](https://www.jetify.com)에서 개발되었으며 내�
 
 ## 데모
 
-아래 버튼을 사용하여 브라우저에서 Devbox를 사용해 볼 수 있습니다:
-
-[![Devspace에서 열기](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://cloud.jetify.com/new/github.com/jetify-com/devspace)
-
 아래 예제는 기본 머신에 해당 패키지가 설치되어 있지 않더라도 `python 2.7`과 `go 1.18`로 개발 환경을 생성합니다:
 
 ![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
@@ -151,3 +147,7 @@ Devbox는 오픈소스 프로젝트이므로 언제든지 기여를 환영합니
 ## 라이선스
 
 이 프로젝트는 [Apache 2.0 License](https://github.com/jetify-com/devbox/blob/main/LICENSE) 하 의 자랑스러운 오픈소스입니다.
+
+# Devbox 문서 번역 가이드
+
+Devbox 문서 번역에 참여해 주셔서 감사합니다! 이 가이드는 Devbox 문서 번역에 기여하는 방법을 안내합니다.

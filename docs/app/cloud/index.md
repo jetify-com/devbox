@@ -17,8 +17,6 @@ Jetify Cloud is currently available in Early Access. We're actively working on a
 
 Jetify Cloud currently includes:
 
-**[Jetify Devspace](./devspace/index.md):** Create isolated, reproducible development environments for your team. Use Devbox to define the packages and configuration for your environment, and access your devspace anywhere from the browser.
-
 **[Jetify Cache](./cache/index.md)**: Provides a secure, private cache to share packages across all your Devbox projects and environments, whether sourced from Nixpkgs or Flakes. Avoid rebuilding custom packages locally or in CI.
 
 **[Jetify Secrets](./secrets/index.md)**: Securely store secrets and variables for all of your environments, and automatically synchronize them with your Devbox Shells and Scripts.
@@ -29,8 +27,6 @@ More features are coming soon, keep an eye on our [**blog**](https://www.jetify.
 
 ## Getting Started
 
-- Create your first [**Jetify Devspace**](./devspace/index.md) and start developing in the cloud
 - Speed up your dev environments with [**Jetify Cache**](./cache/index.md)
 - Integrate Secrets with your Devbox project using [**Jetify Secrets**](./secrets/index.md)
 - Learn how to [**create your team**](./dashboard/creating_your_team.md) and [**invite members**](./dashboard/inviting_members.md)
-- Learn how to deploy your application with [**Jetify Deploys**](./deploys/index.md)

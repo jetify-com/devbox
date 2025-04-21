@@ -7,7 +7,6 @@ This example demonstrates how to setup a simple Rails application. It makes use 
 
 [Example Repo](https://github.com/jetify-com/devbox/tree/main/examples/stacks/rails)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/rails)
 
 ## How To Run
 
