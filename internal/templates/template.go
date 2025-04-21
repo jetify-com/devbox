@@ -18,6 +18,9 @@ import (
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/build"
+  "go.jetify.com/devbox/internal/devconfig"
+
+  "github.com/hashicorp/go-version"
 )
 
 func InitFromName(w io.Writer, template, target string) error {
@@ -29,41 +32,46 @@ func InitFromName(w io.Writer, template, target string) error {
 }
 
 func InitFromRepo(w io.Writer, repo, subdir, target string) error {
-	if err := createDirAndEnsureEmpty(target); err != nil {
-		return err
-	}
-	parsedRepoURL, err := ParseRepoURL(repo)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+    if err := createDirAndEnsureEmpty(target); err != nil {
+        return err
+    }
+    parsedRepoURL, err := ParseRepoURL(repo)
+    if err != nil {
+        return errors.WithStack(err)
+    }
 
-	tmp, err := os.MkdirTemp("", "devbox-template")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	cmd := exec.Command(
-		"git", "clone", parsedRepoURL,
-		// Clone and checkout a specific ref
-		"-b", lo.Ternary(build.IsDev, "main", build.Version),
-		// Create shallow clone with depth of 1
-		"--depth", "1",
-		tmp,
-	)
-	fmt.Fprintf(w, "%s\n", cmd)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	if err = cmd.Run(); err != nil {
-		return errors.WithStack(err)
-	}
+    tmp, err := os.MkdirTemp("", "devbox-template")
+    if err != nil {
+        return errors.WithStack(err)
+    }
+    cmd := exec.Command(
+        "git", "clone", parsedRepoURL,
+        // Clone and checkout a specific ref
+        "-b", lo.Ternary(build.IsDev, "main", build.Version),
+        // Create shallow clone with depth of 1
+        "--depth", "1",
+        tmp,
+    )
+    fmt.Fprintf(w, "%s\n", cmd)
+    cmd.Stderr = os.Stderr
+    cmd.Stdout = os.Stdout
+    if err = cmd.Run(); err != nil {
+        return errors.WithStack(err)
+    }
 
-	cmd = exec.Command(
-		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
-	)
-	fmt.Fprintf(w, "%s\n", cmd)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	return errors.WithStack(cmd.Run())
+    cmd = exec.Command(
+        "sh", "-c",
+        fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
+    )
+    fmt.Fprintf(w, "%s\n", cmd)
+    cmd.Stderr = os.Stderr
+    cmd.Stdout = os.Stdout
+    if err = cmd.Run(); err != nil {
+        return errors.WithStack(err)
+    }
+
+    // Set the devbox version after initializing the template
+    return SetCurrentDevboxVersion(w, target)
 }
 
 func List(w io.Writer, showAll bool) {
@@ -104,4 +112,37 @@ func ParseRepoURL(repo string) (string, error) {
 	// this is to handle cases where user puts repo url with .git at the end
 	// like: https://github.com/jetify-com/devbox.git
 	return strings.TrimSuffix(repo, ".git"), nil
+}
+
+// SetCurrentDevboxVersion sets the current version as the required version in the config
+func SetCurrentDevboxVersion(w io.Writer, projectDir string) error {
+    if strings.HasSuffix(projectDir, "devbox.json") {
+        projectDir = filepath.Dir(projectDir)
+    }
+
+		fmt.Println(projectDir)
+
+    cfg, err := devconfig.Open(projectDir)
+    if err != nil {
+        return errors.WithStack(err)
+    }
+    fmt.Printf("%v", cfg)
+
+    // Create a constraint like "~1.2.0" (compatible with 1.2.x)
+    currentVersion, err := version.NewVersion(build.Version)
+    if err != nil {
+        return errors.WithStack(err)
+    }
+
+    segments := currentVersion.Segments()
+    if len(segments) < 2 {
+        return errors.New("invalid version format")
+    }
+
+    // Create a constraint for the current major.minor version
+    versionConstraint := fmt.Sprintf("~%d.%d.0", segments[0], segments[1])
+
+    fmt.Fprintf(w, "Setting project devbox version constraint: %s\n", versionConstraint)
+    cfg.Root.SetDevboxVersion(versionConstraint)
+    return cfg.Root.SaveTo(cfg.Root.AbsRootPath)
 }

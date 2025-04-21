@@ -7,6 +7,7 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
 
 ```json
 {
+    "devbox_version": "",
     "packages": [] | {},
     "env": {},
     "shell": {
@@ -16,6 +17,10 @@ Your devbox configuration is stored in a `devbox.json` file, located in your pro
     "include": []
 }
 ```
+
+## Devbox Version
+
+The devbox_version field locks your project to a specific Devbox version, safeguarding against unexpected changes when collaborators update their environments.
 
 ### Packages
 
@@ -297,6 +302,7 @@ An example of a devbox configuration for a Rust project called `hello_world` mig
 
 ```json
 {
+    "devbox_version": "v1.0.0",
     "packages": [
         "rustup@latest",
         "libiconv@latest"
