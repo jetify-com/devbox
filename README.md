@@ -170,11 +170,11 @@ the full list of commands.
 
 ## Join our Developer Community
 
-- Chat with us by joining the [Jetify Discord Server](https://discord.gg/devbox)
+- Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify)
   – we have a #devbox channel dedicated to this project.
 - File bug reports and feature requests using
   [Github Issues](https://github.com/jetify-com/devbox/issues)
-- Follow us on [Jetify's Twitter](https://twitter.com/jetify) for product
+- Follow us on [Jetify's Twitter](https://twitter.com/jetify_com) for product
   updates
 
 ## Contributing
