@@ -53,11 +53,11 @@ Treat your Personal Access Token as a password — keep it secret and secure, an
 To generate a Token, first authenticate as described above, and then run:
 
 ```bash
-devbox auth token new
+devbox auth tokens new
 ```
 
 To authenticate with the personal access token, export it as an environment variable on your host: 
 
 ```bash
-export DEVBOX_ACCESS_TOKEN=<personal_token>
+export DEVBOX_API_TOKEN=<personal_token>
 ```
