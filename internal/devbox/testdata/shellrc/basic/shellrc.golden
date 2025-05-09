@@ -3,6 +3,8 @@ if [ -f testdata/shellrc/basic/shellrc ]; then
 fi
 # Begin Devbox Post-init Hook
 
+echo_simple () { echo "${simple}"; }
+export -f echo_simple
 export quote="they said, \"lasers\"";
 export simple="value";
 export space="quote me";
