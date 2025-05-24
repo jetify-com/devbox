@@ -2,3 +2,4 @@ simple=value
 space=quote me
 quote=they said, "lasers"
 special=$`"\
+BASH_FUNC_echo_simple%%=() { echo "${simple}"; }
