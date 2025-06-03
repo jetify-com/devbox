@@ -117,6 +117,7 @@ func TestGithubPluginAuth(t *testing.T) {
 	expectedURL := "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/test"
 
 	t.Run("generate request for public Github repository", func(t *testing.T) {
+		t.Setenv("GITHUB_TOKEN", "")
 		url, err := githubPlugin.url("test")
 		assert.NoError(t, err)
 		actual, err := githubPlugin.request(url)
