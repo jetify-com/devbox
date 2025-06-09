@@ -1,4 +1,7 @@
+# Testscript to validate generating the contents of the .envrc file.
+
 exec devbox init
 exec devbox generate direnv
 exists .envrc
-
+exists devbox.json
+grep 'eval "\$\(devbox generate direnv --print-envrc\)"' .envrc

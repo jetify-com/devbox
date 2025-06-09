@@ -140,11 +140,11 @@ func (g *Options) CreateDevcontainer(ctx context.Context) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) error {
+func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
-	file, err := os.Create(filepath.Join(path, ".envrc"))
+	file, err := os.Create(filepath.Join(opts.EnvrcDir, ".envrc"))
 	if err != nil {
 		return err
 	}
@@ -152,13 +152,13 @@ func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) err
 
 	flags := []string{}
 
-	if len(envFlags.EnvMap) > 0 {
-		for k, v := range envFlags.EnvMap {
+	if len(opts.EnvMap) > 0 {
+		for k, v := range opts.EnvFlags.EnvMap {
 			flags = append(flags, fmt.Sprintf("--env %s=%s", k, v))
 		}
 	}
-	if envFlags.EnvFile != "" {
-		flags = append(flags, fmt.Sprintf("--env-file %s", envFlags.EnvFile))
+	if opts.EnvFile != "" {
+		flags = append(flags, fmt.Sprintf("--env-file %s", opts.EnvFlags.EnvFile))
 	}
 
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))
@@ -166,6 +166,7 @@ func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) err
 	// write content into file
 	return t.Execute(file, map[string]string{
 		"Flags": strings.Join(flags, " "),
+		"Dir":   opts.ConfigDir,
 	})
 }
 
@@ -219,7 +220,7 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
+func EnvrcContent(w io.Writer, envFlags devopt.EnvrcOpts) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	envFlag := ""
@@ -231,5 +232,6 @@ func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
 	return t.Execute(w, map[string]string{
 		"EnvFlag": envFlag,
 		"EnvFile": envFlags.EnvFile,
+		"Dir":     envFlags.EnvrcDir,
 	})
 }

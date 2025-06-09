@@ -6,6 +6,7 @@ package boxcli
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -24,6 +25,7 @@ type generateCmdFlags struct {
 	force             bool
 	printEnvrcContent bool
 	rootUser          bool
+	envrcDir          string // only used by generate direnv command
 }
 
 type generateDockerfileCmdFlags struct {
@@ -151,6 +153,15 @@ func direnvCmd() *cobra.Command {
 	// this command marks a flag as hidden. Error handling for it is not necessary.
 	_ = command.Flags().MarkHidden("print-envrc")
 
+	// --envrc-dir allows users to specify a directory where the .envrc file should be generated
+	// separately from the devbox config directory. Without this flag, the .envrc file
+	// will be generated in the same directory as the devbox config file (i.e., either the current
+	// directory or the directory specified by --config). This is useful for users who want to keep
+	// their .envrc and devbox config files in different locations.
+	command.Flags().StringVar(
+		&flags.envrcDir, "envrc-dir", "", "path to directory where the .envrc file should be generated. "+
+			"If not specified, the .envrc file will be generated in the current working directory.")
+
 	flags.config.register(command)
 	return command
 }
@@ -266,13 +277,32 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 }
 
 func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
+	// --print-envrc is used within the .envrc file and therefore doesn't make sense to also
+	// use it with --envrc-dir, which specifies a directory where the .envrc file should be generated.
+	if flags.printEnvrcContent && flags.envrcDir != "" {
+		return usererr.New(
+			"Cannot use --print-envrc with --envrc-dir. " +
+				"Use --envrc-dir to specify the directory where the .envrc file should be generated.")
+	}
+
+	// Determine the directories for .envrc and config
+	configDir, envrcDir, err := determineDirenvDirs(flags.config.path, flags.envrcDir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	generateOpts := devopt.EnvrcOpts{
+		EnvrcDir:  envrcDir,
+		ConfigDir: configDir,
+		EnvFlags:  devopt.EnvFlags(flags.envFlag),
+	}
+
 	if flags.printEnvrcContent {
-		return devbox.PrintEnvrcContent(
-			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag))
+		return devbox.PrintEnvrcContent(cmd.OutOrStdout(), generateOpts)
 	}
 
 	box, err := devbox.Open(&devopt.Opts{
-		Dir:         flags.config.path,
+		Dir:         filepath.Join(envrcDir, configDir),
 		Environment: flags.config.environment,
 		Stderr:      cmd.ErrOrStderr(),
 	})
@@ -281,5 +311,33 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	}
 
 	return box.GenerateEnvrcFile(
-		cmd.Context(), flags.force, devopt.EnvFlags(flags.envFlag))
+		cmd.Context(), flags.force, generateOpts)
+}
+
+// Returns cononical paths for configDir and envrcDir. Both locations are relative to the current
+// working directory when provided to this function. However, since the config file will ultimately
+// be relative to the .envrc file, we need to determine the relative path from envrcDir to configDir.
+func determineDirenvDirs(configDir, envrcDir string) (string, string, error) {
+	// If envrcDir is specified, use it as the directory for .envrc and
+	// then determine configDir relative to that.
+	if envrcDir != "" {
+		if configDir == "" {
+			return "", envrcDir, nil
+		}
+
+		relativeConfigDir, err := filepath.Rel(envrcDir, configDir)
+		if err != nil {
+			return "", "", errors.Wrapf(err, "failed to determine relative path from %s to %s", envrcDir, configDir)
+		}
+
+		// If the relative path is ".", it means configDir is the same as envrcDir.
+		if relativeConfigDir == "." {
+			relativeConfigDir = ""
+		}
+
+		return relativeConfigDir, envrcDir, nil
+	}
+	// If envrcDir is not specified, we will use the configDir as the location for .envrc. This is
+	// for backward compatibility (prior to the --envrc-dir flag being introduced).
+	return "", configDir, nil
 }

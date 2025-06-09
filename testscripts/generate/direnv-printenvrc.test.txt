@@ -1,0 +1,8 @@
+# Testscript to validate teh output of --print-envrc
+
+exec devbox init
+exec devbox generate direnv --print-envrc
+cp stdout results.txt
+grep 'watch_file devbox.json devbox.lock' results.txt
+grep 'eval "\$\(devbox shellenv --init-hook --install --no-refresh-alias \)"' results.txt
+! exists .envrc
