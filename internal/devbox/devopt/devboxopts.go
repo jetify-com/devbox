@@ -34,6 +34,12 @@ type EnvFlags struct {
 	EnvFile string
 }
 
+type EnvrcOpts struct {
+	EnvFlags
+	EnvrcDir  string
+	ConfigDir string
+}
+
 type PullboxOpts struct {
 	Overwrite   bool
 	URL         string
