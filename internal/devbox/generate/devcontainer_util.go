@@ -153,12 +153,12 @@ func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 	flags := []string{}
 
 	if len(opts.EnvMap) > 0 {
-		for k, v := range opts.EnvFlags.EnvMap {
+		for k, v := range opts.EnvMap {
 			flags = append(flags, fmt.Sprintf("--env %s=%s", k, v))
 		}
 	}
 	if opts.EnvFile != "" {
-		flags = append(flags, fmt.Sprintf("--env-file %s", opts.EnvFlags.EnvFile))
+		flags = append(flags, fmt.Sprintf("--env-file %s", opts.EnvFile))
 	}
 
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))

@@ -555,7 +555,7 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, opts devopt.
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ux.Fsuccessf(d.stderr, "generated .envrc file in %q.\n", opts.EnvrcDir)
+	ux.Fsuccessf(d.stderr, "generated .envrc file\n")
 	if cmdutil.Exists("direnv") {
 		cmd := exec.Command("direnv", "allow")
 		err := cmd.Run()

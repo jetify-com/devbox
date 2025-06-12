@@ -1,4 +1,4 @@
-# Testscript to validate teh output of --print-envrc
+# Testscript to validate the output of --print-envrc
 
 exec devbox init
 exec devbox generate direnv --print-envrc

@@ -318,26 +318,30 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 // working directory when provided to this function. However, since the config file will ultimately
 // be relative to the .envrc file, we need to determine the relative path from envrcDir to configDir.
 func determineDirenvDirs(configDir, envrcDir string) (string, string, error) {
-	// If envrcDir is specified, use it as the directory for .envrc and
-	// then determine configDir relative to that.
-	if envrcDir != "" {
-		if configDir == "" {
-			return "", envrcDir, nil
-		}
-
-		relativeConfigDir, err := filepath.Rel(envrcDir, configDir)
-		if err != nil {
-			return "", "", errors.Wrapf(err, "failed to determine relative path from %s to %s", envrcDir, configDir)
-		}
-
-		// If the relative path is ".", it means configDir is the same as envrcDir.
-		if relativeConfigDir == "." {
-			relativeConfigDir = ""
-		}
-
-		return relativeConfigDir, envrcDir, nil
-	}
 	// If envrcDir is not specified, we will use the configDir as the location for .envrc. This is
 	// for backward compatibility (prior to the --envrc-dir flag being introduced).
-	return "", configDir, nil
+	if envrcDir == "" {
+		return "", configDir, nil
+	}
+
+	// If no configDir is specified, it will be assumed to be in the same directory as the .envrc file
+	// which means we can just return an empty configDir.
+	if configDir == "" {
+		return "", envrcDir, nil
+	}
+
+	relativeConfigDir, err := filepath.Rel(envrcDir, configDir)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "failed to determine relative path from %s to %s", envrcDir, configDir)
+	}
+
+	// If the relative path is ".", it means configDir is the same as envrcDir. Leaving it as "."
+	// will result in the .envrc containing "--config .", which is fine, but unnecessary and also
+	// a change from the previous behavior. So we will return an empty string for relativeConfigDir
+	// which will result in the .envrc file not containing the "--config" flag at all.
+	if relativeConfigDir == "." {
+		relativeConfigDir = ""
+	}
+
+	return relativeConfigDir, envrcDir, nil
 }
