@@ -29,20 +29,33 @@ func exportify(vars map[string]string) string {
 	slices.Sort(keys) // for reproducibility
 
 	strb := strings.Builder{}
-	for _, k := range keys {
-		strb.WriteString("export ")
-		strb.WriteString(k)
-		strb.WriteString(`="`)
-		for _, r := range vars[k] {
-			switch r {
-			// Special characters inside double quotes:
-			// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-			case '$', '`', '"', '\\', '\n':
-				strb.WriteRune('\\')
+	for _, key := range keys {
+		if strings.HasPrefix(key, "BASH_FUNC_") && strings.HasSuffix(key, "%%") {
+			// Bash function
+			funcName := strings.TrimSuffix(key, "%%")
+			funcName = strings.TrimPrefix(funcName, "BASH_FUNC_")
+			strb.WriteString(funcName)
+			strb.WriteString(" ")
+			strb.WriteString(vars[key])
+			strb.WriteString("\nexport -f ")
+			strb.WriteString(funcName)
+			strb.WriteString("\n")
+		} else {
+			// Regular variable
+			strb.WriteString("export ")
+			strb.WriteString(key)
+			strb.WriteString(`="`)
+			for _, r := range vars[key] {
+				switch r {
+				// Special characters inside double quotes:
+				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
+				case '$', '`', '"', '\\', '\n':
+					strb.WriteRune('\\')
+				}
+				strb.WriteRune(r)
 			}
-			strb.WriteRune(r)
+			strb.WriteString("\";\n")
 		}
-		strb.WriteString("\";\n")
 	}
 	return strings.TrimSpace(strb.String())
 }
