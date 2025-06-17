@@ -149,7 +149,8 @@ func direnvCmd() *cobra.Command {
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
 	command.Flags().BoolVarP(
-		&flags.printEnvrcContent, "print-envrc", "p", false, "output contents of devbox configuration to use in .envrc")
+		&flags.printEnvrcContent, "print-envrc", "p", false,
+		"output contents of devbox configuration to use in .envrc")
 	// this command marks a flag as hidden. Error handling for it is not necessary.
 	_ = command.Flags().MarkHidden("print-envrc")
 
@@ -159,8 +160,10 @@ func direnvCmd() *cobra.Command {
 	// directory or the directory specified by --config). This is useful for users who want to keep
 	// their .envrc and devbox config files in different locations.
 	command.Flags().StringVar(
-		&flags.envrcDir, "envrc-dir", "", "path to directory where the .envrc file should be generated. "+
-			"If not specified, the .envrc file will be generated in the current working directory.")
+		&flags.envrcDir, "envrc-dir", "",
+		"path to directory where the .envrc file should be generated. "+
+			"If not specified, the .envrc file will be generated in "+
+			"the current working directory.")
 
 	flags.config.register(command)
 	return command
