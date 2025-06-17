@@ -6,6 +6,7 @@ package boxcli
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"slices"
 	"sort"
 	"strings"
@@ -82,8 +83,22 @@ func runCmd(defaults runFlagDefaults) *cobra.Command {
 }
 
 func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
+	path := flags.config.path
+
+	// Special code path for shell completion.
+	// Landau: I'm not entirely sure why:
+	// * Flags need to be parsed again
+	// * cmd.Flag("config") contains the correct value, but flags.config.path is empty
+	// Give my low confidence, I'm making this a very narrow code path.
+	if path == "" && slices.Contains(os.Args, "__complete") {
+		_ = cmd.ParseFlags(os.Args)
+		if flag := cmd.Flag("config"); flag != nil && flag.Value != nil {
+			path = flag.Value.String()
+		}
+	}
+
 	devboxOpts := &devopt.Opts{
-		Dir:            flags.config.path,
+		Dir:            path,
 		Environment:    flags.config.environment,
 		Stderr:         cmd.ErrOrStderr(),
 		IgnoreWarnings: true,
