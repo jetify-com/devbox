@@ -13,7 +13,7 @@ const (
 	RunXScheme            = "runx"
 	RunXPrefix            = RunXScheme + ":"
 	githubAPITokenVarName = "GITHUB_TOKEN"
-	// TODO: Keep for backwards compatibility
+	// Keep for backwards compatibility
 	oldGithubAPITokenVarName = "DEVBOX_GITHUB_API_TOKEN"
 )
 
