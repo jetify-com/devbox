@@ -14,12 +14,17 @@ import (
 
 // Flake reference types supported by this package.
 const (
-	TypeIndirect = "indirect"
-	TypePath     = "path"
-	TypeFile     = "file"
-	TypeGit      = "git"
-	TypeGitHub   = "github"
-	TypeTarball  = "tarball"
+	TypeIndirect  = "indirect"
+	TypePath      = "path"
+	TypeHttps     = "https"
+	TypeFile      = "file"
+	TypeSSH       = "ssh"
+	TypeGitHub    = "github"
+	TypeGitLab    = "gitlab"
+	TypeGit       = "git"
+	TypeBitBucket = "bitbucket"
+	TypeTarball   = "tarball"
+	TypeBuiltin   = "builtin"
 )
 
 // Ref is a parsed Nix flake reference. A flake reference is a subset of the
@@ -77,6 +82,9 @@ type Ref struct {
 
 	// LastModified is the last modification time of the flake.
 	LastModified int64 `json:"lastModified,omitempty"`
+
+	// Port of the server git server, to support privately hosted git servers or tunnels
+	Port int32 `json:port,omitempty`
 }
 
 // ParseRef parses a raw flake reference. Nix supports a variety of flake ref
@@ -512,6 +520,8 @@ func isArchive(path string) bool {
 // ensuring that path elements with an encoded '/' (%2F) are not split.
 // For example, "/dir/file%2Fname" becomes the elements "dir" and "file/name".
 // The count limits the number of substrings per [strings.SplitN]
+
+// TODO git rid of this
 func splitPathOrOpaque(u *url.URL, n int) ([]string, error) {
 	upath := u.EscapedPath()
 	if upath == "" {
@@ -530,6 +540,31 @@ func splitPathOrOpaque(u *url.URL, n int) ([]string, error) {
 
 	var err error
 	split := strings.SplitN(upath, "/", n)
+	for i := range split {
+		split[i], err = url.PathUnescape(split[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return split, nil
+}
+
+// TODO maybe use this?
+func splitRepoString(repo string, n int) ([]string, error) {
+	repo = strings.TrimSpace(repo)
+
+	if repo == "" {
+		return nil, nil
+	}
+
+	// We don't want an empty element if the path is rooted.
+	if repo[0] == '/' {
+		repo = repo[1:]
+	}
+	repo = path.Clean(repo)
+
+	var err error
+	split := strings.SplitN(repo, "/", n)
 	for i := range split {
 		split[i], err = url.PathUnescape(split[i])
 		if err != nil {
@@ -657,7 +692,13 @@ func ParseInstallable(raw string) (Installable, error) {
 
 	// Interpret installables with path-style flake refs as URLs to extract
 	// the attribute path (fragment). This means that path-style flake refs
-	// cannot point to files with a '#' or '?' in their name, since those
+	//
+	//
+	//
+	//
+	//
+	//
+	//// cannot point to files with a '#' or '?' in their name, since those
 	// would be parsed as the URL fragment or query string. This mimic's
 	// Nix's CLI behavior.
 	if raw[0] == '.' || raw[0] == '/' {
