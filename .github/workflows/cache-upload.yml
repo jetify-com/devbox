@@ -21,6 +21,7 @@ env:
   DEVBOX_API_TOKEN: ${{ secrets.DEVBOX_API_TOKEN }}
   DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DEVBOX_DEBUG: 1
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   upload-cache:
@@ -44,7 +45,7 @@ jobs:
           sudo mv ./dist/devbox /usr/local/bin/
 
       # - name: Install devbox
-      #   uses: jetify-com/devbox-install-action@v0.11.0
+      #   uses: jetify-com/devbox-install-action@v0.13.0
       #   with:
       #     enable-cache: true
 

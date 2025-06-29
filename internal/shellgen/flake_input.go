@@ -22,28 +22,12 @@ type flakeInput struct {
 	Ref      flake.Ref
 }
 
-// IsNixpkgs reports whether the input looks like a nixpkgs flake.
-//
-// While there are many ways to specify this input, devbox always uses
-// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
-// themselves, this function may not return true.
-func (f *flakeInput) IsNixpkgs() bool {
-	switch f.Ref.Type {
-	case flake.TypeGitHub:
-		return f.Ref.Owner == "NixOS" && f.Ref.Repo == "nixpkgs"
-	case flake.TypeIndirect:
-		return f.Ref.ID == "nixpkgs"
-	default:
-		return false
-	}
-}
-
 func (f *flakeInput) HashFromNixPkgsURL() string {
 	return f.Ref.Rev
 }
 
 func (f *flakeInput) URLWithCaching() string {
-	if !f.IsNixpkgs() {
+	if !f.Ref.IsNixpkgs() {
 		return nix.FixInstallableArg(f.Ref.String())
 	}
 	return getNixpkgsInfo(f.Ref.Rev).URL
@@ -99,7 +83,7 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 		joins = append(joins, &SymlinkJoin{
 			Name: pkg.String() + "-combined",
 			Paths: lo.Map(outputNames, func(outputName string, _ int) string {
-				if !f.IsNixpkgs() {
+				if !f.Ref.IsNixpkgs() {
 					return f.Name + "." + attributePath + "." + outputName
 				}
 				parts := strings.Split(attributePath, ".")
@@ -140,7 +124,7 @@ func (f *flakeInput) BuildInputs() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !f.IsNixpkgs() {
+	if !f.Ref.IsNixpkgs() {
 		return lo.Map(attributePaths, func(pkg string, _ int) string {
 			return f.Name + "." + pkg
 		}), nil

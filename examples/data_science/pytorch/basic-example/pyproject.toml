@@ -8,7 +8,7 @@ packages = [{include = "devbox_cuda_dev"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-torch = "^1.13.1"
+torch = "^2.7.0"
 numpy = "^1.24.2"
 
 

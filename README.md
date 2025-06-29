@@ -32,10 +32,6 @@ internally powered by `nix`.
 
 ## Demo
 
-You can try out Devbox in your browser using the button below:
-
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/tutorial)
-
 The example below creates a development environment with `python 2.7` and
 `go 1.18`, even though those packages are not installed in the underlying
 machine:
@@ -97,9 +93,9 @@ ways, including:
 
 ## Quickstart: Fast, Deterministic Shell
 
-In this quickstart we’ll create a development shell with specific tools
+In this quickstart we'll create a development shell with specific tools
 installed. These tools will only be available when using this Devbox shell,
-ensuring we don’t pollute your machine.
+ensuring we don't pollute your machine.
 
 1. Open a terminal in a new empty folder.
 
@@ -137,12 +133,12 @@ ensuring we don’t pollute your machine.
    devbox shell
    ```
 
-   You can tell you’re in a Devbox shell (and not your regular terminal) because
+   You can tell you're in a Devbox shell (and not your regular terminal) because
    the shell prompt changed.
 
 6. Use your favorite tools.
 
-   In this example we installed Python 3.10, so let’s use it.
+   In this example we installed Python 3.10, so let's use it.
 
    ```bash
    python --version

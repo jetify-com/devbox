@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"strings"
-
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/nix/flake"

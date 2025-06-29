@@ -113,10 +113,6 @@ const sidebars = {
           id: "env_variables",
         },
         {
-          type: "doc",
-          id: "devbox_cloud/beta_faq",
-        },
-        {
           type: "category",
           label: "IDE Reference",
           collapsed: true,

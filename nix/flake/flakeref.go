@@ -473,6 +473,22 @@ func (r Ref) String() string {
 	}
 }
 
+// IsNixpkgs reports whether the flake reference looks like a nixpkgs flake.
+//
+// While there are many ways to specify this input, devbox always uses
+// github:NixOS/nixpkgs/<hash> as the URL. If the user wishes to reference nixpkgs
+// themselves, this function may not return true.
+func (r Ref) IsNixpkgs() bool {
+	switch r.Type {
+	case TypeGitHub:
+		return r.Owner == "NixOS" && r.Repo == "nixpkgs"
+	case TypeIndirect:
+		return r.ID == "nixpkgs"
+	default:
+		return false
+	}
+}
+
 func isGitHash(s string) bool {
 	if len(s) != 40 {
 		return false

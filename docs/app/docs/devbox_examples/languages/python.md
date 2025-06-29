@@ -22,7 +22,6 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pip)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/python-pip)
 
 [pip](https://pip.pypa.io/en/stable/) is the standard package manager for Python. Since it installs python packages globally, we strongly recommend using a virtual environment.
 
@@ -82,7 +81,6 @@ If you need to install a specific version of Pip, you can run `devbox add python
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pipenv)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/python-pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 
@@ -106,7 +104,6 @@ This init_hook will automatically start your virtualenv when you run `devbox she
 
 [**Example Link**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/poetry/poetry-demo)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/python-poetry)
 
 [Poetry](https://python-poetry.org/) is a packaging and dependency manager for Python that helps you manage your Python packages, and can automatically create a virtual environment for your project.
 

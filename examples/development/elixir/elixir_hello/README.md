@@ -2,7 +2,6 @@
 
 Basic Elixir project using Mix in Devbox.
 
-[![Open In Devspace](https://www.jetify.com/img/devbox/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/elixir)
 
 ## Configuration
 

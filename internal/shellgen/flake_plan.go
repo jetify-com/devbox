@@ -90,7 +90,7 @@ type glibcPatchFlake struct {
 	Dependencies []string
 }
 
-func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (glibcPatchFlake, error) {
+func newGlibcPatchFlake(nixpkgs flake.Ref, packages []*devpkg.Package) (glibcPatchFlake, error) {
 	patchFlake := glibcPatchFlake{
 		DevboxFlake: flake.Ref{
 			Type:  flake.TypeGitHub,
@@ -98,7 +98,7 @@ func newGlibcPatchFlake(nixpkgsGlibcRev string, packages []*devpkg.Package) (gli
 			Repo:  "devbox",
 			Ref:   build.Version,
 		},
-		NixpkgsGlibcFlakeRef: "flake:nixpkgs/" + nixpkgsGlibcRev,
+		NixpkgsGlibcFlakeRef: nixpkgs.String(),
 	}
 
 	// In dev builds, use the local Devbox flake for patching packages

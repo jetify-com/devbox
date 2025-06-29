@@ -9,10 +9,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/shellgen"
 )
@@ -101,6 +103,64 @@ Generated shellrc != shellrc.golden (-shellrc.golden +shellrc):
 If the new shellrc is correct, you can update the golden file with:
 
 	go test -run "^%s$" -update`), diff, t.Name())
+			}
+		})
+	}
+}
+
+func TestShellPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		envOpts  devopt.EnvOptions
+		expected string
+		env      map[string]string
+	}{
+		{
+			name: "pure mode enabled",
+			envOpts: devopt.EnvOptions{
+				Pure: true,
+			},
+			expected: `^/nix/store/.*/bin/bash$`,
+		},
+		{
+			name: "pure mode disabled",
+			envOpts: devopt.EnvOptions{
+				Pure: false,
+			},
+			env: map[string]string{
+				envir.Shell: "/usr/local/bin/bash",
+			},
+			expected: "^/usr/local/bin/bash$",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			for k, v := range test.env {
+				t.Setenv(k, v)
+			}
+			tmpDir := t.TempDir()
+			err := InitConfig(tmpDir)
+			if err != nil {
+				t.Fatal("Got InitConfig error:", err)
+			}
+			d, err := Open(&devopt.Opts{
+				Dir:    tmpDir,
+				Stderr: os.Stderr,
+			})
+			if err != nil {
+				t.Fatal("Got Open error:", err)
+			}
+			gotPath, err := d.shellPath(test.envOpts)
+			if err != nil {
+				t.Fatal("Got shellPath error:", err)
+			}
+			matched, err := regexp.MatchString(test.expected, gotPath)
+			if err != nil {
+				t.Fatal("Got regexp.MatchString error:", err)
+			}
+			if !matched {
+				t.Errorf("Expected shell path %s, but got %s", test.expected, gotPath)
 			}
 		})
 	}

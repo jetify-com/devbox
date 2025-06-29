@@ -6,7 +6,6 @@ Apache can be automatically configured by Devbox via the built-in Apache Plugin.
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/apache)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/apache)
 
 ### Adding Apache to your Shell
 

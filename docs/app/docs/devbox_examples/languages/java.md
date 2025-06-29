@@ -28,7 +28,6 @@ Other distributions of the JDK (such as OracleJDK and Eclipse Temurin) are avail
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java/gradle/hello-world)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://auth.jetify.com/devspace/templates/java-gradle)
 
 Gradle is a popular, multi-language build tool that is commonly used with JVM projects. To setup an example project using Gradle, follow the instructions below:
 
@@ -81,7 +80,6 @@ An example `devbox.json` would look like the following:
 
 [**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/java/maven/hello-world)
 
-[![Open In Devspace](../../../static/img/open-in-devspace.svg)](https://www.jetify.com/new/templates/java-maven)
 
 Maven is an all-in-one CI-CD tool for building testing and deploying Java projects. To setup a sample project with Java and Maven in devbox follow the steps below:
 
