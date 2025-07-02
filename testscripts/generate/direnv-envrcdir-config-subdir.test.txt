@@ -1,0 +1,9 @@
+# Testscript to validate generating a direnv .envrc in a specified location (./dir) that also
+# references a devbox config in another dir (./cfg) that is a subdir of the first.
+
+mkdir dir/cfg
+exec devbox init dir/cfg
+exists dir/cfg/devbox.json
+
+exec devbox generate direnv --envrc-dir dir --config dir/cfg
+grep 'eval "\$\(devbox generate direnv --print-envrc --config cfg\)"' dir/.envrc
