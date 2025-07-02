@@ -1,0 +1,46 @@
+name: Random Reviewer Assignment
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Randomly assign reviewer from team
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              // Get team members
+              const teamMembers = await github.rest.teams.listMembersInOrg({
+                org: 'jetify-com',
+                team_slug: 'eng'
+              });
+              
+              // Exclude PR author from potential reviewers
+              const prAuthor = context.payload.pull_request.user.login;
+              const eligibleReviewers = teamMembers.data
+                .map(member => member.login)
+                .filter(login => login !== prAuthor)
+                .filter(login => login !== "lagoja");
+              
+              if (eligibleReviewers.length === 0) {
+                console.log('No eligible reviewers found');
+                return;
+              }
+              
+              // Randomly select a reviewer
+              const randomReviewer = eligibleReviewers[Math.floor(Math.random() * eligibleReviewers.length)];
+              console.log(`Assigning reviewer: ${randomReviewer}`);
+              
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                reviewers: [randomReviewer, "lagoja"]
+              });
+              
+            } catch (error) {
+              console.error('Error assigning reviewer:', error);
+            }
