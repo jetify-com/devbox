@@ -19,37 +19,51 @@ jobs:
         with:
           script: |
             const TRIAGE_USERNAME = 'Lagoja';
-            
+
             try {
+              const authenticatedUser = await github.rest.users.getAuthenticated();
+              
               const teamMembers = await github.rest.teams.listMembersInOrg({
                 org: 'jetify-com',
                 team_slug: 'eng'
               });
               
               const prAuthor = context.payload.pull_request.user.login.toLowerCase();
-              console.log(`PR Author: ${prAuthor}`);
+              const prAuthorId = context.payload.pull_request.user.id;
+              const authenticatedUserLower = authenticatedUser.data.login.toLowerCase();
               
-              // Get eligible reviewers (excluding PR author and lagoja)
-
+              // Get eligible reviewers (excluding PR author, authenticated user, and lagoja)
               const eligibleReviewers = teamMembers.data
-                .map(member => member.login)
-                .filter(login => {
-                  const loginLower = login.toLowerCase();
-                  return loginLower !== prAuthor && loginLower !== TRIAGE_USERNAME;
-                });
+                .filter(member => {
+                  const loginLower = member.login.toLowerCase();
+                  
+                  // Exclude PR author by both ID and username
+                  const isNotAuthor = (prAuthorId && member.id !== prAuthorId) && loginLower !== prAuthor;
+                  // Exclude authenticated user
+                  const isNotAuthenticatedUser = member.id !== authenticatedUser.data.id;
+                  const isNotTriage = loginLower !== TRIAGE_USERNAME.toLowerCase();
+                  
+                  return isNotAuthor && isNotAuthenticatedUser && isNotTriage;
+                })
+                .map(member => member.login);
+              
+              console.log(`Eligible reviewers: ${eligibleReviewers.join(', ')}`);
               
               if (eligibleReviewers.length === 0) {
                 console.log('No eligible reviewers found');
                 return;
               }
               
-              // Build reviewers list: random reviewer + lagoja (if not PR author)
               const randomReviewer = eligibleReviewers[Math.floor(Math.random() * eligibleReviewers.length)];
               const reviewers = [randomReviewer];
-              
-              if (prAuthor !== TRIAGE_USERNAME) {
+
+              // Only add TRIAGE_USERNAME if they're not the PR author and not the authenticated user
+              if (prAuthor !== TRIAGE_USERNAME.toLowerCase() && 
+                  authenticatedUserLower !== TRIAGE_USERNAME.toLowerCase()) {
                 reviewers.push(TRIAGE_USERNAME);
               }
+              
+              console.log(`Final reviewers: ${reviewers.join(', ')}`);
               
               console.log(`Assigning reviewers: ${reviewers.join(', ')}`);
               
