@@ -19,9 +19,11 @@ type LocalPlugin struct {
 func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 	plugin := &LocalPlugin{ref: ref, pluginDir: pluginDir}
 	name, err := getPluginNameFromContent(plugin)
+
 	if err != nil {
 		return nil, err
 	}
+
 	plugin.name = name
 	return plugin, nil
 }

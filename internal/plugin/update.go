@@ -1,5 +1,5 @@
 package plugin
 
 func Update() error {
-	return githubCache.Clear()
+	return gitCache.Clear()
 }
