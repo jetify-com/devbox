@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
