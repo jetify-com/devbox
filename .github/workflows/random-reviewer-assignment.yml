@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN_FOR_PR_ASSIGNMENT }}
 
 jobs:
   assign-reviewer:
@@ -18,34 +18,46 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const TRIAGE_USERNAME = 'Lagoja';
+            
             try {
-              // Get team members
               const teamMembers = await github.rest.teams.listMembersInOrg({
                 org: 'jetify-com',
                 team_slug: 'eng'
               });
               
-              // Exclude PR author from potential reviewers
-              const prAuthor = context.payload.pull_request.user.login;
+              const prAuthor = context.payload.pull_request.user.login.toLowerCase();
+              console.log(`PR Author: ${prAuthor}`);
+              
+              // Get eligible reviewers (excluding PR author and lagoja)
+
               const eligibleReviewers = teamMembers.data
                 .map(member => member.login)
-                .filter(login => login !== prAuthor)
-                .filter(login => login !== "lagoja");
+                .filter(login => {
+                  const loginLower = login.toLowerCase();
+                  return loginLower !== prAuthor && loginLower !== TRIAGE_USERNAME;
+                });
               
               if (eligibleReviewers.length === 0) {
                 console.log('No eligible reviewers found');
                 return;
               }
               
-              // Randomly select a reviewer
+              // Build reviewers list: random reviewer + lagoja (if not PR author)
               const randomReviewer = eligibleReviewers[Math.floor(Math.random() * eligibleReviewers.length)];
-              console.log(`Assigning reviewer: ${randomReviewer}`);
+              const reviewers = [randomReviewer];
+              
+              if (prAuthor !== TRIAGE_USERNAME) {
+                reviewers.push(TRIAGE_USERNAME);
+              }
+              
+              console.log(`Assigning reviewers: ${reviewers.join(', ')}`);
               
               await github.rest.pulls.requestReviewers({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number,
-                reviewers: [randomReviewer, "lagoja"]
+                reviewers
               });
               
             } catch (error) {
