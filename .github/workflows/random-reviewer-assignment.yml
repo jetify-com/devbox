@@ -1,0 +1,89 @@
+name: Random Reviewer Assignment
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN_FOR_PR_ASSIGNMENT }}
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Randomly assign reviewer from team
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const TRIAGE_USERNAME = 'Lagoja';
+            const EXCLUDE_USERNAMES = ['jetpack-io-bot'];
+
+            try {
+              const authenticatedUser = await github.rest.users.getAuthenticated();
+              
+              const teamMembers = await github.rest.teams.listMembersInOrg({
+                org: 'jetify-com',
+                team_slug: 'eng'
+              });
+              
+              const prAuthor = context.payload.pull_request.user.login.toLowerCase();
+              const prAuthorId = context.payload.pull_request.user.id;
+              const authenticatedUserLower = authenticatedUser.data.login.toLowerCase();
+
+              // If the PR author is already a member of the team, we can skip random assignment
+              const isPrAuthorInTeam = teamMembers.data.some(member => 
+                member.login.toLowerCase() === prAuthor && member.id === prAuthorId
+              );
+
+              if (isPrAuthorInTeam) {
+                console.log(`PR author ${prAuthor} is already a team member, skipping random assignment.`);
+                return;
+              }
+              
+              // Get eligible reviewers (excluding PR author, authenticated user, and lagoja)
+              const eligibleReviewers = teamMembers.data
+                .filter(member => {
+                  const loginLower = member.login.toLowerCase();
+                  
+                  // Exclude authenticated user
+                  const isNotAuthenticatedUser = member.id !== authenticatedUser.data.id;
+                  const isNotTriage = loginLower !== TRIAGE_USERNAME.toLowerCase();
+                  const isNotExcludedUsername = !EXCLUDE_USERNAMES.includes(loginLower);
+
+                  return isNotAuthenticatedUser && isNotTriage && isNotExcludedUsername;
+                })
+                .map(member => member.login);
+              
+              console.log(`Eligible reviewers: ${eligibleReviewers.join(', ')}`);
+              
+              if (eligibleReviewers.length === 0) {
+                console.log('No eligible reviewers found');
+                return;
+              }
+              
+              const randomReviewer = eligibleReviewers[Math.floor(Math.random() * eligibleReviewers.length)];
+              const reviewers = [randomReviewer];
+
+              // Only add TRIAGE_USERNAME if they're not the PR author and not the authenticated user
+              if (prAuthor !== TRIAGE_USERNAME.toLowerCase() && 
+                  authenticatedUserLower !== TRIAGE_USERNAME.toLowerCase()) {
+                reviewers.push(TRIAGE_USERNAME);
+              }
+              
+              console.log(`Final reviewers: ${reviewers.join(', ')}`);
+              
+              console.log(`Assigning reviewers: ${reviewers.join(', ')}`);
+              
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                reviewers
+              });
+              
+            } catch (error) {
+              console.error('Error assigning reviewer:', error);
+            }
