@@ -165,8 +165,8 @@ func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 
 	// write content into file
 	return t.Execute(file, map[string]string{
-		"Flags": strings.Join(flags, " "),
-		"Dir":   opts.ConfigDir,
+		"EnvFlag":   strings.Join(flags, " "),
+		"ConfigDir": formatConfigDirArg(opts.ConfigDir),
 	})
 }
 
@@ -220,7 +220,7 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer, envFlags devopt.EnvrcOpts) error {
+func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error {
 	tmplName := "envrcContent.tmpl"
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
 	envFlag := ""
@@ -229,9 +229,21 @@ func EnvrcContent(w io.Writer, envFlags devopt.EnvrcOpts) error {
 			envFlag += fmt.Sprintf("--env %s=%s ", k, v)
 		}
 	}
+
 	return t.Execute(w, map[string]string{
-		"EnvFlag": envFlag,
-		"EnvFile": envFlags.EnvFile,
-		"Dir":     envFlags.EnvrcDir,
+		"JSONPath":  filepath.Join(configDir, "devbox.json"),
+		"LockPath":  filepath.Join(configDir, "devbox.lock"),
+		"EnvFlag":   envFlag,
+		"EnvFile":   envFlags.EnvFile,
+		"ConfigDir": formatConfigDirArg(configDir),
 	})
+}
+
+func formatConfigDirArg(configDir string) string {
+	configDirArg := ""
+	if configDir != "" {
+		configDirArg = "--config " + configDir
+	}
+
+	return configDirArg
 }

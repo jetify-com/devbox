@@ -1,7 +1,6 @@
-{{define "DirPrefix"}}{{ if .Dir }}{{ .Dir }}/{{ end }}{{end}}
 use_devbox() {
-    watch_file {{template "DirPrefix" .}}devbox.json {{template "DirPrefix" .}}devbox.lock
-    eval "$(devbox shellenv --init-hook --install --no-refresh-alias {{ if .EnvFlag }}{{ .EnvFlag }}{{ end }} {{- if .Dir }}--config {{ .Dir -}}{{ end }})"
+    watch_file {{ .JSONPath }} {{ .LockPath }}
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias{{ if .EnvFlag}} {{ .EnvFlag }}{{ end }}{{ if .ConfigDir }} {{ .ConfigDir }}{{ end }})"
 }
 use devbox
 {{ if .EnvFile }}

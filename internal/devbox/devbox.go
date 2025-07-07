@@ -527,8 +527,8 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 	}))
 }
 
-func PrintEnvrcContent(w io.Writer, opts devopt.EnvrcOpts) error {
-	return generate.EnvrcContent(w, opts)
+func PrintEnvrcContent(w io.Writer, opts devopt.EnvFlags, configDir string) error {
+	return generate.EnvrcContent(w, opts, configDir)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
