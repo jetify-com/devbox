@@ -311,8 +311,8 @@ func AttachToProcessManager(ctx context.Context, w io.Writer, projectDir string,
 		return err
 	}
 
-	defer configFile.Close()
 	config := readGlobalProcessComposeJSON(configFile)
+	configFile.Close() // release the lock as this command is long running
 
 	project, ok := config.Instances[projectDir]
 	if !ok {
