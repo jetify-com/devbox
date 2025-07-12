@@ -38,9 +38,9 @@ require (
 	github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/zealic/go2node v0.1.0
-	go.jetify.com/envsec v0.0.16-0.20250224183918-888379403227
-	go.jetify.com/pkg v0.0.0-20250305231704-b305f9e8bd85
-	go.jetify.com/typeid v1.3.0
+	go.jetify.com/envsec v0.0.16-0.20250709181241-04401af54a3c
+	go.jetify.com/pkg v0.0.0-20250709180804-ea4301dbbaab
+	go.jetify.com/typeid/v2 v2.0.0-alpha.2
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/mod v0.24.0
 	golang.org/x/oauth2 v0.28.0
@@ -113,7 +113,7 @@ require (
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/codeclysm/extract/v3 v3.1.1 // indirect
+	github.com/codeclysm/extract/v4 v4.0.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.12.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/creack/pty v1.1.24 // indirect
@@ -141,7 +141,7 @@ require (
 	github.com/go-xmlfmt/xmlfmt v1.1.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
-	github.com/gofrs/uuid/v5 v5.3.1 // indirect
+	github.com/gofrs/uuid/v5 v5.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
@@ -275,6 +275,7 @@ require (
 	gitlab.com/bosi/decorder v0.4.2 // indirect
 	go-simpler.org/musttag v0.13.0 // indirect
 	go-simpler.org/sloglint v0.9.0 // indirect
+	go.jetify.com/typeid v1.3.1-0.20250708200829-05dce5112f3d // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
