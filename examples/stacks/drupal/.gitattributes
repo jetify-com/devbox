@@ -42,6 +42,9 @@
 *.xml     text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 *.yml     text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 
+# PHPStan's baseline uses tabs instead of spaces.
+core/.phpstan-baseline.php text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tabwidth=2 diff=php linguist-language=php
+
 # Define binary file attributes.
 # - Do not treat them as text.
 # - Include binary diff in patches instead of "binary files differ."

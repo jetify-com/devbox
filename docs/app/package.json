@@ -17,10 +17,10 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@docusaurus/core": "^3.7.0",
-        "@docusaurus/preset-classic": "^3.7.0",
-        "@docusaurus/theme-common": "^3.7.0",
-        "@docusaurus/theme-mermaid": "^3.7.0",
+        "@docusaurus/core": "^3.8.1",
+        "@docusaurus/preset-classic": "^3.8.1",
+        "@docusaurus/theme-common": "^3.8.1",
+        "@docusaurus/theme-mermaid": "^3.8.1",
         "@mdx-js/react": "^3.1.0",
         "clsx": "^2.1.1",
         "docusaurus-plugin-openapi-docs": "^4.4.0",
@@ -31,7 +31,7 @@
         "reactflow": "^11.11.4"
     },
     "devDependencies": {
-        "@docusaurus/module-type-aliases": "^3.7.0",
+        "@docusaurus/module-type-aliases": "^3.8.1",
         "@tsconfig/docusaurus": "^2.0.3",
         "typescript": "^5.8.3"
     },

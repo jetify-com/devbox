@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -15,7 +16,7 @@ import (
 	"go.jetify.com/pkg/auth"
 	"go.jetify.com/pkg/auth/session"
 	"go.jetify.com/pkg/ids"
-	"go.jetify.com/typeid"
+	"go.jetify.com/typeid/v2"
 	"golang.org/x/oauth2"
 )
 
@@ -32,6 +33,19 @@ var (
 var scopes = []string{"openid", "offline_access", "email", "profile"}
 
 var cachedAccessTokenFromAPIToken *session.Token
+
+// parseAPIToken parses an API token string following the same pattern as other Parse functions
+func parseAPIToken(s string) (ids.APIToken, error) {
+	var zero ids.APIToken
+	tid, err := typeid.Parse(s)
+	if err != nil {
+		return zero, err
+	}
+	if tid.Prefix() != ids.APITokenPrefix {
+		return zero, fmt.Errorf("invalid api_token ID: %s", s)
+	}
+	return ids.APIToken{TypeID: tid}, nil
+}
 
 func GenSession(ctx context.Context) (*session.Token, error) {
 	if t, err := getAccessTokenFromAPIToken(ctx); err != nil || t != nil {
@@ -91,7 +105,7 @@ func getAccessTokenFromAPIToken(
 			return nil, nil
 		}
 
-		apiToken, err := typeid.Parse[ids.APIToken](apiTokenRaw)
+		apiToken, err := parseAPIToken(apiTokenRaw)
 		if err != nil {
 			return nil, err
 		}

@@ -1,4 +1,8 @@
 parameters:
+  # Toggles the super user access policy. If your website has at least one user
+  # with the Administrator role, it is advised to set this to false. This allows
+  # you to make user 1 a regular user, strengthening the security of your site.
+  security.enable_super_user: true
   session.storage.options:
     # Default ini options for sessions.
     #
@@ -60,6 +64,11 @@ parameters:
     # \Drupal\Core\Session\SessionConfiguration::__construct()
     # @default 6
     sid_bits_per_character: 6
+    # By default, Drupal generates a session cookie name based on the full
+    # domain name. Set the name_suffix to a short random string to ensure this
+    # session cookie name is unique on different installations on the same
+    # domain and path (for example, when migrating from Drupal 7).
+    name_suffix: ''
   twig.config:
     # Twig debugging:
     #
