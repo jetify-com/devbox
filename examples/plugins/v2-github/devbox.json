@@ -12,7 +12,16 @@
   },
   "include": [
     // TODO, make these more interesting by adding v2 capabilities
-    "github:jetify-com/devbox-plugin-example",
-    "github:jetify-com/devbox-plugin-example?dir=custom-dir"
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example"
+    },
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example",
+      "dir": "custom-dir"
+    }
   ]
 }

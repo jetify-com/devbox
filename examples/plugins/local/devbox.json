@@ -11,6 +11,9 @@
     }
   },
   "include": [
-    "path:my-plugin/plugin.json"
+    {
+      "type": "path",
+      "path": "my-plugin/plugin.json"
+    }
   ]
 }
