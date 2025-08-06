@@ -1,0 +1,10 @@
+# Testscript to validate generating the contents of the .envrc file.
+# Note that since --envrc-dir was NOT specified, the .envrc will be in the `dir` directory and
+# the config will be found there, which means the `--print-env` doesn't need to specify the dir.
+
+mkdir dir
+exec devbox init dir
+exec devbox generate direnv --env x=y --config dir
+exists dir/.envrc
+exists dir/devbox.json
+grep 'eval "\$\(devbox generate direnv --print-envrc --env x=y\)"' dir/.envrc
