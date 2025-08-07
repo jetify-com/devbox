@@ -9,6 +9,9 @@
     "{{ .Virtenv }}/bin/venvShellHook.sh": "python/venvShellHook.sh"
   },
   "shell": {
-    "init_hook": ["{{ .Virtenv }}/bin/venvShellHook.sh"]
+    "init_hook": [
+      "export UV_PROJECT_ENVIRONMENT=\"$VENV_DIR\"",
+      "{{ .Virtenv }}/bin/venvShellHook.sh"
+    ]
   }
 }
