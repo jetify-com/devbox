@@ -1,22 +1,19 @@
 package plugin
 
 import (
-	"strings"
-
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/nix/flake"
 )
 
-func LoadConfigFromInclude(include string, lockfile *lock.File, workingDir string) (*Config, error) {
+func LoadConfigFromInclude(ref flake.Ref, lockfile *lock.File, workingDir string) (*Config, error) {
 	var includable Includable
 	var err error
-	if t, name, _ := strings.Cut(include, ":"); t == "plugin" {
-		includable = devpkg.PackageFromStringWithDefaults(
-			name,
-			lockfile,
-		)
+
+	if ref.Type == flake.TypeBuiltin {
+		includable = devpkg.PackageFromStringWithDefaults(ref.Path, lockfile)
 	} else {
-		includable, err = parseIncludable(include, workingDir)
+		includable, err = parseIncludable(ref, workingDir)
 		if err != nil {
 			return nil, err
 		}

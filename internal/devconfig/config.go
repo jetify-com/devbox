@@ -15,12 +15,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/samber/lo/mutable"
+
 	"go.jetify.com/devbox/internal/build"
 	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 // ErrNotFound occurs when [Open] or [Find] cannot find a devbox config file
@@ -237,14 +239,20 @@ func (c *Config) loadRecursive(
 ) error {
 	included := make([]*Config, 0, len(c.Root.Include))
 
-	for _, includeRef := range c.Root.Include {
-		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+	for _, ref := range c.Root.Include {
+		switch ref.Type {
+		case flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket:
+			ref.Host = fmt.Sprintf("%s.com", ref.Type)
+		}
+
+		pluginConfig, err := plugin.LoadConfigFromInclude(ref, lockfile, filepath.Dir(c.Root.AbsRootPath))
+
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, includeRef)
+		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, ref)
+
 		if seen[pluginConfig.Source.Hash()] {
 			// Note that duplicate includes are allowed if they are in different paths
 			// e.g. 2 different plugins can include the same plugin.
@@ -252,8 +260,8 @@ func (c *Config) loadRecursive(
 			return errors.Errorf(
 				"circular or duplicate include detected:\n%s", newCyclePath)
 		}
-		seen[pluginConfig.Source.Hash()] = true
 
+		seen[pluginConfig.Source.Hash()] = true
 		includable := createIncludableFromPluginConfig(pluginConfig)
 
 		if err := includable.loadRecursive(
@@ -268,6 +276,7 @@ func (c *Config) loadRecursive(
 		c.Root.TopLevelPackages(),
 		lockfile,
 	)
+
 	if err != nil {
 		return errors.WithStack(err)
 	}

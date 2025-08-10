@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
   "packages": [],
   "env": {
     "PLUGIN1_ENV2": "override"
@@ -28,8 +27,20 @@
     }
   },
   "include": [
-    "./plugin1",
-    "path:plugin2",
-    "./plugin3/plugin.json",
+    {
+      "type": "path",
+      "path": "./plugin1"
+    },
+    {
+      "type": "path",
+      "path": "plugin2"
+    },
+    {
+      "type": "path",
+      "path": "./plugin3/plugin.json"
+    }
+    //"./plugin1",
+    //"path:plugin2",
+    //"./plugin3/plugin.json",
   ]
 }

@@ -114,7 +114,10 @@
       "description": "Shell specific options and hooks for the plugin.",
       "items": {
         "init_hook": {
-          "type": ["array", "string"],
+          "type": [
+            "array",
+            "string"
+          ],
           "description": "Shell command to run right before initializing the user's shell, running a script, or starting a service"
         },
         "scripts": {
@@ -123,7 +126,10 @@
           "patternProperties": {
             ".*": {
               "description": "Alias name for the script.",
-              "type": ["array", "string"],
+              "type": [
+                "array",
+                "string"
+              ],
               "items": {
                 "type": "string",
                 "description": "The script's shell commands."
@@ -137,10 +143,115 @@
       "description": "List of additional plugins to activate within your devbox shell",
       "type": "array",
       "items": {
-        "description": "Name of the plugin to activate.",
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "owner": {
+            "description": "Username or organization name",
+            "type": "string"
+          },
+          "repo": {
+            "description": "Repository name",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of connection (https, ssh, file, builtin)",
+            "type": "string",
+            "enum": [
+              "https",
+              "ssh",
+              "file",
+              "builtin"
+            ],
+            "default": "https"
+          },
+          "host": {
+            "description": "Host of the repository (e.g., gitlab, github, bitbucket, localhost)",
+            "type": "string"
+          },
+          "port": {
+            "description": "Port to use for the connection",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 0
+          },
+          "dir": {
+            "description": "Subdirectory that should be accessed in the repo. Defaults to the path key if not provided",
+            "type": "string"
+          },
+          "ref": {
+            "description": "Git reference",
+            "type": "string"
+          },
+          "rev": {
+            "description": "Git revision (only relevant for https or ssh types)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner",
+          "repo"
+        ],
+        "dependencies": {
+          "host": {
+            "not": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "builtin"
+                  ]
+                }
+              }
+            }
+          },
+          "owner": {
+            "not": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "builtin"
+                  ]
+                }
+              }
+            }
+          },
+          "rev": {
+            "oneOf": [
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "https",
+                      "ssh"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "file",
+                      "builtin"
+                    ]
+                  }
+                },
+                "not": {
+                  "required": [
+                    "rev"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
-  "required": ["name", "version", "description"]
+  "required": [
+    "name",
+    "version",
+    "description"
+  ]
 }

@@ -1,6 +1,8 @@
 {
   "name": "plugin1",
-  "packages": ["hello@latest"],
+  "packages": [
+    "hello@latest"
+  ],
   "env": {
     "PLUGIN1_ENV": "success",
     "PLUGIN1_ENV2": "success"
@@ -20,6 +22,9 @@
     "{{ .Virtenv }}/process-compose.yaml": "process-compose.yaml"
   },
   "include": [
-    "./plugin1a"
+    {
+      "type": "path",
+      "path": "./plugin1a"
+    }
   ]
 }

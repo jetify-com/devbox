@@ -11,6 +11,11 @@
     }
   },
   "include": [
-    "github:jetify-com/devbox-plugin-example/d9c00334353c9b1294c7bd5dbea128c149b2eb3a"
+    {
+      "type": "github",
+      "owner": "jetify-com",
+      "repo": "devbox-plugin-example",
+      "rev": "d9c00334353c9b1294c7bd5dbea128c149b2eb3a"
+    }
   ]
 }

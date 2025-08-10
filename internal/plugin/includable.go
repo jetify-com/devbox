@@ -16,16 +16,12 @@ type Includable interface {
 	LockfileKey() string
 }
 
-func parseIncludable(includableRef, workingDir string) (Includable, error) {
-	ref, err := flake.ParseRef(includableRef)
-	if err != nil {
-		return nil, err
-	}
+func parseIncludable(ref flake.Ref, workingDir string) (Includable, error) {
 	switch ref.Type {
 	case flake.TypePath:
 		return newLocalPlugin(ref, workingDir)
-	case flake.TypeGitHub:
-		return newGithubPlugin(ref)
+	case flake.TypeSSH, flake.TypeBuiltin, flake.TypeGitHub, flake.TypeGitLab, flake.TypeBitBucket, flake.TypeGit:
+		return newGitPlugin(ref)
 	default:
 		return nil, fmt.Errorf("unsupported ref type %q", ref.Type)
 	}
