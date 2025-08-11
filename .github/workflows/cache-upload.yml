@@ -22,6 +22,9 @@ env:
   DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DEVBOX_DEBUG: 1
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # I think this should be added to individual nix commands within devbox, but this is quick fix for now
+  NIX_CONFIG: |
+    access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   upload-cache:
