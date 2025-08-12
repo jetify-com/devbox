@@ -1,17 +1,15 @@
 {
-    "packages": [
-        "go@1.19.8"
+  "packages": ["go@1.24.5"],
+  "env": {
+    "GOPATH": "$HOME/go/",
+    "PATH":   "$PATH:$HOME/go/bin"
+  },
+  "shell": {
+    "init_hook": [
+      "export \"GOROOT=$(go env GOROOT)\""
     ],
-    "env": {
-        "GOPATH": "$HOME/go/",
-        "PATH": "$PATH:$HOME/go/bin"
-    },
-    "shell": {
-        "init_hook": [
-            "export \"GOROOT=$(go env GOROOT)\""
-        ],
-        "scripts": {
-            "run_test": "go run main.go"
-        }
+    "scripts": {
+      "run_test": "go run main.go"
     }
+  }
 }
