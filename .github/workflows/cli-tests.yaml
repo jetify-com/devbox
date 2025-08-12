@@ -83,10 +83,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.13.0
+        with:
+          enable-cache: true
       - name: Build flake
         run: |
-          if ! nix build .; then
+          if ! devbox run build-flake; then
             echo "::warning::If this fails, you probably have to run 'devbox run update-hash'"
             exit 1
           fi
