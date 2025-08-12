@@ -83,6 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.13.0
+        with:
+          enable-cache: true
+      - name: Run devbox install
+        run: devbox install
+      - name: Add Go to PATH
+        run: echo "$(devbox run which go | xargs dirname)" >> $GITHUB_PATH
       - uses: DeterminateSystems/nix-installer-action@main
       - name: Build flake
         run: |
