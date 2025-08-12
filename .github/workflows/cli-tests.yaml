@@ -87,14 +87,9 @@ jobs:
         uses: jetify-com/devbox-install-action@v0.13.0
         with:
           enable-cache: true
-      - name: Run devbox install
-        run: devbox install
-      - name: Add Go to PATH
-        run: echo "$(devbox run which go | xargs dirname)" >> $GITHUB_PATH
-      - uses: DeterminateSystems/nix-installer-action@main
       - name: Build flake
         run: |
-          if ! nix build .; then
+          if ! devbox run build-flake; then
             echo "::warning::If this fails, you probably have to run 'devbox run update-hash'"
             exit 1
           fi

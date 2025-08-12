@@ -50,6 +50,7 @@
         "go mod vendor -o $vendor",
         "nix hash path $vendor >vendor-hash"
       ],
+      "build-flake": "nix build .",
       "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
       // Linux-specific tests. It invokes the test binary directly, so any extra
