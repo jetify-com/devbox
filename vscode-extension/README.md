@@ -4,10 +4,6 @@ This is the official VSCode extension for [devbox](https://github.com/jetify-com
 
 ## Features
 
-### Open In VSCode button
-
-If a Devbox Cloud instance (from [devbox.sh](https://devbox.sh)) has an `Open In Desktop` button, this extension will make VSCode to be able to connect its workspace to the instance.
-
 ### Auto Shell on a devbox project
 
 When VSCode Terminal is opened on a devbox project, this extension detects `devbox.json` and runs `devbox shell` so terminal is automatically in devbox shell environment. Can be turned off in settings.
@@ -50,7 +46,7 @@ No need to take any action for this feature. When writing a devbox.json, if this
 
 ### Debug Mode
 
-Enabling debug mode in extension settings will create a seqience of logs in the file `.devbox/extension.log`. This feature only tracks the logs for `"Devbox: Reopen in Devbox Shell environment"` feature.
+Enabling debug mode in extension settings will create a sequence of logs in the file: `.devbox/extension.log`. This feature only tracks the logs for `"Devbox: Reopen in Devbox Shell environment"`.
 
 ## Following extension guidelines
 
