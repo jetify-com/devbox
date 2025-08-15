@@ -1,6 +1,7 @@
 {
   "name":        "devbox",
   "description": "Instant, easy, and predictable development environments",
+  "devbox_version": "0.0.0-dev",
   "packages": {
     "fd":  "latest",
     "git": "latest",
