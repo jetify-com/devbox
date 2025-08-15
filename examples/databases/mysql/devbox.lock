@@ -1,68 +1,72 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "mysql80@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.3",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#mysql80",
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2025-08-04T20:54:38Z",
+      "resolved": "github:NixOS/nixpkgs/cab778239e705082fe97bb4990e0d24c50924c04?lastModified=1754340878&narHash=sha256-lgmUyVQL9tSnvvIvBp7x1euhkkCho7n3TMzgjdvgPoU%3D"
+    },
+    "mysql84@latest": {
+      "last_modified": "2025-08-08T11:17:04Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/b069b7c1e2fe1a3a24221428558bf44128d3d5c8#mysql84",
       "source": "devbox-search",
-      "version": "8.0.36",
+      "version": "8.4.6",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36",
+              "path": "/nix/store/fab2yjsp2nb2vxkf1q9lizbxpvz72g7z-mysql-8.4.6",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/lhg44jksdla9j4m3g6wmlrrb55j5l3y8-mysql-8.0.36-static"
+              "path": "/nix/store/gi2cfbf7ma36yys3rphz59apwv798y6w-mysql-8.4.6-static"
             }
           ],
-          "store_path": "/nix/store/50hwl7vdz5lqdx3agn9f6q2dibcf8yms-mysql-8.0.36"
+          "store_path": "/nix/store/fab2yjsp2nb2vxkf1q9lizbxpvz72g7z-mysql-8.4.6"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36",
+              "path": "/nix/store/9fnq2ijz65q5q0bvd50279inbhmx9k31-mysql-8.4.6",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/29zyqbla4d9ax6hyv4myxdiy2xb109g5-mysql-8.0.36-static"
+              "path": "/nix/store/4nj305bgk0npv8p683s6fnrkr0f7kfy6-mysql-8.4.6-static"
             }
           ],
-          "store_path": "/nix/store/g5kp969zy1mk2g5hdzzg69vw4g4m9sy0-mysql-8.0.36"
+          "store_path": "/nix/store/9fnq2ijz65q5q0bvd50279inbhmx9k31-mysql-8.4.6"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36",
+              "path": "/nix/store/m53dgvffnpr5xn0phf220qipqpzw04qx-mysql-8.4.6",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/s030q0ibyw32sa755qygi8m0zyf8qn8s-mysql-8.0.36-static"
+              "path": "/nix/store/8ki39xjalywa5f83a716bhmva8lh39k9-mysql-8.4.6-static"
             }
           ],
-          "store_path": "/nix/store/h48pc9is6jw3nxzai5gd025y51c361lj-mysql-8.0.36"
+          "store_path": "/nix/store/m53dgvffnpr5xn0phf220qipqpzw04qx-mysql-8.4.6"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36",
+              "path": "/nix/store/5jkdn4wrr079d5xm14mz0c44fsgqwq4z-mysql-8.4.6",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/x8rlbq0z80nqldwvxs4w2rblp3yjwn0z-mysql-8.0.36-static"
+              "path": "/nix/store/c8r41hrvjiim2vyjcqq81nr7z3g8h11x-mysql-8.4.6-static"
             }
           ],
-          "store_path": "/nix/store/vwcld5bqs1dg7h2ffcgz8am4vdrxw176-mysql-8.0.36"
+          "store_path": "/nix/store/5jkdn4wrr079d5xm14mz0c44fsgqwq4z-mysql-8.4.6"
         }
       }
     }
